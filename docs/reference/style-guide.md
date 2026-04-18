@@ -40,12 +40,12 @@ anyplot.ai is a considered reference work styled like a code editor over a paper
 
 **3. Code is the native register.** Section headers carry shell prompts (`❯ libraries`, `$ plots`, `~/anyplot/`), action buttons read as method calls (`.copy()`, `.open()`, `.download()`), the hero headline types itself with a blinking cursor. The site speaks the dialect of its visitors. This is not skinning — it's the framing device. Removing the editorial paper underneath would over-tip into "developer toy"; removing the terminal layer would feel sterile and product-marketing-y. The two layers depend on each other.
 
-**4. Typography carries the editorial weight, mono carries the code weight.** Three fonts with distinct roles:
-- **Serif (Fraunces)** — hero headlines and section titles only; the editorial moment
-- **Monospace (MonoLisa)** — everything else by default: body text, UI labels, navigation, terminal prompts, buttons, code, logo
-- **Sans-serif (Inter)** — rare; only for places where MonoLisa would feel too dense (legal text, long-form blog body, dense data tables)
+**4. One typeface, two voices.** The entire site is set in **MonoLisa** — body, UI, navigation, prompts, buttons, logo, display headlines, everything. The editorial accent is not a second font but MonoLisa's **italic + `ss02` stylistic set** (the script variant), enabled globally via `font-feature-settings: "ss02"`. Whenever text is set in `font-style: italic`, it renders as a flowing script that carries the emotional/editorial register while staying on the monospace grid.
 
-This is a deliberate inversion of typical sites: mono is the default, serif is the accent.
+- **Roman (upright MonoLisa)** — default for all prose, labels, navigation, buttons, code, logo. Bold weights (700) for display sizes.
+- **Script (italic MonoLisa + ss02)** — accents only: hero sub-headlines (`— any library.`), section titles (`libraries`, `specs`), taglines (`steal like an artist.`), emphasized words (`<em>your</em>`). Reserve for semantic emphasis, not decoration.
+
+This is a stricter system than the typical 3-font stack and depends on MonoLisa's breadth (all weights 100–900, italic with ss02) rather than bringing in a separate serif. The trade-off: no Fraunces editorial warmth; in exchange, a single coherent voice.
 
 **5. Generous vertical rhythm.** Section padding is 80px vertical on desktop. Hero sections get 80–100px. Cards have 24–28px internal padding. The layout should feel **unhurried**, like a journal you read cover to cover rather than a dashboard you scan.
 
@@ -452,86 +452,106 @@ Using them in navigation or buttons breaks the color hierarchy.
 ### 5.1 Font Families
 
 ```css
---serif: 'Fraunces', Georgia, serif;
---sans:  'Inter', system-ui, sans-serif;
---mono:  'MonoLisa', 'JetBrains Mono', 'Fira Code', monospace;
+--serif: 'MonoLisa', 'MonoLisa Fallback', Consolas, Menlo, Monaco, 'DejaVu Sans Mono', monospace;
+--sans:  'MonoLisa', 'MonoLisa Fallback', Consolas, Menlo, Monaco, 'DejaVu Sans Mono', monospace;
+--mono:  'MonoLisa', 'MonoLisa Fallback', 'JetBrains Mono', Consolas, monospace;
 ```
 
+The `--serif` and `--sans` variables are kept as aliases to `--mono` so existing imports resolve, but all three resolve to the same MonoLisa stack. The editorial accent comes from **italic + `ss02` stylistic set**, not from a second font. `ss02` is enabled globally on `html` via `font-feature-settings: "ss02"` — it only affects glyphs rendered with `font-style: italic`, so upright text is unaffected.
+
 **Loading:**
-- **Fraunces**: free, Open Font License. Load via Google Fonts CDN.
-- **Inter**: free, Open Font License. Load via Google Fonts CDN or self-host.
-- **JetBrains Mono**: free, Open Font License. Fallback for MonoLisa.
-- **MonoLisa**: commercial license required. Self-hosted with `@font-face` rules. Licensed per developer — check the license terms before deploying to production. The site should function gracefully if MonoLisa isn't loaded (fallback chain handles this).
+- **MonoLisa 2.017**: commercial license required. Self-hosted on GCS (`gs://anyplot-static/fonts/`) as 64 Unicode-range subsets (woff2, variable 100–900 weights, normal + italic). The italic subsets ship with the `ss02` feature table intact — critical for the script variant. CORS restricted to `anyplot.ai` + localhost.
+- **MonoLisa Fallback**: `@font-face` with `local('Consolas'), local('Menlo'), local('Monaco'), local('DejaVu Sans Mono')` + size-adjust metrics — prevents CLS while the webfont loads.
+- **No Google Fonts**: Fraunces and Inter were removed in favor of MonoLisa-only. ~40–60 KB transfer + one handshake saved.
 
 ### 5.2 Type Roles
 
-The key rule: **mono is the default, serif is the editorial accent, sans is the rare fallback.** Most text on the site is MonoLisa — body, UI, navigation, buttons, labels. Fraunces appears only at hero and section-title moments. Inter is reserved for places where MonoLisa would fatigue (legal text, long-form blog body, dense data tables).
+The key rule: **mono is the default, italic-ss02 is the editorial accent.** Everything is MonoLisa. Upright for structure, italic (which triggers ss02 script glyphs) for emphasis. No second font.
 
-| Element                | Font    | Size                       | Weight | Notes                                                       |
-|------------------------|---------|----------------------------|--------|-------------------------------------------------------------|
-| Display headlines      | serif   | `clamp(48, 7vw, 96px)`     | 400    | Hero only. With italic green accent word.                   |
-| Section titles         | serif   | `clamp(36, 4.5vw, 56px)`   | 400    | Italic green on key word. Preceded by a mono shell prompt.  |
-| Shell prompt prefix    | mono    | 0.6× section-title size    | 500    | `❯` `$` `~/path/` — colored `--ink-muted`, sits before the title |
-| Body paragraph         | mono    | 14–15px                    | 400    | Default body text                                           |
-| Body lede              | serif   | 20px                       | 300    | Long-form intro paragraph (rare, blog/about only)           |
-| Long-form prose        | sans    | 16px                       | 400    | Inter — only for legal/about/blog where mono would fatigue  |
-| Eyebrow / Kicker       | mono    | 11px                       | 500    | Uppercase, tracked `.15em`                                  |
-| UI labels & buttons    | mono    | 12–13px                    | 500    | Buttons read as method calls: `.copy()`, `.open()`          |
-| Navigation links       | mono    | 14px                       | 500    | Active state: green `•` prefix                              |
-| Code / logo            | mono    | context-dependent          | 700    | Logo uses `any.plot()` syntax                               |
-| Stats / numerals       | serif   | 56px                       | 300    | Italic accent on key digit                                  |
-| Inline code in prose   | mono    | inherits ×0.95             | 500    | Background `--bg-elevated`, padding 2–4px, radius 3px       |
+| Element                | Variant           | Size                       | Weight | Notes                                                           |
+|------------------------|-------------------|----------------------------|--------|-----------------------------------------------------------------|
+| Display headlines      | mono + script     | `clamp(44, 4.5vw, 76px)`   | 400–700| Hero H1 mixes upright bold (code token) + italic-script (prose accent). |
+| Section titles         | mono italic + ss02| `clamp(36, 4.5vw, 56px)`   | 300–400| Script variant on title word. Preceded by a shell prompt.       |
+| Shell prompt prefix    | mono upright      | 0.6× section-title size    | 500    | `❯` `$` `~/path/` — `--ink-muted`, sits before the title.        |
+| Body paragraph         | mono upright      | 14–16px                    | 300–400| Default body text. Lowercase preferred.                         |
+| Intro / lede           | mono upright      | 18–19px                    | 300–500| Paragraph under H1. Subtitle (`one spec · every library…`) at 500. |
+| Tagline                | mono italic + ss02| 18–22px                    | 400    | Script variant, e.g. `steal like an artist.`                    |
+| Eyebrow / Kicker       | mono upright      | 11px                       | 400    | Lowercase, tracked `.08em`, preceded by a 18×1px green rule.    |
+| UI labels & buttons    | mono upright      | 12–13px                    | 500    | Buttons lowercase, e.g. `browse plots →`.                       |
+| Navigation links       | mono upright      | 14px                       | 500    | Active state: green `•` prefix.                                 |
+| Code / logo            | mono upright      | context-dependent          | 700    | Logo: `any.plot()` with green dot and ghosted `()`.             |
+| Stats / numerals       | mono upright      | 24–32px                    | 600    | Quiet support — no italic/green accents on numerals anymore.    |
+| Emphasis in body       | mono italic + ss02| inherits                   | inherit| `<em>your</em>` reads as script within upright prose.           |
+| Inline code in prose   | mono upright      | inherits ×0.95             | 500    | Background `--bg-elevated`, padding 2–4px, radius 3px.          |
 
 ### 5.3 Display Type Construction
 
-The hero block sits inside a terminal-style box (see §7.1) and is built from four typographic layers:
+The hero is a split-column layout: editorial text on the left (paper-tier), terminal-framed plot-of-the-day on the right (catalog-tier). The full-width "terminal box" around everything was dropped; the plot panel alone carries the terminal metaphor now.
 
 ```
-┌─ ~/anyplot ──────────────────────┐
-│                                  │
-│ ❯ any.plot() — any library.      │  ← line 1: mono prompt + wordmark + em-dash + serif italic accent
-│                                  │
-│ get inspired.                    │  ← lines 3–5: mono lowercase, large weight 500
-│ grab the code.                   │
-│ make it yours._▌                 │  ← line 5 ends with blinking cursor (see §8.2)
-│                                  │
-│ [.start()]  [.browse()]          │  ← line 7: code-style action buttons (see §7.4)
-│                                  │
-└──────────────────────────────────┘
+— the open plot catalogue           ┌─ ~/anyplot ──────────────────┐
+                                    │ $ python plots/…/plotly.py  │
+any.plot()                          │                             │
+— any library.                      │  [plot rendered here]       │
+                                    │                             │
+one spec · every library ·          │                             │
+always current.                     │                             │
+                                    │                             │
+every plot begins as a              │                             │
+library-agnostic spec…              │                             │
+                                    │                             │
+steal like an artist._▌             │                             │
+                                    │                             │
+[browse plots →]  or connect via    └─────────────────────────────┘
+                  mcp / github →
+────────────────────────────────────────────────────────────────
+ 1            9          310           2,677         441k
+ languages    libraries  specifications implementations lines of code
 ```
 
-**Line 1 construction:**
-- `❯ ` — MonoLisa, weight 500, color `--ink-muted`, scaled to 0.7× line-height
-- `any.plot()` — MonoLisa Bold, color `--ink`, with `.` in `--ok-green` scaled 1.45×
-- ` — ` — em-dash with surrounding spaces, MonoLisa, color `--ink-muted`
-- `any library.` — Fraunces italic, weight 300, color `--ok-green`
+**H1 construction (two lines):**
+- Line 1: `any.plot()` — MonoLisa Bold (700), upright, with `.` in `--ok-green` (circle via `scale(1.3)`), ghosted `()` at opacity 0.45. This matches the NavBar logo exactly for brand consistency.
+- Line 2: `— any library.` — MonoLisa italic + `ss02`, weight 400, same 0.75em size as `any.plot()` so heights align. The script variant reads as the editorial subline.
+- Size: `clamp(2.75rem, 4.5vw, 4.75rem)` on the H1 container, with `0.75em` on both spans.
 
-**Lines 3–5 construction (the user-journey triplet):**
-- MonoLisa, weight 500, color `--ink`
-- Each line is a complete sentence ending in `.`, lowercase
-- Last line ends with `_` (underscore) followed by a `▌` (block cursor) that blinks (see animation §8.2)
+**Layer hierarchy (top to bottom, left column):**
+1. **Eyebrow** — `— the open plot catalogue`, lowercase, 11px MonoLisa upright, `--ok-green`, tracked `.08em`, preceded by 18×1px green rule.
+2. **H1** — see above.
+3. **Subtitle** — `one spec · every library · always current.`, MonoLisa upright weight 500, 18px, `--ink`. Must fit on one line (`whiteSpace: nowrap` + stepped responsive size).
+4. **Intro prose** — 4–6 lines MonoLisa upright weight 300, `--ink-soft`, 18px. `<em>your</em>` renders as italic-ss02 script accent inline.
+5. **Tagline** — `steal like an artist.`, MonoLisa italic + `ss02`, 22px. Typed out by TypewriterText (see §8.1) at ~68ms/char, with a trailing green block cursor that fades 2.5s after typing completes.
+6. **CTAs** — primary black pill `browse plots →`, two stacked text-links next to it: `or connect via mcp →`, `or clone on github →`. Lowercase throughout.
+7. **NumbersStrip** — single `borderTop`, five quiet stats (1.5rem MonoLisa weight 600 in `--ink-soft`), labels 12px `--ink-muted`. Hangs directly under the hero inside the same 88svh section so the libraries peek below.
 
 CSS sketch:
 
 ```css
-.hero {
+.hero-h1 {
   font-family: var(--mono);
-  font-size: clamp(20px, 2.2vw, 32px);
-  line-height: 1.5;
+  font-size: clamp(2.75rem, 4.5vw, 4.75rem);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
   color: var(--ink);
 }
-.hero .prompt    { color: var(--ink-muted); margin-right: 0.4em; }
-.hero .wordmark  { font-weight: 700; }
-.hero .wordmark .dot { color: var(--ok-green); display: inline-block; transform: scale(1.45); }
-.hero .accent    { font-family: var(--serif); font-style: italic; font-weight: 300; color: var(--ok-green); }
-.hero .triplet   { margin-top: 1.5em; font-weight: 500; }
-.hero .cursor    { display: inline-block; width: 0.6em; background: var(--ok-green); animation: blink 1s steps(2) infinite; }
+.hero-h1 .wordmark  { font-weight: 700; font-size: 0.75em; letter-spacing: -0.02em; }
+.hero-h1 .dot       { background: var(--ok-green); border-radius: 50%; /* circle */ }
+.hero-h1 .parens    { font-weight: 400; opacity: 0.45; }
+.hero-h1 .accent    {
+  font-style: italic;
+  font-feature-settings: "ss02";   /* script variant */
+  font-weight: 400;
+  font-size: 0.75em;
+  white-space: nowrap;
+}
+.hero-tagline       { font-style: italic; font-feature-settings: "ss02"; }
+.hero-cursor        { width: 0.55em; background: var(--ok-green); animation: blink 1s steps(2) infinite; transition: opacity 0.6s; }
 @keyframes blink { 50% { opacity: 0; } }
 ```
 
-**Stat/numeral display construction (used for big counts on landing/about):**
-- Number in Fraunces 56px weight 300, with the most striking digit in italic + brand green
-- Label below in MonoLisa uppercase 11px tracked `.15em`
+**NumbersStrip construction** (quiet proof-strip, not dominant numerals):
+- Number in MonoLisa weight 600, 24–28px, `--ink-soft`, no italic, no accent color.
+- Label below in MonoLisa lowercase 12px, `--ink-muted`, tracked `.04em`.
+- Single `borderTop: 1px solid var(--rule)`, no bottom border (matches section-header convention).
 
 ### 5.4 Plot-internal Typography
 
@@ -602,7 +622,7 @@ $ plots
 
 - **Prefix glyph**: `❯` for navigation/categorical sections, `$` for action/list sections, `~/path/` for hierarchical/about/meta sections
 - **Prefix font**: MonoLisa weight 500, color `--ink-muted`, scaled to ~0.6× the title size
-- **Title font**: Fraunces 1.6–2rem weight 400, optionally with one italic green accent word
+- **Title font**: MonoLisa italic + `ss02` stylistic set, 1.6–2rem weight 400, `--ok-green` — the script variant reads as the editorial accent (e.g. `libraries`, `specs`)
 - **Underline**: 1px solid `--rule`, full container width, sits 8–12px below the title baseline
 
 The pattern reads as if the user just typed a command and got a section as output. It collapses the editorial "Section §01" framing into something more native to the visitor.
@@ -612,10 +632,10 @@ The pattern reads as if the user just typed a command and got a section as outpu
 The site opens with a thin horizontal rule displaying:
 
 ```
-~/anyplot · v1 · spring 2026 │ any library. one plot. │ ◐ theme
+~/anyplot.ai · main · v1.1.0 │ // the open plot catalogue. │ ◐ dark
 ```
 
-Lowercase, monospace, three sections separated by `│` (U+2502). The `◐` is a half-circle theme toggle. This is a tiny but high-impact element — immediately positions the site as a tool/publication hybrid rather than a marketing page.
+Lowercase, monospace, three slots. The left slot shows the domain + git branch + current release tag (the tag is fetched live from the GitHub releases API with 24h localStorage cache); `main` links to the branch tree, the version links to the release page. The center slot is a code-comment-style sub-tagline. The right slot is a `◐` half-circle theme toggle. This bar immediately positions the site as a tool/publication hybrid rather than a marketing page, and puts the domain in view at all times.
 
 ### 6.5 Library Grid
 
@@ -625,9 +645,11 @@ In catalog tier (`max-width: 2200px`): `grid-template-columns: repeat(auto-fill,
 
 ## 7. Components
 
-### 7.1 Hero Terminal Box
+### 7.1 Hero Terminal Box (scoped to the plot panel)
 
-The landing hero sits inside a single ASCII-style box drawn with CSS borders. The box framing makes the hero feel like a terminal window and gives the typed-out content a natural container.
+**Status update**: The terminal-box framing no longer wraps the full hero. The left column is now plain editorial text; only the **plot-of-the-day panel on the right** keeps the terminal treatment (with a `~/anyplot` tab label and a `$ python …` prompt header). The CSS below still applies to that panel. See §5.3 for the current hero structure.
+
+The plot panel sits inside a single ASCII-style box drawn with CSS borders. The box framing makes the panel feel like a terminal window rendered on editorial paper.
 
 ```
 ┌─ ~/anyplot ──────────────────────┐
@@ -883,15 +905,16 @@ Hero box rises from 8px below with opacity transition:
 
 Staggered via `animation-delay`:
 
-- Terminal box border: 0s
-- Hero line 1 (prompt + wordmark + accent): 0.1s
-- Triplet line 1 (`get inspired.`): 0.4s
-- Triplet line 2 (`grab the code.`): 0.5s
-- Triplet line 3 (`make it yours._▌`): 0.6s
-- Action buttons: 0.8s
-- Side plot stacks (ultrawide only): 0.4s
+- Eyebrow (`— the open plot catalogue`): 0s
+- H1 line 1 (`any.plot()`): 0.1s
+- H1 line 2 (`— any library.` script): 0.1s
+- Subtitle (`one spec · every library · always current.`): 0.15s
+- Intro paragraph: 0.2s
+- Tagline (TypewriterText, typed at ~68ms/char; cursor fades 2.5s after done): 0.25s
+- CTAs: 0.3s
+- Plot-of-the-day terminal panel (right column): 0.3s
 
-Total sequence: ~1.0s. Slightly longer than typical because the staggered triplet is part of the hero's "code typing itself out" feel.
+Total initial cascade: ~0.8s, plus the tagline types for another ~1.4s. The TypewriterText effect on the tagline is what makes the hero feel like code being written out; no per-line triplet animation anymore.
 
 ### 8.2 Hero Cursor (Blinking)
 
@@ -1068,7 +1091,7 @@ For CSS:
 - **Pure white or pure black backgrounds**: harsh, removes the warmth, makes plots look awkward against them.
 - **Branded loading spinners**: a plain loading indicator is fine. A branded animated logo is overkill.
 - **Generic stock imagery**: no isometric illustrations, no people high-fiving, no laptop-on-desk hero shots. Plots are our imagery.
-- **Fonts beyond the three chosen**: no Space Grotesk, no Poppins, no Inter Tight, no experiments with IBM Plex Serif. Three fonts is the system.
+- **A second typeface**: no Space Grotesk, no Poppins, no Fraunces, no Inter. MonoLisa is the only face; italic + `ss02` is the only "second voice." Reaching for a serif for warmth or a sans for legal text undoes the single-face discipline.
 
 ### 10.2 Brand
 
@@ -1104,9 +1127,10 @@ The design system is implemented across:
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>anyplot.ai — any library. one plot.</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
+  <!-- MonoLisa basic-latin preload (variable font, all weights in one file) -->
+  <link rel="preload" href="https://storage.googleapis.com/anyplot-static/fonts/0-MonoLisa-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="https://storage.googleapis.com/anyplot-static/fonts/2-MonoLisa-normal.woff2" as="font" type="font/woff2" crossorigin>
   <style>
     :root {
       /* Okabe-Ito palette — full 7 + adaptive neutral */
@@ -1129,10 +1153,10 @@ The design system is implemented across:
       --ink-muted:   #8A8A82;
       --rule:        rgba(26, 26, 23, 0.10);
 
-      /* Typography roles */
-      --serif: 'Fraunces', Georgia, serif;
-      --sans:  'Inter', system-ui, sans-serif;
-      --mono:  'MonoLisa', 'JetBrains Mono', 'Fira Code', monospace;
+      /* Typography — MonoLisa only. serif/sans aliased for compatibility. */
+      --serif: 'MonoLisa', 'MonoLisa Fallback', Consolas, Menlo, Monaco, monospace;
+      --sans:  'MonoLisa', 'MonoLisa Fallback', Consolas, Menlo, Monaco, monospace;
+      --mono:  'MonoLisa', 'MonoLisa Fallback', 'JetBrains Mono', Consolas, monospace;
 
       /* Layout */
       --gutter: 24px;
@@ -1150,8 +1174,11 @@ The design system is implemented across:
       --rule:        rgba(240, 239, 232, 0.10);
     }
 
+    /* Global: enable ss02 so any italic text renders as the script variant. */
+    html { font-feature-settings: "ss02"; }
+
     body {
-      font-family: var(--sans);
+      font-family: var(--mono);
       background: var(--bg-page);
       color: var(--ink);
       font-size: 16px;
@@ -1190,8 +1217,8 @@ Eventually, once the project is mature, consider writing a JOSS (Journal of Open
 **Non-web visual identity:**
 
 - **GitHub profile images**: square variant of the logo: `any.plot()` in MonoLisa Bold, centered, on warm off-white background (`#F5F3EC`). Green dot at `#009E73`. Maintain 1em padding from edges.
-- **OG / Twitter card images**: 1200×630px. Top-left: `anyplot.ai` logo. Center-left: page title in Fraunces serif, italic accent on one word. Center-right: representative plot screenshot or palette strip. Bottom: minimal meta in mono.
-- **Presentations**: black or warm off-white backgrounds. Sans-serif (Inter or MonoLisa) body. Fraunces for section dividers. Brand green only for emphasis. Every plot in the deck uses Okabe-Ito.
+- **OG / Twitter card images**: 1200×630px. Top-left: `anyplot.ai` logo in MonoLisa Bold. Center-left: page title in MonoLisa — bold upright for the subject, italic + ss02 script for one accent word. Center-right: representative plot screenshot or palette strip. Bottom: minimal meta in mono.
+- **Presentations**: black or warm off-white backgrounds. MonoLisa throughout — upright for body, italic-script for section dividers. Brand green only for emphasis. Every plot in the deck uses Okabe-Ito.
 - **T-shirts / merch (if ever)**: dark t-shirt, `any.plot()` in white with green dot, centered on chest. No taglines, no URLs, no GitHub handles. One variant only.
 
 ---
