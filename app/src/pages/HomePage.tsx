@@ -196,7 +196,7 @@ export function HomePage() {
       {showHero && (
         <>
           <MastheadRule />
-          <HeroSection stats={stats} />
+          <HeroSection />
           <NumbersStrip stats={stats} />
           <LibrariesSection libraries={librariesData} onLibraryClick={handleLibraryClick} />
           <CodeShowcase />

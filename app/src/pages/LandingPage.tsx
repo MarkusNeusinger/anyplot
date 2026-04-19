@@ -56,7 +56,7 @@ export function LandingPage() {
           }}
         >
           <Container maxWidth={false} sx={catalogContainerSx}>
-            <HeroSection stats={stats} potd={potd} />
+            <HeroSection potd={potd} />
             <NumbersStrip stats={stats} />
           </Container>
         </Box>

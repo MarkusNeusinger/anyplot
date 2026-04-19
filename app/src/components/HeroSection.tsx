@@ -7,7 +7,6 @@ import { PlotOfTheDayTerminal } from './PlotOfTheDayTerminal';
 import type { PlotOfTheDayData } from '../hooks/usePlotOfTheDay';
 
 interface HeroSectionProps {
-  stats: { specs: number; plots: number; libraries: number; lines_of_code?: number } | null;
   potd?: PlotOfTheDayData | null;
 }
 
@@ -17,7 +16,7 @@ interface HeroSectionProps {
  * on ultrawide. Each landing-page section below mirrors this width so the
  * page reads as one continuous grid.
  */
-export function HeroSection({ stats, potd = null }: HeroSectionProps) {
+export function HeroSection({ potd = null }: HeroSectionProps) {
   return (
     <Box
       sx={{

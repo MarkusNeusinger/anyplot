@@ -1,5 +1,5 @@
 import Box from '@mui/material/Box';
-import { colors, typography } from '../theme';
+import { typography } from '../theme';
 
 interface NumbersStripProps {
   stats: { specs: number; plots: number; libraries: number; lines_of_code?: number } | null;
