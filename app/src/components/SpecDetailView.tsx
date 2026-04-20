@@ -227,7 +227,7 @@ export function SpecDetailView({
           </Box>
 
           <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
-            <Tooltip title="Show static preview" disableFocusListener>
+            <Tooltip title=".preview()" disableFocusListener>
               <IconButton
                 onClick={() => {
                   onViewModeChange('preview');
@@ -240,7 +240,7 @@ export function SpecDetailView({
                 <ImageOutlinedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Open Raw HTML" disableFocusListener>
+            <Tooltip title=".raw()" disableFocusListener>
               <IconButton
                 onClick={() => window.open(currentImpl.preview_html, '_blank', 'noopener,noreferrer')}
                 aria-label="Open raw HTML"
@@ -329,7 +329,7 @@ export function SpecDetailView({
               pointerEvents: 'none',
               zIndex: 2,
             }}>
-              {codeCopied === currentImpl.library_id ? '>>> copied' : '>>> downloaded'}
+              {codeCopied === currentImpl.library_id ? '>>> .copied' : '>>> .downloaded'}
             </Box>
           )}
 
@@ -338,7 +338,7 @@ export function SpecDetailView({
             sx={{ position: 'absolute', top: 8, right: 8, display: zoomed ? 'none' : 'flex', gap: 0.5 }}
           >
             {currentImpl && (
-              <Tooltip title="Copy Code" disableFocusListener>
+              <Tooltip title=".copy()" disableFocusListener>
                 <IconButton
                   onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onCopyCode(currentImpl); }}
                   aria-label="Copy code"
@@ -350,7 +350,7 @@ export function SpecDetailView({
               </Tooltip>
             )}
             {currentImpl && (
-              <Tooltip title="Download PNG" disableFocusListener>
+              <Tooltip title=".download()" disableFocusListener>
                 <IconButton
                   onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onDownload(currentImpl); }}
                   aria-label="Download PNG"
@@ -362,7 +362,7 @@ export function SpecDetailView({
               </Tooltip>
             )}
             {interactiveAvailable && (
-              <Tooltip title="Show Interactive" disableFocusListener>
+              <Tooltip title=".open()" disableFocusListener>
                 <IconButton
                   onClick={() => {
                     onViewModeChange('interactive');

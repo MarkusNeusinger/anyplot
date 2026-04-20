@@ -119,26 +119,26 @@ describe('SpecDetailView', () => {
     expect(screen.queryByText('1/1')).not.toBeInTheDocument();
   });
 
-  it('shows ">>> copied" overlay when codeCopied matches current library', () => {
+  it('shows ">>> .copied" overlay when codeCopied matches current library', () => {
     render(
       <SpecDetailView {...defaultProps} codeCopied="matplotlib" />,
     );
-    expect(screen.getByText('>>> copied')).toBeInTheDocument();
+    expect(screen.getByText('>>> .copied')).toBeInTheDocument();
   });
 
-  it('shows ">>> downloaded" overlay when downloadDone matches current library', () => {
+  it('shows ">>> .downloaded" overlay when downloadDone matches current library', () => {
     render(
       <SpecDetailView {...defaultProps} downloadDone="matplotlib" />,
     );
-    expect(screen.getByText('>>> downloaded')).toBeInTheDocument();
+    expect(screen.getByText('>>> .downloaded')).toBeInTheDocument();
   });
 
   it('does not show overlay when codeCopied does not match current library', () => {
     render(
       <SpecDetailView {...defaultProps} codeCopied="plotly" />,
     );
-    expect(screen.queryByText('>>> copied')).not.toBeInTheDocument();
-    expect(screen.queryByText('>>> downloaded')).not.toBeInTheDocument();
+    expect(screen.queryByText('>>> .copied')).not.toBeInTheDocument();
+    expect(screen.queryByText('>>> .downloaded')).not.toBeInTheDocument();
   });
 
   it('toggles zoom on click via aria-label change', async () => {

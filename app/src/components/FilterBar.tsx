@@ -450,7 +450,7 @@ export function FilterBar({
             '&:focus': isSearchExpanded ? {} : { outline: `2px solid ${colors.primary}`, outlineOffset: 2 },
           }}
         >
-          <Tooltip title={isSearchExpanded ? '' : 'search'}>
+          <Tooltip title={isSearchExpanded ? '' : '.find()'}>
             <SearchIcon
               className="search-icon"
               sx={{
@@ -469,7 +469,7 @@ export function FilterBar({
             id="filter-search"
             name="filter-search"
             inputProps={{ 'aria-label': selectedCategory ? `Search ${FILTER_LABELS[selectedCategory]}` : 'Search filters' }}
-            placeholder={selectedCategory ? FILTER_LABELS[selectedCategory] : ''}
+            placeholder={selectedCategory ? FILTER_LABELS[selectedCategory] : '.find(_)'}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);

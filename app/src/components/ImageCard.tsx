@@ -207,7 +207,7 @@ export const ImageCard = memo(function ImageCard({
             pointerEvents: 'none',
             zIndex: 2,
           }}>
-            {'>>> copied'}
+            {'>>> .copied'}
           </Box>
         )}
         {/* Copy button - appears on hover */}

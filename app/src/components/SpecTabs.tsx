@@ -329,7 +329,7 @@ export function SpecTabs({
       {!overviewMode && (
         <TabPanel value={tabIndex} index={0}>
           <Box sx={{ position: 'relative' }}>
-            <Tooltip title={copied ? 'Copied!' : 'Copy code'}>
+            <Tooltip title={copied ? '.copied' : '.copy()'}>
               <IconButton
                 onClick={handleCopy}
                 aria-label="Copy code"

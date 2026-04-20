@@ -24,10 +24,11 @@ interface ToolbarActionsProps {
  */
 export function PlotsLink() {
   return (
-    <Tooltip title="plots">
+    <Tooltip title="plots.list()">
       <Box
         component={Link}
         to="/plots"
+        aria-label="Browse plots"
         sx={{
           display: 'flex',
           alignItems: 'center',
@@ -62,7 +63,7 @@ export function GridSizeToggle({ imageSize, onImageSizeChange, onTrackEvent }: T
   };
 
   return (
-    <Tooltip title={imageSize === 'normal' ? 'compact view' : 'normal view'}>
+    <Tooltip title={imageSize === 'normal' ? '.compact()' : '.normal()'}>
       <Box
         role="button"
         tabIndex={0}

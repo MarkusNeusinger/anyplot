@@ -157,25 +157,25 @@ describe('SpecOverview', () => {
     expect(skeleton).toBeInTheDocument();
   });
 
-  it('shows ">>> copied" overlay when codeCopied matches a library_id', () => {
+  it('shows ">>> .copied" overlay when codeCopied matches a library_id', () => {
     render(
       <SpecOverview {...defaultProps} codeCopied="matplotlib" />,
     );
-    expect(screen.getByText('>>> copied')).toBeInTheDocument();
+    expect(screen.getByText('>>> .copied')).toBeInTheDocument();
   });
 
-  it('shows ">>> downloaded" overlay when downloadDone matches a library_id', () => {
+  it('shows ">>> .downloaded" overlay when downloadDone matches a library_id', () => {
     render(
       <SpecOverview {...defaultProps} downloadDone="plotly" />,
     );
-    expect(screen.getByText('>>> downloaded')).toBeInTheDocument();
+    expect(screen.getByText('>>> .downloaded')).toBeInTheDocument();
   });
 
   it('does not show overlay when codeCopied does not match any library_id', () => {
     render(
       <SpecOverview {...defaultProps} codeCopied="nonexistent" />,
     );
-    expect(screen.queryByText('>>> copied')).not.toBeInTheDocument();
-    expect(screen.queryByText('>>> downloaded')).not.toBeInTheDocument();
+    expect(screen.queryByText('>>> .copied')).not.toBeInTheDocument();
+    expect(screen.queryByText('>>> .downloaded')).not.toBeInTheDocument();
   });
 });
