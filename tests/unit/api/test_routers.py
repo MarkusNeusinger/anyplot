@@ -147,11 +147,14 @@ class TestStatsRouter:
         mock_lib_repo = MagicMock()
         mock_lib_repo.get_all = AsyncMock(return_value=[mock_lib])
 
+        mock_impl_repo = MagicMock()
+        mock_impl_repo.get_total_code_lines = AsyncMock(return_value=0)
+
         with (
             patch("api.routers.stats.get_or_set_cache", side_effect=_passthrough_cache),
-            patch("api.routers.stats.get_cache", return_value=None),
             patch("api.routers.stats.SpecRepository", return_value=mock_spec_repo),
             patch("api.routers.stats.LibraryRepository", return_value=mock_lib_repo),
+            patch("api.routers.stats.ImplRepository", return_value=mock_impl_repo),
         ):
             response = client.get("/stats")
             assert response.status_code == 200
@@ -673,7 +676,7 @@ class TestOgImagesRouter:
     def test_get_branded_impl_image_no_db(self, client: TestClient) -> None:
         """Should return 503 when DB not available."""
         with patch(DB_CONFIG_PATCH, return_value=False):
-            response = client.get("/og/scatter-basic/matplotlib.png")
+            response = client.get("/og/scatter-basic/python/matplotlib.png")
             assert response.status_code == 503
 
     def test_get_branded_impl_image_spec_not_found(self, db_client) -> None:
@@ -684,7 +687,7 @@ class TestOgImagesRouter:
         mock_spec_repo.get_by_id = AsyncMock(return_value=None)
 
         with patch("api.routers.og_images.SpecRepository", return_value=mock_spec_repo):
-            response = client.get("/og/nonexistent/matplotlib.png")
+            response = client.get("/og/nonexistent/python/matplotlib.png")
             assert response.status_code == 404
 
     def test_get_branded_impl_image_impl_not_found(self, db_client, mock_spec) -> None:
@@ -696,7 +699,7 @@ class TestOgImagesRouter:
 
         with patch("api.routers.og_images.SpecRepository", return_value=mock_spec_repo):
             # Request a library that doesn't exist in mock_spec
-            response = client.get("/og/scatter-basic/nonexistent.png")
+            response = client.get("/og/scatter-basic/python/nonexistent.png")
             assert response.status_code == 404
 
     def test_get_branded_impl_image_cached(self, db_client) -> None:
@@ -705,7 +708,7 @@ class TestOgImagesRouter:
 
         cached_bytes = b"fake png data"
         with patch("api.routers.og_images.get_cache", return_value=cached_bytes):
-            response = client.get("/og/scatter-basic/matplotlib.png")
+            response = client.get("/og/scatter-basic/python/matplotlib.png")
             assert response.status_code == 200
             assert response.headers["content-type"] == "image/png"
             assert response.content == cached_bytes
@@ -774,7 +777,7 @@ class TestOgImagesRouter:
             patch("api.routers.og_images._fetch_image", new_callable=AsyncMock, return_value=fake_image_bytes),
             patch("api.routers.og_images.create_branded_og_image", return_value=fake_branded_bytes),
         ):
-            response = client.get("/og/scatter-basic/matplotlib.png")
+            response = client.get("/og/scatter-basic/python/matplotlib.png")
             assert response.status_code == 200
             assert response.headers["content-type"] == "image/png"
             assert response.headers["cache-control"] == "public, max-age=3600"
@@ -821,7 +824,7 @@ class TestOgImagesRouter:
 
         cached_bytes = b"fake png data"
         with patch("api.routers.og_images.get_cache", return_value=cached_bytes):
-            response = client.get("/og/scatter-basic/matplotlib.png")
+            response = client.get("/og/scatter-basic/python/matplotlib.png")
             assert response.status_code == 200
             assert response.headers["cache-control"] == "public, max-age=3600"
 
@@ -1519,6 +1522,8 @@ class TestInsightsRouter:
         mock_impl1.quality_score = 90.0
         mock_impl1.preview_url = TEST_IMAGE_URL
         mock_impl1.impl_tags = {}
+        mock_impl1.library = MagicMock()
+        mock_impl1.library.language = "python"
 
         mock_spec1 = MagicMock()
         mock_spec1.id = "scatter-basic"
@@ -1531,6 +1536,8 @@ class TestInsightsRouter:
         mock_impl2.quality_score = 88.0
         mock_impl2.preview_url = TEST_IMAGE_URL
         mock_impl2.impl_tags = {}
+        mock_impl2.library = MagicMock()
+        mock_impl2.library.language = "python"
 
         mock_spec2 = MagicMock()
         mock_spec2.id = "scatter-regression"
@@ -1575,6 +1582,8 @@ class TestInsightsRouter:
         mock_impl1.quality_score = 90.0
         mock_impl1.preview_url = TEST_IMAGE_URL
         mock_impl1.impl_tags = {"techniques": ["annotations"], "patterns": ["data-generation"]}
+        mock_impl1.library = MagicMock()
+        mock_impl1.library.language = "python"
 
         mock_spec1 = MagicMock()
         mock_spec1.id = "scatter-basic"
@@ -1587,6 +1596,8 @@ class TestInsightsRouter:
         mock_impl2.quality_score = 85.0
         mock_impl2.preview_url = TEST_IMAGE_URL
         mock_impl2.impl_tags = {"techniques": ["annotations"], "patterns": ["other"]}
+        mock_impl2.library = MagicMock()
+        mock_impl2.library.language = "python"
 
         mock_spec2 = MagicMock()
         mock_spec2.id = "bar-annotated"

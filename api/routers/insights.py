@@ -380,7 +380,15 @@ async def _build_potd(spec_repo: SpecRepository, impl_repo: ImplRepository) -> P
             if impl.quality_score is not None and impl.quality_score >= 90 and impl.preview_url:
                 language = impl.library.language if impl.library else "python"
                 candidates.append(
-                    (spec.id, spec.title, spec.description or "", impl.library_id, language, impl.quality_score, impl.preview_url)
+                    (
+                        spec.id,
+                        spec.title,
+                        spec.description or "",
+                        impl.library_id,
+                        language,
+                        impl.quality_score,
+                        impl.preview_url,
+                    )
                 )
 
     if not candidates:

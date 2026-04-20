@@ -11,7 +11,11 @@ export function specPath(specId: string, language?: string, library?: string): s
   return `/${specId}`;
 }
 
-/** Reserved top-level paths that must never be assigned as spec ids. */
+/**
+ * Reserved top-level paths that must never be assigned as spec ids.
+ *
+ * Keep in sync with `RESERVED_SLUGS` in `.github/workflows/spec-create.yml`.
+ */
 export const RESERVED_TOP_LEVEL = new Set([
   'plots',
   'specs',
@@ -22,6 +26,8 @@ export const RESERVED_TOP_LEVEL = new Set([
   'mcp',
   'stats',
   'debug',
+  'api',
+  'og',
   'sitemap.xml',
   'robots.txt',
 ]);

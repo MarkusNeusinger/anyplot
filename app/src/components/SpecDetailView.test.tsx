@@ -24,7 +24,6 @@ const implB = makeImpl({ library_id: 'matplotlib', library_name: 'Matplotlib' })
 const implC = makeImpl({ library_id: 'plotly', library_name: 'Plotly', preview_html: '<div>interactive</div>' });
 
 const defaultProps = {
-  specId: 'scatter-basic',
   specTitle: 'Basic Scatter Plot',
   selectedLibrary: 'matplotlib',
   currentImpl: implB,

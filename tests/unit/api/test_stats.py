@@ -2,10 +2,8 @@
 Tests for api/routers/stats.py — stats endpoint and _refresh_stats factory.
 
 Covers:
-- _refresh_stats() with cached data (lines 21-29)
-- _refresh_stats() with DB fallback (lines 31-39)
-- _fetch() inner function deriving stats from cached responses (line 57-62)
-- Stats with specs that have no implementations
+- _refresh_stats() DB query path
+- /stats endpoint with empty and populated specs
 """
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -58,33 +56,8 @@ def db_client():
 class TestStatsRefreshFactory:
     """Tests for the _refresh_stats standalone factory function."""
 
-    async def test_refresh_stats_derives_from_cached_data(self) -> None:
-        """_refresh_stats should derive stats from cached specs_list and libraries."""
-        # Create mock cached specs (each item needs .library_count)
-        mock_spec_item_1 = MagicMock()
-        mock_spec_item_1.library_count = 3
-        mock_spec_item_2 = MagicMock()
-        mock_spec_item_2.library_count = 2
-
-        cached_specs = [mock_spec_item_1, mock_spec_item_2]
-        cached_libs = {"libraries": [{"id": "matplotlib"}, {"id": "seaborn"}, {"id": "plotly"}]}
-
-        def fake_get_cache(key):
-            if "specs_list" in key:
-                return cached_specs
-            if "libraries" in key:
-                return cached_libs
-            return None
-
-        with patch("api.routers.stats.get_cache", side_effect=fake_get_cache):
-            result = await _refresh_stats()
-
-        assert result.specs == 2
-        assert result.plots == 5  # 3 + 2
-        assert result.libraries == 3
-
-    async def test_refresh_stats_falls_back_to_db(self) -> None:
-        """_refresh_stats should query DB when no cached data is available."""
+    async def test_refresh_stats_queries_db(self) -> None:
+        """_refresh_stats should derive stats from DB query results."""
         mock_impl = MagicMock()
         mock_spec_with_impl = MagicMock()
         mock_spec_with_impl.impls = [mock_impl]
@@ -99,13 +72,16 @@ class TestStatsRefreshFactory:
         mock_lib_repo = MagicMock()
         mock_lib_repo.get_all = AsyncMock(return_value=[mock_lib])
 
+        mock_impl_repo = MagicMock()
+        mock_impl_repo.get_total_code_lines = AsyncMock(return_value=42)
+
         mock_db = AsyncMock()
 
         with (
-            patch("api.routers.stats.get_cache", return_value=None),
             patch("api.routers.stats.get_db_context") as mock_ctx,
             patch("api.routers.stats.SpecRepository", return_value=mock_spec_repo),
             patch("api.routers.stats.LibraryRepository", return_value=mock_lib_repo),
+            patch("api.routers.stats.ImplRepository", return_value=mock_impl_repo),
         ):
             mock_ctx.return_value.__aenter__ = AsyncMock(return_value=mock_db)
             mock_ctx.return_value.__aexit__ = AsyncMock(return_value=False)
@@ -114,38 +90,11 @@ class TestStatsRefreshFactory:
         assert result.specs == 1  # Only spec with impls
         assert result.plots == 1
         assert result.libraries == 1
+        assert result.lines_of_code == 42
 
 
-class TestStatsFetchCachedDerivation:
-    """Tests for the _fetch() inner function's cached-derivation branch."""
-
-    def test_stats_derived_from_cached_specs_and_libs(self, db_client) -> None:
-        """When specs_list and libraries are already cached, stats should be derived from them."""
-        client, _ = db_client
-
-        mock_spec_item = MagicMock()
-        mock_spec_item.library_count = 4
-
-        cached_specs = [mock_spec_item, mock_spec_item]
-        cached_libs = {"libraries": [{"id": "matplotlib"}, {"id": "seaborn"}]}
-
-        def fake_get_cache(key):
-            if "specs_list" in key:
-                return cached_specs
-            if "libraries" in key:
-                return cached_libs
-            return None
-
-        with (
-            patch("api.routers.stats.get_or_set_cache", side_effect=_passthrough_cache),
-            patch("api.routers.stats.get_cache", side_effect=fake_get_cache),
-        ):
-            response = client.get("/stats")
-            assert response.status_code == 200
-            data = response.json()
-            assert data["specs"] == 2
-            assert data["plots"] == 8  # 4 + 4
-            assert data["libraries"] == 2
+class TestStatsEndpoint:
+    """Tests for the /stats endpoint _fetch branch."""
 
     def test_stats_with_empty_specs(self, db_client) -> None:
         """Stats should return specs=0, plots=0 when all specs lack implementations."""
@@ -160,11 +109,14 @@ class TestStatsFetchCachedDerivation:
         mock_lib_repo = MagicMock()
         mock_lib_repo.get_all = AsyncMock(return_value=[MagicMock()])
 
+        mock_impl_repo = MagicMock()
+        mock_impl_repo.get_total_code_lines = AsyncMock(return_value=0)
+
         with (
             patch("api.routers.stats.get_or_set_cache", side_effect=_passthrough_cache),
-            patch("api.routers.stats.get_cache", return_value=None),
             patch("api.routers.stats.SpecRepository", return_value=mock_spec_repo),
             patch("api.routers.stats.LibraryRepository", return_value=mock_lib_repo),
+            patch("api.routers.stats.ImplRepository", return_value=mock_impl_repo),
         ):
             response = client.get("/stats")
             assert response.status_code == 200

@@ -374,8 +374,7 @@ async def seo_spec_implementation(
         raise HTTPException(status_code=404, detail="Spec not found")
 
     impl = next(
-        (i for i in spec.impls if i.library_id == library and i.library and i.library.language == language),
-        None,
+        (i for i in spec.impls if i.library_id == library and i.library and i.library.language == language), None
     )
     image = (
         f"https://api.anyplot.ai/og/{spec_id}/{language}/{library}.png"

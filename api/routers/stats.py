@@ -28,10 +28,7 @@ async def _refresh_stats() -> StatsResponse:
     specs_with_impls = [s for s in specs if s.impls]
     total_impls = sum(len(s.impls) for s in specs)
     return StatsResponse(
-        specs=len(specs_with_impls),
-        plots=total_impls,
-        libraries=len(libraries),
-        lines_of_code=total_loc,
+        specs=len(specs_with_impls), plots=total_impls, libraries=len(libraries), lines_of_code=total_loc
     )
 
 
@@ -56,10 +53,7 @@ async def get_stats(db: AsyncSession | None = Depends(optional_db)):
         specs_with_impls = [s for s in specs if s.impls]
         total_impls = sum(len(s.impls) for s in specs)
         return StatsResponse(
-            specs=len(specs_with_impls),
-            plots=total_impls,
-            libraries=len(libraries),
-            lines_of_code=total_loc,
+            specs=len(specs_with_impls), plots=total_impls, libraries=len(libraries), lines_of_code=total_loc
         )
 
     return await get_or_set_cache(

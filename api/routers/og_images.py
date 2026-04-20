@@ -92,11 +92,7 @@ async def _fetch_image(url: str) -> bytes:
 
 @router.get("/{spec_id}/{language}/{library}.png")
 async def get_branded_impl_image(
-    spec_id: str,
-    language: str,
-    library: str,
-    request: Request,
-    db: AsyncSession | None = Depends(optional_db),
+    spec_id: str, language: str, library: str, request: Request, db: AsyncSession | None = Depends(optional_db)
 ) -> Response:
     """Get a branded OG image for an implementation.
 
@@ -121,8 +117,7 @@ async def get_branded_impl_image(
 
     # Find the implementation matching language + library
     impl = next(
-        (i for i in spec.impls if i.library_id == library and i.library and i.library.language == language),
-        None,
+        (i for i in spec.impls if i.library_id == library and i.library and i.library.language == language), None
     )
     if not impl or not impl.preview_url:
         raise HTTPException(status_code=404, detail="Implementation not found")

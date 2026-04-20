@@ -94,6 +94,7 @@ export function SpecPage() {
           );
           if (!matched) {
             navigate(specPath(specId!, urlLanguage), { replace: true });
+            return;
           }
         }
       } catch (err) {
@@ -445,7 +446,6 @@ export function SpecPage() {
             </Box>
 
             <SpecDetailView
-              specId={specId || ''}
               specTitle={specData.title}
               selectedLibrary={selectedLibrary || ''}
               currentImpl={currentImpl}

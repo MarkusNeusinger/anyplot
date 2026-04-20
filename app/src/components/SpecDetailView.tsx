@@ -25,7 +25,6 @@ const INITIAL_WIDTH = 1600;
 const INITIAL_HEIGHT = 900;
 
 interface SpecDetailViewProps {
-  specId: string;
   specTitle: string;
   selectedLibrary: string;
   currentImpl: Implementation | null;
@@ -42,7 +41,6 @@ interface SpecDetailViewProps {
 }
 
 export function SpecDetailView({
-  specId: _specId,
   specTitle,
   selectedLibrary,
   currentImpl,
@@ -69,11 +67,13 @@ export function SpecDetailView({
   const prevLibRef = useRef(selectedLibrary);
 
   // Reset zoom when library changes
-  if (prevLibRef.current !== selectedLibrary) {
-    prevLibRef.current = selectedLibrary;
-    setZoomed(false);
-    setOrigin({ x: 50, y: 50 });
-  }
+  useEffect(() => {
+    if (prevLibRef.current !== selectedLibrary) {
+      prevLibRef.current = selectedLibrary;
+      setZoomed(false);
+      setOrigin({ x: 50, y: 50 });
+    }
+  }, [selectedLibrary]);
 
   // Interactive iframe state — scaled to fit container
   const interactiveContainerRef = useRef<HTMLDivElement>(null);

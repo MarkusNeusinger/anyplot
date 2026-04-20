@@ -20,9 +20,10 @@ class TestImplementationResponse:
     """Tests for ImplementationResponse schema."""
 
     def test_minimal_creation(self) -> None:
-        impl = ImplementationResponse(library_id="matplotlib", library_name="Matplotlib")
+        impl = ImplementationResponse(library_id="matplotlib", library_name="Matplotlib", language="python")
         assert impl.library_id == "matplotlib"
         assert impl.library_name == "Matplotlib"
+        assert impl.language == "python"
         assert impl.preview_url is None
         assert impl.quality_score is None
         assert impl.code is None
@@ -34,6 +35,7 @@ class TestImplementationResponse:
         impl = ImplementationResponse(
             library_id="matplotlib",
             library_name="Matplotlib",
+            language="python",
             preview_url="https://example.com/img.png",
             preview_html="<div>chart</div>",
             quality_score=92.5,
@@ -55,9 +57,10 @@ class TestImplementationResponse:
         assert impl.impl_tags == {"techniques": ["annotations"]}
 
     def test_serialization(self) -> None:
-        impl = ImplementationResponse(library_id="matplotlib", library_name="Matplotlib")
+        impl = ImplementationResponse(library_id="matplotlib", library_name="Matplotlib", language="python")
         data = impl.model_dump()
         assert data["library_id"] == "matplotlib"
+        assert data["language"] == "python"
         assert data["review_strengths"] == []
 
 
@@ -74,7 +77,7 @@ class TestSpecDetailResponse:
         assert spec.issue is None
 
     def test_with_implementations(self) -> None:
-        impl = ImplementationResponse(library_id="matplotlib", library_name="Matplotlib")
+        impl = ImplementationResponse(library_id="matplotlib", library_name="Matplotlib", language="python")
         spec = SpecDetailResponse(
             id="scatter-basic",
             title="Basic Scatter",
@@ -171,7 +174,8 @@ class TestLibraryInfo:
     """Tests for LibraryInfo schema."""
 
     def test_minimal(self) -> None:
-        lib = LibraryInfo(id="matplotlib", name="Matplotlib")
+        lib = LibraryInfo(id="matplotlib", name="Matplotlib", language="python")
+        assert lib.language == "python"
         assert lib.version is None
         assert lib.documentation_url is None
 
@@ -179,6 +183,7 @@ class TestLibraryInfo:
         lib = LibraryInfo(
             id="matplotlib",
             name="Matplotlib",
+            language="python",
             version="3.10.0",
             documentation_url="https://matplotlib.org",
             description="A comprehensive plotting library",
@@ -198,4 +203,4 @@ class TestStatsResponse:
     def test_serialization(self) -> None:
         stats = StatsResponse(specs=10, plots=50, libraries=9)
         data = stats.model_dump()
-        assert data == {"specs": 10, "plots": 50, "libraries": 9}
+        assert data == {"specs": 10, "plots": 50, "libraries": 9, "lines_of_code": 0}

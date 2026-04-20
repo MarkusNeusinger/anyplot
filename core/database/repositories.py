@@ -128,13 +128,17 @@ class SpecRepository(BaseRepository[Spec]):
         return result.scalar_one_or_none()
 
     async def get_all(self) -> list[Spec]:
-        """Get all specs with their implementations (deferred heavy fields excluded)."""
-        result = await self.session.execute(select(Spec).options(selectinload(Spec.impls)))
+        """Get all specs with their implementations and library (deferred heavy fields excluded)."""
+        result = await self.session.execute(select(Spec).options(selectinload(Spec.impls).selectinload(Impl.library)))
         return list(result.scalars().all())
 
     async def get_all_with_code(self) -> list[Spec]:
-        """Get all specs with implementations including deferred code field."""
-        result = await self.session.execute(select(Spec).options(selectinload(Spec.impls).undefer(Impl.code)))
+        """Get all specs with implementations (code + library eager-loaded)."""
+        result = await self.session.execute(
+            select(Spec).options(
+                selectinload(Spec.impls).selectinload(Impl.library), selectinload(Spec.impls).undefer(Impl.code)
+            )
+        )
         return list(result.scalars().all())
 
     async def get_ids(self) -> list[str]:
