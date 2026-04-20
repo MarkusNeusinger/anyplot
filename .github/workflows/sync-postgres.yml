@@ -15,6 +15,7 @@ on:
       - main
     paths:
       - 'plots/**'
+      - 'alembic/versions/**'  # Ensure migration-only PRs trigger a sync
   workflow_dispatch:  # Allow manual trigger
 
 concurrency:
