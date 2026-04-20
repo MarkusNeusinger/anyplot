@@ -56,10 +56,14 @@ def db_client():
     fastapi_app.dependency_overrides.clear()
 
 
-def _make_impl(library_id="matplotlib", preview_url="https://example.com/plot.png", quality_score=92.5):
+def _make_impl(
+    library_id="matplotlib", preview_url="https://example.com/plot.png", quality_score=92.5, language="python"
+):
     """Helper to create a mock implementation."""
     impl = MagicMock()
     impl.library_id = library_id
+    impl.library = MagicMock()
+    impl.library.language = language
     impl.preview_url = preview_url
     impl.quality_score = quality_score
     return impl
@@ -239,7 +243,7 @@ class TestBrandedImplImage:
             patch("api.routers.og_images._fetch_image", new_callable=AsyncMock, return_value=FAKE_PNG),
             patch("api.routers.og_images.create_branded_og_image", return_value=FAKE_PNG),
         ):
-            response = client.get("/og/scatter-basic/matplotlib.png")
+            response = client.get("/og/scatter-basic/python/matplotlib.png")
 
         assert response.status_code == 200
         assert response.headers["content-type"] == "image/png"
@@ -252,7 +256,7 @@ class TestBrandedImplImage:
             patch("api.routers.og_images.track_og_image"),
             patch("api.routers.og_images.get_cache", return_value=FAKE_PNG),
         ):
-            response = client.get("/og/scatter-basic/matplotlib.png")
+            response = client.get("/og/scatter-basic/python/matplotlib.png")
 
         assert response.status_code == 200
         assert response.content == FAKE_PNG
@@ -264,7 +268,7 @@ class TestBrandedImplImage:
             patch("api.routers.og_images.track_og_image"),
             patch("api.routers.og_images.get_cache", return_value=None),
         ):
-            response = client.get("/og/scatter-basic/matplotlib.png")
+            response = client.get("/og/scatter-basic/python/matplotlib.png")
 
         assert response.status_code == 503
 
@@ -280,7 +284,7 @@ class TestBrandedImplImage:
             patch("api.routers.og_images.get_cache", return_value=None),
             patch("api.routers.og_images.SpecRepository", return_value=mock_repo),
         ):
-            response = client.get("/og/nonexistent/matplotlib.png")
+            response = client.get("/og/nonexistent/python/matplotlib.png")
 
         assert response.status_code == 404
 
@@ -299,7 +303,7 @@ class TestBrandedImplImage:
             patch("api.routers.og_images.get_cache", return_value=None),
             patch("api.routers.og_images.SpecRepository", return_value=mock_repo),
         ):
-            response = client.get("/og/scatter-basic/matplotlib.png")
+            response = client.get("/og/scatter-basic/python/matplotlib.png")
 
         assert response.status_code == 404
 
@@ -318,7 +322,7 @@ class TestBrandedImplImage:
             patch("api.routers.og_images.get_cache", return_value=None),
             patch("api.routers.og_images.SpecRepository", return_value=mock_repo),
         ):
-            response = client.get("/og/scatter-basic/matplotlib.png")
+            response = client.get("/og/scatter-basic/python/matplotlib.png")
 
         assert response.status_code == 404
 
@@ -342,7 +346,7 @@ class TestBrandedImplImage:
                 side_effect=httpx.HTTPError("connection failed"),
             ),
         ):
-            response = client.get("/og/scatter-basic/matplotlib.png")
+            response = client.get("/og/scatter-basic/python/matplotlib.png")
 
         assert response.status_code == 502
 

@@ -37,14 +37,22 @@ class TestBuildSitemapXml:
         assert "<loc>https://anyplot.ai/</loc>" in result
         assert "<loc>https://anyplot.ai/plots</loc>" in result
         assert "<loc>https://anyplot.ai/specs</loc>" in result
+        assert "<loc>https://anyplot.ai/libraries</loc>" in result
+        assert "<loc>https://anyplot.ai/palette</loc>" in result
+        assert "<loc>https://anyplot.ai/about</loc>" in result
         assert "<loc>https://anyplot.ai/mcp</loc>" in result
         assert "<loc>https://anyplot.ai/legal</loc>" in result
         assert "<loc>https://anyplot.ai/stats</loc>" in result
         assert "</urlset>" in result
 
     def test_spec_with_impls(self) -> None:
+        """Spec with impls should emit hub, language-overview, and detail URLs."""
+        library = MagicMock()
+        library.language = "python"
+
         impl = MagicMock()
         impl.library_id = "matplotlib"
+        impl.library = library
         impl.updated = datetime(2025, 3, 15)
 
         spec = MagicMock()
@@ -53,8 +61,14 @@ class TestBuildSitemapXml:
         spec.updated = datetime(2025, 3, 14)
 
         result = _build_sitemap_xml([spec])
-        assert "https://anyplot.ai/python/scatter-basic" in result
-        assert "https://anyplot.ai/python/scatter-basic/matplotlib" in result
+        # Cross-language hub
+        assert "<loc>https://anyplot.ai/scatter-basic</loc>" in result
+        # Language overview
+        assert "<loc>https://anyplot.ai/scatter-basic/python</loc>" in result
+        # Implementation detail
+        assert "<loc>https://anyplot.ai/scatter-basic/python/matplotlib</loc>" in result
+        # Legacy /python/{spec} path must NOT appear
+        assert "https://anyplot.ai/python/scatter-basic" not in result
         assert "<lastmod>2025-03-14</lastmod>" in result
         assert "<lastmod>2025-03-15</lastmod>" in result
 
@@ -67,8 +81,11 @@ class TestBuildSitemapXml:
         assert "no-impls" not in result
 
     def test_multiple_specs(self) -> None:
+        lib_mpl = MagicMock()
+        lib_mpl.language = "python"
         impl1 = MagicMock()
         impl1.library_id = "matplotlib"
+        impl1.library = lib_mpl
         impl1.updated = None
 
         spec1 = MagicMock()
@@ -76,8 +93,11 @@ class TestBuildSitemapXml:
         spec1.impls = [impl1]
         spec1.updated = None
 
+        lib_sns = MagicMock()
+        lib_sns.language = "python"
         impl2 = MagicMock()
         impl2.library_id = "seaborn"
+        impl2.library = lib_sns
         impl2.updated = None
 
         spec2 = MagicMock()
@@ -86,15 +106,46 @@ class TestBuildSitemapXml:
         spec2.updated = None
 
         result = _build_sitemap_xml([spec1, spec2])
-        assert "scatter-basic" in result
-        assert "bar-grouped" in result
-        assert "scatter-basic/matplotlib" in result
-        assert "bar-grouped/seaborn" in result
+        assert "<loc>https://anyplot.ai/scatter-basic</loc>" in result
+        assert "<loc>https://anyplot.ai/bar-grouped</loc>" in result
+        assert "<loc>https://anyplot.ai/scatter-basic/python/matplotlib</loc>" in result
+        assert "<loc>https://anyplot.ai/bar-grouped/python/seaborn</loc>" in result
+
+    def test_language_overview_deduplicated(self) -> None:
+        """Multiple impls sharing a language should yield one language-overview URL."""
+        library = MagicMock()
+        library.language = "python"
+
+        impl_mpl = MagicMock()
+        impl_mpl.library_id = "matplotlib"
+        impl_mpl.library = library
+        impl_mpl.updated = None
+
+        impl_sns = MagicMock()
+        impl_sns.library_id = "seaborn"
+        impl_sns.library = library
+        impl_sns.updated = None
+
+        spec = MagicMock()
+        spec.id = "scatter-basic"
+        spec.impls = [impl_mpl, impl_sns]
+        spec.updated = None
+
+        result = _build_sitemap_xml([spec])
+        # Language overview appears exactly once despite two impls
+        assert result.count("<loc>https://anyplot.ai/scatter-basic/python</loc>") == 1
+        # Both implementations are present
+        assert "<loc>https://anyplot.ai/scatter-basic/python/matplotlib</loc>" in result
+        assert "<loc>https://anyplot.ai/scatter-basic/python/seaborn</loc>" in result
 
     def test_html_escaping(self) -> None:
         """Spec IDs with special characters should be escaped."""
+        library = MagicMock()
+        library.language = "python"
+
         impl = MagicMock()
         impl.library_id = "matplotlib"
+        impl.library = library
         impl.updated = None
 
         spec = MagicMock()
@@ -106,8 +157,12 @@ class TestBuildSitemapXml:
         assert "test&amp;spec" in result
 
     def test_spec_with_none_updated(self) -> None:
+        library = MagicMock()
+        library.language = "python"
+
         impl = MagicMock()
         impl.library_id = "matplotlib"
+        impl.library = library
         impl.updated = None
 
         spec = MagicMock()
@@ -117,7 +172,7 @@ class TestBuildSitemapXml:
 
         result = _build_sitemap_xml([spec])
         # Should not have lastmod when updated is None
-        assert "scatter-basic</loc></url>" in result
+        assert "<loc>https://anyplot.ai/scatter-basic</loc></url>" in result
 
 
 class TestBotHtmlTemplate:

@@ -37,6 +37,8 @@ def _build_sitemap_xml(specs: list) -> str:
         "  <url><loc>https://anyplot.ai/plots</loc></url>",
         "  <url><loc>https://anyplot.ai/specs</loc></url>",
         "  <url><loc>https://anyplot.ai/libraries</loc></url>",
+        "  <url><loc>https://anyplot.ai/palette</loc></url>",
+        "  <url><loc>https://anyplot.ai/about</loc></url>",
         "  <url><loc>https://anyplot.ai/mcp</loc></url>",
         "  <url><loc>https://anyplot.ai/legal</loc></url>",
         "  <url><loc>https://anyplot.ai/stats</loc></url>",
@@ -225,6 +227,45 @@ async def seo_mcp():
             description="Connect your AI assistant to anyplot via the Model Context Protocol (MCP).",
             image=DEFAULT_HOME_IMAGE,
             url="https://anyplot.ai/mcp",
+        )
+    )
+
+
+@router.get("/seo-proxy/about")
+async def seo_about():
+    """Bot-optimized about page with correct og:tags."""
+    return HTMLResponse(
+        BOT_HTML_TEMPLATE.format(
+            title="About | anyplot.ai",
+            description="About anyplot.ai — library-agnostic, AI-powered plotting.",
+            image=DEFAULT_HOME_IMAGE,
+            url="https://anyplot.ai/about",
+        )
+    )
+
+
+@router.get("/seo-proxy/palette")
+async def seo_palette():
+    """Bot-optimized palette page with correct og:tags."""
+    return HTMLResponse(
+        BOT_HTML_TEMPLATE.format(
+            title="Palette | anyplot.ai",
+            description="Color palette reference for anyplot.ai branding.",
+            image=DEFAULT_HOME_IMAGE,
+            url="https://anyplot.ai/palette",
+        )
+    )
+
+
+@router.get("/seo-proxy/stats")
+async def seo_stats():
+    """Bot-optimized stats page with correct og:tags."""
+    return HTMLResponse(
+        BOT_HTML_TEMPLATE.format(
+            title="Stats | anyplot.ai",
+            description="Platform statistics: library scores, coverage, tags, and top implementations.",
+            image=DEFAULT_HOME_IMAGE,
+            url="https://anyplot.ai/stats",
         )
     )
 
