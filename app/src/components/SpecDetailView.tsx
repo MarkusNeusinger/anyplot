@@ -227,23 +227,23 @@ export function SpecDetailView({
           </Box>
 
           <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
-            <Tooltip title="Show static preview" disableFocusListener>
+            <Tooltip title=".preview()" disableFocusListener>
               <IconButton
                 onClick={() => {
                   onViewModeChange('preview');
                   onTrackEvent('view_mode_change', { mode: 'preview', library: selectedLibrary });
                 }}
-                aria-label="Show static preview"
+                aria-label=".preview()"
                 sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: '#fff', color: colors.primary } }}
                 size="medium"
               >
                 <ImageOutlinedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Open Raw HTML" disableFocusListener>
+            <Tooltip title=".raw()" disableFocusListener>
               <IconButton
                 onClick={() => window.open(currentImpl.preview_html, '_blank', 'noopener,noreferrer')}
-                aria-label="Open raw HTML"
+                aria-label=".raw()"
                 sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: '#fff', color: colors.primary } }}
                 size="medium"
               >
@@ -257,7 +257,7 @@ export function SpecDetailView({
           ref={containerRef}
           role="button"
           tabIndex={0}
-          aria-label={zoomed ? 'Zoom out' : 'Zoom in'}
+          aria-label={zoomed ? '.zoom(-)' : '.zoom(+)'}
           onClick={handleZoomToggle}
           onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleZoomToggle(e as unknown as React.MouseEvent); } }}
           onMouseMove={handleMouseMove}
@@ -329,7 +329,7 @@ export function SpecDetailView({
               pointerEvents: 'none',
               zIndex: 2,
             }}>
-              {codeCopied === currentImpl.library_id ? '>>> copied' : '>>> downloaded'}
+              {codeCopied === currentImpl.library_id ? '>>> .copied' : '>>> .downloaded'}
             </Box>
           )}
 
@@ -338,10 +338,10 @@ export function SpecDetailView({
             sx={{ position: 'absolute', top: 8, right: 8, display: zoomed ? 'none' : 'flex', gap: 0.5 }}
           >
             {currentImpl && (
-              <Tooltip title="Copy Code" disableFocusListener>
+              <Tooltip title=".copy()" disableFocusListener>
                 <IconButton
                   onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onCopyCode(currentImpl); }}
-                  aria-label="Copy code"
+                  aria-label=".copy()"
                   sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: '#fff', color: colors.primary } }}
                   size="medium"
                 >
@@ -350,10 +350,10 @@ export function SpecDetailView({
               </Tooltip>
             )}
             {currentImpl && (
-              <Tooltip title="Download PNG" disableFocusListener>
+              <Tooltip title=".download()" disableFocusListener>
                 <IconButton
                   onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onDownload(currentImpl); }}
-                  aria-label="Download PNG"
+                  aria-label=".download()"
                   sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: '#fff', color: colors.primary } }}
                   size="medium"
                 >
@@ -362,13 +362,13 @@ export function SpecDetailView({
               </Tooltip>
             )}
             {interactiveAvailable && (
-              <Tooltip title="Show Interactive" disableFocusListener>
+              <Tooltip title=".open()" disableFocusListener>
                 <IconButton
                   onClick={() => {
                     onViewModeChange('interactive');
                     onTrackEvent('view_mode_change', { mode: 'interactive', library: selectedLibrary });
                   }}
-                  aria-label="Show interactive"
+                  aria-label=".open()"
                   sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: '#fff', color: colors.primary } }}
                   size="medium"
                 >

@@ -418,7 +418,7 @@ export function FilterBar({
           ref={searchContainerRef}
           role={isSearchExpanded ? undefined : 'button'}
           tabIndex={isSearchExpanded ? undefined : 0}
-          aria-label={isSearchExpanded ? undefined : 'Open filter search'}
+          aria-label={isSearchExpanded ? undefined : '.find()'}
           onClick={handleSearchExpand}
           onKeyDown={(e) => {
             if (!isSearchExpanded && (e.key === 'Enter' || e.key === ' ')) {
@@ -450,7 +450,7 @@ export function FilterBar({
             '&:focus': isSearchExpanded ? {} : { outline: `2px solid ${colors.primary}`, outlineOffset: 2 },
           }}
         >
-          <Tooltip title={isSearchExpanded ? '' : 'search'}>
+          <Tooltip title={isSearchExpanded ? '' : '.find()'}>
             <SearchIcon
               className="search-icon"
               sx={{
@@ -462,14 +462,14 @@ export function FilterBar({
             />
           </Tooltip>
           <label htmlFor="filter-search" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0,0,0,0)' }}>
-            {selectedCategory ? `Search ${FILTER_LABELS[selectedCategory]}` : 'Search filters'}
+            {selectedCategory ? `.find(${FILTER_LABELS[selectedCategory]})` : '.find()'}
           </label>
           <InputBase
             inputRef={inputRef}
             id="filter-search"
             name="filter-search"
-            inputProps={{ 'aria-label': selectedCategory ? `Search ${FILTER_LABELS[selectedCategory]}` : 'Search filters' }}
-            placeholder={selectedCategory ? FILTER_LABELS[selectedCategory] : ''}
+            inputProps={{ 'aria-label': selectedCategory ? `.find(${FILTER_LABELS[selectedCategory]})` : '.find()' }}
+            placeholder={selectedCategory ? FILTER_LABELS[selectedCategory] : '.find(_)'}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);

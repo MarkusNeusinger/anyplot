@@ -109,7 +109,7 @@ export function PlotOfTheDay() {
           <IconButton
             onClick={handleDismiss}
             size="small"
-            aria-label="Dismiss plot of the day"
+            aria-label=".dismiss()"
             sx={{
               color: colors.gray[400], p: 0.25,
               '&:hover': { color: colors.gray[600] },

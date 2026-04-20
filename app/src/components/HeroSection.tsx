@@ -165,10 +165,10 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
             animation: 'rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s backwards',
           }}
         >
-          <PrimaryCta to="/plots" label="browse plots" />
+          <PrimaryCta to="/plots" subject="plots" verb="browse" />
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
-            <SecondaryLink to="/mcp" label="or connect via mcp" />
-            <SecondaryLink href="https://github.com/MarkusNeusinger/anyplot" label="or clone on github" external />
+            <SecondaryLink to="/mcp" subject="mcp" verb="connect" />
+            <SecondaryLink href="https://github.com/MarkusNeusinger/anyplot" subject="github" verb="clone" external />
           </Box>
         </Box>
 
@@ -183,11 +183,12 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
   );
 }
 
-function PrimaryCta({ to, label }: { to: string; label: string }) {
+function PrimaryCta({ to, subject, verb }: { to: string; subject: string; verb: string }) {
   return (
     <Box
       component={RouterLink}
       to={to}
+      aria-label={`${subject}.${verb}()`}
       sx={{
         textDecoration: 'none',
         fontFamily: typography.mono,
@@ -201,11 +202,17 @@ function PrimaryCta({ to, label }: { to: string; label: string }) {
         bgcolor: 'var(--ink)',
         color: 'var(--bg-page)',
         transition: 'all 0.2s',
+        '& .cta-subject': { opacity: 0.55, transition: 'opacity 0.2s' },
         '&:hover': { bgcolor: colors.primary, color: '#FFF' },
+        '&:hover .cta-subject': { opacity: 0.8 },
         '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: 2 },
       }}
     >
-      {label} <Box component="span">→</Box>
+      <Box component="span">
+        <Box component="span" className="cta-subject">{subject}</Box>
+        {`.${verb}()`}
+      </Box>{' '}
+      <Box component="span">→</Box>
     </Box>
   );
 }
@@ -213,12 +220,14 @@ function PrimaryCta({ to, label }: { to: string; label: string }) {
 function SecondaryLink({
   to,
   href,
-  label,
+  subject,
+  verb,
   external,
 }: {
   to?: string;
   href?: string;
-  label: string;
+  subject: string;
+  verb: string;
   external?: boolean;
 }) {
   const linkProps = external
@@ -228,6 +237,7 @@ function SecondaryLink({
   return (
     <Box
       {...linkProps}
+      aria-label={`${subject}.${verb}()`}
       sx={{
         textDecoration: 'none',
         fontFamily: typography.mono,
@@ -237,13 +247,19 @@ function SecondaryLink({
         alignItems: 'center',
         gap: 0.5,
         transition: 'color 0.2s',
+        '& .link-subject': { opacity: 0.7, transition: 'opacity 0.2s' },
         '& .arrow': { transition: 'transform 0.2s' },
         '&:hover': { color: colors.primary },
+        '&:hover .link-subject': { opacity: 1 },
         '&:hover .arrow': { transform: 'translateX(3px)' },
         '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: 2, borderRadius: '2px' },
       }}
     >
-      {label}&nbsp;<Box component="span" className="arrow">→</Box>
+      <Box component="span">
+        <Box component="span" className="link-subject">{subject}</Box>
+        {`.${verb}()`}
+      </Box>
+      &nbsp;<Box component="span" className="arrow">→</Box>
     </Box>
   );
 }

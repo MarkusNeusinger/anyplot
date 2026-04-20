@@ -221,10 +221,10 @@ function ImplementationCard({
             transition: 'opacity 0.2s',
           }}
         >
-          <Tooltip title="Copy Code" disableFocusListener>
+          <Tooltip title=".copy()" disableFocusListener>
             <IconButton
               onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onCopyCode(impl); }}
-              aria-label="Copy code"
+              aria-label=".copy()"
               sx={{
                 bgcolor: 'rgba(255,255,255,0.9)',
                 '&:hover': { bgcolor: '#fff', color: colors.primary },
@@ -234,10 +234,10 @@ function ImplementationCard({
               <ContentCopyIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Download PNG" disableFocusListener>
+          <Tooltip title=".download()" disableFocusListener>
             <IconButton
               onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onDownload(impl); }}
-              aria-label="Download PNG"
+              aria-label=".download()"
               sx={{
                 bgcolor: 'rgba(255,255,255,0.9)',
                 '&:hover': { bgcolor: '#fff', color: colors.primary },
@@ -248,11 +248,11 @@ function ImplementationCard({
             </IconButton>
           </Tooltip>
           {impl.preview_html && (
-            <Tooltip title="Open Interactive" disableFocusListener>
+            <Tooltip title=".open()" disableFocusListener>
               <IconButton
                 component={Link}
                 to={`${specPath(specId, impl.language, impl.library_id)}?view=interactive`}
-                aria-label="Open interactive"
+                aria-label=".open()"
                 onClick={(e: React.MouseEvent) => {
                   e.stopPropagation();
                   onTrackEvent('open_interactive', { spec: specId, library: impl.library_id });

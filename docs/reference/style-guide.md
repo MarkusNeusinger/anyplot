@@ -765,7 +765,23 @@ Three variants. All buttons read as method calls in mono — there is no ambigui
 .btn-action:hover::before { color: var(--ok-green); }
 ```
 
-Examples: `.copy()`, `.open()`, `.download()`, `.preview()`, `.share()`, `.fork()`. The leading `.` is part of the visual language — it signals "this is a method on the thing in front of you" without saying so. No icons needed for common actions.
+Examples: `.copy()`, `.open()`, `.download()`, `.preview()`, `.share()`, `.fork()`, `.raw()`. The leading `.` is part of the visual language — it signals "this is a method on the thing in front of you" without saying so. No icons needed for common actions.
+
+#### 7.4.1 Subject-Prefixed Method Calls
+
+Two forms of the pseudo-function style, used in different contexts:
+
+1. **Implicit subject — `.verb()`** — when a card or surrounding surface visually provides the subject (plot card, detail pane). See the button examples above.
+2. **Explicit subject — `subject.verb()`** — when the action stands alone, detached from a carrier. Format follows `any.plot()`: the subject is the object/namespace (`--ink-muted`), `.verb()` is the method (`--ink`, green on hover).
+
+Examples of the explicit form:
+
+- Hero CTAs: `plots.browse()`, `plots.find()`
+- Secondary links: `github.clone()`, `mcp.connect()`
+- Search prompt: `❯ plots.find(_▌)` (or bare `.find()` inside a detail pane)
+- Page-level fallbacks: `page.miss()`, `results.empty()`
+
+Pluralisation: prefer the natural plural for collections (`plots.browse()`, `libs.list()`) and the singular for a specific item (`plot.open()`, `spec.copy()`). Keep everything lowercase — the wordmark-style capitalisation stops at the logo.
 
 **Hero CTA (filled, only on landing hero)**
 
