@@ -273,6 +273,7 @@ async def get_spec_detail(spec_id: str) -> dict[str, Any]:
             impl_response = ImplementationResponse(
                 library_id=impl.library.id,
                 library_name=impl.library.name,
+                language=impl.library.language,
                 preview_url=impl.preview_url,
                 preview_html=impl.preview_html,
                 quality_score=impl.quality_score,
@@ -291,7 +292,7 @@ async def get_spec_detail(spec_id: str) -> dict[str, Any]:
             implementations.append(
                 {
                     **impl_response.model_dump(),
-                    "website_url": f"{ANYPLOT_WEBSITE_URL}/python/{spec_id}/{impl.library.id}",
+                    "website_url": f"{ANYPLOT_WEBSITE_URL}/{spec_id}/{impl.library.language}/{impl.library.id}",
                 }
             )
 
@@ -367,6 +368,7 @@ async def get_implementation(spec_id: str, library: str) -> dict[str, Any]:
         response = ImplementationResponse(
             library_id=impl.library.id,
             library_name=impl.library.name,
+            language=impl.library.language,
             preview_url=impl.preview_url,
             preview_html=impl.preview_html,
             quality_score=impl.quality_score,
@@ -383,7 +385,10 @@ async def get_implementation(spec_id: str, library: str) -> dict[str, Any]:
             impl_tags=impl.impl_tags,
         )
 
-        return {**response.model_dump(), "website_url": f"{ANYPLOT_WEBSITE_URL}/python/{spec_id}/{library}"}
+        return {
+            **response.model_dump(),
+            "website_url": f"{ANYPLOT_WEBSITE_URL}/{spec_id}/{impl.library.language}/{library}",
+        }
     finally:
         await session.close()
 

@@ -39,6 +39,7 @@ def mock_spec():
     mock_impl = MagicMock()
     mock_impl.library.id = "matplotlib"
     mock_impl.library.name = "Matplotlib"
+    mock_impl.library.language = "python"
     mock_impl.code = "import matplotlib.pyplot as plt"
     mock_impl.preview_url = "https://example.com/plot.png"
     mock_impl.preview_html = None
@@ -194,6 +195,7 @@ async def test_get_implementation(mock_db_context, mock_spec):
     mock_lib = MagicMock()
     mock_lib.id = "matplotlib"
     mock_lib.name = "Matplotlib"
+    mock_lib.language = "python"
 
     mock_impl = mock_spec.impls[0]
 
