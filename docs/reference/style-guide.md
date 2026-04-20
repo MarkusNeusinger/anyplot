@@ -783,6 +783,8 @@ Examples of the explicit form:
 
 Pluralisation: prefer the natural plural for collections (`plots.browse()`, `libs.list()`) and the singular for a specific item (`plot.open()`, `spec.copy()`). Keep everything lowercase — the wordmark-style capitalisation stops at the logo.
 
+**Accessibility**: the pseudo-function style is a *visual* convention — it belongs on visible labels, tooltip titles, and placeholder text. `aria-label` and any hidden `<label>` fallback for assistive tech must stay in readable human language (`"Copy code"`, `"Browse plots"`, `"Zoom in"`), because screen readers announce punctuation literally (`.copy()` → "dot copy open close paren"). Icon-only controls should always carry a descriptive `aria-label` even when their tooltip uses the method-call style.
+
 **Hero CTA (filled, only on landing hero)**
 
 ```css

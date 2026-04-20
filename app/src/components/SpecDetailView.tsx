@@ -233,7 +233,7 @@ export function SpecDetailView({
                   onViewModeChange('preview');
                   onTrackEvent('view_mode_change', { mode: 'preview', library: selectedLibrary });
                 }}
-                aria-label=".preview()"
+                aria-label="Show static preview"
                 sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: '#fff', color: colors.primary } }}
                 size="medium"
               >
@@ -243,7 +243,7 @@ export function SpecDetailView({
             <Tooltip title=".raw()" disableFocusListener>
               <IconButton
                 onClick={() => window.open(currentImpl.preview_html, '_blank', 'noopener,noreferrer')}
-                aria-label=".raw()"
+                aria-label="Open raw HTML"
                 sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: '#fff', color: colors.primary } }}
                 size="medium"
               >
@@ -257,7 +257,7 @@ export function SpecDetailView({
           ref={containerRef}
           role="button"
           tabIndex={0}
-          aria-label={zoomed ? '.zoom(-)' : '.zoom(+)'}
+          aria-label={zoomed ? 'Zoom out' : 'Zoom in'}
           onClick={handleZoomToggle}
           onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleZoomToggle(e as unknown as React.MouseEvent); } }}
           onMouseMove={handleMouseMove}
@@ -341,7 +341,7 @@ export function SpecDetailView({
               <Tooltip title=".copy()" disableFocusListener>
                 <IconButton
                   onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onCopyCode(currentImpl); }}
-                  aria-label=".copy()"
+                  aria-label="Copy code"
                   sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: '#fff', color: colors.primary } }}
                   size="medium"
                 >
@@ -353,7 +353,7 @@ export function SpecDetailView({
               <Tooltip title=".download()" disableFocusListener>
                 <IconButton
                   onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onDownload(currentImpl); }}
-                  aria-label=".download()"
+                  aria-label="Download PNG"
                   sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: '#fff', color: colors.primary } }}
                   size="medium"
                 >
@@ -368,7 +368,7 @@ export function SpecDetailView({
                     onViewModeChange('interactive');
                     onTrackEvent('view_mode_change', { mode: 'interactive', library: selectedLibrary });
                   }}
-                  aria-label=".open()"
+                  aria-label="Show interactive"
                   sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: '#fff', color: colors.primary } }}
                   size="medium"
                 >

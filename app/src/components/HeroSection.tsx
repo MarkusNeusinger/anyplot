@@ -165,10 +165,10 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
             animation: 'rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s backwards',
           }}
         >
-          <PrimaryCta to="/plots" subject="plots" verb="browse" />
+          <PrimaryCta to="/plots" subject="plots" verb="browse" ariaLabel="Browse plots" />
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
-            <SecondaryLink to="/mcp" subject="mcp" verb="connect" />
-            <SecondaryLink href="https://github.com/MarkusNeusinger/anyplot" subject="github" verb="clone" external />
+            <SecondaryLink to="/mcp" subject="mcp" verb="connect" ariaLabel="Connect via MCP" />
+            <SecondaryLink href="https://github.com/MarkusNeusinger/anyplot" subject="github" verb="clone" ariaLabel="Clone on GitHub" external />
           </Box>
         </Box>
 
@@ -183,12 +183,12 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
   );
 }
 
-function PrimaryCta({ to, subject, verb }: { to: string; subject: string; verb: string }) {
+function PrimaryCta({ to, subject, verb, ariaLabel }: { to: string; subject: string; verb: string; ariaLabel: string }) {
   return (
     <Box
       component={RouterLink}
       to={to}
-      aria-label={`${subject}.${verb}()`}
+      aria-label={ariaLabel}
       sx={{
         textDecoration: 'none',
         fontFamily: typography.mono,
@@ -222,12 +222,14 @@ function SecondaryLink({
   href,
   subject,
   verb,
+  ariaLabel,
   external,
 }: {
   to?: string;
   href?: string;
   subject: string;
   verb: string;
+  ariaLabel: string;
   external?: boolean;
 }) {
   const linkProps = external
@@ -237,7 +239,7 @@ function SecondaryLink({
   return (
     <Box
       {...linkProps}
-      aria-label={`${subject}.${verb}()`}
+      aria-label={ariaLabel}
       sx={{
         textDecoration: 'none',
         fontFamily: typography.mono,

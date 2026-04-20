@@ -203,7 +203,7 @@ function ImplementationCard({
             pointerEvents: 'none',
             zIndex: 2,
           }}>
-            {codeCopied === impl.library_id ? '>>> copied' : '>>> downloaded'}
+            {codeCopied === impl.library_id ? '>>> .copied' : '>>> .downloaded'}
           </Box>
         )}
 
@@ -224,7 +224,7 @@ function ImplementationCard({
           <Tooltip title=".copy()" disableFocusListener>
             <IconButton
               onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onCopyCode(impl); }}
-              aria-label=".copy()"
+              aria-label="Copy code"
               sx={{
                 bgcolor: 'rgba(255,255,255,0.9)',
                 '&:hover': { bgcolor: '#fff', color: colors.primary },
@@ -237,7 +237,7 @@ function ImplementationCard({
           <Tooltip title=".download()" disableFocusListener>
             <IconButton
               onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onDownload(impl); }}
-              aria-label=".download()"
+              aria-label="Download PNG"
               sx={{
                 bgcolor: 'rgba(255,255,255,0.9)',
                 '&:hover': { bgcolor: '#fff', color: colors.primary },
@@ -252,7 +252,7 @@ function ImplementationCard({
               <IconButton
                 component={Link}
                 to={`${specPath(specId, impl.language, impl.library_id)}?view=interactive`}
-                aria-label=".open()"
+                aria-label="Open interactive"
                 onClick={(e: React.MouseEvent) => {
                   e.stopPropagation();
                   onTrackEvent('open_interactive', { spec: specId, library: impl.library_id });

@@ -332,7 +332,7 @@ export function SpecTabs({
             <Tooltip title={copied ? '.copied' : '.copy()'}>
               <IconButton
                 onClick={handleCopy}
-                aria-label=".copy()"
+                aria-label="Copy code"
                 sx={{
                   position: 'absolute',
                   top: 8,

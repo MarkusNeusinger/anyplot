@@ -10,14 +10,19 @@ describe('PlotsLink', () => {
     expect(link).toHaveAttribute('href', '/plots');
   });
 
-  it('has a "plots" tooltip', async () => {
+  it('has a "plots.list()" tooltip', async () => {
     const user = userEvent.setup();
     render(<PlotsLink />);
 
     const link = screen.getByRole('link');
     await user.hover(link);
 
-    expect(await screen.findByText('plots')).toBeInTheDocument();
+    expect(await screen.findByText('plots.list()')).toBeInTheDocument();
+  });
+
+  it('has a descriptive aria-label', () => {
+    render(<PlotsLink />);
+    expect(screen.getByRole('link')).toHaveAttribute('aria-label', 'Browse plots');
   });
 });
 

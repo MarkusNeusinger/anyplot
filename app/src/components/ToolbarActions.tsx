@@ -28,6 +28,7 @@ export function PlotsLink() {
       <Box
         component={Link}
         to="/plots"
+        aria-label="Browse plots"
         sx={{
           display: 'flex',
           alignItems: 'center',
@@ -66,7 +67,7 @@ export function GridSizeToggle({ imageSize, onImageSizeChange, onTrackEvent }: T
       <Box
         role="button"
         tabIndex={0}
-        aria-label={imageSize === 'normal' ? '.compact()' : '.normal()'}
+        aria-label={imageSize === 'normal' ? 'Switch to compact view' : 'Switch to normal view'}
         onClick={handleToggle}
         onKeyDown={handleKeyDown}
         sx={{
