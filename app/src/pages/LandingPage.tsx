@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 import Box from '@mui/material/Box';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
 import { HeroSection } from '../components/HeroSection';
 import { NumbersStrip } from '../components/NumbersStrip';
@@ -12,12 +12,13 @@ import { useFeaturedSpecs, type FeaturedImpl } from '../hooks/useFeaturedSpecs';
 import { GITHUB_URL } from '../constants';
 import { specPath } from '../utils/paths';
 import { buildSrcSet, getFallbackSrc } from '../utils/responsiveImage';
-import { colors, fontSize, semanticColors, typography } from '../theme';
+import { colors, semanticColors, typography } from '../theme';
 
 export function LandingPage() {
   const { librariesData, stats } = useAppData();
   const potd = usePlotOfTheDay();
-  const featured = useFeaturedSpecs(4);
+  const featured = useFeaturedSpecs(5);
+  const navigate = useNavigate();
 
   return (
     <>
@@ -49,7 +50,7 @@ export function LandingPage() {
 
       <LibrariesSection
         libraries={librariesData}
-        onLibraryClick={() => {}}
+        onLibraryClick={(lib) => navigate(`/plots?lib=${encodeURIComponent(lib)}`)}
         widthTier="catalog"
       />
 
@@ -203,46 +204,55 @@ function SpecsSection({ specCount, featured }: { specCount?: number; featured: F
     <Box sx={{ py: { xs: 4, md: 7 } }}>
       <SectionHeader prompt="§" title={<em>specifications</em>} linkText="specs.all()" linkTo="/specs" />
 
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) minmax(0, 1.2fr)' },
-          gap: { xs: 4, md: 8, lg: 12 },
-          alignItems: 'start',
-        }}
-      >
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          <Box
-            sx={{
-              fontFamily: typography.serif,
-              fontSize: { xs: '1rem', md: '1.25rem' },
-              lineHeight: 1.55,
-              color: 'var(--ink-soft)',
-              fontWeight: 300,
-              maxWidth: '52ch',
-            }}
-          >
-            a spec is a short, library-agnostic markdown document —{' '}
-            <Box component="span" sx={{ color: 'var(--ink)' }}>
-              what the plot shows, what data it needs, and when to use it.
-            </Box>{' '}
-            from that single source, implementations are generated for every
-            supported library. new specs come from github issues; anyone can
-            propose one.
-          </Box>
-
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            <ActionChip to="/specs" label={`browse ${specCount ?? ''} specs`.trim()} />
-            <ActionChip
-              href={`${GITHUB_URL}/issues/new?template=request-new-plot.yml`}
-              label="suggest spec"
-              external
-            />
-          </Box>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mb: { xs: 4, md: 5 } }}>
+        <Box
+          sx={{
+            fontFamily: typography.serif,
+            fontSize: { xs: '1rem', md: '1.25rem' },
+            lineHeight: 1.55,
+            color: 'var(--ink-soft)',
+            fontWeight: 300,
+            maxWidth: '52ch',
+          }}
+        >
+          a spec is a short, library-agnostic markdown document —{' '}
+          <Box component="span" sx={{ color: 'var(--ink)' }}>
+            what the plot shows, what data it needs, and when to use it.
+          </Box>{' '}
+          from that single source, implementations are generated for every
+          supported library. new specs come from github issues; anyone can
+          propose one.
         </Box>
 
-        <FeaturedGrid featured={featured} />
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+          <MethodLink
+            href={`${GITHUB_URL}/issues/new?template=request-new-plot.yml`}
+            subject="spec"
+            verb="suggest"
+            external
+          />
+        </Box>
       </Box>
+
+      <FeaturedGrid featured={featured} />
+      {specCount != null && featured && featured.length < specCount && (
+        <Box
+          component={RouterLink}
+          to="/specs"
+          sx={{
+            display: 'inline-block',
+            mt: 2.5,
+            fontFamily: typography.mono,
+            fontSize: '12px',
+            color: semanticColors.mutedText,
+            textDecoration: 'none',
+            transition: 'color 0.2s',
+            '&:hover': { color: colors.primary },
+          }}
+        >
+          + {specCount - featured.length} more in the catalogue →
+        </Box>
+      )}
     </Box>
   );
 }
@@ -252,42 +262,61 @@ function FeaturedGrid({ featured }: { featured: FeaturedImpl[] | null }) {
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(2, 1fr)' },
-        gap: 2,
+        // 2 cols on phones, 3 on tablets, 5 on desktop — always a full row,
+        // never hanging singletons.
+        gridTemplateColumns: {
+          xs: 'repeat(2, 1fr)',
+          sm: 'repeat(3, 1fr)',
+          md: 'repeat(5, 1fr)',
+        },
+        alignItems: 'stretch',
+        gap: { xs: 2, md: 2.5 },
       }}
     >
-      {(featured ?? Array.from({ length: 4 }, () => null)).map((item, i) => (
-        <FeaturedThumb key={item?.spec_id ? `${item.spec_id}-${item.library_id}` : `skel-${i}`} item={item} />
+      {(featured ?? Array.from({ length: 5 }, () => null)).map((item, i) => (
+        <FeaturedThumb
+          key={item?.spec_id ? `${item.spec_id}-${item.library_id}` : `skel-${i}`}
+          item={item}
+        />
       ))}
     </Box>
   );
 }
 
-interface ActionChipProps {
+interface MethodLinkProps {
   to?: string;
   href?: string;
-  label: string;
+  subject: string;
+  verb: string;
   external?: boolean;
 }
 
-function ActionChip({ to, href, label, external }: ActionChipProps) {
+/**
+ * Two-tone subject.verb() link — matches HeroSection.SecondaryLink: subject
+ * rendered muted (opacity 0.7), `.verb()` at the link's current colour.
+ * Whole element turns primary-green on hover; subject brightens to full.
+ */
+function MethodLink({ to, href, subject, verb, external }: MethodLinkProps) {
   const sx = {
     fontFamily: typography.mono,
     fontSize: '13px',
-    fontWeight: 500,
-    color: 'var(--ink-muted)',
-    bgcolor: 'transparent',
-    border: 'none',
-    borderRadius: '4px',
-    px: 1.25,
-    py: 1,
+    color: 'var(--ink-soft)',
     textDecoration: 'none',
     display: 'inline-flex',
     alignItems: 'baseline',
-    transition: 'color 0.2s, background 0.2s',
-    '&::before': { content: '"."', color: 'inherit' },
-    '&:hover': { color: colors.primary, bgcolor: 'var(--bg-elevated)' },
+    transition: 'color 0.2s',
+    '& .subj': { opacity: 0.7, transition: 'opacity 0.2s' },
+    '&:hover': { color: colors.primary },
+    '&:hover .subj': { opacity: 1 },
+    '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: 2, borderRadius: '2px' },
   } as const;
+
+  const content = (
+    <>
+      <Box component="span" className="subj">{subject}</Box>
+      {`.${verb}()`}
+    </>
+  );
 
   if (href) {
     return (
@@ -298,87 +327,107 @@ function ActionChip({ to, href, label, external }: ActionChipProps) {
         rel={external ? 'noopener noreferrer' : undefined}
         sx={sx}
       >
-        {label}()
+        {content}
       </Box>
     );
   }
   return (
     <Box component={RouterLink} to={to ?? '#'} sx={sx}>
-      {label}()
+      {content}
     </Box>
   );
 }
 
 /**
- * Compact terminal-window card — mirrors PlotOfTheDay's shape (top bar with
- * `$` prompt, square-ish image body, bottom bar with `>>>` output) so the
- * featured grid feels part of the same language as the hero POTD.
+ * Featured plot card — mirrors the mockup's `.lib-card` pattern: bordered
+ * surface with green accent bar that slides in from the left on hover,
+ * translateY lift, shadow. Inside: the preview image (inset, rounded) +
+ * spec title underneath. The whole card is the link to the spec hub.
  */
 function FeaturedThumb({ item }: { item: FeaturedImpl | null }) {
   const cardSx = {
     display: 'flex',
     flexDirection: 'column' as const,
+    gap: 1.5,
+    bgcolor: 'var(--bg-surface)',
+    border: '1px solid var(--rule)',
     borderRadius: 2,
+    p: 1.5,
+    minWidth: 0,
+    position: 'relative',
     overflow: 'hidden',
-    border: `1px solid ${colors.gray[200]}`,
-    boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-    transition: 'box-shadow 0.25s, transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
     textDecoration: 'none',
     color: 'inherit',
-    bgcolor: 'var(--bg-surface)',
+    transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s, border-color 0.25s',
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '2px',
+      background: colors.primary,
+      transform: 'scaleX(0)',
+      transformOrigin: 'left',
+      transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+      zIndex: 1,
+    },
     '&:hover': {
-      transform: 'translateY(-2px)',
-      boxShadow: '0 6px 24px rgba(0,0,0,0.08)',
+      transform: 'translateY(-3px)',
+      boxShadow: '0 16px 32px -12px rgba(0,0,0,0.08)',
+      borderColor: 'rgba(0, 158, 115, 0.2)',
+      '&::before': { transform: 'scaleX(1)' },
     },
   } as const;
 
-  const barSx = {
-    display: 'flex',
-    alignItems: 'center',
-    px: 1.25,
-    py: 0.5,
-    bgcolor: colors.gray[100],
-    gap: 0.75,
-    fontFamily: typography.mono,
-    fontSize: fontSize.xxs,
+  const imageSx = {
+    display: 'block',
+    width: '100%',
+    aspectRatio: '16 / 10',
+    borderRadius: 1,
+    overflow: 'hidden',
+    bgcolor: 'var(--bg-elevated)',
+  } as const;
+
+  const titleSx = {
+    fontFamily: typography.serif,
+    fontSize: { xs: '0.875rem', md: '0.9375rem' },
+    fontWeight: 400,
+    lineHeight: 1.35,
+    color: 'var(--ink)',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    px: 0.25,
+  } as const;
+
+  const descSx = {
+    fontFamily: typography.serif,
+    fontSize: { xs: '0.75rem', md: '0.8125rem' },
+    fontWeight: 300,
+    lineHeight: 1.45,
+    color: semanticColors.mutedText,
+    px: 0.25,
+    pb: 0.25,
+    display: '-webkit-box',
+    WebkitLineClamp: 3,
+    WebkitBoxOrient: 'vertical' as const,
+    overflow: 'hidden',
   } as const;
 
   if (!item || !item.preview_url) {
     return (
       <Box sx={cardSx}>
-        <Box sx={{ ...barSx, borderBottom: `1px solid ${colors.gray[200]}` }}>
-          <Box component="span" sx={{ color: colors.gray[300] }}>$</Box>
-          <Box component="span" sx={{ color: colors.gray[300] }}>&nbsp;</Box>
-        </Box>
-        <Box sx={{ aspectRatio: '16 / 10', bgcolor: 'var(--bg-elevated)' }} />
-        <Box sx={{ ...barSx, borderTop: `1px solid ${colors.gray[200]}` }}>
-          <Box component="span" sx={{ color: colors.gray[300] }}>&gt;&gt;&gt;</Box>
-        </Box>
+        <Box sx={imageSx} />
+        <Box sx={{ ...titleSx, height: 14, width: '70%', bgcolor: 'var(--bg-elevated)', borderRadius: 0.5 }} />
+        <Box sx={{ height: 12, width: '90%', bgcolor: 'var(--bg-elevated)', borderRadius: 0.5, mx: 0.25 }} />
       </Box>
     );
   }
 
   return (
-    <Box component={RouterLink} to={specPath(item.spec_id, item.language, item.library_id)} sx={cardSx}>
-      {/* Top bar — mimics POTD's `$ python …` prompt */}
-      <Box sx={{ ...barSx, borderBottom: `1px solid ${colors.gray[200]}` }}>
-        <Box component="span" sx={{ color: colors.primary, fontWeight: 600 }}>$</Box>
-        <Box
-          component="span"
-          sx={{
-            color: semanticColors.mutedText,
-            flex: 1,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}
-        >
-          {item.spec_id}.py
-        </Box>
-      </Box>
-
-      {/* Image body */}
-      <Box sx={{ aspectRatio: '16 / 10', overflow: 'hidden' }}>
+    <Box component={RouterLink} to={specPath(item.spec_id)} sx={cardSx}>
+      <Box sx={imageSx}>
         <Box component="picture" sx={{ display: 'block', width: '100%', height: '100%' }}>
           <source type="image/webp" srcSet={buildSrcSet(item.preview_url, 'webp')} sizes="(max-width: 599px) 50vw, 25vw" />
           <source type="image/png" srcSet={buildSrcSet(item.preview_url, 'png')} sizes="(max-width: 599px) 50vw, 25vw" />
@@ -391,27 +440,9 @@ function FeaturedThumb({ item }: { item: FeaturedImpl | null }) {
           />
         </Box>
       </Box>
-
-      {/* Bottom bar — mimics POTD's `>>> plot.png saved | library` */}
-      <Box sx={{ ...barSx, borderTop: `1px solid ${colors.gray[200]}` }}>
-        <Box component="span" sx={{ color: colors.primary }}>&gt;&gt;&gt;</Box>
-        <Box
-          component="span"
-          sx={{
-            color: semanticColors.mutedText,
-            flex: 1,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}
-        >
-          plot.png saved
-        </Box>
-        <Box component="span" sx={{ color: colors.gray[300] }}>│</Box>
-        <Box component="span" sx={{ color: semanticColors.mutedText, flexShrink: 0 }}>
-          {item.library_id}
-        </Box>
-      </Box>
+      <Box sx={titleSx}>{item.spec_title}</Box>
+      {item.spec_description && <Box sx={descSx}>{item.spec_description}</Box>}
     </Box>
   );
 }
+

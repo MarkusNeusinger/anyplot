@@ -1,18 +1,6 @@
 import Box from '@mui/material/Box';
 import { colors, typography } from '../theme';
 
-const ACCENT_COLORS: Record<string, string> = {
-  matplotlib: colors.okabe.green,
-  seaborn: colors.okabe.vermillion,
-  plotly: colors.okabe.blue,
-  bokeh: colors.okabe.purple,
-  altair: colors.okabe.orange,
-  plotnine: colors.okabe.sky,
-  pygal: colors.okabe.green,
-  highcharts: colors.okabe.vermillion,
-  letsplot: colors.okabe.blue,
-};
-
 const DESCRIPTIONS: Record<string, string> = {
   matplotlib: 'The foundation. Publication-ready figures with total control.',
   seaborn: 'Statistical visualization, built on matplotlib. Elegant by default.',
@@ -32,8 +20,6 @@ interface LibraryCardProps {
 }
 
 export function LibraryCard({ name, count, onClick }: LibraryCardProps) {
-  const accent = ACCENT_COLORS[name] || colors.primary;
-
   return (
     <Box
       component="button"
@@ -59,7 +45,7 @@ export function LibraryCard({ name, count, onClick }: LibraryCardProps) {
           left: 0,
           right: 0,
           height: '2px',
-          background: accent,
+          background: colors.primary,
           transform: 'scaleX(0)',
           transformOrigin: 'left',
           transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',

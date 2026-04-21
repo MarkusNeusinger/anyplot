@@ -67,6 +67,7 @@ class TopImpl(BaseModel):
 
     spec_id: str
     spec_title: str
+    spec_description: str | None = None
     library_id: str
     language: str
     quality_score: float
@@ -255,6 +256,7 @@ async def _build_dashboard(repo: SpecRepository, impl_repo: ImplRepository) -> D
                         TopImpl(
                             spec_id=spec.id,
                             spec_title=spec.title,
+                            spec_description=spec.description,
                             library_id=lib_id,
                             language=impl.library.language if impl.library else "python",
                             quality_score=score,
