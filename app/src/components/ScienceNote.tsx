@@ -1,4 +1,5 @@
 import Box from '@mui/material/Box';
+import { Link as RouterLink } from 'react-router-dom';
 import { colors, typography } from '../theme';
 import { PaletteStrip } from './PaletteStrip';
 
@@ -8,7 +9,7 @@ export function ScienceNote() {
       bgcolor: 'var(--bg-surface)',
       borderTop: '1px solid var(--rule)',
       borderBottom: '1px solid var(--rule)',
-      py: { xs: 6, md: 10 },
+      py: { xs: 4, md: 7 },
       px: 3,
     }}>
       <Box sx={{ maxWidth: 760, mx: 'auto', textAlign: 'center' }}>
@@ -75,6 +76,23 @@ export function ScienceNote() {
         </Box>
 
         <PaletteStrip />
+
+        <Box
+          component={RouterLink}
+          to="/palette"
+          sx={{
+            display: 'inline-block',
+            mt: 3,
+            fontFamily: typography.mono,
+            fontSize: '12px',
+            color: 'var(--ink-soft)',
+            textDecoration: 'none',
+            transition: 'color 0.2s',
+            '&:hover': { color: colors.primary },
+          }}
+        >
+          palette.explore()
+        </Box>
       </Box>
     </Box>
   );

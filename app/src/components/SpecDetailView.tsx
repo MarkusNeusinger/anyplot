@@ -15,6 +15,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
 
 import type { Implementation } from '../types';
 import { API_URL } from '../constants';
@@ -33,10 +34,12 @@ interface SpecDetailViewProps {
   codeCopied: string | null;
   downloadDone: string | null;
   viewMode: 'preview' | 'interactive';
+  reportUrl: string;
   onViewModeChange: (mode: 'preview' | 'interactive') => void;
   onImageLoad: () => void;
   onCopyCode: (impl: Implementation) => void;
   onDownload: (impl: Implementation) => void;
+  onReport: () => void;
   onTrackEvent: (event: string, props?: Record<string, string | undefined>) => void;
 }
 
@@ -49,10 +52,12 @@ export function SpecDetailView({
   codeCopied,
   downloadDone,
   viewMode,
+  reportUrl,
   onViewModeChange,
   onImageLoad,
   onCopyCode,
   onDownload,
+  onReport,
   onTrackEvent,
 }: SpecDetailViewProps) {
   const sortedImpls = [...implementations].sort((a, b) => a.library_id.localeCompare(b.library_id));
@@ -226,6 +231,23 @@ export function SpecDetailView({
             />
           </Box>
 
+          <Box sx={{ position: 'absolute', top: 8, left: 8, display: 'flex', gap: 0.5 }}>
+            <Tooltip title=".report()" disableFocusListener>
+              <IconButton
+                component="a"
+                href={reportUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={onReport}
+                aria-label="Report issue"
+                sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: '#fff', color: colors.primary } }}
+                size="medium"
+              >
+                <FlagOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+
           <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
             <Tooltip title=".preview()" disableFocusListener>
               <IconButton
@@ -332,6 +354,26 @@ export function SpecDetailView({
               {codeCopied === currentImpl.library_id ? '>>> .copied' : '>>> .downloaded'}
             </Box>
           )}
+
+          <Box
+            onClick={(e) => e.stopPropagation()}
+            sx={{ position: 'absolute', top: 8, left: 8, display: zoomed ? 'none' : 'flex', gap: 0.5 }}
+          >
+            <Tooltip title=".report()" disableFocusListener>
+              <IconButton
+                component="a"
+                href={reportUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e: React.MouseEvent) => { (e.currentTarget as HTMLElement).blur(); onReport(); }}
+                aria-label="Report issue"
+                sx={{ bgcolor: 'rgba(255,255,255,0.9)', '&:hover': { bgcolor: '#fff', color: colors.primary } }}
+                size="medium"
+              >
+                <FlagOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
 
           <Box
             onClick={(e) => e.stopPropagation()}

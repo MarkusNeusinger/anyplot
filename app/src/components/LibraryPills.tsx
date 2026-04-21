@@ -28,12 +28,14 @@ interface LibraryPillsProps {
   implementations: Implementation[];
   selectedLibrary: string;
   onSelect: (libraryId: string) => void;
+  onAll?: () => void;
 }
 
 export const LibraryPills = memo(function LibraryPills({
   implementations,
   selectedLibrary,
   onSelect,
+  onAll,
 }: LibraryPillsProps) {
   // Sort implementations alphabetically
   const sortedImpls = useMemo(() => {
@@ -92,6 +94,42 @@ export const LibraryPills = memo(function LibraryPills({
         py: 2,
       }}
     >
+      {onAll && (
+        <>
+          <Box
+            onClick={onAll}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onAll(); } }}
+            aria-label="Back to all implementations"
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 0.75,
+              fontFamily: typography.mono,
+              fontSize: fontSize.sm,
+              color: 'var(--ink-soft)',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              transition: 'color 0.2s',
+              '& .all-subject': { opacity: 0.7, transition: 'opacity 0.2s' },
+              '& .all-arrow': { transition: 'transform 0.2s' },
+              '&:hover': { color: colors.primary },
+              '&:hover .all-subject': { opacity: 1 },
+              '&:hover .all-arrow': { transform: 'translateX(-3px)' },
+              '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: 2, borderRadius: '2px' },
+            }}
+          >
+            <Box component="span" className="all-arrow">←</Box>
+            <Box component="span">
+              <Box component="span" className="all-subject">impls</Box>
+              .all()
+            </Box>
+          </Box>
+          <Box sx={{ height: 20, width: '1px', bgcolor: 'var(--rule)', mx: 1.5 }} />
+        </>
+      )}
+
       {/* Left Arrow */}
       <IconButton
         onClick={handlePrev}

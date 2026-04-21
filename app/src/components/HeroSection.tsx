@@ -175,7 +175,7 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
               userSelect: 'none',
             }}
           >
-            ||
+            |
           </Box>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
             <SecondaryLink to="/mcp" subject="mcp" verb="connect" ariaLabel="Connect via MCP" />
@@ -261,10 +261,8 @@ function SecondaryLink({
         gap: 0.5,
         transition: 'color 0.2s',
         '& .link-subject': { opacity: 0.7, transition: 'opacity 0.2s' },
-        '& .arrow': { ml: 'auto', pl: 1, transition: 'transform 0.2s' },
         '&:hover': { color: colors.primary },
         '&:hover .link-subject': { opacity: 1 },
-        '&:hover .arrow': { transform: 'translateX(3px)' },
         '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: 2, borderRadius: '2px' },
       }}
     >
@@ -272,7 +270,6 @@ function SecondaryLink({
         <Box component="span" className="link-subject">{subject}</Box>
         {`.${verb}()`}
       </Box>
-      <Box component="span" className="arrow">→</Box>
     </Box>
   );
 }

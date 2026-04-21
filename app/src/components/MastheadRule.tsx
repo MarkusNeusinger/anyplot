@@ -126,7 +126,11 @@ export function MastheadRule() {
   if (isSpecRoute) {
     const [specId, language, library] = parts;
     centerContent = library ? `${specId}.${library}` : specId;
-    if (language && LANG_DELIM[language]) centerDelim = LANG_DELIM[language];
+    // Hub pages carry the language via ?language=… query param (see router.tsx
+    // SpecLanguageRedirect). Detail pages carry it as a path segment.
+    const queryLanguage = new URLSearchParams(location.search).get('language');
+    const effectiveLanguage = language || queryLanguage;
+    if (effectiveLanguage && LANG_DELIM[effectiveLanguage]) centerDelim = LANG_DELIM[effectiveLanguage];
   }
 
   return (

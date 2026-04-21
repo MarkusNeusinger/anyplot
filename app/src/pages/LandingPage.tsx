@@ -38,6 +38,7 @@ export function LandingPage() {
           flexDirection: 'column',
           justifyContent: 'center',
           minHeight: { xs: 'auto', md: 'calc(88svh - 88px)' },
+          pb: { xs: 4, md: 7 },
         }}
       >
         <HeroSection potd={potd} />
@@ -50,9 +51,145 @@ export function LandingPage() {
         libraries={librariesData}
         onLibraryClick={() => {}}
         widthTier="catalog"
-        headerStyle="prompt"
       />
+
+      <PaletteSection />
     </>
+  );
+}
+
+/**
+ * Palette section — mirrors SpecsSection's two-column layout: description on
+ * the left, labelled palette strip on the right.
+ */
+function PaletteSection() {
+  return (
+    <Box sx={{ py: { xs: 4, md: 7 } }}>
+      <SectionHeader prompt="§" title={<em>palette</em>} linkText="palette.explore()" linkTo="/palette" />
+
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) minmax(0, 1.2fr)' },
+          gap: { xs: 4, md: 8, lg: 12 },
+          alignItems: 'center',
+        }}
+      >
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <Box
+            sx={{
+              fontFamily: typography.serif,
+              fontSize: { xs: '1rem', md: '1.25rem' },
+              lineHeight: 1.55,
+              color: 'var(--ink-soft)',
+              fontWeight: 300,
+              maxWidth: '52ch',
+            }}
+          >
+            a colourblind-safe set of eight, proposed by{' '}
+            <Box
+              component="a"
+              href="https://jfly.uni-koeln.de/color/"
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{
+                color: 'var(--ink)',
+                textDecoration: 'none',
+                borderBottom: '1px dotted currentColor',
+                '&:hover': { color: colors.primary },
+              }}
+            >
+              Okabe &amp; Ito (2008)
+            </Box>
+            . every plot in the catalogue picks from it — and so does this
+            site, accent for accent.
+          </Box>
+        </Box>
+
+        <LabelledPaletteStrip />
+      </Box>
+    </Box>
+  );
+}
+
+const PALETTE = [
+  { background: '#009E73', hex: '#009E73', name: 'bluish green' },
+  { background: '#D55E00', hex: '#D55E00', name: 'vermillion' },
+  { background: '#0072B2', hex: '#0072B2', name: 'blue' },
+  { background: '#CC79A7', hex: '#CC79A7', name: 'reddish purple' },
+  { background: '#E69F00', hex: '#E69F00', name: 'orange' },
+  { background: '#56B4E9', hex: '#56B4E9', name: 'sky blue' },
+  { background: '#F0E442', hex: '#F0E442', name: 'yellow' },
+  { background: 'var(--ink)', hex: 'adaptive', name: 'ink' },
+] as const;
+
+function LabelledPaletteStrip() {
+  return (
+    <Box>
+      <Box
+        sx={{
+          display: 'flex',
+          borderRadius: '6px',
+          overflow: 'hidden',
+          '&:hover .swatch': { flex: 0.6 },
+          '&:hover .swatch:hover': { flex: 3 },
+        }}
+      >
+        {PALETTE.map(({ background, hex }) => (
+          <Box
+            key={background}
+            className="swatch"
+            sx={{
+              flex: 1,
+              height: 120,
+              background,
+              transition: 'flex 0.3s',
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              '& .hex-label': { opacity: 0, transition: 'opacity 0.2s' },
+              '&:hover .hex-label': { opacity: 1 },
+            }}
+          >
+            <Box
+              className="hex-label"
+              sx={{
+                fontFamily: typography.mono,
+                fontSize: '12px',
+                fontWeight: 500,
+                color: '#fff',
+                bgcolor: 'rgba(0,0,0,0.65)',
+                px: 1,
+                py: 0.25,
+                borderRadius: 1,
+                whiteSpace: 'nowrap',
+                pointerEvents: 'none',
+              }}
+            >
+              {hex}
+            </Box>
+          </Box>
+        ))}
+      </Box>
+      <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(${PALETTE.length}, 1fr)`, mt: 1 }}>
+        {PALETTE.map(({ background, name }) => (
+          <Box
+            key={background}
+            sx={{
+              fontFamily: typography.mono,
+              fontSize: { xs: '9px', md: '10px' },
+              color: semanticColors.mutedText,
+              textAlign: 'center',
+              px: 0.5,
+              lineHeight: 1.3,
+            }}
+          >
+            {name}
+          </Box>
+        ))}
+      </Box>
+    </Box>
   );
 }
 
@@ -63,8 +200,8 @@ export function LandingPage() {
  */
 function SpecsSection({ specCount, featured }: { specCount?: number; featured: FeaturedImpl[] | null }) {
   return (
-    <Box sx={{ py: { xs: 6, md: 10 } }}>
-      <SectionHeader prompt="$" title={<em>specifications</em>} linkText="specs.all()" linkTo="/specs" />
+    <Box sx={{ py: { xs: 4, md: 7 } }}>
+      <SectionHeader prompt="§" title={<em>specifications</em>} linkText="specs.all()" linkTo="/specs" />
 
       <Box
         sx={{

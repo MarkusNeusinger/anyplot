@@ -81,7 +81,7 @@ export function AboutPage() {
       </Helmet>
 
       <Box sx={{ maxWidth: 'var(--max, 1240px)', mx: 'auto', pb: 6 }}>
-        <SectionHeader prompt="~/anyplot/" title={<em>about</em>} />
+        <SectionHeader prompt="§" title={<em>about</em>} />
 
         <Box sx={{ maxWidth: 760, mx: 'auto' }}>
           {/* Lede */}

@@ -43,7 +43,7 @@ export function LibrariesPage() {
       </Helmet>
 
       <Box sx={{ maxWidth: 'var(--max-catalog, 2200px)', mx: 'auto', pb: 6 }}>
-        <SectionHeader prompt="❯" title={<em>libraries</em>} />
+        <SectionHeader prompt="§" title={<em>libraries</em>} />
 
         <Box sx={{ ...textStyle, maxWidth: 720, mb: 6 }}>
           Each spec is implemented in every supported library so you can compare side-by-side.

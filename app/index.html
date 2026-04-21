@@ -28,6 +28,8 @@
 
     <!-- Preload MonoLisa Basic Latin (most used, variable font = all weights) -->
     <link rel="preload" href="https://storage.googleapis.com/anyplot-static/fonts/0-MonoLisa-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <!-- Preload Basic Latin italic — the editorial script variant (`<em>` + ss02). Without this the font arrives too late under `font-display: optional` and the page renders with the upright fallback. -->
+    <link rel="preload" href="https://storage.googleapis.com/anyplot-static/fonts/1-MonoLisa-italic.woff2" as="font" type="font/woff2" crossorigin>
     <!-- Preload Latin-1 Supplement for ä, ö, ü, ß etc. -->
     <link rel="preload" href="https://storage.googleapis.com/anyplot-static/fonts/2-MonoLisa-normal.woff2" as="font" type="font/woff2" crossorigin>
 

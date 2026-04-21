@@ -39,7 +39,11 @@
   src: url('https://storage.googleapis.com/anyplot-static/fonts/1-MonoLisa-italic.woff2') format('woff2');
   font-weight: 100 900;
   font-style: italic;
-  font-display: optional;
+  /* `swap` (not `optional`) — the Basic Latin italic carries the editorial
+     script emphasis (`<em>` + ss02). On a slow first load `optional` would
+     freeze the page with the upright fallback; `swap` accepts a brief FOUT
+     but guarantees the italic variant eventually renders. */
+  font-display: swap;
   unicode-range: U+0020-007F;
 }
 

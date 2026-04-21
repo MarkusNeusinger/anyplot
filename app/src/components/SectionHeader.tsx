@@ -3,18 +3,16 @@ import { Link } from 'react-router-dom';
 import { colors, typography } from '../theme';
 
 interface SectionHeaderProps {
-  /** Shell-prompt prefix per style-guide §6.3 — e.g. `❯`, `$`, `~/anyplot/`. Preferred. */
+  /** Prefix symbol — e.g. `§`, `❯`, `$`. Rendered at the same size as the title. */
   prompt?: string;
-  /** Legacy editorial section number — e.g. `§ 01`. Kept for non-landing pages. */
-  number?: string;
   title: React.ReactNode;
   linkText?: string;
   linkTo?: string;
 }
 
-export function SectionHeader({ prompt, number, title, linkText, linkTo }: SectionHeaderProps) {
-  const isPrompt = !!prompt;
+const titleFontSize = { xs: '1.5rem', sm: '1.875rem', md: 'clamp(1.875rem, 3.5vw, 2.5rem)' };
 
+export function SectionHeader({ prompt, title, linkText, linkTo }: SectionHeaderProps) {
   return (
     <Box sx={{
       display: 'grid',
@@ -25,28 +23,22 @@ export function SectionHeader({ prompt, number, title, linkText, linkTo }: Secti
       pb: 2.5,
       borderBottom: `1px solid var(--rule)`,
     }}>
-      <Box sx={isPrompt ? {
-        fontFamily: typography.mono,
-        fontSize: { xs: '0.95rem', sm: '1.15rem', md: '1.4rem' },
-        fontWeight: 500,
-        color: 'var(--ink-muted)',
-        whiteSpace: 'nowrap',
-      } : {
-        fontFamily: typography.mono,
-        fontSize: '11px',
-        color: 'var(--ink-muted)',
-        textTransform: 'uppercase',
-        letterSpacing: '0.15em',
-      }}>
-        {isPrompt ? prompt : number}
-      </Box>
+      {prompt && (
+        <Box sx={{
+          fontFamily: typography.mono,
+          fontSize: { xs: '0.95rem', sm: '1.15rem', md: '1.4rem' },
+          fontWeight: 500,
+          color: 'var(--ink-muted)',
+          whiteSpace: 'nowrap',
+        }}>
+          {prompt}
+        </Box>
+      )}
       <Box component="h2" sx={{
         fontFamily: typography.serif,
         fontWeight: 400,
-        fontSize: isPrompt
-          ? { xs: '1.5rem', sm: '1.875rem', md: 'clamp(1.875rem, 3.5vw, 2.5rem)' }
-          : { xs: '1.75rem', sm: '2.25rem', md: 'clamp(2.25rem, 4.5vw, 3.5rem)' },
-        lineHeight: isPrompt ? 1.15 : 1,
+        fontSize: titleFontSize,
+        lineHeight: 1.15,
         letterSpacing: '-0.02em',
         color: 'var(--ink)',
         m: 0,
@@ -69,12 +61,11 @@ export function SectionHeader({ prompt, number, title, linkText, linkTo }: Secti
             textDecoration: 'none',
             display: 'inline-flex',
             alignItems: 'center',
-            gap: 1,
-            transition: 'color 0.2s, gap 0.2s',
-            '&:hover': { color: colors.primary, gap: 1.5 },
+            transition: 'color 0.2s',
+            '&:hover': { color: colors.primary },
           }}
         >
-          {linkText} →
+          {linkText}
         </Box>
       )}
     </Box>

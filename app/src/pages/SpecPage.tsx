@@ -336,25 +336,27 @@ export function SpecPage() {
         <link rel="canonical" href={canonical} />
       </Helmet>
 
-      <Box sx={{ pb: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-          <Box
-            component="a"
-            href={buildReportUrl()}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => trackEvent('report_issue', { spec: specId, library: selectedLibrary || undefined })}
-            sx={{
-              fontFamily: typography.mono,
-              fontSize: fontSize.sm,
-              color: semanticColors.mutedText,
-              textDecoration: 'none',
-              '&:hover': { color: colors.primary },
-            }}
-          >
-            report issue ↗
+      <Box sx={{ pt: 1.5, pb: 4 }}>
+        {mode === 'hub' && (
+          <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 0.5 }}>
+            <Box
+              component="a"
+              href={buildReportUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackEvent('report_issue', { spec: specId, library: selectedLibrary || undefined })}
+              sx={{
+                fontFamily: typography.mono,
+                fontSize: fontSize.sm,
+                color: semanticColors.mutedText,
+                textDecoration: 'none',
+                '&:hover': { color: colors.primary },
+              }}
+            >
+              report issue ↗
+            </Box>
           </Box>
-        </Box>
+        )}
 
         <Typography
           variant="h4"
@@ -453,19 +455,8 @@ export function SpecPage() {
               implementations={langImpls}
               selectedLibrary={selectedLibrary || ''}
               onSelect={handleLibrarySelect}
+              onAll={() => navigate(specPath(specId!))}
             />
-
-            <Box sx={{ textAlign: 'center', mt: -0.5, mb: 1 }}>
-              <Box component={Link} to={{ pathname: specPath(specId!), search: urlLanguage ? `?language=${encodeURIComponent(urlLanguage)}` : '' }} sx={{
-                fontFamily: typography.fontFamily,
-                fontSize: fontSize.sm,
-                color: semanticColors.mutedText,
-                textDecoration: 'none',
-                '&:hover': { color: colors.primary },
-              }}>
-                {'< all implementations'}
-              </Box>
-            </Box>
 
             <SpecDetailView
               specTitle={specData.title}
@@ -476,10 +467,12 @@ export function SpecPage() {
               codeCopied={codeCopied}
               downloadDone={downloadDone}
               viewMode={viewMode}
+              reportUrl={buildReportUrl()}
               onViewModeChange={handleViewModeChange}
               onImageLoad={() => setImageLoaded(true)}
               onCopyCode={handleCopyCode}
               onDownload={handleDownload}
+              onReport={() => trackEvent('report_issue', { spec: specId, library: selectedLibrary || undefined })}
               onTrackEvent={trackEvent}
             />
 
