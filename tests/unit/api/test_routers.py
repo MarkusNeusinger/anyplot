@@ -537,6 +537,21 @@ class TestSeoProxyRouter:
             response = client.get("/seo-proxy/nonexistent-spec")
             assert response.status_code == 404
 
+    def test_seo_spec_language_redirects_to_hub(self, client: TestClient) -> None:
+        """Language-overview URL should 301-redirect to the cross-language hub.
+
+        The /{spec}/{language} tier was consolidated onto /{spec} to remove
+        duplicate content; the language segment is intentionally dropped.
+        """
+        response = client.get("/seo-proxy/scatter-basic/python", follow_redirects=False)
+        assert response.status_code == 301
+        assert response.headers["location"] == "/seo-proxy/scatter-basic"
+
+    def test_seo_spec_language_rejects_malformed_spec_id(self, client: TestClient) -> None:
+        """Malformed spec_ids must 404, not redirect — prevents header injection."""
+        response = client.get("/seo-proxy/Invalid_Spec/python", follow_redirects=False)
+        assert response.status_code == 404
+
     def test_seo_spec_implementation_without_db(self, client: TestClient) -> None:
         """SEO spec implementation should return fallback HTML when DB unavailable."""
         with patch(DB_CONFIG_PATCH, return_value=False):

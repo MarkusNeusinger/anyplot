@@ -239,11 +239,15 @@ export function SpecPage() {
     return `${GITHUB_URL}/issues/new?${params.toString()}`;
   }, [specId]);
 
-  // Track page view
+  // Track page view. Hub mode calls trackPageview() without an override so
+  // buildPlausibleUrl() picks up ?language= from window.location and converts
+  // it to the path-segment form (e.g. /{spec}/language/python). The URL
+  // override path used for detail mode cannot carry query strings — see
+  // useAnalytics.ts sendPageview() validation regex.
   useEffect(() => {
     if (!specData || !specId) return;
     if (mode === 'hub') {
-      trackPageview(languageFilter ? `/${specId}?language=${languageFilter}` : `/${specId}`);
+      trackPageview();
     } else if (mode === 'detail' && selectedLibrary) {
       trackPageview(`/${specId}/${urlLanguage}/${selectedLibrary}`);
     }

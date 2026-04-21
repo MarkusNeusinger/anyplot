@@ -32,7 +32,10 @@ function buildPlausibleUrl(): string {
   const pathPrefix =
     parts.length > 0 && !RESERVED_TOP_LEVEL.has(parts[0]) ? `/${parts.join("/")}` : "";
 
-  // Definierte Reihenfolge der Filter-Kategorien (inkl. impl-level tags)
+  // Definierte Reihenfolge der Filter-Kategorien (inkl. impl-level tags).
+  // `language` is included so the hub's ?language= filter is tracked as a
+  // distinct pageview path (/{spec}/language/python), matching the path-segment
+  // convention used for all other filter params.
   const orderedKeys = [
     "lib",
     "spec",
@@ -45,6 +48,7 @@ function buildPlausibleUrl(): string {
     "pat",
     "prep",
     "style",
+    "language",
   ];
 
   for (const key of orderedKeys) {

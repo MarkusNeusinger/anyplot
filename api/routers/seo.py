@@ -1,6 +1,7 @@
 """SEO endpoints (sitemap, bot-optimized pages)."""
 
 import html
+import re
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -15,6 +16,11 @@ from core.database.connection import get_db_context
 
 
 router = APIRouter(tags=["seo"])
+
+# Canonical spec-id shape — lowercase alphanumerics with hyphen separators.
+# Same pattern enforced in automation/scripts/sync_to_postgres.py. Used here to
+# constrain user-controlled path segments before they land in Location headers.
+_SPEC_ID_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 
 
 def _lastmod(dt: datetime | None) -> str:
@@ -317,6 +323,8 @@ async def seo_spec_language(spec_id: str, language: str):
     it — Google should consolidate the page, not a filtered variant.
     """
     del language  # referenced for route matching only; deliberately not forwarded
+    if not _SPEC_ID_RE.fullmatch(spec_id):
+        raise HTTPException(status_code=404, detail="Spec not found")
     return RedirectResponse(url=f"/seo-proxy/{spec_id}", status_code=301)
 
 
