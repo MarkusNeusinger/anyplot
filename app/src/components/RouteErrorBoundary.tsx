@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Link as RouterLink, isRouteErrorResponse, useRouteError } from 'react-router-dom';
 import { Alert, Box, Button, CircularProgress, Typography } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -7,16 +7,19 @@ import { NotFoundPage } from '../pages/NotFoundPage';
 
 const RELOAD_ATTEMPT_KEY = 'anyplot:chunk-reload-attempt';
 
+function extractMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  if (error && typeof error === 'object') {
+    const maybe = (error as { message?: unknown }).message;
+    if (typeof maybe === 'string') return maybe;
+  }
+  return '';
+}
+
 function isChunkLoadError(error: unknown): boolean {
   if (!error) return false;
-  const message =
-    error instanceof Error
-      ? error.message
-      : typeof error === 'string'
-        ? error
-        : typeof (error as { message?: unknown }).message === 'string'
-          ? (error as { message: string }).message
-          : '';
+  const message = extractMessage(error);
   return (
     /Failed to fetch dynamically imported module/i.test(message) ||
     /Importing a module script failed/i.test(message) ||
@@ -28,10 +31,36 @@ function isChunkLoadError(error: unknown): boolean {
 function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === 'string') return error;
+  // Both raw Response objects and react-router's ErrorResponse wrapper expose
+  // status/statusText — JSON.stringify alone would yield "{}" for a raw Response.
+  if (error instanceof Response || isRouteErrorResponse(error)) {
+    const statusText = (error as { statusText?: string }).statusText;
+    return `${error.status} ${statusText || 'Response'}`.trim();
+  }
+  const fromMessage = extractMessage(error);
+  if (fromMessage) return fromMessage;
   try {
-    return JSON.stringify(error);
+    const json = JSON.stringify(error);
+    if (json && json !== '{}') return json;
   } catch {
-    return 'Unknown error';
+    // fall through to String(error)
+  }
+  return String(error);
+}
+
+function hasAttemptedReload(): boolean {
+  try {
+    return Boolean(sessionStorage.getItem(RELOAD_ATTEMPT_KEY));
+  } catch {
+    return false;
+  }
+}
+
+function markReloadAttempted(): void {
+  try {
+    sessionStorage.setItem(RELOAD_ATTEMPT_KEY, String(Date.now()));
+  } catch {
+    // sessionStorage can throw in private mode; skip the loop guard.
   }
 }
 
@@ -47,29 +76,22 @@ export function RouteErrorBoundary() {
   const error = useRouteError();
   const chunkError = isChunkLoadError(error);
 
-  // Decide once at mount whether to auto-reload. Using a lazy initializer
-  // avoids setState-in-effect and guarantees the reload decision and the
-  // sessionStorage write happen together.
-  const [isReloading] = useState(() => {
-    if (!chunkError) return false;
-    try {
-      if (sessionStorage.getItem(RELOAD_ATTEMPT_KEY)) return false;
-      sessionStorage.setItem(RELOAD_ATTEMPT_KEY, String(Date.now()));
-    } catch {
-      // sessionStorage can throw in private mode; skip the loop guard.
-    }
-    return true;
-  });
+  // Decide whether to auto-reload from pure reads only — the render phase
+  // stays side-effect free. The sessionStorage write and the actual reload
+  // happen in an effect.
+  const shouldAttemptReload = chunkError && !hasAttemptedReload();
 
   useEffect(() => {
-    if (isReloading) window.location.reload();
-  }, [isReloading]);
+    if (!shouldAttemptReload) return;
+    markReloadAttempted();
+    window.location.reload();
+  }, [shouldAttemptReload]);
 
   if (isRouteErrorResponse(error) && error.status === 404) {
     return <NotFoundPage />;
   }
 
-  if (chunkError && isReloading) {
+  if (shouldAttemptReload) {
     return (
       <Box
         sx={{

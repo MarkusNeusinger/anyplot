@@ -125,10 +125,32 @@ describe('RouteErrorBoundary', () => {
     expect(await screen.findByText('Something went wrong')).toBeInTheDocument();
   });
 
-  it('falls back to "Unknown error" when JSON.stringify throws (circular refs)', async () => {
+  it('handles JSON.stringify failures (circular refs) without crashing', async () => {
     const circular: Record<string, unknown> = {};
     circular.self = circular;
     renderWithRouter(circular);
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument();
+  });
+
+  it('renders useful diagnostics for non-404 Response errors', async () => {
+    const router = createMemoryRouter(
+      [
+        {
+          path: '/',
+          errorElement: <RouteErrorBoundary />,
+          loader: () => {
+            throw new Response('Bad', { status: 500, statusText: 'Internal Server Error' });
+          },
+          element: <div>never</div>,
+        },
+      ],
+      { initialEntries: ['/'] }
+    );
+    render(
+      <ThemeProvider theme={theme}>
+        <RouterProvider router={router} />
+      </ThemeProvider>
+    );
     expect(await screen.findByText('Something went wrong')).toBeInTheDocument();
   });
 
