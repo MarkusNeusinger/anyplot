@@ -80,14 +80,20 @@ jobs:
           SPEC_ID=$(echo "$BRANCH" | cut -d'/' -f2)
           LIBRARY=$(echo "$BRANCH" | cut -d'/' -f3)
 
+          # Language: only python supported today. If future branches encode language,
+          # parse it from the branch name here.
+          LANGUAGE="python"
+
           echo "specification_id=$SPEC_ID" >> $GITHUB_OUTPUT
           echo "library=$LIBRARY" >> $GITHUB_OUTPUT
+          echo "language=$LANGUAGE" >> $GITHUB_OUTPUT
 
       - name: Validate PR completeness before merge
         if: steps.check.outputs.should_run == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPEC_ID: ${{ steps.extract.outputs.specification_id }}
+          LANGUAGE: ${{ steps.extract.outputs.language }}
           LIBRARY: ${{ steps.extract.outputs.library }}
           BRANCH: ${{ steps.check.outputs.branch }}
           PR_NUM: ${{ steps.check.outputs.pr_number }}
@@ -95,8 +101,8 @@ jobs:
           # Fetch the PR branch to check its contents
           git fetch origin "$BRANCH"
 
-          IMPL_FILE="plots/${SPEC_ID}/implementations/${LIBRARY}.py"
-          META_FILE="plots/${SPEC_ID}/metadata/${LIBRARY}.yaml"
+          IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}.py"
+          META_FILE="plots/${SPEC_ID}/metadata/${LANGUAGE}/${LIBRARY}.yaml"
 
           # Check if implementation file exists on the PR branch
           if ! git show "origin/${BRANCH}:${IMPL_FILE}" &>/dev/null; then
@@ -198,10 +204,11 @@ jobs:
         if: steps.check.outputs.should_run == 'true'
         env:
           SPEC_ID: ${{ steps.extract.outputs.specification_id }}
+          LANGUAGE: ${{ steps.extract.outputs.language }}
           LIBRARY: ${{ steps.extract.outputs.library }}
         run: |
-          STAGING="gs://anyplot-images/staging/${SPEC_ID}/${LIBRARY}"
-          PRODUCTION="gs://anyplot-images/plots/${SPEC_ID}/${LIBRARY}"
+          STAGING="gs://anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}"
+          PRODUCTION="gs://anyplot-images/plots/${SPEC_ID}/${LANGUAGE}/${LIBRARY}"
 
           # Copy from staging to production
           gsutil -m -h "Cache-Control:public, max-age=604800" cp -r "${STAGING}/*" "${PRODUCTION}/" 2>/dev/null || echo "No staging files to promote"
@@ -235,6 +242,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE: ${{ steps.issue.outputs.number }}
+          LANGUAGE: ${{ steps.extract.outputs.language }}
           LIBRARY: ${{ steps.extract.outputs.library }}
           SPEC_ID: ${{ steps.extract.outputs.specification_id }}
           PR_NUM: ${{ steps.check.outputs.pr_number }}
@@ -253,7 +261,7 @@ jobs:
 
           BODY="${BODY}
 
-          **Preview:** [View image](https://storage.googleapis.com/anyplot-images/plots/${SPEC_ID}/${LIBRARY}/plot.png)
+          **Preview:** [View image](https://storage.googleapis.com/anyplot-images/plots/${SPEC_ID}/${LANGUAGE}/${LIBRARY}/plot.png)
 
           ---
           :robot: *[impl-merge](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"

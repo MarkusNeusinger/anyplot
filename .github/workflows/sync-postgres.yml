@@ -98,8 +98,8 @@ jobs:
         echo "**Structure synced:**" >> $GITHUB_STEP_SUMMARY
         echo "- plots/{spec-id}/specification.md (descriptions, applications, data, notes)" >> $GITHUB_STEP_SUMMARY
         echo "- plots/{spec-id}/specification.yaml (tags, created, issue, suggested, history)" >> $GITHUB_STEP_SUMMARY
-        echo "- plots/{spec-id}/metadata/{library}.yaml (per-library metadata)" >> $GITHUB_STEP_SUMMARY
-        echo "- plots/{spec-id}/implementations/*.py (code)" >> $GITHUB_STEP_SUMMARY
+        echo "- plots/{spec-id}/metadata/{language}/{library}.yaml (per-library metadata)" >> $GITHUB_STEP_SUMMARY
+        echo "- plots/{spec-id}/implementations/{language}/{library}.{ext} (code)" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Trigger:** \`${{ github.event_name }}\`" >> $GITHUB_STEP_SUMMARY
         echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY

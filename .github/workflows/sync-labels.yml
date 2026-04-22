@@ -123,11 +123,11 @@ jobs:
           if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
             # First push or new branch: diff-tree on the after commit only
             CHANGED_IMPLS=$(git diff-tree --no-commit-id --name-only -r "$AFTER" | \
-              grep -P 'plots/[^/]+/implementations/[^/]+\.py$' || true)
+              grep -P 'plots/[^/]+/implementations/[^/]+/[^/]+\.py$' || true)
           else
             # Normal push: diff between before and after SHAs
             CHANGED_IMPLS=$(git diff --name-only "$BEFORE" "$AFTER" | \
-              grep -P 'plots/[^/]+/implementations/[^/]+\.py$' || true)
+              grep -P 'plots/[^/]+/implementations/[^/]+/[^/]+\.py$' || true)
           fi
 
           if [ -z "$CHANGED_IMPLS" ]; then
@@ -148,9 +148,11 @@ jobs:
           echo "${{ steps.detect.outputs.impls }}" | while read IMPL_PATH; do
             [ -z "$IMPL_PATH" ] && continue
 
-            # Extract spec-id and library from path: plots/{spec-id}/implementations/{library}.py
+            # Extract spec-id, language, and library from path:
+            # plots/{spec-id}/implementations/{language}/{library}.py
             SPEC_ID=$(echo "$IMPL_PATH" | cut -d'/' -f2)
-            LIBRARY=$(echo "$IMPL_PATH" | cut -d'/' -f4 | sed 's/\.py$//')
+            LANGUAGE=$(echo "$IMPL_PATH" | cut -d'/' -f4)
+            LIBRARY=$(echo "$IMPL_PATH" | cut -d'/' -f5 | sed 's/\.[^.]*$//')
 
             # Get issue number
             SPEC_YAML="plots/${SPEC_ID}/specification.yaml"

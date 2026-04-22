@@ -103,7 +103,8 @@ jobs:
 
             4. **If implementation issue, validate the library exists:**
                ```bash
-               ls plots/{spec_id}/implementations/{library}.py
+               # Language is python unless the report explicitly references another language
+               ls plots/{spec_id}/implementations/python/{library}.py
                ```
                If NOT found:
                - Post comment: "Implementation `{library}` not found for `{spec_id}`."
@@ -114,8 +115,8 @@ jobs:
             5. **Read relevant files:**
                - `plots/{spec_id}/specification.md`
                - `plots/{spec_id}/specification.yaml`
-               - `plots/{spec_id}/implementations/{library}.py` (if impl issue)
-               - `plots/{spec_id}/metadata/{library}.yaml` (if impl issue)
+               - `plots/{spec_id}/implementations/python/{library}.py` (if impl issue)
+               - `plots/{spec_id}/metadata/python/{library}.yaml` (if impl issue)
                - Optionally: read other files in `plots/{spec_id}/` if needed for analysis
 
             6. **Post structured analysis comment** following the format in the prompt file.

@@ -121,6 +121,7 @@ jobs:
             Read `prompts/workflow-prompts/impl-repair-claude.md` and follow those instructions.
 
             Variables for this run:
+            - LANGUAGE: python
             - LIBRARY: ${{ inputs.library }}
             - SPEC_ID: ${{ inputs.specification_id }}
             - ATTEMPT: ${{ inputs.attempt }}
@@ -139,6 +140,7 @@ jobs:
             Read `prompts/workflow-prompts/impl-repair-claude.md` and follow those instructions.
 
             Variables for this run:
+            - LANGUAGE: python
             - LIBRARY: ${{ inputs.library }}
             - SPEC_ID: ${{ inputs.specification_id }}
             - ATTEMPT: ${{ inputs.attempt }}
@@ -149,8 +151,9 @@ jobs:
         env:
           SPEC_ID: ${{ inputs.specification_id }}
           LIBRARY: ${{ inputs.library }}
+          LANGUAGE: python
         run: |
-          IMPL_DIR="plots/${SPEC_ID}/implementations"
+          IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"
 
           if [ ! -f "$IMPL_DIR/plot.png" ]; then
             echo "::warning::No plot.png found after repair"
@@ -186,9 +189,10 @@ jobs:
         env:
           SPEC_ID: ${{ inputs.specification_id }}
           LIBRARY: ${{ inputs.library }}
+          LANGUAGE: python
         run: |
-          IMPL_DIR="plots/${SPEC_ID}/implementations"
-          STAGING_PATH="gs://anyplot-images/staging/${SPEC_ID}/${LIBRARY}"
+          IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"
+          STAGING_PATH="gs://anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}"
 
           # Upload all plot images (original + responsive variants)
           if [ -f "$IMPL_DIR/plot.png" ]; then

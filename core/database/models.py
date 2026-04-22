@@ -9,10 +9,10 @@ from typing import Any, Optional
 from uuid import uuid4
 
 from sqlalchemy import BigInteger, CheckConstraint, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
-from sqlalchemy.orm import Mapped, deferred, mapped_column, relationship
+from sqlalchemy.orm import Mapped, deferred, mapped_column, relationship, synonym
 from sqlalchemy.sql import func
 
-from core.constants import LIBRARIES_METADATA
+from core.constants import LANGUAGES_METADATA, LIBRARIES_METADATA
 from core.database.connection import Base
 from core.database.types import StringArray, UniversalJSON, UniversalUUID
 
@@ -26,6 +26,9 @@ MAX_SPEC_ID_LENGTH = 100
 
 # Maximum length for library IDs (e.g., "highcharts" = 10 chars)
 MAX_LIBRARY_ID_LENGTH = 50
+
+# Maximum length for language IDs (e.g., "javascript" = 10 chars)
+MAX_LANGUAGE_ID_LENGTH = 50
 
 # Valid review verdicts
 REVIEW_VERDICTS = ("APPROVED", "REJECTED")
@@ -62,6 +65,24 @@ class Spec(Base):
     impls: Mapped[list["Impl"]] = relationship("Impl", back_populates="spec", cascade="all, delete-orphan")
 
 
+class Language(Base):
+    """Supported programming language (analog to Library). Allows future R, JavaScript, Julia etc."""
+
+    __tablename__ = "languages"
+
+    id: Mapped[str] = mapped_column(String(MAX_LANGUAGE_ID_LENGTH), primary_key=True)  # e.g., "python", "r"
+    name: Mapped[str] = mapped_column(String(100), nullable=False)  # e.g., "Python", "R"
+    file_extension: Mapped[str] = mapped_column(String(10), nullable=False)  # e.g., ".py", ".R", ".js"
+    runtime_version: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # e.g., "3.14"
+    documentation_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=func.now())
+
+    # Relationships
+    libraries: Mapped[list["Library"]] = relationship("Library", back_populates="language_ref")
+    impls: Mapped[list["Impl"]] = relationship("Impl", back_populates="language_ref")
+
+
 class Library(Base):
     """Supported plotting library."""
 
@@ -69,12 +90,22 @@ class Library(Base):
 
     id: Mapped[str] = mapped_column(String, primary_key=True)  # e.g., "matplotlib"
     name: Mapped[str] = mapped_column(String, nullable=False)  # e.g., "Matplotlib"
-    language: Mapped[str] = mapped_column(String(50), nullable=False, default="python")  # e.g., "python", "julia", "r"
+    language_id: Mapped[str] = mapped_column(
+        String(MAX_LANGUAGE_ID_LENGTH),
+        ForeignKey("languages.id", ondelete="RESTRICT"),
+        nullable=False,
+        default="python",
+    )
     version: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # Current version
     documentation_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # Short description
 
+    # Backward-compat: .language reads/writes language_id. Keeps all existing
+    # `library.language` access working after the FK refactor.
+    language = synonym("language_id")
+
     # Relationships
+    language_ref: Mapped["Language"] = relationship("Language", back_populates="libraries")
     impls: Mapped[list["Impl"]] = relationship("Impl", back_populates="library", cascade="all, delete-orphan")
 
 
@@ -87,13 +118,28 @@ class Impl(Base):
     id: Mapped[str] = mapped_column(UniversalUUID, primary_key=True, default=lambda: str(uuid4()))
     spec_id: Mapped[str] = mapped_column(String, ForeignKey("specs.id", ondelete="CASCADE"), nullable=False)
     library_id: Mapped[str] = mapped_column(String, ForeignKey("libraries.id", ondelete="CASCADE"), nullable=False)
+    language_id: Mapped[str] = mapped_column(
+        String(MAX_LANGUAGE_ID_LENGTH),
+        ForeignKey("languages.id", ondelete="RESTRICT"),
+        nullable=False,
+        default="python",
+    )
 
     # Code (deferred — ~13 MB total, only loaded when explicitly accessed or undeferred)
-    code: Mapped[Optional[str]] = deferred(mapped_column(Text, nullable=True))  # Python source
+    code: Mapped[Optional[str]] = deferred(mapped_column(Text, nullable=True))  # Source
 
-    # Previews (filled by workflow, synced from metadata YAML)
-    preview_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # Full PNG
-    preview_html: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # Interactive HTML
+    # Previews — one per theme (filled by Phase C pipeline, synced from metadata YAML).
+    # Light and dark PNGs are always emitted; HTML variants are emitted only for interactive libraries.
+    preview_url_light: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    preview_url_dark: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    preview_html_light: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    preview_html_dark: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+    # Backward-compat synonyms for callers still using single-theme field names.
+    # These resolve to the light variant so existing behavior (single preview) is preserved
+    # until callers migrate to the theme-aware pair.
+    preview_url = synonym("preview_url_light")
+    preview_html = synonym("preview_html_light")
 
     # Creation versions (filled by workflow)
     python_version: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # e.g., "3.13"
@@ -134,10 +180,11 @@ class Impl(Base):
     # Relationships
     spec: Mapped["Spec"] = relationship("Spec", back_populates="impls")
     library: Mapped["Library"] = relationship("Library", back_populates="impls")
+    language_ref: Mapped["Language"] = relationship("Language", back_populates="impls")
 
     # Unique constraint and check constraints
     __table_args__ = (
-        UniqueConstraint("spec_id", "library_id", name="uq_impl"),
+        UniqueConstraint("spec_id", "language_id", "library_id", name="uq_impl"),
         # Quality score must be between 0 and 100
         CheckConstraint(
             "quality_score IS NULL OR (quality_score >= 0 AND quality_score <= 100)", name="ck_quality_score_range"
@@ -149,5 +196,6 @@ class Impl(Base):
     )
 
 
-# Seed data for libraries (re-exported from core.constants)
+# Seed data for libraries + languages (re-exported from core.constants)
 LIBRARIES_SEED = LIBRARIES_METADATA
+LANGUAGES_SEED = LANGUAGES_METADATA

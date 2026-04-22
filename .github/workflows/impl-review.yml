@@ -102,9 +102,10 @@ jobs:
         env:
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
           LIBRARY: ${{ steps.pr.outputs.library }}
+          LANGUAGE: python
         run: |
           mkdir -p plot_images
-          gsutil -m cp "gs://anyplot-images/staging/${SPEC_ID}/${LIBRARY}/*" plot_images/ 2>/dev/null || true
+          gsutil -m cp "gs://anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}/*" plot_images/ 2>/dev/null || true
           ls -la plot_images/
 
       - name: Verify plot image exists
@@ -255,11 +256,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
           LIBRARY: ${{ steps.pr.outputs.library }}
+          LANGUAGE: python
           SCORE: ${{ steps.score.outputs.score }}
           BRANCH: ${{ steps.pr.outputs.branch }}
         run: |
-          METADATA_FILE="plots/${SPEC_ID}/metadata/${LIBRARY}.yaml"
-          IMPL_FILE="plots/${SPEC_ID}/implementations/${LIBRARY}.py"
+          METADATA_FILE="plots/${SPEC_ID}/metadata/${LANGUAGE}/${LIBRARY}.yaml"
+          IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}.py"
 
           # Configure git auth and checkout the PR branch
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
@@ -462,6 +464,7 @@ jobs:
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
           LIBRARY: ${{ steps.pr.outputs.library }}
+          LANGUAGE: python
           SCORE: ${{ steps.score.outputs.score }}
           ATTEMPT: ${{ steps.attempts.outputs.display }}
           ATTEMPT_COUNT: ${{ steps.attempts.outputs.count }}
@@ -542,8 +545,8 @@ jobs:
               gh pr close "$PR_NUM"
 
               # Remove old implementation from main if it exists
-              IMPL_FILE="plots/${SPEC_ID}/implementations/${LIBRARY}.py"
-              META_FILE="plots/${SPEC_ID}/metadata/${LIBRARY}.yaml"
+              IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}.py"
+              META_FILE="plots/${SPEC_ID}/metadata/${LANGUAGE}/${LIBRARY}.yaml"
 
               git fetch origin main
               if git show origin/main:"$IMPL_FILE" &>/dev/null; then

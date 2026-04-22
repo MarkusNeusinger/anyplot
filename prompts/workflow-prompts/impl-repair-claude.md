@@ -1,6 +1,6 @@
 # Repair Implementation
 
-You are repairing the **{LIBRARY}** implementation for **{SPEC_ID}**.
+You are repairing the **{LANGUAGE}/{LIBRARY}** implementation for **{SPEC_ID}**.
 
 This is **repair attempt {ATTEMPT}/3**. The previous implementation was rejected.
 
@@ -9,7 +9,7 @@ This is **repair attempt {ATTEMPT}/3**. The previous implementation was rejected
 Read both sources to understand what needs to be fixed:
 
 1. `/tmp/ai_feedback.md` - Full review from PR comments
-2. `plots/{SPEC_ID}/metadata/{LIBRARY}.yaml` - Look at:
+2. `plots/{SPEC_ID}/metadata/{LANGUAGE}/{LIBRARY}.yaml` - Look at:
    - `review.strengths` (keep these aspects!)
    - `review.weaknesses` (fix these problems - decide HOW yourself)
    - `review.image_description` (understand what was generated visually)
@@ -39,7 +39,7 @@ Read both sources to understand what needs to be fixed:
 
 ## Step 3: Read current implementation
 
-`plots/{SPEC_ID}/implementations/{LIBRARY}.py`
+`plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}.py`
 
 ## Step 4: Fix the issues
 
@@ -52,7 +52,7 @@ Based on the AI feedback, fix:
 
 ```bash
 source .venv/bin/activate
-cd plots/{SPEC_ID}/implementations
+cd plots/{SPEC_ID}/implementations/{LANGUAGE}
 MPLBACKEND=Agg ANYPLOT_THEME=light python {LIBRARY}.py
 MPLBACKEND=Agg ANYPLOT_THEME=dark  python {LIBRARY}.py
 ```
@@ -67,8 +67,8 @@ View `plot-light.png` AND `plot-dark.png`. Verify the failed criteria are now fi
 
 ```bash
 source .venv/bin/activate
-ruff format plots/{SPEC_ID}/implementations/{LIBRARY}.py
-ruff check --fix plots/{SPEC_ID}/implementations/{LIBRARY}.py
+ruff format plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}.py
+ruff check --fix plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}.py
 ```
 
 ## Step 8: Commit and push
@@ -76,7 +76,7 @@ ruff check --fix plots/{SPEC_ID}/implementations/{LIBRARY}.py
 ```bash
 git config user.name "github-actions[bot]"
 git config user.email "github-actions[bot]@users.noreply.github.com"
-git add plots/{SPEC_ID}/implementations/{LIBRARY}.py
+git add plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}.py
 git commit -m "fix({LIBRARY}): address review feedback for {SPEC_ID}
 
 Attempt {ATTEMPT}/3 - fixes based on AI review"

@@ -1,14 +1,15 @@
 # Generate Implementation
 
-**YOUR PRIMARY TASK: Create a working Python plot implementation file.**
+**YOUR PRIMARY TASK: Create a working plot implementation file.**
 
-You MUST create: `plots/{SPEC_ID}/implementations/{LIBRARY}.py`
+You MUST create: `plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}.py`
 
 This is NOT optional. The workflow will FAIL if this file does not exist after you finish.
 
 ---
 
 **Variables:**
+- LANGUAGE: {LANGUAGE}
 - LIBRARY: {LIBRARY}
 - SPEC_ID: {SPEC_ID}
 - Regeneration: {IS_REGENERATION}
@@ -23,8 +24,8 @@ Read these files to understand the requirements:
 4. `plots/{SPEC_ID}/specification.md` - What to visualize
 
 Optional (if regenerating):
-- `plots/{SPEC_ID}/metadata/{LIBRARY}.yaml` - Previous review feedback
-- `plots/{SPEC_ID}/implementations/{LIBRARY}.py` - Previous implementation
+- `plots/{SPEC_ID}/metadata/{LANGUAGE}/{LIBRARY}.yaml` - Previous review feedback
+- `plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}.py` - Previous implementation
 
 ### Feasibility Check (Static Libraries Only)
 
@@ -39,7 +40,7 @@ If LIBRARY is **matplotlib**, **seaborn**, or **plotnine**, AND the specificatio
 **You MUST use the Write tool to create:**
 
 ```
-plots/{SPEC_ID}/implementations/{LIBRARY}.py
+plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}.py
 ```
 
 The script MUST:
@@ -59,7 +60,7 @@ The script MUST:
 Run the implementation **twice**, once per theme:
 ```bash
 source .venv/bin/activate
-cd plots/{SPEC_ID}/implementations
+cd plots/{SPEC_ID}/implementations/{LANGUAGE}
 MPLBACKEND=Agg ANYPLOT_THEME=light python {LIBRARY}.py
 MPLBACKEND=Agg ANYPLOT_THEME=dark  python {LIBRARY}.py
 ```
@@ -79,8 +80,8 @@ Look at `plot-light.png` AND `plot-dark.png`:
 
 ```bash
 source .venv/bin/activate
-ruff format plots/{SPEC_ID}/implementations/{LIBRARY}.py
-ruff check --fix plots/{SPEC_ID}/implementations/{LIBRARY}.py
+ruff format plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}.py
+ruff check --fix plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}.py
 ```
 
 ## Step 6: Verify file exists (CRITICAL)
@@ -88,7 +89,7 @@ ruff check --fix plots/{SPEC_ID}/implementations/{LIBRARY}.py
 Before committing, verify the implementation file exists:
 
 ```bash
-ls -la plots/{SPEC_ID}/implementations/{LIBRARY}.py
+ls -la plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}.py
 ```
 
 **If the file does NOT exist, you MUST go back to Step 2 and create it!**
@@ -98,7 +99,7 @@ ls -la plots/{SPEC_ID}/implementations/{LIBRARY}.py
 ```bash
 git config user.name "github-actions[bot]"
 git config user.email "github-actions[bot]@users.noreply.github.com"
-git add plots/{SPEC_ID}/implementations/{LIBRARY}.py
+git add plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}.py
 git commit -m "feat({LIBRARY}): implement {SPEC_ID}"
 git push -u origin implementation/{SPEC_ID}/{LIBRARY}
 ```
@@ -106,7 +107,7 @@ git push -u origin implementation/{SPEC_ID}/{LIBRARY}
 ## Final Check
 
 Before finishing, confirm:
-1. ✅ `plots/{SPEC_ID}/implementations/{LIBRARY}.py` exists
+1. ✅ `plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}.py` exists
 2. ✅ `plot-light.png` AND `plot-dark.png` were generated successfully (plus `plot-light.html` / `plot-dark.html` for interactive libs)
 3. ✅ First categorical series renders in `#009E73` in both themes
 4. ✅ Changes were committed and pushed

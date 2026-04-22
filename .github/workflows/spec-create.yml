@@ -135,8 +135,8 @@ jobs:
                  - `issue`: ${{ github.event.issue.number }}
                  - `suggested`: ${{ github.event.issue.user.login }}
                  - `tags`: Follow tagging-system.md guide (4 dimensions: plot_type, data_type, domain, features)
-               - Create empty folder: `plots/{specification-id}/implementations/`
-               - Create empty folder: `plots/{specification-id}/metadata/`
+               - Create empty folder: `plots/{specification-id}/implementations/python/`
+               - Create empty folder: `plots/{specification-id}/metadata/python/`
 
             8. **Commit and push:**
                ```bash
@@ -239,8 +239,8 @@ jobs:
                  - `issue`: ${{ github.event.issue.number }}
                  - `suggested`: ${{ github.event.issue.user.login }}
                  - `tags`: Follow tagging-system.md guide (4 dimensions: plot_type, data_type, domain, features)
-               - Create empty folder: `plots/{specification-id}/implementations/`
-               - Create empty folder: `plots/{specification-id}/metadata/`
+               - Create empty folder: `plots/{specification-id}/implementations/python/`
+               - Create empty folder: `plots/{specification-id}/metadata/python/`
 
             8. **Commit and push:**
                ```bash

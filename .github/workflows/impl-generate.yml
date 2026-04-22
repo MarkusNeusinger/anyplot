@@ -106,12 +106,16 @@ jobs:
           DEPS_VAR="DEPS_${LIBRARY}"
           DEPS="${!DEPS_VAR}"
 
+          # Language: only python supported today. Future multi-language work will derive this per spec.
+          LANGUAGE="python"
+
           echo "specification_id=$SPEC_ID" >> $GITHUB_OUTPUT
           echo "library=$LIBRARY" >> $GITHUB_OUTPUT
+          echo "language=$LANGUAGE" >> $GITHUB_OUTPUT
           echo "issue_number=$ISSUE" >> $GITHUB_OUTPUT
           echo "deps=$DEPS" >> $GITHUB_OUTPUT
 
-          echo "::notice::Generating $LIBRARY for $SPEC_ID (issue: ${ISSUE:-none})"
+          echo "::notice::Generating $LANGUAGE/$LIBRARY for $SPEC_ID (issue: ${ISSUE:-none})"
 
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -232,10 +236,11 @@ jobs:
         id: existing
         env:
           SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
+          LANGUAGE: ${{ steps.inputs.outputs.language }}
           LIBRARY: ${{ steps.inputs.outputs.library }}
         run: |
-          METADATA_FILE="plots/${SPEC_ID}/metadata/${LIBRARY}.yaml"
-          IMPL_FILE="plots/${SPEC_ID}/implementations/${LIBRARY}.py"
+          METADATA_FILE="plots/${SPEC_ID}/metadata/${LANGUAGE}/${LIBRARY}.yaml"
+          IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}.py"
 
           if [ -f "$METADATA_FILE" ] && [ -f "$IMPL_FILE" ]; then
             echo "is_regeneration=true" >> $GITHUB_OUTPUT
@@ -244,13 +249,14 @@ jobs:
             echo "is_regeneration=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Ensure implementations directory exists
+      - name: Ensure implementation directories exist
         env:
           SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
+          LANGUAGE: ${{ steps.inputs.outputs.language }}
         run: |
-          # Create implementations directory if it doesn't exist (for new specs)
-          mkdir -p "plots/${SPEC_ID}/implementations"
-          echo "::notice::Ensured implementations directory exists"
+          mkdir -p "plots/${SPEC_ID}/implementations/${LANGUAGE}"
+          mkdir -p "plots/${SPEC_ID}/metadata/${LANGUAGE}"
+          echo "::notice::Ensured implementation + metadata directories exist for language '${LANGUAGE}'"
 
       - name: Run Claude Code to generate implementation
         id: claude
@@ -264,6 +270,7 @@ jobs:
             Read `prompts/workflow-prompts/impl-generate-claude.md` and follow those instructions.
 
             Variables for this run:
+            - LANGUAGE: ${{ steps.inputs.outputs.language }}
             - LIBRARY: ${{ steps.inputs.outputs.library }}
             - SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
             - IS_REGENERATION: ${{ steps.existing.outputs.is_regeneration }}
@@ -280,6 +287,7 @@ jobs:
             Read `prompts/workflow-prompts/impl-generate-claude.md` and follow those instructions.
 
             Variables for this run:
+            - LANGUAGE: ${{ steps.inputs.outputs.language }}
             - LIBRARY: ${{ steps.inputs.outputs.library }}
             - SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
             - IS_REGENERATION: ${{ steps.existing.outputs.is_regeneration }}
@@ -291,13 +299,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
+          LANGUAGE: ${{ steps.inputs.outputs.language }}
           LIBRARY: ${{ steps.inputs.outputs.library }}
           ISSUE: ${{ steps.issue.outputs.number }}
           BRANCH: ${{ steps.branch.outputs.branch }}
         run: |
+          IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"
+
           # Save plot files before git operations (they are not committed and would be lost)
-          cp "plots/${SPEC_ID}/implementations/plot.png" "/tmp/plot.png" 2>/dev/null || true
-          cp "plots/${SPEC_ID}/implementations/plot.html" "/tmp/plot.html" 2>/dev/null || true
+          cp "${IMPL_DIR}/plot.png" "/tmp/plot.png" 2>/dev/null || true
+          cp "${IMPL_DIR}/plot.html" "/tmp/plot.html" 2>/dev/null || true
 
           # Configure git auth (Claude's action configured it, but it's gone now)
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
@@ -315,11 +326,13 @@ jobs:
           fi
 
           # Restore plot files after git operations
-          cp "/tmp/plot.png" "plots/${SPEC_ID}/implementations/plot.png" 2>/dev/null || true
-          cp "/tmp/plot.html" "plots/${SPEC_ID}/implementations/plot.html" 2>/dev/null || true
+          mkdir -p "${IMPL_DIR}"
+          cp "/tmp/plot.png" "${IMPL_DIR}/plot.png" 2>/dev/null || true
+          cp "/tmp/plot.html" "${IMPL_DIR}/plot.html" 2>/dev/null || true
 
           # Now create metadata file
-          METADATA_DIR="plots/${SPEC_ID}/metadata"
+          METADATA_DIR="plots/${SPEC_ID}/metadata/${LANGUAGE}"
+          mkdir -p "${METADATA_DIR}"
           METADATA_FILE="${METADATA_DIR}/${LIBRARY}.yaml"
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
@@ -363,7 +376,7 @@ jobs:
           PREVIEW_HTML="null"
           case "$LIBRARY" in
             plotly|bokeh|altair|highcharts|pygal|letsplot)
-              PREVIEW_HTML="https://storage.googleapis.com/anyplot-images/plots/${SPEC_ID}/${LIBRARY}/plot.html"
+              PREVIEW_HTML="https://storage.googleapis.com/anyplot-images/plots/${SPEC_ID}/${LANGUAGE}/${LIBRARY}/plot.html"
               ;;
           esac
 
@@ -373,6 +386,7 @@ jobs:
           import yaml
           lib = '$LIBRARY'
           spec = '$SPEC_ID'
+          language = '$LANGUAGE'
           ts = '$TIMESTAMP'
           run_id = ${{ github.run_id }}
           issue = int('$ISSUE' or '0')
@@ -382,6 +396,7 @@ jobs:
           metadata_file = '$METADATA_FILE'
           data = {
               'library': lib,
+              'language': language,
               'specification_id': spec,
               'created': ts,
               'updated': ts,
@@ -390,7 +405,7 @@ jobs:
               'issue': issue,
               'python_version': py_ver,
               'library_version': lib_ver,
-              'preview_url': f'https://storage.googleapis.com/anyplot-images/plots/{spec}/{lib}/plot.png',
+              'preview_url': f'https://storage.googleapis.com/anyplot-images/plots/{spec}/{language}/{lib}/plot.png',
               'preview_html': preview_html if preview_html != 'null' else None,
               'quality_score': None,
               'review': {'strengths': [], 'weaknesses': []}
@@ -405,7 +420,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          IMPL_FILE="plots/${SPEC_ID}/implementations/${LIBRARY}.py"
+          IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}.py"
 
           # Verify implementation file exists in the repository (Claude should have committed it)
           if ! git ls-files --error-unmatch "$IMPL_FILE" >/dev/null 2>&1; then
@@ -437,11 +452,12 @@ jobs:
       - name: Process plot images
         env:
           SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
+          LANGUAGE: ${{ steps.inputs.outputs.language }}
         run: |
-          IMPL_DIR="plots/${SPEC_ID}/implementations"
+          IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"
 
           if [ ! -f "$IMPL_DIR/plot.png" ]; then
-            echo "::error::No plot.png found - implementation failed to generate image"
+            echo "::error::No plot.png found at ${IMPL_DIR}/plot.png - implementation failed to generate image"
             exit 1
           fi
 
@@ -466,6 +482,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
+          LANGUAGE: ${{ steps.inputs.outputs.language }}
           LIBRARY: ${{ steps.inputs.outputs.library }}
           ISSUE: ${{ steps.issue.outputs.number }}
           BRANCH: ${{ steps.branch.outputs.branch }}
@@ -481,11 +498,11 @@ jobs:
           fi
 
           # Create PR body
-          BODY="## Implementation: \`${SPEC_ID}\` - ${LIBRARY}
+          BODY="## Implementation: \`${SPEC_ID}\` - ${LANGUAGE}/${LIBRARY}
 
-          Implements the **${LIBRARY}** version of \`${SPEC_ID}\`.
+          Implements the **${LANGUAGE}/${LIBRARY}** version of \`${SPEC_ID}\`.
 
-          **File:** \`plots/${SPEC_ID}/implementations/${LIBRARY}.py\`"
+          **File:** \`plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}.py\`"
 
           if [ -n "$ISSUE" ]; then
             BODY="${BODY}
@@ -527,11 +544,12 @@ jobs:
         if: steps.pr.outputs.pr_exists == 'true'
         env:
           SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
+          LANGUAGE: ${{ steps.inputs.outputs.language }}
           LIBRARY: ${{ steps.inputs.outputs.library }}
         run: |
-          IMPL_DIR="plots/${SPEC_ID}/implementations"
-          STAGING_PATH="gs://anyplot-images/staging/${SPEC_ID}/${LIBRARY}"
-          PUBLIC_URL="https://storage.googleapis.com/anyplot-images/staging/${SPEC_ID}/${LIBRARY}"
+          IMPL_DIR="plots/${SPEC_ID}/implementations/${LANGUAGE}"
+          STAGING_PATH="gs://anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}"
+          PUBLIC_URL="https://storage.googleapis.com/anyplot-images/staging/${SPEC_ID}/${LANGUAGE}/${LIBRARY}"
 
           # Upload all plot images (original + responsive variants)
           if [ -f "$IMPL_DIR/plot.png" ]; then

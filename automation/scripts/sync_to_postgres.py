@@ -38,7 +38,8 @@ from sqlalchemy import delete, select, tuple_  # noqa: E402
 from sqlalchemy.dialects.postgresql import insert  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
-from core.database import LIBRARIES_SEED, Impl, Library, Spec  # noqa: E402
+from core.constants import LANGUAGE_FILE_EXTENSIONS  # noqa: E402
+from core.database import LANGUAGES_SEED, LIBRARIES_SEED, Impl, Language, Library, Spec  # noqa: E402
 from core.database.connection import close_db_sync, get_db_context_sync, init_db_sync, is_db_configured  # noqa: E402
 
 
@@ -93,7 +94,7 @@ def _validate_quality_score(score) -> float | None:
             return score_float
         logger.warning(f"Quality score {score_float} out of range 0-100, setting to None")
         return None
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         logger.warning(f"Invalid quality score '{score}', setting to None")
         return None
 
@@ -280,24 +281,49 @@ def scan_plot_directory(plot_dir: Path) -> dict | None:
     spec_data["created"] = parse_timestamp(metadata.get("created"))
     spec_data["updated"] = parse_timestamp(metadata.get("updated"))
 
-    # Scan implementations
+    # Scan implementations — supports both the new language-aware layout
+    # (plots/{spec}/implementations/{language}/{library}.{ext}) and the legacy flat
+    # layout (plots/{spec}/implementations/{library}.py, python-only).
     implementations = []
     if implementations_dir.exists():
-        for impl_file in implementations_dir.glob("*.py"):
+        # Build a list of (language_id, impl_file) tuples to process
+        impl_file_pairs: list[tuple[str, Path]] = []
+
+        # New layout: language subdirectories
+        for language_dir in sorted(implementations_dir.iterdir()):
+            if not language_dir.is_dir() or language_dir.name.startswith("_") or language_dir.name.startswith("."):
+                continue
+            language_id = language_dir.name
+            ext = LANGUAGE_FILE_EXTENSIONS.get(language_id)
+            if ext is None:
+                logger.warning(f"Unknown language directory '{language_id}' in {implementations_dir} — skipping")
+                continue
+            for impl_file in sorted(language_dir.glob(f"*{ext}")):
+                if impl_file.name.startswith("_"):
+                    continue
+                impl_file_pairs.append((language_id, impl_file))
+
+        # Legacy layout: flat .py files under implementations/ are implicitly python
+        for impl_file in sorted(implementations_dir.glob("*.py")):
             if impl_file.name.startswith("_"):
                 continue
+            impl_file_pairs.append(("python", impl_file))
 
+        for language_id, impl_file in impl_file_pairs:
             library_id = impl_file.stem  # e.g., "matplotlib", "seaborn"
             code = impl_file.read_text(encoding="utf-8")
 
-            # Get implementation metadata from per-library file (new) or legacy metadata.yaml
+            # Get implementation metadata — new path includes language,
+            # legacy path is metadata/{library}.yaml (python-only, still supported during migration).
             impl_meta = {}
-            library_metadata_file = metadata_dir / f"{library_id}.yaml"
-            if library_metadata_file.exists():
-                # New structure: metadata/{library}.yaml
-                impl_meta = parse_library_metadata_yaml(library_metadata_file) or {}
+            language_metadata_file = metadata_dir / language_id / f"{library_id}.yaml"
+            legacy_library_metadata_file = metadata_dir / f"{library_id}.yaml"
+            if language_metadata_file.exists():
+                impl_meta = parse_library_metadata_yaml(language_metadata_file) or {}
+            elif language_id == "python" and legacy_library_metadata_file.exists():
+                impl_meta = parse_library_metadata_yaml(legacy_library_metadata_file) or {}
             else:
-                # Legacy structure: metadata.yaml -> implementations -> {library}
+                # Ancient layout: metadata.yaml -> implementations -> {library}
                 impl_meta = metadata.get("implementations", {}).get(library_id, {})
 
             # Support both new flat structure and legacy current: nesting
@@ -317,17 +343,29 @@ def scan_plot_directory(plot_dir: Path) -> dict | None:
             # Validate review verdict
             review_verdict = review.get("verdict")
             if review_verdict and review_verdict not in ("APPROVED", "REJECTED"):
-                logger.warning(f"Invalid review verdict '{review_verdict}' for {spec_id}/{library_id}, setting to None")
+                logger.warning(
+                    f"Invalid review verdict '{review_verdict}' for {spec_id}/{language_id}/{library_id}, setting to None"
+                )
                 review_verdict = None
+
+            # Preview URLs — accept theme-aware fields (new) with fallback to single-theme legacy field.
+            # Legacy single-theme preview_url is treated as the light variant.
+            preview_url_light = impl_meta.get("preview_url_light") or impl_meta.get("preview_url")
+            preview_url_dark = impl_meta.get("preview_url_dark")
+            preview_html_light = impl_meta.get("preview_html_light") or impl_meta.get("preview_html")
+            preview_html_dark = impl_meta.get("preview_html_dark")
 
             implementations.append(
                 {
                     "spec_id": spec_id,
+                    "language_id": language_id,
                     "library_id": library_id,
                     "code": code,
-                    # Preview URLs (from metadata YAML, filled by workflow)
-                    "preview_url": impl_meta.get("preview_url"),
-                    "preview_html": impl_meta.get("preview_html"),
+                    # Preview URLs — one pair per theme (filled by workflow)
+                    "preview_url_light": preview_url_light,
+                    "preview_url_dark": preview_url_dark,
+                    "preview_html_light": preview_html_light,
+                    "preview_html_dark": preview_html_dark,
                     # Versions (from metadata YAML, filled by workflow)
                     "python_version": current.get("python_version") or impl_meta.get("python_version"),
                     "library_version": current.get("library_version") or impl_meta.get("library_version"),
@@ -341,11 +379,11 @@ def scan_plot_directory(plot_dir: Path) -> dict | None:
                     # Review feedback
                     "review_strengths": review.get("strengths") or [],
                     "review_weaknesses": review.get("weaknesses") or [],
-                    # Extended review data (issue #2845)
+                    # Extended review data
                     "review_image_description": review.get("image_description"),
                     "review_criteria_checklist": review.get("criteria_checklist"),
                     "review_verdict": review_verdict,
-                    # Implementation-level tags (issue #2434)
+                    # Implementation-level tags
                     "impl_tags": impl_meta.get("impl_tags"),
                 }
             )
@@ -369,8 +407,10 @@ _BATCH_CHUNK_SIZE = 500
 # All Impl fields that should be set from the excluded row on conflict
 _IMPL_UPDATE_FIELDS = [
     "code",
-    "preview_url",
-    "preview_html",
+    "preview_url_light",
+    "preview_url_dark",
+    "preview_html_light",
+    "preview_html_dark",
     "python_version",
     "library_version",
     "generated_at",
@@ -401,6 +441,11 @@ def sync_to_database(session: Session, plots: list[dict]) -> dict:
     """
     stats = {"specs_synced": 0, "specs_removed": 0, "impls_synced": 0, "impls_removed": 0}
 
+    # Seed languages first (libraries.language_id FK requires languages to exist)
+    if LANGUAGES_SEED:
+        stmt = insert(Language).values(LANGUAGES_SEED).on_conflict_do_nothing(index_elements=["id"])
+        session.execute(stmt)
+
     # Batch seed all libraries in one statement
     if LIBRARIES_SEED:
         stmt = insert(Library).values(LIBRARIES_SEED).on_conflict_do_nothing(index_elements=["id"])
@@ -408,7 +453,7 @@ def sync_to_database(session: Session, plots: list[dict]) -> dict:
 
     # Collect all spec values and impl values
     spec_ids = set()
-    impl_keys = set()
+    impl_keys = set()  # (spec_id, language_id, library_id)
     all_spec_values = []
     all_impl_values = []
 
@@ -418,16 +463,26 @@ def sync_to_database(session: Session, plots: list[dict]) -> dict:
         all_spec_values.append(spec)
 
         for impl in plot_data["implementations"]:
-            impl_keys.add((impl["spec_id"], impl["library_id"]))
+            impl_keys.add((impl["spec_id"], impl["language_id"], impl["library_id"]))
             all_impl_values.append(impl)
 
     # Batch upsert specs in chunks
-    spec_update_fields = ["title", "description", "applications", "data", "notes", "created", "updated", "issue", "suggested", "tags"]
+    spec_update_fields = [
+        "title",
+        "description",
+        "applications",
+        "data",
+        "notes",
+        "created",
+        "updated",
+        "issue",
+        "suggested",
+        "tags",
+    ]
     for chunk in _chunked(all_spec_values, _BATCH_CHUNK_SIZE):
         stmt = insert(Spec).values(chunk)
         stmt = stmt.on_conflict_do_update(
-            index_elements=["id"],
-            set_={field: stmt.excluded[field] for field in spec_update_fields},
+            index_elements=["id"], set_={field: stmt.excluded[field] for field in spec_update_fields}
         )
         session.execute(stmt)
     stats["specs_synced"] = len(all_spec_values)
@@ -436,8 +491,7 @@ def sync_to_database(session: Session, plots: list[dict]) -> dict:
     for chunk in _chunked(all_impl_values, _BATCH_CHUNK_SIZE):
         stmt = insert(Impl).values(chunk)
         stmt = stmt.on_conflict_do_update(
-            constraint="uq_impl",
-            set_={field: stmt.excluded[field] for field in _IMPL_UPDATE_FIELDS},
+            constraint="uq_impl", set_={field: stmt.excluded[field] for field in _IMPL_UPDATE_FIELDS}
         )
         session.execute(stmt)
     stats["impls_synced"] = len(all_impl_values)
@@ -450,17 +504,13 @@ def sync_to_database(session: Session, plots: list[dict]) -> dict:
         stats["specs_removed"] = len(removed_spec_ids)
         logger.info(f"Removed {len(removed_spec_ids)} specs no longer in repo")
 
-    # Remove impls that no longer exist in repo
-    result = session.execute(select(Impl.spec_id, Impl.library_id))
-    existing_impls = [(row[0], row[1]) for row in result.fetchall()]
+    # Remove impls that no longer exist in repo (language-aware comparison)
+    result = session.execute(select(Impl.spec_id, Impl.language_id, Impl.library_id))
+    existing_impls = [(row[0], row[1], row[2]) for row in result.fetchall()]
 
     removed_impls = [impl for impl in existing_impls if impl not in impl_keys]
     if removed_impls:
-        session.execute(
-            delete(Impl).where(
-                tuple_(Impl.spec_id, Impl.library_id).in_(removed_impls)
-            )
-        )
+        session.execute(delete(Impl).where(tuple_(Impl.spec_id, Impl.language_id, Impl.library_id).in_(removed_impls)))
         stats["impls_removed"] = len(removed_impls)
         logger.info(f"Removed {len(removed_impls)} impls no longer in repo")
 

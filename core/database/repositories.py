@@ -31,8 +31,11 @@ LIBRARY_UPDATABLE_FIELDS = frozenset({"name", "version", "documentation_url", "d
 IMPL_UPDATABLE_FIELDS = frozenset(
     {
         "code",
-        "preview_url",
-        "preview_html",
+        # Theme-aware preview variants (Phase B+C schema)
+        "preview_url_light",
+        "preview_url_dark",
+        "preview_html_light",
+        "preview_html_dark",
         "python_version",
         "library_version",
         "tested",
@@ -233,31 +236,39 @@ class ImplRepository(BaseRepository[Impl]):
         )
         return list(result.scalars().all())
 
-    async def get_code(self, spec_id: str, library_id: str) -> Optional[Impl]:
+    async def get_code(self, spec_id: str, library_id: str, language_id: str = "python") -> Optional[Impl]:
         """Get a specific implementation with only the code field undeferred."""
         result = await self.session.execute(
-            select(Impl).where(Impl.spec_id == spec_id, Impl.library_id == library_id).options(undefer(Impl.code))
+            select(Impl)
+            .where(Impl.spec_id == spec_id, Impl.library_id == library_id, Impl.language_id == language_id)
+            .options(undefer(Impl.code))
         )
         return result.scalar_one_or_none()
 
-    async def get_by_spec_and_library(self, spec_id: str, library_id: str) -> Optional[Impl]:
-        """Get a specific implementation by spec and library (includes all deferred fields)."""
+    async def get_by_spec_and_library(
+        self, spec_id: str, library_id: str, language_id: str = "python"
+    ) -> Optional[Impl]:
+        """Get a specific implementation by spec + language + library (includes all deferred fields).
+
+        Defaults to language_id="python" so existing callers keep working. Pass ``language_id``
+        explicitly to disambiguate when multiple languages exist for the same (spec, library).
+        """
         result = await self.session.execute(
             select(Impl)
-            .where(Impl.spec_id == spec_id, Impl.library_id == library_id)
+            .where(Impl.spec_id == spec_id, Impl.library_id == library_id, Impl.language_id == language_id)
             .options(
                 undefer(Impl.code), undefer(Impl.review_image_description), undefer(Impl.review_criteria_checklist)
             )
         )
         return result.scalar_one_or_none()
 
-    async def upsert(self, spec_id: str, library_id: str, impl_data: dict) -> Impl:
-        """Create or update an implementation by spec_id + library_id."""
-        existing = await self.get_by_spec_and_library(spec_id, library_id)
+    async def upsert(self, spec_id: str, library_id: str, impl_data: dict, language_id: str = "python") -> Impl:
+        """Create or update an implementation by (spec_id, language_id, library_id)."""
+        existing = await self.get_by_spec_and_library(spec_id, library_id, language_id)
         if existing:
             self._apply_updates(existing, impl_data)
             await self.session.commit()
             await self.session.refresh(existing)
             return existing
-        full_data = {**impl_data, "spec_id": spec_id, "library_id": library_id}
+        full_data = {**impl_data, "spec_id": spec_id, "library_id": library_id, "language_id": language_id}
         return await self.create(full_data)
