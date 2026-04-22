@@ -32,6 +32,7 @@ export default [
         URLSearchParams: 'readonly',
         localStorage: 'readonly',
         sessionStorage: 'readonly',
+        Storage: 'readonly',
         history: 'readonly',
         location: 'readonly',
         requestAnimationFrame: 'readonly',

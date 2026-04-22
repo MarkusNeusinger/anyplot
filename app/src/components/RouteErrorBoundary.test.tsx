@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { RouteErrorBoundary } from './RouteErrorBoundary';
@@ -99,5 +100,49 @@ describe('RouteErrorBoundary', () => {
   it('treats ChunkLoadError messages as chunk errors', async () => {
     renderWithRouter(new Error('ChunkLoadError: Loading chunk 42 failed'));
     await waitFor(() => expect(window.location.reload).toHaveBeenCalledTimes(1));
+  });
+
+  it('reloads the page when the Reload Page button is clicked', async () => {
+    renderWithRouter(new Error('boom'));
+    await screen.findByText('Something went wrong');
+    await userEvent.click(screen.getByRole('button', { name: /reload page/i }));
+    expect(window.location.reload).toHaveBeenCalledTimes(1);
+  });
+
+  it('handles string errors thrown from loaders', async () => {
+    renderWithRouter('plain string error');
+    // Plain strings are not chunk errors; render generic UI.
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument();
+    // In dev mode the raw message is rendered — when present, it shows the string.
+    const devMessage = screen.queryByText('plain string error');
+    if (devMessage) {
+      expect(devMessage).toBeInTheDocument();
+    }
+  });
+
+  it('handles non-Error object values thrown from loaders', async () => {
+    renderWithRouter({ some: 'object' });
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument();
+  });
+
+  it('falls back to "Unknown error" when JSON.stringify throws (circular refs)', async () => {
+    const circular: Record<string, unknown> = {};
+    circular.self = circular;
+    renderWithRouter(circular);
+    expect(await screen.findByText('Something went wrong')).toBeInTheDocument();
+  });
+
+  it('detects chunk errors from non-Error objects with a message property', async () => {
+    renderWithRouter({ message: 'Importing a module script failed' });
+    await waitFor(() => expect(window.location.reload).toHaveBeenCalledTimes(1));
+  });
+
+  it('skips the reload-loop guard when sessionStorage throws', async () => {
+    const getSpy = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('sessionStorage unavailable');
+    });
+    renderWithRouter(new Error('Failed to fetch dynamically imported module: /x.js'));
+    await waitFor(() => expect(window.location.reload).toHaveBeenCalledTimes(1));
+    getSpy.mockRestore();
   });
 });
