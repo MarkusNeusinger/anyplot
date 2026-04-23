@@ -132,7 +132,18 @@ async def pg_db_with_data(pg_session):
     Uses atomic commit: libraries + specs flushed first (FK targets),
     then impls added and everything committed together.
     """
-    from core.database.models import Impl, Library, Spec
+    from core.database.models import Impl, Language, Library, Spec
+
+    # Seed languages (FK target for libraries.language_id / impls.language_id).
+    # Alembic migration seeds this in prod; tests build schema via create_all, so we seed here.
+    python_lang = Language(
+        id="python",
+        name="Python",
+        file_extension=".py",
+        runtime_version="3.14",
+        documentation_url="https://python.org",
+        description="Python programming language",
+    )
 
     # Create libraries
     matplotlib_lib = Library(
@@ -206,7 +217,9 @@ async def pg_db_with_data(pg_session):
         library_version="3.10.0",
     )
 
-    # Add FK targets first (libraries and specs)
+    # Add FK targets first (languages, then libraries and specs)
+    pg_session.add(python_lang)
+    await pg_session.flush()  # Language must exist before libraries reference it
     pg_session.add_all([matplotlib_lib, seaborn_lib])
     pg_session.add_all([scatter_spec, bar_spec])
     await pg_session.flush()  # Ensure FK targets exist before adding children
