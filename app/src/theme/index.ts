@@ -64,10 +64,10 @@ export const colors = {
   },
   tooltipLight: '#56B4E9', // Sky blue on dark tooltip backgrounds
 
-  // Code blocks (dark theme)
+  // Code blocks — values come from CSS vars so they adapt with [data-theme]
   codeBlock: {
-    bg: '#0E0E0C',
-    text: '#E8E8E0',
+    bg: 'var(--code-bg)',
+    text: 'var(--code-text)',
   },
 } as const;
 

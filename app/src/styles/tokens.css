@@ -38,8 +38,11 @@
   --max-wide: 1600px;     /* (legacy)     — kept for components still referencing it */
   --max-catalog: 2200px;  /* catalog tier — plot grids, library pages, spec pages */
 
-  /* Code blocks */
-  --code-bg:   #0E0E0C;
+  /* Code blocks — warm near-black, matches --ink so code reads as
+     "inverted body text" against the cream page (editorial feel,
+     softer than pure black). Dark mode goes a step deeper for an
+     inset look against --bg-page. */
+  --code-bg:   #1A1A17;
   --code-text: #E8E8E0;
 }
 
@@ -77,4 +80,5 @@ html { font-feature-settings: "ss02"; }
   --ink-soft:    #B8B7B0;
   --ink-muted:   #A8A79F;
   --rule:        rgba(240, 239, 232, 0.10);
+  --code-bg:     #0E0E0C;
 }

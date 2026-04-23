@@ -880,11 +880,11 @@ Each thumbnail in the stack:
 
 ### 7.6 Code Block
 
-Dark block, even in light mode. The reasoning: code is "different material" — like a photograph inside a magazine. Forcing it to be light-on-light would make it blend into the surrounding text and lose its "this is code" signal.
+Warm-dark block, even in light mode. The reasoning: code is "different material" — like a photograph inside a magazine. Forcing it to be light-on-light would make it blend into the surrounding text and lose its "this is code" signal. The light-mode background matches `--ink` (warm near-black), so the code reads as inverted body text — softer than pure black, in-keeping with the editorial aesthetic. Dark mode steps a shade deeper than `--bg-page` for a recessed/inset feel.
 
 ```css
-background: #0E0E0C;
-color: #E8E8E0;
+background: var(--code-bg);   /* #1A1A17 light · #0E0E0C dark */
+color:      var(--code-text); /* #E8E8E0 in both modes */
 border-radius: 12px;
 padding: 28px 32px;
 font: 14px/1.7 var(--mono);

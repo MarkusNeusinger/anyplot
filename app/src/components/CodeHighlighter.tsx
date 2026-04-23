@@ -8,7 +8,7 @@ SyntaxHighlighter.registerLanguage('python', python);
 const okabeItoDark: Record<string, React.CSSProperties> = {
   'pre[class*="language-"]': {
     color: '#E8E8E0',
-    background: '#0E0E0C',
+    background: 'var(--code-bg)',
   },
   'code[class*="language-"]': {
     color: '#E8E8E0',
@@ -55,7 +55,7 @@ export default function CodeHighlighter({ code }: CodeHighlighterProps) {
         padding: '28px 32px',
         fontSize: '0.85rem',
         fontFamily: typography.fontFamily,
-        background: '#0E0E0C',
+        background: 'var(--code-bg)',
         borderRadius: '12px',
         lineHeight: 1.7,
       }}
