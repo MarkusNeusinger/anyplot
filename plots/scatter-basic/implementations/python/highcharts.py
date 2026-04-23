@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-basic: Basic Scatter Plot
-Library: highcharts 1.10.3 | Python 3.14
-Quality: 91/100 | Created: 2025-12-22
+Library: highcharts unknown | Python 3.14.4
+Quality: 88/100 | Created: 2026-04-23
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -12,271 +13,110 @@ from pathlib import Path
 import numpy as np
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
-from highcharts_core.options.annotations import Annotation
 from highcharts_core.options.series.scatter import ScatterSeries
-from highcharts_core.options.series.spline import SplineSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data — height vs weight with moderate positive correlation
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"
+
+# Data — study hours vs exam scores with moderate positive correlation
 np.random.seed(42)
-n_points = 100
-height_cm = np.random.normal(170, 10, n_points)
-weight_kg = height_cm * 0.65 + np.random.normal(0, 5, n_points) - 40
+n_points = 120
+study_hours = np.random.normal(6, 1.8, n_points)
+exam_scores = study_hours * 7.5 + np.random.normal(0, 6, n_points) + 30
+exam_scores = np.clip(exam_scores, 0, 100)
 
-# Compute linear regression for trend line
-slope, intercept = np.polyfit(height_cm, weight_kg, 1)
-r_squared = np.corrcoef(height_cm, weight_kg)[0, 1] ** 2
-
-# Axis bounds — tight to data with small padding
-x_min, x_max = float(np.floor(height_cm.min() - 2)), float(np.ceil(height_cm.max() + 2))
-y_min, y_max = float(np.floor(weight_kg.min() - 3)), float(np.ceil(weight_kg.max() + 3))
-
-# Trend line endpoints
-trend_x = np.array([x_min, x_max])
-trend_y = slope * trend_x + intercept
-
-# Identify outlier points (beyond 2 std from regression line)
-predicted = slope * height_cm + intercept
-residuals = weight_kg - predicted
-std_resid = np.std(residuals)
-outlier_mask = np.abs(residuals) > 1.8 * std_resid
-outlier_heights = height_cm[outlier_mask]
-outlier_weights = weight_kg[outlier_mask]
-
-# Create chart with typed API
+# Chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration
 chart.options.chart = {
     "type": "scatter",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#fafbfc",
-    "style": {"fontFamily": "'Segoe UI', Helvetica, Arial, sans-serif"},
-    "marginTop": 160,
-    "marginBottom": 310,
-    "marginLeft": 220,
-    "marginRight": 200,
+    "backgroundColor": PAGE_BG,
+    "style": {"fontFamily": "'Inter', 'Segoe UI', Helvetica, Arial, sans-serif", "color": INK},
+    "spacing": [60, 60, 60, 60],
 }
 
-# Title with refined typography
 chart.options.title = {
-    "text": "scatter-basic \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "64px", "fontWeight": "600", "color": "#2c3e50", "letterSpacing": "1px"},
+    "text": "scatter-basic · highcharts · anyplot.ai",
+    "style": {"fontSize": "64px", "fontWeight": "500", "color": INK},
     "margin": 50,
 }
 
-# Subtitle for data storytelling
-chart.options.subtitle = {
-    "text": "Height vs Weight — positive correlation across 100 subjects",
-    "style": {"fontSize": "38px", "color": "#7f8c8d", "fontWeight": "400"},
-}
-
-# X-axis with tight bounds and refined styling
 chart.options.x_axis = {
-    "title": {
-        "text": "Height (cm)",
-        "style": {"fontSize": "44px", "color": "#34495e", "fontWeight": "500"},
-        "margin": 30,
-    },
-    "labels": {"style": {"fontSize": "34px", "color": "#7f8c8d"}},
-    "min": x_min,
-    "max": x_max,
-    "tickInterval": 5,
-    "startOnTick": False,
-    "endOnTick": False,
+    "title": {"text": "Study Hours per Day", "style": {"fontSize": "44px", "color": INK}, "margin": 30},
+    "labels": {"style": {"fontSize": "32px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.06)",
-    "gridLineDashStyle": "Dot",
-    "lineColor": "#bdc3c7",
-    "lineWidth": 2,
-    "tickColor": "#bdc3c7",
-    "tickLength": 10,
+    "gridLineColor": GRID,
 }
 
-# Y-axis with tight bounds and reduced tick density
 chart.options.y_axis = {
-    "title": {
-        "text": "Weight (kg)",
-        "style": {"fontSize": "44px", "color": "#34495e", "fontWeight": "500"},
-        "margin": 30,
-    },
-    "labels": {"style": {"fontSize": "34px", "color": "#7f8c8d"}},
-    "min": y_min,
-    "max": y_max,
-    "tickInterval": 5,
-    "startOnTick": False,
-    "endOnTick": False,
+    "title": {"text": "Exam Score (%)", "style": {"fontSize": "44px", "color": INK}, "margin": 30},
+    "labels": {"style": {"fontSize": "32px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.06)",
-    "gridLineDashStyle": "Dot",
-    "lineColor": "#bdc3c7",
-    "lineWidth": 2,
-    "tickColor": "#bdc3c7",
-    "tickLength": 10,
-    "plotBands": [
-        {
-            "from": y_min,
-            "to": float(np.percentile(weight_kg, 25)),
-            "color": "rgba(48, 105, 152, 0.03)",
-            "label": {
-                "text": "Lower quartile",
-                "style": {"fontSize": "32px", "color": "rgba(48, 105, 152, 0.55)"},
-                "align": "left",
-                "x": 20,
-                "y": 16,
-            },
-        },
-        {
-            "from": float(np.percentile(weight_kg, 75)),
-            "to": y_max,
-            "color": "rgba(48, 105, 152, 0.03)",
-            "label": {
-                "text": "Upper quartile",
-                "style": {"fontSize": "32px", "color": "rgba(48, 105, 152, 0.55)"},
-                "align": "left",
-                "x": 20,
-                "y": 16,
-            },
-        },
-    ],
+    "gridLineColor": GRID,
 }
 
-# Legend — show to label trend line
-chart.options.legend = {
-    "enabled": True,
-    "align": "right",
-    "verticalAlign": "top",
-    "layout": "vertical",
-    "x": -40,
-    "y": 80,
-    "floating": True,
-    "backgroundColor": "rgba(255, 255, 255, 0.85)",
-    "borderWidth": 1,
-    "borderColor": "#e0e0e0",
-    "borderRadius": 8,
-    "itemStyle": {"fontSize": "30px", "fontWeight": "400", "color": "#34495e"},
-    "padding": 16,
-    "symbolRadius": 6,
-}
-
+chart.options.legend = {"enabled": False}
 chart.options.credits = {"enabled": False}
 
-# Rich tooltip — Highcharts-distinctive feature
 chart.options.tooltip = {
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderRadius": 8,
+    "borderWidth": 1,
+    "style": {"fontSize": "26px", "color": INK},
     "headerFormat": "",
-    "pointFormat": (
-        '<span style="font-size:24px;color:{point.color}">\u25cf</span> '
-        '<span style="font-size:26px">'
-        "Height: <b>{point.x:.1f} cm</b><br/>"
-        "Weight: <b>{point.y:.1f} kg</b></span>"
-    ),
-    "backgroundColor": "rgba(255, 255, 255, 0.95)",
-    "borderColor": "#306998",
-    "borderRadius": 10,
-    "borderWidth": 2,
-    "shadow": {"color": "rgba(0,0,0,0.1)", "offsetX": 2, "offsetY": 2, "width": 4},
-    "style": {"fontSize": "26px"},
+    "pointFormat": "Hours: <b>{point.x:.1f}</b><br/>Score: <b>{point.y:.1f}</b>",
 }
 
-# Main scatter series — Python Blue with transparency
+chart.options.plot_options = {
+    "scatter": {"marker": {"radius": 20, "symbol": "circle", "lineWidth": 2, "lineColor": PAGE_BG, "fillOpacity": 0.7}}
+}
+
 scatter = ScatterSeries()
-scatter.data = [[float(h), float(w)] for h, w in zip(height_cm, weight_kg, strict=True)]
-scatter.name = "Subjects"
-scatter.color = "rgba(48, 105, 152, 0.65)"
-scatter.marker = {
-    "radius": 12,
-    "symbol": "circle",
-    "lineWidth": 2,
-    "lineColor": "#ffffff",
-    "states": {"hover": {"radiusPlus": 4, "lineWidthPlus": 1, "lineColor": "#306998"}},
-}
-scatter.z_index = 2
-
-# Outlier series — highlight extreme points with distinct marker
-outlier_series = ScatterSeries()
-outlier_series.data = [[float(h), float(w)] for h, w in zip(outlier_heights, outlier_weights, strict=True)]
-outlier_series.name = "Outliers"
-outlier_series.color = "rgba(211, 84, 0, 0.80)"
-outlier_series.marker = {
-    "radius": 15,
-    "symbol": "diamond",
-    "lineWidth": 2,
-    "lineColor": "#d35400",
-    "states": {"hover": {"radiusPlus": 4}},
-}
-outlier_series.z_index = 3
-
-# Trend line (linear regression) using SplineSeries
-trend = SplineSeries()
-trend.data = [[float(trend_x[0]), float(trend_y[0])], [float(trend_x[1]), float(trend_y[1])]]
-trend.name = f"Trend (R\u00b2 = {r_squared:.2f})"
-trend.color = "#e67e22"
-trend.line_width = 4
-trend.dash_style = "LongDash"
-trend.marker = {"enabled": False}
-trend.enable_mouse_tracking = False
-trend.z_index = 1
-
+scatter.data = [[float(h), float(s)] for h, s in zip(study_hours, exam_scores, strict=True)]
+scatter.name = "Students"
+scatter.color = BRAND
 chart.add_series(scatter)
-chart.add_series(outlier_series)
-chart.add_series(trend)
 
-# Annotation — R² value and slope description
-chart.options.annotations = [
-    Annotation.from_dict(
-        {
-            "draggable": "",
-            "labelOptions": {
-                "backgroundColor": "rgba(255, 255, 255, 0.9)",
-                "borderColor": "#e67e22",
-                "borderRadius": 8,
-                "borderWidth": 2,
-                "padding": 14,
-                "style": {"fontSize": "34px", "color": "#2c3e50"},
-            },
-            "labels": [
-                {
-                    "point": {
-                        "x": float(x_min + 8),
-                        "y": float(slope * (x_min + 8) + intercept - 5),
-                        "xAxis": 0,
-                        "yAxis": 0,
-                    },
-                    "text": f"y = {slope:.2f}x {intercept:+.1f}  |  R\u00b2 = {r_squared:.2f}",
-                }
-            ],
-        }
-    )
-]
-
-# Download Highcharts JS and annotations module (required for headless Chrome)
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-annotations_url = "https://code.highcharts.com/modules/annotations.js"
+# Download Highcharts JS (headless Chrome cannot load CDN from file://)
+highcharts_url = "https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.4.8/highcharts.js"
 with urllib.request.urlopen(highcharts_url, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
-with urllib.request.urlopen(annotations_url, timeout=30) as response:
-    annotations_js = response.read().decode("utf-8")
 
-# Generate HTML with inline scripts
-html_str = chart.to_js_literal()
+chart_js = chart.to_js_literal()
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
-    <script>{annotations_js}</script>
 </head>
-<body style="margin:0; background:#fafbfc;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
-    <script>{html_str}</script>
+    <script>{chart_js}</script>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
+# Save HTML artifact for the site
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Render PNG via headless Chrome
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
@@ -286,31 +126,13 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--window-size=4900,2800")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-
-# Screenshot the chart container for exact dimensions
 container = driver.find_element("id", "container")
-container.screenshot("plot.png")
+container.screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
-
-# Save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    interactive_html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/annotations.js"></script>
-</head>
-<body style="margin:0; background:#fafbfc;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>{html_str}</script>
-</body>
-</html>"""
-    f.write(interactive_html)
