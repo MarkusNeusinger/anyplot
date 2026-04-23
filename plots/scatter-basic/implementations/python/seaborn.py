@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-basic: Basic Scatter Plot
 Library: seaborn 0.13.2 | Python 3.14.4
-Quality: 85/100 | Created: 2026-04-23
+Quality: pending | Updated: 2026-04-23
 """
 
 import os
@@ -19,23 +19,18 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"  # Okabe-Ito position 1
 
-# Data — study hours vs exam scores with realistic correlation and variety
+# Data — marketing spend vs. quarterly sales revenue (r~0.75)
 np.random.seed(42)
-n = 150
-study_hours = np.random.uniform(1, 10, n)
-exam_scores = 12 * study_hours - 0.4 * study_hours**2 + np.random.randn(n) * 7 + 30
+n = 220
+marketing_spend = np.random.gamma(shape=2.2, scale=9.0, size=n) + 3
+sales_revenue = 4.1 * marketing_spend + np.random.normal(0, 18, n) + 15
+sales_revenue = np.clip(sales_revenue, 5, None)
 
-# Natural outliers: a few high-effort underperformers and gifted low-study students
-exam_scores[0], study_hours[0] = 95, 2.5
-exam_scores[5], study_hours[5] = 28, 8.5
-exam_scores[10], study_hours[10] = 88, 3.0
-exam_scores[140], study_hours[140] = 35, 7.8
-exam_scores[145], study_hours[145] = 92, 5.5
-
-df = pd.DataFrame({"Study Hours (per week)": study_hours, "Exam Score (points)": exam_scores})
+df = pd.DataFrame({"Marketing Spend ($ thousands)": marketing_spend, "Quarterly Revenue ($ thousands)": sales_revenue})
 
 # Plot
 sns.set_theme(
+    context="talk",
     style="ticks",
     rc={
         "figure.facecolor": PAGE_BG,
@@ -47,8 +42,9 @@ sns.set_theme(
         "ytick.color": INK_SOFT,
         "grid.color": INK,
         "grid.alpha": 0.10,
-        "font.family": "sans-serif",
-        "axes.linewidth": 0.8,
+        "axes.linewidth": 0.9,
+        "axes.grid": True,
+        "axes.axisbelow": True,
     },
 )
 
@@ -56,23 +52,22 @@ fig, ax = plt.subplots(figsize=(16, 9))
 
 sns.scatterplot(
     data=df,
-    x="Study Hours (per week)",
-    y="Exam Score (points)",
+    x="Marketing Spend ($ thousands)",
+    y="Quarterly Revenue ($ thousands)",
     ax=ax,
     color=BRAND,
-    s=220,
+    s=130,
     alpha=0.7,
     edgecolor=PAGE_BG,
-    linewidth=0.8,
+    linewidth=0.9,
 )
 
 # Style
-ax.set_title("scatter-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=18)
-ax.set_xlabel("Study Hours (per week)", fontsize=20, color=INK)
-ax.set_ylabel("Exam Score (points)", fontsize=20, color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-ax.grid(True, linewidth=0.8)
-ax.set_axisbelow(True)
+ax.set_title("scatter-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
+ax.set_xlabel("Marketing Spend ($ thousands)", fontsize=20, color=INK, labelpad=12)
+ax.set_ylabel("Quarterly Revenue ($ thousands)", fontsize=20, color=INK, labelpad=12)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT, length=0)
+ax.margins(x=0.04, y=0.06)
 sns.despine(ax=ax)
 
 plt.tight_layout()
