@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-basic: Basic Scatter Plot
-Library: plotly | Python 3.13
-Quality: pending | Updated: 2026-04-23
+Library: plotly 6.7.0 | Python 3.14.4
+Quality: 89/100 | Updated: 2026-04-23
 """
 
 import os
