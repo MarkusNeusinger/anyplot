@@ -73,7 +73,11 @@ jobs:
 
     - name: Invalidate API cache
       env:
-        API_URL: ${{ vars.API_BASE_URL || 'https://api.anyplot.ai' }}
+        # Hit the Cloud Run service directly — Cloudflare's bot challenge blocks
+        # unauthenticated curl posts against api.anyplot.ai with a 403 HTML page,
+        # so the CF-fronted hostname is not usable here. The direct *.run.app URL
+        # is unprotected by CF and accepts the bearer token directly.
+        API_URL: ${{ vars.API_DIRECT_URL || 'https://anyplot-api-r3tvmejsmq-ez.a.run.app' }}
         CACHE_INVALIDATE_TOKEN: ${{ secrets.CACHE_INVALIDATE_TOKEN }}
       run: |
         if [ -z "${CACHE_INVALIDATE_TOKEN}" ]; then

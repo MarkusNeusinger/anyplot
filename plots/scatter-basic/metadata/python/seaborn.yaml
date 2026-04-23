@@ -1,9 +1,9 @@
 library: seaborn
 language: python
 specification_id: scatter-basic
-created: '2026-04-23T19:18:49Z'
+created: '2025-12-10T20:55:10Z'
 updated: '2026-04-23T19:24:09Z'
-generated_by: claude-opus-4-5-20251101
+generated_by: claude-opus
 workflow_run: 24853787271
 issue: 611
 python_version: 3.14.4
