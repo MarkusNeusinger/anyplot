@@ -15,6 +15,7 @@ import type { PlotImage } from '../types';
 import { BATCH_SIZE, type ImageSize } from '../constants';
 import { useCodeFetch } from '../hooks';
 import { buildSrcSet, getResponsiveSizes, getFallbackSrc } from '../utils/responsiveImage';
+import { useThemedPreviewUrl } from '../utils/themedPreview';
 import { colors, typography, fontSize, semanticColors } from '../theme';
 
 // Library abbreviations for compact mode
@@ -61,6 +62,7 @@ export const ImageCard = memo(function ImageCard({
 }: ImageCardProps) {
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down('sm')); // < 600px
+  const imgUrl = useThemedPreviewUrl(image) ?? image.url;
 
   const labelFontSize = imageSize === 'compact' ? fontSize.xs : fontSize.md;
   const labelLetterSpacing = isXs ? '-0.03em' : 'normal';
@@ -155,19 +157,19 @@ export const ImageCard = memo(function ImageCard({
         <Box component="picture" sx={{ display: 'contents' }}>
           <source
             type="image/webp"
-            srcSet={buildSrcSet(image.url, 'webp')}
+            srcSet={buildSrcSet(imgUrl, 'webp')}
             sizes={getResponsiveSizes(imageSize)}
           />
           <source
             type="image/png"
-            srcSet={buildSrcSet(image.url, 'png')}
+            srcSet={buildSrcSet(imgUrl, 'png')}
             sizes={getResponsiveSizes(imageSize)}
           />
           <Box
             component="img"
             loading={index < BATCH_SIZE ? 'eager' : 'lazy'}
             fetchPriority={index === 0 ? 'high' : undefined}
-            src={getFallbackSrc(image.url)}
+            src={getFallbackSrc(imgUrl)}
             alt={viewMode === 'library' ? `${image.spec_id} - ${image.library}` : `${selectedSpec} - ${image.library}`}
             sx={{
               display: 'block',
@@ -183,7 +185,7 @@ export const ImageCard = memo(function ImageCard({
                 target.dataset.fallback = '1';
                 target.closest('picture')?.querySelectorAll('source').forEach(s => s.remove());
                 target.removeAttribute('srcset');
-                target.src = image.url;
+                target.src = imgUrl;
               } else {
                 target.style.display = 'none';
               }
