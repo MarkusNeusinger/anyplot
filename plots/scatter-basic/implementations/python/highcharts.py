@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-basic: Basic Scatter Plot
-Library: highcharts unknown | Python 3.14.4
-Quality: 88/100 | Created: 2026-04-23
+Library: highcharts | Python 3.14
+Quality: pending | Created: 2026-04-23
 """
 
 import os
@@ -24,14 +24,15 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 BRAND = "#009E73"
 
-# Data — study hours vs exam scores with moderate positive correlation
+# Data — study hours vs exam scores, moderate positive correlation with realistic spread
 np.random.seed(42)
-n_points = 120
-study_hours = np.random.normal(6, 1.8, n_points)
-exam_scores = study_hours * 7.5 + np.random.normal(0, 6, n_points) + 30
+n_points = 180
+study_hours = np.random.gamma(shape=4.0, scale=1.4, size=n_points)
+exam_scores = 38 + 6.2 * study_hours + np.random.normal(0, 7.5, n_points)
 exam_scores = np.clip(exam_scores, 0, 100)
 
 # Chart
@@ -43,32 +44,58 @@ chart.options.chart = {
     "width": 4800,
     "height": 2700,
     "backgroundColor": PAGE_BG,
-    "style": {"fontFamily": "'Inter', 'Segoe UI', Helvetica, Arial, sans-serif", "color": INK},
-    "spacing": [60, 60, 60, 60],
+    "style": {"fontFamily": "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif", "color": INK},
+    "spacingTop": 80,
+    "spacingRight": 120,
+    "spacingBottom": 80,
+    "spacingLeft": 80,
 }
 
 chart.options.title = {
     "text": "scatter-basic · highcharts · anyplot.ai",
-    "style": {"fontSize": "64px", "fontWeight": "500", "color": INK},
-    "margin": 50,
+    "align": "left",
+    "x": 40,
+    "style": {"fontSize": "68px", "fontWeight": "600", "color": INK, "letterSpacing": "-0.5px"},
+    "margin": 20,
+}
+
+chart.options.subtitle = {
+    "text": "Study hours versus exam performance across 180 students",
+    "align": "left",
+    "x": 40,
+    "style": {"fontSize": "32px", "fontWeight": "400", "color": INK_MUTED},
 }
 
 chart.options.x_axis = {
-    "title": {"text": "Study Hours per Day", "style": {"fontSize": "44px", "color": INK}, "margin": 30},
-    "labels": {"style": {"fontSize": "32px", "color": INK_SOFT}},
+    "title": {
+        "text": "Study Hours per Day",
+        "style": {"fontSize": "40px", "fontWeight": "500", "color": INK},
+        "margin": 28,
+    },
+    "labels": {"style": {"fontSize": "28px", "color": INK_SOFT}, "y": 36},
     "lineColor": INK_SOFT,
+    "lineWidth": 2,
     "tickColor": INK_SOFT,
+    "tickLength": 0,
     "gridLineWidth": 1,
     "gridLineColor": GRID,
+    "min": 0,
+    "max": 14,
+    "tickInterval": 2,
 }
 
 chart.options.y_axis = {
-    "title": {"text": "Exam Score (%)", "style": {"fontSize": "44px", "color": INK}, "margin": 30},
-    "labels": {"style": {"fontSize": "32px", "color": INK_SOFT}},
+    "title": {"text": "Exam Score (%)", "style": {"fontSize": "40px", "fontWeight": "500", "color": INK}, "margin": 28},
+    "labels": {"style": {"fontSize": "28px", "color": INK_SOFT}, "x": -16},
     "lineColor": INK_SOFT,
+    "lineWidth": 0,
     "tickColor": INK_SOFT,
+    "tickLength": 0,
     "gridLineWidth": 1,
     "gridLineColor": GRID,
+    "min": 0,
+    "max": 100,
+    "tickInterval": 20,
 }
 
 chart.options.legend = {"enabled": False}
@@ -77,15 +104,27 @@ chart.options.credits = {"enabled": False}
 chart.options.tooltip = {
     "backgroundColor": ELEVATED_BG,
     "borderColor": INK_SOFT,
-    "borderRadius": 8,
+    "borderRadius": 10,
     "borderWidth": 1,
-    "style": {"fontSize": "26px", "color": INK},
+    "shadow": False,
+    "style": {"fontSize": "28px", "color": INK},
     "headerFormat": "",
-    "pointFormat": "Hours: <b>{point.x:.1f}</b><br/>Score: <b>{point.y:.1f}</b>",
+    "pointFormat": "<b>{point.x:.1f} h</b> study · <b>{point.y:.0f}%</b> score",
 }
 
 chart.options.plot_options = {
-    "scatter": {"marker": {"radius": 20, "symbol": "circle", "lineWidth": 2, "lineColor": PAGE_BG, "fillOpacity": 0.7}}
+    "scatter": {
+        "marker": {
+            "radius": 18,
+            "symbol": "circle",
+            "lineWidth": 2,
+            "lineColor": PAGE_BG,
+            "fillOpacity": 0.7,
+            "states": {"hover": {"enabled": True, "radiusPlus": 4, "lineWidthPlus": 1}},
+        },
+        "states": {"hover": {"halo": {"size": 14, "opacity": 0.18}}},
+        "stickyTracking": False,
+    }
 }
 
 scatter = ScatterSeries()
@@ -112,11 +151,9 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Save HTML artifact for the site
 with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
-# Render PNG via headless Chrome
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
