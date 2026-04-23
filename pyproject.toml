@@ -16,11 +16,11 @@ keywords = [
 
 dependencies = [
     # Core Framework
-    "fastapi>=0.115.0",
+    "fastapi>=0.136.1",
     "uvicorn[standard]>=0.34.0",
     # MCP Server
     "mcp>=1.0.0",
-    "fastmcp>=2.0.0",
+    "fastmcp>=3.2.4",
     # Database
     "sqlalchemy[asyncio]>=2.0.0",
     "asyncpg>=0.30.0",
@@ -36,20 +36,20 @@ dependencies = [
     "scikit-learn>=1.6.0",
     "statsmodels>=0.14.0",
     # AI & Cloud
-    "anthropic>=0.39.0",
+    "anthropic>=0.96.0",
     "google-cloud-storage>=3.0.0",
     # Image Processing
     "pillow>=11.0.0",
     # HTTP Client
     "httpx>=0.28.0",
     # Essentials
-    "pydantic>=2.10.0",
-    "pydantic-settings>=2.7.0",
+    "pydantic>=2.13.3",
+    "pydantic-settings>=2.14.0",
     "pyyaml>=6.0.0",
     "python-dotenv>=1.0.0",
     "pandas-stubs>=2.3.0",
     # Caching
-    "cachetools>=7.0.0",
+    "cachetools>=7.0.6",
 ]
 
 [project.optional-dependencies]
@@ -61,18 +61,18 @@ test = [
     "aiosqlite>=0.20.0",  # SQLite async driver for integration tests
 ]
 dev = [
-    "ruff>=0.11.13",
-    "pre-commit>=4.0.0",
+    "ruff>=0.15.11",
+    "pre-commit>=4.6.0",
 ]
 typecheck = [
-    "mypy>=1.14.0",
+    "mypy>=1.20.2",
 ]
 plotting = [
     # Additional plotting libraries (matplotlib already in main dependencies)
     "seaborn>=0.13.0",
-    "plotly>=6.0.0",
+    "plotly>=6.7.0",
     "bokeh>=3.6.0",
-    "altair>=5.5.0",
+    "altair>=6.1.0",
     "plotnine>=0.14.0",
     "pygal>=3.0.0",
     "highcharts-core>=1.10.0",
@@ -80,7 +80,7 @@ plotting = [
     # PNG export dependencies
     "vl-convert-python>=1.7.0",  # altair PNG export
     "kaleido>=1.0.0",            # plotly PNG export
-    "selenium>=4.15.0",          # bokeh/highcharts PNG export
+    "selenium>=4.43.0",          # bokeh/highcharts PNG export
     "webdriver-manager>=4.0.0",  # auto-install chromedriver
     "cairosvg>=2.7.0",           # pygal PNG export
     # Common data science stack used across plot implementations
@@ -91,12 +91,12 @@ plotting = [
 # Per-library dependencies for CI (minimal installs)
 lib-matplotlib = ["matplotlib>=3.10.0", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
 lib-seaborn = ["seaborn>=0.13.0", "matplotlib>=3.10.0", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
-lib-plotly = ["plotly>=6.0.0", "kaleido>=1.0.0", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
-lib-bokeh = ["bokeh>=3.6.0", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0", "selenium>=4.15.0", "webdriver-manager>=4.0.0"]
-lib-altair = ["altair>=5.5.0", "vl-convert-python>=1.7.0", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
+lib-plotly = ["plotly>=6.7.0", "kaleido>=1.0.0", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
+lib-bokeh = ["bokeh>=3.6.0", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0", "selenium>=4.43.0", "webdriver-manager>=4.0.0"]
+lib-altair = ["altair>=6.1.0", "vl-convert-python>=1.7.0", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
 lib-plotnine = ["plotnine>=0.14.0", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
 lib-pygal = ["pygal>=3.0.0", "cairosvg>=2.7.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
-lib-highcharts = ["highcharts-core>=1.10.0", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0", "selenium>=4.15.0", "webdriver-manager>=4.0.0"]
+lib-highcharts = ["highcharts-core>=1.10.0", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0", "selenium>=4.43.0", "webdriver-manager>=4.0.0"]
 lib-letsplot = ["lets-plot>=4.6.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
 all = [
     "anyplot[test,dev,plotting,typecheck]",
