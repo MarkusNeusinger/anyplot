@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-basic: Basic Scatter Plot
 Library: bokeh 3.9.0 | Python 3.14.4
-Quality: 81/100 | Created: 2026-04-23
+Quality: 75/100 | Created: 2026-04-23
 """
 
 import numpy as np
