@@ -40,6 +40,14 @@ on:
 env:
   ALL_LIBRARIES: "matplotlib seaborn plotly bokeh altair plotnine pygal highcharts letsplot"
 
+# Serialise bulk-generate runs. Each run paces its own 9 dispatches with
+# `pace_seconds`; letting two runs overlap would interleave their
+# dispatches and stack the Claude queue, which is exactly what the pacing
+# exists to avoid. Second run waits for first to finish instead.
+concurrency:
+  group: bulk-generate
+  cancel-in-progress: false
+
 jobs:
   # ============================================================================
   # Build matrix of (spec, library) pairs to generate
