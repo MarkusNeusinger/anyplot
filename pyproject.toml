@@ -26,7 +26,7 @@ dependencies = [
     "asyncpg>=0.30.0",
     "pg8000>=1.31.0",  # Sync driver for Cloud SQL Connector in GitHub Actions
     "alembic>=1.14.0",
-    "cloud-sql-python-connector[asyncpg,pg8000]>=1.18.0",  # Cloud SQL Connector
+    "cloud-sql-python-connector[asyncpg,pg8000]>=1.20.2",  # Cloud SQL Connector
     # Data & Plotting
     "pandas>=3.0.0",
     "numpy>=2.0.0",

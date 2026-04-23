@@ -373,7 +373,7 @@ requires-dist = [
     { name = "cachetools", specifier = ">=7.0.0" },
     { name = "cairosvg", marker = "extra == 'lib-pygal'", specifier = ">=2.7.0" },
     { name = "cairosvg", marker = "extra == 'plotting'", specifier = ">=2.7.0" },
-    { name = "cloud-sql-python-connector", extras = ["asyncpg", "pg8000"], specifier = ">=1.18.0" },
+    { name = "cloud-sql-python-connector", extras = ["asyncpg", "pg8000"], specifier = ">=1.20.2" },
     { name = "fastapi", specifier = ">=0.115.0" },
     { name = "fastmcp", specifier = ">=2.0.0" },
     { name = "google-cloud-storage", specifier = ">=3.0.0" },
@@ -710,7 +710,7 @@ wheels = [
 
 [[package]]
 name = "cloud-sql-python-connector"
-version = "1.18.5"
+version = "1.20.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
@@ -720,9 +720,9 @@ dependencies = [
     { name = "google-auth" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/cb/9f/76285c820bce09729f716cf9e466d0261bc30d6a008dae5176c469f883d3/cloud_sql_python_connector-1.18.5.tar.gz", hash = "sha256:043477258226214973ebb9d1f6c8e775552619031a3a1e6c9337f0e4b05758ff", size = 42913, upload-time = "2025-10-09T22:30:04.133Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b3/35/b2145359b1d6e6a2447be27c5048dd23703ac7df7303f8bbb88f0cb5d793/cloud_sql_python_connector-1.20.2.tar.gz", hash = "sha256:c1a6d827199c9730e7f9687c074885ce7db447dd7d8f3f3a49c37180a530df95", size = 44245, upload-time = "2026-04-17T19:03:37.631Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2a/36/9eab10d407369f9dc5c3ba8304c7d3926af7ba59ec1cde1ac74ba7488b62/cloud_sql_python_connector-1.18.5-py3-none-any.whl", hash = "sha256:ddead8e081d09e718967cfd5ba7100749f798742e962fbe03d887fa254a424b6", size = 49396, upload-time = "2025-10-09T22:30:03.074Z" },
+    { url = "https://files.pythonhosted.org/packages/d0/53/e94962c964644f75cae552ed2d8162cf0404d6e7004113777f355717f9ec/cloud_sql_python_connector-1.20.2-py3-none-any.whl", hash = "sha256:cbd55bf58cbd5bea8e44c5768bcecc18d4ab2bc490150d90620b3fdb518d1063", size = 50099, upload-time = "2026-04-17T19:03:35.91Z" },
 ]
 
 [package.optional-dependencies]
