@@ -2,9 +2,9 @@ library: plotnine
 language: python
 specification_id: scatter-basic
 created: '2025-12-10T20:55:10Z'
-updated: '2026-04-23T19:27:47Z'
+updated: '2026-04-23T21:57:49Z'
 generated_by: claude-opus
-workflow_run: 24853804820
+workflow_run: 24860511110
 issue: 611
 python_version: 3.14.4
 library_version: 0.15.3
@@ -15,37 +15,36 @@ preview_html_dark: null
 quality_score: 87
 review:
   strengths:
-  - 'Perfect Visual Quality: all font sizes explicitly set, correct theme-adaptive
-    chrome in both light and dark renders with no legibility failures'
-  - Correct Okabe-Ito palette usage — single series is brand green (#009E73) throughout
-    both renders
-  - 'Excellent code structure: clean KISS pattern, reproducible seed, no unused imports'
-  - Idiomatic plotnine grammar-of-graphics composition using element_* theme objects
-  - Realistic, neutral data scenario (study hours vs. exam scores) with appropriate
-    scale
+  - Adaptive theme with full chrome customization works correctly in both light and
+    dark renders
+  - Background-colored stroke on geom_point creates subtle edge definition without
+    a hard outline
+  - Explicit font sizing hierarchy (24/20/16) and tick mark removal give a polished
+    professional base
+  - 'Perfect spec compliance and data quality: realistic education scenario with seed-reproducible
+    data'
   weaknesses:
-  - 'Design Excellence is below the approval threshold: the plot is clean but lacks
-    visual storytelling (DE-03=2) and aesthetic sophistication beyond well-configured
-    defaults (DE-01=4)'
-  - No trendline or stat_smooth layer to help the viewer read the correlation — the
-    scatter reveals the trend but does not guide interpretation
-  - 'LM-02 is low: no plotnine-distinctive feature beyond geom_point; stat_smooth,
-    facet_wrap, or a secondary computed layer would demonstrate deeper library mastery'
+  - 'DE-03 LOW: No visual storytelling or hierarchy - positive correlation visible
+    but not emphasized; add geom_smooth trend line or alpha/size variation to create
+    focal point'
+  - 'VQ-03 MINOR: alpha=0.75 slightly exceeds recommended 0.5-0.7 for 100-300 points;
+    dense cluster at low hours shows over-saturation; reduce to 0.65 and use white
+    stroke'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "scatter-basic · plotnine · anyplot.ai" top-left in dark INK (#1A1A17); axis labels "Study Hours (per week)" and "Exam Score (points)" in INK (#1A1A17); tick labels in INK_SOFT (#4A4A44) — all clearly readable
-      Data: 180 scatter points in brand green #009E73 with alpha=0.70; subtle major-only grid; L-shaped axis lines; no tick marks
-      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light issues
+      Background: Warm off-white #FAF8F1 - correct, not pure white
+      Chrome: Title "scatter-basic · plotnine · anyplot.ai" in dark text, left-aligned, clearly readable. Axis labels "Study Hours (per week)" and "Exam Score (points)" in dark text with units, readable. Tick labels (1-10 x-axis, 20-100 y-axis) in dark secondary tone, readable.
+      Data: 220 green (#009E73) filled dots with background-colored stroke edge, alpha=0.75. Clear positive correlation pattern visible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct, not pure black
-      Chrome: Title in INK (#F0EFE8) light cream; axis labels in INK (#F0EFE8); tick labels in INK_SOFT (#B8B7B0) — all clearly readable against dark surface; no dark-on-dark failures detected
-      Data: Same 180 scatter points in brand green #009E73 — identical color to light render, confirming only chrome flips between themes
-      Legibility verdict: PASS — all text clearly readable against near-black background; no dark-on-dark failures
+      Background: Warm near-black #1A1A17 - correct, not pure black
+      Chrome: Title in light text (F0EFE8 tone), clearly readable against dark background. Axis labels and tick labels in light secondary tone (B8B7B0), fully readable. No dark-on-dark failures observed.
+      Data: Green (#009E73) dots identical in color to light render - only chrome flips. Correlation pattern equally visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -53,73 +52,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, tick
-          labels 16pt; both renders clearly readable'
+        comment: 'All sizes explicitly set: title=24pt, axis_title=20pt, axis_text=16pt;
+          readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap; data-point density handled well with alpha=0.70
+        comment: No text element collisions; data overlap managed with alpha
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: size=4.0 with alpha=0.70 well-suited for 180 points; markers clearly
-          distinguishable
+        comment: 220 points well-sized; alpha=0.75 slightly above recommended 0.5-0.7
+          for 100-300 pts
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand-green series is CVD-safe; adequate contrast in both
-          themes
+        comment: Single Okabe-Ito series; CVD-safe, good luminance contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 canvas, data fills 60-75% of plot area, balanced margins, nothing
-          cut off
+        comment: Well-proportioned 16:9, balanced margins, data fills canvas appropriately
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes have descriptive labels with units
+        comment: 'Labels include units: Study Hours (per week) and Exam Score (points)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds #FAF8F1/#1A1A17; all chrome
-          uses theme-adaptive INK/INK_SOFT tokens'
+        comment: 'First series #009E73, light bg #FAF8F1, dark bg #1A1A17, theme-adaptive
+          text all correct'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Clean, well-configured theme above defaults but not at publication/FiveThirtyEight
-          level; lacks trendline, subtitle, or visual emphasis
+        passed: true
+        comment: Brand green with background-colored stroke, no tick marks, adaptive
+          theme - above generic default but not strong design
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: 'Good refinement: tick marks removed, minor gridlines removed, subtle
-          major grid (alpha=0.10), L-shaped axis lines; clearly above defaults'
+        passed: true
+        comment: Tick marks removed, only bottom spine, no x-grid, y-grid at alpha=0.10,
+          panel border removed
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed but not interpreted; positive correlation visible
-          but no visual cue guides the viewer (no trendline, annotation, or emphasis)
+        comment: Correlation visible but no visual emphasis or hierarchy guides the
+          viewer; story left for viewer to discover
     spec_compliance:
       score: 15
       max: 15
@@ -129,28 +126,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot using geom_point()
+        comment: Correct scatter plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Axis labels, title, grid lines, alpha~0.7, appropriate point size
-          all present
+        comment: Transparency (alpha=0.75), axis labels, title, grid lines all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = study hours (independent), Y = exam scores (dependent); axes
-          show full data range
+        comment: X=Study Hours (independent), Y=Exam Score (dependent); all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'scatter-basic · plotnine · anyplot.ai' (exact format);
-          no legend needed for single series
+        comment: scatter-basic · plotnine · anyplot.ai correct; no legend (single
+          series - appropriate)
     data_quality:
       score: 15
       max: 15
@@ -160,22 +155,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 180 points demonstrating correlation, scatter variance, and typical
-          distribution for this plot type
+        comment: Shows scatter relationship, correlation pattern, distribution variation,
+          and outliers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Study hours vs. exam scores is a real, comprehensible, neutral educational
-          scenario
+        comment: Study hours vs exam scores is neutral, real educational scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Study hours 1-10/week and exam scores 15-100 are realistic, well-calibrated
-          values
+        comment: Hours 1-10/week and scores 33-100 are plausible values
     code_quality:
       score: 10
       max: 10
@@ -185,50 +178,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports > constants > data > plot > save; no
-          functions or classes'
+        comment: Flat imports -> data -> plot -> save; no classes or functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unused symbols
+        comment: All imports used; no extraneous modules
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity, no over-engineering
+        comment: Clean, Pythonic; no over-engineering; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no bare plot.png; current API
+        comment: Saves as plot-{THEME}.png
     library_mastery:
       score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expertly uses plotnine''s grammar-of-graphics API: ggplot() + geom_point()
-          + labs() + theme() with element_* objects'
+        comment: Correct ggplot grammar with coord_cartesian, scale_*, labs, theme;
+          fine-grained axis_title_x/y with margin
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses plotnine's declarative theme() system but no layer beyond geom_point;
-          no stat_smooth, faceting, or other plotnine-distinctive capability
+        passed: true
+        comment: fill/color/stroke distinction on geom_point (edge-as-background trick),
+          coord_cartesian for non-clipping limits - plotnine-specific idioms
   verdict: REJECTED
 impl_tags:
   dependencies: []
