@@ -236,7 +236,7 @@ export function LegalPage() {
                     <Link href="https://mui.com" target="_blank" rel="noopener" sx={proseLinkStyle}>
                       MUI
                     </Link>{' '}
-                    7,{' '}
+                    9,{' '}
                     <Link href="https://typescriptlang.org" target="_blank" rel="noopener" sx={proseLinkStyle}>
                       TypeScript
                     </Link>
