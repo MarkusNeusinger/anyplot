@@ -1,63 +1,50 @@
 library: altair
+language: python
 specification_id: scatter-basic
-created: '2025-12-22T23:36:19Z'
-updated: '2026-02-14T14:57:26Z'
-generated_by: claude-opus-4-6
-workflow_run: 20446832690
-issue: 0
-python_version: '3.14'
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/altair/plot.html
+created: '2026-04-23T19:26:44Z'
+updated: '2026-04-23T19:32:11Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 24853800836
+issue: 611
+python_version: 3.14.4
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/altair/plot-dark.html
 quality_score: 88
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - layer-composition
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  dataprep:
-  - regression
-  styling:
-  - alpha-blending
-  - edge-highlighting
-  - grid-styling
 review:
   strengths:
-  - Excellent use of Altair's transform_regression for the trend line — idiomatic
-    and avoids manual numpy polyfit for the line itself
-  - 'Strong text hierarchy with custom font sizes, colors (#222, #333, #555, #777),
-    and subtitle padding'
-  - Clean layered composition (points + trend + annotation) using Altair's + operator
-  - Correlation annotation (r = 0.92) adds meaningful data storytelling
-  - Multi-component data generation (uniform tails + normal center) creates realistic-looking
-    scatter distribution
-  - Dual output (PNG + HTML with interactivity) leverages Altair's web-native strengths
+  - 'Perfect visual quality: all font sizes explicitly set, both themes render correctly
+    with proper adaptive chrome tokens'
+  - Clean idiomatic altair code with mark_circle stroke=PAGE_BG giving subtle marker
+    definition
+  - 'Excellent spec and data coverage: realistic educational scenario, correct title
+    format, all required features present'
+  - configure_view(stroke=None) cleanly removes chart border - genuine refinement
+    above defaults
   weaknesses:
-  - Layout could better utilize canvas space — the defined axis domains (1-10.5 x,
-    20-105 y) leave empty corners where no data exists
-  - Marker size=150 is at the upper boundary for 100 data points; reducing slightly
-    could improve clarity in dense regions
-  - The r=0.92 annotation positioning relies on a manual calculation offset (+8) that
-    could be fragile with different data
-  image_description: 'The plot displays a scatter chart with approximately 100 blue
-    filled circle markers (Python Blue #306998) with white edge strokes on a clean
-    white background. The x-axis is labeled "Study Hours per Day (hrs)" and ranges
-    from 1 to 10. The y-axis is labeled "Exam Score (%)" and ranges from 20 to 100.
-    A dashed gray trend line runs diagonally from lower-left to upper-right, clearly
-    showing the positive linear relationship. A bold text annotation "r = 0.92" is
-    positioned near the center of the plot. The title "scatter-basic · altair · pyplots.ai"
-    is displayed prominently at the top in dark text, with a smaller gray subtitle
-    "Positive correlation between daily study hours and exam performance" beneath
-    it. The grid uses subtle dashed light gray lines at low opacity. Data points spread
-    naturally around the trend line with realistic scatter, clustering denser in the
-    4-7 hour range (from the normal distribution component) and sparser at the extremes.'
+  - 'DE-03 (2/6): No visual storytelling — no trend line, focal emphasis, or size/color
+    variation to guide the viewer to the correlation insight'
+  - 'DE-01 (4/8): Aesthetic ceiling capped by single-color flat scatter with no compositional
+    emphasis or typographic hierarchy'
+  - 'LM-02 (3/5): No distinctively altair feature used beyond configuration — transform_regression()
+    overlay or layer() composition would demonstrate library depth'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white ~#FAF8F1 — correct, not pure white
+      Chrome: Title "scatter-basic · altair · anyplot.ai" top-left in dark ink, clearly readable; Y-axis "Exam Score (%)" and X-axis "Study Hours per Week" labels visible in dark ink; tick labels in slightly muted dark tone, all readable; subtle grid lines at low opacity
+      Data: 180 teal/green scatter points in #009E73 (brand color), positive correlation pattern from lower-left to upper-right; point edges match background for subtle definition; no legend (single series, appropriate)
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black ~#1A1A17 — correct warm near-black, not pure black
+      Chrome: Title, axis labels, tick labels all rendered in light-colored text (#F0EFE8 / #B8B7B0 range), clearly readable against dark background; no dark-on-dark issues observed; grid lines subtle and visible
+      Data: Scatter points remain identical #009E73 teal — same color as light render, confirming data colors are theme-independent; points vivid against dark background
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -65,68 +52,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis titles 22pt, tick
-          labels 18pt. All perfectly readable.'
+        comment: 'All font sizes explicitly set: title=28px, axis titles=22px, tick
+          labels=18px; readable in both renders'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements anywhere.
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers size=150 with opacity=0.7 and white stroke edges. Good for
-          100 points, slightly on the larger side.
+        comment: 180 points at size=180, opacity=0.7; well-adapted to data density
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single teal series on warm backgrounds; excellent contrast, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Single-series Python Blue, colorblind-safe, good contrast against
-          white.
-      - id: VQ-05
-        name: Layout Balance
-        score: 2
-        max: 4
-        passed: false
-        comment: Plot fills canvas adequately but some wasted space in corners. Data
-          doesn't fully utilize the defined axis domains.
+        comment: Chart fills canvas well, balanced margins, no elements cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Study Hours per Day (hrs) and Exam
-          Score (%).'
+        comment: Study Hours per Week and Exam Score (%) - descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds #FAF8F1/#1A1A17; text tokens
+          theme-adaptive in both renders'
     design_excellence:
-      score: 14
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Strong design with custom Python Blue, white stroke on markers, removed
-          axis domains, dashed grid, custom title/subtitle hierarchy. Above defaults
-          but not quite publication-level perfection.
+        passed: false
+        comment: Competent configuration with stroke=PAGE_BG on markers, intentional
+          title alignment; reads as well-tuned library default — no typographic hierarchy
+          or visual emphasis
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: 'Good refinement: subtle dashed grid at 0.15 opacity, view stroke
-          removed, axis domains removed, custom tick/label colors.'
+        passed: false
+        comment: configure_view stroke=None removes border; gridOpacity=0.10, gridWidth=0.8;
+          domainColor/tickColor set to INK_SOFT — genuine refinements above defaults
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Correlation annotation (r = 0.92) and descriptive subtitle provide
-          narrative. Trend line guides the eye through the relationship.
+        passed: false
+        comment: 'Relatable educational scenario with visible correlation but no storytelling
+          layer: no trend line, focal emphasis, or size/color variation'
     spec_compliance:
       score: 15
       max: 15
@@ -136,50 +126,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D scatter plot.
+        comment: Correct scatter/point chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: transparency, axis labels, descriptive
-          title, grid lines, appropriate point size.'
+        comment: Transparency opacity=0.7, axis labels with units, grid lines, appropriate
+          point sizing all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X/Y correctly assigned: study hours horizontal, exam scores vertical.'
+        comment: x=hours (independent), y=score (dependent); full data range visible
       - id: SC-04
-        name: Title Format
+        name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. No legend needed for single-series.
+        comment: Title 'scatter-basic · altair · anyplot.ai' correct; no legend needed
+          for single series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows clear positive correlation with realistic noise, data spread,
-          and variation. Multi-component distribution adds depth.
+        comment: 'Demonstrates full scatter pattern: correlation gradient, natural
+          spread, clustering, variation across range'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Study hours vs exam scores: neutral, comprehensible educational
-          scenario.'
+        comment: Study hours vs exam scores — neutral, real-world educational scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Realistic values: 1.5-9.5 study hours, 25-100% exam scores.'
+        comment: Study hours 1-12/week and exam scores 30-100% are both realistic
     code_quality:
       score: 10
       max: 10
@@ -189,33 +179,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports, data, plot, save structure. No functions or classes.
+        comment: Imports -> Data -> Plot -> Save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (altair, numpy, pandas).
+        comment: Only altair, numpy, pandas imported via importlib to avoid self-import
+          collision
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clean Pythonic code, no over-engineering.
+        comment: Clean, concise; importlib usage is necessary workaround for filename
+          collision
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale_factor=3.0 and plot.html.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current altair API
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -223,13 +215,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert use of Altair''s declarative grammar: encoding types, layered
-          composition, configure_ methods, alt.Title, alt.Scale, alt.Axis.'
+        comment: Expertly uses alt.Chart().mark_circle().encode() with alt.X/alt.Y/alt.Scale/alt.Title;
+          configure_axis and configure_view used correctly
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Uses transform_regression, layer composition, .interactive(), tooltip
-          encoding, and HTML export — features distinctive to Altair.
-  verdict: APPROVED
+        passed: false
+        comment: Uses alt.Title with anchor/offset, alt.Scale(nice=False), configure_view(stroke=None)
+          — stops short of transform_regression(), interactive selection, or layer()
+          composition
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
