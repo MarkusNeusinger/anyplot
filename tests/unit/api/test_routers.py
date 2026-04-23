@@ -1543,6 +1543,8 @@ class TestInsightsRouter:
         mock_impl1.library_id = "matplotlib"
         mock_impl1.quality_score = 90.0
         mock_impl1.preview_url = TEST_IMAGE_URL
+        mock_impl1.preview_url_light = TEST_IMAGE_URL
+        mock_impl1.preview_url_dark = None
         mock_impl1.impl_tags = {}
         mock_impl1.library = MagicMock()
         mock_impl1.library.language = "python"
@@ -1557,6 +1559,8 @@ class TestInsightsRouter:
         mock_impl2.library_id = "matplotlib"
         mock_impl2.quality_score = 88.0
         mock_impl2.preview_url = TEST_IMAGE_URL
+        mock_impl2.preview_url_light = TEST_IMAGE_URL
+        mock_impl2.preview_url_dark = None
         mock_impl2.impl_tags = {}
         mock_impl2.library = MagicMock()
         mock_impl2.library.language = "python"
@@ -1603,6 +1607,8 @@ class TestInsightsRouter:
         mock_impl1.library_id = "matplotlib"
         mock_impl1.quality_score = 90.0
         mock_impl1.preview_url = TEST_IMAGE_URL
+        mock_impl1.preview_url_light = TEST_IMAGE_URL
+        mock_impl1.preview_url_dark = None
         mock_impl1.impl_tags = {"techniques": ["annotations"], "patterns": ["data-generation"]}
         mock_impl1.library = MagicMock()
         mock_impl1.library.language = "python"
@@ -1617,6 +1623,8 @@ class TestInsightsRouter:
         mock_impl2.library_id = "matplotlib"
         mock_impl2.quality_score = 85.0
         mock_impl2.preview_url = TEST_IMAGE_URL
+        mock_impl2.preview_url_light = TEST_IMAGE_URL
+        mock_impl2.preview_url_dark = None
         mock_impl2.impl_tags = {"techniques": ["annotations"], "patterns": ["other"]}
         mock_impl2.library = MagicMock()
         mock_impl2.library.language = "python"

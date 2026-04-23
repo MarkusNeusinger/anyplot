@@ -123,6 +123,8 @@ class RelatedSpecItem(BaseModel):
     id: str
     title: str
     preview_url: str | None = None
+    preview_url_light: str | None = None
+    preview_url_dark: str | None = None
     library_id: str | None = None
     language: str | None = None
     similarity: float
@@ -533,6 +535,8 @@ async def _build_related(
                 id=spec.id,
                 title=spec.title,
                 preview_url=best_impl.preview_url if best_impl else None,
+                preview_url_light=best_impl.preview_url_light if best_impl else None,
+                preview_url_dark=best_impl.preview_url_dark if best_impl else None,
                 library_id=best_impl.library_id if best_impl else None,
                 language=(best_impl.library.language if best_impl and best_impl.library else None),
                 similarity=round(similarity, 3),
