@@ -1,60 +1,56 @@
 library: matplotlib
+language: python
 specification_id: scatter-basic
-created: '2025-12-22T23:24:09Z'
-updated: '2026-02-14T14:41:27Z'
-generated_by: claude-opus-4-6
-workflow_run: 20446633390
-issue: 0
-python_version: '3.14'
+created: '2026-04-23T19:14:01Z'
+updated: '2026-04-23T19:19:17Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 24853797063
+issue: 611
+python_version: 3.14.4
 library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - annotations
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep:
-  - regression
-  styling:
-  - custom-colormap
-  - alpha-blending
-  - edge-highlighting
-  - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
 review:
   strengths:
-  - Excellent data storytelling with two well-placed annotations (Underperformer and
-    Ceiling effect) that guide interpretation
-  - Professional aesthetic with viridis color mapping, white marker edges, and path
-    effects on annotation text for readability
-  - Perfect spec compliance — all required features (transparency, grid, labels, title
-    format) present
-  - Realistic educational context (study hours vs exam scores) with intentional outliers
-    and ceiling effect demonstrating scatter pattern diversity
-  - Clean, well-structured code following KISS principle with fixed seed for reproducibility
+  - Perfect theme-adaptive chrome — both light (#FAF8F1) and dark (#1A1A17) renders
+    apply INK/INK_SOFT tokens to all chrome elements; no dark-on-dark or light-on-light
+    failures
+  - 'Fully spec-compliant data: 180 points, r~0.7 positive correlation, alpha=0.7
+    transparency, descriptive axis labels with units, correct title format'
+  - Clean, reproducible code — KISS structure, seed(42), Axes-method usage (ax.scatter
+    not plt.scatter), set_axisbelow(True) keeps grid under data
+  - 'Good visual hygiene: L-shaped spine frame, background-colored marker edges (edgecolors=PAGE_BG)
+    for clean point separation, subtle grid at alpha=0.10'
   weaknesses:
-  - Marker size s=120 is slightly above the recommended range of 50-100 for 120 data
-    points, creating minor overlap in dense regions (lower-left cluster)
-  - Colorbar adds visual interest but is somewhat redundant since it maps the same
-    variable as the y-axis — a second variable would add more information
-  - The Ceiling effect at 100% annotation arrow points to the general cluster area
-    rather than a specific data point, which could be slightly more precise
-  image_description: 'The plot displays a scatter chart of 120 data points mapping
-    "Study Hours (per week)" (x-axis, range 0–13) against "Exam Score (%)" (y-axis,
-    range 30–108). Points are colored using the viridis colormap mapped to exam score
-    values (purple for low ~35%, yellow for high ~100%), with a vertical colorbar
-    on the right labeled "Exam Score (%)". A dashed blue trend line is shown with
-    legend text "Trend (r = 0.88)" in the lower right. Two annotations with arrows
-    highlight key data features: "Underperformer" pointing to a mid-study, low-score
-    outlier around (5, 48), and "Ceiling effect at 100%" pointing to the cluster of
-    points capped at 100. Top and right spines are removed. Subtle dashed y-axis grid
-    lines aid readability. All markers have white edge highlights. Title reads "scatter-basic
-    · matplotlib · pyplots.ai" in medium weight. The layout is clean with balanced
-    margins and good canvas utilization.'
+  - 'DE-01 (4/8): No aesthetic differentiation beyond correct defaults — typography
+    is unstyled, no intentional visual hierarchy, no design flair above a well-configured
+    library output'
+  - 'DE-03 (2/6): The positive correlation story is fully visible in the data but
+    nothing emphasises it — no trend line, no performance-group colouring, no annotation
+    of notable outliers; viewer must extract the insight unaided'
+  - 'DE-02 (4/6): Tick marks still visible; no letter-spacing or padding tweaks; could
+    remove tick marks (ax.tick_params(length=0)) and add generous ax.margins() for
+    a more polished look'
+  - 'LM-02 (2/5): Only set_axisbelow and edgecolors use matplotlib-specific capabilities;
+    no use of PathCollection transforms, rcParams-based style, or other distinctively
+    matplotlib techniques'
+  - 'VQ-03 (5/6): s=140 exceeds the recommended s=50-100 for 180 points, causing noticeable
+    crowding in the 1-3 hour cluster; reduce to s=90-110 and tighten alpha slightly'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white matching #FAF8F1 — correct, not pure white.
+      Chrome: Title "scatter-basic · matplotlib · anyplot.ai" in dark ink, clearly readable. X-axis label "Study Hours per Week" and Y-axis label "Exam Score (%)" in dark text, both readable. Tick labels in dark gray (INK_SOFT), clearly readable against the light surface. L-shaped spine frame (top/right removed). Subtle gridlines on both axes, alpha ~0.10.
+      Data: ~180 teal-green (#009E73) scatter markers with alpha=0.7 and background-colored edges. Clear positive correlation visible from lower-left to upper-right. Moderate crowding in the 1–3 hour range.
+      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black matching #1A1A17 — correct, not pure black.
+      Chrome: Title, axis labels, and tick labels all rendered in light colors (INK/INK_SOFT tokens), clearly readable against the dark surface. No dark-on-dark failures observed. Gridlines subtle, visible. Same L-shaped spine structure.
+      Data: Teal-green (#009E73) markers are identical in color to the light render — only chrome elements have flipped. Markers are clearly distinguishable against the dark background.
+      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark issues; brand green #009E73 remains fully visible.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -65,67 +61,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          legend 16pt, colorbar label 18pt, annotations 13pt'
+        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16; readable
+          in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; annotations well-placed with arrows; legend
-          in lower right away from data
+        comment: No text overlap; marker overlap is natural and handled by alpha=0.7
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 120 points with s=120 and alpha=0.75; marker size slightly above
-          recommended range (50-100) for 100-300 points
+        comment: s=140 slightly above recommended s=50-100 for 180 points; causes
+          crowding in 1-3h cluster but still readable
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Viridis colormap is colorblind-safe; Python blue trend line provides
-          good contrast
+        comment: 'Single-series #009E73 on both backgrounds; CVD-safe Okabe-Ito color'
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization with colorbar; balanced margins
+        comment: 16:9 canvas well utilized; balanced margins; tight_layout applied
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Study Hours (per week) and Exam Score
-          (%)'
+        comment: 'X: ''Study Hours per Week'', Y: ''Exam Score (%)'' with unit; title
+          format correct'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series = #009E73; backgrounds #FAF8F1/#1A1A17; INK/INK_SOFT
+          tokens applied correctly in both renders'
     design_excellence:
-      score: 16
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Custom viridis color mapping, white marker edges, path effects on
-          annotations, styled colorbar — clearly above defaults
+        passed: false
+        comment: Well-configured default look; correct theming and palette but no
+          distinctive typography, hierarchy, or design flair
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Top/right spines removed, subtle dashed y-axis grid (alpha=0.15),
-          thin colorbar outline, generous whitespace
+        passed: false
+        comment: Grid adjusted, spines removed, set_axisbelow; tick marks still present;
+          no padding/margin polish
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 2
         max: 6
-        passed: true
-        comment: Two meaningful annotations plus trend line with correlation coefficient
-          guide viewer interpretation
+        passed: false
+        comment: Correlation is visible in data but not emphasised; no trend line,
+          grouping, or focal point; viewer must extract insight unaided
     spec_compliance:
       score: 15
       max: 15
@@ -135,26 +136,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D scatter plot
+        comment: Correct scatter plot type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: alpha transparency, axis labels, title,
-          grid lines, appropriate point size'
+        comment: Alpha=0.7, axis labels, title, grid lines all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=study hours, Y=exam scores correctly mapped; all data visible
+        comment: X=study hours (independent), Y=exam score (dependent); 180 points;
+          r~0.7 correlation
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend shows trend with r value
+        comment: Title 'scatter-basic · matplotlib · anyplot.ai' correct; single-series
+          so no legend needed
     data_quality:
       score: 15
       max: 15
@@ -164,20 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows positive correlation, outliers (both high and low), ceiling
-          effect, spread/noise
+        comment: Demonstrates correlation, scatter/noise, density variation, natural
+          spread across range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Study hours vs exam scores — classic, neutral educational scenario
+        comment: Study hours vs exam scores — neutral educational scenario matching
+          spec examples; plausible values
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Study hours 1-12/week, exam scores 35-100% — realistic values
+        comment: Hours 1-12/week and scores 35-100% are realistic; linear relationship
+          with noise is physically sensible
     code_quality:
       score: 10
       max: 10
@@ -187,7 +191,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save; no functions/classes
+        comment: 'Linear: imports → theme tokens → data → plot → style → save; no
+          functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -199,35 +204,47 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used (pyplot, numpy, patheffects.withStroke)
+        comment: Only os, matplotlib.pyplot, numpy — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity; not over-engineered
+        comment: Clean Pythonic code; no over-engineering; no fake UI elements
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, bbox_inches=tight; no deprecated functions
+        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches=tight, facecolor=PAGE_BG;
+          uses Axes methods
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Axes methods throughout, fig/ax subplots, fig.colorbar, zorder layering
-          — expert matplotlib patterns
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: patheffects (withStroke), colorbar with scatter mappable, zorder
-          layering, annotate with arrowprops
-  verdict: APPROVED
+        comment: ax.scatter not plt.scatter; proper spines API; tick_params; set_axisbelow
+          — correct and idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: set_axisbelow and edgecolors are matplotlib-specific but basic; no
+          use of rcParams, PathCollection, or advanced matplotlib capabilities
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
