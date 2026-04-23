@@ -1,7 +1,7 @@
 # pyproject.toml
 [project]
 name = "anyplot"
-version = "1.1.0"
+version = "2.0.0"
 description = "AI-powered plotting examples"
 authors = [{ name = "Markus Neusinger", email = "admin@anyplot.ai" }]
 requires-python = ">=3.14"
