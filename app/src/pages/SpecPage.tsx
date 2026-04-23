@@ -397,18 +397,6 @@ export function SpecPage() {
           {specData.description}
         </Typography>
 
-        {mode === 'hub' && availableLanguages.length === 1 && (
-          <Box sx={{ textAlign: 'center', mb: 3 }}>
-            <Typography sx={{
-              fontFamily: typography.mono,
-              fontSize: fontSize.sm,
-              color: semanticColors.mutedText,
-            }}>
-              currently available in {availableLanguages[0]} · more languages coming
-            </Typography>
-          </Box>
-        )}
-
         <Suspense fallback={<Box sx={{ minHeight: 400 }} />}>
         {mode !== 'detail' ? (
           <>
