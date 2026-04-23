@@ -1,63 +1,51 @@
 library: bokeh
+language: python
 specification_id: scatter-basic
-created: '2025-12-22T23:35:35Z'
-updated: '2026-02-14T14:41:47Z'
-generated_by: claude-opus-4-6
-workflow_run: 20446832275
-issue: 0
-python_version: '3.14'
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/bokeh/plot.html
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - data-generation
-  - columndatasource
-  dataprep:
-  - regression
-  styling:
-  - alpha-blending
-  - edge-highlighting
-  - grid-styling
+created: '2026-04-23T19:24:19Z'
+updated: '2026-04-23T19:48:28Z'
+generated_by: claude-opus-4-5-20251101
+workflow_run: 24853799686
+issue: 611
+python_version: 3.14.4
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/bokeh/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - 'Excellent use of Bokeh-distinctive features: Band glyph for confidence band,
-    Slope model for trend line, Label model for annotations — showcasing what makes
-    Bokeh unique'
-  - Strong data storytelling with R² statistic, confidence band, and explanatory subtitle
-    guiding the viewer interpretation
-  - 'Publication-quality visual refinement: removed axis lines/ticks, subtle grid,
-    custom background, white marker edges for definition'
-  - Well-chosen realistic scenario (study hours vs exam scores) with intentional outliers
-    that demonstrate scatter plot features
-  - All font sizes explicitly calibrated for the 4800x2700 canvas, ensuring perfect
-    readability
+  - 'All chrome is correctly theme-adaptive: both renders pass legibility check with
+    no dark-on-dark or light-on-light failures'
+  - Three Bokeh-distinctive features (Band, Slope, HoverTool) used idiomatically,
+    elevating this beyond a generic scatter
+  - All font sizes explicitly set well above the minimums (42pt/32pt/24pt), and both
+    HTML + PNG outputs are generated
+  - 'Data storytelling is genuine: confidence band + trend line + outliers together
+    create a coherent analytical narrative'
+  - Title exactly follows the required format, axis labels include units
   weaknesses:
-  - Marker size (45) is slightly large for 100 points, causing mild visual crowding
-    in the upper-right cluster — reducing to ~35 would improve clarity
-  - Subtitle text at 36pt could be slightly more prominent or repositioned as it blends
-    into the background with gray color and 0.7 alpha
-  image_description: The plot displays a scatter plot titled "scatter-basic · bokeh
-    · pyplots.ai" at the top in large bold text. Blue circular markers (#306998 Python
-    Blue) with white edge outlines are plotted on a Cartesian grid showing Study Hours
-    (hrs) on the x-axis (range 0–11) versus Exam Score (%) on the y-axis (range 10–100).
-    A dashed blue trend line with positive slope runs through the data, surrounded
-    by a light blue semi-transparent confidence band (±1.5σ). An italic blue annotation
-    "R² = 0.730" is positioned in the upper-left area, with a gray subtitle below
-    it reading "Positive correlation with natural outliers — shaded region shows ±1.5σ".
-    The background is a very light gray (#FAFAFA) with subtle grid lines (alpha 0.15).
-    Axis lines and tick marks are removed for a clean aesthetic. Outliers are clearly
-    visible — notably a point at ~5.5 hours scoring ~30 and a point at ~9 hours scoring
-    ~42. Points at ~2.5 hours scoring ~95 and ~3.5 hours scoring ~91 also stand out
-    as high-performing outliers. The overall layout is well-balanced with the plot
-    filling most of the 4800×2700 canvas.
+  - 'DE-01 limited to 5/8: overall composition is monochromatic (all brand-green elements);
+    trend line, band, and markers share the same color creating flat visual hierarchy'
+  - 'DE-02 at 4/6: top/right axis spine lines remain visible via INK_SOFT color; setting
+    them to None would create a cleaner L-frame'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — matches spec, not pure white
+      Chrome: Title "scatter-basic · bokeh · anyplot.ai" in bold dark text (INK #1A1A17), axis labels in dark INK, tick labels in muted INK_SOFT #4A4A44 — all clearly readable
+      Data: 150 scatter points in #009E73 (Okabe-Ito position 1 / brand green), size=32, alpha=0.7, white edge outlines; semi-transparent green confidence band; dashed green trend line (Slope model)
+      Grid: Both axes at 10% alpha — subtle but present
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — matches spec, not pure black
+      Chrome: Title and axis labels in light INK #F0EFE8, tick labels in muted INK_SOFT #B8B7B0 — all clearly readable; no dark-on-dark failures detected
+      Data: Same #009E73 scatter points (identical to light render — only chrome flips); confidence band appears as darker green-tinted fill due to alpha blending on dark surface; dashed green trend line identical
+      Grid: Subtle at 10% alpha, visible on both axes
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -65,67 +53,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 72pt, axis labels 48pt, tick
-          labels 36pt, annotations 42pt/36pt. Perfectly readable.'
+        comment: Title 42pt, axis labels 32pt, tick labels 24pt — all explicitly set,
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. R² label and subtitle positioned in upper-left
-          away from dense data.
+        comment: No text or element collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 100 points with alpha=0.7 and white edges. Slightly large markers
-          cause mild crowding in upper-right cluster.
+        comment: size=32, alpha=0.7, white edge — well adapted to 150 points
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Single Python Blue (#306998) with white edges. No colorblind concerns.
+        comment: Single brand-green series, CVD-safe, sufficient alpha
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent canvas utilization, balanced margins, plot fills >60% of
-          canvas.
+        comment: Good canvas utilization, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Study Hours (hrs) and Exam Score
-          (%).'
+        comment: Study Hours per Day (hrs) and Exam Score (%) — both include units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17, all chrome theme-adaptive
+          in both renders'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom Python Blue, white marker edges, intentional typography hierarchy,
-          removed axis lines/ticks. Strong design clearly above defaults.
+        comment: 'Clearly above defaults: confidence band, Slope trend line, clean
+          toolbar-free layout. Not Nature-publication level.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid (alpha 0.15), removed spines and ticks, light gray background,
-          outline removed. Nearly perfect polish.
+        comment: Grid at 10% alpha, minor ticks removed, outline_line_color=None,
+          generous whitespace. Top/right axis lines still present.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: R² annotation provides statistical context, subtitle explains confidence
-          band and outliers, Band glyph communicates data spread.
+        comment: 'Coherent story: positive correlation, visible uncertainty, identifiable
+          outliers. Clear visual hierarchy.'
     spec_compliance:
       score: 15
       max: 15
@@ -135,50 +126,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D scatter plot.
+        comment: Correct 2D scatter plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: transparency, axis labels, title, grid
-          lines, appropriate point size.'
+        comment: Alpha ~0.7, axis labels, grid lines, appropriate point size — all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=study hours (independent), Y=exam scores (dependent). Correctly
-          mapped.
+        comment: X = study hours (independent), Y = exam score (dependent), all data
+          visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact match. No legend needed for single series.
+        comment: scatter-basic · bokeh · anyplot.ai exact format, no legend needed
+          for single series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Positive correlation, natural outliers, noise, and data spread. Could
-          benefit from slightly more density variation.
+        comment: Shows positive correlation, density variation, outliers, full scatter
+          behavior
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Study hours vs exam scores is a relatable, neutral educational scenario.
+        comment: Study hours vs exam scores — real educational scenario, neutral,
+          plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Hours 1-10, scores 15-98. Realistic ranges with soft clipping.
+        comment: 1-10 hrs/day, 15-98% scores, r~0.7 — all realistic for domain
     code_quality:
       score: 10
       max: 10
@@ -188,35 +181,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → regression → figure → styling
-          → save.'
+        comment: 'Flat script: imports -> data -> plot -> save, no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: Band, Slope, HoverTool, ColumnDataSource, export_png,
+          output_file, save'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex. Trend line and confidence band add value without
-          over-engineering.
+        comment: Clean, Pythonic, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png(). No deprecated functions.
+        comment: Saves plot-{THEME}.png + plot-{THEME}.html, current Bokeh 3.x API
     library_mastery:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -224,13 +216,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ColumnDataSource, figure kwargs for axis config, model-based annotations.
-          Expertly idiomatic Bokeh.
+        comment: ColumnDataSource, figure, scatter, export_png, output_file — idiomatic
+          Bokeh patterns throughout
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Band glyph, Slope model, Label model — distinctly Bokeh features
-          not easily replicated elsewhere.
+        comment: Band glyph, Slope model, HoverTool — three Bokeh-native features
+          used correctly
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - edge-highlighting
