@@ -1,171 +1,196 @@
 library: bokeh
+language: python
 specification_id: contour-basic
 created: '2025-12-23T10:00:08Z'
-updated: '2025-12-23T10:03:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20457533896
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/contour-basic/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - contourpy
-  techniques:
-  - colorbar
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-04-24T01:30:27Z'
+generated_by: claude-opus
+workflow_run: 24867170776
+issue: 855
+python_version: 3.14.4
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/bokeh/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent use of contourpy library for generating filled contours and contour
-    lines, demonstrating sophisticated polygon extraction
-  - Viridis colormap provides excellent accessibility and visual appeal
-  - Both PNG and HTML outputs are generated, supporting Bokeh interactive capabilities
-  - Clean implementation with proper handling of ChunkCombinedOffset fill type from
-    contourpy
-  - Appropriate 50x50 grid resolution provides smooth contour curves
-  - Good axis range with buffer prevents edge clipping
+  - Uses Bokeh native p.contour() API with Viridis256 for idiomatic filled contour
+    rendering
+  - Perfect theme adaptation — all chrome tokens (background, title, axis labels,
+    ticks, colorbar) flip correctly between light and dark
+  - Realistic mountain terrain dataset with two distinct peaks creating clear geographic
+    storytelling
+  - construct_color_bar() on ContourRenderer is the idiomatic Bokeh pattern, not a
+    general colorbar workaround
+  - 'Creative contour line styling: line_color=PAGE_BG at 0.45 alpha creates subtle
+    band separation in both themes'
+  - match_aspect=True demonstrates domain knowledge for geographic accuracy
+  - 'All font sizes explicitly set well above minimums: 42pt title, 32pt axis labels,
+    24pt tick labels'
+  - 'KISS code structure: flat imports → data → plot → save, no functions or classes'
   weaknesses:
-  - Colorbar title Z Value appears partially clipped at the right edge of the image
-  - Grid lines are barely visible against the dark purple background of low-value
-    regions
-  - Axis labels use generic X Coordinate / Y Coordinate instead of a domain-specific
-    context
-  image_description: The plot displays a contour visualization of a 2D scalar field
-    with a Gaussian peak function. The main peak is centered around (0, 0) with a
-    secondary, smaller peak visible around (1.5, -1). The filled contours use the
-    Viridis colormap (colorblind-safe) transitioning from dark purple/blue (low values
-    ~0.05) through teal/cyan to green and finally bright yellow (high values ~0.95).
-    Contour lines in dark gray overlay the filled regions. The title "contour-basic
-    · bokeh · pyplots.ai" appears at the top left. X and Y axes are labeled "X Coordinate"
-    and "Y Coordinate" respectively, with tick marks from -3 to 3. A colorbar on the
-    right shows the Z Value scale from ~0.05 to ~0.95. The overall layout is clean
-    with a light gray background and subtle grid lines.
+  - 'DE-01: Design sophistication is above defaults but not exceptional — the plot
+    is well-configured rather than distinctively designed; could add a focal point
+    annotation on the highest peak or use contour level labels to raise storytelling'
+  - 'DE-02: Could further refine by adding a subtle watermark-style text element or
+    marginal spacing adjustments'
+  - 'LM-02: Could leverage more Bokeh-distinctive features such as HoverTool with
+    elevation readout (for HTML output) or custom palettes beyond standard Viridis'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) visible in the outer border/frame area surrounding the plot
+      Chrome: Title "Mountain Terrain · contour-basic · bokeh · anyplot.ai" in dark text (INK=#1A1A17) is clearly readable; axis labels "Distance East (km)" and "Distance North (km)" in dark text; tick labels 0-10 in dark-gray (INK_SOFT=#4A4A44); colorbar title "Elevation (m)" and value labels (322.865 to 1221.206) in dark text on warm off-white colorbar background — all readable
+      Data: Two mountain peaks shown with Viridis256 colormap — large high peak at upper-right (bright yellow, ~1221m) and smaller secondary peak at lower-left (green, ~700m); dark purple fills represent low-elevation valleys; subtle warm off-white contour lines at 0.45 alpha provide band separation; 14 contour levels smoothly rendered
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) in the outer border/frame area
+      Chrome: Title in light text (INK=#F0EFE8) clearly readable against dark background; axis labels in light INK text; tick labels in lighter-gray (INK_SOFT=#B8B7B0); colorbar title and value labels in appropriate light colors on dark background — all text is light-on-dark, NO dark-on-dark failures observed
+      Data: Viridis256 colormap colors are identical to light render — same purple/green/yellow gradient; the two peaks maintain their visual identity unchanged between themes (data colors are theme-independent as required); contour line color changes to #1A1A17 (near-black) at 0.45 alpha, making them slightly less visible on dark viridis fills compared to light render, but the filled contours clearly communicate the elevation data
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable at the
-          high resolution
+        comment: 'All font sizes explicitly set: 42pt title, 32pt axis labels, 24pt
+          tick labels, 26pt colorbar title, 22pt colorbar labels — all readable in
+          both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere in the plot
+        comment: No overlapping text elements; well-spaced layout with colorbar properly
+          positioned
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Contour levels are well-defined with smooth transitions and clear
-          boundaries
+        comment: Viridis filled contour bands are optimally visible; 14 levels provide
+          smooth gradient representation
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Viridis palette is colorblind-safe with excellent contrast progression
+        comment: Viridis is perceptually uniform and colorblind-safe
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good proportions, but colorbar "Z Value" title appears partially
-          cut off at edge
+        comment: Good proportions, balanced margins, colorbar well-positioned on right,
+          nothing cut off
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels ("X Coordinate", "Y Coordinate") but no units
-          provided
+        comment: Distance East (km), Distance North (km), Elevation (m) on colorbar
+          — all descriptive with units
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle but barely visible against the dark contour fill
+        comment: 'Viridis256 sequential colormap for continuous elevation data; #FAF8F1
+          light / #1A1A17 dark backgrounds; all chrome theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured defaults: bold centered title, match_aspect
+          for geographic accuracy, creative line_color=PAGE_BG at 0.45 alpha for subtle
+          band separation, clean chrome. Not yet ''strong design clearly above defaults''.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed (outline_line_color=None), grid disabled (appropriate
+          for filled contour), minor ticks disabled, custom margins (min_border_right=60),
+          toolbar removed
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Visual hierarchy present: bright yellow dominant peak creates focal
+          point, two peaks enable natural comparison, geographic mountain terrain
+          narrative. Viewer is guided to the highest peak.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct contour plot with both filled regions and contour lines
+        comment: Correct filled contour plot with contour lines — matches the spec
+          exactly
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X, Y coordinates correctly mapped to grid, Z values to color
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has colorbar, contour lines, filled regions as specified
-      - id: SC-04
-        name: Data Range
+        comment: Colorbar present, both filled regions and contour lines, sequential
+          viridis colormap, 90x90 grid (within 20-100 spec), sufficient resolution
+          for smooth contours
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis range (-3.2 to 3.2 buffer works well)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Distance East, Y=Distance North, Z=elevation — correct mapping,
+          full 0-10km range shown on both axes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar accurately represents Z value range
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "contour-basic · bokeh · pyplots.ai" format
+        comment: Title 'Mountain Terrain · contour-basic · bokeh · anyplot.ai' contains
+          all required components; colorbar serves as legend for continuous data
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows primary and secondary peaks demonstrating nested contours;
-          could show more varied topography (saddle points, ridges)
+        comment: 'Shows all contour plot features: filled bands, contour lines, colorbar
+          scale, multiple peaks, depression (saddle), gradient slope (+12*X term)'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Gaussian peak function is a plausible mathematical scenario; axis
-          labels are generic rather than domain-specific
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values 0-1 range is appropriate for the normalized Gaussian function
+        comment: Mountain terrain at 10x10 km scale — real-world, scientifically plausible,
+          completely neutral topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 322-1221m elevation range over 10km region — realistic for a mountainous
+          area
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,42 +198,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → contour generation → plot → save'
+        comment: 'Flat code: imports → theme tokens → data generation → figure → contour
+          → colorbar → styling → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42), though data is deterministic anyway
+        comment: Fully deterministic — mathematical function with no random elements
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only os, numpy, bokeh.io, bokeh.palettes, bokeh.plotting — all used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity for the visualization task
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Bokeh and contourpy APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as "plot.png" (correct) but code structure includes unnecessary
-          top-level function-like organization
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly; current Bokeh
+          3.x API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses p.contour() — the recommended Bokeh 3.x high-level API for contour
+          plots. construct_color_bar() on ContourRenderer is the idiomatic pattern.
+          Above the default 3.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Bokeh's patches and multi_line glyphs appropriately; uses contourpy
-          for contour generation which is standard. Could leverage more Bokeh-specific
-          features like HoverTool for interactivity in the HTML version.
+        comment: p.contour() with fill_color as palette list and construct_color_bar()
+          are distinctively Bokeh. HTML export via output_file()/save() is Bokeh-native.
+          Could further leverage HoverTool for elevation readout in HTML output.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
