@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 donut-basic: Basic Donut Chart
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: plotly 6.7.0 | Python 3.14.4
+Quality: 89/100 | Updated: 2026-04-24
 """
 
 import plotly.graph_objects as go
