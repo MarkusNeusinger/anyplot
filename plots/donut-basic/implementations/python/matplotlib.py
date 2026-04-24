@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 donut-basic: Basic Donut Chart
-Library: matplotlib | Python 3.13
-Quality: pending | Created: 2026-04-24
+Library: matplotlib 3.10.9 | Python 3.14.4
+Quality: 86/100 | Updated: 2026-04-24
 """
 
 import os
