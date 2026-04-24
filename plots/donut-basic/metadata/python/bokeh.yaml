@@ -1,162 +1,185 @@
 library: bokeh
+language: python
 specification_id: donut-basic
 created: '2025-12-23T00:48:41Z'
-updated: '2025-12-23T01:22:13Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20447973231
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/donut-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/donut-basic/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - numpy
-  techniques:
-  - html-export
-  patterns:
-  - columndatasource
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-04-24T05:40:42Z'
+generated_by: claude-opus
+workflow_run: 24873801761
+issue: 733
+python_version: 3.14.4
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/bokeh/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent use of Bokeh annular_wedge for creating donut shape with proper inner/outer
-    radius
-  - 'Clean center annotation showing summary statistic (Total: 100) as spec recommends'
-  - Good use of ColumnDataSource and cumsum transform for angle calculations
-  - Proper white segment separators (line_width=4) enhance readability
-  - Smart text color contrast logic (white on dark backgrounds, dark on light)
-  - Outputs both PNG and interactive HTML versions
+  - 'Perfect spec compliance: hollow center with total metric, percentage labels on
+    all segments, correct category count and Okabe-Ito ordering.'
+  - Ideal canvas choice (3600x3600 square) and full palette compliance in both light
+    and dark themes.
+  - Theme-adaptive chrome correctly implemented throughout — no dark-on-dark failures
+    in either render.
+  - Clean, readable code with deterministic data and correct output filenames (plot-{THEME}.png
+    + .html).
+  - Realistic, neutral budget allocation scenario with well-proportioned values.
   weaknesses:
-  - Legend shows percentage values redundantly - should show actual values instead
-    of duplicating percentages visible on segments
-  - 'Two similar teal colors (#4ECDC4 and #95E1D3) could be harder to distinguish
-    for some users'
-  image_description: 'The plot displays a donut chart (ring chart) showing portfolio
-    allocation across 5 asset classes. The chart uses a square 3600x3600 format with
-    the donut centered slightly left. Colors used are: Python Blue (#306998) for Technology
-    (35%), Yellow (#FFD43B) for Healthcare (25%), Teal (#4ECDC4) for Finance (20%),
-    Coral/Red (#FF6B6B) for Energy (12%), and Light Teal (#95E1D3) for Retail (8%).
-    Percentage labels are positioned within each segment. The center displays "Total"
-    with "100" below it in Python Blue. A legend on the right side shows each category
-    with its percentage. The title "donut-basic · bokeh · pyplots.ai" appears at the
-    top left.'
+  - 'DE-01 (4/8): Flat typography hierarchy — title uses text_font_style=''normal'';
+    no subtitle or source annotation for added context.'
+  - 'DE-02 (4/6): Wide empty canvas margins around the donut; tighten x_range/y_range
+    from 1.4 to ~1.25 and increase inner_radius to make the ring more prominent.'
+  - 'LM-02 (3/5): HTML output is generated but no HoverTool is added — missing Bokeh''s
+    signature interactive feature.'
+  - 'VQ-01 minor: White percentage label on amber #E69F00 (Support 5.4%) has marginal
+    contrast; consider contrast-adaptive label color for small light segments.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "Budget by Department · donut-basic · bokeh · anyplot.ai" in dark ink at top, clearly readable. No axes or grid (correct for donut). Legend in top-right with dark text labels on elevated-light background — all readable.
+      Data: Five segments in Okabe-Ito order: Engineering #009E73 (46.8%), Operations #D55E00 (20.5%), Marketing #0072B2 (15.1%), Sales #CC79A7 (12.2%), Support #E69F00 (5.4%). White-bold percentage labels on each segment. Center shows "Total budget" in INK_SOFT and "$1,025K" in large bold INK.
+      Legibility verdict: PASS — all text readable. Minor note: white label on #E69F00 amber segment has marginal contrast but is visible.
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in light-colored text (#F0EFE8), clearly readable against dark background. Legend items in INK_SOFT (#B8B7B0) on dark elevated background (#242420) — readable. No dark-on-dark failures.
+      Data: Segment colors identical to light render — Okabe-Ito preserved across themes. Percentage labels remain off-white (#F0EFE8), readable on colored segments. Center "Total budget" in #B8B7B0 and "$1,025K" in #F0EFE8 — both readable against dark center hole (#1A1A17).
+      Legibility verdict: PASS — all text readable in dark theme; chrome adapts correctly.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: All text readable; title 36pt, segment labels 26pt, center text 32-48pt,
-          legend 22pt - all appropriately sized
+        comment: 'All font sizes explicitly set (title 56pt, labels 44pt bold, center
+          96pt bold, legend 36pt). Minor: white label on amber #E69F00 has marginal
+          contrast.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels clearly separated
+        comment: No overlapping elements.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Donut segments well-sized with thick ring width (0.45-0.95 radius),
-          good visual weight
+        comment: All five segments clearly visible and well-sized.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Good contrast and mostly colorblind-safe palette, though some similar
-          teal shades could be improved
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions with chart centered and legend positioned to the
-          right
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed on right side with clear color boxes
+        comment: Okabe-Ito palette is CVD-safe; segments easily distinguishable.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3600x3600 square canvas appropriate for circular chart; donut fills
+          canvas well.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title present; no axes needed for donut chart.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order; backgrounds #FAF8F1/#1A1A17;
+          chrome theme-correct in both renders.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library default. Center metric is thoughtful but
+          typography hierarchy is flat (title style 'normal', no subtitle).
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Good: axes hidden, no grid, segment gaps via line_color, borderless
+          legend. Wide canvas margins around donut not fully tightened.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Center total provides context; percentage labels guide reader; data
+          sorted largest-to-smallest. No focal point emphasis on dominant Engineering
+          segment.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct donut/ring chart using annular_wedge
+        comment: Correct donut chart via annular_wedge() with inner/outer radius.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories correctly mapped to segments, values to angles
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'Center space used for key metric (Total: 100), percentage labels
-          on segments, 5 categories (within 3-8 range)'
-      - id: SC-04
-        name: Data Range
+        comment: Hollow center, center metric (total budget), percentage labels, consistent
+          ordering, 5 categories all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All segments visible and properly proportioned
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Values correctly mapped to angle proportions; percentages accurately
+          computed.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels match categories and show percentages
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "donut-basic · bokeh · pyplots.ai"'
+        comment: Title format correct with spec-id, library, anyplot.ai; legend labels
+          match categories.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varied segment sizes (35% down to 8%), demonstrates donut chart
-          well, though could show more extreme size differences
+        comment: Proportions range from 5.4% to 46.8%, showing full range of donut
+          chart capabilities.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Portfolio allocation by asset class is a real, comprehensible scenario
-          perfectly suited for donut charts
+        comment: Annual departmental budget allocation — canonical, neutral, real-world
+          use case.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values sum to 100% appropriately; percentages are realistic for portfolio
-          allocation
+        comment: Budget values $55K-$480K, total $1,025K — realistic for mid-size
+          organization.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -164,41 +187,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple script structure: imports → data → plot → save'
+        comment: 'Linear flow: tokens -> data -> figure -> annular_wedge -> labels
+          -> style -> save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random values used)
+        comment: Fully deterministic data; no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (math.pi, numpy, bokeh components)
+        comment: Every import is used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic. Manual angle math is necessary for Bokeh label
+          placement.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly, but legend labels show "(35%)" which
-          duplicates the value display
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly; current Bokeh
+          API throughout.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, cumsum transform, annular_wedge which are
-          Bokeh-specific; exports both PNG and HTML
-  verdict: APPROVED
+        comment: Uses annular_wedge(), cumsum() transform, ColumnDataSource, Label
+          — idiomatic Bokeh donut pattern.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: cumsum() transform is Bokeh-specific; legend_field uses data-driven
+          legends; annular_wedge is native Bokeh. HoverTool not added despite HTML
+          output being generated.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - columndatasource
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting

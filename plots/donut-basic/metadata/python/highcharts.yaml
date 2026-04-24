@@ -1,161 +1,179 @@
 library: highcharts
+language: python
 specification_id: donut-basic
 created: '2025-12-23T00:51:02Z'
-updated: '2025-12-23T01:22:13Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20448001420
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-24T05:58:37Z'
+generated_by: claude-opus
+workflow_run: 24874374608
+issue: 733
+python_version: 3.14.4
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/donut-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/donut-basic/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - pillow
-  - selenium
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/highcharts/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent use of colorblind-safe color palette matching library guidelines
-  - Clean center annotation showing total budget with proper formatting
-  - Well-sized data labels with percentage formatting
-  - Professional appearance with good ring thickness (55% inner size)
-  - Proper Highcharts implementation with correct container setup
-  - Interactive HTML version also generated
+  - 'Perfect spec compliance: donut chart with center metric ($1,025K total), percentage
+    labels, and correct 5-segment Okabe-Ito ordering'
+  - Both themes render cleanly — light (#FAF8F1) and dark (#1A1A17) backgrounds with
+    fully theme-adaptive chrome (INK/INK_SOFT tokens applied to title, data labels,
+    and center subtitle)
+  - 'Clean idiomatic Highcharts code: correct PieSeries with innerSize, container=''container'',
+    inline JS download, proper Selenium screenshot pipeline'
   weaknesses:
-  - Legend text appears slightly small relative to the chart size on the right side
-  - 'Center text could be better vertically centered (currently offset with y: 60)'
-  image_description: 'The plot displays a donut chart showing budget allocation across
-    5 categories. The chart has a hollow center displaying "Total $100M". Segments
-    are colored with a colorblind-safe palette: blue (Marketing 28%), yellow (Development
-    35%), purple (Operations 18%), cyan (Research 12%), and brown (Support 7%). Each
-    segment has clear percentage labels positioned outside the ring. The title "donut-basic
-    · highcharts · pyplots.ai" appears at the top. A vertical legend on the right
-    lists all categories with corresponding color indicators. The layout is clean
-    with good whitespace balance.'
+  - Title font size (56px) is double the 28px style-guide recommendation for pixel-based
+    Highcharts; data labels at 44px are similarly oversized relative to the 18px tick-label
+    guideline — while readable, this creates inconsistency with other implementations
+  - 'Design excellence is functional but not polished: no weight contrast between
+    label name and percentage (both plain text), no visual callout for the dominant
+    Engineering segment, center metric styling is standard Highcharts subtitle without
+    extra typographic refinement'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "Budget by Department · donut-basic · highcharts · anyplot.ai" in dark #1A1A17 text, clearly readable. No axis labels (appropriate for donut). Center subtitle shows "Total budget" in INK_SOFT (#4A4A44) and "$1,025K" in bold INK (#1A1A17), both readable against the off-white donut hole.
+      Data: Five Okabe-Ito segments in order — Engineering (brand green #009E73, ~47%), Operations (vermillion #D55E00, ~21%), Marketing (blue #0072B2, ~15%), Sales (reddish purple #CC79A7, ~12%), Support (orange/yellow #E69F00, ~5%). Outside data labels with connectors show name + percentage in dark INK text, all clearly readable. Thin PAGE_BG gap between segments for definition.
+      Legibility verdict: PASS — all text dark on light background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct warm near-black, not pure black
+      Chrome: Title in light #F0EFE8, clearly readable against dark background. Center metric "Total budget" in #B8B7B0 and "$1,025K" in bold #F0EFE8, both readable. Outside data labels use INK=#F0EFE8 (cream/light), clearly visible against dark background.
+      Data: Identical Okabe-Ito data colors to light render — Engineering green, Operations vermillion, Marketing blue, Sales pink, Support yellow. Only chrome elements flipped. Segment gaps use dark PAGE_BG for definition.
+      Legibility verdict: PASS — no dark-on-dark issues, all text light on dark background, brand green #009E73 remains visible
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title, data labels, and legend are all clearly readable at the 4800x2700
-          resolution with appropriate font sizes (48px title, 28px labels)
+        comment: All text readable in both themes; title at 56px and data labels at
+          44px exceed style-guide recommendations (28px/18px for pixel-based), though
+          visually acceptable
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; data labels are well-spaced around the donut
+        comment: All labels well-positioned with connectors, no collisions including
+          the small Support segment
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Ring thickness (55% inner size) provides excellent segment visibility
+        comment: All five segments clearly visible; Support at 5.4% is small but readable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses recommended colorblind-safe palette with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good overall layout but the donut is slightly left of center due
-          to right-aligned legend
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for pie/donut charts (no axes)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend is well-placed and readable
+        comment: Okabe-Ito palette is CVD-safe by design
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Donut centered well at 4800x2700, nothing cut off, generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title includes spec-id format; no axes needed for donut
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First segment #009E73 (Engineering), full Okabe-Ito order, light
+          bg #FAF8F1, dark bg #1A1A17, data colors identical between themes'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: center metric with two-line HTML subtitle, clean
+          segment gaps, no legend — functional and clean but not exceptional'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Segment gaps via borderColor=PAGE_BG, credits disabled, no legend
+          box — appropriate for chart type
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Center metric ($1,025K) adds context beyond raw slices; dominant
+          Engineering segment immediately visible; percentages aid comparison
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct donut chart (pie with inner hole)
+        comment: Correct donut (PieSeries with innerSize=58%)
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories and values correctly mapped to segments
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has hollow center with summary (Total $100M), percentage labels on
-          segments, consistent segment ordering
-      - id: SC-04
-        name: Data Range
+        comment: Center metric, percentage labels, consistent ordering, thick ring
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, percentages sum to 100%
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 5 categories correctly mapped with proportional values
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "{spec-id} · {library} · pyplots.ai"
+        comment: 'Title: ''Budget by Department · donut-basic · highcharts · anyplot.ai'';
+          no legend (labels on segments instead)'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 5 categories with varying proportions demonstrating the donut
-          format well; could show more variation in segment sizes
+        comment: 'Shows all donut aspects: proportions, center metric, percentage
+          labels, categorical color coding'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Budget allocation by department is a very realistic and relatable
-          scenario
+        comment: Annual budget by department — real-world, plausible, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are plausible percentages; the total shown as $100M works
-          but data values (28, 35, etc.) are treated as percentages
+        comment: Values in USD thousands (55K-480K), total ~$1M — realistic company
+          budget
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -163,13 +181,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → chart config → export'
+        comment: Flat script, no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random values)
+        comment: Hardcoded deterministic data, no randomness needed
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -177,29 +195,43 @@ review:
         passed: true
         comment: All imports are used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and appropriately complex; zip(strict=True) is a nice touch
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Highcharts Core API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Outputs plot.png correctly but also creates intermediate plot_raw.png
-          (cleaned up)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Follows highcharts.md patterns: Chart(container=''container''),
+          HighchartsOptions, PieSeries, inline JS, Selenium pipeline. Minor: uses
+          jsdelivr CDN instead of official highcharts.com'
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts PieSeries with innerSize for donut effect, allowPointSelect
-          for interactivity, proper subtitle positioning in center. Could leverage
-          more Highcharts-specific features like tooltips or animations in the HTML
-          output.
+        comment: useHTML subtitle positioned in donut center is Highcharts-specific;
+          connectorColor/connectorWidth customization; hover brightness state — above
+          default but room for more
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns: []
+  dataprep: []
+  styling: []

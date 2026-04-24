@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 donut-basic: Basic Donut Chart
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: highcharts unknown | Python 3.14.4
+Quality: 88/100 | Updated: 2026-04-24
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -12,89 +13,90 @@ from pathlib import Path
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
 from highcharts_core.options.series.pie import PieSeries
-from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Budget allocation by category
-categories = ["Marketing", "Development", "Operations", "Research", "Support"]
-values = [28, 35, 18, 12, 7]
-total = sum(values)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Colorblind-safe colors (Python Blue first, then complementary)
-colors = ["#306998", "#FFD43B", "#9467BD", "#17BECF", "#8C564B"]
+# Okabe-Ito palette (first segment is always brand green)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+
+# Data - Annual budget allocation by department (USD thousands)
+categories = ["Engineering", "Operations", "Marketing", "Sales", "Support"]
+values = [480, 210, 155, 125, 55]
+total = sum(values)
 
 # Create chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration
 chart.options.chart = {
     "type": "pie",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
-    "spacingBottom": 100,
-    "spacingTop": 50,
+    "backgroundColor": PAGE_BG,
+    "style": {"color": INK, "fontFamily": "Helvetica, Arial, sans-serif"},
 }
 
-# Title
 chart.options.title = {
-    "text": "donut-basic · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
+    "text": "Budget by Department · donut-basic · highcharts · anyplot.ai",
+    "style": {"fontSize": "56px", "fontWeight": "500", "color": INK},
+    "margin": 40,
 }
 
-# Subtitle in center showing total
+# Center metric (two-line subtitle)
 chart.options.subtitle = {
-    "text": f"Total<br><b>${total}M</b>",
+    "text": f'<div style="text-align:center;line-height:1.2;">'
+    f'<div style="font-size:44px;color:{INK_SOFT};">Total budget</div>'
+    f'<div style="font-size:112px;font-weight:700;color:{INK};">${total:,}K</div>'
+    f"</div>",
+    "useHTML": True,
     "align": "center",
     "verticalAlign": "middle",
-    "style": {"fontSize": "42px"},
-    "y": 60,
+    "y": 0,
 }
 
-# Colors
-chart.options.colors = colors
+chart.options.colors = OKABE_ITO
 
-# Plot options for donut (pie with innerSize)
 chart.options.plot_options = {
     "pie": {
-        "allowPointSelect": True,
-        "cursor": "pointer",
-        "innerSize": "55%",  # This creates the donut hole
+        "innerSize": "58%",
+        "size": "80%",
+        "borderColor": PAGE_BG,
+        "borderWidth": 8,
         "dataLabels": {
             "enabled": True,
-            "format": "<b>{point.name}</b>: {point.percentage:.1f}%",
-            "style": {"fontSize": "28px"},
-            "distance": 30,
+            "format": "<b>{point.name}</b><br>{point.percentage:.1f}%",
+            "distance": 80,
+            "style": {"fontSize": "44px", "fontWeight": "normal", "color": INK, "textOutline": "none"},
+            "connectorColor": INK_SOFT,
+            "connectorWidth": 3,
         },
-        "showInLegend": True,
+        "showInLegend": False,
+        "states": {"hover": {"brightness": 0.05}},
     }
 }
 
-# Legend
-chart.options.legend = {
-    "enabled": True,
-    "align": "right",
-    "verticalAlign": "middle",
-    "layout": "vertical",
-    "itemStyle": {"fontSize": "28px"},
-}
+chart.options.legend = {"enabled": False}
 
-# Create pie series with data
+chart.options.credits = {"enabled": False}
+
 series = PieSeries()
 series.name = "Budget"
 series.data = [{"name": cat, "y": val} for cat, val in zip(categories, values, strict=True)]
-
 chart.add_series(series)
 
-# Download Highcharts JS for inline embedding
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+# Download Highcharts JS for inline embedding (headless Chrome cannot load CDN from file://)
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js"
+req = urllib.request.Request(highcharts_url, headers={"User-Agent": "Mozilla/5.0"})
+with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-# Generate HTML with inline scripts
 html_str = chart.to_js_literal()
 html_content = f"""<!DOCTYPE html>
 <html>
@@ -102,38 +104,33 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
+# Save HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Render PNG via headless Chrome
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
-# Also save the HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
-
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2900")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=4800,2820")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
-driver.save_screenshot("plot_raw.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-# Crop to exact 4800x2700 dimensions
-img = Image.open("plot_raw.png")
-img_cropped = img.crop((0, 0, 4800, 2700))
-img_cropped.save("plot.png")
-Path("plot_raw.png").unlink()
-
-Path(temp_path).unlink()  # Clean up temp file
+Path(temp_path).unlink()
