@@ -1,0 +1,233 @@
+library: plotnine
+language: python
+specification_id: donut-basic
+created: '2026-04-24T05:43:19Z'
+updated: '2026-04-24T05:49:06Z'
+generated_by: claude-opus
+workflow_run: 24874086016
+issue: 733
+python_version: 3.14.4
+library_version: 0.15.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - 'Perfect spec compliance: all required donut features (hollow center, percentage
+    labels, center metric, consistent ordering) present and working'
+  - 'Correct Okabe-Ito palette with #009E73 as first series; both light and dark themes
+    render correctly with proper background colors and readable chrome'
+  - Clean minimal composition — no axes, grid, or legend clutter; background-colored
+    wedge gaps add professional separation
+  - Realistic, neutral business data context (budget allocation by department) with
+    plausible proportions and values
+  weaknesses:
+  - Title font at 22pt is below the 24pt target; percentage labels inside wedges at
+    14pt are below the 16pt recommendation for high-resolution canvas
+  - 'Library Mastery is low: manual polygon construction bypasses plotnine''s grammar-of-graphics
+    strengths — coord_polar() + geom_bar() would be idiomatic'
+  - 'Design Excellence is above average but not exceptional: typography lacks a bold/regular
+    hierarchy between category names and percentages, and the center metric could
+    have stronger contrast between label and value lines'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "Budget by Department · donut-basic · plotnine · anyplot.ai" in dark ink, clearly readable. No axis labels or tick labels (donut chart). Center labels ("Total budget" in INK_SOFT gray, "$1,025K" in bold INK dark) readable. Category labels outside ring in dark INK text — all clearly visible.
+      Data: Five Okabe-Ito segments — Engineering #009E73 (46.8%), Marketing #D55E00 (20.5%), Operations #0072B2 (15.1%), Sales #CC79A7 (12.2%), Support #E69F00 (5.4%). White percentage labels inside each wedge. Background-colored gaps between segments.
+      Legibility verdict: PASS — all text clearly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light off-white text, clearly readable against dark background. Category labels outside ring in light INK (#F0EFE8) text — all visible. Center "Total budget" in soft gray (INK_SOFT #B8B7B0), "$1,025K" in bright near-white (INK #F0EFE8) — both readable. No dark-on-dark failures observed.
+      Data: All five segment colors identical to light render — Engineering #009E73, Marketing #D55E00, Operations #0072B2, Sales #CC79A7, Support #E69F00. White percentage labels remain visible inside wedges.
+      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark issues
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicit; title 22pt (target 24pt), pct labels 14pt (target
+          16pt)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlaps; category labels well-spaced around ring
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All segments visible; Support 5.4% wedge small but label fits
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito CVD-safe; white labels on colored segments good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format appropriate; well-centered, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title; no axes needed for donut
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order; correct bg both themes; chrome
+          correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: wedge gaps, two-tier center metric, label hierarchy.
+          Not publication-level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Fully minimal chrome; background-colored wedge edges add crispness
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Center $1,025K focal point; Engineering dominance immediately obvious
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct donut (ring chart) with hollow center
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Hollow center, pct labels, consistent ordering, center summary all
+          present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category to segment, value to arc angle, all 5 categories present
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; category labels directly on chart
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Hollow center, pct labels, outer labels, center summary — all spec
+          features shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Annual budget by department; neutral business scenario, plausible
+          proportions
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values in $K (480, 210, 155, 125, 55); 5 categories in 3-8 range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes; linear data -> polygon -> plot -> save
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; math, numpy, all plotnine symbols consumed
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic loop for polygon construction; appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: plot.save(f'plot-{THEME}.png', dpi=300) correct
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct ggplot grammar; but coord_polar+geom_bar is the idiomatic
+          donut approach
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: scale_fill_identity, coord_fixed, annotate layers — some distinctive
+          ggplot features
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting

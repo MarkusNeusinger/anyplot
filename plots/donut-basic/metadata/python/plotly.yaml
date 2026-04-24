@@ -1,150 +1,184 @@
 library: plotly
+language: python
 specification_id: donut-basic
 created: '2025-12-23T00:48:01Z'
-updated: '2025-12-23T01:21:10Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20447959475
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/donut-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/donut-basic/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - explicit-figure
-  dataprep: []
-  styling: []
+updated: '2026-04-24T05:36:16Z'
+generated_by: claude-opus
+workflow_run: 24873655754
+issue: 733
+python_version: 3.14.4
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/plotly/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent use of center annotation for total budget display
-  - Clean colorblind-safe color palette with Python blue as primary
-  - White borders between segments improve visual separation
-  - Subtle pull effect adds visual interest without distraction
-  - Both PNG and interactive HTML outputs generated
-  - Realistic budget allocation scenario
+  - Perfect Okabe-Ito palette compliance in canonical order, both themes fully correct
+  - Elegant three-level center annotation (header / bold amount / year) creates a
+    natural focal point
+  - Clean no-legend design with outside labels — professional and uncluttered
+  - Custom Inter font family raises typography above defaults
+  - 'Excellent theme adaptation: warm off-white and near-black backgrounds, all chrome
+    tokens applied correctly'
+  - Realistic, neutral FY2026 budget dataset with plausible proportions (engineering-heavy
+    tech company)
+  - Custom hovertemplate with HTML formatting for interactive HTML output
   weaknesses:
-  - Legend positioning creates slight layout imbalance
-  - Could leverage more Plotly interactivity features like custom hover templates
-  image_description: The plot displays a donut chart with 6 budget allocation categories
-    rendered as colored ring segments. The largest segment is Engineering (35%) in
-    Python blue (#306998), followed by Marketing (20%) in yellow, Operations (15%)
-    in teal, Sales (15%) in coral/salmon, R&D (10%) in green, and HR (5%) in orange.
-    Each segment has a slight pull/explosion effect and white borders between segments.
-    Labels with category names and percentages are positioned outside the ring. The
-    center contains "Total $100M" in blue text. A vertical legend on the right lists
-    all categories. The title "donut-basic · plotly · pyplots.ai" appears at the top
-    center.
+  - 'Design excellence falls short of 90: the dominant Engineering segment (42%) gets
+    no visual emphasis — a subtle pull or highlight would guide the eye and lift DE-01
+    to 6+'
+  - Three small segments on the right (Operations 10%, R&D 6%, G&A 4%) have labels
+    that crowd together; auto-margin helps but spacing could be improved
+  - White segment separator lines are not theme-adaptive — on the dark render they
+    appear as fixed white rather than matching the surface color
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light surface color, not pure white.
+      Chrome: Title "donut-basic · plotly · anyplot.ai" in dark #1A1A17 text, clearly readable. Outside segment labels (category + %) in dark ink, all readable. Center annotations in three tones: "Total Budget" in muted #4A4A44, "$100M" bold in primary #1A1A17, "FY2026" in tertiary #6B6A63.
+      Data: Six Okabe-Ito segments — Engineering (42%) #009E73, Sales (24%) #D55E00, Marketing (14%) #0072B2, Operations (10%) #CC79A7, R&D (6%) #E69F00, G&A (4%) #56B4E9. White separator lines between segments. No legend.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct dark surface color, not pure black.
+      Chrome: Title in light text, clearly readable against dark background. Segment labels appear in light-colored text. Center annotations visible in appropriately adapted light tones. No dark-on-dark text failures.
+      Data: Identical six Okabe-Ito colors to light render — #009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9 — all clearly visible on the dark background. White separator lines visible (slightly harsh on dark, could be theme-adaptive).
+      Legibility verdict: PASS — all text readable; no dark-on-dark issues detected.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 32pt, labels at 20pt, center annotation at 36pt - all clearly
-          readable
+        comment: 'All font sizes explicitly set: title 28px, center annotations 56/22/18px,
+          segment labels 18px. Readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: All labels positioned outside the ring with no overlapping text
+        comment: Mostly clean; three small right-side segments (Operations, R&D, G&A)
+          have labels that crowd together without true overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Ring segments are well-sized with good thickness (hole=0.5), slight
-          pull effect adds visual separation
+        comment: Ring width (hole=0.58) is thick and well-proportioned; all six segments
+          including 4% G&A slice clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses colorblind-safe palette with distinct hues (blue, yellow, teal,
-          coral, green, orange)
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good overall but the legend positioned far right creates some asymmetry
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed, no grid needed for donut charts
+        comment: Okabe-Ito palette used, inherently CVD-safe; white segment dividers
+          add further differentiation.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Donut fills ~65% of canvas, well-centered, generous equal margins
+          on all sides.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title in correct format; no axes applicable to donut chart.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, full Okabe-Ito canonical order, #FAF8F1 light
+          bg, #1A1A17 dark bg, theme-adaptive chrome all correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom font (Inter), no legend, three-level center annotation with
+          size hierarchy — clearly above defaults but lacks focal-point emphasis on
+          dominant segment.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No legend, white segment dividers, generous margins, appropriate
+          absence of grid/spines. Some intentional refinement but separator colors
+          not theme-adaptive.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Center annotation creates focal point; Engineering's 42% arc naturally
+          dominant. Could be stronger with explicit pull on Engineering segment.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct donut chart with hollow center
+        comment: Correct donut chart via go.Pie(hole=0.58).
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories and values correctly mapped to segments
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has percentage labels, center metric ($100M total), consistent ordering
-      - id: SC-04
-        name: Data Range
+        comment: Center annotation, percentage labels, consistent ordering (sort=False),
+          thick ring width all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All segments visible, no data cut off
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Categories to labels, values to segment sizes; all data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels match segment categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "donut-basic · plotly · pyplots.ai"'
+        comment: Exact title format; labels-on-segments replace legend appropriately.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows 6 categories with varying sizes, demonstrates donut chart well
-          but could show more extreme size contrasts
+        comment: 'Demonstrates all donut features: varied sizes (4%-42%), center annotation,
+          outside labels, thick ring.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Budget allocation scenario is highly realistic and relatable
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values sum to 100 (representing $100M), percentages are plausible
+        comment: FY2026 corporate budget $100M across Engineering/Sales/Marketing/Operations/R&D/G&A
+          — neutral and realistic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: $100M total realistic; allocations sum to 100% with plausible proportions
+          for engineering-heavy company.
     code_quality:
       score: 10
       max: 10
@@ -154,41 +188,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flat structure: imports → data → plot → save'
+        comment: 'Linear flow: env read → data → chart → annotations → layout → save.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses deterministic hardcoded data
+        comment: Fully deterministic hardcoded data; no random generation needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only plotly.graph_objects imported
+        comment: Only plotly.graph_objects and os used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Clean idiomatic Plotly code; three-level annotation elegantly split
+          with semantic colors.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-light.png, plot-dark.png, plot-light.html, plot-dark.html
+          with current API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses go.Pie with hole, sort=False, insidetextorientation, hovertemplate;
+          theme via os.getenv. Excellent but not exhaustive of Plotly-specific patterns.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses go.Pie with hole parameter, add_annotation for center text,
-          and HTML export for interactivity. Could have used more Plotly-specific
-          features like hovertemplate customization.
-  verdict: APPROVED
+        comment: Custom hovertemplate with HTML formatting, interactive HTML export,
+          clockwise direction + rotation=90 — Plotly-specific features well-applied.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  - hover-tooltips
+  patterns:
+  - explicit-figure
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting
