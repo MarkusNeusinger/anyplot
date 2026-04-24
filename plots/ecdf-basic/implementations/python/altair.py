@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ecdf-basic: Basic ECDF Plot
-Library: altair | Python 3.13
-Quality: pending | Created: 2026-04-24
+Library: altair 6.1.0 | Python 3.14.4
+Quality: 86/100 | Updated: 2026-04-24
 """
 
 import os
