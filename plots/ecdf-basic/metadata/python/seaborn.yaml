@@ -1,162 +1,176 @@
 library: seaborn
+language: python
 specification_id: ecdf-basic
 created: '2025-12-23T13:02:20Z'
-updated: '2025-12-23T13:08:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461372756
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-24T12:51:06Z'
+generated_by: claude-opus
+workflow_run: 24889970235
+issue: 976
+python_version: 3.14.4
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - grid-styling
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Clean, professional ECDF visualization using seaborn native ecdfplot function
-  - Perfect text sizing following library guidelines (title 24pt, labels 20pt, ticks
-    16pt)
-  - Appropriate line width (3) for high-resolution output
-  - Subtle grid styling (alpha=0.3, dashed) aids percentile reading without visual
-    distraction
-  - Correct y-axis range enforcement (0 to 1) per specification requirements
-  - Good data size (200 observations) within recommended 50-500 range
+  - Perfect visual quality with all text explicitly sized and theme-adaptive in both
+    renders
+  - 'Idiomatic seaborn: sns.ecdfplot() is the native seaborn function for this exact
+    chart type'
+  - Real neutral dataset (penguin flipper lengths) with physically plausible values
+    and deterministic loading
+  - 'Complete spec compliance: y-axis 0→1, grid for percentile reading, step function
+    clear'
+  - Theme-adaptive chrome correctly implemented via full token system
   weaknesses:
-  - Axis labels lack context/units - Value could be more descriptive for a real-world
-    scenario
-  - Could leverage more seaborn ECDF features like stat=count or complementary=True
-    to showcase library capabilities
-  - Data context is generic (random normal samples) rather than a compelling real-world
-    scenario
-  image_description: The plot displays a clear ECDF (Empirical Cumulative Distribution
-    Function) step function with a steel blue line (#306998) against a white background.
-    The x-axis is labeled "Value" and ranges from approximately 10 to 90, while the
-    y-axis is labeled "Cumulative Proportion" and correctly spans from 0 to 1.0. The
-    title "ecdf-basic · seaborn · pyplots.ai" is prominently displayed at the top.
-    The step function exhibits the characteristic S-curve shape expected from normally
-    distributed data (mean=50, std=15), with the steepest increase around the center
-    (values 40-60) and flattening tails at both ends. Subtle dashed grid lines (alpha=0.3)
-    aid in reading percentile values. The line width is appropriately thick (linewidth=3)
-    for visibility at high resolution.
+  - No data storytelling — key percentiles (median, quartiles) not annotated or visually
+    emphasized
+  - Aesthetic sophistication stays at configured-default level — no subtitle, narrative,
+    fill, or emphasis beyond compliance
+  - Seaborn distinctive features underused — multi-hue ecdfplot, complementary ECDF,
+    or stat=count variant could show deeper library mastery
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — not pure white, has a creamy/beige tone
+      Chrome: Title "Penguin Flipper Lengths · ecdf-basic · seaborn · anyplot.ai" in dark ink, fully readable; x-label "Flipper Length (mm)" and y-label "Cumulative Proportion" in dark ink, clearly readable; tick labels in muted dark tone (INK_SOFT), legible
+      Data: Single ECDF step line in brand green #009E73 at linewidth=3.5; rises from ~170mm to ~232mm with step increments; subtle grid on both axes
+      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black consistent with #1A1A17 — not pure black, has a slightly warm dark tone
+      Chrome: Title in off-white/light tone, fully readable against dark background; axis labels in light ink, clearly legible; tick labels in muted light tone (B8B7B0 equivalent), readable; no dark-on-dark failures detected
+      Data: ECDF step line in identical brand green #009E73 — same hue and linewidth as light render; data colors unchanged between themes
+      Legibility verdict: PASS — all text clearly readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt - all perfectly readable
+        comment: All font sizes explicitly set (title=24, labels=20, ticks=16); INK/INK_SOFT
+          tokens applied; fully readable in both renders
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: No text collisions; tick labels well-spaced across both axes
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width of 3 is perfect for this data density
+        comment: ECDF step line at linewidth=3.5, crisp and prominent in both renders
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color, no colorblind issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: '"Value" and "Cumulative Proportion" are descriptive but lack units'
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3, dashed), no legend needed
+        comment: Single brand-green series, high contrast on both surfaces, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas, tight_layout, nothing cut off, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Flipper Length (mm) includes units; Cumulative Proportion is descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; chrome flips
+          correctly in both renders'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: 'Well-configured library default: correct palette and spine removal,
+          but no distinguishing visual identity, no subtitle or narrative hook'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Spines removed and color-adapted, custom grid (alpha=0.10, linewidth=0.8),
+          ax.set_axisbelow; above defaults but not fully polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: ECDF displayed correctly but no emphasis on key percentiles, no annotations,
+          no focal points; viewer extracts insights independently
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct ECDF step function
+        comment: Uses sns.ecdfplot(), correct step-function ECDF
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Values on X, cumulative proportion on Y
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Step function, 0-1 y-axis range, grid for percentile reading
-      - id: SC-04
-        name: Data Range
+        comment: Y-axis 0-1 via set_ylim; grid for percentile reading; distinct linewidth=3.5;
+          step behavior native
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, y-axis correctly set to 0-1
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=flipper_length_mm, Y=cumulative proportion; full data range visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: ecdf-basic · seaborn · pyplots.ai'
+        comment: ecdf-basic · seaborn · anyplot.ai present in title; no legend needed
+          for single series
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows normal distribution ECDF well, but could benefit from showing
-          specific percentile markers
+        comment: Full ECDF step function with ~342 data points shows distribution
+          shape, spread, and all percentile values
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Random samples from normal distribution is a classic statistical
-          example
+        comment: 'Penguin flipper lengths: real scientific dataset, neutral, well-known,
+          not controversial'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values centered at 50 with std=15 are sensible, though generic
+        comment: 170-232mm range is physically correct for penguin species
     code_quality:
       score: 10
       max: 10
@@ -166,40 +180,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: 'Linear: imports → tokens → theme → data → plot → style → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: sns.load_dataset('penguins') is deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib, numpy, seaborn - all used
+        comment: os, matplotlib.pyplot, seaborn — all three used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: sns.ecdfplot is current API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code, no fake functionality, no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png; current seaborn API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: sns.ecdfplot() is the high-level seaborn function for ECDF; sns.load_dataset()
+          and sns.set_theme() are idiomatic seaborn patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
         max: 5
         passed: false
-        comment: Uses sns.ecdfplot which is seaborn-specific, but no additional seaborn
-          features like stat parameter variations or complementary=True option
-  verdict: APPROVED
+        comment: sns.ecdfplot() is seaborn-exclusive (matplotlib requires manual ECDF);
+          doesn't leverage multi-hue ecdfplot, complementary=True variant, or stat='count'
+          option
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - dataset-loading
+  - explicit-figure
+  dataprep: []
+  styling:
+  - grid-styling

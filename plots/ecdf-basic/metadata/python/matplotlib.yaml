@@ -1,161 +1,190 @@
 library: matplotlib
+language: python
 specification_id: ecdf-basic
 created: '2025-12-23T13:01:58Z'
-updated: '2025-12-23T13:04:04Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461372823
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  - grid-styling
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep: []
-  styling: []
+updated: '2026-04-24T12:46:13Z'
+generated_by: claude-opus
+workflow_run: 24889765087
+issue: 976
+python_version: 3.14.4
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Clean, correct ECDF implementation with proper step function using where="post"
-  - Excellent text sizing and readability following matplotlib guidelines exactly
-  - Helpful quartile reference lines (0.25, 0.5, 0.75) that add value for reading
-    percentiles
-  - Colorblind-safe color choices with good contrast
-  - Follows KISS structure perfectly with clean, readable code
+  - Uses ax.ecdf() — matplotlib's native ECDF function (3.8+) — idiomatic and concise
+  - 'Excellent theme-adaptive chrome: all INK/INK_SOFT tokens threaded through title,
+    axes, ticks, spines, and grid'
+  - Meaningful data storytelling via p50/p95/p99 percentile reference lines with labeled
+    values — genuine SRE context
+  - Brand green (#009E73) used correctly as the sole series color
+  - Correct y-axis range (0–1.02) and x-axis starting at 0, matching spec requirements
+  - 'Perfect code quality: KISS structure, seed set, clean imports, correct output
+    naming'
   weaknesses:
-  - X-axis label "Value" is generic and lacks units (could be more descriptive)
-  - Data scenario is generic random samples rather than a real-world context (e.g.,
-    test scores, response times)
-  - Does not use matplotlib.pyplot.ecdf (available since 3.8) which would demonstrate
-    matplotlib-specific functionality
-  image_description: The plot displays a blue step function (ECDF curve) showing the
-    cumulative distribution of 200 random normal samples. The x-axis is labeled "Value"
-    ranging from approximately 10 to 90, and the y-axis is labeled "Cumulative Proportion"
-    ranging from 0 to 1.0. Three yellow dotted horizontal reference lines mark the
-    quartile positions at 0.25, 0.50, and 0.75. The title correctly reads "ecdf-basic
-    · matplotlib · pyplots.ai" at the top. The line width is appropriately thick (linewidth=3),
-    and the plot uses a subtle gray dashed grid for readability. The overall color
-    scheme is colorblind-safe with blue (#306998) for the main data and yellow (#FFD43B)
-    for the reference lines.
+  - Annotation font size is 14pt — below the 16pt minimum for tertiary text at 4800×2700;
+    labels appear slightly small in the render
+  - 'Design excellence ceiling: no area fill under the ECDF curve, no marker at key
+    percentile intersections — plot reads as ''well-configured default'' rather than
+    publication-ready'
+  - X-axis uses a linear scale; a log scale would better reveal the distribution shape
+    for a log-normal API response time dataset and utilize the right half of the canvas
+    more effectively
+  - The p95 and p99 annotation labels crowd the upper-right section; the p99 offset
+    (-18 pts) places it on top of the p99 horizontal reference line rather than above
+    it
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "API Response Times · ecdf-basic · matplotlib · anyplot.ai" in dark ink, fully readable. X-axis label "Response Time (ms)" and Y-axis label "Cumulative Proportion of Requests" in dark ink, readable. Tick labels in INK_SOFT dark grey, clearly readable. Top and right spines removed; left and bottom spines in INK_SOFT. Subtle dotted grid lines throughout.
+      Data: Single ECDF step-function line in #009E73 (brand green), linewidth=3.5 — clearly visible. Three dotted reference lines (p50=103ms, p95=234ms, p99=371ms) in INK_SOFT with inline text annotations. Annotations at fontsize=14 — slightly small for this canvas size but readable.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white surface. Annotation font (14pt) is marginally below the 16pt minimum but does not cause legibility failure.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title in #F0EFE8 light ink, fully readable against dark background. Axis labels in light ink, readable. Tick labels in #B8B7B0 (INK_SOFT dark-mode value) — light grey, clearly visible on dark surface. No dark-on-dark failures observed. Left and bottom spines in INK_SOFT light grey. Grid lines subtle dotted, just visible.
+      Data: ECDF line remains identical #009E73 brand green — exactly matches light render. Reference line annotations in INK_SOFT (#B8B7B0) light grey — readable on dark background.
+      Legibility verdict: PASS — all text and data elements clearly readable against the warm near-black surface. Theme adaptation is correct throughout.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt - all perfectly readable
+        comment: Title 24pt, axis labels 20pt, ticks 16pt — all explicitly set. Annotation
+          labels at 14pt are below the 16pt minimum for tertiary text at this canvas
+          size; readable but deducted 1pt.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text. p50/p95/p99 labels are at distinct x/y positions
+          with appropriate offsets.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width of 3 is appropriate for step function visibility
+        comment: ECDF line at linewidth=3.5 is clearly visible in both renders.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow are colorblind-safe, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: '"Value" is descriptive but lacks units; "Cumulative Proportion"
-          is good'
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3, dashed), no legend needed
+        comment: Single color (#009E73) with high contrast on both light and dark
+          backgrounds. CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas well with balanced margins. The long right
+          tail is inherent to the log-normal distribution and not a layout failure.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Response Time (ms)'' with units. Y: ''Cumulative Proportion
+          of Requests'' — descriptive.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series uses #009E73 (brand green). Light background #FAF8F1,
+          dark #1A1A17. All chrome tokens flip correctly between themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above configured-default level. Deliberate percentile markers with
+          SRE context, correct brand color, theme-adaptive styling. Not yet publication-ready
+          — no area fill, no marker dots at intersection points.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, subtle grid at alpha=0.10, tight_layout.
+          Good but not perfect — annotation placement crowds the upper-right.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: p50/p95/p99 reference lines provide a clear SRE performance narrative.
+          Visual hierarchy is present — green ECDF line dominates over muted grey
+          reference lines. Above baseline storytelling.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct ECDF step function
+        comment: Correct ECDF step function using ax.ecdf().
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Values on X-axis, cumulative proportion on Y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Step function increases by 1/n, Y-axis 0-1, grid lines present, quartile
-          references added
-      - id: SC-04
-        name: Data Range
+        comment: Step function increases by 1/n, y-axis 0–1, distinct line style,
+          grid lines all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, Y-axis properly 0-1
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X = response time values (continuous), Y = cumulative proportion.
+          Correct mapping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A (no legend needed for single series)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "{spec-id} · {library} · pyplots.ai"
+        comment: Title contains 'ecdf-basic · matplotlib · anyplot.ai' in correct
+          format with descriptive prefix. Single series — no legend needed.
     data_quality:
-      score: 17
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows normal distribution ECDF well; quartile references are a nice
-          addition but data itself is somewhat generic
+        comment: Shows step function, long tail, percentile readings. Single distribution
+          — no group comparison shown (which is fine for 'basic' spec).
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Generic random normal samples; plausible but not tied to a specific
-          real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: loc=50, scale=15 produces sensible values in ~10-90 range
+        comment: API response times (ms) is a realistic, neutral SRE scenario. Log-normal
+          distribution is the standard model for latency.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 30–840ms range is realistic for API calls. p50=103ms, p95=234ms,
+          p99=371ms are plausible SLO values.
     code_quality:
       score: 10
       max: 10
@@ -165,41 +194,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple flow: imports → data → plot → save'
+        comment: 'Linear: imports → theme tokens → data → plot → style → save. No
+          functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported
+        comment: Only os, matplotlib.pyplot, numpy — all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: All APIs current
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. zip(..., strict=True) is idiomatic. No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png. ax.ecdf() is current matplotlib 3.8+ API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Basic matplotlib usage with ax.step(); could use matplotlib's built-in
-          ecdf from stats module (matplotlib 3.8+) or demonstrate more advanced matplotlib
-          features
-  verdict: APPROVED
+        passed: true
+        comment: ax.ecdf() is the recommended high-level matplotlib API for ECDFs.
+          Axes-based pattern throughout.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: ax.ecdf() is a distinctive matplotlib 3.8+ feature. axhline/axvline
+          with ymax parameter is also library-specific. Could further leverage matplotlib's
+          step drawing or fill_between for more distinctiveness.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
