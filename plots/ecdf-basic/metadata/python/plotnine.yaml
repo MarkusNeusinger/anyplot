@@ -1,160 +1,174 @@
 library: plotnine
+language: python
 specification_id: ecdf-basic
 created: '2025-12-23T13:02:05Z'
-updated: '2025-12-23T13:05:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461375061
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/plotnine/plot.png
-preview_html: null
+updated: '2026-04-24T13:29:23Z'
+generated_by: claude-opus
+workflow_run: 24890800769
+issue: 976
+python_version: 3.14.4
+library_version: 0.15.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - grid-styling
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep: []
-  styling: []
 review:
   strengths:
-  - Clean, professional appearance with excellent text legibility
-  - Correct ECDF implementation with proper step function
-  - Perfect title format following spec requirements
-  - Good use of plotnine grammar of graphics with theme customization
-  - Appropriate figure sizing (16x9) and DPI (300)
+  - Perfect visual quality in both light and dark themes with all chrome tokens correctly
+    theme-adaptive
+  - Reference lines at y=0.5 and x=median create meaningful data storytelling beyond
+    mere display
+  - All font sizes explicitly set to style guide specifications (24/20/16pt hierarchy)
+  - Clean ECDF computation and idiomatic grammar of graphics composition
+  - Neutral, realistic test score context with appropriate 200-sample dataset
   weaknesses:
-  - Manual ECDF computation instead of using plotnine native stat_ecdf() which would
-    be more idiomatic
-  - Axis label Values is generic and lacks units or more descriptive context
-  image_description: The plot displays an ECDF (Empirical Cumulative Distribution
-    Function) as a blue step function on a clean minimal background. The title "ecdf-basic
-    · plotnine · pyplots.ai" is positioned at the top center. The x-axis is labeled
-    "Values" and shows data ranging from approximately 0 to 90, with tick marks at
-    25, 50, and 75. The y-axis is labeled "Cumulative Proportion" with values from
-    0.0 to 1.0 in 0.1 increments. The step function shows a classic S-shaped cumulative
-    distribution, starting near 0 on the left and rising to 1.0 on the right, with
-    the steepest increase around the median value of 50. Light gray grid lines aid
-    in reading values. The blue color (#306998) provides good contrast against the
-    white background.
+  - DE-01 could reach strong design level with annotation labels on the reference
+    lines identifying the median value explicitly
+  - LM-02 limited because ECDF is computed manually rather than via a grammar-of-graphics
+    stat layer; no plotnine-specific stat is used
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface, not pure white
+      Chrome: Title "ecdf-basic · plotnine · anyplot.ai" dark ink, left-aligned; axis labels "Test Score (points)" and "Cumulative Proportion" in dark INK; tick labels in INK_SOFT — all clearly readable
+      Data: Brand green #009E73 ECDF step curve spanning full x range (~10-87); dotted reference lines in INK_SOFT at y=0.5 and x≈50 (median)
+      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title, axis labels, tick labels all rendered in light-colored ink (#F0EFE8 / #B8B7B0) — clearly readable against dark surface; no dark-on-dark failures; subtle grid lines visible but non-competing
+      Data: ECDF curve identical color #009E73 to light render — only chrome flipped; reference lines visible in muted tone
+      Legibility verdict: PASS — all text clearly readable against dark background; brand green #009E73 remains visible and identifiable
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable with
-          appropriate font sizes (24pt title, 20pt axis labels, 16pt tick labels)
+        comment: Title 24pt, axis labels 20pt, tick labels 16pt — all explicitly set;
+          both renders fully readable
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: Clean layout, no text collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Step line is clearly visible with appropriate width (size=1.5)
+        comment: geom_step(size=2) perfectly adapted to 200-point ECDF; individual
+          steps visible without overwhelming
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single blue color with good contrast, colorblind-safe
+        comment: 'Single #009E73 series; excellent contrast on both backgrounds; CVD-safe'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas appropriately with balanced margins
+        comment: Plot fills canvas well; balanced margins; data spans full x range
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Labels are descriptive but lack units ("Values" could specify the
-          measurement unit)
+        passed: true
+        comment: Test Score (points) with units; Cumulative Proportion descriptive
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle (alpha=0.3), but no legend needed for single series
-          - minor deduction for grid being slightly less visible than optimal
+        passed: true
+        comment: 'First series #009E73; light bg #FAF8F1, dark bg #1A1A17; all chrome
+          theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above configured default: brand green, panel border removed, reference
+          lines at statistically meaningful positions show design intent'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: panel_border=element_blank(), minor grid removed, subtle major grid
+          10% opacity, thin axis lines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Reference lines at y=0.5 and x=median create focal crosshair guiding
+          viewer to median; visual hierarchy established
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct ECDF step plot
+        comment: Correct ECDF step plot using geom_step
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Values on x-axis, cumulative proportion on y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Step function increases by 1/n, y-axis 0-1, grid lines present
-      - id: SC-04
-        name: Data Range
+        comment: Step function increases 1/n per point, y-axis 0-1 with explicit breaks,
+          grid lines present, distinct line style
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis correctly shows 0-1 range, x-axis shows full data range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=test score values, Y=cumulative proportion; full 0-1 range displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "ecdf-basic · plotnine · pyplots.ai"
+        comment: Title exactly ecdf-basic · plotnine · anyplot.ai; single-series no
+          legend needed
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows normal distribution ECDF well, demonstrates S-curve shape;
-          could show more interesting features like different distribution shapes
+        comment: Complete ECDF from near-0 to 1.0; step structure clearly visible;
+          full distribution range
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Normal distribution centered at 50 with spread of 15 is plausible
-          generic data
+        comment: Test scores in educational context; neutral, real-world plausible,
+          non-controversial
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 200 observations is good for ECDF visualization; values in reasonable
-          range
+        comment: Mean 50, std 15 — plausible exam score distribution; values range
+          ~10-87
     code_quality:
       score: 10
       max: 10
@@ -164,11 +178,12 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: 'Clean linear flow: imports → theme tokens → data → ECDF → plot →
+          save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: np.random.seed(42) set
       - id: CQ-03
@@ -176,29 +191,43 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no extraneous dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Concise, Pythonic; ECDF computed cleanly in two lines
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png via ggsave; current plotnine API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert plotnine: full grammar of graphics layering with geom_step+hline+vline+labs+scale+theme'
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses plotnine's ggplot grammar correctly with geom_step, theme_minimal,
-          and proper element_text styling; however, could leverage stat_ecdf() for
-          native ECDF computation instead of manual calculation
+        passed: true
+        comment: Layered reference lines as separate geom layers; theme_minimal+theme
+          override pattern is distinctively plotnine
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
