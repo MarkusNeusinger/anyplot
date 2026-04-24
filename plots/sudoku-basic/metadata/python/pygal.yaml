@@ -1,191 +1,246 @@
 library: pygal
+language: python
 specification_id: sudoku-basic
 created: '2025-12-23T12:24:56Z'
-updated: '2025-12-23T12:27:00Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20460565972
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-24T09:40:18Z'
+generated_by: claude-opus
+workflow_run: 24882217792
+issue: 1311
+python_version: 3.14.4
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling:
-  - minimal-chrome
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/pygal/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent visual execution of Sudoku grid with clear visual hierarchy between
-    3x3 boxes and individual cells
-  - Perfect text legibility with appropriately sized bold numbers
-  - Clean monochrome design ideal for printing as specified
-  - Good canvas utilization with well-balanced layout
-  - Outputs both SVG and PNG formats leveraging pygal native SVG capabilities
-  - Valid, recognizable Sudoku puzzle with varied difficulty regions
+  - 'Perfect visual quality: explicitly sized text, no overlaps, excellent contrast
+    in both themes, ideal canvas utilization'
+  - 'Correct theme-adaptive chrome: background, title text, and grid line colors all
+    flip correctly between light and dark'
+  - Clean, minimal implementation with no unnecessary abstractions
+  - Distinctive use of pygal's SVG tree infrastructure to build a chart type not natively
+    supported
+  - Fully deterministic and reproducible; correct output files
   weaknesses:
-  - Code uses a custom class (SudokuGrid) instead of simple procedural code, violating
-    the KISS principle for plot implementations
-  - sys.path manipulation is unnecessary complexity that could be avoided
-  image_description: The plot displays a 9×9 Sudoku grid with the title "sudoku-basic
-    · pygal · pyplots.ai" at the top. The grid features thick black lines separating
-    the nine 3×3 box regions, with thinner gray lines dividing individual cells within
-    each box. Numbers 1-9 are displayed in a blue color (#306998) in their starting
-    positions, centered within their respective cells. Empty cells are left blank.
-    The background is white, creating a clean monochrome design. The grid is well-centered
-    and fills a good portion of the square canvas. The numbers are bold and clearly
-    legible with appropriate font sizing.
+  - 'Design Excellence gap (12/20): The clean grid is functional but needs more visual
+    sophistication — refined typography, a slightly elevated outer border treatment
+    (e.g., outer border at 14-16px vs box lines at 10px), or nuanced background differentiation
+    for the 3x3 box regions would push this into strong design territory'
+  - 'DE-03 storytelling: Consider using a slightly different shade or weight for cells
+    within the same 3x3 box to reinforce the regional grouping, creating clearer visual
+    hierarchy'
+  - 'LM-01: The actual grid rendering bypasses pygal''s chart API entirely — the pygal
+    library is mostly used for SVG infrastructure and theming rather than its chart
+    rendering capabilities'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "sudoku-basic · pygal · anyplot.ai" in dark ink (#1A1A17) — clearly readable; no axis labels (appropriate for this plot type)
+      Data: Given Sudoku numbers rendered in brand green (#009E73), bold, large font (~185px), centered in each cell; thick box-boundary lines in dark ink (10px); thin cell lines in muted ink (#4A4A44, 2px)
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light text (#F0EFE8) — clearly readable against dark background; thick grid lines in near-white (#F0EFE8); thin cell lines in lighter muted tone (#B8B7B0)
+      Data: Numbers remain identical brand green (#009E73) — same as light render, as required; the green-on-dark contrast is visually crisp
+      Legibility verdict: PASS — no dark-on-dark text failures detected
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: All numbers perfectly readable with appropriate font size, title
-          clear
+        comment: Title explicitly set at 96px; cell numbers explicitly sized at ~55%
+          of cell height (~185px); all text clearly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, numbers well-centered in cells
+        comment: All numbers well-spaced within cells, no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Grid lines and numbers sized optimally for the content
+        comment: Numbers are large and prominent; thick/thin line differentiation
+          is clear
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue numbers on white background with black/gray grid lines - excellent
-          contrast
+        comment: Brand green on off-white and near-black both provide excellent contrast;
+          CVD-safe Okabe-Ito
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Grid well-centered with appropriate margins, fills ~70% of canvas
+        comment: Grid occupies ~71% of 3600x3600 canvas; margins are balanced
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title is sudoku-basic · pygal · anyplot.ai; no axis labels needed
+          for this plot type
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First data color is #009E73; backgrounds #FAF8F1 (light) and #1A1A17
+          (dark); chrome flips correctly'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Clean and intentional design above library defaults (4) but not publication-ready
+          — needs more typographic depth and outer border differentiation
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: No axes, no legend; thick/thin line hierarchy is good; whitespace
+          between title and grid could be more deliberate; line weight ratio could
+          be more elegant
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Green numbers vs. blank cells creates implied puzzle narrative; missing
+          visual differentiation between 3x3 box regions
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 9×9 Sudoku grid with proper structure
+        comment: Correct 9x9 Sudoku grid with 3x3 box regions
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Numbers correctly placed in grid positions
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Thick lines for 3×3 boxes, thin lines for cells, centered numbers,
-          empty cells blank
-      - id: SC-04
-        name: Data Range
+        comment: 'Thick box lines, thin cell lines, centered numbers, blank empty
+          cells all present; minor: spec says monochrome but numbers are brand green
+          (follows style guide)'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 81 cells properly displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: All 81 cells correctly mapped; puzzle data fully represented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A, appropriately omitted for Sudoku
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct "sudoku-basic · pygal · pyplots.ai" format
+        comment: Title matches required format; no legend needed
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows classic Sudoku puzzle with mixed difficulty areas (dense and
-          sparse regions)
+        comment: 'All structural features shown: thick/thin line hierarchy, filled
+          clue cells, blank empty cells, varied number distribution'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Standard valid Sudoku puzzle, recognizable format
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Numbers 1-9 as expected, appropriate starting cell count (~30 given
-          numbers)
+        comment: Classic recognizable Sudoku puzzle — immediately contextually valid
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 1-9 in a 9x9 grid, exactly correct for the domain
     code_quality:
-      score: 5
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
-        max: 3
-        passed: false
-        comment: Uses custom class (SudokuGrid) which violates KISS principle
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Deterministic puzzle data, no random generation
+        comment: Linear Imports → Data → Plot → Save with no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic (hardcoded puzzle data)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: All imports (os, sys, xml.etree.ElementTree, cairosvg, pygal, pygal.style.Style)
+          actively used
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Custom class approach adds complexity
+        comment: SVG manipulation is appropriate complexity for a custom grid type;
+          Pythonic and well-structured
       - id: CQ-05
-        name: Output Correct
-        score: 0
+        name: Output & API
+        score: 1
         max: 1
         passed: true
-        comment: Outputs plot.png, plot.svg, and plot.html correctly
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
         passed: true
-        comment: Custom pygal Graph subclass demonstrates advanced SVG capabilities,
-          renders to multiple formats (SVG, PNG, HTML)
-  verdict: APPROVED
+        comment: Uses pygal Style object for theming and render_tree() to obtain SVG
+          root; actual grid rendered via raw SVG injection rather than pygal chart
+          APIs
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Leverages pygal's SVG-native architecture (render_tree() returning
+          ElementTree) to extend beyond standard chart types; HTML output with embedded
+          SVG is pygal-native
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - cairosvg
+  techniques:
+  - html-export
+  patterns:
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome

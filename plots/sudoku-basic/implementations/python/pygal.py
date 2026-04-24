@@ -1,139 +1,31 @@
-""" pyplots.ai
+""" anyplot.ai
 sudoku-basic: Basic Sudoku Grid
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: pygal 3.1.0 | Python 3.14.4
+Quality: 87/100 | Updated: 2026-04-24
 """
 
+import os
 import sys
+import xml.etree.ElementTree as ET
 
 
-# Temporarily remove current directory from path to avoid name collision
-_cwd = sys.path[0] if sys.path[0] else "."
-if _cwd in sys.path:
-    sys.path.remove(_cwd)
+# Drop script dir from sys.path so `import pygal` resolves to the library, not this file
+sys.path[:] = [p for p in sys.path if p not in ("", ".", os.path.dirname(os.path.abspath(__file__)))]
 
-from pygal.graph.graph import Graph  # noqa: E402
+import cairosvg  # noqa: E402
+import pygal  # noqa: E402
 from pygal.style import Style  # noqa: E402
 
 
-# Restore path
-sys.path.insert(0, _cwd)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+BRAND = "#009E73"
 
-
-class SudokuGrid(Graph):
-    """Custom Sudoku Grid chart for pygal - displays a 9x9 grid with numbers."""
-
-    def __init__(self, *args, **kwargs):
-        self.grid_data = kwargs.pop("grid_data", [[0] * 9 for _ in range(9)])
-        self.cell_color = kwargs.pop("cell_color", "#306998")
-        self.grid_line_color = kwargs.pop("grid_line_color", "#000000")
-        self.thin_line_color = kwargs.pop("thin_line_color", "#999999")
-        super().__init__(*args, **kwargs)
-
-    def _plot(self):
-        """Draw the Sudoku grid."""
-        # Get plot dimensions
-        plot_width = self.view.width
-        plot_height = self.view.height
-
-        # Calculate grid size to fit within the view
-        margin_top = 100
-        margin_bottom = 80
-        margin_sides = 80
-
-        available_width = plot_width - 2 * margin_sides
-        available_height = plot_height - margin_top - margin_bottom
-
-        # Use the smaller dimension to keep grid square
-        grid_size = min(available_width, available_height)
-        cell_size = grid_size / 9
-
-        # Center the grid
-        x_offset = self.view.x(0) + margin_sides + (available_width - grid_size) / 2
-        y_offset = self.view.y(9) + margin_top + (available_height - grid_size) / 2
-
-        # Create group for the sudoku grid
-        plot_node = self.nodes["plot"]
-        sudoku_group = self.svg.node(plot_node, class_="sudoku-grid")
-
-        # Draw background
-        self.svg.node(
-            sudoku_group,
-            "rect",
-            x=x_offset,
-            y=y_offset,
-            width=grid_size,
-            height=grid_size,
-            fill="white",
-            stroke=self.grid_line_color,
-        )
-        self.svg.node(sudoku_group, "rect", x=x_offset, y=y_offset, width=grid_size, height=grid_size, fill="white")
-
-        # Draw thin lines for individual cells (every cell except where thick lines go)
-        thin_width = 2
-        for i in range(1, 9):
-            if i % 3 != 0:  # Skip positions where thick lines will go
-                # Horizontal line
-                y_pos = y_offset + i * cell_size
-                self.svg.node(
-                    sudoku_group,
-                    "line",
-                    x1=x_offset,
-                    y1=y_pos,
-                    x2=x_offset + grid_size,
-                    y2=y_pos,
-                    stroke=self.thin_line_color,
-                )
-                line = self.svg.node(sudoku_group, "line", x1=x_offset, y1=y_pos, x2=x_offset + grid_size, y2=y_pos)
-                line.set("stroke", self.thin_line_color)
-                line.set("stroke-width", str(thin_width))
-
-                # Vertical line
-                x_pos = x_offset + i * cell_size
-                line = self.svg.node(sudoku_group, "line", x1=x_pos, y1=y_offset, x2=x_pos, y2=y_offset + grid_size)
-                line.set("stroke", self.thin_line_color)
-                line.set("stroke-width", str(thin_width))
-
-        # Draw thick lines for 3x3 box boundaries
-        thick_width = 8
-        for i in range(0, 10, 3):
-            # Horizontal line
-            y_pos = y_offset + i * cell_size
-            line = self.svg.node(sudoku_group, "line", x1=x_offset, y1=y_pos, x2=x_offset + grid_size, y2=y_pos)
-            line.set("stroke", self.grid_line_color)
-            line.set("stroke-width", str(thick_width))
-
-            # Vertical line
-            x_pos = x_offset + i * cell_size
-            line = self.svg.node(sudoku_group, "line", x1=x_pos, y1=y_offset, x2=x_pos, y2=y_offset + grid_size)
-            line.set("stroke", self.grid_line_color)
-            line.set("stroke-width", str(thick_width))
-
-        # Draw numbers
-        font_size = int(cell_size * 0.6)
-        for row in range(9):
-            for col in range(9):
-                value = self.grid_data[row][col]
-                if value != 0:
-                    x = x_offset + col * cell_size + cell_size / 2
-                    y = y_offset + row * cell_size + cell_size / 2 + font_size * 0.35
-
-                    text_node = self.svg.node(sudoku_group, "text", x=x, y=y)
-                    text_node.set("text-anchor", "middle")
-                    text_node.set("fill", self.cell_color)
-                    text_node.set("style", f"font-size:{font_size}px;font-weight:bold;font-family:Arial,sans-serif")
-                    text_node.text = str(value)
-
-    def _compute(self):
-        """Compute the box for rendering."""
-        self._box.xmin = 0
-        self._box.xmax = 9
-        self._box.ymin = 0
-        self._box.ymax = 9
-
-
-# Sample Sudoku puzzle data (0 = empty cell)
-# Classic puzzle with starting numbers
+# Data: classic Sudoku puzzle (0 = empty cell)
 grid = [
     [5, 3, 0, 0, 7, 0, 0, 0, 0],
     [6, 0, 0, 1, 9, 5, 0, 0, 0],
@@ -146,64 +38,163 @@ grid = [
     [0, 0, 0, 0, 8, 0, 0, 7, 9],
 ]
 
-# Custom style for 3600x3600 square canvas (appropriate for grid-based visualization)
+# Pygal style carries all chrome (background, title color, fonts)
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#000000",
-    foreground_subtle="#666666",
-    colors=("#306998",),
-    title_font_size=72,
-    legend_font_size=48,
-    label_font_size=48,
-    value_font_size=64,
-    font_family="Arial, sans-serif",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=(BRAND,),
+    title_font_size=96,
+    label_font_size=18,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=18,
+    font_family="DejaVu Sans, Arial, sans-serif",
 )
 
-# Create Sudoku grid
-chart = SudokuGrid(
-    width=3600,
-    height=3600,
+# Square canvas — matches the symmetric 9x9 grid
+CANVAS = 3600
+
+chart = pygal.Bar(
+    width=CANVAS,
+    height=CANVAS,
     style=custom_style,
-    title="sudoku-basic · pygal · pyplots.ai",
-    grid_data=grid,
-    cell_color="#306998",
-    grid_line_color="#000000",
-    thin_line_color="#999999",
+    title="sudoku-basic · pygal · anyplot.ai",
     show_legend=False,
-    margin=100,
-    margin_top=200,
-    margin_bottom=100,
     show_x_labels=False,
     show_y_labels=False,
+    show_x_guides=False,
+    show_y_guides=False,
+    margin=80,
+    margin_top=220,
 )
-
-# Add a dummy series to trigger _plot (pygal requires at least one series)
 chart.add("", [0])
 
-# Save output
-chart.render_to_file("plot.svg")
-chart.render_to_png("plot.png")
+svg_root = chart.render_tree()
 
-# Also save HTML for interactivity
-html_content = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>sudoku-basic - pygal</title>
-    <style>
-        body {{ margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f5f5f5; }}
-        .chart {{ max-width: 100%; height: auto; }}
-    </style>
-</head>
-<body>
-    <figure class="chart">
-        {chart.render(is_unicode=True)}
-    </figure>
-</body>
-</html>
-"""
+# Strip pygal's plot/overlay groups — title + page background are all we keep
+SVG_NS = "{http://www.w3.org/2000/svg}"
+for plot_group in list(svg_root.iter(f"{SVG_NS}g")):
+    cls = plot_group.attrib.get("class", "")
+    if cls.startswith("plot"):
+        plot_group.clear()
+        plot_group.set("class", cls)
 
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
+# Sudoku geometry — centered horizontally, biased below the title
+TOP = 340
+BOTTOM = 160
+SIDE = 280
+GRID_SIZE = min(CANVAS - 2 * SIDE, CANVAS - TOP - BOTTOM)
+CELL = GRID_SIZE / 9
+GRID_X = (CANVAS - GRID_SIZE) / 2
+GRID_Y = TOP + (CANVAS - TOP - BOTTOM - GRID_SIZE) / 2
+
+# Elements added with plain tag names inherit xmlns from the pygal SVG root
+sudoku = ET.SubElement(svg_root, "g", {"class": "sudoku"})
+
+ET.SubElement(
+    sudoku,
+    "rect",
+    {"x": str(GRID_X), "y": str(GRID_Y), "width": str(GRID_SIZE), "height": str(GRID_SIZE), "fill": PAGE_BG},
+)
+
+# Thin lines — individual cell boundaries (skip 3x3 positions, drawn thick later)
+for i in range(1, 9):
+    if i % 3 == 0:
+        continue
+    x = GRID_X + i * CELL
+    y = GRID_Y + i * CELL
+    ET.SubElement(
+        sudoku,
+        "line",
+        {
+            "x1": str(x),
+            "y1": str(GRID_Y),
+            "x2": str(x),
+            "y2": str(GRID_Y + GRID_SIZE),
+            "stroke": INK_SOFT,
+            "stroke-width": "2",
+        },
+    )
+    ET.SubElement(
+        sudoku,
+        "line",
+        {
+            "x1": str(GRID_X),
+            "y1": str(y),
+            "x2": str(GRID_X + GRID_SIZE),
+            "y2": str(y),
+            "stroke": INK_SOFT,
+            "stroke-width": "2",
+        },
+    )
+
+# Thick lines — 3x3 box boundaries and outer border
+for i in range(0, 10, 3):
+    x = GRID_X + i * CELL
+    y = GRID_Y + i * CELL
+    ET.SubElement(
+        sudoku,
+        "line",
+        {
+            "x1": str(x),
+            "y1": str(GRID_Y),
+            "x2": str(x),
+            "y2": str(GRID_Y + GRID_SIZE),
+            "stroke": INK,
+            "stroke-width": "10",
+            "stroke-linecap": "square",
+        },
+    )
+    ET.SubElement(
+        sudoku,
+        "line",
+        {
+            "x1": str(GRID_X),
+            "y1": str(y),
+            "x2": str(GRID_X + GRID_SIZE),
+            "y2": str(y),
+            "stroke": INK,
+            "stroke-width": "10",
+            "stroke-linecap": "square",
+        },
+    )
+
+# Numbers — brand green, centered within cells
+font_size = int(CELL * 0.55)
+for row in range(9):
+    for col in range(9):
+        value = grid[row][col]
+        if value == 0:
+            continue
+        cx = GRID_X + col * CELL + CELL / 2
+        cy = GRID_Y + row * CELL + CELL / 2 + font_size * 0.35
+        text_node = ET.SubElement(
+            sudoku,
+            "text",
+            {
+                "x": str(cx),
+                "y": str(cy),
+                "text-anchor": "middle",
+                "fill": BRAND,
+                "style": (f"font-size:{font_size}px;font-weight:bold;font-family:DejaVu Sans,Arial,sans-serif;"),
+            },
+        )
+        text_node.text = str(value)
+
+# Save
+svg_bytes = ET.tostring(svg_root, xml_declaration=True, encoding="utf-8")
+cairosvg.svg2png(bytestring=svg_bytes, write_to=f"plot-{THEME}.png", output_width=CANVAS)
+
+html_page = (
+    f'<!DOCTYPE html><html><head><meta charset="utf-8">'
+    f"<title>sudoku-basic · pygal · anyplot.ai</title></head>"
+    f'<body style="margin:0;background:{PAGE_BG};display:flex;'
+    f'justify-content:center;align-items:center;min-height:100vh;">'
+    f"{svg_bytes.decode('utf-8')}"
+    f"</body></html>"
+)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_page)
