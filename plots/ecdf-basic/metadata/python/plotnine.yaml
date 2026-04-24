@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: ecdf-basic
 created: '2025-12-23T13:02:05Z'
-updated: '2026-04-24T13:14:10Z'
+updated: '2026-04-24T13:29:23Z'
 generated_by: claude-opus
 workflow_run: 24890800769
 issue: 976
@@ -12,119 +12,110 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 74
+quality_score: 91
 review:
   strengths:
-  - Correct ECDF implementation using geom_step — the natural plotnine idiom for this
-    chart type
-  - Deterministic data generation with fixed seed; 200 observations is ideal for ECDF
-    clarity
-  - Explicit y-axis breaks at 0.1 intervals aid percentile reading — spec-aligned
+  - Perfect visual quality in both light and dark themes with all chrome tokens correctly
+    theme-adaptive
+  - Reference lines at y=0.5 and x=median create meaningful data storytelling beyond
+    mere display
+  - All font sizes explicitly set to style guide specifications (24/20/16pt hierarchy)
+  - Clean ECDF computation and idiomatic grammar of graphics composition
+  - Neutral, realistic test score context with appropriate 200-sample dataset
   weaknesses:
-  - 'Critical: color=''#306998'' is wrong — must be ''#009E73'' (Okabe-Ito position
-    1)'
-  - 'Critical: No ANYPLOT_THEME / os.getenv handling — dark theme not implemented;
-    code produces same output regardless of theme'
-  - 'Critical: Output saved as ''plot.png'' instead of ''plot-{THEME}.png'' — pipeline
-    cannot find the file'
-  - 'Critical: Title brand is ''pyplots.ai'' instead of ''anyplot.ai'''
-  - Missing element_rect for plot_background and panel_background (must use PAGE_BG
-    token)
-  - Missing theme-adaptive text colors (axis_text, axis_title, plot_title must use
-    INK/INK_SOFT)
-  - Generic x-axis label 'Values' — should reflect the data domain (e.g., 'Test Score
-    (points)')
-  - No explicit spine removal (top/right spines should be hidden)
-  - Design lacks any storytelling element (median line, quartile markers, reference
-    annotations)
+  - DE-01 could reach strong design level with annotation labels on the reference
+    lines identifying the median value explicitly
+  - LM-02 limited because ECDF is computed manually rather than via a grammar-of-graphics
+    stat layer; no plotnine-specific stat is used
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (approximately #FAF8F1) — correct theme surface
-      Chrome: Title "ecdf-basic · plotnine · anyplot.ai" in dark ink, readable. Axis labels "Test Score (points)" and "Cumulative Proportion" in dark text, readable. Tick labels (0.0–1.0 on y, 25/50/75 on x) clearly visible against light background.
-      Data: Teal-green ECDF step line consistent with #009E73 (Okabe-Ito position 1). Clear S-curve shape. Subtle horizontal grid lines.
-      Legibility verdict: PASS
-      NOTE: Images appear to be from a prior correct code version — current code uses #306998 (blue) and "pyplots.ai" brand, which would NOT produce these images.
+      Background: Warm off-white #FAF8F1 — correct light theme surface, not pure white
+      Chrome: Title "ecdf-basic · plotnine · anyplot.ai" dark ink, left-aligned; axis labels "Test Score (points)" and "Cumulative Proportion" in dark INK; tick labels in INK_SOFT — all clearly readable
+      Data: Brand green #009E73 ECDF step curve spanning full x range (~10-87); dotted reference lines in INK_SOFT at y=0.5 and x≈50 (median)
+      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Dark near-black (approximately #1A1A17) — correct dark theme surface
-      Chrome: Title and axis labels in white/light-grey, clearly readable against dark background. Tick labels visible. No dark-on-dark failures observed.
-      Data: ECDF step line is same teal-green (#009E73) as light render — data colors unchanged, only chrome flipped. Subtle grid lines visible.
-      Legibility verdict: PASS
-      NOTE: Same code discrepancy applies — the current code has no ANYPLOT_THEME handling and would not produce a dark-themed output.
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title, axis labels, tick labels all rendered in light-colored ink (#F0EFE8 / #B8B7B0) — clearly readable against dark surface; no dark-on-dark failures; subtle grid lines visible but non-competing
+      Data: ECDF curve identical color #009E73 to light render — only chrome flipped; reference lines visible in muted tone
+      Legibility verdict: PASS — all text clearly readable against dark background; brand green #009E73 remains visible and identifiable
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Both renders legible; font sizes 16/20/24pt applied; minor: no explicit
-          tick color binding in code'
+        comment: Title 24pt, axis labels 20pt, tick labels 16pt — all explicitly set;
+          both renders fully readable
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Single step function, no element collisions
+        comment: Clean layout, no text collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: ECDF step line well-weighted and clearly visible
+        comment: geom_step(size=2) perfectly adapted to 200-point ECDF; individual
+          steps visible without overwhelming
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single teal series, CVD-safe
+        comment: 'Single #009E73 series; excellent contrast on both backgrounds; CVD-safe'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions; panel border visible in dark render
+        comment: Plot fills canvas well; balanced margins; data spans full x range
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Images show descriptive Test Score (points) label
+        comment: Test Score (points) with units; Cumulative Proportion descriptive
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Code uses #306998 (wrong, not Okabe-Ito position 1). No ANYPLOT_THEME
-          handling — no theme-adaptive backgrounds or text colors.'
+        passed: true
+        comment: 'First series #009E73; light bg #FAF8F1, dark bg #1A1A17; all chrome
+          theme-adaptive'
     design_excellence:
-      score: 9
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Generic defaults; theme_minimal with no custom refinements
+        passed: true
+        comment: 'Above configured default: brand green, panel border removed, reference
+          lines at statistically meaningful positions show design intent'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Minimal customization; no explicit spine removal
+        passed: true
+        comment: panel_border=element_blank(), minor grid removed, subtle major grid
+          10% opacity, thin axis lines
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Functional ECDF only; no annotations (median, quartiles) to guide
-          viewer
+        passed: true
+        comment: Reference lines at y=0.5 and x=median create focal crosshair guiding
+          viewer to median; visual hierarchy established
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -132,29 +123,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ECDF step function with geom_step, y-axis 0-1
+        comment: Correct ECDF step plot using geom_step
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step increases by 1/n, y-axis 0-1 via scale_y_continuous, grid lines
-          present
+        comment: Step function increases 1/n per point, y-axis 0-1 with explicit breaks,
+          grid lines present, distinct line style
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct x (values) and y (cumulative proportion) mapping
+        comment: X=test score values, Y=cumulative proportion; full 0-1 range displayed
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Code title is 'ecdf-basic · plotnine · pyplots.ai' — wrong brand
-          (should be anyplot.ai)
+        passed: true
+        comment: Title exactly ecdf-basic · plotnine · anyplot.ai; single-series no
+          legend needed
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -162,22 +153,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full distribution shape shown, S-curve, all 200 data points
+        comment: Complete ECDF from near-0 to 1.0; step structure clearly visible;
+          full distribution range
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Data is realistic test score distribution but x-axis label is generic
-          'Values' in code
+        comment: Test scores in educational context; neutral, real-world plausible,
+          non-controversial
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 observations, scores ~15-90, sensible test score domain
+        comment: Mean 50, std 15 — plausible exam score distribution; values range
+          ~10-87
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -185,54 +178,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: 'Clean linear flow: imports → theme tokens → data → ECDF → plot →
+          save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) — deterministic
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All listed imports used
+        comment: All imports used; no extraneous dependencies
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: No fake UI, but hardcoded wrong color and zero ANYPLOT_THEME handling
+        passed: true
+        comment: Concise, Pythonic; ECDF computed cleanly in two lines
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves as plot.png instead of plot-{THEME}.png — breaks pipeline
+        passed: true
+        comment: Saves as plot-{THEME}.png via ggsave; current plotnine API
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Grammar of graphics pattern correct but missing ggsave with width/height,
-          no element_rect for background theming
+        passed: true
+        comment: 'Expert plotnine: full grammar of graphics layering with geom_step+hline+vline+labs+scale+theme'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: geom_step is correct plotnine idiom for ECDF; scale_y_continuous
-          with breaks is idiomatic, but no scale_color_manual or plotnine theme tokens
-  verdict: REJECTED
+        passed: true
+        comment: Layered reference lines as separate geom layers; theme_minimal+theme
+          override pattern is distinctively plotnine
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
   - data-generation
-  dataprep: []
-  styling: []
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
