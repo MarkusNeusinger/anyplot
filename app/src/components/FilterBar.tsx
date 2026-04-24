@@ -434,8 +434,8 @@ export function FilterBar({
             gap: 0.5,
             px: isSearchExpanded ? 1.5 : 0,
             height: 32,
-            width: isSearchExpanded ? { xs: 80, sm: 160, md: 'auto' } : 32,
-            minWidth: isSearchExpanded ? { xs: 80, sm: 160, md: 120 } : 32,
+            width: isSearchExpanded ? { xs: 220, sm: 220, md: 'auto' } : 32,
+            minWidth: isSearchExpanded ? { xs: 220, sm: 220, md: 200 } : 32,
             border: isSearchExpanded ? '1px dashed var(--ink-muted)' : 'none',
             borderRadius: '16px',
             bgcolor: isDropdownOpen ? 'var(--bg-elevated)' : 'transparent',
@@ -495,8 +495,12 @@ export function FilterBar({
               transition: 'all 0.2s ease',
               fontFamily: typography.fontFamily,
               fontSize: fontSize.base,
+              color: 'var(--ink)',
               '& input': {
                 padding: 0,
+                fontFamily: typography.fontFamily,
+                fontSize: fontSize.base,
+                color: 'var(--ink)',
                 '&::placeholder': {
                   color: semanticColors.mutedText,
                   opacity: 1,
