@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 donut-basic: Basic Donut Chart
 Library: pygal 3.1.0 | Python 3.14.4
-Quality: pending | Updated: 2026-04-24
+Quality: 88/100 | Updated: 2026-04-24
 """
 
 import os
