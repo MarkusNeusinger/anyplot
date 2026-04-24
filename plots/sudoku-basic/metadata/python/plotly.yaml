@@ -1,167 +1,182 @@
 library: plotly
+language: python
 specification_id: sudoku-basic
 created: '2025-12-23T12:23:20Z'
-updated: '2025-12-23T12:25:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20460561139
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling:
-  - minimal-chrome
+updated: '2026-04-24T09:13:47Z'
+generated_by: claude-opus
+workflow_run: 24881403608
+issue: 1311
+python_version: 3.14.4
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/plotly/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent visual hierarchy with clearly distinguishable thick (3×3 box) and thin
-    (cell) lines
-  - Numbers are large, bold, and perfectly centered using Arial Black font
-  - Clean monochrome design ideal for printing as specified
-  - Uses proper square aspect ratio (1:1) appropriate for Sudoku
-  - Generates both PNG and HTML outputs, leveraging Plotly dual-output capability
-  - Real, solvable Sudoku puzzle data rather than random numbers
+  - 'Perfect spec compliance: all required sudoku features (thick/thin lines, blank
+    empty cells, centered numbers, monochrome design) present and correctly implemented'
+  - Full perfect score on Visual Quality, Spec Compliance, Data Quality, and Code
+    Quality
+  - 'Excellent theme adaptation: both renders clean and readable; monochrome design
+    flips elegantly between light and dark'
+  - 'Clever use of plotly interactivity: invisible hover layer adds genuine value
+    in HTML output (cell coordinate labels)'
+  - Correct square canvas choice (3600x3600) for a symmetric 9x9 grid
   weaknesses:
-  - Output size 3600×3600 differs from standard 4800×2700 landscape format (though
-    square is appropriate for Sudoku)
-  - Could add subtle hover tooltips showing cell coordinates to leverage Plotly interactivity
-  - Thin line width (1.5) could be slightly thicker (2.0) for better print visibility
-    at smaller sizes
-  image_description: The plot displays a 9×9 Sudoku puzzle grid on a clean white background.
-    The grid uses a clear visual hierarchy with thick black lines (width 5) separating
-    the nine 3×3 box regions, and thinner black lines (width 1.5) dividing individual
-    cells. Numbers (1-9) are displayed in large black Arial Black font, centered within
-    their cells. Empty cells are properly blank with no zeros shown. The title "sudoku-basic
-    · plotly · pyplots.ai" appears centered at the top in black text. The puzzle shows
-    a classic partially-filled Sudoku with numbers distributed across all regions.
-    The overall design is monochrome (black and white only), clean, and suitable for
-    printing.
+  - 'Design Excellence could be pushed further: DE-01 sits at 5/8 — no visual emphasis
+    distinguishes given numbers from empty cells (e.g., subtle warm fill for given-number
+    cells)'
+  - Line weight ratio (width=2 vs width=6) is reasonable but a wider gap would make
+    3x3 structure more immediately obvious
+  - Hover interactivity underutilized — hover text could include box number for richer
+    context
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "sudoku-basic · plotly · anyplot.ai" in dark ink (#1A1A17), clearly readable at top center; no axis labels or tick labels (appropriately hidden for grid visualization)
+      Data: 9x9 Sudoku grid with thick black lines (width=6) at 3x3 box boundaries and thinner black lines (width=2) at cell boundaries; given numbers displayed in large Arial Black font (#1A1A17) centered in cells; empty cells blank
+      Legibility verdict: PASS — all text elements clearly readable against warm off-white background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title rendered in light text (#F0EFE8), clearly readable against dark background; grid lines appear as white/light lines on dark surface — both thick box boundaries and thin cell dividers clearly visible
+      Data: Identical number placement and values as light render; numbers appear in light text (#F0EFE8) clearly readable against dark cell backgrounds; no dark-on-dark failures detected
+      Legibility verdict: PASS — all text and grid elements clearly readable against dark background; theme adaptation works correctly for all elements
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Numbers are large (font size 48), bold, and perfectly readable. Title
-          is clear at size 36.
+        comment: Title explicitly set to 28px, number annotations to 48px (Arial Black);
+          all text crisp and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements; each number is perfectly centered in its
-          cell.
+        comment: Each number occupies its own cell; no text collisions possible
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Grid lines are appropriately sized with clear thick/thin distinction.
+        comment: Grid lines clearly visible at both weights; numbers prominent at
+          48px
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Pure black on white, perfect contrast, no color-based information.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Grid fills canvas well with balanced margins, good use of square
-          format.
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for Sudoku (no axes needed, but no points awarded).
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid lines serve as the visualization itself; no legend needed.
+        comment: Monochrome design; no CVD concerns; high contrast in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 3600x3600 canvas; grid fills canvas well with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title in exact required format; no axis labels needed for grid visualization
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'No categorical colors (appropriate for monochrome spec); backgrounds
+          are #FAF8F1/#1A1A17; chrome fully theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: custom font (Arial Black), deliberate
+          line weights, all axes hidden, theme-adaptive chrome. Not quite publication-level
+          polish.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes, ticks, and grid completely removed; custom-drawn grid lines;
+          clean margins. Good refinement, slightly short of perfect.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Line weight differential creates clear visual hierarchy for 3x3 box
+          structure; viewer immediately identifies the nine regions
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: 'Correct: 9×9 Sudoku grid with proper box divisions.'
+        comment: Correct 9x9 Sudoku grid
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Numbers correctly placed in cells, row/column positioning accurate.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: thick box lines, thin cell lines, centered
-          numbers, empty cells blank.'
-      - id: SC-04
-        name: Data Range
+        comment: Thick lines at box boundaries, thin lines for cells, numbers centered,
+          empty cells blank, monochrome design — all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 9×9 grid displayed with proper boundaries.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Numbers placed at correct grid positions; row ordering correct (top-to-bottom)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for Sudoku (no legend needed).
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "sudoku-basic · plotly · pyplots.ai"'
+        comment: Title is exactly 'sudoku-basic · plotly · anyplot.ai'; no legend
+          needed
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows a valid Sudoku puzzle with varied number placement across all
-          boxes. Could benefit from showing more numbers to demonstrate fuller coverage.
+        comment: Shows both filled and empty cells; demonstrates box and cell boundary
+          features; valid puzzle structure
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Uses a real, solvable Sudoku puzzle (the classic "Wikipedia Sudoku").
+        comment: Classic Sudoku puzzle; neutral, universally recognized, educational
+          context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Numbers 1-9 are appropriate; slightly sparse distribution (30 given
-          numbers).
+        comment: Integer values 1-9 only; 0 used internally for empty cells (not displayed);
+          correct domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,42 +184,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → figure → traces → layout → save.'
+        comment: 'Clear linear flow: imports -> tokens -> data -> traces -> layout
+          -> save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Fixed data (no random elements), deterministic output.
+        comment: Hardcoded deterministic puzzle data; no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only `plotly.graph_objects` imported and used.
+        comment: Only os and plotly.graph_objects imported; both used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; the invisible hover layer is legitimate plotly interactivity,
+          not fake static UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Plotly API.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png but uses 1200×1200 base (3600×3600 with scale=3)
-          instead of standard sizes.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API used
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses scatter traces for custom grid lines, annotation dicts for positioned
+          text, invisible marker layer for hover — all idiomatic plotly patterns
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Plotly's annotation system and Scatter traces for custom drawing.
-          Also generates HTML for interactivity. Could leverage more Plotly-specific
-          features like hover information for educational purposes.
+        comment: Leverages plotly's interactive hover (cell coordinates and values)
+          and HTML export; distinctively plotly features a static library couldn't
+          replicate
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
