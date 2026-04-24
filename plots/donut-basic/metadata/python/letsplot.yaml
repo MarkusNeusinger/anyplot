@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: donut-basic
 created: '2025-12-23T12:12:06Z'
-updated: '2026-04-24T06:08:32Z'
+updated: '2026-04-24T06:23:17Z'
 generated_by: claude-opus
 workflow_run: 24874519662
 issue: 733
@@ -12,57 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/letsplot/plot-dark.html
-quality_score: 81
+quality_score: 73
 review:
   strengths:
-  - Correct donut chart type with proper hollow center using hole=0.5 parameter
-  - Uses lets-plot's distinctive layer_labels() API for segment percentage formatting
-  - Center label with total budget metric uses the center space effectively (spec
-    requirement)
-  - Realistic, neutral business scenario (budget by department) with good segment
-    size variation
-  - theme_void() is the right base theme for a donut chart — no unnecessary chrome
-  - Clean KISS code structure with no functions or classes
+  - Correct donut via geom_pie(hole=0.5) — uses the native lets-plot pie/donut API
+    properly
+  - layer_labels().line().format().size() chain is the idiomatic lets-plot label API
+    for segment percentages
+  - Center label with total budget value adds good data storytelling
+  - theme_void() is the right choice for a clean donut chart with no axes needed
+  - Clean KISS code structure; static deterministic data; categorical ordering handled
+    correctly
   weaknesses:
-  - 'CRITICAL: Committed code uses colors=[''#306998'',...] (Python Blue first) instead
-    of Okabe-Ito #009E73 — explicit VQ-07 violation'
-  - 'CRITICAL: Code saves as plot.png/plot.html — must be plot-{THEME}.png and plot-{THEME}.html;
-    ANYPLOT_THEME environment variable not read'
-  - 'CRITICAL: Code-image discrepancy — images show different data, colors, and title
-    than the committed implementation'
-  - Title includes extra 'Budget by Department · ' prefix; required format is exactly
-    'donut-basic · letsplot · anyplot.ai'
-  - Code uses fill='white' hardcoded for center label — in dark mode renders as bright
-    white box; should use ELEVATED_BG token
-  - 'No theme-adaptive chrome: PAGE_BG, INK, INK_SOFT tokens not used; background
-    and text colors not adapted for light/dark themes'
-  - Code uses 'pyplots.ai' in title instead of 'anyplot.ai'
+  - 'CRITICAL: Non-Okabe-Ito palette — first color is Python Blue #306998 instead
+    of #009E73; must use OKABE_ITO = [''#009E73'', ''#D55E00'', ''#0072B2'', ''#CC79A7'',
+    ''#E69F00'']'
+  - 'CRITICAL: No ANYPLOT_THEME environment variable handling — no os.getenv, no PAGE_BG/INK/INK_SOFT
+    tokens, no plot_background set; dark render would be broken'
+  - 'CRITICAL: Center label uses hardcoded fill=''white'' — must adapt to ELEVATED_BG
+    token for dark theme'
+  - 'CRITICAL: Output files saved as plot.png / plot.html instead of plot-{THEME}.png
+    / plot-{THEME}.html'
+  - Title contains 'pyplots.ai' instead of 'anyplot.ai'
+  - Canvas utilization low — donut is relatively small in the 16:9 canvas; consider
+    square canvas (ggsize(1200,1200) scale=3) for better proportions
+  - 5.4% segment label uses leader line rather than fitting inside the segment
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white
-      Chrome: Title "Budget by Department · donut-basic · letsplot · anyplot.ai" in dark bold text, clearly readable. Legend "Department" with 5 entries, readable dark text.
-      Data: Five donut segments — Engineering (46.8%, teal-green #009E73), Marketing (20.5%, orange #D55E00), Operations (15.1%, blue #0072B2), Sales (12.2%, pinkish-purple #CC79A7), Support (5.4%, gold #E69F00). Percentage labels on segments. Center label "Total budget $1,025K" in bold.
-      Legibility verdict: PASS — all text readable against light background
+      Background: Warm off-white approximately #FAF8F1 — correct for light theme
+      Chrome: Title "donut-basic · letsplot · anyplot.ai" in dark text, clearly readable. Legend "Department" header and labels in dark text, readable. No axis labels (theme_void). Center "Total budget $1,025K" in dark text on white box.
+      Data: Five segments — teal-green (46.8%), orange (20.5%), blue (15.1%), mauve/pink (12.2%), yellow (5.4%). Colors appear Okabe-Ito-like in the rendered image. Small segment uses leader line.
+      Legibility verdict: PASS (images appear to be stale from a prior implementation run — current code uses different categories, different colors, different title domain "pyplots.ai")
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black
-      Chrome: Title in white/light text, clearly readable. Legend text light-colored, readable. No dark-on-dark failures detected.
-      Data: Colors identical to light render (green, orange, blue, pink, gold — Okabe-Ito order). Center label text appears white/light on dark background.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures
-
-    CRITICAL NOTE: Significant discrepancy between committed code and rendered images.
-    Code colors: ["#306998", "#FFD43B", "#4CAF50", "#FF7043", "#AB47BC"] (Python Blue first)
-    Image colors: Okabe-Ito starting with #009E73 (green first)
-    Code categories: Marketing, Operations, R&D, Sales, HR
-    Image categories: Engineering, Marketing, Operations, Sales, Support
-    Code title: "donut-basic · letsplot · pyplots.ai"
-    Image title: "Budget by Department · donut-basic · letsplot · anyplot.ai"
-    Code saves: plot.png (no theme support)
-    Images saved as: plot-light.png, plot-dark.png (theme-correct)
-    The images were generated from a different implementation than what is committed.
+      Background: Near-black approximately #1A1A17 — correct for dark theme
+      Chrome: Title in light/white text, readable. Legend text in light color, readable. Center label adapts (dark box, white text). No dark-on-dark failures in the rendered image.
+      Data: Identical segment colors to light render — data colors preserved correctly across themes.
+      Legibility verdict: PASS for the rendered images. However, the current code does NOT implement ANYPLOT_THEME handling — if the code were actually run for dark theme, it would fail: fill='white' hardcoded in geom_label, no plot_background set, no INK/INK_SOFT tokens applied to legend/title text. The images shown are stale from a prior run with different (better) code.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 21
       max: 30
       items:
       - id: VQ-01
@@ -70,51 +59,48 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Sizes explicitly set; all text readable in both themes. Center label
-          fill='white' risks harsh box in dark mode. Small Support segment label (5.4%)
-          is tight.
+        comment: Font sizes explicitly set (title=28, legend=20/18, labels=18, center=20);
+          no ANYPLOT_THEME handling means dark chrome would be broken if run
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping elements in either render
+        comment: Leader line for 5.4% segment slightly awkward; no major overlaps
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Segments clearly visible. 5.4% Support wedge is small but legible.
+        comment: Segments clearly visible at canvas size
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Okabe-Ito palette (as shown in images) is colorblind-safe with good
-          contrast
+        comment: Non-Okabe-Ito palette but colors have reasonable contrast differences
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
         passed: true
-        comment: Donut fills good portion of 16:9 canvas. Some unused whitespace above
-          chart. Legend placement reasonable.
+        comment: Donut occupies roughly 40% of canvas; empty space above/left; legend
+          at x=0.85 creates imbalance
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes required for donut chart. Title is descriptive.
+        comment: N/A for axis labels (donut chart); title present and descriptive
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: 'Images show Okabe-Ito with #009E73 first (PASS on image). But committed
-          code uses Python Blue #306998 first — explicitly non-compliant. No theme-adaptive
-          chrome in code. Scored 1/2 for code-image discrepancy.'
+        comment: 'Python Blue #306998 as first color (not #009E73); non-Okabe-Ito
+          palette; no ANYPLOT_THEME handling; no plot_background set'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -122,24 +108,24 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: Clean, well-configured above defaults. theme_void() is correct choice.
-          Not exceptional — no refined typography hierarchy or segment edge strokes.
+        comment: Center label is a thoughtful touch; theme_void gives clean look;
+          non-Okabe-Ito palette and missing design polish keep this at default-level
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: theme_void() removes all chart chrome appropriately. Good whitespace.
-          White center label box may appear harsh in dark mode.
+        comment: theme_void removes axes/grid; no further polish (font family, edge
+          styling, margin control)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Engineering's 46.8% dominant share creates clear focal point. Center
-          total adds meaningful context. Effective budget story.
+        comment: Center annotation with total adds context; corporate budget framing
+          clear; no visual hierarchy for dominant segment
     spec_compliance:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -147,30 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct donut chart with hollow center (hole=0.5)
+        comment: geom_pie with hole=0.5 correctly produces a donut chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Hollow center, percentage labels, center metric, consistent ordering,
-          thick ring — all present
+        comment: Hollow center, percentage labels via layer_labels(), center summary
+          statistic, ordered categories — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category to fill, value to slice size — correct
+        comment: slice='value', fill='category' correct
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 1
         max: 3
         passed: false
-        comment: 'Image title has extra ''Budget by Department · '' prefix. Required
-          format: ''donut-basic · letsplot · anyplot.ai''. Code title uses ''pyplots.ai''
-          (wrong app name). Legend labels match data categories.'
+        comment: Title uses 'pyplots.ai' instead of 'anyplot.ai'; legend label 'Department'
+          is appropriate
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -178,19 +163,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Good range of segment sizes (5.4% to 46.8%), all donut features demonstrated
+        comment: Five categories with varied proportions (7%-28%); good range
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Budget allocation by department is realistic, neutral business scenario
+        comment: Corporate budget allocation by department — clear, plausible scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: $1,025K total with plausible department splits
+        comment: Values sum to $100M; realistic departmental budget proportions
     code_quality:
       score: 9
       max: 10
@@ -200,33 +185,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports → Data → Plot → Save structure. No functions/classes.
+        comment: 'Clean linear flow: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Static deterministic data, no random seed needed
+        comment: Static hardcoded data; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: from lets_plot import * is standard for this library
+        comment: Only used imports present
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, appropriate complexity. noqa comments necessary for
-          wildcard import. No fake UI.
+        comment: Clean, readable code; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as plot.png/plot.html — must be plot-{THEME}.png/plot-{THEME}.html.
-          ANYPLOT_THEME not read from environment.
+        comment: Saves as plot.png / plot.html; must save as plot-{THEME}.png / plot-{THEME}.html
     library_mastery:
       score: 7
       max: 10
@@ -236,23 +219,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: geom_pie with hole, layer_labels() with format(), ggsize(), ggsave()
-          with scale=3 — all idiomatic
+        comment: geom_pie with hole, layer_labels(), ggsize() — all idiomatic lets-plot
+          patterns
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_labels() API for segment label configuration is distinctive
-          to lets-plot. geom_label for center annotation is a clean compositing technique.
+        comment: layer_labels().line().format().size() chain is lets-plot-specific;
+          geom_pie hole parameter distinctive
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
-  patterns: []
+  patterns:
+  - data-generation
   dataprep: []
   styling:
   - minimal-chrome
-  - alpha-blending
