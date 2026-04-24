@@ -23,9 +23,20 @@ Read these files to understand the requirements:
 3. `prompts/library/{LIBRARY}.md` - Library-specific rules + theme-adaptive chrome mapping for this library
 4. `plots/{SPEC_ID}/specification.md` - What to visualize
 
-Optional (if regenerating):
-- `plots/{SPEC_ID}/metadata/{LANGUAGE}/{LIBRARY}.yaml` - Previous review feedback
-- `plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}.py` - Previous implementation
+### If regenerating (`IS_REGENERATION=true`) — MANDATORY
+
+When regenerating an existing implementation, you MUST read these BEFORE writing any code:
+
+1. `/tmp/anyplot-prev-review.md` — structured review from the previous attempt (image description, strengths, weaknesses, failed criteria checklist). The workflow extracts this automatically from the previous `metadata/{LANGUAGE}/{LIBRARY}.yaml`.
+2. `plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}.py` — the previous implementation.
+
+**Default regen mindset: incremental improvement, not rewrite.**
+
+- Preserve the bits listed under "Strengths" unchanged.
+- Address every bullet under "Weaknesses" and each ❌ item in the criteria checklist.
+- If a base style rule (palette, theme colors, chrome, etc. from `prompts/default-style-guide.md` or `prompts/library/{LIBRARY}.md`) conflicts with the previous implementation, update the previous code to match — base style wins.
+- Do NOT discard working structure / data generation / layout choices that the previous review did not flag.
+- Your deliverable is a refined version of the previous file, not a fresh rewrite from the spec.
 
 ### Feasibility Check (Static Libraries Only)
 
@@ -104,6 +115,18 @@ git commit -m "feat({LIBRARY}): implement {SPEC_ID}"
 git push -u origin implementation/{SPEC_ID}/{LIBRARY}
 ```
 
+If `IS_REGENERATION=true`, use an expanded commit body that names what you addressed. Example:
+
+```
+feat(matplotlib): implement scatter-basic
+
+Regen from quality 78. Addressed:
+- text legibility on dark background
+- grid contrast (VQ-03 failed → fixed)
+```
+
+Pass the multi-line message via `-F -` or a heredoc so git preserves the body.
+
 ## Final Check
 
 Before finishing, confirm:
@@ -111,5 +134,6 @@ Before finishing, confirm:
 2. ✅ `plot-light.png` AND `plot-dark.png` were generated successfully (plus `plot-light.html` / `plot-dark.html` for interactive libs)
 3. ✅ First categorical series renders in `#009E73` in both themes
 4. ✅ Changes were committed and pushed
+5. ✅ If regenerating: `/tmp/anyplot-prev-review.md` and the previous `.py` were read, and each weakness / failed criterion was either addressed or consciously kept (explained in the commit body)
 
 If any of these failed, DO NOT report success.
