@@ -1,16 +1,24 @@
-""" pyplots.ai
+""" anyplot.ai
 sudoku-basic: Basic Sudoku Grid
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: seaborn 0.13.2 | Python 3.14.4
+Quality: 90/100 | Updated: 2026-04-24
 """
 
-import matplotlib.patches as patches
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
 
-# Sudoku puzzle data (0 = empty cell)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Data (classic Sudoku puzzle; 0 = empty cell)
 grid = np.array(
     [
         [5, 3, 0, 0, 7, 0, 0, 0, 0],
@@ -24,68 +32,56 @@ grid = np.array(
         [0, 0, 0, 0, 8, 0, 0, 7, 9],
     ]
 )
+clue_mask = (grid > 0).astype(float)
+annotations = np.where(grid == 0, "", grid.astype(str))
 
-# Set seaborn style for clean aesthetic
-sns.set_style("white")
-sns.set_context("talk", font_scale=1.5)
+# Theme-adaptive seaborn chrome
+sns.set_theme(
+    style="white",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+    },
+)
 
-# Create square figure (3600x3600 px at 300 dpi = 12x12 inches)
-fig, ax = plt.subplots(figsize=(12, 12))
+# Plot
+fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
 
-# Create heatmap data for visual structure (all white for clean look)
-display_grid = np.ones((9, 9))
-
-# Use seaborn heatmap as the base grid structure
+# Seaborn renders the full grid: cell fills (subtle clue vs. empty contrast),
+# thin cell separators, and the digits themselves via `annot`.
 sns.heatmap(
-    display_grid,
-    ax=ax,
-    cmap=["white"],
+    clue_mask,
+    annot=annotations,
+    fmt="",
+    cmap=[PAGE_BG, ELEVATED_BG],
     cbar=False,
-    linewidths=1,
-    linecolor="#CCCCCC",
+    linewidths=1.2,
+    linecolor=INK_SOFT,
     square=True,
     xticklabels=False,
     yticklabels=False,
     vmin=0,
     vmax=1,
+    annot_kws={"size": 34, "weight": "bold", "color": INK},
+    ax=ax,
 )
 
-# Add numbers to the grid
-for i in range(9):
-    for j in range(9):
-        if grid[i, j] != 0:
-            ax.text(
-                j + 0.5,
-                i + 0.5,
-                str(grid[i, j]),
-                ha="center",
-                va="center",
-                fontsize=32,
-                fontweight="bold",
-                color="#306998",
-            )
+# Thick 3x3 box boundaries (full outer frame + interior dividers)
+for k in range(4):
+    ax.axhline(y=k * 3, color=INK, linewidth=5, clip_on=False)
+    ax.axvline(x=k * 3, color=INK, linewidth=5, clip_on=False)
 
-# Draw thick lines for 3x3 box boundaries
-for i in range(4):
-    # Horizontal thick lines
-    ax.axhline(y=i * 3, color="black", linewidth=4)
-    # Vertical thick lines
-    ax.axvline(x=i * 3, color="black", linewidth=4)
-
-# Add border rectangle for clean edges
-border = patches.Rectangle((0, 0), 9, 9, linewidth=4, edgecolor="black", facecolor="none")
-ax.add_patch(border)
-
-# Title
-ax.set_title("sudoku-basic · seaborn · pyplots.ai", fontsize=28, fontweight="bold", pad=20, color="#306998")
-
-# Remove axis ticks
+# Style
+ax.set_title("sudoku-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=24)
 ax.set_xticks([])
 ax.set_yticks([])
-
-# Set axis limits
 ax.set_xlim(0, 9)
 ax.set_ylim(9, 0)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
