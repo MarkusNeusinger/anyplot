@@ -1,7 +1,7 @@
 """ anyplot.ai
 ecdf-basic: Basic ECDF Plot
 Library: pygal 3.1.0 | Python 3.14.4
-Quality: 82/100 | Created: 2026-04-24
+Quality: 80/100 | Created: 2026-04-24
 """
 
 import os

@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: ecdf-basic
 created: 2025-12-17 02:24:24+00:00
-updated: '2026-04-24T13:16:45Z'
+updated: '2026-04-24T13:28:19Z'
 generated_by: claude-opus
 workflow_run: 24891020304
 issue: 976
@@ -12,36 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/pygal/plot-dark.html
-quality_score: 82
+quality_score: 80
 review:
   strengths:
-  - 'Perfect spec compliance: correct ECDF step function with right-continuous implementation,
-    proper 1/n increments, and full feature coverage'
-  - Clean, reproducible code with proper dual-output (PNG + HTML) and correct theme
-    token usage
-  - Data color and plot backgrounds are theme-correct in both renders
+  - 'Perfect spec compliance: step function, 0-1 y-axis, grid, single-series with
+    no legend'
+  - Clean theme-adaptive implementation with correct Okabe-Ito brand green in both
+    renders
+  - 'Flawless code quality: seed, KISS structure, clean imports, necessary workarounds
+    documented'
+  - js=[] and stroke_style settings show solid pygal library knowledge
   weaknesses:
-  - 'Dark mode INK_MUTED is #6E6D66 on #1A1A17 background causing nearly invisible
-    dark-on-dark grid lines; fix: change to #A8A79F per style guide'
-  - 'js=[] disables pygal''s interactive JS tooltips — pygal''s main distinguishing
-    feature; fix: remove js=[] to restore interactivity'
-  - 'No visual storytelling: step line displayed without emphasis on key percentiles;
-    consider adding reference lines or annotations at median (y=0.5) and quartiles'
+  - Abstract data without real-world scenario reduces communicative value
+  - Value x-axis label is too generic; should reflect real-world context with units
+  - ECDF line appears thin against the light background — increase stroke width for
+    higher visual prominence
+  - 'No data storytelling: key percentiles (median, quartiles) are not highlighted
+    or annotated'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title "ecdf-basic · pygal · anyplot.ai" in dark text — readable. Y-axis label "Cumulative Proportion" and X-axis label "Value" in dark text — readable. Tick labels on both axes in dark text — readable.
-      Data: Single ECDF step function line in brand green #009E73, rising from 0.00 at x≈-2.5 to 1.00 at x≈2.0. Dashed grid lines subtly visible.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "ecdf-basic · pygal · anyplot.ai" visible in dark ink at top; y-axis label "Cumulative Proportion" and x-axis label "Value" readable; tick labels on both axes (x: -2.8 to 2.8, y: 0.00 to 1.00) clearly visible; subtle dotted grid lines on both axes
+      Data: ECDF step function in brand green (#009E73), tracing S-curve from bottom-left to top-right; no data point dots (show_dots=False); line is somewhat thin but traceable
+      Legibility verdict: PASS — all text readable against light background; no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title and axis labels in light-colored text — readable. Tick labels in light gray — readable. Grid lines nearly invisible — INK_MUTED=#6E6D66 on #1A1A17 is dark-on-dark (should be #A8A79F). Only vertical x=0 line has noticeable contrast.
-      Data: Brand green #009E73 ECDF line — identical to light render — visible against dark background.
-      Legibility verdict: PASS for text elements, FAIL for grid chrome (dark-on-dark grid lines)
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title, axis labels, and tick labels all rendered in warm light text; clearly readable against dark surface; subtle lighter-colored dotted grid lines; vertical guide at x=0 slightly prominent; no dark-on-dark failures
+      Data: ECDF line is identical brand green (#009E73) — same color as light render, as required; line more visually prominent against dark background
+      Legibility verdict: PASS — all text readable against dark background; no chrome adaptation failures
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -49,9 +51,8 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (52/40/36px), all text readable in both
-          themes; sizes significantly exceed style guide recommendations (28/22/18px)
-          but output looks fine
+        comment: All font sizes explicitly set (title 52px, labels 40px, ticks 36px);
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -60,62 +61,62 @@ review:
         comment: No overlapping elements in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: ECDF line visible in both themes; stroke width 6 adequate but slightly
-          thin for 4800x2700 canvas
+        comment: ECDF line traces correctly but appears thin on light surface; stroke
+          width 6 at 4800x2700 could be thicker
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series, colorblind-safe brand green
+        comment: 'Brand green #009E73 is CVD-safe; single series'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, plot fills canvas well, balanced margins
+        comment: Good canvas utilization, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
-        max: 2
-        passed: true
-        comment: Value and Cumulative Proportion are descriptive
-      - id: VQ-07
-        name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Brand green correct, backgrounds correct, but INK_MUTED in dark
-          mode is #6E6D66 (should be #A8A79F) causing nearly invisible dark-on-dark
-          grid lines'
+        comment: Cumulative Proportion is descriptive; Value is too generic without
+          real-world context or units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds are #FAF8F1/#1A1A17; chrome
+          is theme-correct in both renders'
     design_excellence:
-      score: 9
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library default; clean but no deliberate design flourishes
-          beyond mandatory palette
+        passed: true
+        comment: Custom font family, brand color, no-dot line — clean and above defaults;
+          not yet publication-ready
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: show_dots=False is a refinement; grid shown with default dashed style;
-          no spine removal (pygal limitation)
+        passed: true
+        comment: Theme-adaptive colors, subtle dotted grid, dot removal, custom font;
+          good refinement
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed correctly but no visual hierarchy; key percentiles
-          not highlighted; viewer must interpret independently
+        comment: Data displayed correctly but without storytelling; no visual emphasis
+          on key percentiles, no real-world framing
     spec_compliance:
       score: 15
       max: 15
@@ -125,53 +126,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ECDF step function using pygal.XY with manually constructed
+        comment: Correct ECDF step-function chart using pygal.XY with manually constructed
           step points
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step function increases by 1/n at each data point; Y-axis 0-1 range;
-          grid lines; distinct line style
+        comment: Step function increases by 1/n; y-axis 0-1; grid lines present; distinct
+          single-color line
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Sorted values on X, cumulative proportion on Y, all data visible
+        comment: X = sorted values, Y = cumulative proportion; axes show full data
+          range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title ecdf-basic · pygal · anyplot.ai correct; no legend appropriate
-          for single series
+        comment: Title ecdf-basic · pygal · anyplot.ai is correct; legend correctly
+          omitted for single series
     data_quality:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Full ECDF step function shown with 120 samples demonstrating all
-          ECDF characteristics
+        comment: 120-point sample covers full distribution shape; S-curve is clear
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Normal distribution is neutral, scientifically realistic, explicitly
-          suggested in spec
+        passed: false
+        comment: Plausible data (standard normal) but purely abstract; no real-world
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values ~-2.5 to 2.8 natural range for 120 standard-normal samples,
-          Y from 0 to 1.05
+        comment: Normal distribution values in [-3, 3] are realistic for the context
     code_quality:
       score: 10
       max: 10
@@ -181,8 +181,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports -> theme tokens -> data -> step computation
-          -> chart -> save'
+        comment: 'Clean linear structure: imports -> tokens -> data -> style -> chart
+          -> save'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -194,14 +194,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, sys, numpy, pygal, Style all used; noqa justified by sys.path
-          workaround
+        comment: All imports used; noqa comments justified by sys.path.pop(0) workaround
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and appropriately complex; sys.path.pop(0) workaround is documented
+        comment: Pythonic; manual step-point construction necessary for pygal; workaround
+          documented
       - id: CQ-05
         name: Output & API
         score: 1
@@ -217,15 +217,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of pygal.XY, Style object, render_to_png, and render()
-          for HTML; js=[] is unusual choice
+        comment: Correct use of pygal.XY with Style object; js=[] to suppress JS for
+          static output shows library knowledge
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: HTML export is pygal-distinctive but js=[] disables pygal's primary
-          interactive JS tooltips/hover feature
+        comment: HTML interactive export is pygal-distinctive; otherwise no advanced
+          pygal-specific features
   verdict: REJECTED
 impl_tags:
   dependencies: []
