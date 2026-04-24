@@ -1,14 +1,22 @@
-""" pyplots.ai
+"""anyplot.ai
 sudoku-basic: Basic Sudoku Grid
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: altair 6.1.0 | Python 3.13
+Quality: pending | Updated: 2026-04-24
 """
+
+import os
 
 import altair as alt
 import pandas as pd
 
 
-# Sudoku puzzle data (0 = empty cell)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Data: "World's Hardest Sudoku" puzzle (0 = empty)
 grid = [
     [5, 3, 0, 0, 7, 0, 0, 0, 0],
     [6, 0, 0, 1, 9, 5, 0, 0, 0],
@@ -21,7 +29,6 @@ grid = [
     [0, 0, 0, 0, 8, 0, 0, 7, 9],
 ]
 
-# Build data for cells with numbers
 cell_data = []
 for row in range(9):
     for col in range(9):
@@ -31,50 +38,52 @@ for row in range(9):
 
 df_numbers = pd.DataFrame(cell_data)
 
-# Build grid lines data
 thin_lines = []
 thick_lines = []
-
-# Vertical lines
 for i in range(10):
-    line = {"x": i, "x2": i, "y": 0, "y2": 9}
+    v_line = {"x": i, "x2": i, "y": 0, "y2": 9}
+    h_line = {"x": 0, "x2": 9, "y": i, "y2": i}
     if i % 3 == 0:
-        thick_lines.append(line)
+        thick_lines.append(v_line)
+        thick_lines.append(h_line)
     else:
-        thin_lines.append(line)
-
-# Horizontal lines
-for i in range(10):
-    line = {"x": 0, "x2": 9, "y": i, "y2": i}
-    if i % 3 == 0:
-        thick_lines.append(line)
-    else:
-        thin_lines.append(line)
+        thin_lines.append(v_line)
+        thin_lines.append(h_line)
 
 df_thin = pd.DataFrame(thin_lines)
 df_thick = pd.DataFrame(thick_lines)
 
-# Create thin grid lines
-thin_grid = alt.Chart(df_thin).mark_rule(color="black", strokeWidth=1).encode(x="x:Q", x2="x2:Q", y="y:Q", y2="y2:Q")
+# Plot
+thin_grid = alt.Chart(df_thin).mark_rule(color=INK_SOFT, strokeWidth=1.2).encode(x="x:Q", x2="x2:Q", y="y:Q", y2="y2:Q")
 
-# Create thick grid lines (3x3 box boundaries)
-thick_grid = alt.Chart(df_thick).mark_rule(color="black", strokeWidth=4).encode(x="x:Q", x2="x2:Q", y="y:Q", y2="y2:Q")
+thick_grid = alt.Chart(df_thick).mark_rule(color=INK, strokeWidth=5).encode(x="x:Q", x2="x2:Q", y="y:Q", y2="y2:Q")
 
-# Create number labels
 numbers = (
     alt.Chart(df_numbers)
-    .mark_text(fontSize=48, fontWeight="bold", color="black")
+    .mark_text(fontSize=56, fontWeight="bold", color=INK)
     .encode(x="col:Q", y="row:Q", text="value:N")
 )
 
-# Combine layers
 chart = (
     alt.layer(thin_grid, thick_grid, numbers)
-    .properties(width=900, height=900, title=alt.Title("sudoku-basic · altair · pyplots.ai", fontSize=32))
+    .properties(
+        width=900,
+        height=900,
+        background=PAGE_BG,
+        title=alt.Title(
+            "sudoku-basic · altair · anyplot.ai",
+            fontSize=32,
+            fontWeight="normal",
+            color=INK,
+            anchor="middle",
+            offset=24,
+        ),
+    )
+    .configure_view(fill=PAGE_BG, stroke=None)
     .configure_axis(grid=False, domain=False, ticks=False, labels=False, title=None)
-    .configure_view(strokeWidth=0)
+    .configure_scale(bandPaddingInner=0, bandPaddingOuter=0)
 )
 
-# Save as PNG and HTML
-chart.save("plot.png", scale_factor=4.0)
-chart.save("plot.html")
+# Save
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+chart.save(f"plot-{THEME}.html")
