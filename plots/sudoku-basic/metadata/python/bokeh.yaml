@@ -1,157 +1,186 @@
 library: bokeh
+language: python
 specification_id: sudoku-basic
 created: '2025-12-23T12:24:17Z'
-updated: '2025-12-23T12:26:20Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20460562984
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/bokeh/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling:
-  - minimal-chrome
+updated: '2026-04-24T09:18:24Z'
+generated_by: claude-opus
+workflow_run: 24881610559
+issue: 1311
+python_version: 3.14.4
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/bokeh/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent visual hierarchy with clear thick/thin line distinction for 3×3 boxes
-    vs cells
-  - Perfect monochrome design matching spec requirements for printability
-  - Numbers well-centered and sized for readability at 60pt font
-  - Correct title format following pyplots.ai conventions
-  - Clean KISS code structure without unnecessary complexity
-  - Dual output (PNG + HTML) leverages Bokeh interactive capabilities
+  - 'Perfect visual quality: all text sizes explicitly set (48pt title, 60pt numbers),
+    no overlaps, clear monochrome contrast in both themes'
+  - 'Complete spec compliance: thick box boundaries (10px), thin cell lines (3px),
+    centered bold numbers, empty cells blank, correct title format'
+  - 'Clean idiomatic Bokeh code: ColumnDataSource for all data, segment glyphs for
+    lines, LabelSet for efficient label rendering'
+  - 'Proper theme adaptation: PAGE_BG and INK tokens applied correctly — warm off-white
+    in light, near-black in dark, text flips accordingly'
+  - Correct 3600×3600 square canvas and axis/grid/toolbar/outline all hidden for clean
+    puzzle presentation
   weaknesses:
-  - Feature coverage could show more variety in number distribution across the puzzle
-  - Library features usage is basic - could leverage ColumnDataSource for more idiomatic
-    Bokeh code
-  image_description: The plot displays a standard 9×9 Sudoku grid with a clean black-and-white
-    design. The title "sudoku-basic · bokeh · pyplots.ai" appears at the top in bold
-    text. The grid uses thick black lines to separate the nine 3×3 boxes and thin
-    black lines for individual cell boundaries. Numbers (1-9) are displayed in bold
-    black font, centered within their cells. Empty cells are blank (no zeros shown).
-    The overall layout is square with balanced proportions, and the grid fills a good
-    portion of the canvas. The monochrome design is suitable for printing.
+  - 'Design Excellence is low (10/20): pure monochrome with no visual hierarchy beyond
+    required thick/thin lines — consider alternating subtle background tints on the
+    nine 3×3 boxes to make regions visually distinct (e.g., every other box with a
+    very slightly different fill within the same theme palette)'
+  - 'DE-03 Data Storytelling at default (2/6): the grid renders data correctly but
+    guides the viewer no further — adding a subtle shading distinction between the
+    3×3 boxes would create a clearer visual hierarchy and make the puzzle more readable
+    at a glance'
+  - 'DE-01 Aesthetic Sophistication at default (4/8): the design is clean but uninspired
+    — a small design flourish such as slightly rounded border on the outer grid, a
+    drop shadow on thick lines, or even a subtle warm-tinted fill on alternating boxes
+    would push it above baseline'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "sudoku-basic · bokeh · anyplot.ai" is bold, centered, clearly readable in dark near-black ink. No axis labels (axes hidden). No tick labels. Title is well-sized.
+      Data: 9×9 Sudoku grid rendered in near-black (#1A1A17) lines. Thin lines (3px) divide individual cells; thick lines (10px) separate the nine 3×3 boxes — visual hierarchy is clear. Numbers are 60pt bold, centered in cells, displayed in the same near-black ink. Empty cells are blank. All 29 given digits are visible and well-placed.
+      Legibility verdict: PASS — all text clearly readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title "sudoku-basic · bokeh · anyplot.ai" is bold, centered, rendered in light cream (#F0EFE8) — clearly visible on dark background. No dark-on-dark failures observed.
+      Data: Grid lines and numbers flip to light cream (#F0EFE8) against the dark background — data colors are theme-adaptive (monochrome, not Okabe-Ito), which is appropriate for this puzzle type. Thick/thin line distinction remains clear. All 29 given digits are legible.
+      Legibility verdict: PASS — all text clearly readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 48pt and numbers at 60pt are perfectly readable
+        comment: Title 48pt and numbers 60pt explicitly set; both readable in light
+          and dark themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, all numbers clearly separated
+        comment: Numbers centered in fixed 1-unit cells, no overlaps possible
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Grid lines and numbers optimally sized for the canvas
+        comment: Thick (10px) and thin (3px) lines clearly visible; numbers large
+          and bold
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Black-and-white design is universally accessible
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Square 3600×3600 canvas well-utilized, grid centered
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for Sudoku grid (no axes needed, not penalized)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid lines well-differentiated (thin vs thick)
+        comment: Monochrome design; maximum contrast between ink and background
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 3600×3600 canvas; grid fills ~85% with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title 'sudoku-basic · bokeh · anyplot.ai' correct; no axis labels
+          needed
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Monochrome design; backgrounds #FAF8F1 light / #1A1A17 dark; INK
+          tokens correct'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured but baseline — standard monochrome Sudoku with no
+          distinguishing design choices beyond required line weights
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes, grid, toolbar, outline all removed; clean presentation; thick/thin
+          line hierarchy adds refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Default — required box hierarchy is present but no additional visual
+          emphasis or storytelling beyond spec minimum
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 9×9 Sudoku grid visualization
+        comment: Correct 9×9 Sudoku grid
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Numbers correctly placed in cells, row 0 at top
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Thick box boundaries, thin cell lines, centered numbers, blank empties
-      - id: SC-04
-        name: Data Range
+        comment: Thick 3×3 box boundaries, thin cell lines, bold centered numbers,
+          blank empty cells
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 9×9 grid displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Row 0 at top, columns left-to-right, all cells correctly positioned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for Sudoku (no legend needed)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "sudoku-basic · bokeh · pyplots.ai"
+        comment: Title 'sudoku-basic · bokeh · anyplot.ai'; no legend needed
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows valid Sudoku puzzle with good number distribution
+        comment: Full 9×9 grid with given numbers spread across all nine 3×3 boxes
+          and all rows/columns
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Uses a real, solvable Sudoku puzzle pattern
+        comment: Valid partially-filled Sudoku puzzle; neutral content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Numbers 1-9 as expected, partially filled puzzle
+        comment: Values 1–9 only; 29 given digits is realistic for a medium-difficulty
+          puzzle
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -159,39 +188,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear code: imports → data → plot → save'
+        comment: 'Sequential: imports → data → build sources → figure → style → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (hardcoded grid)
+        comment: Hardcoded puzzle data is fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: os, export_png, output_file, save, ColumnDataSource, LabelSet, figure
+          — all used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean loops for line coordinate construction; no fake UI or over-engineering
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: 'Minor: could use `output_file` placement'
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ColumnDataSource for all data; segment glyph for lines; LabelSet
+          for text — all Bokeh idioms
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Bokeh Label model for text, export_png, and HTML output
-  verdict: APPROVED
+        comment: LabelSet (Bokeh-specific bulk text model) and segment glyph with
+          ColumnDataSource are Bokeh-distinctive patterns; HTML export via output_file/save
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - columndatasource
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
