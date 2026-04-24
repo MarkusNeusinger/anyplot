@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: ecdf-basic
 created: 2025-12-17 02:24:24+00:00
-updated: '2026-04-24T13:28:19Z'
+updated: '2026-04-24T13:46:55Z'
 generated_by: claude-opus
 workflow_run: 24891020304
 issue: 976
@@ -12,35 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/pygal/plot-dark.html
-quality_score: 80
+quality_score: 84
 review:
   strengths:
-  - 'Perfect spec compliance: step function, 0-1 y-axis, grid, single-series with
-    no legend'
-  - Clean theme-adaptive implementation with correct Okabe-Ito brand green in both
-    renders
-  - 'Flawless code quality: seed, KISS structure, clean imports, necessary workarounds
-    documented'
-  - js=[] and stroke_style settings show solid pygal library knowledge
+  - 'Perfect spec compliance: correct ECDF step function with all required features
+    (step increases by 1/n, y-axis 0-1, grid lines, distinct line style)'
+  - 'Excellent data quality: realistic food delivery scenario with gamma distribution
+    (120 observations, mean ~30 min right-skewed) — neutral and comprehensible'
+  - Quartile markers at P25/P50/P75 add meaningful storytelling and directly serve
+    the spec purpose of reading percentiles at a glance
+  - 'Perfect code quality: clean KISS linear structure, np.random.seed(42), proper
+    sys.path workaround for pygal.py filename shadowing'
+  - 'Correct Okabe-Ito palette with brand green first series and correct theme-adaptive
+    backgrounds (#FAF8F1 light / #1A1A17 dark)'
   weaknesses:
-  - Abstract data without real-world scenario reduces communicative value
-  - Value x-axis label is too generic; should reflect real-world context with units
-  - ECDF line appears thin against the light background — increase stroke width for
-    higher visual prominence
-  - 'No data storytelling: key percentiles (median, quartiles) are not highlighted
-    or annotated'
+  - 'Dark mode INK_MUTED is #6E6D66 instead of reference #A8A79F, making grid lines
+    nearly invisible in dark render — fix by using #A8A79F as the dark-theme muted
+    token'
+  - Font sizes (title=52px, labels=40px, ticks=36px) render relatively small on the
+    4800x2700 canvas — increase to 72/52/44 for better legibility at full resolution
+  - Quartile marker dots (dots_size=22) appear small at canvas scale — increase to
+    35-45 for more prominent percentile reference points
+  - Design excellence limited to configured-default level (DE-01=4) due to pygal's
+    inherent full-frame border and constrained styling options
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "ecdf-basic · pygal · anyplot.ai" visible in dark ink at top; y-axis label "Cumulative Proportion" and x-axis label "Value" readable; tick labels on both axes (x: -2.8 to 2.8, y: 0.00 to 1.00) clearly visible; subtle dotted grid lines on both axes
-      Data: ECDF step function in brand green (#009E73), tracing S-curve from bottom-left to top-right; no data point dots (show_dots=False); line is somewhat thin but traceable
-      Legibility verdict: PASS — all text readable against light background; no light-on-light failures
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "ecdf-basic · pygal · anyplot.ai" visible in dark text at top; axis labels "Delivery Time (minutes)" and "Cumulative Proportion" readable; tick labels (10, 20, ..., 70 and 0.00, 0.10, ..., 1.00) clearly visible; grid lines subtle but present
+      Data: ECDF step function in #009E73 (brand green), three #D55E00 (vermillion) quartile markers at P25/P50/P75; first series correctly uses brand green
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title, axis labels, and tick labels all rendered in warm light text; clearly readable against dark surface; subtle lighter-colored dotted grid lines; vertical guide at x=0 slightly prominent; no dark-on-dark failures
-      Data: ECDF line is identical brand green (#009E73) — same color as light render, as required; line more visually prominent against dark background
-      Legibility verdict: PASS — all text readable against dark background; no chrome adaptation failures
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and axis labels appear in light text, clearly readable; tick labels readable in light colors; grid lines nearly invisible (INK_MUTED in dark mode is #6E6D66 rather than reference #A8A79F, causing very low contrast with background, but no text legibility failure)
+      Data: ECDF step function remains #009E73 — identical to light render; three #D55E00 quartile markers also identical; data colors unchanged between themes
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures; brand green #009E73 remains clearly visible on dark surface
   criteria_checklist:
     visual_quality:
       score: 26
@@ -48,75 +54,79 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 52px, labels 40px, ticks 36px);
-          all text readable in both themes
+        comment: Font sizes explicitly set (title=52px, labels=40px, ticks=36px);
+          all text readable but appears relatively small on 4800x2700 canvas
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render
+        comment: No overlapping elements; step function and quartile markers cleanly
+          separated
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: ECDF line traces correctly but appears thin on light surface; stroke
-          width 6 at 4800x2700 could be thicker
+        comment: ECDF line well visible (stroke_width=28); quartile dots somewhat
+          small (dots_size=22 at canvas scale)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 is CVD-safe; single series'
+        comment: 'Okabe-Ito positions 1 and 2 (#009E73 + #D55E00) are colorblind-safe
+          with strong contrast on both surfaces'
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization, balanced margins
+        comment: Good canvas utilization; minor wasted space in upper-right where
+          ECDF plateaus
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Cumulative Proportion is descriptive; Value is too generic without
-          real-world context or units
+        passed: true
+        comment: Delivery Time (minutes) and Cumulative Proportion are descriptive
+          with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds are #FAF8F1/#1A1A17; chrome
-          is theme-correct in both renders'
+        comment: 'First series #009E73, second #D55E00, backgrounds #FAF8F1/#1A1A17
+          correct; dark INK_MUTED #6E6D66 deviates from reference #A8A79F but does
+          not break compliance'
     design_excellence:
       score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Custom font family, brand color, no-dot line — clean and above defaults;
-          not yet publication-ready
+        comment: Correct palette, clean font, quartile markers add thoughtfulness;
+          overall looks like a well-configured library default
       - id: DE-02
         name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Some refinement: margin=60, legend suppressed, large fonts, js=[];
+          full box frame inherent to pygal limits further refinement'
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Theme-adaptive colors, subtle dotted grid, dot removal, custom font;
-          good refinement
-      - id: DE-03
-        name: Data Storytelling
-        score: 2
-        max: 6
-        passed: false
-        comment: Data displayed correctly but without storytelling; no visual emphasis
-          on key percentiles, no real-world framing
+        comment: Quartile markers at P25/P50/P75 guide viewer to read specific percentiles;
+          right-skewed distribution tells clear story about delivery time variability
     spec_compliance:
       score: 15
       max: 15
@@ -126,52 +136,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ECDF step-function chart using pygal.XY with manually constructed
-          step points
+        comment: Correct ECDF step function with proper horizontal leads and vertical
+          jumps at each data point
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step function increases by 1/n; y-axis 0-1; grid lines present; distinct
-          single-color line
+        comment: Step increases by 1/n, y-axis 0-1, grid lines, distinct line style
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = sorted values, Y = cumulative proportion; axes show full data
-          range
+        comment: 'X: delivery time values; Y: cumulative proportion; all 120 data
+          points visible'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title ecdf-basic · pygal · anyplot.ai is correct; legend correctly
-          omitted for single series
+        comment: Title 'ecdf-basic · pygal · anyplot.ai' correct; no legend appropriate
+          for single-series ECDF
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 120-point sample covers full distribution shape; S-curve is clear
+        comment: ECDF shows full distribution shape including right skew; quartile
+          reference points highlight key statistical features
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Plausible data (standard normal) but purely abstract; no real-world
-          scenario
+        passed: true
+        comment: Food delivery times with gamma distribution (mean ~30 min, right
+          tail) — highly realistic, neutral, comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Normal distribution values in [-3, 3] are realistic for the context
+        comment: Delivery times 10-70 minutes with right skew entirely realistic for
+          food delivery
     code_quality:
       score: 10
       max: 10
@@ -181,27 +193,28 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports -> tokens -> data -> style -> chart
-          -> save'
+        comment: 'Linear flow: imports → data → ECDF → style → chart → save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; noqa comments justified by sys.path.pop(0) workaround
+        comment: All imports used; sys.path.pop(0) necessary for pygal.py filename
+          shadowing
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic; manual step-point construction necessary for pygal; workaround
-          documented
+        comment: Clean and appropriate complexity; step-point construction necessarily
+          verbose for proper ECDF; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
@@ -209,7 +222,7 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -217,15 +230,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of pygal.XY with Style object; js=[] to suppress JS for
-          static output shows library knowledge
+        comment: Good use of pygal.XY, Style object, value_formatter, x_value_formatter,
+          js=[], dict-based data points with labels for quartile markers
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: HTML interactive export is pygal-distinctive; otherwise no advanced
-          pygal-specific features
+        passed: true
+        comment: HTML interactive export, tooltip formatters, label-annotated XY data
+          points leverage pygal-specific features
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -233,6 +246,5 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  dataprep:
-  - cumulative-sum
+  dataprep: []
   styling: []
