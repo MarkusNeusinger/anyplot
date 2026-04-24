@@ -249,6 +249,65 @@ jobs:
             echo "is_regeneration=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Extract previous review feedback (regeneration)
+        id: prev_review
+        if: steps.existing.outputs.is_regeneration == 'true'
+        env:
+          SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
+          LANGUAGE: ${{ steps.inputs.outputs.language }}
+          LIBRARY: ${{ steps.inputs.outputs.library }}
+        run: |
+          .venv/bin/python3 - <<'PY'
+          import os, pathlib, yaml
+
+          spec = os.environ["SPEC_ID"]
+          lang = os.environ["LANGUAGE"]
+          lib = os.environ["LIBRARY"]
+          meta_path = pathlib.Path(f"plots/{spec}/metadata/{lang}/{lib}.yaml")
+          data = yaml.safe_load(meta_path.read_text(encoding="utf-8")) or {}
+          review = data.get("review") or {}
+          quality = data.get("quality_score")
+
+          lines = [f"# Previous Review for {spec} / {lang} / {lib}", ""]
+          lines.append(f"**Previous quality score:** {quality if quality is not None else 'n/a'}")
+          lines.append("")
+
+          desc = review.get("image_description")
+          if desc:
+              lines += ["## Previous image description", str(desc).strip(), ""]
+
+          strengths = review.get("strengths") or []
+          if strengths:
+              lines.append("## Strengths (KEEP these)")
+              lines += [f"- {s}" for s in strengths]
+              lines.append("")
+
+          weaknesses = review.get("weaknesses") or []
+          if weaknesses:
+              lines.append("## Weaknesses (FIX these)")
+              lines += [f"- {w}" for w in weaknesses]
+              lines.append("")
+
+          checklist = review.get("criteria_checklist") or {}
+          if checklist:
+              lines.append("## Criteria checklist (focus on items that failed)")
+              for cat, payload in checklist.items():
+                  payload = payload or {}
+                  score = payload.get("score", "?")
+                  max_score = payload.get("max", "?")
+                  lines.append(f"### {cat}  ({score}/{max_score})")
+                  for item in payload.get("items") or []:
+                      item = item or {}
+                      mark = "✅" if item.get("passed") else "❌"
+                      lines.append(
+                          f"- {mark} {item.get('id', '?')} {item.get('name', '')}: {item.get('comment', '')}"
+                      )
+                  lines.append("")
+
+          pathlib.Path("/tmp/anyplot-prev-review.md").write_text("\n".join(lines), encoding="utf-8")
+          print(f"::notice::Extracted previous review (score={quality}) to /tmp/anyplot-prev-review.md")
+          PY
+
       - name: Ensure implementation directories exist
         env:
           SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
