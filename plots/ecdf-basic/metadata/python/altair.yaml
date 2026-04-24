@@ -1,162 +1,175 @@
 library: altair
+language: python
 specification_id: ecdf-basic
 created: '2025-12-23T13:01:57Z'
-updated: '2025-12-23T13:06:50Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461374687
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/altair/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - hover-tooltips
-  - grid-styling
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-04-24T13:09:14Z'
+generated_by: claude-opus
+workflow_run: 24890589158
+issue: 976
+python_version: 3.14.4
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/altair/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Correct ECDF implementation with proper step-after interpolation
-  - Excellent text sizing (title 28pt, labels 22pt, ticks 18pt) for high readability
-  - Proper Y-axis scale fixed to 0-1 range as required by spec
-  - Clean, minimal code following KISS principles
-  - Good use of Altair declarative syntax with proper encoding types
-  - Subtle grid styling (alpha 0.3, dashed) aids percentile reading without being
-    distracting
-  - Appropriate data size (200 points) for ECDF visualization
+  - Correct ECDF step function using interpolate=step-after
+  - Complete theme adaptation (light/dark) with all chrome tokens properly threaded
+    through configure_* calls
+  - Realistic neutral data context (API latency) with seed for reproducibility
+  - Axis labeled with units (ms), Y-axis as percentages with explicit 11-tick formatting
+  - Interactive tooltips and HTML output leveraging Altair native interactivity
   weaknesses:
-  - Axis labels lack units (e.g., could be "Value (units)" instead of just "Value")
-  - Data uses generic normal distribution rather than a real-world scenario context
-  - Could leverage more Altair-specific features like interactive selections or layered
-    annotations
-  image_description: The plot displays a basic ECDF with a blue step line (#306998)
-    on a white background. The x-axis is labeled "Value" and ranges from approximately
-    10 to 98. The y-axis is labeled "Cumulative Proportion" and ranges from 0.00 to
-    1.00 with increments of 0.05. The title "ecdf-basic · altair · pyplots.ai" appears
-    at the top center. Subtle dashed grid lines aid in reading values. The step function
-    shows the characteristic S-curve shape of a normal distribution, starting near
-    0 on the left, rising through the middle values, and approaching 1.0 on the right.
-    The line uses step-after interpolation, creating the proper staircase pattern
-    expected from an ECDF.
+  - No visual emphasis or focal point — no reference line at median or percentile
+    annotation to guide viewer insight
+  - Design feels like a well-themed default rather than a purposeful composition with
+    no intentional hierarchy beyond color
+  - Grid shows on both axes; for a line chart style guide prefers Y-axis-only grid
+    to reduce visual noise
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "ecdf-basic · altair · anyplot.ai" in dark ink at top — clearly readable; axis labels "API Response Time (ms)" and "Cumulative Proportion" in dark ink — readable; tick labels in INK_SOFT (#4A4A44) — readable; subtle grid at 10% opacity; no view border box (strokeWidth=0)
+      Data: Single brand-green (#009E73) ECDF step-function line (strokeWidth=3.5) climbing from 0% at ~20ms to 100% at ~260ms; sigmoid rise concentrated around 100-150ms
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light cream (#F0EFE8) — clearly readable against dark background; axis labels in light text — readable; tick labels in INK_SOFT (#B8B7B0) — readable; grid lines flip to light-tinted 10% opacity; no dark-on-dark failure detected
+      Data: ECDF line identical #009E73 — matches light render exactly; no color shift
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is large (28pt), axis labels (22pt) and tick labels (18pt)
-          are all clearly readable
+        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
+          labels 18px; readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: No overlapping text or data elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width of 3 is excellent for visibility, step function clearly
+        comment: strokeWidth=3.5 appropriate for 4800x2700px canvas; step line clearly
           visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color, high contrast against white background
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills the canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Descriptive labels ("Value", "Cumulative Proportion") but no units
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
+        passed: true
+        comment: Single CVD-safe Okabe-Ito brand green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills canvas well with balanced margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: API Response Time (ms) includes units; Cumulative Proportion is descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; light bg #FAF8F1, dark bg #1A1A17; all chrome
+          theme-correct'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is subtle (alpha 0.3, dashed), no legend needed for single series
+        comment: Well-configured library default with brand green and theme handling,
+          but no intentional visual hierarchy or design layering
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: strokeWidth=0 removes view border box, gridOpacity=0.10 is subtle;
+          above default but not fully polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed correctly but no visual emphasis, no reference line
+          at median, no focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct ECDF step function visualization
+        comment: mark_line(interpolate=step-after) is the correct ECDF step function
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Values on X-axis, cumulative proportion on Y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Step function, Y-axis 0-1, grid lines for percentile reading
-      - id: SC-04
-        name: Data Range
+        comment: Step function, Y-axis [0,1] as percentages, grid lines, distinct
+          line style all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, Y-axis correctly ranges 0-1
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=latency values, Y=cumulative proportion; full data range visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series (N/A)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "ecdf-basic · altair · pyplots.ai"
+        comment: Exact format ecdf-basic · altair · anyplot.ai; no legend appropriate
+          for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows full distribution shape, percentiles readable, normal distribution
-          characteristics visible
+        comment: 250 observations within spec ideal range; shows full ECDF from 0%
+          to 100% with realistic distribution shape
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: false
-        comment: Uses generic normal distribution data (loc=50, scale=15), plausible
-          but not a real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: 200 data points ideal for visualization, values in sensible range
+        comment: API response latency from production web service — neutral, real-world,
+          immediately comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Normal(120ms, 35ms) clipped at 20ms; realistic for web API; values
+          20-260ms are domain-appropriate
     code_quality:
       score: 10
       max: 10
@@ -166,40 +179,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → chart → save structure, no functions/classes
+        comment: Flat Imports -> Tokens -> Data -> Chart -> Save; no functions or
+          classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas - all used
+        comment: os, altair, numpy, pandas — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern Altair API used
+        comment: Clean idiomatic Altair; appropriate complexity; no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with scale_factor=3.0
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Well-executed Altair patterns: typed encodings (:Q), alt.X/alt.Y
+          with alt.Axis, alt.Title, configure_view/configure_axis/configure_title
+          for theming'
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses Altair's declarative encoding and step-after interpolation,
-          tooltips included, but could leverage more interactive features
-  verdict: APPROVED
+        passed: true
+        comment: .interactive() zoom/pan, hover tooltips with format strings, and
+          interpolate=step-after are Altair-native features
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling: []
