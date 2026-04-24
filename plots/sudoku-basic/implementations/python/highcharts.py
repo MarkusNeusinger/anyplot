@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sudoku-basic: Basic Sudoku Grid
-Library: highcharts | Python 3.13
-Quality: 91/100 | Updated: 2026-04-24
+Library: highcharts unknown | Python 3.14.4
+Quality: 89/100 | Updated: 2026-04-24
 """
 
 import os
