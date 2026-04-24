@@ -1,149 +1,197 @@
 library: seaborn
+language: python
 specification_id: donut-basic
 created: '2025-12-23T00:47:40Z'
-updated: '2025-12-23T01:21:37Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20447958494
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-24T05:51:20Z'
+generated_by: claude-opus
+workflow_run: 24873516282
+issue: 733
+python_version: 3.14.4
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/donut-basic/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - explicit-figure
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Excellent use of center space for total budget display
-  - Clean, professional appearance with appropriate ring width
-  - Percentage labels are bold white and highly readable inside segments
-  - Category labels well-positioned outside the ring without overlap
-  - Correct title format following pyplots.ai standards
-  - Realistic budget allocation scenario with sensible departmental values
-  - Square figure size appropriate for circular chart
+  - 'Perfect spec compliance: hollow center with key metric, percentage labels on
+    all segments, ordered segments'
+  - 'All previous weaknesses addressed: canvas fixed to 3600x3600, labels upgraded
+    to 20pt, Engineering emphasized via explode, center metric gains separator line'
+  - 'Excellent data quality: realistic neutral departmental budget scenario with sensible
+    $45K-$520K values'
+  - 'Perfect code quality: clean linear KISS structure, deterministic data, correct
+    output format, idiomatic zip(strict=True)'
+  - 'Robust dual-theme support: correct #FAF8F1 / #1A1A17 backgrounds and fully adaptive
+    text colors in both renders'
+  - Adaptive label radius (1.28 for small segments, 1.18 otherwise) intelligently
+    reduces crowding near top
   weaknesses:
-  - Limited use of seaborn-specific features (relies on matplotlib pie for the actual
-    chart)
-  - Could benefit from more extreme variation in segment sizes to better demonstrate
-    donut chart capabilities
-  image_description: 'The plot displays a donut chart showing budget allocation across
-    6 departments. The ring uses seaborn''s Set2 color palette with distinct pastel
-    colors: orange for Engineering (28.1%), teal-green for Marketing (15.6%), yellow
-    for R&D (17.5%), light green for HR (7.5%), pink for Sales (20.0%), and blue for
-    Operations (11.2%). The center displays "Total $160,000" in bold dark text. Percentage
-    labels appear in white bold text inside each segment. Category labels are positioned
-    outside the ring. The title "donut-basic · seaborn · pyplots.ai" appears at the
-    top. White edge separators divide the segments. The chart uses a square aspect
-    ratio appropriate for circular visualizations.'
+  - 'Library Mastery structurally limited: seaborn used only for sns.set_theme() and
+    sns.color_palette(); all chart rendering is vanilla matplotlib ax.pie() — unavoidable
+    since seaborn has no pie/donut function'
+  - HR (3.3%) and R&D (7.0%) labels still visibly crowded near the top of the donut
+    despite adaptive radius; gap between them is tight
+  - 'DE-01 Aesthetic Sophistication: explode offset of 0.03 is nearly imperceptible
+    visually — barely distinguishes Engineering from the other segments'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, clearly not pure white
+      Chrome: Title "FY2026 Budget Allocation · donut-basic · seaborn · anyplot.ai" at 24pt medium-weight dark ink — fully readable. No axis labels or tick labels (appropriate for donut). External two-line labels at 20pt in dark INK token — readable. Center "Total Budget" at 20pt in INK_SOFT, thin separator line, "$1.36M" at 44pt bold in primary dark ink — clearly readable and well-hierarchized.
+      Data: 6 segments in Okabe-Ito order starting from 12-o'clock clockwise — Engineering (38.2%) in brand green #009E73 with subtle explode, Sales (22.8%) vermillion #D55E00, Operations (17.6%) blue #0072B2, Marketing (11.0%) reddish-purple #CC79A7, R&D (7.0%) amber #E69F00, HR (3.3%) sky blue #56B4E9. Background-colored 3pt separator lines between segments for definition.
+      Legibility verdict: PASS — all text readable against #FAF8F1 surface, no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title in light (#F0EFE8 tone) text — fully readable against dark surface. External labels in light ink — readable. Center "Total Budget" in secondary light ink (INK_SOFT → #B8B7B0), separator line in same tone, "$1.36M" in bold primary light ink (#F0EFE8) — clearly readable. No dark-on-dark failures detected anywhere.
+      Data: Segment colors identical to light render — Engineering still #009E73, Sales vermillion, Operations blue, Marketing reddish-purple, R&D amber, HR sky blue. Okabe-Ito positions 1-6 unchanged between themes as required.
+      Legibility verdict: PASS — all text readable against #1A1A17 surface, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, labels, and percentages are clearly readable; center text
-          is prominent
+        comment: 'All font sizes explicitly set at guideline values: title 24pt, external
+          labels 20pt (fixed from 18pt), center metric 44pt bold — all perfectly readable
+          in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: All labels and percentages are well-positioned without overlap
+        comment: HR (3.3%) and R&D (7.0%) labels remain tight near top of donut; adaptive
+          radius helps but crowding persists for smallest segments
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Donut ring has appropriate width (0.5), segments clearly distinguished
+        comment: All wedge segments clearly visible including tiny HR slice; background-colored
+          separator lines aid visual definition
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Set2 palette is generally colorblind-friendly, though some similar
-          tones
+        comment: Okabe-Ito palette is CVD-safe; segment separators provide additional
+          contrast cues
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Excellent use of square canvas, donut well-centered
+        comment: Canvas now exactly 3600x3600px (figsize=12x12 @ 300dpi) — fixed from
+          previous 4050x4050; layout balanced with generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title with business context FY2026; no axis labels needed
+          for donut chart
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito positions 1-6 in canonical order;
+          light bg #FAF8F1, dark bg #1A1A17; chrome adapts correctly with INK/INK_SOFT
+          tokens'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful center-metric design with label + separator + bold dollar
+          amount; two-line labels with linespacing; above library default but explode
+          offset 0.03 is nearly imperceptible — not publication-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axis completely off, no grid, background-matching separator lines,
+          tight whitespace around labels; good refinement, could push further
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Engineering dominance reinforced by size + color + position + explode;
+          descending order aids comparison; center total provides immediate context;
+          clear focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct donut chart with hollow center
+        comment: Correct donut chart with hollow center (wedgeprops width=0.38 → 62%
+          hollow)
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories and values correctly mapped to segments
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Center text with total, percentage labels, consistent ordering
-      - id: SC-04
-        name: Data Range
+        comment: Center metric (Total Budget + dollar amount), percentage labels on
+          all segments, consistent ordering (largest→smallest), thick ring width all
+          present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All segments visible and proportional
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Category and value correctly mapped to ring segments; all 6 segments
+          visible with labels
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Category labels accurate and positioned correctly
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "donut-basic · seaborn · pyplots.ai"'
+        comment: 'Title format correct: descriptive prefix + donut-basic · seaborn
+          · anyplot.ai; labels embedded as external annotations (no redundant legend
+          needed)'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 6 categories with varying proportions; could show more extreme
-          variation
+        comment: 'Full donut feature set: hollow center with key metric, external
+          labels with dept+%, segment range from 38% dominant to 3% tiny, ring format
+          with separators'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Budget allocation by department is a real, comprehensible scenario
+        comment: Departmental budget allocation is a canonical neutral business use
+          case; standard department names; FY2026 framing adds credibility
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic for departmental budgets, though could include
-          smaller departments
+        comment: Amounts $45K (HR) to $520K (Engineering), total $1.36M — realistic
+          for a mid-size company annual department budget
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -151,41 +199,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: 'Clean linear flow: imports → theme tokens → data → theme setup →
+          plot → labels → title → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Deterministic data (hardcoded values), no random seed needed but
-          also no random data
+        comment: Deterministic hardcoded data; no random generation; fully reproducible
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib, pandas, seaborn)
+        comment: All 5 imports (os, matplotlib.pyplot, numpy, pandas, seaborn) are
+          actively used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib/seaborn APIs
+        comment: Pythonic style; zip(..., strict=True) is idiomatic Python 3.10+;
+          list comprehension for explode; no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct dpi=300 and facecolor=PAGE_BG
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Uses seaborn's color_palette and set_theme, but donut chart is matplotlib-native;
-          seaborn doesn't have a dedicated donut/pie function
-  verdict: APPROVED
+        comment: sns.set_theme() and sns.color_palette() used correctly for theming;
+          actual chart rendering via ax.pie() (matplotlib) is unavoidable since seaborn
+          has no pie/donut function
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Seaborn used only for palette/theme setup; no distinctive seaborn
+          visualization features leveraged; structural limitation — seaborn simply
+          cannot render donut charts
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  patterns:
+  - data-generation
+  - explicit-figure
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting
