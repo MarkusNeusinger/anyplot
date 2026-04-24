@@ -1,0 +1,30 @@
+# Specification-level metadata for area-mountain-panorama
+# Auto-synced to PostgreSQL on push to main
+
+spec_id: area-mountain-panorama
+title: Mountain Panorama Profile with Labeled Peaks
+
+# Specification tracking
+created: 2026-04-24T21:39:00Z
+updated: 2026-04-24T21:39:00Z
+issue: 5365
+suggested: MarkusNeusinger
+
+# Classification tags (applies to all library implementations)
+# See docs/reference/tagging-system.md for detailed guidelines
+tags:
+  plot_type:
+    - area
+    - line
+  data_type:
+    - numeric
+    - continuous
+    - spatial
+  domain:
+    - general
+    - science
+    - education
+  features:
+    - annotated
+    - silhouette
+    - geospatial
