@@ -1,10 +1,10 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-basic: Basic Contour Plot
 Library: pygal 3.1.0 | Python 3.14.4
-Quality: 83/100 | Created: 2026-04-24
 """
 
 import os
+import re
 import sys
 
 
@@ -21,15 +21,13 @@ from pygal.style import Style  # noqa: E402
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-RULE_RGBA = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 LINE_COLOR = "#FAF8F1" if THEME == "light" else "#F0EFE8"
 LINE_OPACITY = 0.65 if THEME == "light" else 0.80
 
-# Viridis colormap stops (sequential, perceptually uniform)
+# Viridis colormap stops (sequential, perceptually uniform, CVD-safe)
 VIRIDIS = [
     (0.00, "#440154"),
     (0.10, "#482475"),
@@ -75,50 +73,111 @@ elevation = (
 )
 
 z_min, z_max = float(elevation.min()), float(elevation.max())
+primary_peak = (7.0, 7.0)
+secondary_peak = (2.5, 3.0)
+primary_elev = int(
+    round(
+        float(
+            850 * np.exp(0)
+            + 550 * np.exp(-((7 - 2.5) ** 2 + (7 - 3) ** 2) / 3.0)
+            - 180 * np.exp(-((7 - 5) ** 2 + (7 - 5) ** 2) / 8.0)
+            + 12 * 7
+            + 350
+        )
+    )
+)
+secondary_elev = int(
+    round(
+        float(
+            850 * np.exp(-((2.5 - 7) ** 2 + (3 - 7) ** 2) / 4.0)
+            + 550 * np.exp(0)
+            - 180 * np.exp(-((2.5 - 5) ** 2 + (3 - 5) ** 2) / 8.0)
+            + 12 * 2.5
+            + 350
+        )
+    )
+)
 
-# Canvas and plot layout
+# Canvas and plot layout (pygal margins define the reserved area around the plot)
 CANVAS_W, CANVAS_H = 4800, 2700
-plot_x = 360
-plot_y = 220
-plot_right_pad = 520
-plot_bottom_pad = 260
-plot_width = CANVAS_W - plot_x - plot_right_pad
-plot_height = CANVAS_H - plot_y - plot_bottom_pad
-
-cell_w = plot_width / (n_points - 1)
-cell_h = plot_height / (n_points - 1)
+MARGIN_L, MARGIN_R = 360, 520
+MARGIN_T, MARGIN_B = 220, 260
 
 font = "DejaVu Sans, Helvetica, Arial, sans-serif"
 
+# Style carries theme tokens + peak marker colors (Okabe-Ito orange & blue —
+# deliberately off-palette from viridis so markers stay legible on any elevation tone).
 custom_style = Style(
     background=PAGE_BG,
-    plot_background=PAGE_BG,
+    plot_background="transparent",
     foreground=INK_SOFT,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=("#009E73",),
+    colors=("#D55E00", "#0072B2"),
     font_family=font,
     title_font_family=font,
-    title_font_size=52,
+    label_font_family=font,
+    major_label_font_family=font,
+    tooltip_font_family=font,
+    tooltip_font_size=34,
+    legend_font_size=38,
+    stroke_width=6,
+    opacity=".95",
+    opacity_hover=".65",
+    transition="200ms ease-in",
 )
 
+# Pygal XY chart: peak markers are real data, rendered natively with hover tooltips.
+# Interactivity (pygal's default JS) is kept enabled — the HTML export is a live chart.
 chart = pygal.XY(
     width=CANVAS_W,
     height=CANVAS_H,
     style=custom_style,
     show_legend=False,
-    margin=0,
     show_x_labels=False,
     show_y_labels=False,
     show_x_guides=False,
     show_y_guides=False,
-    js=[],
+    margin_left=MARGIN_L,
+    margin_right=MARGIN_R,
+    margin_top=MARGIN_T,
+    margin_bottom=MARGIN_B,
+    xrange=(0, 10),
+    range=(0, 10),
+    dots_size=22,
+    stroke=False,
+    truncate_label=-1,
 )
-chart.add("", [(0, 0)])
+
+chart.add("Primary Peak", [{"value": primary_peak, "label": f"Primary Peak · {primary_elev} m"}])
+chart.add("Secondary Peak", [{"value": secondary_peak, "label": f"Secondary Peak · {secondary_elev} m"}])
+
+# Render pygal first so we can read back its exact plot-box placement.
+# Pygal applies a small internal axis-range padding inside the margin box; we
+# back-compute it from the two peak dots' pixel positions so the contour aligns
+# perfectly with the interactive markers pygal drew.
+base_svg = chart.render(is_unicode=True)
+
+dot_re = re.compile(r'<circle cx="([-\d.]+)" cy="([-\d.]+)"[^>]*class="dot')
+peaks = [(float(cx), float(cy)) for cx, cy in dot_re.findall(base_svg)]
+(p1x, p1y), (p2x, p2y) = peaks[0], peaks[1]
+x_scale = (p1x - p2x) / (primary_peak[0] - secondary_peak[0])
+x_off = p1x - primary_peak[0] * x_scale
+y_scale = (p1y - p2y) / (primary_peak[1] - secondary_peak[1])
+y_off = p1y - primary_peak[1] * y_scale
+
+# Absolute plot box in SVG coords (inside pygal's translated plot group → + margins)
+plot_x = MARGIN_L + x_off
+plot_y = MARGIN_T + y_off + 10 * y_scale
+plot_width = 10 * x_scale
+plot_height = -10 * y_scale
+
+cell_w = plot_width / (n_points - 1)
+cell_h = plot_height / (n_points - 1)
 
 svg_parts = []
 
-# Filled contour: color each cell by its average value
+# Filled contour — one quad per grid cell, colored by its mean elevation
 for i in range(n_points - 1):
     for j in range(n_points - 1):
         cell_val = (elevation[i, j] + elevation[i, j + 1] + elevation[i + 1, j] + elevation[i + 1, j + 1]) / 4
@@ -131,8 +190,8 @@ for i in range(n_points - 1):
             f'height="{cell_h + 0.6:.2f}" fill="{color}" stroke="none"/>'
         )
 
-# Contour lines via marching squares
-minor_levels = np.arange(300, 1251, 50)
+# Marching-squares contour extraction
+minor_levels = np.arange(400, 1251, 50)
 major_levels = np.arange(400, 1251, 200)
 
 
@@ -191,6 +250,7 @@ def march(level):
     return lines
 
 
+# Minor contours (50 m intervals, subtle)
 for lvl in minor_levels:
     for (x1, y1), (x2, y2) in march(lvl):
         svg_parts.append(
@@ -198,73 +258,110 @@ for lvl in minor_levels:
             f'stroke="{LINE_COLOR}" stroke-width="2" stroke-opacity="0.30"/>'
         )
 
+# Major contours (200 m intervals, emphasized) — collect segments for labeling
+major_segments_by_level = {}
 for lvl in major_levels:
-    for (x1, y1), (x2, y2) in march(lvl):
+    segs = march(lvl)
+    major_segments_by_level[int(lvl)] = segs
+    for (x1, y1), (x2, y2) in segs:
         svg_parts.append(
             f'<line x1="{x1:.2f}" y1="{y1:.2f}" x2="{x2:.2f}" y2="{y2:.2f}" '
             f'stroke="{LINE_COLOR}" stroke-width="4" stroke-opacity="{LINE_OPACITY}"/>'
         )
 
-# L-shaped frame (left and bottom only)
+
+# Contour level labels — place elevation text at the rightmost point of each
+# major contour's eastern flank (stable placement avoids label pile-ups near peaks).
+# A PAGE_BG halo keeps digits legible against the viridis fill.
+def label_anchors(segments, max_labels=2):
+    """Return up to `max_labels` well-separated midpoints from the segment list."""
+    if not segments:
+        return []
+    # Build midpoints of every segment, then sample evenly by segment count
+    mids = [((x1 + x2) / 2, (y1 + y2) / 2) for (x1, y1), (x2, y2) in segments]
+    n = len(mids)
+    if n <= max_labels:
+        return mids
+    step = n / (max_labels + 1)
+    return [mids[int(step * (i + 1))] for i in range(max_labels)]
+
+
+label_font_px = 40
+for lvl, segs in major_segments_by_level.items():
+    for cx, cy in label_anchors(segs, max_labels=2):
+        text = f"{lvl} m"
+        svg_parts.append(
+            f'<text x="{cx:.2f}" y="{cy + 14:.2f}" text-anchor="middle" '
+            f'fill="none" stroke="{PAGE_BG}" stroke-width="9" stroke-linejoin="round" '
+            f'style="font-size:{label_font_px}px;font-family:{font};font-weight:600">{text}</text>'
+        )
+        svg_parts.append(
+            f'<text x="{cx:.2f}" y="{cy + 14:.2f}" text-anchor="middle" '
+            f'fill="{INK}" style="font-size:{label_font_px}px;font-family:{font};font-weight:600">{text}</text>'
+        )
+
+# L-shaped frame (left + bottom only)
 svg_parts.append(
-    f'<line x1="{plot_x}" y1="{plot_y}" x2="{plot_x}" y2="{plot_y + plot_height}" '
+    f'<line x1="{plot_x:.2f}" y1="{plot_y:.2f}" x2="{plot_x:.2f}" y2="{plot_y + plot_height:.2f}" '
     f'stroke="{INK_SOFT}" stroke-width="2.5"/>'
 )
 svg_parts.append(
-    f'<line x1="{plot_x}" y1="{plot_y + plot_height}" x2="{plot_x + plot_width}" y2="{plot_y + plot_height}" '
+    f'<line x1="{plot_x:.2f}" y1="{plot_y + plot_height:.2f}" '
+    f'x2="{plot_x + plot_width:.2f}" y2="{plot_y + plot_height:.2f}" '
     f'stroke="{INK_SOFT}" stroke-width="2.5"/>'
 )
 
-# X-axis ticks and labels
+# X-axis ticks + labels
 n_x_ticks = 6
 for i in range(n_x_ticks):
     frac = i / (n_x_ticks - 1)
     tick_x = plot_x + frac * plot_width
     tick_y = plot_y + plot_height
-    val = x[0] + frac * (x[-1] - x[0])
+    val = frac * 10
     svg_parts.append(
-        f'<line x1="{tick_x:.2f}" y1="{tick_y}" x2="{tick_x:.2f}" y2="{tick_y + 14}" '
+        f'<line x1="{tick_x:.2f}" y1="{tick_y:.2f}" x2="{tick_x:.2f}" y2="{tick_y + 14:.2f}" '
         f'stroke="{INK_SOFT}" stroke-width="2"/>'
     )
     svg_parts.append(
-        f'<text x="{tick_x:.2f}" y="{tick_y + 66}" text-anchor="middle" fill="{INK_SOFT}" '
+        f'<text x="{tick_x:.2f}" y="{tick_y + 66:.2f}" text-anchor="middle" fill="{INK_SOFT}" '
         f'style="font-size:38px;font-family:{font}">{val:.0f}</text>'
     )
 
 svg_parts.append(
-    f'<text x="{plot_x + plot_width / 2:.2f}" y="{plot_y + plot_height + 160}" text-anchor="middle" '
-    f'fill="{INK}" style="font-size:44px;font-family:{font}">Distance East (km)</text>'
+    f'<text x="{plot_x + plot_width / 2:.2f}" y="{plot_y + plot_height + 160:.2f}" '
+    f'text-anchor="middle" fill="{INK}" style="font-size:44px;font-family:{font}">'
+    f"Distance East (km)</text>"
 )
 
-# Y-axis ticks and labels
+# Y-axis ticks + labels
 n_y_ticks = 6
 for i in range(n_y_ticks):
     frac = i / (n_y_ticks - 1)
     tick_y = plot_y + plot_height - frac * plot_height
     tick_x = plot_x
-    val = y[0] + frac * (y[-1] - y[0])
+    val = frac * 10
     svg_parts.append(
-        f'<line x1="{tick_x - 14}" y1="{tick_y:.2f}" x2="{tick_x}" y2="{tick_y:.2f}" '
+        f'<line x1="{tick_x - 14:.2f}" y1="{tick_y:.2f}" x2="{tick_x:.2f}" y2="{tick_y:.2f}" '
         f'stroke="{INK_SOFT}" stroke-width="2"/>'
     )
     svg_parts.append(
-        f'<text x="{tick_x - 26}" y="{tick_y + 14:.2f}" text-anchor="end" fill="{INK_SOFT}" '
+        f'<text x="{tick_x - 26:.2f}" y="{tick_y + 14:.2f}" text-anchor="end" fill="{INK_SOFT}" '
         f'style="font-size:38px;font-family:{font}">{val:.0f}</text>'
     )
 
 y_title_x = plot_x - 200
 y_title_y = plot_y + plot_height / 2
 svg_parts.append(
-    f'<text x="{y_title_x}" y="{y_title_y}" text-anchor="middle" fill="{INK}" '
+    f'<text x="{y_title_x:.2f}" y="{y_title_y:.2f}" text-anchor="middle" fill="{INK}" '
     f'style="font-size:44px;font-family:{font}" '
-    f'transform="rotate(-90, {y_title_x}, {y_title_y})">Distance North (km)</text>'
+    f'transform="rotate(-90, {y_title_x:.2f}, {y_title_y:.2f})">Distance North (km)</text>'
 )
 
-# Colorbar (right of plot)
+# Colorbar — right of plot area
 cb_width = 72
 cb_height = int(plot_height * 0.80)
 cb_x = plot_x + plot_width + 120
-cb_y = plot_y + (plot_height - cb_height) // 2
+cb_y = plot_y + (plot_height - cb_height) / 2
 
 n_cb_segments = 120
 seg_h = cb_height / n_cb_segments
@@ -273,11 +370,12 @@ for i in range(n_cb_segments):
     color = viridis_at(t)
     seg_y = cb_y + i * seg_h
     svg_parts.append(
-        f'<rect x="{cb_x}" y="{seg_y:.2f}" width="{cb_width}" height="{seg_h + 0.6:.2f}" fill="{color}" stroke="none"/>'
+        f'<rect x="{cb_x:.2f}" y="{seg_y:.2f}" width="{cb_width}" '
+        f'height="{seg_h + 0.6:.2f}" fill="{color}" stroke="none"/>'
     )
 
 svg_parts.append(
-    f'<rect x="{cb_x}" y="{cb_y}" width="{cb_width}" height="{cb_height}" '
+    f'<rect x="{cb_x:.2f}" y="{cb_y:.2f}" width="{cb_width}" height="{cb_height}" '
     f'fill="none" stroke="{INK_SOFT}" stroke-width="1.5"/>'
 )
 
@@ -287,36 +385,38 @@ for i in range(n_cb_labels):
     val = z_max - (z_max - z_min) * frac
     label_y = cb_y + frac * cb_height + 14
     svg_parts.append(
-        f'<text x="{cb_x + cb_width + 20}" y="{label_y:.2f}" fill="{INK_SOFT}" '
+        f'<text x="{cb_x + cb_width + 20:.2f}" y="{label_y:.2f}" fill="{INK_SOFT}" '
         f'style="font-size:34px;font-family:{font}">{int(round(val))}</text>'
     )
 
-# Colorbar label (rotated, right of values)
 cb_title_x = cb_x + cb_width + 220
 cb_title_y = cb_y + cb_height / 2
 svg_parts.append(
-    f'<text x="{cb_title_x}" y="{cb_title_y}" text-anchor="middle" fill="{INK}" '
+    f'<text x="{cb_title_x:.2f}" y="{cb_title_y:.2f}" text-anchor="middle" fill="{INK}" '
     f'style="font-size:40px;font-family:{font}" '
-    f'transform="rotate(90, {cb_title_x}, {cb_title_y})">Elevation (m)</text>'
+    f'transform="rotate(90, {cb_title_x:.2f}, {cb_title_y:.2f})">Elevation (m)</text>'
 )
 
-# Render chart, inject custom SVG, save outputs
-base_svg = chart.render(is_unicode=True)
-
-# Background rectangle (ensures consistent theme fill behind our overlay)
+# Title
 bg_rect = f'<rect x="0" y="0" width="{CANVAS_W}" height="{CANVAS_H}" fill="{PAGE_BG}" stroke="none"/>'
-
-# Title (drawn as SVG for precise placement alongside the other custom chrome)
 title_svg = (
     f'<text x="{CANVAS_W / 2:.2f}" y="120" text-anchor="middle" fill="{INK}" '
     f'style="font-size:64px;font-weight:500;font-family:{font}">'
     f"Mountain Terrain · contour-basic · pygal · anyplot.ai</text>"
 )
 
+# Inject custom chrome into pygal's graph group BEFORE the plot overlay so
+# pygal's peak markers (and their tooltip hit-areas) render on top.
 custom_svg = "\n".join([bg_rect, title_svg] + svg_parts)
-
-# Insert custom SVG right before the closing </svg>
-output_svg = base_svg.replace("</svg>", f"{custom_svg}\n</svg>")
+overlay_marker = '<g transform="translate('
+# Locate pygal's first plot group by class
+plot_group_idx = base_svg.find('class="plot"')
+if plot_group_idx != -1:
+    # Back up to the opening '<g'
+    insert_idx = base_svg.rfind("<g", 0, plot_group_idx)
+    output_svg = base_svg[:insert_idx] + custom_svg + "\n" + base_svg[insert_idx:]
+else:
+    output_svg = base_svg.replace("</svg>", f"{custom_svg}\n</svg>")
 
 cairosvg.svg2png(bytestring=output_svg.encode("utf-8"), write_to=f"plot-{THEME}.png")
 
