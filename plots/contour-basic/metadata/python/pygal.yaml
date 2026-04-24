@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: contour-basic
 created: '2026-04-24T01:37:51Z'
-updated: '2026-04-24T01:43:40Z'
+updated: '2026-04-24T02:06:17Z'
 generated_by: claude-opus
 workflow_run: 24867578429
 issue: 855
@@ -12,110 +12,119 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/pygal/plot-dark.html
-quality_score: 83
+quality_score: 82
 review:
   strengths:
-  - Creative SVG injection approach overcomes pygal lack of native contour support
-    while maintaining correct theme tokens throughout
-  - Viridis colormap correctly chosen and manually interpolated for continuous elevation
-    data matching style guide requirements
-  - Marching squares implementation produces accurate contour lines at both minor
-    and major intervals with intentional visual differentiation
-  - Both light and dark themes fully implemented with identical data colors and distinct
-    chrome — no dark-on-dark or light-on-light failures
+  - Viridis colormap correctly applied to continuous elevation data — spec-compliant
+    and perceptually appropriate
+  - Two-level contour system (minor 50 m / major 200 m at different opacities) creates
+    genuine visual hierarchy
+  - Flawless theme adaptation in both renders — backgrounds, ink colors, and text
+    all correct
+  - Realistic, neutral mountain terrain data with appropriate scales (km distances,
+    meter elevations)
+  - Colorbar with units and numeric labels meets spec requirement exactly
   weaknesses:
-  - 'Library mastery critically low: pygal native charting API used only for SVG wrapper
-    with dummy data point and JS interactivity explicitly disabled with js=[] — the
-    implementation is essentially a custom SVG renderer wearing pygal theme system'
-  - Contour level labels (elevation values on contour lines) absent; spec recommends
-    labeling key levels when practical
+  - 'SC-04: Title format incorrect — prefix "Mountain Terrain ·" should be removed;
+    correct format is contour-basic · pygal · anyplot.ai'
+  - 'CQ-01: Four helper functions (viridis_at, lerp, march, label_anchors) violate
+    KISS structure — inline the simple ones; reorganize march algorithm inline if
+    possible'
+  - 'VQ-02: Contour level labels crowd near the primary peak — reduce max_labels to
+    1 per level, or spread label placement to avoid clustering in the peak area'
+  - 'VQ-05: Right margin tight — reduce colorbar label size or shift colorbar left
+    to give the rotated Elevation (m) text more space'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct per style guide
-      Chrome: Title "Mountain Terrain · contour-basic · pygal · anyplot.ai" in dark ink, clearly readable. Axis labels "Distance East (km)" and "Distance North (km)" in dark ink. Tick labels 0–10 on both axes in dark muted ink. Colorbar labels 302–1225 readable on right.
-      Data: Viridis colormap from purple (low elevation ~302m) to yellow (high elevation ~1225m). Two peaks visible: large bright-yellow peak upper-right, smaller teal peak lower-left. Contour lines in translucent off-white at minor (opacity 0.30) and major (opacity 0.65) intervals.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Mountain Terrain · contour-basic · pygal · anyplot.ai" in dark ink, clearly readable. Axis labels "Distance East (km)" and "Distance North (km)" in dark ink, readable. Tick labels (0–10 numeric) in muted dark ink, readable. Colorbar labels and rotated "Elevation (m)" title readable.
+      Data: Viridis colormap fills — deep purple at low elevations, transitioning through teal/green to bright yellow at peaks. Two Okabe-Ito colored peak markers: orange (#D55E00) primary peak, blue (#0072B2) secondary peak. Minor contour lines at low opacity, major lines at higher opacity. Contour level labels with white halos.
+      Legibility verdict: PASS — all text readable, correct background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct per style guide
-      Chrome: Title in light-colored text clearly readable against dark surface. Axis labels and tick labels rendered in lighter-gray INK_SOFT/INK_MUTED tones — all readable against the dark background. No dark-on-dark failures. Colorbar labels visible on right.
-      Data: Viridis colormap colors are identical to light render — same purple/teal/yellow hues. Two mountain peaks clearly visible with same color mapping.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, axis labels, tick labels, colorbar labels all render in light ink (#F0EFE8 / #B8B7B0) — clearly readable against dark background. No dark-on-dark failures detected. Contour level text visible with halos.
+      Data: Viridis colormap colors are identical to light render — same purple-to-yellow gradient, same orange and blue peak markers. Data colors are theme-invariant as required.
+      Legibility verdict: PASS — all text readable, correct background, no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 64px, labels 44px, ticks 38px).
-          All text readable in both themes.
+        comment: 'All font sizes explicitly set: title 64px, axis labels 44px, tick
+          labels 38px, contour labels 40px; readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: No overlapping labels or contour elements.
+        comment: Minor label crowding near primary peak — 1000 m and 1200 m labels
+          close together in upper-right; main content readable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Filled contour cells and contour lines clearly visible against both
-          backgrounds.
+        comment: Filled regions, contour lines, peak markers, and colorbar all clearly
+          visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and CVD-safe.
+        comment: Viridis is CVD-safe; peak markers use Okabe-Ito orange and blue with
+          good luminance separation
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 4800x2700 landscape, colorbar well-positioned, generous margins.
+        comment: Good canvas utilization; right margin slightly tight — colorbar,
+          numeric labels, and rotated title compete for ~520px
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Distance East (km), Distance North (km), Elevation (m) all with units.
+        comment: Distance East (km), Distance North (km), Elevation (m) — all descriptive
+          with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis correctly applied for continuous data. Backgrounds are #FAF8F1/#1A1A17
-          per theme.'
+        comment: 'Viridis for continuous data; background #FAF8F1 light / #1A1A17
+          dark; data colors theme-invariant; text chrome flips correctly'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom viridis interpolation, marching squares contour lines, distinct
-          minor vs major level styling, gradient colorbar.
+        comment: 'Above defaults: viridis colormap, two-level contours at different
+          opacities, halo labels, L-shaped frame; not quite publication-ready'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: L-shaped frame per style guide, contour lines at two opacity levels
-          (0.30 minor / 0.65 major), no unnecessary chrome.
+        comment: No top/right spines, no grid (appropriate), minor/major contour opacity
+          differentiation, label halos; some visible refinement
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Two mountain peaks create clear visual focal points. Viridis scale
-          guides eye from valley (purple) to summit (yellow).
+        comment: Viridis draws eye to peak elevations; two annotated peaks guide viewer;
+          filled + line combination creates visual hierarchy
     spec_compliance:
       score: 14
       max: 15
@@ -125,117 +134,122 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct contour plot with filled regions and contour lines.
+        comment: Correct contour plot with filled regions and contour lines
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Viridis, colorbar, filled+lines, 80x80 grid all present. Missing:
-          labeled contour levels on lines.'
+        comment: Sequential viridis colormap, colorbar, filled regions + lines, major
+          contour labels, 80x80 grid — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y as spatial km coordinates, Z as elevation on correct grid.
+        comment: X/Y correctly mapped to spatial coordinates; Z encoded via viridis
+          fill and contour lines
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title includes spec-id, library, anyplot.ai. Colorbar serves as value
-          legend.
+        passed: false
+        comment: Title Mountain Terrain · contour-basic · pygal · anyplot.ai has extra
+          prefix; required format is contour-basic · pygal · anyplot.ai. Peak labels
+          only in HTML tooltips, not PNG.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Filled contours, minor and major contour lines, colorbar. Missing:
-          labeled contour level text.'
+        comment: Shows filled isolines, two contour density levels, two distinct peaks,
+          valley, gradient — all contour plot aspects covered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mountain terrain elevation map is realistic, neutral, and domain-appropriate.
+        comment: Mountain terrain, 10x10 km region, elevation in meters — neutral
+          geographic/scientific context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Elevation 350-1225m over 10x10 km area; realistic for mountainous
-          terrain.
+        comment: Elevation 320–1220 m realistic for local mountain; 10 km spatial
+          extent appropriate
     code_quality:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 1
         max: 3
-        passed: true
-        comment: Helper functions viridis_at(), lerp(), march() are necessary for
-          marching squares. 343 lines verbose but justified.
+        passed: false
+        comment: 'Four helper functions defined: viridis_at, lerp, march, label_anchors
+          — KISS principle requires no functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present.
+        comment: np.random.seed(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: os, re, sys, cairosvg, numpy, pygal, Style'
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Marching squares correctly implemented; no fake UI elements.
+        passed: false
+        comment: Marching squares + SVG injection is technically impressive but ~250
+          lines of custom SVG generation; slightly over-engineered
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with correct filenames;
+          current pygal API
     library_mastery:
-      score: 3
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Pygal used only as SVG skeleton container with dummy data point [(0,0)].
-          All rendering is raw SVG injection. Style object used correctly for theming
-          but native chart API barely engaged.
+        passed: true
+        comment: Uses pygal XY chart and Style system correctly; main visualization
+          is custom SVG since pygal lacks native contour support
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Pygal JS interactivity explicitly disabled with js=[]. HTML output
-          is static SVG in HTML rather than interactive pygal chart. No native pygal
-          chart type meaningfully used.
-  verdict: APPROVED
+        passed: true
+        comment: Leverages pygal interactive HTML export and JS hover tooltips for
+          peak markers; SVG injection exploits pygal SVG output format
+  verdict: REJECTED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
   - colorbar
+  - annotations
   - html-export
-  - manual-ticks
+  - hover-tooltips
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
