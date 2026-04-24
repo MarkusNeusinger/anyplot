@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: contour-basic
 created: 2025-12-14 19:45:33+00:00
-updated: '2026-04-24T02:04:47Z'
+updated: '2026-04-24T02:20:12Z'
 generated_by: claude-opus
 workflow_run: 24867443277
 issue: 855
@@ -12,128 +12,116 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 78
+quality_score: 80
 review:
   strengths:
-  - All font sizes explicitly set at correct levels (title 24pt, axis 20pt, tick 16pt,
-    legend 16/18pt) — both renders pass legibility check
-  - 'Theme-adaptive chrome fully implemented using PAGE_BG/INK/INK_SOFT/ELEVATED_BG
-    tokens; backgrounds correctly #FAF8F1 (light) / #1A1A17 (dark)'
-  - viridis colormap is the correct choice for continuous sequential data — perceptually
-    uniform and CVD-safe
-  - contourpy + geom_path approach keeps rendering within the plotnine grammar without
-    matplotlib mixing
-  - 'Spec compliance strong: geom_raster filled surface + geom_path isolines + colorbar;
-    correct title format; correct output filenames'
+  - 'Excellent code quality: clean KISS structure, seed set, all imports used, proper
+    ggsave output'
+  - Viridis raster + white semi-transparent contour line overlay is visually effective
+  - Theme-adaptive chrome properly implemented for all main text, grid, and backgrounds
+  - Primary peak annotation creates a clear focal point and guides the viewer
+  - 'High spec compliance: correct plot type, colorbar, both filled regions and contour
+    lines'
   weaknesses:
-  - 'CRITICAL: geom_path isoline color is set to color=PAGE_BG; in dark mode PAGE_BG=#1A1A17
-    (near-black) — isolines become invisible over dark viridis purple regions; fix
-    by using a fixed semi-transparent white e.g. color=''#FFFFFF'' with alpha=0.55
-    in both themes'
-  - Images in plot_images/ appear to be from a previous run (they show a 'Primary
-    peak' annotation and white isolines in dark mode that do not match the current
-    code); current code has neither annotation nor a fix for dark-mode isoline visibility
-  - 100x100 raster grid (geom_raster on 100x100 DataFrame) produces visible pixel-level
-    color blocks at 4800x2700 full resolution — increase to at least 200x200
-  - Contour level labels not added despite spec note 'label key contour levels when
-    practical'
-  - 'Design excellence limited: no annotation in current code, no visual hierarchy
-    or storytelling elements beyond the colormap gradient'
-  - Triple-nested contourpy loop appending row-by-row is verbose; could be vectorized
-    with list comprehension
+  - Full rectangular panel border (all 4 spines) instead of L-shaped frame — style
+    guide requires removing top and right spines
+  - 'Annotation and peak marker colors hardcoded to #1A1A17 (not theme-adaptive);
+    should use INK token'
+  - No real-world framing for the data — X Coordinate / Y Coordinate are generic labels
+  - Uses contourpy for line extraction instead of plotnine native geom_contour/stat_contour
+  - Individual contour level labels not shown (spec mentions labeling key levels when
+    practical)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) outer canvas and panel — correct
-      Chrome: Title "contour-basic · plotnine · anyplot.ai" in dark ink — readable. Axis labels "X Coordinate" / "Y Coordinate" in dark ink — readable. Tick labels (−3 to 3 range) in dark secondary text — readable. Colorbar "Value" label readable at right edge.
-      Data: viridis-colored gradient surface showing dual Gaussian peaks — primary yellow peak at upper-right (~1,1), secondary teal/green peak at lower-left (~−1,−1), dark purple depression near origin. Contour isolines rendered in light/off-white color following level curves — clearly visible against purple viridis regions. A "Primary peak" text annotation with a leader line and dot marker is present (NOTE: this annotation does NOT appear in the current code — images may be from a previous attempt).
+      Background: Warm off-white (~#FAF8F1) - correct theme surface
+      Chrome: Title "contour-basic · plotnine · anyplot.ai" in dark text (readable). Axis labels "X Coordinate" / "Y Coordinate" in dark text (readable). Tick labels in secondary dark (readable). Colorbar label "Value" readable. Annotation "Primary peak" in hardcoded #1A1A17 — readable because it falls on bright yellow-green viridis area (~Z=0.74).
+      Data: Viridis colormap from deep purple (low) to bright yellow (high). White semi-transparent contour lines (alpha=0.55) clearly visible. Two distinct peak regions visible. Small dark peak marker at (1,1). Colorbar on right shows 0.00–0.75 range.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) outer canvas and panel — correct
-      Chrome: Title in light (#F0EFE8) text — readable. Axis labels and tick labels in light secondary text — readable. Colorbar label readable. No dark-on-dark failures for text elements.
-      Data: viridis data colors IDENTICAL to light render — correct. Same dual-peak structure visible. Contour isolines appear white/light in the dark render, contrasting well with viridis background. However, per the current code, isolines use color=PAGE_BG which in dark mode resolves to #1A1A17 (near-black) — this should produce near-invisible isolines over dark viridis purple. The white isolines visible in the image are inconsistent with the current code and suggest these images are from a previous run. "Primary peak" annotation also visible, confirming images do not match current code.
-      Legibility verdict: PASS (all text readable, no dark-on-dark for chrome) — NOTE: isoline visibility in dark mode is a code-level issue not reflected in available images
+      Background: Warm near-black (~#1A1A17) - correct dark theme surface
+      Chrome: Title and axis labels rendered in light text (INK_SOFT/INK tokens applied correctly). Tick labels in light secondary color. Colorbar text light-colored. All main chrome readable. No dark-on-dark failures for theme-adaptive elements. HOWEVER: annotation text "Primary peak" and peak marker use hardcoded color=#1A1A17 (near-black). These remain visible only because they fall on the bright yellow-green viridis area — this is a theme-adaptation flaw that could fail in other contexts.
+      Data: Viridis colors are identical to light render (bimodal field, same yellow peak and blue-purple lows). Data colors are unchanged between themes as required.
+      Legibility verdict: CONDITIONAL PASS — main chrome passes; annotation color not theme-adaptive but readable due to bright viridis background at annotation position.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis 20pt, tick 16pt,
-          legend 16/18pt — all readable in both renders'
+        comment: 'Font sizes explicitly set (title=24, axis_title=20, axis_text=16,
+          legend_text=16). Annotation text size=14 readable but color hardcoded #1A1A17
+          (not theme-adaptive).'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements in either render
+        comment: No overlapping text elements in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Raster fill clearly visible; images show isolines visible but current
-          code uses color=PAGE_BG (#1A1A17 in dark mode) which would make isolines
-          invisible on dark viridis purple; 100x100 grid shows pixelation at 4800x2700
-          full res
+        comment: Viridis raster fills plot well; white contour lines clearly visible;
+          peak marker visible on bright area.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: viridis is perceptually uniform and CVD-safe
+        comment: Viridis is CVD-safe and perceptually uniform; white contour lines
+          provide strong contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 canvas well utilized; balanced margins; colorbar properly placed
-          at right
+        comment: Plot fills ~65% of canvas, balanced margins, colorbar well-integrated.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Descriptive 'X Coordinate' / 'Y Coordinate'; correct title format
-          'contour-basic · plotnine · anyplot.ai'
+        passed: false
+        comment: X Coordinate and Y Coordinate are descriptive but have no units.
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'viridis correct for continuous sequential data; backgrounds #FAF8F1/#1A1A17;
-          theme-adaptive chrome with INK/INK_SOFT/ELEVATED_BG tokens; data colors
-          identical between themes'
+        passed: false
+        comment: 'Viridis correct for sequential continuous. Backgrounds theme-correct.
+          Main chrome theme-adaptive. Deducted: annotation and peak marker hardcoded
+          to #1A1A17, not theme-adaptive.'
     design_excellence:
-      score: 9
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: viridis is appropriate; custom theme-adaptive chrome adds polish;
-          overall looks like a well-configured library default — not exceptional
+        passed: true
+        comment: Viridis raster + white semi-transparent contour overlay is polished
+          and above library defaults. Annotation adds context. Full rectangular panel
+          border and mathematical demo data prevent higher score.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Subtle grid (alpha=0.08/0.04), styled panel_border, legend_key fill,
-          theme_minimal base; between default and good
+        comment: Grid extremely subtle (alpha=0.08/0.04, excellent). But panel_border=element_rect
+          keeps all 4 spines — style guide requires removing top/right spines.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Current code has no annotation or emphasis elements; images show
-          annotation from a previous run; dual-peak structure visible through colormap
-          but no explicit storytelling in deployed code
+        passed: true
+        comment: Primary peak annotation with marker and leader creates focal point.
+          Bimodal structure visible. Visual hierarchy guides viewer to primary insight.
     spec_compliance:
       score: 14
       max: 15
@@ -143,31 +131,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: filled contour surface (geom_raster) + overlaid isolines
-          (geom_path via contourpy)'
+        comment: 'Correct contour plot: filled raster + isoline overlays, both filled
+          regions and contour lines as spec recommends.'
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
-        passed: true
-        comment: Filled regions, contour lines, colorbar present; spec note 'label
-          key contour levels when practical' not implemented
+        passed: false
+        comment: 'Sequential colormap (viridis), colorbar, filled+lines, 200x200 grid
+          all present. Missing: individual contour level value labels on the lines.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned to axes; Z mapped to fill color via scale_fill_cmap;
-          all data visible
+        comment: X/Y correctly assigned, Z mapped to fill color via viridis, all data
+          visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'contour-basic · plotnine · anyplot.ai' correct; colorbar legend
-          'Value' appropriate
+        comment: Title 'contour-basic · plotnine · anyplot.ai' correct format. Colorbar
+          labeled 'Value' with correct range.
     data_quality:
-      score: 13
+      score: 12
       max: 15
       items:
       - id: DQ-01
@@ -175,24 +163,25 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Dual Gaussian peaks plus negative trough demonstrates varied scalar
-          field features; isolines at multiple levels show gradient patterns
+        comment: Shows bimodal surface, depression area, gradient transitions, smooth
+          contour structure. Good coverage.
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Mathematical function plausible for scientific computing / probability
-          density; axis labels generic but not abstract
+        passed: false
+        comment: Mathematical Gaussian superposition with no real-world framing. X
+          Coordinate/Y Coordinate are plausible but generic. Spec mentions topographic,
+          temperature, pressure contexts — none adopted.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Domain [-3,3] and Z-range ~[-0.3, 1.0] natural for Gaussian functions;
-          100x100 grid gives sufficient mathematical resolution
+        comment: Z range -0.3 to 0.75, X/Y from -3 to 3 — appropriate for normalized
+          mathematical field.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -200,34 +189,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Theme tokens → Data → Contour computation → Plot → Save;
-          no functions or classes
+        comment: Clean Imports -> Data -> Plot -> Save flow; no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, contourpy, numpy, pandas, plotnine symbols all actively used
+        comment: 'All imports used: contourpy, numpy, pandas, all plotnine symbols
+          referenced.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Triple-nested contourpy loop appending row-by-row is verbose; color=PAGE_BG
-          for isolines is semantically incorrect (data-encoding color should not use
-          background token) and produces a dark-mode visibility bug
+        comment: Clean Pythonic code; contourpy segment extraction is sophisticated
+          but not over-engineered; no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via ggsave; current plotnine API used
+        comment: Saves as plot-{THEME}.png using ggsave correctly.
     library_mastery:
       score: 5
       max: 10
@@ -237,24 +225,25 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: 'Proper ggplot layering grammar: ggplot + geom_raster + geom_path
-          + scale_fill_cmap + theme(); contour computation relies on external contourpy
-          rather than plotnine-native mechanism, reducing idiomaticity'
+        comment: 'ggplot grammar used correctly: layered geoms, aesthetic mappings,
+          scale functions, theme customization. But contourpy+geom_path workaround
+          instead of native geom_contour/stat_contour reduces idiomaticity.'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: geom_raster + scale_fill_cmap + geom_path layer composition demonstrates
-          plotnine's declarative grammar; however contour computation is fully external
-          — the plot itself is a heatmap with overlaid paths, not a true contour geom
+        comment: Multiple-layer composition demonstrates grammar-of-graphics strength.
+          But bypasses native stat_contour, missing the most distinctive plotnine
+          capability for this plot type.
   verdict: REJECTED
 impl_tags:
   dependencies:
   - contourpy
   techniques:
-  - layer-composition
   - colorbar
+  - annotations
+  - layer-composition
   patterns:
   - data-generation
   - matrix-construction
