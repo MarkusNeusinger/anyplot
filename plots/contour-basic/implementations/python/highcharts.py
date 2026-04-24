@@ -1,10 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 contour-basic: Basic Contour Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: highcharts unknown | Python 3.14.4
+Quality: 90/100 | Updated: 2026-04-24
 """
 
-import base64
+import os
 import tempfile
 import time
 import urllib.request
@@ -17,420 +17,312 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - create a 2D scalar field using a mathematical function
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Data — simulated topographic elevation map over a 10 km × 10 km mountain region
 np.random.seed(42)
-grid_size = 100  # 100x100 grid for smooth appearance
+grid_n = 80
+x_km = np.linspace(0, 10, grid_n)
+y_km = np.linspace(0, 10, grid_n)
+X, Y = np.meshgrid(x_km, y_km)
 
-x = np.linspace(-3, 3, grid_size)
-y = np.linspace(-3, 3, grid_size)
-X, Y = np.meshgrid(x, y)
-
-# Create an interesting surface: combination of Gaussian peaks
-# Simulates temperature distribution across a 2D surface
-Z = (
-    np.exp(-((X - 1) ** 2 + (Y - 1) ** 2))
-    + 0.8 * np.exp(-((X + 1) ** 2 + (Y + 1) ** 2))
-    - 0.5 * np.exp(-((X) ** 2 + (Y - 1.5) ** 2) / 0.5)
+elevation = (
+    850 * np.exp(-((X - 7) ** 2 + (Y - 7) ** 2) / 4.0)
+    + 550 * np.exp(-((X - 2.5) ** 2 + (Y - 3) ** 2) / 3.0)
+    - 180 * np.exp(-((X - 5) ** 2 + (Y - 5) ** 2) / 8.0)
+    + 12 * X
+    + 350
 )
+el_min = float(elevation.min())
+el_max = float(elevation.max())
 
-# Normalize Z to 0-100 range for better color mapping
-Z_min, Z_max = Z.min(), Z.max()
-Z_normalized = (Z - Z_min) / (Z_max - Z_min) * 100
+# Heatmap cells use integer grid indices (Highcharts Python wrapper requires
+# integer colsize/rowsize, so we work in index-space and label the axis in km)
+heatmap_data = [[int(i), int(j), round(float(elevation[j, i]), 1)] for j in range(grid_n) for i in range(grid_n)]
 
-# Create heatmap data in Highcharts format: [x_index, y_index, value]
-heatmap_data = []
-for y_idx in range(grid_size):
-    for x_idx in range(grid_size):
-        heatmap_data.append([x_idx, y_idx, round(Z_normalized[y_idx, x_idx], 1)])
+# Sparse km labels at even km positions along each axis
+km_labels_x = [""] * grid_n
+km_labels_y = [""] * grid_n
+for km in range(0, 11, 2):
+    idx = round(km * (grid_n - 1) / 10)
+    km_labels_x[idx] = str(km)
+    km_labels_y[idx] = str(km)
 
+# Contour extraction via marching squares (pure numpy, inline — no helpers)
+# Corner indices: top-left=0, top-right=1, bottom-right=2, bottom-left=3
+# Edge indices:   top=0, right=1, bottom=2, left=3
+ms_edges = {
+    0: [],
+    1: [(3, 2)],
+    2: [(1, 2)],
+    3: [(3, 1)],
+    4: [(0, 1)],
+    5: [(0, 3), (1, 2)],
+    6: [(0, 2)],
+    7: [(0, 3)],
+    8: [(0, 3)],
+    9: [(0, 2)],
+    10: [(0, 1), (2, 3)],
+    11: [(0, 1)],
+    12: [(1, 3)],
+    13: [(1, 2)],
+    14: [(2, 3)],
+    15: [],
+}
 
-def marching_squares_contour(Z, level):
-    """Extract contour paths using marching squares algorithm with linear interpolation.
+contour_levels = [400, 500, 600, 700, 800, 900, 1000, 1100]
+contour_series = []
 
-    Returns smooth contour lines by interpolating exact crossing points on cell edges.
-    """
-    rows, cols = Z.shape
+for level in contour_levels:
+    # Collect every cell-crossing as a segment in (i, j) index space
     segments = []
-
-    # Marching squares lookup table - maps cell configuration to edge crossings
-    # Each cell corner is labeled: top-left=0, top-right=1, bottom-right=2, bottom-left=3
-    # Edge indices: top=0, right=1, bottom=2, left=3
-    ms_table = {
-        0: [],
-        1: [[3, 2]],
-        2: [[1, 2]],
-        3: [[3, 1]],
-        4: [[0, 1]],
-        5: [[0, 3], [1, 2]],
-        6: [[0, 2]],
-        7: [[0, 3]],
-        8: [[0, 3]],
-        9: [[0, 2]],
-        10: [[0, 1], [2, 3]],
-        11: [[0, 1]],
-        12: [[1, 3]],
-        13: [[1, 2]],
-        14: [[2, 3]],
-        15: [],
-    }
-
-    # Process each cell
-    for i in range(rows - 1):
-        for j in range(cols - 1):
-            # Get cell corners (clockwise from top-left)
-            tl = Z[i, j]
-            tr = Z[i, j + 1]
-            br = Z[i + 1, j + 1]
-            bl = Z[i + 1, j]
-
-            # Compute cell configuration
-            config = 0
-            if tl >= level:
-                config |= 8
-            if tr >= level:
-                config |= 4
-            if br >= level:
-                config |= 2
-            if bl >= level:
-                config |= 1
-
-            edges = ms_table[config]
+    for j in range(grid_n - 1):
+        for i in range(grid_n - 1):
+            tl = elevation[j, i]
+            tr = elevation[j, i + 1]
+            br = elevation[j + 1, i + 1]
+            bl = elevation[j + 1, i]
+            config = (
+                (8 if tl >= level else 0)
+                | (4 if tr >= level else 0)
+                | (2 if br >= level else 0)
+                | (1 if bl >= level else 0)
+            )
+            edges = ms_edges[config]
             if not edges:
                 continue
-
-            # Interpolate crossing points on edges
-            edge_points = {}
-
-            # Top edge (between tl and tr)
+            pts = {}
             if tl != tr:
                 t = (level - tl) / (tr - tl)
                 if 0 <= t <= 1:
-                    edge_points[0] = (j + t, i)
-
-            # Right edge (between tr and br)
+                    pts[0] = (i + t, j)
             if tr != br:
                 t = (level - tr) / (br - tr)
                 if 0 <= t <= 1:
-                    edge_points[1] = (j + 1, i + t)
-
-            # Bottom edge (between bl and br)
+                    pts[1] = (i + 1, j + t)
             if bl != br:
                 t = (level - bl) / (br - bl)
                 if 0 <= t <= 1:
-                    edge_points[2] = (j + t, i + 1)
-
-            # Left edge (between tl and bl)
+                    pts[2] = (i + t, j + 1)
             if tl != bl:
                 t = (level - tl) / (bl - tl)
                 if 0 <= t <= 1:
-                    edge_points[3] = (j, i + t)
+                    pts[3] = (i, j + t)
+            for a, b in edges:
+                if a in pts and b in pts:
+                    segments.append((pts[a], pts[b]))
 
-            # Create segments
-            for e1, e2 in edges:
-                if e1 in edge_points and e2 in edge_points:
-                    segments.append((edge_points[e1], edge_points[e2]))
-
-    return segments
-
-
-def connect_segments(segments):
-    """Connect line segments into continuous paths."""
-    if not segments:
-        return []
-
-    paths = []
+    # Chain adjacent segments into continuous polylines
     remaining = list(segments)
-
+    tol = 0.05
+    paths = []
     while remaining:
-        # Start new path
-        seg = remaining.pop(0)
+        seg = remaining.pop()
         path = [seg[0], seg[1]]
-
-        # Try to extend path
-        changed = True
-        while changed:
-            changed = False
-            for i, seg in enumerate(remaining):
-                # Check if segment connects to end of path
-                if np.allclose(seg[0], path[-1], atol=0.01):
-                    path.append(seg[1])
-                    remaining.pop(i)
-                    changed = True
+        extended = True
+        while extended:
+            extended = False
+            for k in range(len(remaining) - 1, -1, -1):
+                a, b = remaining[k]
+                if abs(a[0] - path[-1][0]) < tol and abs(a[1] - path[-1][1]) < tol:
+                    path.append(b)
+                    remaining.pop(k)
+                    extended = True
                     break
-                elif np.allclose(seg[1], path[-1], atol=0.01):
-                    path.append(seg[0])
-                    remaining.pop(i)
-                    changed = True
+                if abs(b[0] - path[-1][0]) < tol and abs(b[1] - path[-1][1]) < tol:
+                    path.append(a)
+                    remaining.pop(k)
+                    extended = True
                     break
-                # Check if segment connects to start of path
-                elif np.allclose(seg[1], path[0], atol=0.01):
-                    path.insert(0, seg[0])
-                    remaining.pop(i)
-                    changed = True
+                if abs(b[0] - path[0][0]) < tol and abs(b[1] - path[0][1]) < tol:
+                    path.insert(0, a)
+                    remaining.pop(k)
+                    extended = True
                     break
-                elif np.allclose(seg[0], path[0], atol=0.01):
-                    path.insert(0, seg[1])
-                    remaining.pop(i)
-                    changed = True
+                if abs(a[0] - path[0][0]) < tol and abs(a[1] - path[0][1]) < tol:
+                    path.insert(0, b)
+                    remaining.pop(k)
+                    extended = True
                     break
-
-        if len(path) >= 5:
+        if len(path) >= 4:
             paths.append(path)
 
-    return paths
-
-
-# Extract contour lines using marching squares algorithm (pure numpy)
-contour_levels = [10, 20, 30, 40, 50, 60, 70, 80, 90]
-
-# Consistent white contour lines with black shadow for visibility on viridis colormap
-CONTOUR_COLOR = "#ffffff"
-CONTOUR_SHADOW = "#000000"
-
-contour_series = []
-label_positions = []
-
-for level in contour_levels:
-    segments = marching_squares_contour(Z_normalized, level)
-    paths = connect_segments(segments)
-
+    # Emit null-separated polylines as a single line series per level
+    data = []
     for path in paths:
-        if len(path) < 5:
-            continue
+        data.extend([[round(p[0], 3), round(p[1], 3)] for p in path])
+        data.append([None, None])
+    contour_series.append(
+        {
+            "type": "line",
+            "name": f"{level} m",
+            "data": data,
+            "color": "rgba(255,255,255,0.85)",
+            "lineWidth": 3,
+            "marker": {"enabled": False},
+            "enableMouseTracking": False,
+            "showInLegend": False,
+            "zIndex": 5,
+            "clip": True,
+        }
+    )
 
-        # Subsample for performance if path is very long
-        step = max(1, len(path) // 150)
-        subsampled = path[::step]
-        if len(path) > step:
-            subsampled.append(path[-1])
-
-        line_data = [[round(pt[0], 2), round(pt[1], 2)] for pt in subsampled]
-
-        # Add shadow line for better visibility
-        contour_series.append(
-            {
-                "type": "line",
-                "name": f"Level {level}% shadow",
-                "data": line_data,
-                "color": CONTOUR_SHADOW,
-                "lineWidth": 7,
-                "dashStyle": "Solid",
-                "marker": {"enabled": False},
-                "enableMouseTracking": False,
-                "showInLegend": False,
-                "zIndex": 9,
-            }
-        )
-
-        # Main contour line
-        contour_series.append(
-            {
-                "type": "line",
-                "name": f"Level {level}%",
-                "data": line_data,
-                "color": CONTOUR_COLOR,
-                "lineWidth": 4,
-                "dashStyle": "Solid",
-                "marker": {"enabled": False},
-                "enableMouseTracking": False,
-                "showInLegend": False,
-                "zIndex": 10,
-            }
-        )
-
-        # Store position for label (one per level, using first valid path)
-        if len(path) > 10 and not any(lp["level"] == level for lp in label_positions):
-            mid_idx = len(path) // 2
-            label_positions.append({"x": path[mid_idx][0], "y": path[mid_idx][1], "level": level})
-
-# Create chart
+# Chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration
 chart.options.chart = {
     "type": "heatmap",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
-    "marginBottom": 180,
-    "marginRight": 320,
-    "marginLeft": 220,
-    "marginTop": 100,
+    "backgroundColor": PAGE_BG,
+    "plotBackgroundColor": PAGE_BG,
+    "style": {"fontFamily": "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif", "color": INK},
+    "spacingTop": 80,
+    "spacingRight": 120,
+    "spacingBottom": 80,
+    "spacingLeft": 80,
 }
 
-# Title
 chart.options.title = {
-    "text": "contour-basic · highcharts · pyplots.ai",
-    "style": {"fontSize": "64px", "fontWeight": "bold"},
+    "text": "Mountain Terrain · contour-basic · highcharts · anyplot.ai",
+    "align": "left",
+    "x": 40,
+    "style": {"fontSize": "68px", "fontWeight": "600", "color": INK, "letterSpacing": "-0.5px"},
+    "margin": 20,
+}
+chart.options.subtitle = {
+    "text": "Simulated elevation across a 10 km × 10 km region, 100 m contour intervals",
+    "align": "left",
+    "x": 40,
+    "style": {"fontSize": "32px", "fontWeight": "400", "color": INK_MUTED},
 }
 
-# Create sparse category labels (show at key positions)
-x_labels_sparse = ["" for _ in range(grid_size)]
-y_labels_sparse = ["" for _ in range(grid_size)]
-label_interval = grid_size // 6
-for i in range(0, grid_size, label_interval):
-    x_labels_sparse[i] = f"{x[i]:.1f}"
-    y_labels_sparse[i] = f"{y[i]:.1f}"
-x_labels_sparse[-1] = f"{x[-1]:.1f}"
-y_labels_sparse[-1] = f"{y[-1]:.1f}"
-
-# X-axis with more visible grid lines
 chart.options.x_axis = {
-    "categories": x_labels_sparse,
-    "title": {"text": "X Position (units)", "style": {"fontSize": "48px"}, "y": 30},
-    "labels": {"style": {"fontSize": "36px"}, "rotation": 0, "y": 45},
-    "lineWidth": 3,
-    "tickLength": 12,
-    "gridLineWidth": 3,
-    "gridLineColor": "rgba(200, 200, 200, 0.7)",
-    "gridLineDashStyle": "Dot",
-}
-
-# Y-axis with more visible grid lines
-chart.options.y_axis = {
-    "categories": y_labels_sparse,
-    "title": {"text": "Y Position (units)", "style": {"fontSize": "48px"}},
-    "labels": {"style": {"fontSize": "36px"}},
-    "reversed": False,
-    "lineWidth": 3,
-    "tickLength": 12,
-    "gridLineWidth": 3,
-    "gridLineColor": "rgba(200, 200, 200, 0.7)",
-    "gridLineDashStyle": "Dot",
-}
-
-# Color axis with viridis-like gradient (colorblind-safe)
-chart.options.color_axis = {
+    "categories": km_labels_x,
+    "title": {
+        "text": "Distance East (km)",
+        "style": {"fontSize": "40px", "fontWeight": "500", "color": INK},
+        "margin": 28,
+    },
+    "labels": {"style": {"fontSize": "28px", "color": INK_SOFT}, "y": 36},
+    "lineColor": INK_SOFT,
+    "lineWidth": 2,
+    "tickColor": INK_SOFT,
+    "tickLength": 0,
+    "gridLineWidth": 0,
     "min": 0,
-    "max": 100,
-    "stops": [[0, "#440154"], [0.25, "#3b528b"], [0.5, "#21918c"], [0.75, "#5ec962"], [1, "#fde725"]],
-    "labels": {"style": {"fontSize": "32px"}, "format": "{value}%"},
+    "max": grid_n - 1,
+    "startOnTick": False,
+    "endOnTick": False,
+}
+chart.options.y_axis = {
+    "categories": km_labels_y,
+    "title": {
+        "text": "Distance North (km)",
+        "style": {"fontSize": "40px", "fontWeight": "500", "color": INK},
+        "margin": 28,
+    },
+    "labels": {"style": {"fontSize": "28px", "color": INK_SOFT}, "x": -16},
+    "lineColor": INK_SOFT,
+    "lineWidth": 0,
+    "tickColor": INK_SOFT,
+    "tickLength": 0,
+    "gridLineWidth": 0,
+    "min": 0,
+    "max": grid_n - 1,
+    "startOnTick": False,
+    "endOnTick": False,
 }
 
-# Legend configuration (colorbar)
+# Viridis continuous colormap for the elevation surface
+chart.options.color_axis = {
+    "min": round(el_min),
+    "max": round(el_max),
+    "stops": [[0.0, "#440154"], [0.25, "#3b528b"], [0.5, "#21918c"], [0.75, "#5ec962"], [1.0, "#fde725"]],
+    "labels": {"style": {"fontSize": "26px", "color": INK_SOFT}, "format": "{value} m"},
+    "tickInterval": 200,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": PAGE_BG,
+}
+
 chart.options.legend = {
     "align": "right",
-    "layout": "vertical",
-    "margin": 50,
     "verticalAlign": "middle",
-    "symbolHeight": 700,
-    "itemStyle": {"fontSize": "32px"},
-    "title": {"text": "Intensity (%)", "style": {"fontSize": "40px"}},
-}
-
-# Tooltip
-chart.options.tooltip = {
-    "style": {"fontSize": "32px"},
-    "headerFormat": "",
-    "pointFormat": "X: <b>{series.xAxis.categories.(point.x)}</b><br>"
-    "Y: <b>{series.yAxis.categories.(point.y)}</b><br>"
-    "Intensity: <b>{point.value}%</b>",
-}
-
-# Add heatmap series first (background - filled contour effect)
-heatmap_series = {
-    "name": "Surface Intensity",
-    "type": "heatmap",
-    "data": heatmap_data,
+    "layout": "vertical",
+    "symbolHeight": 1800,
+    "symbolWidth": 48,
+    "x": -20,
+    "title": {"text": "Elevation", "style": {"fontSize": "30px", "color": INK, "fontWeight": "500"}},
+    "itemStyle": {"color": INK_SOFT, "fontSize": "26px"},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
     "borderWidth": 0,
-    "dataLabels": {"enabled": False},
-    "zIndex": 1,
+    "padding": 18,
 }
 
-# Combine all series: heatmap first, then contour lines on top
-all_series = [heatmap_series] + contour_series
-chart.options.series = all_series
+chart.options.credits = {"enabled": False}
+chart.options.tooltip = {"enabled": False}
 
-# Add annotations for contour level labels with high visibility
-chart.options.annotations = [
-    {
-        "labels": [
-            {
-                "point": {"x": pos["x"], "y": pos["y"], "xAxis": 0, "yAxis": 0},
-                "text": f"{pos['level']}%",
-                "backgroundColor": "rgba(255, 255, 255, 0.95)",
-                "borderColor": "#333333",
-                "borderWidth": 3,
-                "style": {"fontSize": "36px", "fontWeight": "bold", "color": "#000000"},
-                "padding": 12,
-                "borderRadius": 8,
-            }
-            for pos in label_positions
-        ],
-        "labelOptions": {"shape": "rect"},
-    }
+chart.options.plot_options = {
+    "heatmap": {"borderWidth": 0, "nullColor": PAGE_BG, "enableMouseTracking": False},
+    "series": {"animation": False, "states": {"inactive": {"opacity": 1}}},
+}
+
+chart.options.series = [
+    {"type": "heatmap", "name": "Elevation", "data": heatmap_data, "showInLegend": False, "zIndex": 1},
+    *contour_series,
 ]
 
-# Download Highcharts JS modules
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-heatmap_url = "https://code.highcharts.com/modules/heatmap.js"
-annotations_url = "https://code.highcharts.com/modules/annotations.js"
+# Download Highcharts + heatmap module (headless Chrome can't load CDN from file://)
+highcharts_url = "https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.4.8/highcharts.js"
+heatmap_url = "https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.4.8/modules/heatmap.js"
 
 with urllib.request.urlopen(highcharts_url, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
-
 with urllib.request.urlopen(heatmap_url, timeout=30) as response:
     heatmap_js = response.read().decode("utf-8")
 
-with urllib.request.urlopen(annotations_url, timeout=30) as response:
-    annotations_js = response.read().decode("utf-8")
-
-# Generate HTML with inline scripts
-html_str = chart.to_js_literal()
+chart_js = chart.to_js_literal()
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
     <script>{heatmap_js}</script>
-    <script>{annotations_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
-    <script>{html_str}</script>
+    <script>{chart_js}</script>
 </body>
 </html>"""
 
-# Save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    standalone_html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/heatmap.js"></script>
-    <script src="https://code.highcharts.com/modules/annotations.js"></script>
-</head>
-<body style="margin:0;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>{html_str}</script>
-</body>
-</html>"""
-    f.write(standalone_html)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
 
-# Write temp HTML and take screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless=new")
+chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--hide-scrollbars")
-chrome_options.add_argument("--force-device-scale-factor=1")
+chrome_options.add_argument("--window-size=4900,2800")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)
-
-# Use CDP for full page screenshot
-screenshot_config = {"captureBeyondViewport": True, "clip": {"x": 0, "y": 0, "width": 4800, "height": 2700, "scale": 1}}
-result = driver.execute_cdp_cmd("Page.captureScreenshot", screenshot_config)
-with open("plot.png", "wb") as f:
-    f.write(base64.b64decode(result["data"]))
+time.sleep(6)
+container = driver.find_element("id", "container")
+container.screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()

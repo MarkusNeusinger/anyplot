@@ -1,228 +1,248 @@
 library: highcharts
+language: python
 specification_id: contour-basic
 created: '2025-12-23T10:03:46Z'
-updated: '2025-12-23T11:19:52Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20457537906
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-24T01:55:27Z'
+generated_by: claude-opus
+workflow_run: 24867714420
+issue: 855
+python_version: 3.14.4
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/contour-basic/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - colorbar
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep:
-  - normalization
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/highcharts/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent visual implementation of contour plot using heatmap + line series overlay
-    approach
-  - White contour lines with black shadow provide superior visibility across all color
-    values
-  - Well-implemented marching squares algorithm for smooth contour extraction
-  - Proper viridis colormap (colorblind-safe) with clearly visible colorbar
-  - Contour level annotations are clean and well-positioned
-  - Dual output (PNG + HTML) leverages Highcharts interactive capabilities
+  - Excellent custom viridis color stops producing a faithful perceptually-uniform
+    elevation colormap
+  - Marching squares contour extraction (inline, no scipy dependency) produces smooth
+    correctly chained polylines
+  - 'Full theme-adaptive chrome: PAGE_BG INK INK_SOFT INK_MUTED ELEVATED_BG all wired
+    to ANYPLOT_THEME throughout'
+  - White contour lines (rgba(255,255,255,0.85)) are visible across the entire viridis
+    range in both themes
+  - Both grid axes fully suppressed for a clean cartographic look; axis labels include
+    units
   weaknesses:
-  - Grid lines configured in code are not visible in the final output
-  - Contour labels cluster in the lower-left peak area, minor readability concern
-  - Code uses helper functions which deviates from KISS structure (though justified
-    for algorithm complexity)
-  image_description: 'The plot displays a contour visualization using a heatmap background
-    with overlaid white contour lines and black shadow outlines for visibility. The
-    colormap is viridis (purple to yellow gradient), showing three distinct regions:
-    a bright yellow high-value peak in the upper-right (~90%), a yellow-green peak
-    in the lower-left (~80%), and a dark purple low-value region in the upper-center
-    (~10%). White contour lines clearly delineate iso-levels from 10% to 90% in 10%
-    increments. Each contour level is labeled with a white rectangular annotation
-    showing the percentage value. The title reads "contour-basic · highcharts · pyplots.ai"
-    at the top. X-axis is labeled "X Position (units)" and Y-axis is labeled "Y Position
-    (units)", both ranging from approximately -3.0 to 3.0. A vertical colorbar on
-    the right shows "Intensity (%)" from 0% to 100%.'
+  - Title prefix Mountain Terrain breaks the required {spec-id} · {library} · anyplot.ai
+    format — move the descriptive name to the subtitle only
+  - Contour lines are not labeled with elevation values; the spec says label key contour
+    levels when practical — adding text at the open ends of a few key contours (e.g.
+    600 m, 800 m, 1000 m) would satisfy this
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, visible as page margin around the heatmap
+      Chrome: Title "Mountain Terrain · contour-basic · highcharts · anyplot.ai" is large dark text (INK #1A1A17) — readable. Subtitle in smaller INK_MUTED. Axis labels "Distance East (km)" / "Distance North (km)" in INK, readable. Tick labels (0,2,4,6,8,10) in INK_SOFT, visible. Colorbar elevation labels in INK_SOFT on off-white margin — readable.
+      Data: Viridis colormap from deep purple (~350 m) to bright yellow (~1200 m). Two distinct mountain peaks visible. White contour lines at 100 m intervals clearly overlay the heatmap.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, clearly dark page surface
+      Chrome: Title, axis labels, and tick labels rendered in light text (#F0EFE8 / #B8B7B0) — all clearly readable against dark background. No dark-on-dark failures. Colorbar labels also light-colored.
+      Data: Viridis colors are identical to light render — same purple-to-yellow range, same white contour lines. Only chrome (background, text) has flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and contour labels are all clearly readable.
-          Font sizes are appropriate for the 4800x2700 resolution.
-      - id: VQ-02
-        name: No Overlap
-        score: 7
-        max: 8
-        passed: true
-        comment: Contour labels are well-placed along the lines. Minor clustering
-          of labels in the lower-left peak (30%-80% labels stack vertically), but
-          still readable.
-      - id: VQ-03
-        name: Element Visibility
         score: 8
         max: 8
         passed: true
-        comment: Heatmap cells are properly sized for the 100x100 grid. Contour lines
-          with shadow effect provide excellent visibility against the varying background
-          colors.
+        comment: All sizes explicitly set (title 68px, axis 40px, ticks 28px, colorbar
+          26px); readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; all elements have clear separation
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: White contour lines clearly visible across full viridis range; heatmap
+          fills canvas well
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is colorblind-safe. White contour lines with black
-          shadow ensure visibility across all color values.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good margins, no clipping. Colorbar is well-positioned on the right.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "X Position (units)", "Y Position
-          (units)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Viridis is CVD-safe and perceptually uniform; white contour lines
+          maximise contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Heatmap fills 80%+ of canvas; colorbar cleanly positioned on right;
+          generous spacing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid lines are barely visible/not shown on the heatmap. The dotted
-          grid configured in code is not apparent in the final image.
+        passed: true
+        comment: Distance East (km) and Distance North (km) — descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis sequential colormap correct for continuous elevation data;
+          backgrounds #FAF8F1/#1A1A17; full theme-adaptive chrome'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: custom viridis stops, white contour overlay, left-aligned
+          title+subtitle, full theme tokens — clearly above defaults'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid suppressed, tick marks removed, borderWidth=0, generous spacing;
+          polished but not perfect on every detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Two peaks with clear visual hierarchy; bright yellow dominant peak
+          draws eye; concentric contours guide gradient reading
     spec_compliance:
-      score: 24
-      max: 25
+      score: 13
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct contour plot type with both filled regions (heatmap) and
-          contour lines as specified.
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X, Y, Z correctly mapped. Grid coordinates properly assigned.
-      - id: SC-03
+        comment: 'Correct: heatmap (filled regions) + contour line overlay — standard
+          basic contour plot approach'
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Has colorbar, contour lines, filled regions, and labeled levels.
-          The specification suggests "Consider using both contour lines and filled
-          regions for clarity" - this is done well. However, no diverging colormap
-          option shown (only viridis which is sequential).
-      - id: SC-04
-        name: Data Range
+        comment: Viridis colormap, colorbar, filled regions+lines all present; contour
+          level text labels missing
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes span the full -3 to 3 range.
-      - id: SC-05
-        name: Legend Accuracy
+        comment: X=easting, Y=northing, Z=elevation correctly mapped; all grid coordinates
+          shown
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Colorbar legend correctly shows "Intensity (%)" with proper scale.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "contour-basic · highcharts · pyplots.ai"'
+        max: 3
+        passed: false
+        comment: Title has extra prefix 'Mountain Terrain · ' — required format is
+          contour-basic · highcharts · anyplot.ai
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple peaks (high values), a valley (low value region),
-          and gradients between them. Demonstrates the key features of contour plots
-          well. Could show a saddle point for completeness.
+        comment: Multiple elevation bands, two distinct peaks, saddle region, full
+          contour structure
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Uses a mathematical Gaussian combination that simulates "temperature
-          distribution" as mentioned in comments. Plausible scientific scenario but
-          generic.
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Grid of 100x100 points provides smooth contours. Value range 0-100%
-          is sensible for normalized intensity.
+        comment: Topographic elevation map of a mountain region — neutral, realistic,
+          scientifically plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 350-1200 m elevation for a 10 km x 10 km region — realistic for mountain
+          terrain
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Code uses functions (marching_squares_contour, connect_segments)
-          rather than flat script structure. While these are necessary for the contour
-          extraction algorithm, it deviates from the KISS principle.
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) is set, ensuring reproducibility.
+        comment: 'Linear: imports -> data -> contour computation -> chart -> HTML
+          -> screenshot; no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set; elevation surface is deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports are actually used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current API.
+        comment: Clean and Pythonic; inline marching squares is complex but necessary
+          — Highcharts has no native contour series
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Highcharts
+          API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of Highcharts heatmap module with annotations API for
-          contour labels. Custom marching squares algorithm to generate contour lines
-          as overlay series. Shadow effect on contour lines for visibility. Interactive
-          HTML output alongside PNG.
+        comment: container='container', HighchartsOptions, colorAxis for continuous
+          scale, inline JS for headless Chrome — idiomatic highcharts_core usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: colorAxis for continuous colormap, heatmap module, null-separated
+          polylines [None,None] for multi-segment contour rendering — Highcharts-specific
+          techniques
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - colorbar
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
