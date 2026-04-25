@@ -13,6 +13,8 @@ from typing import Dict, Tuple
 
 import anthropic
 
+from core.config import settings
+
 
 def get_spec_version(spec_content: str) -> str:
     """Extract spec version from content"""
@@ -145,11 +147,12 @@ Generate the upgraded spec now:"""
     if dry_run:
         return True, spec_content, f"Would upgrade from {current_version} to {target_version} using AI"
 
-    # Call Claude
-    client = anthropic.Anthropic(api_key=api_key)
+    # Call Claude. timeout caps a single request; SDK default max_retries (~2)
+    # is fine here since this script has no outer retry handler.
+    client = anthropic.Anthropic(api_key=api_key, timeout=300.0)
 
     response = client.messages.create(
-        model="claude-sonnet-4-20250514", max_tokens=4000, messages=[{"role": "user", "content": prompt}]
+        model=settings.claude_model, max_tokens=4000, messages=[{"role": "user", "content": prompt}]
     )
 
     upgraded_content = response.content[0].text

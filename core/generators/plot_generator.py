@@ -6,6 +6,7 @@ Generates plot implementations from specifications using Claude with versioned r
 """
 
 import ast
+import logging
 import os
 import sys
 import time
@@ -16,6 +17,9 @@ import anthropic
 from anthropic import APIConnectionError, APIError, RateLimitError
 
 from core.config import settings
+
+
+logger = logging.getLogger(__name__)
 
 
 LibraryType = Literal[
@@ -86,17 +90,21 @@ def retry_with_backoff(
         except (RateLimitError, APIConnectionError) as e:
             last_exception = e
             if attempt < max_retries:
-                print(
-                    f"⚠️  API error: {type(e).__name__}. Retrying in {delay}s... (attempt {attempt + 1}/{max_retries})"
+                logger.warning(
+                    "API error: %s. Retrying in %ss... (attempt %d/%d)",
+                    type(e).__name__,
+                    delay,
+                    attempt + 1,
+                    max_retries,
                 )
                 time.sleep(delay)
                 delay *= backoff_factor
             else:
-                print(f"❌ Max retries ({max_retries}) exceeded")
+                logger.error("Max retries (%d) exceeded", max_retries)
                 raise
         except APIError as e:
             # For other API errors, don't retry
-            print(f"❌ API error: {e}")
+            logger.error("API error: %s", e)
             raise
 
     # Should never reach here, but for type checker
@@ -119,9 +127,9 @@ def load_spec(spec_id: str) -> str:
     version_match = re.search(r"\*\*Spec Version:\*\*\s+(\d+\.\d+\.\d+)", content)
     if version_match:
         spec_version = version_match.group(1)
-        print(f"📋 Spec version: {spec_version}")
+        logger.info("Spec version: %s", spec_version)
     else:
-        print("⚠️  Warning: Spec has no version marker. Consider upgrading with upgrade_specs.py")
+        logger.warning("Spec has no version marker. Consider upgrading with upgrade_specs.py")
 
     return content
 
@@ -181,7 +189,9 @@ def generate_code(
     if not api_key:
         raise ValueError("ANTHROPIC_API_KEY environment variable not set")
 
-    client = anthropic.Anthropic(api_key=api_key)
+    # timeout caps a single request; max_retries=0 disables SDK-side retry so
+    # transient errors flow through retry_with_backoff (the outer handler).
+    client = anthropic.Anthropic(api_key=api_key, timeout=300.0, max_retries=0)
 
     # Determine output path
     # Format: plots/{library}/{plot_type}/{spec_id}/{variant}.py
@@ -201,7 +211,7 @@ def generate_code(
     code = ""  # Will be set in loop
     review_feedback = ""  # Will be set in loop
     for attempt in range(1, max_attempts + 1):
-        print(f"🔄 Attempt {attempt}/{max_attempts} for {spec_id}/{library}/{variant}")
+        logger.info("Attempt %d/%d for %s/%s/%s", attempt, max_attempts, spec_id, library, variant)
 
         # Build prompt
         if attempt == 1:
@@ -272,14 +282,14 @@ Generate the improved implementation:"""
         try:
             code = extract_and_validate_code(response.content[0].text)
         except ValueError as e:
-            print(f"❌ Code extraction/validation failed: {e}")
+            logger.error("Code extraction/validation failed: %s", e)
             if attempt < max_attempts:
-                print(f"🔄 Retrying... ({attempt + 1}/{max_attempts})")
+                logger.info("Retrying... (%d/%d)", attempt + 1, max_attempts)
                 continue
             raise
 
         # Self-review
-        print("🔍 Running self-review...")
+        logger.info("Running self-review...")
         review_prompt = f"""Review this generated plot implementation against the specification and quality criteria.
 
 # Specification
@@ -326,7 +336,7 @@ Format your response as:
 
         # Check if passed
         if "## Verdict\nPASS" in review_feedback or "Verdict: PASS" in review_feedback:
-            print(f"✅ Self-review passed on attempt {attempt}")
+            logger.info("Self-review passed on attempt %d", attempt)
             return {
                 "code": code,
                 "file_path": str(file_path),
@@ -335,11 +345,11 @@ Format your response as:
                 "review_feedback": review_feedback,
             }
         else:
-            print(f"❌ Self-review failed on attempt {attempt}")
+            logger.warning("Self-review failed on attempt %d", attempt)
             if attempt < max_attempts:
-                print("🔄 Regenerating with feedback...")
+                logger.info("Regenerating with feedback...")
             else:
-                print("⚠️ Max attempts reached. Returning best effort code.")
+                logger.warning("Max attempts reached. Returning best effort code.")
 
     # Max attempts reached without passing
     return {
@@ -356,12 +366,14 @@ def save_implementation(result: dict) -> Path:
     file_path = Path(result["file_path"])
     file_path.parent.mkdir(parents=True, exist_ok=True)
     file_path.write_text(result["code"])
-    print(f"💾 Saved to: {file_path}")
+    logger.info("Saved to: %s", file_path)
     return file_path
 
 
 if __name__ == "__main__":
     import argparse
+
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
     parser = argparse.ArgumentParser(description="Generate plot implementation from spec")
     parser.add_argument("spec_id", help="Specification ID (e.g., scatter-basic-001)")
@@ -386,20 +398,18 @@ if __name__ == "__main__":
         # Save code
         file_path = save_implementation(result)
 
-        # Print summary
-        print("\n" + "=" * 60)
-        print("✅ Generation complete!")
-        print(f"   Spec: {args.spec_id}")
-        print(f"   Library: {args.library}")
-        print(f"   Variant: {args.variant}")
-        print(f"   File: {file_path}")
-        print(f"   Attempts: {result['attempt_count']}")
-        print(f"   Review: {'✅ PASSED' if result['passed_review'] else '❌ FAILED'}")
-        print("=" * 60)
+        logger.info(
+            "Generation complete: spec=%s library=%s variant=%s file=%s attempts=%d review=%s",
+            args.spec_id,
+            args.library,
+            args.variant,
+            file_path,
+            result["attempt_count"],
+            "PASSED" if result["passed_review"] else "FAILED",
+        )
 
-        # Exit with appropriate code
         sys.exit(0 if result["passed_review"] else 1)
 
     except Exception as e:
-        print(f"❌ Error: {e}", file=sys.stderr)
+        logger.error("Error: %s", e)
         sys.exit(1)

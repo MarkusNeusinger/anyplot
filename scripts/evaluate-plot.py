@@ -28,6 +28,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from core.config import settings
+
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -468,7 +470,8 @@ def evaluate_with_claude(prompt: str, image_path: Path | None = None) -> dict:
     if not api_key:
         return {"error": "ANTHROPIC_API_KEY not set"}
 
-    client = anthropic.Anthropic(api_key=api_key)
+    # timeout caps a single request; SDK default max_retries is fine here.
+    client = anthropic.Anthropic(api_key=api_key, timeout=300.0)
     content = [{"type": "text", "text": prompt}]
 
     if image_path and image_path.exists():
@@ -483,7 +486,7 @@ def evaluate_with_claude(prompt: str, image_path: Path | None = None) -> dict:
 
     try:
         response = client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model=settings.claude_model,
             max_tokens=4096,
             messages=[{"role": "user", "content": content}],
         )
