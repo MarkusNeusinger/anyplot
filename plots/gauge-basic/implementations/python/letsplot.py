@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 gauge-basic: Basic Gauge Chart
 Library: letsplot 4.9.0 | Python 3.14.4
-Quality: 81/100 | Updated: 2026-04-25
+Quality: 86/100 | Updated: 2026-04-25
 """
 
 import math

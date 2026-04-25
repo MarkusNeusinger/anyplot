@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: gauge-basic
 created: '2025-12-23T13:09:15Z'
-updated: '2026-04-25T13:49:43Z'
+updated: '2026-04-25T14:03:55Z'
 generated_by: claude-opus
 workflow_run: 24931583580
 issue: 857
@@ -12,117 +12,132 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/letsplot/plot-dark.html
-quality_score: 81
+quality_score: 86
 review:
   strengths:
-  - 'All critical failures from Attempts 1-2 fully resolved: ANYPLOT_THEME env var,
-    theme-adaptive INK/INK_SOFT/PAGE_BG tokens, correct output filenames, correct
-    anyplot.ai branding'
-  - 'Theme adaptation thorough: needle, pivot, text, and backgrounds all adapt — dark
-    render passes with no dark-on-dark failures'
-  - Clean frameless gauge aesthetic with all unnecessary elements removed via element_blank()
-  - Deterministic code with clean KISS structure and modern Python patterns (strict=True
-    in zip)
-  - Correct min/max edge labels and accurate needle positioning at value=72
+  - 'Perfect spec compliance: all gauge features (semi-circular arc, three color zones,
+    needle, pivot circle, prominent value label, min/max markers, zone labels) are
+    implemented correctly'
+  - 'Excellent data quality: realistic sales performance context at 72% with meaningful
+    thresholds at 30/70'
+  - 'Perfect code quality: clean KISS structure with no functions/classes, deterministic
+    data, all imports used'
+  - 'Correct theme-adaptive chrome: background (#FAF8F1 light / #1A1A17 dark), INK/INK_SOFT
+    tokens applied to needle, circle, and all text elements'
+  - 'Idiomatic lets_plot usage: multiple geom layers (polygon, segment, text) composed
+    with grammar-of-graphics pattern'
+  - HTML output generated alongside PNG for both themes
   weaknesses:
-  - Zone labels (Low/Medium/High) not displayed — legend_position=none hides zone
-    identification; add geom_text labels inside each arc zone at midpoint angles colored
-    with INK_SOFT
-  - Value label shows raw 72 without unit or percentage sign; a metric subtitle would
-    add context
-  - Some unused canvas space above the gauge arc top and below the value label — adjust
-    ylim or ggsize to tighten composition
+  - 'Design excellence limited (DE-01=5/8): the semantic red/yellow/green color scheme
+    is spec-required but the overall aesthetic is still workmanlike; consider adding
+    a subtle gradient arc or thicker ring, a drop shadow on the value label, or more
+    refined typography hierarchy to push toward publication quality'
+  - 'Library mastery is moderate (LM-01=3/5, LM-02=2/5): the polygon coordinate math
+    approach is correct but not uniquely leveraging lets_plot features; could use
+    lets_plot HTML interactivity (tooltip on hover showing zone details) or distinctive
+    animation capabilities'
+  - 'Color accessibility (VQ-04=1/2): red (#DC2626) and green (#22C55E) zones are
+    not CVD-safe for deuteranopes; zone text labels mitigate this but consider adding
+    a pattern or icon cue to zones to eliminate red-green reliance'
+  - Zone labels at size=13 and supporting text at size=14 are slightly below the 16pt
+    guideline (though readable at 3x scale)
+  - The element_text face=bold parameter for plot_title may not render bold in all
+    lets_plot versions (fontface= is the idiomatic parameter in geom_text)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white
-      Chrome: Title "gauge-basic · letsplot · anyplot.ai" in bold dark text at top-left — clearly readable. Edge labels "0" and "100" in INK_SOFT color at gauge base — readable. Bold "72" value label below center — clearly readable.
-      Data: Three arc zones — red (Low 0-30%), yellow/amber (Medium 30-70%), green (High 70-100%). Dark needle (INK token) points accurately into the green zone at 72%. Dark circular pivot at center. No zone text labels visible (legend hidden).
-      Legibility verdict: PASS — all text clearly readable against warm off-white background; INK/INK_SOFT tokens correctly applied
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "gauge-basic · letsplot · anyplot.ai" at top-left in dark ink (#1A1A17), clearly readable. No axis labels or tick labels (appropriate for gauge). Min/max values "0" and "100" at gauge edges in INK_SOFT gray. "Sales Performance Score" subtitle in muted gray. All chrome readable against light background.
+      Data: Semi-circular donut gauge with three color zones — red arc (Low, 0–30%), gold/yellow arc (Medium, 30–70%), green arc (High, 70–100%). Thin PAGE_BG-colored polygon border between zones. Black needle pointing to approximately 72% (just past the 70% High threshold). Black pivot circle at center base. Zone labels "Low", "Medium", "High" in bold INK_SOFT on the respective arcs. Large bold "72%" value centered below gauge.
+      Legibility verdict: PASS — all text readable, no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title "gauge-basic · letsplot · anyplot.ai" in white/light text at top-left — clearly readable. Edge labels "0" and "100" in INK_SOFT (#B8B7B0) — readable. Bold "72" in light text — clearly readable. No dark-on-dark failures.
-      Data: Zone colors (red/yellow/green) are IDENTICAL to light render — correct. Needle and pivot circle adapt to INK (#F0EFE8), appearing white/light — clearly visible against dark background.
-      Legibility verdict: PASS — all text readable, no dark-on-dark issues; theme adaptation fully implemented via ANYPLOT_THEME env var and token system
+      Background: Near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title in near-white (#F0EFE8 = INK for dark theme) — readable against dark background. Min/max "0" and "100" in light INK_SOFT (#B8B7B0). Subtitle in muted light gray. No dark-on-dark failures detected. Needle and pivot circle render in white/near-white (INK token). "72%" value in bold white.
+      Data: Same three zones (red/yellow/green) — data colors are identical to light render as required. Zone labels in light muted color on arcs. Visual hierarchy maintained: gauge → white needle → white "72%" → light gray subtitle.
+      Legibility verdict: PASS — all text readable, chrome fully theme-adaptive, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set (title 24pt, value 28pt, min/max 14pt);
-          readable in both themes via INK/INK_SOFT tokens
+        comment: All font sizes explicitly set and readable in both renders; zone
+          labels at 13pt and subtitle at 14pt are below 16pt guideline though readable
+          at 3x scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render
+        comment: No text or element overlaps; zone labels, value, subtitle, and min/max
+          are in distinct well-spaced positions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Gauge zones, needle, pivot circle, and value label all clearly visible
-          in both renders
+        comment: Gauge arcs, needle, pivot circle all clearly visible in both themes;
+          needle adapts to INK token (dark/white)
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: false
-        comment: Red/green zone pairing has CVD concern for deuteranopia/protanopia;
-          needle position partially mitigates but not fully
+        comment: Red (#DC2626) and green (#22C55E) zones are not CVD-safe for deuteranopes;
+          zone text labels (Low/Medium/High) provide text-based alternative encoding
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions for semi-circular gauge; some unused vertical space
-          above arc and below value label
+        comment: Gauge fills 50-65% of canvas; title at top, gauge center, value/subtitle
+          below; balanced whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; min/max labels at gauge edges
+        comment: Title format 'gauge-basic · letsplot · anyplot.ai' correct; no axis
+          labels appropriate for gauge; metric subtitle provides context
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Backgrounds and chrome are theme-correct in both renders; zone colors
-          are spec-mandated traffic-light red/yellow/green rather than Okabe-Ito
+        passed: true
+        comment: 'Background #FAF8F1 (light) / #1A1A17 (dark) correct; chrome fully
+          theme-adaptive using INK/INK_SOFT tokens; zone colors red/yellow/green are
+          spec-required semantic convention'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Clean professional gauge with good theme adaptation; well-configured
-          but not publication-exceptional; no zone labels or metric subtitle
+        comment: 'Above defaults: custom donut gauge arc, semantic zone colors, clean
+          needle+pivot design; not at FiveThirtyEight publication level'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: All axes, ticks, grid, and spines removed via element_blank(); legend
-          hidden; clean frameless gauge on themed surface
+        comment: All axes/ticks/grid/legend removed; PAGE_BG polygon borders between
+          zones; clean background; generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Needle + bold 72 creates clear focal point; missing zone labels and
-          metric context weaken the narrative
+        comment: 'Clear story: 72% just past High threshold; visual hierarchy gauge→needle→value→subtitle;
+          zone labels guide interpretation immediately'
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -130,52 +145,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct semi-circular gauge with needle indicator and color zones
+        comment: Correct semi-circular gauge/speedometer chart with all subtypes present
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Needle, three color zones, thresholds at 30/70, value label, min/max
-          labels all present; zone identification labels not displayed
+        passed: true
+        comment: 'All features present: single value (72), min/max range (0-100),
+          thresholds (30/70), three color zones, needle indicator, prominent value
+          label'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: value=72, min=0, max=100, thresholds at 30 and 70 correctly positioned
+        comment: Value 72 correctly positioned at ~72% of gauge arc; needle mathematically
+          correct
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct with anyplot.ai branding; zone labels absent
+        passed: true
+        comment: Title 'gauge-basic · letsplot · anyplot.ai' correct format; no legend
+          appropriate for single gauge
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows all core gauge elements (zones, needle, pivot, value, min/max);
-          zone labels absent mean viewer must infer zone identity from color convention
-          alone
+        comment: 'Shows all gauge aspects: colored zones, needle, pivot, value display,
+          zone labels, min/max markers'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sales performance gauge at 72/100 is a neutral, comprehensible, real-world
-          business KPI
+        comment: Sales Performance Score at 72% is a real, neutral business KPI scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100 range with value 72 and thresholds at 30/70 are standard and
-          realistic
+        comment: 0-100 scale for sales performance score is perfect; 30/70 thresholds
+          create meaningful Low/Medium/High zones
     code_quality:
       score: 10
       max: 10
@@ -185,58 +201,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'No functions or classes; clean linear flow: imports, tokens, data,
-          plot, save'
+        comment: Imports → Data → Plot → Save; no functions or classes; polygon math
+          is necessarily complex for custom gauge
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data with no random elements; no seed needed
+        comment: All data hardcoded (value=72, min=0, max=100, thresholds=[30,70]);
+          fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported lets_plot symbols, math, os, and pandas are used
+        comment: 'All imports used: math, os, pandas, and all lets_plot components'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Trigonometric polygon construction appropriate for gauge; strict=True
-          in zip shows modern Python awareness
+        comment: Clean Pythonic code; polygon arc computation is appropriately complex
+          for this visualization type
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with correct scale=3
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; correct filenames;
+          current API
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Correct grammar-of-graphics layering; scale_fill_manual, theme()
-          with element_blank(), ggsize(), ggsave(scale=3) all idiomatic; theme-adaptive
-          token pattern matches lets-plot guide
+        comment: 'Correct ggplot grammar: geom_polygon + geom_segment + geom_text
+          + scale_fill_manual + theme; polygon coordinate math is the right approach
+          for custom shapes in lets_plot'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Creative use of geom_polygon layers for gauge arc construction; core
-          approach is library-agnostic trigonometry that would work similarly in plotnine
+        comment: Uses scale_fill_manual and element_blank theme customization; HTML
+          export generated; but core approach could be replicated in plotnine with
+          minimal changes
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - annotations
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
