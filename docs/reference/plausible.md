@@ -431,7 +431,7 @@ User lands on anyplot.ai
 | `tag_click` | `param`, `value`, `source` | SpecTabs.tsx |
 | `plot_rotate` | `spec` | SpecsListPage.tsx |
 | `open_interactive` | `spec`, `library` | SpecOverview.tsx, SpecDetailView.tsx |
-| `suggest_spec` | - | CatalogPage.tsx |
+| `suggest_spec` | - | SpecsListPage.tsx (LandingPage mirror attributed via `nav_click` with `source: suggest_spec_link`) |
 | `report_issue` | `spec`, `library`? | SpecPage.tsx |
 | `external_link` | `destination`, `spec`?, `library`? | Footer.tsx, LegalPage.tsx |
 | `internal_link` | `destination`, `spec`, `library` | Footer.tsx |
