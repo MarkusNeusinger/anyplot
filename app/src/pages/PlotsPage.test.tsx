@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '../test-utils';
 
 vi.mock('../hooks', () => ({
@@ -67,5 +67,29 @@ describe('PlotsPage', () => {
   it('renders Helmet for SEO', () => {
     render(<PlotsPage />);
     expect(screen.getByTestId('helmet')).toBeInTheDocument();
+  });
+
+  describe('scrollRestoration', () => {
+    const original = history.scrollRestoration;
+
+    afterEach(() => {
+      history.scrollRestoration = original;
+    });
+
+    it("sets scrollRestoration to 'manual' on mount and restores the previous value on unmount", () => {
+      history.scrollRestoration = 'auto';
+      const { unmount } = render(<PlotsPage />);
+      expect(history.scrollRestoration).toBe('manual');
+      unmount();
+      expect(history.scrollRestoration).toBe('auto');
+    });
+
+    it('restores a non-default previous value on unmount instead of forcing auto', () => {
+      history.scrollRestoration = 'manual';
+      const { unmount } = render(<PlotsPage />);
+      expect(history.scrollRestoration).toBe('manual');
+      unmount();
+      expect(history.scrollRestoration).toBe('manual');
+    });
   });
 });

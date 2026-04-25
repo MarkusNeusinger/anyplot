@@ -38,12 +38,25 @@
   --max-wide: 1600px;     /* (legacy)     — kept for components still referencing it */
   --max-catalog: 2200px;  /* catalog tier — plot grids, library pages, spec pages */
 
-  /* Code blocks — warm near-black, matches --ink so code reads as
-     "inverted body text" against the cream page (editorial feel,
-     softer than pure black). Dark mode goes a step deeper for an
-     inset look against --bg-page. */
-  --code-bg:   #1A1A17;
-  --code-text: #E8E8E0;
+  /* Code blocks — paper aesthetic in light mode (cream surface, ink text)
+     so the syntax-highlighter view sits flush with the editorial palette.
+     Dark mode keeps the warm near-black for an inset look against --bg-page. */
+  --code-bg:     #FFFDF6;
+  --code-text:   #1A1A17;
+  --code-border: rgba(26, 26, 23, 0.10);
+
+  /* Syntax tokens — tuned for cream paper background.
+     Brand green is reserved for comments (italic) so it reads as
+     a deliberate accent against neutral ink body text. */
+  --code-comment:     #007A59;  /* darker brand green, italic — passes AA on cream */
+  --code-keyword:     #0072B2;  /* blue */
+  --code-string:      #D55E00;  /* vermillion */
+  --code-function:    #1A1A17;  /* ink (bold) */
+  --code-number:      #B85400;  /* darker vermillion for legibility */
+  --code-variable:    #4A4A44;  /* ink-soft */
+  --code-constant:    #CC79A7;  /* purple */
+  --code-punctuation: #6B6A63;  /* ink-muted */
+  --code-operator:    #1A1A17;  /* ink */
 }
 
 /* MonoLisa script variant (italic ss02) — test */
@@ -80,5 +93,20 @@ html { font-feature-settings: "ss02"; }
   --ink-soft:    #B8B7B0;
   --ink-muted:   #A8A79F;
   --rule:        rgba(240, 239, 232, 0.10);
-  --code-bg:     #0E0E0C;
+
+  /* Code: warm near-black surface, cream text */
+  --code-bg:     #1A1A17;
+  --code-text:   #E8E8E0;
+  --code-border: rgba(240, 239, 232, 0.08);
+
+  /* Syntax tokens — tuned for warm near-black background */
+  --code-comment:     #009E73;  /* brand green, italic */
+  --code-keyword:     #56B4E9;  /* sky */
+  --code-string:      #E69F00;  /* orange */
+  --code-function:    #F0E442;  /* yellow */
+  --code-number:      #F0E442;  /* yellow */
+  --code-variable:    #CC79A7;  /* purple */
+  --code-constant:    #D55E00;  /* vermillion */
+  --code-punctuation: #8A8A82;
+  --code-operator:    #E8E8E0;
 }

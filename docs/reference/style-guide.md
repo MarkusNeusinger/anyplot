@@ -429,7 +429,7 @@ Verified with [WebAIM Contrast Checker](https://webaim.org/resources/contrastche
 3. Hero terminal cursor (the blinking `▌` at the end of `make it yours._`)
 4. Active navigation item (green dot prefix + underline on hover)
 5. Code-style action button hover (`.copy()` → green on hover) and CTA hover (filled background swap)
-6. Code block syntax highlighting (strings, specific tokens)
+6. Code block syntax highlighting (comments — italic, signals editorial commentary inside code)
 7. Palette strip and any deliberate palette display
 8. Small status indicators (pulsing dot in plot-card header)
 
