@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -47,14 +47,11 @@ export function RelatedSpecs({ specId, mode = 'spec', library, onHoverTags }: Re
   const [related, setRelated] = useState<RelatedSpec[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
-  const prevSpecIdRef = useRef(specId);
   const { isDark } = useTheme();
 
-  // Reset expanded when specId changes (no effect needed)
-  if (prevSpecIdRef.current !== specId) {
-    prevSpecIdRef.current = specId;
+  useEffect(() => {
     setExpanded(false);
-  }
+  }, [specId]);
 
   useEffect(() => {
     let cancelled = false;
