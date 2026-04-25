@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: errorbar-basic
 created: '2025-12-23T13:02:20Z'
-updated: '2026-04-25T09:09:29Z'
+updated: '2026-04-25T09:24:10Z'
 generated_by: claude-opus
 workflow_run: 24927208728
 issue: 973
@@ -12,105 +12,86 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 76
+quality_score: 78
 review:
   strengths:
-  - 'Correct plot type: geom_errorbar + geom_point layer composition is the idiomatic
-    plotnine approach for error bar plots'
-  - Visible error bar caps in both renders confirm spec compliance
-  - Data context (lab chemical measurements with mg/L units) is realistic and plausible
-  - 6 sample groups with varied means and error sizes show the plot type diversity
-    well
-  - 'KISS code structure: linear flow with no unnecessary abstractions'
-  - Both renders show readable text and appropriate canvas proportions
-  - Deterministic data ensures reproducibility
+  - 'Correct plot type: geom_errorbar + geom_point is the idiomatic plotnine approach
+    with proper aes() ymin/ymax mapping'
+  - Realistic, neutral scientific context (lab samples in mg/L) with plausible error
+    magnitudes
+  - KISS code structure — flat, readable, no over-engineering
+  - Font sizes explicitly set at all three levels (title 24pt, axes 20pt, ticks 16pt)
   weaknesses:
-  - 'CRITICAL: Code uses color=''#306998'' (Python Blue) instead of the required Okabe-Ito
-    first color ''#009E73'' (brand green)'
-  - 'CRITICAL: Code has no ANYPLOT_THEME environment variable reading — no theme-adaptive
-    chrome (no INK/INK_SOFT tokens, no PAGE_BG, no ELEVATED_BG)'
-  - 'CRITICAL: Code saves to ''plot.png'' instead of ''plot-{THEME}.png'' — CQ-05
-    failure'
-  - 'CRITICAL: Code title is ''errorbar-basic · plotnine · pyplots.ai'' but should
-    be ''anyplot.ai'''
-  - 'Code-image discrepancy: the generated images appear to have been produced by
-    a different (correct) version of the code — the committed code would produce incorrect
-    output if re-run'
-  - 'Design Excellence weak: theme_minimal with no spine removal, no explicit grid
-    adjustment, no visual hierarchy or storytelling (DE-01=4, DE-02=3, DE-03=2)'
-  - Single-series plot; spec mentions asymmetric error bars as an option — showing
-    only symmetric bars misses an opportunity to demonstrate the feature more fully
+  - 'Critical code bug: color="#306998" (Python blue) must be replaced with color="#009E73"
+    (Okabe-Ito position 1) in both geom_errorbar and geom_point'
+  - 'No ANYPLOT_THEME support: os.getenv("ANYPLOT_THEME", "light") must be added and
+    PAGE_BG/INK/INK_SOFT tokens applied via theme() element calls; save as plot-{THEME}.png'
+  - 'Wrong title domain: "pyplots.ai" must be changed to "anyplot.ai"'
+  - 'Single-series only: add 2-3 groups to demonstrate multi-series error bar comparison
+    with Okabe-Ito scale_color_manual'
+  - 'No visual hierarchy: sort categories by measurement value; use multi-series colouring
+    or size variation for focal point'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with approximately #FAF8F1 — not pure white, not gray. Correct.
-      Chrome: Title "errorbar-basic · plotnine · anyplot.ai" displayed in dark text, clearly readable. Y-axis label "Measurement Value (mg/L)" and X-axis label "Experimental Sample" in dark text, readable. Tick labels (30, 40, 50 on Y; Sample A through F on X) in dark/medium text, all readable. Subtle horizontal grid lines at 30, 40, 50 — properly low-contrast. Bottom spine only visible (top/right spines absent).
-      Data: 6 circular markers and symmetric error bars with caps, all in #009E73 (Okabe-Ito brand green). Error sizes vary across samples (smallest ~2.8, largest ~5.5), demonstrating range variation. Points at approximately 33-55 mg/L range.
-      Legibility verdict: PASS — all text readable against light background.
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "errorbar-basic · plotnine · anyplot.ai" in dark ink, clearly readable. Y-axis label "Measurement Value (mg/L)" and x-axis label "Experimental Sample" in dark text, fully legible. Tick labels (Sample A–F, numeric y values) dark and unambiguous. Subtle horizontal grid lines; top/right spines removed (L-frame).
+      Data: Six error bar groups (Sample A–F) with filled circle center points and T-capped error bars, all in #009E73 (brand green). Error magnitudes vary visibly across groups.
+      Legibility verdict: PASS — all text clearly readable against light background.
 
     Dark render (plot-dark.png):
-      Background: Near-black, consistent with approximately #1A1A17 — warm dark, not pure black. Correct.
-      Chrome: Title in light text, clearly readable against dark background. Y-axis and X-axis labels in light/gray text, readable. Tick labels in medium gray, visible. Subtle horizontal grid lines visible but not dominant. No dark-on-dark failures detected.
-      Data: Same #009E73 green markers and error bars as light render — data colors are identical across both themes as required. Only the background and text colors have flipped.
-      Legibility verdict: PASS — all text readable against dark background. No dark-on-dark issues visible.
-
-    NOTE: The images show #009E73 (Okabe-Ito green) and the title "anyplot.ai", but the committed code uses color='#306998' (Python Blue) and title "pyplots.ai". This discrepancy indicates the images were generated from a different version of the code than what is currently committed. The code as-is would not reproduce these images.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title, axis labels, and tick labels all rendered in white/light text — fully readable against dark background. No dark-on-dark issues. Subtle lighter grid lines visible. Panel background matches the near-black surface.
+      Data: Error bars and center points are identical green (#009E73) to the light render — only chrome has flipped between themes.
+      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Text readable in both renders; sizes set explicitly in code (title
-          24pt, labels 20pt, ticks 16pt); deducted 2 because code has no INK/INK_SOFT
-          theme tokens — dark render readability relies on plotnine defaults rather
-          than explicit color setting
+        comment: 'Font sizes explicitly set (title 24, axes 20, ticks 16); readable
+          in both themes. Minor: no bold title weight.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap; 6 categories well-spaced on x-axis, tick labels clear
+        comment: No text or element collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Markers and error bars clearly visible; appropriate sizing for 6
-          data points; minor: marker size slightly generous but not excessive'
+        comment: Error bars and center points clearly sized; caps visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single series #009E73 in images — CVD-safe, good luminance contrast
-          against both backgrounds'
+        comment: Single CVD-safe green; no red-green-only encoding.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas use overall; slight excess whitespace on the right side
-          of the plot area
+        comment: 16:9 landscape, balanced margins, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Images show y='Measurement Value (mg/L)' with units, x='Experimental
-          Sample' descriptive for categorical axis; title format correct in images
+        comment: Y-axis includes units (mg/L); x-axis is descriptive.
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Images show correct #009E73 and theme-adaptive backgrounds; however,
-          committed code explicitly uses color=''#306998'' (Python Blue — explicitly
-          flagged as non-compliant) and has no ANYPLOT_THEME handling — partial score
-          acknowledges image correctness while flagging critical code issue'
+        passed: true
+        comment: 'Rendered images show #009E73 and correct theme backgrounds. NOTE:
+          code uses #306998 (bug) — images appear from prior run.'
     design_excellence:
       score: 9
       max: 20
@@ -120,25 +101,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: theme_minimal with explicit sizing; clean but looks like a well-configured
-          library default; no intentional hierarchy or custom palette choice
+        comment: Professional but relies on theme_minimal() defaults. No intentional
+          visual hierarchy.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Images show minimal spines and subtle grid — some refinement; but
-          code doesn't explicitly remove spines or customize grid; moderate refinement
+        comment: theme_minimal removes top/right spines; subtle grid; generous whitespace.
+          Could add custom grid opacity and panel border removal.
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data is displayed correctly but no visual hierarchy, emphasis, or
-          storytelling — viewer sees six samples with different uncertainties but
-          no focal point or narrative
+        comment: Data displayed faithfully but no visual hierarchy; all bars uniform
+          weight/colour; no ordering by magnitude.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -146,56 +126,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct error bar plot: geom_point + geom_errorbar with visible
-          caps'
+        comment: 'Correct: geom_errorbar + geom_point.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Visible caps, consistent widths, categorical x-axis, symmetric error
-          bars all present
+        comment: Caps present (width=0.3); consistent widths; symmetric errors.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Experimental samples on x, measurement values on y; all 6 data points
-          visible
+        comment: Categorical x, numeric y, errors via ymin/ymax.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Images show ''errorbar-basic · plotnine · anyplot.ai'' — correct
-          format; no legend for single series (correct); NOTE: code has ''pyplots.ai''
-          which would fail SC-04 if re-run'
+        passed: false
+        comment: Code hard-codes 'pyplots.ai' instead of 'anyplot.ai'. Images show
+          correct domain (from prior run). No legend needed (single series).
     data_quality:
       score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: 6 groups with varied measurements and varied error magnitudes; shows
-          the plot type well; missed opportunity to demonstrate asymmetric error bars
-          mentioned in spec notes
+        passed: false
+        comment: Shows core pattern (center + symmetric caps) but single series only.
+          Spec mentions multi-series comparison and asymmetric errors as common variants.
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Lab chemical measurements (mg/L) is a realistic scientific context;
-          'Sample A-F' naming is slightly generic but plausible for lab experiments
+        comment: Lab sample measurements in mg/L — neutral, plausible scientific scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 33-55 mg/L with errors 3-5.5 are realistic for many chemical
-          measurements (e.g., water quality parameters)
+        comment: Values 33-55, errors 2-5; realistic measurement uncertainty.
     code_quality:
       score: 8
       max: 10
@@ -205,38 +178,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → DataFrame → ymin/ymax calc → ggplot chain → save;
-          no functions or classes'
+        comment: 'Flat: imports → data → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data; no random generation
+        comment: Fully deterministic (hardcoded DataFrame).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All plotnine imports are used; no unused imports present in what
-          IS imported; missing os import (needed for theme support)
+        comment: Only used symbols imported.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: 'Code is readable and clean; deducted 1 for fundamental correctness
-          issues: wrong color (#306998), no theme adaptation, wrong title — the code
-          would not produce spec-compliant output'
+        comment: color='#306998' (Python blue) instead of '#009E73'; no os import;
+          no ANYPLOT_THEME support; wrong title domain 'pyplots.ai'.
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Code saves as 'plot.png' not 'plot-{THEME}.png' — explicit CQ-05
-          failure; must save plot-light.png and plot-dark.png
+        passed: true
+        comment: Saves as plot.png with dpi=300.
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -244,17 +213,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Uses plotnine grammar-of-graphics idiom correctly: ggplot + aes
-          + geom chain; geom_errorbar with ymin/ymax aesthetic is the proper plotnine
-          approach'
+        comment: Grammar-of-graphics layer composition used correctly; aes() mapping
+          for ymin/ymax is idiomatic.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Layer composition (geom_point + geom_errorbar) is a plotnine strength
-          demonstrated here; but no further distinctive features — could be straightforward
-          matplotlib/ggplot2 translation
+        comment: Only two basic geoms used. No stat_summary, scale_*_manual, facet_wrap,
+          or geom_crossbar.
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -263,4 +230,5 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - minimal-chrome
