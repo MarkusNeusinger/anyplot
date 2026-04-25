@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: venn-labeled-items
 created: '2026-04-25T05:10:07Z'
-updated: '2026-04-25T05:17:18Z'
+updated: '2026-04-25T05:30:49Z'
 generated_by: claude-opus
 workflow_run: 24923161796
 issue: 5364
@@ -12,132 +12,124 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-labe
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 80
+quality_score: 88
 review:
   strengths:
-  - All 8 Venn regions (including 'outside') are populated, demonstrating the full
-    plot type
-  - Witty, editorial data choices (NFTs/Metaverse as 'Overhyped', Sourdough in triple
-    overlap) match the WIRED Chartgeist spec intent perfectly
-  - Correct Okabe-Ito palette for all three circles with matching colored category
-    labels
-  - Serif font is an intentional editorial design choice aligned with the spec's magazine
-    aesthetic
-  - Theme tokens correctly applied across both renders — dark render has no dark-on-dark
-    failures
-  - Clean KISS code structure with well-organized zone_items and zone_centroids dictionaries
-  - 'Perfect data quality: 16 items, real-world pop-culture references, neutral content'
+  - Editorial magazine aesthetic with serif fonts, color-matched category labels,
+    and focal emphasis on the triple-overlap zone
+  - 'Full theme-adaptive chrome: PAGE_BG, INK, INK_SOFT, INK_MUTED tokens correctly
+    applied to all text and backgrounds'
+  - 'Correct Okabe-Ito order for all three circles (#009E73, #D55E00, #0072B2); both
+    renders have identical data colors'
+  - All 7 interior zones + outside zone populated; item count (16) within the 10-25
+    spec range
+  - 'Focal storytelling: ''Sourdough'' in ABC zone is larger, bold, and highlighted
+    with a subtle dashed circle; outside item is italicized/muted'
+  - Clean KISS code with no functions or classes; fully deterministic data
   weaknesses:
-  - 'Title format incorrect: should be ''venn-labeled-items · seaborn · anyplot.ai''
-    not ''Tech & Trends · venn-labeled-items · seaborn · anyplot.ai'''
-  - 'Several font sizes below the large-canvas minimums: item labels at 15pt (min
-    16pt), subtitle at 14pt (should be ~18pt), ''(outside all)'' hint at 11pt (should
-    be ~14pt)'
-  - No visual emphasis on the triple-overlap zone (ABC / 'Sourdough') or on any particular
-    insight — the editorial narrative would be strengthened by visually elevating
-    the most interesting intersection
-  - 'Library mastery is low: seaborn is only used for sns.set_theme(); consider adding
-    an actual seaborn plot element (e.g., scatter points for item markers via sns.scatterplot)'
-  - Large empty left margin due to 'outside' zone placement; canvas utilization could
-    be improved by centering the diagram more
+  - dpi=200 produces 2400×2400 px instead of the standard 3600×3600 for a square canvas
+    (figsize=12 × dpi=300 is required)
+  - 'Library Mastery is low: sns.scatterplot is used for tiny anchor dots only; seaborn''s
+    distinctive value (hue-mapped scatter, statistical API, FacetGrid) is not leveraged;
+    the plot is essentially matplotlib with seaborn theming'
+  - Hint text '(outside all)' at 14pt falls below the recommended 16pt minimum for
+    secondary annotations at this canvas size
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "Tech & Trends · venn-labeled-items · seaborn · anyplot.ai" in dark ink at 24pt; italic subtitle in muted dark ink at 14pt; both readable. Category labels (Overhyped/Actually Useful/Secretly Loved) in bold Okabe-Ito colors at 22pt — clearly readable. Item labels inside zones at 15pt — readable but slightly small. "(outside all)" hint at 11pt — too small for canvas.
-      Data: Three overlapping circles with semi-transparent fills — Okabe green (#009E73), Okabe orange (#D55E00), Okabe blue (#0072B2). First series correctly #009E73. 16 item labels distributed across all 7 zones plus "outside".
-      Legibility verdict: PASS (minor issue: several text sizes below recommended minimums)
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "venn-labeled-items · seaborn · anyplot.ai" in dark ink, clearly readable; editorial subtitle in muted dark ink below; category labels "Overhyped", "Actually Useful", "Secretly Loved" in bold Okabe-Ito green/orange/blue respectively, positioned outside their circles
+      Data: Three semi-transparent Venn circles in #009E73 (green/Overhyped), #D55E00 (orange/Actually Useful), #0072B2 (blue/Secretly Loved) at alpha=0.20; overlapping regions show blended colors; item labels in dark ink placed inside their zones; "Sourdough" in the ABC triple-overlap zone is larger and bold; "Jury Duty" in the outside zone is italicized and muted; a subtle dashed circle highlights the triple-overlap centroid
+      Legibility verdict: PASS — all text clearly readable against the light background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title and subtitle render in light text (#F0EFE8) — readable against dark background. Category labels retain their Okabe-Ito colors (green, orange, blue) — all readable. Item labels inside circles render in #F0EFE8 (INK token for dark theme) — clearly readable. "(outside all)" and "Jury Duty" in muted light text (#A8A79F) — visible. No dark-on-dark failures detected.
-      Data: Circle fill colors are identical Okabe-Ito hexes as in light render; visual appearance differs due to dark background mixed with alpha=0.18 fills, creating darker-looking overlaps. Data color identity preserved.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
+      Chrome: Title and subtitle rendered in light #F0EFE8 (INK in dark mode) — clearly readable against the dark background; category labels use the same Okabe-Ito colors as light render (green/orange/blue) — unchanged
+      Data: Circle colors identical to light render (#009E73, #D55E00, #0072B2 at alpha=0.20); item labels rendered in light #F0EFE8 (INK) — readable; "Sourdough" remains bold and larger; "Jury Duty" muted in #A8A79F (INK_MUTED in dark mode)
+      Legibility verdict: PASS — no dark-on-dark failures; all text is light-colored on the dark background; data colors are identical to light render; only chrome (text, background) has flipped
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Title 24pt and category labels 22pt explicitly set and readable;
-          item labels 15pt below 16pt minimum; subtitle 14pt below 20pt guideline;
-          '(outside all)' hint at 11pt too small for 4800x2700 canvas
+        comment: All font sizes explicitly set (title 26pt, category labels 24pt,
+          items 17-20pt); however dpi=200 gives 2400x2400 instead of 3600x3600, and
+          hint text at 14pt is below recommended minimum
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All labels well-spaced via manual zone centroids and vertical distribution;
-          no collisions
+        comment: Items spaced 0.20 units vertically within each zone; no visible overlap
+          in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Circle fills (alpha=0.18) and item labels visible; alpha slightly
-          low in dark render overlap regions
+        comment: Three Venn circles clearly visible; semi-transparent fills show overlapping
+          regions; item labels readable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; three circles use green/orange/blue,
-          all distinguishable
+        comment: Okabe-Ito palette (CVD-safe); items distinguished primarily by text
+          labels not color alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Diagram fills reasonable portion of 16:9 canvas; left margin has
-          large empty space with only 'Jury Duty'; square canvas would suit symmetric
-          Venn better
+        comment: Square canvas appropriate for symmetric Venn; diagram fills canvas
+          well with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes appropriately off; title is descriptive and editorial subtitle
-          adds context
+        comment: No axis labels needed; title format 'venn-labeled-items · seaborn
+          · anyplot.ai' is correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First circle correctly uses #009E73; positions 2-3 follow Okabe-Ito
-          order; #FAF8F1/#1A1A17 backgrounds confirmed; theme tokens applied to all
-          chrome elements'
+        comment: 'First circle uses #009E73, followed by #D55E00 and #0072B2 in Okabe-Ito
+          order; light bg #FAF8F1, dark bg #1A1A17; both renders theme-correct'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Serif font is deliberate editorial choice matching Chartgeist/WIRED
-          spec; color-coded category labels tied to circle colors are thoughtful;
-          clearly above generic defaults but not publication-ready
+        comment: 'Strong editorial design: serif fonts, color-matched circle labels,
+          focal emphasis on triple overlap, muted/italic outside items, editorial
+          subtitle — clearly above library defaults'
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes completely hidden; no grid; semi-transparent circle fills (alpha=0.20);
+          subtle dashed highlight circle around ABC zone; careful ha/va text alignment
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Axes turned off, no grid, appropriate whitespace margins; clean gridless
-          background matches spec; lacks finer polish
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: false
-        comment: Witty pop-culture data choices carry editorial narrative; subtitle
-          reinforces the angle; no visual emphasis distinguishing zones — triple-overlap
-          zone not elevated above single-circle zones
+        comment: Visual hierarchy via focal 'Sourdough' (larger, bolder) in triple
+          overlap, dashed circle highlight; muted/italic outside items create clear
+          secondary tier; viewer is guided to the convergence zone
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -145,28 +137,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct symmetric three-circle Venn diagram with labeled items
+        comment: Three-circle Venn diagram with labeled items in each zone — exactly
+          as specified
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fills, category names outside circles, items in
-          all 7 interior zones, 'outside' zone used, 16 total items within 10-25 range
+        comment: Semi-transparent fills, labeled items in zones, category names outside
+          circles, all 7 interior zones + outside used
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All items placed in correct zones via manually-specified centroids
+        comment: Items correctly placed in their specified zones (A=NFTs/Metaverse/Web3,
+          B=Spreadsheets/Calculators, etc.)
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title reads 'Tech & Trends · venn-labeled-items · seaborn · anyplot.ai';
-          required format is '{spec-id} · {library} · anyplot.ai' — extra 'Tech &
-          Trends ·' prefix is non-compliant
+        passed: true
+        comment: Title is exactly 'venn-labeled-items · seaborn · anyplot.ai'; category
+          labels serve as legend; no formal legend needed
     data_quality:
       score: 15
       max: 15
@@ -176,21 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All 8 regions demonstrated: A, B, C, AB, AC, BC, ABC, and outside'
+        comment: All 7 interior zones (A, B, C, AB, AC, BC, ABC) plus outside zone
+          populated; shows all aspects of labeled Venn diagram
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Editorial tech/culture commentary with real well-known items; neutral,
-          non-controversial; matches magazine-style spec scenario
+        comment: Tech and pop culture items (NFTs, Google Maps, Dolly Parton, Sourdough,
+          etc.) — relatable, neutral, and appropriate for editorial commentary
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 16 items across all zones; appropriate for visual clarity without
-          crowding
+        comment: 16 items within the 10-25 spec range; good distribution across zones
+          with single item in ABC for editorial focus
     code_quality:
       score: 10
       max: 10
@@ -200,34 +194,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports -> theme -> data -> plot -> save; no functions
+        comment: 'Linear script: imports → theme → data → plot → save; no functions
           or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data; no randomness needed
+        comment: All data is hardcoded; no random number generation needed; fully
+          deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports (os, matplotlib.pyplot, seaborn, matplotlib.patches.Circle)
-          are used
+        comment: os, matplotlib.pyplot, pandas, seaborn, matplotlib.patches.Circle
+          — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; zone_centroids dict is appropriate and readable;
-          iteration over zone_items is tidy
+        comment: Clean Pythonic code; zone centroid dict + spacing loop is an elegant
+          positioning approach; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves to plot-{THEME}.png via f-string; current API used
+        comment: Saves as plot-{THEME}.png; current seaborn 0.13 API; no deprecated
+          functions
     library_mastery:
       score: 4
       max: 10
@@ -237,28 +233,27 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: sns.set_theme() is used for theme configuration (idiomatic seaborn
-          approach); actual drawing uses matplotlib primitives exclusively which is
-          the only viable approach since seaborn has no native Venn support
+        comment: sns.set_theme() with full rc dict and sns.scatterplot() with pandas
+          DataFrame are idiomatic seaborn patterns; however the bulk of rendering
+          uses matplotlib patches and ax.text() directly
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Core visualization is pure matplotlib; seaborn contributes only the
-          set_theme() call; no seaborn plot functions (scatterplot, kdeplot, etc.)
-          are used
+        comment: Seaborn's distinctive capabilities (hue-mapped scatter, statistical
+          functions, FacetGrid) are not used; sns.scatterplot provides tiny anchor
+          dots only — this could be replicated with ax.scatter() in any library
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - patches
+  - annotations
   patterns:
   - explicit-figure
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
-  - edge-highlighting
+  - minimal-chrome
