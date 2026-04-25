@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 gauge-basic: Basic Gauge Chart
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: bokeh 3.9.0 | Python 3.14.4
+Quality: 87/100 | Updated: 2026-04-25
 """
+
+import os
 
 import numpy as np
 from bokeh.io import export_png, output_file, save
@@ -10,136 +12,130 @@ from bokeh.models import Label
 from bokeh.plotting import figure
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito zones: low / mid / high (intuitive + colorblind-safe)
+ZONE_LOW = "#D55E00"  # vermillion
+ZONE_MID = "#E69F00"  # orange
+ZONE_HIGH = "#009E73"  # brand bluish green (Okabe-Ito position 1)
+
 # Data
 value = 72
 min_value = 0
 max_value = 100
 thresholds = [30, 70]
 
-# Gauge parameters
-start_angle = np.pi  # 180 degrees (left side)
-end_angle = 0  # 0 degrees (right side)
-center_x = 0
-center_y = 0
-outer_radius = 0.9
-inner_radius = 0.6
-needle_length = 0.85
+# Gauge geometry
+center_x, center_y = 0.0, 0.0
+outer_radius = 0.95
+inner_radius = 0.62
+needle_length = 0.86
+start_angle = np.pi  # left
 
-# Create figure
+# Map data values onto the semi-circle (pi → 0 radians)
+zone_bounds = np.array([min_value] + thresholds + [max_value])
+zone_angles = start_angle - (zone_bounds - min_value) / (max_value - min_value) * np.pi
+
+tick_values = np.array([0, 25, 50, 75, 100])
+tick_angles = start_angle - (tick_values - min_value) / (max_value - min_value) * np.pi
+
+needle_angle = start_angle - (value - min_value) / (max_value - min_value) * np.pi
+
+# Figure
 p = figure(
     width=4800,
     height=2700,
-    title="gauge-basic · bokeh · pyplots.ai",
-    x_range=(-1.2, 1.2),
-    y_range=(-0.3, 1.2),
+    title="gauge-basic · bokeh · anyplot.ai",
+    x_range=(-1.25, 1.25),
+    y_range=(-0.45, 1.20),
     tools="",
     toolbar_location=None,
+    background_fill_color=PAGE_BG,
+    border_fill_color=PAGE_BG,
+    outline_line_color=None,
 )
-
-# Remove axes and grid
 p.axis.visible = False
 p.grid.visible = False
-p.outline_line_color = None
 
-# Title styling
-p.title.text_font_size = "36pt"
+p.title.text_font_size = "44pt"
+p.title.text_color = INK
 p.title.align = "center"
 
-# Colors for zones (red, yellow, green)
-zone_colors = ["#E74C3C", "#FFD43B", "#27AE60"]
-
-# Draw arc segments for each zone
-zones = [min_value] + thresholds + [max_value]
-for i in range(len(zones) - 1):
-    zone_start = zones[i]
-    zone_end = zones[i + 1]
-
-    # Convert value range to angle range
-    angle_start = start_angle - (zone_start - min_value) / (max_value - min_value) * np.pi
-    angle_end = start_angle - (zone_end - min_value) / (max_value - min_value) * np.pi
-
-    # Create wedge for this zone
-    num_points = 50
-    angles = np.linspace(angle_start, angle_end, num_points)
-
-    # Outer arc points
-    outer_x = center_x + outer_radius * np.cos(angles)
-    outer_y = center_y + outer_radius * np.sin(angles)
-
-    # Inner arc points (reversed for closed polygon)
-    inner_x = center_x + inner_radius * np.cos(angles[::-1])
-    inner_y = center_y + inner_radius * np.sin(angles[::-1])
-
-    # Combine to form closed polygon
-    xs = np.concatenate([outer_x, inner_x])
-    ys = np.concatenate([outer_y, inner_y])
-
-    p.patch(xs, ys, fill_color=zone_colors[i], line_color="white", line_width=2)
-
-# Draw tick marks and labels
-tick_values = [0, 25, 50, 75, 100]
-for tick_val in tick_values:
-    tick_angle = start_angle - (tick_val - min_value) / (max_value - min_value) * np.pi
-
-    # Tick line (outer)
-    tick_outer_x = center_x + (outer_radius + 0.02) * np.cos(tick_angle)
-    tick_outer_y = center_y + (outer_radius + 0.02) * np.sin(tick_angle)
-    tick_inner_x = center_x + (outer_radius + 0.08) * np.cos(tick_angle)
-    tick_inner_y = center_y + (outer_radius + 0.08) * np.sin(tick_angle)
-
-    p.line([tick_outer_x, tick_inner_x], [tick_outer_y, tick_inner_y], line_color="#2C3E50", line_width=4)
-
-    # Tick label
-    label_x = center_x + (outer_radius + 0.18) * np.cos(tick_angle)
-    label_y = center_y + (outer_radius + 0.18) * np.sin(tick_angle)
-
-    label = Label(
-        x=label_x,
-        y=label_y,
-        text=str(tick_val),
-        text_font_size="24pt",
-        text_color="#2C3E50",
-        text_align="center",
-        text_baseline="middle",
+# Zone arcs via annular_wedge (cleaner than manual polygons)
+zone_colors = [ZONE_LOW, ZONE_MID, ZONE_HIGH]
+for i, color in enumerate(zone_colors):
+    p.annular_wedge(
+        x=center_x,
+        y=center_y,
+        inner_radius=inner_radius,
+        outer_radius=outer_radius,
+        start_angle=zone_angles[i + 1],
+        end_angle=zone_angles[i],
+        fill_color=color,
+        line_color=PAGE_BG,
+        line_width=4,
     )
-    p.add_layout(label)
 
-# Draw needle
-needle_angle = start_angle - (value - min_value) / (max_value - min_value) * np.pi
-needle_x = center_x + needle_length * np.cos(needle_angle)
-needle_y = center_y + needle_length * np.sin(needle_angle)
+# Tick marks and labels
+for tick_val, a in zip(tick_values, tick_angles, strict=True):
+    cos_a, sin_a = np.cos(a), np.sin(a)
 
-# Needle triangle
-needle_width = 0.04
-perp_angle = needle_angle + np.pi / 2
-base_x1 = center_x + needle_width * np.cos(perp_angle)
-base_y1 = center_y + needle_width * np.sin(perp_angle)
-base_x2 = center_x - needle_width * np.cos(perp_angle)
-base_y2 = center_y - needle_width * np.sin(perp_angle)
+    p.line(
+        [center_x + (outer_radius + 0.02) * cos_a, center_x + (outer_radius + 0.10) * cos_a],
+        [center_y + (outer_radius + 0.02) * sin_a, center_y + (outer_radius + 0.10) * sin_a],
+        line_color=INK_SOFT,
+        line_width=4,
+    )
+
+    p.add_layout(
+        Label(
+            x=center_x + (outer_radius + 0.20) * cos_a,
+            y=center_y + (outer_radius + 0.20) * sin_a,
+            text=str(tick_val),
+            text_font_size="30pt",
+            text_color=INK_SOFT,
+            text_align="center",
+            text_baseline="middle",
+        )
+    )
+
+# Needle (triangle)
+needle_tip_x = center_x + needle_length * np.cos(needle_angle)
+needle_tip_y = center_y + needle_length * np.sin(needle_angle)
+half_base = 0.035
+perp = needle_angle + np.pi / 2
+base1_x = center_x + half_base * np.cos(perp)
+base1_y = center_y + half_base * np.sin(perp)
+base2_x = center_x - half_base * np.cos(perp)
+base2_y = center_y - half_base * np.sin(perp)
 
 p.patch(
-    [base_x1, needle_x, base_x2], [base_y1, needle_y, base_y2], fill_color="#306998", line_color="#1A3A5C", line_width=2
+    [base1_x, needle_tip_x, base2_x], [base1_y, needle_tip_y, base2_y], fill_color=INK, line_color=INK, line_width=2
 )
 
-# Center circle
-p.circle(center_x, center_y, radius=0.08, fill_color="#306998", line_color="#1A3A5C", line_width=3)
+# Center hub
+p.scatter(x=[center_x], y=[center_y], size=70, marker="circle", fill_color=INK, line_color=PAGE_BG, line_width=4)
 
 # Value display
-value_label = Label(
-    x=center_x,
-    y=-0.18,
-    text=str(value),
-    text_font_size="48pt",
-    text_color="#306998",
-    text_align="center",
-    text_baseline="middle",
-    text_font_style="bold",
+p.add_layout(
+    Label(
+        x=center_x,
+        y=-0.28,
+        text=str(value),
+        text_font_size="84pt",
+        text_color=INK,
+        text_align="center",
+        text_baseline="middle",
+        text_font_style="bold",
+    )
 )
-p.add_layout(value_label)
 
-# Save as PNG
-export_png(p, filename="plot.png")
-
-# Save as HTML for interactivity
-output_file("plot.html")
+# Save
+export_png(p, filename=f"plot-{THEME}.png")
+output_file(f"plot-{THEME}.html")
 save(p)

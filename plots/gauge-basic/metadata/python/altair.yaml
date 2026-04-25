@@ -1,15 +1,242 @@
 library: altair
+language: python
 specification_id: gauge-basic
 created: '2025-12-23T13:03:02Z'
-updated: '2025-12-23T13:10:27Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461378816
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/altair/plot.html
-quality_score: 92
+updated: '2026-04-25T13:06:27Z'
+generated_by: claude-opus
+workflow_run: 24931340754
+issue: 857
+python_version: 3.14.4
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/altair/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Value '72' displayed in the zone's own color (brand green) — strong visual shortcut
+    communicating 'we're in the good zone' without text
+  - 'Correct theme adaptation in both renders: needle flips from near-black to near-white,
+    hub two-tone adapts, all chrome uses appropriate tokens; no dark-on-dark failures'
+  - Arc stroke separator (PAGE_BG colored) creates clean visual gaps between zones
+    — a refined detail that elevates the chart above default appearance
+  - Code structure is clean and linear after removing the value_to_angle() function;
+    numpy vectorization for boundary_angles is elegant
+  - 'Full spec compliance: all required gauge features (zones, needle, threshold labels,
+    range bounds, value display, context label) correctly implemented'
+  weaknesses:
+  - Landscape canvas (1600x900) leaves large empty horizontal margins for a semi-circular
+    gauge; a square format would better utilize the canvas and look more polished
+  - Title at fontSize=28 and context label at 22 are at minimum guideline values —
+    increasing title to 34-36px and context label to 26px would strengthen typographic
+    hierarchy
+  - Altair's tooltip capability is unused — adding tooltip encoding to the arc segments
+    would make the HTML export genuinely informative and leverage a distinctive Altair
+    strength
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "gauge-basic · altair · anyplot.ai" in dark near-black text at top center, clearly readable. Threshold labels "30" and "70" in INK_SOFT dark gray, readable. Range labels "0" and "100" at bottom corners in dark gray, readable. Context label "Current Sales" in muted gray, readable.
+      Data: Three Okabe-Ito zone arcs — vermillion (#D55E00, 0-30), orange (#E69F00, 30-70), teal green (#009E73, 70-100). Needle in near-black (INK = #1A1A17), pointing to 72 in green zone. Hub: dark outer circle with lighter PAGE_BG inner circle. Value "72" in brand green (#009E73), bold, large (88px).
+      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title in near-white (#F0EFE8) light text, clearly readable against dark background. Threshold labels "30" and "70" in INK_SOFT lighter tone (#B8B7B0), readable. Range labels "0" and "100" in lighter gray, readable. Context label "Current Sales" in muted lighter tone, readable. No dark-on-dark text failures.
+      Data: Zone arc colors are identical to light render (vermillion, orange, teal green — Okabe-Ito positions 2, 5, 1). Needle flips to near-white (INK = #F0EFE8), clearly visible against dark surface. Hub adapts: outer circle near-white, inner circle near-black. Value "72" retains brand green (#009E73) — visible on dark background.
+      Legibility verdict: PASS — all text clearly readable against warm near-black background; no dark-on-dark failures detected
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set and readable in both themes; title
+          at 28px and context label at 22px are at minimums
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Arcs, needle (strokeWidth=10), hub, and labels all clearly visible
+          in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito zone colors are CVD-safe; numeric labels provide redundant
+          encoding beyond color
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Gauge centered and balanced but landscape format leaves significant
+          empty space on left/right; square canvas would better suit this chart type
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; min/max labels and context label appropriate
+          for gauge chart
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito zone colors (#D55E00, #E69F00, #009E73); correct backgrounds
+          (#FAF8F1/#1A1A17); data colors identical across themes; chrome correctly
+          adapts'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Value colored in zone color is intentional storytelling; arc stroke
+          gaps and two-tone hub add sophistication; above defaults but not publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: configure_view(strokeWidth=0); arc stroke separators; no chartjunk;
+          minor penalty for underutilized landscape canvas
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Value colored to match zone creates narrative; Current Sales adds
+          context; needle near 70 threshold adds subtle tension
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct semi-circular gauge chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: color zones, needle, value label, threshold
+          labels, min/max bounds'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: value=72 maps correctly to needle in green zone; thresholds and range
+          boundaries accurate
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches gauge-basic · altair · anyplot.ai; no legend
+          required for gauge chart type
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All gauge aspects: arcs, zones, needle, hub, value display, threshold
+          markers, range labels'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Current Sales = 72 on 0-100 scale is a real-world neutral business
+          KPI matching spec examples
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Canonical 0-100 percentage scale; thresholds at 30/70 create reasonable
+          zones; value 72 (just into good zone) is interesting
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'No function/class definitions; clean linear flow: imports → tokens
+          → data → geometry → layers → compose → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic (fixed values, no randomness)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, altair, numpy, pandas — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Concise; numpy vectorization for boundary angles; no fake UI or interactivity
+          simulations
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly; current Altair
+          6.1.0 API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of alt.layer(), mark_arc() with innerRadius/outerRadius,
+          mark_rule() with x2/y2, alt.Scale(domain=...), alt.Title() with properties
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Creative mark_arc() with theta/theta2 Scale=None for gauge geometry;
+          8-layer composition; HTML export; tooltip capability unused
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
@@ -17,189 +244,7 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  dataprep: []
-  styling: []
-review:
-  strengths:
-  - Excellent visual design with clear color zones following intuitive red/yellow/green
-    convention
-  - Creative use of Altair mark_arc for gauge segments and mark_rule for the needle
-    indicator
-  - Prominent value display (72%) centered below the gauge for immediate readability
-  - Proper use of Altair layering system to combine arcs, needle, hub, and labels
-  - Well-positioned threshold labels (30, 70) and range labels (0, 100)
-  weaknesses:
-  - Code contains a function definition value_to_angle() which violates the KISS structure
-    requirement (imports → data → plot → save, no functions)
-  image_description: 'The plot displays a semi-circular gauge chart with three colored
-    zones: red (0-30), yellow (30-70), and green (70-100). A dark blue needle points
-    to approximately the 72 mark, which falls in the green zone. The title "gauge-basic
-    · altair · pyplots.ai" appears at the top in large text. Threshold values "30"
-    and "70" are labeled above the arc at their respective positions. Min (0) and
-    max (100) values are displayed at the left and right ends of the gauge. A prominent
-    "72%" label is centered below the gauge hub. The layout uses a white background
-    with good contrast.'
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is large and clear, value label "72%" is bold and prominent,
-          all threshold and range labels are readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, all labels are well-spaced
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Arc segments are clearly visible with distinct colors, needle is
-          thick and clearly points to the value
-      - id: VQ-04
-        name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Red/yellow/green is intuitive for gauges but not ideal for colorblind
-          users; however, the zones are also labeled with numbers
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization with the gauge centered, though there is
-          some empty space at the bottom
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: Not applicable for gauge charts (no traditional axes), but min/max
-          labels are present
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
-        passed: true
-        comment: No grid needed for gauge; color zones are self-explanatory
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct semi-circular gauge chart as specified
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Value correctly mapped to needle position at 72
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'All spec features present: needle indicator, color zones (red/yellow/green),
-          value label, min/max bounds, thresholds at 30 and 70'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Full range 0-100 is visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Threshold labels and range labels are accurate
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "gauge-basic · altair · pyplots.ai"
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows gauge with value in green zone; could also demonstrate edge
-          cases but current value (72) effectively shows the concept
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Sales performance at 72% is a realistic business KPI scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: 0-100 percentage scale is appropriate; thresholds at 30/70 are reasonable
-    code_quality:
-      score: 8
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Contains a function definition `value_to_angle()` which violates
-          KISS principle (no functions/classes rule)
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Data is deterministic (fixed values, no randomness)
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports (altair, numpy, pandas) are used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of Altair's declarative layering with `alt.layer()`,
-          custom arc marks with `mark_arc()`, rule marks for needle, and proper theta
-          encoding for radial positioning
-  verdict: APPROVED
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome

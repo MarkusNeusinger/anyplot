@@ -1,88 +1,111 @@
-""" pyplots.ai
+""" anyplot.ai
 gauge-basic: Basic Gauge Chart
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: highcharts unknown | Python 3.14.4
+Quality: 87/100 | Updated: 2026-04-25
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
 from pathlib import Path
 
-from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Current sales performance against target
-value = 72  # Current value
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito zones: low / mid / high (intuitive + colorblind-safe)
+ZONE_LOW = "#D55E00"  # vermillion (bad)
+ZONE_MID = "#E69F00"  # orange (warning)
+ZONE_HIGH = "#009E73"  # brand bluish green (good)
+
+# Data
+value = 72
 min_value = 0
 max_value = 100
-thresholds = [30, 70]  # Red/Yellow/Green zones
+thresholds = [30, 70]
 
-# Chart options for solid gauge
+# Chart options
 chart_options = {
     "chart": {
         "type": "gauge",
         "width": 4800,
         "height": 2700,
-        "backgroundColor": "#ffffff",
+        "backgroundColor": PAGE_BG,
         "plotBackgroundColor": None,
         "plotBorderWidth": 0,
         "plotShadow": False,
+        "spacingTop": 40,
+        "spacingBottom": 40,
+        "style": {"color": INK},
     },
     "title": {
-        "text": "gauge-basic · highcharts · pyplots.ai",
-        "style": {"fontSize": "48px", "fontWeight": "bold"},
-        "y": 80,
+        "text": "gauge-basic · highcharts · anyplot.ai",
+        "style": {"fontSize": "72px", "fontWeight": "bold", "color": INK},
+        "y": 90,
     },
     "pane": {
         "startAngle": -90,
         "endAngle": 90,
-        "center": ["50%", "75%"],
+        "center": ["50%", "78%"],
         "size": "140%",
-        "background": [
-            {
-                "backgroundColor": {
-                    "linearGradient": {"x1": 0, "y1": 0, "x2": 0, "y2": 1},
-                    "stops": [[0, "#FFF"], [1, "#333"]],
-                },
-                "borderWidth": 0,
-                "outerRadius": "109%",
-                "innerRadius": "0%",
-            },
-            {
-                "backgroundColor": {
-                    "linearGradient": {"x1": 0, "y1": 0, "x2": 0, "y2": 1},
-                    "stops": [[0, "#333"], [1, "#FFF"]],
-                },
-                "borderWidth": 1,
-                "outerRadius": "107%",
-                "innerRadius": "0%",
-            },
-            {"backgroundColor": "#DDD", "borderWidth": 0, "outerRadius": "105%", "innerRadius": "103%"},
-        ],
+        "background": [{"backgroundColor": PAGE_BG, "borderWidth": 0, "outerRadius": "109%", "innerRadius": "0%"}],
     },
     "yAxis": {
         "min": min_value,
         "max": max_value,
-        "minorTickInterval": "auto",
+        "tickInterval": 10,
+        "minorTickInterval": 5,
         "minorTickWidth": 2,
-        "minorTickLength": 15,
+        "minorTickLength": 16,
         "minorTickPosition": "inside",
-        "minorTickColor": "#666",
-        "tickPixelInterval": 50,
+        "minorTickColor": INK_SOFT,
         "tickWidth": 3,
         "tickPosition": "inside",
-        "tickLength": 20,
-        "tickColor": "#666",
-        "labels": {"step": 2, "rotation": "auto", "style": {"fontSize": "28px"}, "distance": 25},
-        "title": {"text": "Performance (%)", "style": {"fontSize": "36px"}, "y": 50},
+        "tickLength": 26,
+        "tickColor": INK_SOFT,
+        "lineColor": INK_SOFT,
+        "lineWidth": 0,
+        "labels": {
+            "rotation": "auto",
+            "style": {"fontSize": "44px", "color": INK_SOFT, "fontWeight": "500"},
+            "distance": 40,
+        },
+        "title": {"text": "Performance (%)", "style": {"fontSize": "44px", "color": INK_SOFT}, "y": -120},
         "plotBands": [
-            {"from": min_value, "to": thresholds[0], "color": "#9467BD", "thickness": 40},  # Low zone (purple)
-            {"from": thresholds[0], "to": thresholds[1], "color": "#FFD43B", "thickness": 40},  # Mid zone (yellow)
-            {"from": thresholds[1], "to": max_value, "color": "#306998", "thickness": 40},  # High zone (blue)
+            {
+                "from": min_value,
+                "to": thresholds[0],
+                "color": ZONE_LOW,
+                "thickness": 70,
+                "outerRadius": "100%",
+                "innerRadius": "92%",
+            },
+            {
+                "from": thresholds[0],
+                "to": thresholds[1],
+                "color": ZONE_MID,
+                "thickness": 70,
+                "outerRadius": "100%",
+                "innerRadius": "92%",
+            },
+            {
+                "from": thresholds[1],
+                "to": max_value,
+                "color": ZONE_HIGH,
+                "thickness": 70,
+                "outerRadius": "100%",
+                "innerRadius": "92%",
+            },
         ],
     },
     "series": [
@@ -91,36 +114,37 @@ chart_options = {
             "data": [value],
             "tooltip": {"valueSuffix": "%"},
             "dataLabels": {
-                "format": '<span style="font-size:64px;font-weight:bold">{y}</span>',
+                "format": f'<span style="font-size:160px;font-weight:bold;color:{INK}">{{y}}</span>',
                 "borderWidth": 0,
-                "y": 120,
-                "style": {"fontSize": "64px"},
+                "backgroundColor": "transparent",
+                "y": 180,
+                "useHTML": True,
+                "style": {"color": INK},
             },
             "dial": {
-                "radius": "80%",
-                "backgroundColor": "#1a3d5c",
-                "baseWidth": 20,
+                "radius": "82%",
+                "backgroundColor": INK,
+                "borderColor": INK,
+                "baseWidth": 22,
+                "topWidth": 4,
                 "baseLength": "0%",
                 "rearLength": "0%",
             },
-            "pivot": {"backgroundColor": "#1a3d5c", "radius": 15},
+            "pivot": {"backgroundColor": INK, "radius": 18, "borderWidth": 0},
         }
     ],
     "tooltip": {"enabled": False},
     "credits": {"enabled": False},
 }
 
-# Download Highcharts JS files for inline embedding
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
-
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+# Download Highcharts JS (inline embed required for headless Chrome)
+HC_BASE = "https://cdn.jsdelivr.net/npm/highcharts@11.4.8"
+with urllib.request.urlopen(f"{HC_BASE}/highcharts.js", timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
-
-with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
+with urllib.request.urlopen(f"{HC_BASE}/highcharts-more.js", timeout=30) as response:
     highcharts_more_js = response.read().decode("utf-8")
 
-# Generate HTML with inline scripts
+# Generate HTML
 chart_options_json = json.dumps(chart_options)
 html_content = f"""<!DOCTYPE html>
 <html>
@@ -129,7 +153,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{highcharts_more_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {{
@@ -139,33 +163,26 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Write temp HTML file
+# Save HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Render PNG via headless Chrome
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
-# Also save the HTML for interactive viewing
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
-
-# Take screenshot with headless Chrome
 chrome_options = Options()
 chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2900")
+chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
-driver.save_screenshot("plot_raw.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-# Crop to exact 4800x2700 dimensions
-img = Image.open("plot_raw.png")
-img_cropped = img.crop((0, 0, 4800, 2700))
-img_cropped.save("plot.png")
-Path("plot_raw.png").unlink()
-
-Path(temp_path).unlink()  # Clean up temp file
+Path(temp_path).unlink()

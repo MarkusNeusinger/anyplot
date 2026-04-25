@@ -1,158 +1,179 @@
 library: bokeh
+language: python
 specification_id: gauge-basic
 created: '2025-12-23T13:02:34Z'
-updated: '2025-12-23T13:09:34Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461378400
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/bokeh/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - patches
-  - manual-ticks
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-04-25T12:54:21Z'
+generated_by: claude-opus
+workflow_run: 24931133255
+issue: 857
+python_version: 3.14.4
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/bokeh/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent visual design with clean, professional appearance
-  - Proper implementation of semi-circular gauge with three distinct color zones
-  - Clear needle indicator with triangular shape and center hub
-  - Prominent value display below gauge (48pt bold)
-  - Correct title format following pyplots conventions
-  - Well-proportioned layout utilizing canvas space effectively
-  - Clean KISS code structure with deterministic data
+  - 'Perfect spec compliance: all gauge features (zones, needle, hub, ticks, value)
+    present and correctly implemented'
+  - 'Excellent code quality: idiomatic use of annular_wedge, flat KISS structure,
+    clean theme token wiring'
+  - 'Full theme adaptation: needle, hub, text, and background all adapt correctly
+    between light and dark renders'
+  - Okabe-Ito zone colors used semantically (brand green for high/good zone) — CVD-safe
+    and visually coherent
   weaknesses:
-  - Color zones use red-green which may be challenging for colorblind users; consider
-    using blue/orange/green or adding patterns
-  - Could use Bokeh annular_wedge glyph for simpler arc rendering instead of manual
-    polygon patches
-  image_description: 'The plot displays a semi-circular gauge chart with three color
-    zones: red (0-30), yellow (30-70), and green (70-100). The gauge has a dark blue
-    needle pointing to approximately 72, which falls in the green zone. A center hub
-    circle anchors the needle. Tick marks appear at 0, 25, 50, 75, and 100 with corresponding
-    numeric labels positioned outside the arc. The current value "72" is prominently
-    displayed in bold blue text below the gauge center. The title "gauge-basic · bokeh
-    · pyplots.ai" appears at the top. The overall layout is clean with good use of
-    whitespace and a balanced composition on a white background.'
+  - 'Design storytelling is minimal: no zone labels (Low/Med/High), no contextual
+    subtitle, no annotation explaining what 72 means — viewer sees a value but not
+    a narrative'
+  - Lower canvas quadrant is largely empty; the gauge composition could be enlarged
+    or supplemented with context text to fill the space more purposefully
+  - 'DE-01 does not yet reach strong design level: no subtitle, no zone annotations,
+    visual hierarchy limited to needle position and bold value'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "gauge-basic · bokeh · anyplot.ai" in dark ink at top — readable. Tick labels (0, 25, 50, 75, 100) in dark grey INK_SOFT around arc — all readable. Bold "72" value in dark INK below gauge — prominent and readable.
+      Data: Three zone arcs — vermillion/orange (#D55E00, low 0-30), golden-orange (#E69F00, mid 30-70), brand green (#009E73, high 70-100). Black triangular needle points to ~72 (just into green zone). Dark circular hub at center.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light cream text — readable. Tick labels in light INK_SOFT — readable. "72" value in light color — prominent and readable. No dark-on-dark failures observed.
+      Data: Zone colors identical to light render (vermillion, golden-orange, brand green unchanged). Needle is now white/cream (#F0EFE8 = INK in dark mode) — adapts correctly and is clearly visible. Hub is light with dark ring border.
+      Legibility verdict: PASS — all text clearly readable against near-black background; correct theme adaptation throughout
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'Title at 36pt, tick labels at 24pt, value at 48pt - all clearly
-          readable. Minor: title could be slightly larger for a 4800px canvas'
+        comment: Title 44pt, tick labels 30pt, value 84pt — all explicitly set and
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements whatsoever
+        comment: No overlapping elements; 0 and 100 labels near edges but non-overlapping
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Gauge arc segments are well-sized, needle is clearly visible, center
-          hub appropriately sized
+        comment: All arcs, needle, hub, tick marks clearly visible at 4800x2700
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Red/yellow/green zones are distinguishable; however, red-green colorblind
-          users may have difficulty distinguishing the two extreme zones
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of canvas space, gauge is well-centered with balanced
-          margins
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        score: 2
         max: 2
         passed: true
-        comment: No grid needed for gauge; no legend needed as zones are self-explanatory
+        comment: Okabe-Ito zone colors CVD-safe; zones differ in hue and luminance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Gauge well-positioned but significant empty space below value label
+          in lower canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; no axis labels needed for gauge type
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 for high zone; backgrounds correct; chrome flips
+          correctly; data colors identical across themes'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Intentional Okabe-Ito zone assignment, clean minimal chrome, but
+          no zone labels, no contextual subtitle, limited visual hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes and grid hidden; PAGE_BG zone separator borders; hub styled
+          with theme contrast. Good refinement above defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Needle in green zone communicates positive reading; missing zone
+          labels (Low/Mid/High), contextual annotations, or subtitle that turns value
+          into insight
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct semi-circular gauge chart as specified
+        comment: Correct semi-circular speedometer gauge
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Value of 72 correctly mapped to needle position
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All features present: color zones (red/yellow/green), needle indicator,
-          value label, tick marks'
-      - id: SC-04
-        name: Data Range
+        comment: value=72, min=0, max=100, thresholds=[30,70], three zones, needle,
+          hub, tick marks, value display — all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full range 0-100 displayed with appropriate tick marks
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Value 72 correctly mapped to angular position just past 70 threshold
+          into green zone
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for gauge, zones self-explanatory
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "gauge-basic · bokeh · pyplots.ai"'
+        comment: Title format correct; legend N/A for single-value gauge
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows gauge with value in green zone; could also demonstrate values
-          in other zones
+        comment: 'Demonstrates all core gauge features: arc, three semantic color
+          zones, needle, tick scale, value readout'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Value of 72 out of 100 is a plausible KPI/score scenario (matches
-          spec example)
+        comment: Value 72 on 0-100 scale plausible for sales performance, NPS, or
+          completion rate; neutral business context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 0-100 scale with thresholds at 30 and 70 is sensible; exactly matches
-          spec example
+        comment: 0-100 range with thresholds at 30 and 70 is standard gauge configuration;
+          value 72 interestingly just past upper threshold
     code_quality:
       score: 10
       max: 10
@@ -162,41 +183,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → plot → save, no functions/classes'
+        comment: 'Flat structure: theme tokens → data → geometry → figure → zones
+          → ticks → needle → labels → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (fixed values, no random elements)
+        comment: Deterministic hardcoded values; no randomness needed for gauge
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, bokeh.io, bokeh.models, bokeh.plotting)
+        comment: os, numpy, and only used bokeh modules
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: annular_wedge used idiomatically; zip(strict=True) clean; no fake
+          UI elements
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: annular_wedge is correct Bokeh primitive for arc segments; Label
+          model for annotations; proper theme token wiring via figure properties
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Bokeh's figure, patch, circle, line, and Label correctly. Creates
-          custom geometry via patch polygons. Could leverage more Bokeh-specific features
-          like hover tooltips or annular_wedge for cleaner arc rendering.
-  verdict: APPROVED
+        comment: annular_wedge is Bokeh-native; dual output via export_png + output_file/save;
+          Bokeh-specific Label model layer
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  - manual-ticks
+  patterns: []
+  dataprep: []
+  styling:
+  - minimal-chrome
