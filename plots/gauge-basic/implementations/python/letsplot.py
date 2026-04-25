@@ -1,16 +1,18 @@
-""" pyplots.ai
+""" anyplot.ai
 gauge-basic: Basic Gauge Chart
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: letsplot 4.9.0 | Python 3.14.4
+Quality: 86/100 | Updated: 2026-04-25
 """
 
 import math
+import os
 
 import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
     element_blank,
+    element_rect,
     element_text,
     geom_polygon,
     geom_segment,
@@ -27,6 +29,11 @@ from lets_plot import (
 
 
 LetsPlot.setup_html()
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - sales performance gauge
 value = 72
@@ -94,37 +101,55 @@ df_circle = pd.DataFrame(
 )
 
 # Value label - prominently displayed below gauge
-df_label = pd.DataFrame({"x": [0], "y": [-0.25], "label": [str(value)]})
+df_label = pd.DataFrame({"x": [0], "y": [-0.22], "label": [f"{value}%"]})
+
+# Metric subtitle below value
+df_subtitle = pd.DataFrame({"x": [0], "y": [-0.42], "label": ["Sales Performance Score"]})
 
 # Min/Max labels at gauge edges
 df_min_max = pd.DataFrame({"x": [-1.05, 1.05], "y": [-0.08, -0.08], "label": [str(min_value), str(max_value)]})
 
+# Zone labels (Low/Medium/High) at arc zone midpoints
+zone_label_radius = 0.75
+df_zone_labels_rows = []
+for i, name in enumerate(zone_names):
+    start_val = zone_boundaries[i]
+    end_val = zone_boundaries[i + 1]
+    mid_ratio = ((start_val + end_val) / 2 - min_value) / (max_value - min_value)
+    mid_angle = math.radians(180 - mid_ratio * 180)
+    df_zone_labels_rows.append(
+        {"x": zone_label_radius * math.cos(mid_angle), "y": zone_label_radius * math.sin(mid_angle), "label": name}
+    )
+df_zone_labels = pd.DataFrame(df_zone_labels_rows)
+
 # Create plot
 plot = (
     ggplot()
-    + geom_polygon(aes(x="x", y="y", fill="zone", group="zone"), data=df_polygons, color="#FFFFFF", size=1.5, alpha=0.9)
+    + geom_polygon(aes(x="x", y="y", fill="zone", group="zone"), data=df_polygons, color=PAGE_BG, size=1.5, alpha=0.9)
     + scale_fill_manual(values=zone_colors)
-    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_needle, color="#1F2937", size=5)
-    + geom_polygon(aes(x="x", y="y"), data=df_circle, fill="#1F2937", color="#1F2937")
-    + geom_text(aes(x="x", y="y", label="label"), data=df_label, size=28, color="#1F2937", fontface="bold")
-    + geom_text(aes(x="x", y="y", label="label"), data=df_min_max, size=14, color="#6B7280")
-    + labs(title="gauge-basic · letsplot · pyplots.ai")
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_needle, color=INK, size=5)
+    + geom_polygon(aes(x="x", y="y"), data=df_circle, fill=INK, color=INK)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_label, size=28, color=INK, fontface="bold")
+    + geom_text(aes(x="x", y="y", label="label"), data=df_subtitle, size=14, color=INK_SOFT)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_min_max, size=14, color=INK_SOFT)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_zone_labels, size=13, color=INK_SOFT, fontface="bold")
+    + labs(title="gauge-basic · letsplot · anyplot.ai")
     + xlim(-1.4, 1.4)
-    + ylim(-0.5, 1.3)
+    + ylim(-0.55, 1.15)
     + theme(
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         axis_line=element_blank(),
         panel_grid=element_blank(),
-        panel_background=element_blank(),
-        plot_background=element_blank(),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         legend_position="none",
-        plot_title=element_text(size=24, face="bold"),
+        plot_title=element_text(size=24, face="bold", color=INK),
     )
     + ggsize(1600, 900)
 )
 
 # Save outputs
-ggsave(plot, "plot.png", scale=3, path=".")
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.png", scale=3, path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
