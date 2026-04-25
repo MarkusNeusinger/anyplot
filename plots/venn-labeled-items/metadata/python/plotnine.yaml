@@ -1,0 +1,238 @@
+library: plotnine
+language: python
+specification_id: venn-labeled-items
+created: '2026-04-25T05:30:42Z'
+updated: '2026-04-25T05:39:05Z'
+generated_by: claude-opus
+workflow_run: 24923512026
+issue: 5364
+python_version: 3.14.4
+library_version: 0.15.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - Perfect spec compliance — all 7 Venn zones populated with witty, thematically
+    coherent pop-culture items
+  - 'Strong editorial aesthetic: italic serif title, bold colored category labels,
+    and semi-transparent Okabe-Ito fills faithfully reproduce the WIRED/Chartgeist
+    magazine style the spec requests'
+  - Dual-theme implementation is correct — theme tokens applied throughout, both renders
+    pass the legibility check, data colors are identical across themes
+  weaknesses:
+  - Item labels (size=13) and subtitle (size=12) are below the 16pt minimum for secondary
+    text at 3600x3600; increase to >=16pt for item labels and >=14pt for subtitle
+  - Three separate single-item DataFrames and three duplicate geom_text calls for
+    category labels — consolidate into one DataFrame and one geom_text layer
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "Chartgeist 2026" in bold italic serif — clearly readable. Subtitle "venn-labeled-items · plotnine · anyplot.ai" in small muted text — readable but small (12pt). Category labels in bold colored serif (size 22) outside circles — clearly readable.
+      Data: Three overlapping circles in Okabe-Ito #009E73 (green/Overhyped), #D55E00 (orange-red/Actually Useful), #0072B2 (blue/Secretly Loved). Semi-transparent fills (alpha=0.22) allow zone visibility. Item labels in dark #1A1A17 ink serif (size 13) placed inside zones.
+      Legibility verdict: PASS — all text readable; item labels (13pt) and subtitle (12pt) are below 16pt minimum but still legible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light #F0EFE8 — clearly readable. Subtitle in muted light ink — readable. Category labels in their respective Okabe-Ito circle colors (green, orange, blue) — all sufficiently bright on dark surface, no dark-on-dark failures. Item labels in light #F0EFE8 — readable.
+      Data: Circle outlines in identical Okabe-Ito colors (#009E73, #D55E00, #0072B2) — same as light render. Semi-transparent fills create dark blended zones on the near-black background. Triple-overlap center is very dark but item text remains legible due to light ink color.
+      Legibility verdict: PASS — all text readable; no dark-on-dark failures detected
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Sizes explicitly set; item labels (13pt) and subtitle (12pt) below
+          16pt minimum for secondary text at 3600x3600
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding in A∩B∩C zone and near zone boundaries, all labels
+          readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Circles and labels clearly visible; triple-overlap center very dark
+          in dark render but text legible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito positions 1-3 are CVD-safe, adequate luminance contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 12x12 @ 300 DPI = 3600x3600 square format; diagram fills canvas well,
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Editorial title + subtitle with spec-id/library/anyplot.ai; no axes
+          needed for Venn
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First circle #009E73; multi-series Okabe-Ito order; backgrounds
+          #FAF8F1/#1A1A17; chrome theme-correct in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong editorial aesthetic: italic serif title, bold colored category
+          labels, witty pop-culture categories echo the WIRED Chartgeist spec'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All axes, ticks, grid lines, and spines removed. Clean composition
+          with generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Triple-overlap center acts as natural focal point; item placement
+          makes implicit editorial commentary; coherent cultural narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct three-circle Venn diagram with labeled items
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent fills, items in all 7 zones, category labels outside
+          circles, symmetric layout
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All items correctly placed in their assigned zones
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Subtitle: venn-labeled-items · plotnine · anyplot.ai; editorial
+          title adds polish; no legend needed'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 7 interior zones populated; varied item counts per zone; no empty
+          regions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Witty, neutral pop-culture items; editorial categories avoid controversy;
+          real-world plausible scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 16 items across 7 zones (2-3 per zone); appropriate density for readability
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports -> Data -> Plot -> Save; no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic; no random data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Three separate single-item DataFrames and three identical geom_text
+          calls for category labels; could be one DataFrame + one geom_text
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png correctly
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of scale_fill_identity/scale_color_identity for direct color
+          mapping, coord_fixed for square coordinates, proper layer composition
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: geom_polygon for circle approximation and identity scales are plotnine-specific;
+          overall approach is fairly generic
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
