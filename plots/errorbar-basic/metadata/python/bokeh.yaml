@@ -1,165 +1,184 @@
 library: bokeh
+language: python
 specification_id: errorbar-basic
 created: '2025-12-23T13:03:02Z'
-updated: '2025-12-23T13:12:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461376132
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - columndatasource
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-04-25T09:17:22Z'
+generated_by: claude-opus
+workflow_run: 24927158256
+issue: 973
+python_version: 3.14.4
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/bokeh/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent use of Bokeh's Whisker and TeeHead components for professional error
-    bar caps
-  - Clean implementation using ColumnDataSource for data management
-  - Demonstrates asymmetric error bars as mentioned in the spec
-  - Realistic experimental scenario with control and treatment groups
-  - Proper title format and descriptive axis labels with units
-  - Good use of grid styling with dashed lines and appropriate alpha
+  - 'Full theme adaptation: warm off-white / near-black backgrounds with all chrome
+    (text, grid, axes) flipping correctly — both renders pass readability checks'
+  - Idiomatic Bokeh Whisker+TeeHead error bars with per-group ColumnDataSource enabling
+    individual colors — a Bokeh-distinctive pattern
+  - 'Asymmetric errors (Treatment C: -6.5/+2.8) showcase a meaningful feature of error
+    bar plots'
+  - '''highest variability'' annotation adds light data storytelling without crowding'
+  - 'Perfect code quality: seed set, KISS structure, all imports used, strict zip'
   weaknesses:
-  - Text sizes could be slightly larger for the 4800x2700 canvas (title 36pt is good,
-    but axis labels at 28pt could be 32pt)
-  - The Bokeh toolbar in the corner adds visual clutter to the static PNG output
-  image_description: The plot displays an error bar chart with 6 experimental groups
-    (Control, Treatment A, B, C, D, E) along the x-axis and "Response Value (units)"
-    on the y-axis ranging from 0 to ~55. Each data point is represented by a blue
-    circle with vertical error bars extending above and below. The error bars have
-    visible caps (horizontal lines at the ends). Treatment D shows the highest mean
-    value (~48), while Control has the lowest (~25). Treatment C notably shows asymmetric
-    error bars with a larger lower uncertainty. The color scheme uses a consistent
-    blue (#306998) throughout. The title "errorbar-basic · bokeh · pyplots.ai" appears
-    at the top. A subtle dashed horizontal grid helps with readability. There is a
-    Bokeh logo/toolbar visible in the top-right corner.
+  - Error bar line_width=5 and TeeHead size=40 render noticeably thin at full 4800x2700
+    — increase to line_width=8-10 and TeeHead size=60+ for visual prominence
+  - Bokeh's interactive HoverTool (showing exact mean and CI values on hover) is unused
+    — adding a tooltip uses a feature unique to Bokeh that no static library can match,
+    raising LM-02
+  - DQ-02 unit label 'Response Value (units)' is generic — replace with a concrete
+    domain unit (e.g., 'Cell Viability (%)' or 'Enzyme Activity (U/mL)') for realistic
+    context
+  - 'DE-01 lacks a final polish step: consider a horizontal reference line at Control
+    mean as a dashed baseline to elevate beyond well-configured defaults'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "errorbar-basic · bokeh · anyplot.ai" in dark ink #1A1A17, top-left aligned. Axis labels "Experimental Group" (x) and "Response Value (units)" (y) in dark ink. Tick labels in INK_SOFT #4A4A44. All text clearly readable against the light background.
+      Data: Six groups (Control, Treatment A-E) each with a scatter point and Whisker error bar. Colors follow Okabe-Ito canonical order — Control #009E73 (brand green), Treatment A #D55E00, Treatment B #0072B2, Treatment C #CC79A7, Treatment D #E69F00, Treatment E #56B4E9. Asymmetric errors visible (Treatment C extends ~6.5 units down, ~2.8 up). TeeHead caps present on both ends of each bar. "highest variability" italic annotation near Treatment C lower extent.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and axis labels in light #F0EFE8, tick labels in #B8B7B0. All text clearly readable against the dark background. No dark-on-dark failures observed — text contrasts well with the near-black surface.
+      Data: All six data colors are identical to the light render (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9). The Okabe-Ito palette is theme-consistent as required. Scatter markers have PAGE_BG edge color which flips to #1A1A17 in dark mode — subtle ring effect still distinguishable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick labels are readable, though slightly
-          small relative to the 4800x2700 canvas
+        comment: Title 36pt, axis labels 32pt, ticks 24pt — all explicitly set; readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Six well-spaced categories, no label or element overlap
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Error bars and markers are appropriately sized for the 6 data points
+        comment: Markers visible; Whisker line_width=5 and TeeHead size=40 slightly
+          thin at full 4800x2700
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color is accessible, no color differentiation needed
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout but Bokeh toolbar in corner adds visual noise
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Response Value (units)" and "Experimental
-          Group"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette CVD-safe; no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: y-range trimmed with 15% padding; minor excess vertical space at
+          top; horizontal spread appropriate
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle and appropriate, but no legend is needed/present
+        comment: Experimental Group and Response Value (units) — descriptive with
+          unit qualifier
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order, correct warm backgrounds,
+          chrome adapts in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Per-group colored error bars and asymmetric errors above generic
+          defaults; not publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-grid only at 10% alpha, outline removed, minor ticks hidden, axis
+          colors customized
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: '''highest variability'' annotation guides viewer; asymmetric errors
+          signal skewed uncertainty'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct error bar plot type
+        comment: Error bar plot with TeeHead caps on both ends
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, numeric values on Y correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Error bars with visible caps, consistent widths, asymmetric errors
-          demonstrated
-      - id: SC-04
-        name: Data Range
+        comment: Categorical x-axis, central value markers, caps, asymmetric errors,
+          6 groups
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows all data with proper padding (starts at 0, ends above
-          max)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Experimental groups on x, response values on y, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "errorbar-basic · bokeh · pyplots.ai"'
+        comment: Title format exact; legend omitted correctly since x-labels identify
+          groups
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows asymmetric errors (Treatment C, D), varying means, but could
-          show more dramatic differences
+        comment: Varying means, different error magnitudes, asymmetric errors, annotation
+          highlight
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Plausible experimental/clinical trial scenario with control and treatment
-          groups
-      - id: DQ-03
-        name: Appropriate Scale
         score: 4
         max: 5
         passed: true
-        comment: Values are reasonable for a generic response variable
+        comment: Clinical/lab trial context plausible; 'Response Value (units)' unit
+          label generic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Means 25-48 with errors 2-6.5 realistic for biological measurements
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -167,40 +186,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: Imports -> Data -> Plot -> Style -> Save; no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imported symbols used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic zip(..., strict=True), clean per-group loop, no over-engineering
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png but also creates plot.html (acceptable for Bokeh)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Whisker+TeeHead, ColumnDataSource per group, Label annotation, categorical
+          x_range — all idiomatic Bokeh
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Whisker with TeeHead for caps, ColumnDataSource - good Bokeh
-          patterns but could leverage more interactive features
-  verdict: APPROVED
+        comment: Whisker/TeeHead and Label are Bokeh-native; per-group ColumnDataSource
+          distinctive; HoverTool absent
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
