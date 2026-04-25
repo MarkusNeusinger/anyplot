@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 gauge-basic: Basic Gauge Chart
 Library: seaborn 0.13.2 | Python 3.14.4
-Quality: 83/100 | Updated: 2026-04-25
+Quality: 84/100 | Updated: 2026-04-25
 """
 
 import os
