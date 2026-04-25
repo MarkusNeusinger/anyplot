@@ -29,13 +29,15 @@ export function HomePage() {
   const { homeStateRef, saveScrollPosition } = useHomeState();
 
   // Disable browser's automatic scroll restoration so we can restore from
-  // our persisted state (homeStateRef.scrollY) instead. Restore on unmount
-  // so other routes get native back/forward behavior.
+  // our persisted state (homeStateRef.scrollY) instead. Capture the prior
+  // mode and restore it on unmount, so we don't clobber any non-default
+  // value set elsewhere and other routes get back native behavior.
   useEffect(() => {
     if (!('scrollRestoration' in history)) return;
+    const previous = history.scrollRestoration;
     history.scrollRestoration = 'manual';
     return () => {
-      history.scrollRestoration = 'auto';
+      history.scrollRestoration = previous;
     };
   }, []);
 

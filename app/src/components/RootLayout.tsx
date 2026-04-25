@@ -27,12 +27,12 @@ export function RootLayout() {
   const navigationType = useNavigationType();
   const mastheadSticks = pathname !== '/plots';
 
-  // Reset scroll on forward navigation (PUSH/REPLACE). Without this, short
-  // pages like /legal inherit the previous page's scroll position because
-  // PlotsPage sets scrollRestoration='manual'. Skip on POP so browser
-  // back/forward keeps native scroll restoration; skip when a hash anchor
-  // is present so in-page anchors still work. PlotsPage runs its own
-  // saved-scroll restore in a later effect, so it still overrides this.
+  // Reset scroll on forward navigation (PUSH/REPLACE). In SPA route changes,
+  // the next page can otherwise keep the previous page's scroll position,
+  // which is especially noticeable on short pages like /legal. Skip on POP
+  // so browser back/forward keeps native scroll restoration; skip when a
+  // hash anchor is present so in-page anchors still work. Pages with their
+  // own saved-scroll restore in a later effect can still override this.
   useEffect(() => {
     if (hash) return;
     if (navigationType === 'POP') return;

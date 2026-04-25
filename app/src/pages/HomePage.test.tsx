@@ -124,12 +124,20 @@ describe('HomePage', () => {
       history.scrollRestoration = original;
     });
 
-    it("sets scrollRestoration to 'manual' on mount and restores 'auto' on unmount", () => {
+    it("sets scrollRestoration to 'manual' on mount and restores the previous value on unmount", () => {
       history.scrollRestoration = 'auto';
       const { unmount } = render(<HomePage />);
       expect(history.scrollRestoration).toBe('manual');
       unmount();
       expect(history.scrollRestoration).toBe('auto');
+    });
+
+    it('restores a non-default previous value on unmount instead of forcing auto', () => {
+      history.scrollRestoration = 'manual';
+      const { unmount } = render(<HomePage />);
+      expect(history.scrollRestoration).toBe('manual');
+      unmount();
+      expect(history.scrollRestoration).toBe('manual');
     });
   });
 });
