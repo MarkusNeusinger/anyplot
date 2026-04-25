@@ -2,7 +2,7 @@
 
 ## Description
 
-A panoramic mountain silhouette chart that renders the horizon as seen from a fixed vantage point, like a photograph of a ridgeline against the sky. A filled area under the skyline curve traces the ridgeline across a horizontal viewing range (in degrees of bearing or horizontal distance), and major summits are annotated with their name and elevation. Unlike an elevation-profile-along-a-trail, this plot is the angular view of the surrounding peaks from a single observer, making it ideal for summit-identification infographics, alpine panoramas, and travel guides.
+A panoramic mountain silhouette chart that renders the horizon as seen from a fixed vantage point, like a photograph of a ridgeline against the sky. A filled area under the skyline curve traces the ridgeline across a horizontal viewing range (in degrees of bearing or horizontal distance), and major summits are annotated with their name and elevation. The skyline is jagged and angular — sharp triangular peaks with steep, often asymmetric flanks meeting at pointed apexes, connected by rugged ridges with cols, sub-peaks and rocky notches — not a sequence of smooth bell-shaped bumps. Unlike an elevation-profile-along-a-trail, this plot is the angular view of the surrounding peaks from a single observer, making it ideal for summit-identification infographics, alpine panoramas, and travel guides.
 
 ## Applications
 
@@ -25,6 +25,9 @@ A panoramic mountain silhouette chart that renders the horizon as seen from a fi
 
 ## Notes
 
+- Render the ridgeline as a piecewise-linear / fractal silhouette: triangular peaks with sharp apexes and steep linear flanks, with small irregular jaggedness along the ridges (e.g. midpoint-displacement noise, jittered linear segments, or summed steep triangle/tent functions). Do NOT model summits as Gaussian / bell-curve bumps — the silhouette must read as alpine rock, not as a probability density
+- Vary slope steepness and asymmetry per summit (e.g. one flank steeper than the other), and let saddles between neighboring peaks dip far enough to make each summit individually recognizable
+- Optional layered depth: a darker foreground ridge in front of one or two lighter background ridges fading toward the sky color, like a classic Zermatt / Matterhorn panorama photograph
 - Fill the area below the ridgeline with a dark solid color (photo-like silhouette, evening/dusk feel)
 - Optional sky-gradient background above the ridgeline (light blue → white, or dusk orange → deep blue) for a photographic mood
 - Annotate each peak with a thin leader line from the summit up to a label; label format is peak name on top and elevation in meters below (e.g., "Matterhorn" / "4478 m")
