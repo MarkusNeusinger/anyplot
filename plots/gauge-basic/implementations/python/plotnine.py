@@ -1,15 +1,25 @@
-""" pyplots.ai
+"""anyplot.ai
 gauge-basic: Basic Gauge Chart
-Library: plotnine 0.15.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-14
+Library: plotnine | Python 3.13
+Quality: pending | Updated: 2026-04-25
 """
 
-import numpy as np
-import pandas as pd
-from plotnine import (
+import os
+import sys
+
+
+# Avoid name collision: drop this script's directory from sys.path
+# so `from plotnine import ...` resolves to the installed package.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != _HERE]
+
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from plotnine import (  # noqa: E402
     aes,
     coord_fixed,
     element_blank,
+    element_rect,
     geom_point,
     geom_polygon,
     geom_segment,
@@ -22,106 +32,131 @@ from plotnine import (
 )
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito zone colors (colorblind-safe red/yellow/green)
+ZONE_BAD = "#D55E00"  # vermillion
+ZONE_WARN = "#E69F00"  # orange
+ZONE_GOOD = "#009E73"  # bluish green (brand)
+
 # Data
 value = 72
 min_value = 0
 max_value = 100
 thresholds = [30, 70]
 
-# Gauge parameters
-inner_radius = 0.5
+# Geometry
+inner_radius = 0.7
 outer_radius = 1.0
-start_angle = np.pi  # 180 degrees (left)
-end_angle = 0  # 0 degrees (right)
+start_angle = np.pi
+end_angle = 0.0
 
-# Create color zones based on thresholds
-zones = []
-zone_colors = ["#E74C3C", "#F1C40F", "#27AE60"]  # Red, Yellow, Green
-zone_bounds = [min_value] + thresholds + [max_value]
-
-for i in range(len(zone_bounds) - 1):
+# Zone arc polygons
+zone_colors = [ZONE_BAD, ZONE_WARN, ZONE_GOOD]
+zone_bounds = [min_value, *thresholds, max_value]
+zone_records = []
+for i in range(len(zone_colors)):
     start_pct = (zone_bounds[i] - min_value) / (max_value - min_value)
     end_pct = (zone_bounds[i + 1] - min_value) / (max_value - min_value)
-
-    # Create arc segment as polygon
     start_ang = start_angle - start_pct * (start_angle - end_angle)
     end_ang = start_angle - end_pct * (start_angle - end_angle)
-    n_points = 50
-
+    n_points = 60
     angles_outer = np.linspace(start_ang, end_ang, n_points)
     angles_inner = np.linspace(end_ang, start_ang, n_points)
+    xs = np.concatenate([outer_radius * np.cos(angles_outer), inner_radius * np.cos(angles_inner)])
+    ys = np.concatenate([outer_radius * np.sin(angles_outer), inner_radius * np.sin(angles_inner)])
+    for j in range(len(xs)):
+        zone_records.append({"x": xs[j], "y": ys[j], "zone": str(i)})
 
-    x = np.concatenate([outer_radius * np.cos(angles_outer), inner_radius * np.cos(angles_inner)])
-    y = np.concatenate([outer_radius * np.sin(angles_outer), inner_radius * np.sin(angles_inner)])
+df_zones = pd.DataFrame(zone_records)
 
-    for j in range(len(x)):
-        zones.append({"x": x[j], "y": y[j], "zone": i, "color": zone_colors[i]})
-
-df_zones = pd.DataFrame(zones)
-
-# Create needle pointing to value
+# Needle pointing to current value
 value_pct = (value - min_value) / (max_value - min_value)
 needle_angle = start_angle - value_pct * (start_angle - end_angle)
-needle_length = outer_radius * 0.85
-
+needle_length = inner_radius * 0.92
 df_needle = pd.DataFrame(
     {"x": [0], "y": [0], "xend": [needle_length * np.cos(needle_angle)], "yend": [needle_length * np.sin(needle_angle)]}
 )
 
-# Create tick marks and labels
-tick_values = [0, 25, 50, 75, 100]
-tick_data = []
-label_data = []
-tick_inner = outer_radius * 1.02
-tick_outer = outer_radius * 1.08
-label_radius = outer_radius * 1.18
+# Tick marks and labels
+major_ticks = [0, 25, 50, 75, 100]
+minor_ticks = [t for t in range(0, 101, 5) if t not in major_ticks]
 
-for tv in tick_values:
+minor_tick_records = []
+for tv in minor_ticks:
     pct = (tv - min_value) / (max_value - min_value)
     ang = start_angle - pct * (start_angle - end_angle)
-    tick_data.append(
+    minor_tick_records.append(
         {
-            "x": tick_inner * np.cos(ang),
-            "y": tick_inner * np.sin(ang),
-            "xend": tick_outer * np.cos(ang),
-            "yend": tick_outer * np.sin(ang),
+            "x": (outer_radius * 1.02) * np.cos(ang),
+            "y": (outer_radius * 1.02) * np.sin(ang),
+            "xend": (outer_radius * 1.05) * np.cos(ang),
+            "yend": (outer_radius * 1.05) * np.sin(ang),
         }
     )
-    label_data.append({"x": label_radius * np.cos(ang), "y": label_radius * np.sin(ang), "label": str(tv)})
 
-df_ticks = pd.DataFrame(tick_data)
-df_labels = pd.DataFrame(label_data)
+major_tick_records = []
+label_records = []
+for tv in major_ticks:
+    pct = (tv - min_value) / (max_value - min_value)
+    ang = start_angle - pct * (start_angle - end_angle)
+    major_tick_records.append(
+        {
+            "x": (outer_radius * 1.02) * np.cos(ang),
+            "y": (outer_radius * 1.02) * np.sin(ang),
+            "xend": (outer_radius * 1.10) * np.cos(ang),
+            "yend": (outer_radius * 1.10) * np.sin(ang),
+        }
+    )
+    label_records.append(
+        {"x": (outer_radius * 1.20) * np.cos(ang), "y": (outer_radius * 1.20) * np.sin(ang), "label": str(tv)}
+    )
 
-# Value display label
-df_value = pd.DataFrame({"x": [0], "y": [-0.2], "label": [str(value)]})
+df_minor_ticks = pd.DataFrame(minor_tick_records)
+df_major_ticks = pd.DataFrame(major_tick_records)
+df_labels = pd.DataFrame(label_records)
 
-# Title label
-df_title = pd.DataFrame({"x": [0], "y": [1.45], "label": ["gauge-basic · plotnine · pyplots.ai"]})
+# Center cap (two layered points for definition)
+df_cap_outer = pd.DataFrame({"x": [0], "y": [0]})
+df_cap_inner = pd.DataFrame({"x": [0], "y": [0]})
 
-# Build the plot
+# Value display and context
+df_value = pd.DataFrame({"x": [0], "y": [-0.30], "label": [str(value)]})
+df_context = pd.DataFrame({"x": [0], "y": [-0.55], "label": ["Current Sales"]})
+
+# Title
+df_title = pd.DataFrame({"x": [0], "y": [1.42], "label": ["gauge-basic · plotnine · anyplot.ai"]})
+
+# Build plot
 plot = (
     ggplot()
-    # Draw zone arcs as polygons grouped by zone
-    + geom_polygon(aes(x="x", y="y", fill="factor(zone)", group="zone"), data=df_zones, color="white", size=0.5)
-    # Draw tick marks
-    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_ticks, color="#2C3E50", size=1.5)
-    # Draw tick labels
-    + geom_text(aes(x="x", y="y", label="label"), data=df_labels, color="#2C3E50", size=16)
-    # Draw needle
-    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_needle, color="#2C3E50", size=3)
-    # Draw needle center circle
-    + geom_point(aes(x="x", y="y"), data=pd.DataFrame({"x": [0], "y": [0]}), color="#2C3E50", size=8)
-    # Draw value label
-    + geom_text(aes(x="x", y="y", label="label"), data=df_value, color="#2C3E50", size=24, fontweight="bold")
-    # Draw title
-    + geom_text(aes(x="x", y="y", label="label"), data=df_title, color="#2C3E50", size=14)
-    + coord_fixed(ratio=1, xlim=(-1.5, 1.5), ylim=(-0.5, 1.6))
+    + geom_polygon(aes(x="x", y="y", fill="zone", group="zone"), data=df_zones, color=PAGE_BG, size=1.2)
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_minor_ticks, color=INK_SOFT, size=0.8)
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_major_ticks, color=INK, size=1.6)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_labels, color=INK_SOFT, size=18, fontweight="bold")
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_needle, color=INK, size=4, lineend="round")
+    + geom_point(aes(x="x", y="y"), data=df_cap_outer, color=INK, size=14)
+    + geom_point(aes(x="x", y="y"), data=df_cap_inner, color=PAGE_BG, size=5)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_value, color=ZONE_GOOD, size=56, fontweight="bold")
+    + geom_text(aes(x="x", y="y", label="label"), data=df_context, color=INK_MUTED, size=20)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_title, color=INK, size=24, fontweight="medium")
+    + scale_fill_manual(values=zone_colors, guide=None)
+    + coord_fixed(ratio=1, xlim=(-1.5, 1.5), ylim=(-0.75, 1.55))
     + labs(x="", y="")
     + theme_void()
-    + theme(figure_size=(16, 9), legend_position="none", plot_background=element_blank())
-    # Manual fill colors for zones
-    + scale_fill_manual(values=zone_colors)
+    + theme(
+        figure_size=(16, 9),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        legend_position="none",
+        axis_text=element_blank(),
+        axis_title=element_blank(),
+    )
 )
 
-# Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
