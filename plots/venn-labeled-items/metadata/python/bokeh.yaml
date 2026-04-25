@@ -1,0 +1,265 @@
+library: bokeh
+language: python
+specification_id: venn-labeled-items
+created: '2026-04-25T05:22:11Z'
+updated: '2026-04-25T05:29:10Z'
+generated_by: claude-opus
+workflow_run: 24923336606
+issue: 5364
+python_version: 3.14.4
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/bokeh/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - Beautiful editorial aesthetic with serif italic typography and Okabe-Ito circle
+    colors — achieves the WIRED Chartgeist magazine look convincingly
+  - All 7 Venn zones populated with culturally relevant, witty items; 15 items total
+    within spec range
+  - 'Perfect palette compliance: circles follow Okabe-Ito order (#009E73 → #D55E00
+    → #0072B2), semi-transparent fills, theme-adaptive chrome throughout'
+  - Completely clean gridless layout with axes hidden — appropriate for editorial
+    Venn diagram
+  - 'Perfect code quality: KISS structure, deterministic hardcoded data, clean imports,
+    correct dual PNG+HTML output'
+  weaknesses:
+  - Title format doesn't match required `{spec-id} · {library} · anyplot.ai` pattern
+    — 'Tech Vibes 2026 · ' prefix should be a separate subtitle Label, leaving the
+    main title as 'venn-labeled-items · bokeh · anyplot.ai'
+  - Item label font size (38pt) is slightly small for the 3600×3600 canvas — increase
+    to 44-48pt so items read confidently at full resolution
+  - No Bokeh-distinctive interactive features leveraged — HoverTool showing zone membership
+    and item description would showcase Bokeh's unique value versus static libraries
+  - No ColumnDataSource used for items — more idiomatic Bokeh would collect item coordinates
+    in a ColumnDataSource and use p.text() or p.scatter() + Label via glyph renderer
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — correct light theme surface
+      Chrome: Title "Tech Vibes 2026 · venn-labeled-items · bokeh · anyplot.ai" in dark ink at top — readable. Subtitle "A field guide to fifteen things, three feelings, and seven overlapping truths" in muted INK_SOFT at bottom — readable.
+      Data: Three overlapping circles — green (#009E73 / Overhyped, top-left), orange (#D55E00 / Actually Useful, top-right), blue (#0072B2 / Secretly Loved, bottom-center) — all with 22% alpha fill and matching outline. Category names in each circle's color in large italic serif outside the circles. Fifteen item labels in dark INK distributed across all 7 zones without visible collision.
+      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black consistent with #1A1A17 — correct dark theme surface
+      Chrome: Title renders as light text on dark background — readable. Subtitle rendered in INK_SOFT (#B8B7B0) as medium-gray — readable. Category names retain their Okabe-Ito colors (green, orange, blue) and are clearly visible against the dark background.
+      Data: Circle data colors are identical to the light render (same #009E73, #D55E00, #0072B2) — only chrome flips as required. Item labels use INK = #F0EFE8 (light cream) — visible as white text on dark fill areas. In triple-overlap ABC zone the background is quite dark but item labels (Sourdough, TikTok) remain readable as light text.
+      Legibility verdict: PASS — no dark-on-dark failures detected. All item labels are light-colored on dark backgrounds. Brand green #009E73 remains visible.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 54pt, category names 64pt, items
+          38pt, subtitle 30pt). All readable in both themes. Item labels slightly
+          small for the large canvas.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No visible overlaps. Slight tightness in AC zone (Crocs / Pumpkin
+          Spice) but no actual collision.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Circles well-sized, semi-transparent fills visible. Item labels
+          clearly readable. Minor: items in triple-overlap zone harder to distinguish
+          on dark render.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito colors are CVD-safe. No red-green sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Square 3600x3600 format appropriate for radial Venn. Diagram fills
+          ~70% of canvas with title and subtitle padding. Minor: some empty space
+          at sides.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels needed for Venn diagram. Title present and descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First circle #009E73 (green), second #D55E00, third #0072B2 — canonical
+          Okabe-Ito order. Background #FAF8F1 light / #1A1A17 dark. Theme-adaptive
+          chrome correct.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong editorial aesthetic: italic serif category labels in circle
+          colors, semi-transparent fills, witty subtitle, clean off-white/near-black
+          surfaces. Clearly above library defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No grid, no axes, no outline_line_color — completely clean canvas.
+          Background/border fill unified. Excellent attention to chrome detail.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Cultural commentary comes through clearly. Zone distribution tells
+          a story (NFTs/Metaverse/Web3 overhyped, Google Maps useful). Typography
+          hierarchy (large italic category names vs small items) guides the eye.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Three-circle symmetric Venn diagram with labeled items — exactly
+          as specified.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent fills, category names outside circles in italic
+          serif, item labels inside zones, all 7 zones populated, gridless editorial
+          layout.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Items correctly placed in their assigned zones based on x,y coordinates
+          relative to circle geometry.
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: false
+        comment: Title is 'Tech Vibes 2026 · venn-labeled-items · bokeh · anyplot.ai'
+          — the spec-id and library attribution are present but prefixed with 'Tech
+          Vibes 2026 ·'. Required format is exactly '{spec-id} · {library} · anyplot.ai'.
+          Witty editorial title should be a separate subtitle Label.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All 7 zones populated: A (3 items), B (2), C (2), AB (2), AC (2),
+          BC (2), ABC (2). 15 total items within 10-25 spec range.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Culturally recognizable pop-culture items. Neutral content — no politics,
+          religion, or sensitive comparisons. NFTs/Metaverse/Web3 as 'Overhyped' is
+          a widely shared non-partisan view.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Categorical membership plot — scale is zone distribution, which is
+          balanced and appropriate.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports → theme tokens → geometry → data → figure → circles
+          → labels → items → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data is hardcoded. Fully deterministic, no random generation
+          needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os (theme env), numpy (sqrt), bokeh.io (export_png, output_file,
+          save), bokeh.models (Label), bokeh.plotting (figure) — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. Geometric calculations for circle centers are concise.
+          Loops over circles and items appropriate.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Bokeh API used.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Correct Bokeh usage: figure(), ellipse(), add_layout(Label()), export_png,
+          output_file/save. However, items are placed via individual Label objects
+          rather than using ColumnDataSource with p.text() — the more idiomatic Bokeh
+          pattern for collections of text glyphs.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HTML export alongside PNG is Bokeh-distinctive. match_aspect=True
+          ensures correct circle geometry. Label model with per-glyph styling (font,
+          size, style, color, alignment) is more flexible than matplotlib. However,
+          no HoverTool which would be the most Bokeh-distinctive feature.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
