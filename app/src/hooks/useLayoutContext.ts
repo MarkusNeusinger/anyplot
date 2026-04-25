@@ -39,14 +39,26 @@ export const initialHomeState: HomeState = {
   initialized: false,
 };
 
+export type ThemeMode = 'system' | 'light' | 'dark';
+export type EffectiveTheme = 'light' | 'dark';
+
 export interface ThemeContextValue {
+  mode: ThemeMode;
+  effective: EffectiveTheme;
   isDark: boolean;
-  toggle: () => void;
+  setMode: (mode: ThemeMode) => void;
+  cycle: () => void;
 }
 
 export const AppDataContext = createContext<AppData | null>(null);
 export const HomeStateContext = createContext<HomeStateContextValue | null>(null);
-export const ThemeContext = createContext<ThemeContextValue>({ isDark: false, toggle: () => {} });
+export const ThemeContext = createContext<ThemeContextValue>({
+  mode: 'system',
+  effective: 'light',
+  isDark: false,
+  setMode: () => {},
+  cycle: () => {},
+});
 
 export function useAppData() {
   const context = useContext(AppDataContext);

@@ -57,6 +57,7 @@ export default [
         ClipboardEvent: 'readonly',
         Event: 'readonly',
         MessageEvent: 'readonly',
+        MediaQueryListEvent: 'readonly',
         // APIs
         AbortController: 'readonly',
         AbortSignal: 'readonly',

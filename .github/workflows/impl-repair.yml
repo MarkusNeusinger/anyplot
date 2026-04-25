@@ -239,3 +239,57 @@ jobs:
             -f event_type=review-pr \
             -f "client_payload[pr_number]=$PR_NUM"
           echo "::notice::Triggered impl-review.yml via repository_dispatch for PR #$PR_NUM"
+
+      # ========================================================================
+      # Failure handling: when the repair workflow itself crashes (e.g. Claude
+      # Code Action transient failure), restore the ai-rejected label and
+      # auto-retry once. After one auto-retry, fall back to manual.
+      # ========================================================================
+      - name: Handle repair failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ inputs.pr_number }}
+          SPEC_ID: ${{ inputs.specification_id }}
+          LIBRARY: ${{ inputs.library }}
+          ATTEMPT: ${{ inputs.attempt }}
+        run: |
+          # Restore ai-rejected label that was removed at start of repair so the
+          # PR state stays consistent (otherwise it looks "stuck approved").
+          gh pr edit "$PR_NUM" --add-label "ai-rejected" 2>/dev/null || true
+
+          MARKER="<!-- repair-retry:${SPEC_ID}:${LIBRARY}:attempt-${ATTEMPT} -->"
+          # Paginate so the marker is found even on PRs with >30 comments.
+          RETRY_COUNT=$(gh api --paginate "repos/${{ github.repository }}/issues/${PR_NUM}/comments?per_page=100" \
+            --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2>/dev/null || echo "0")
+
+          if [ "$RETRY_COUNT" -ge 1 ]; then
+            echo "::error::Repair attempt ${ATTEMPT} crashed twice — giving up"
+            gh pr comment "$PR_NUM" --body "${MARKER}
+          ## :x: Repair Workflow Crashed (Attempt ${ATTEMPT}/3, retry exhausted)
+
+          The repair workflow itself failed twice for this attempt — likely a persistent Claude Code Action issue.
+
+          **Manual restart:**
+          \`\`\`
+          gh workflow run impl-repair.yml -f pr_number=${PR_NUM} -f specification_id=${SPEC_ID} -f library=${LIBRARY} -f attempt=${ATTEMPT}
+          \`\`\`
+
+          ---
+          :robot: *[impl-repair](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+          else
+            echo "::warning::Repair attempt ${ATTEMPT} crashed — auto-retrying once"
+            gh pr comment "$PR_NUM" --body "${MARKER}
+          ## :wrench: Repair Workflow Crashed (Attempt ${ATTEMPT}/3) — Auto-Retrying
+
+          The repair workflow failed (probably a transient Claude Code Action issue). Automatically re-triggering this attempt...
+
+          ---
+          :robot: *[impl-repair](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+
+            gh workflow run impl-repair.yml \
+              -f pr_number="$PR_NUM" \
+              -f specification_id="$SPEC_ID" \
+              -f library="$LIBRARY" \
+              -f attempt="$ATTEMPT"
+          fi

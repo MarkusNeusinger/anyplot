@@ -1,0 +1,242 @@
+library: letsplot
+language: python
+specification_id: area-mountain-panorama
+created: '2026-04-25T21:44:24Z'
+updated: '2026-04-25T21:51:46Z'
+generated_by: claude-opus
+workflow_run: 24941216649
+issue: 5365
+python_version: 3.14.4
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/letsplot/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - 'Exemplary data quality: real Swiss Alpine peaks (Matterhorn, Monte Rosa, Weisshorn,
+    Dom, etc.) with accurate elevations from Gornergrat vantage point'
+  - 3-row label staggering algorithm elegantly solves the crowding problem for 16
+    simultaneous peak annotations without any overlap
+  - 'Perfect theme adaptation: both light (#FAF8F1) and dark (#1A1A17) renders are
+    correct without any dark-on-dark or readability failures'
+  - Matterhorn typographic emphasis (size 9 vs 7 for others) provides a clear visual
+    anchor focal point
+  - Compass bearing X-axis labels (WSW, W, NW, N, NE) add geographic orientation without
+    cluttering the panorama
+  weaknesses:
+  - 'Mountain silhouette uses bright brand green (#009E73) instead of the spec-required
+    dark solid color for a photo-like silhouette with evening/dusk feel — the spec
+    explicitly says to fill with a dark solid color; use a dark charcoal/slate fill
+    and reserve #009E73 as a thin ridge outline'
+  - No sky-gradient background above the ridgeline (spec describes it as optional
+    but it would dramatically improve the atmospheric panorama feel the spec envisions)
+  - lets-plot HTML export does not leverage tooltip annotations on peaks — hover for
+    name and elevation would be the library's key interactive differentiator and is
+    missing from the implementation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title in dark ink (#1A1A17) at size 24, clearly readable. Subtitle in muted gray (#6B6A63). Axis labels "Elevation (m)" and "Bearing" in dark ink. Tick labels in INK_SOFT (#4A4A44). All chrome elements readable.
+      Data: Mountain area filled solid with brand green #009E73. 16 peak leader lines in INK_SOFT gray. Peak names in bold dark INK. Elevation sub-labels in INK_SOFT. Matterhorn name larger than others.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title adapts to light text (#F0EFE8), clearly readable against dark background. Subtitle in #A8A79F. Axis labels in light INK token. Tick labels in #B8B7B0. No dark-on-dark failures detected.
+      Data: Mountain area fill is identical #009E73 brand green — same as light render, data colors unchanged. Leader lines in soft gray. Peak name labels in light ink. Elevation labels in muted light gray.
+      Legibility verdict: PASS — all text clearly readable against near-black background, no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Sizes explicitly set: title 24, axis_title 20, axis_text 16; geom_text
+          sizes in lets-plot native units; all readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 3-row staggering algorithm prevents all 16 peak label collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Mountain silhouette, leader lines, and all annotations clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single series green on warm backgrounds, high contrast in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Landscape aspect suits panorama; annotation area takes upper 45%
+          of canvas height
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Elevation (m) and Bearing with compass labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: '#009E73 fill, correct backgrounds #FAF8F1/#1A1A17, theme-adaptive
+          chrome'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: Matterhorn emphasis, compass labels, subtitle; bright
+          green silhouette misses spec dark atmospheric feel'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis-only grid, spines removed, subtle RULE color
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Matterhorn focal point via larger text; panoramic sweep intuitive;
+          missing atmospheric sky gradient
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct area chart as panoramic mountain silhouette
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: false
+        comment: All structural features present but spec says dark solid color fill;
+          bright green does not match evening/dusk silhouette intent
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: angle_deg on X, elevation_m on Y, all 16 peaks annotated
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes spec-id, library, anyplot.ai; no legend needed for
+          single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Skyline profile, labeled summits, varying elevations, ridge variation,
+          compass orientation, 16 peaks
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real Valais Alps peaks with accurate elevations from Gornergrat vantage
+          point
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Y range 2800-6000m for Alpine panorama; X 0-290 degrees WSW to NE
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports, tokens, data, skyline, staggering, plot, save;
+          no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for staggering logic; idiomatic pandas usage
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct ggplot grammar, geom layering, ggsize(), ggsave() with scale=3,
+          element_* theme tokens
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Generates HTML output (lets-plot distinctive) but no interactive
+          tooltips on peaks which is the library's key differentiator
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome

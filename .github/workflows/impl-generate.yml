@@ -755,16 +755,22 @@ jobs:
         run: |
           echo "::notice::Handling generation failure for $LIBRARY/$SPEC_ID"
 
-          # Count previous failures via hidden marker comments (more reliable than workflow runs)
+          # Count previous failures via hidden marker comments (more reliable than workflow runs).
+          # Paginate so the marker is found even on issues with >30 comments
+          # (which is common because all 9 library impls land on the same issue).
           MARKER="<!-- impl-fail:${SPEC_ID}:${LIBRARY} -->"
-          FAILURE_COUNT=$(gh api "repos/${{ github.repository }}/issues/${ISSUE}/comments" \
-            --jq "[.[] | select(.body | contains(\"$MARKER\"))] | length" 2>/dev/null || echo "0")
+          FAILURE_COUNT=$(gh api --paginate "repos/${{ github.repository }}/issues/${ISSUE}/comments?per_page=100" \
+            --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2>/dev/null || echo "0")
 
           echo "::notice::Previous failures for ${LIBRARY}/${SPEC_ID}: $FAILURE_COUNT"
 
-          # After 1 previous failure (= this is attempt 2) → mark as failed
-          if [ "$FAILURE_COUNT" -ge 1 ]; then
-            echo "::warning::Marking $LIBRARY as failed after 2 generation attempts"
+          # FAILURE_COUNT counts marker comments BEFORE this run.
+          # 0 → this is attempt 1 fail, 1 → attempt 2 fail, 2 → attempt 3 fail.
+          ATTEMPT=$((FAILURE_COUNT + 1))
+
+          # After 2 previous failures (= this is attempt 3) → mark as failed
+          if [ "$FAILURE_COUNT" -ge 2 ]; then
+            echo "::warning::Marking $LIBRARY as failed after 3 generation attempts"
 
             # Create failed label if needed
             gh label create "impl:${LIBRARY}:failed" --color "d73a4a" \
@@ -777,9 +783,9 @@ jobs:
 
             # Post final failure comment with marker
             gh issue comment "$ISSUE" --body "${MARKER}
-          ## :x: ${LIBRARY} Failed (Attempt 2/2)
+          ## :x: ${LIBRARY} Failed (Attempt 3/3)
 
-          The **${LIBRARY}** implementation for \`${SPEC_ID}\` failed after 2 attempts.
+          The **${LIBRARY}** implementation for \`${SPEC_ID}\` failed after 3 attempts.
 
           **Reason:** Claude Code failed to create the implementation file.
 
@@ -792,11 +798,11 @@ jobs:
           :robot: *[impl-generate](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
 
           else
-            # First failure → post comment with marker and auto-retry
+            # Attempt 1 or 2 failed → post comment with marker and auto-retry
             gh issue comment "$ISSUE" --body "${MARKER}
-          ## :warning: ${LIBRARY} Generation Failed (Attempt 1/2)
+          ## :warning: ${LIBRARY} Generation Failed (Attempt ${ATTEMPT}/3)
 
-          First attempt failed. Automatically retrying...
+          Attempt ${ATTEMPT} failed. Automatically retrying...
 
           ---
           :robot: *[impl-generate](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
@@ -810,5 +816,5 @@ jobs:
               -f library="${LIBRARY}" \
               -f issue_number="${ISSUE}"
 
-            echo "::notice::Triggered automatic retry for ${LIBRARY}/${SPEC_ID}"
+            echo "::notice::Triggered automatic retry for ${LIBRARY}/${SPEC_ID} (attempt $((ATTEMPT + 1)))"
           fi

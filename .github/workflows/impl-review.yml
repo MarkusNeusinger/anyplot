@@ -172,33 +172,53 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
+          SPEC_ID: ${{ steps.pr.outputs.specification_id }}
+          LIBRARY: ${{ steps.pr.outputs.library }}
         run: |
-          echo "::error::AI Review did not produce valid output files"
-          echo "::error::Expected quality_score.txt but got score=0"
-          echo "::error::This indicates Claude Code Action ran but didn't complete the review task"
+          echo "::error::AI Review did not produce valid output files (score=0)"
 
-          # Add ai-review-failed label so it's visible
-          gh pr edit "$PR_NUM" --add-label "ai-review-failed" 2>/dev/null || true
+          MARKER="<!-- review-retry:${SPEC_ID}:${LIBRARY} -->"
+          # Paginate so the marker is found even on PRs with >30 comments.
+          RETRY_COUNT=$(gh api --paginate "repos/${{ github.repository }}/issues/${PR_NUM}/comments?per_page=100" \
+            --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2>/dev/null || echo "0")
 
-          # Post error comment on PR
-          gh pr comment "$PR_NUM" --body "## :x: AI Review Failed
+          if [ "$RETRY_COUNT" -ge 1 ]; then
+            # Already auto-retried once → final fail, require manual rerun
+            gh pr edit "$PR_NUM" --add-label "ai-review-failed" 2>/dev/null || true
+            gh pr comment "$PR_NUM" --body "${MARKER}
+          ## :x: AI Review Failed (auto-retry exhausted)
 
-          The AI review action completed but did not produce valid output files.
+          The AI review action completed but did not produce valid output files. Auto-retry already tried once.
 
           **What happened:**
           - The Claude Code Action ran
           - No \`quality_score.txt\` file was created
-          - No review data was extracted
 
-          **Action required:**
-          Re-run the impl-review workflow manually:
+          **Manual rerun:**
           \`\`\`
           gh workflow run impl-review.yml -f pr_number=$PR_NUM
           \`\`\`
 
           ---
           :robot: *[impl-review](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+            exit 1
+          fi
 
+          # First failure — post marker and auto-retry via repository_dispatch
+          gh pr comment "$PR_NUM" --body "${MARKER}
+          ## :wrench: AI Review Produced No Score — Auto-Retrying
+
+          The Claude Code Action ran but didn't write \`quality_score.txt\`. Auto-retrying review once...
+
+          ---
+          :robot: *[impl-review](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+
+          gh api repos/${{ github.repository }}/dispatches \
+            -f event_type=review-pr \
+            -f "client_payload[pr_number]=$PR_NUM"
+          echo "::notice::Auto-re-triggered impl-review.yml for PR #$PR_NUM"
+          # Mark this run as failed so the run status reflects that no verdict
+          # was produced. The auto-retry runs in a separate workflow run.
           exit 1
 
       - name: Add quality score label
@@ -448,18 +468,46 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
+          SPEC_ID: ${{ steps.pr.outputs.specification_id }}
+          LIBRARY: ${{ steps.pr.outputs.library }}
         run: |
-          gh pr edit "$PR_NUM" --add-label "ai-review-failed"
-          gh pr comment "$PR_NUM" --body "## :warning: AI Review Failed
+          MARKER="<!-- review-retry:${SPEC_ID}:${LIBRARY} -->"
+          # Paginate so the marker is found even on PRs with >30 comments.
+          RETRY_COUNT=$(gh api --paginate "repos/${{ github.repository }}/issues/${PR_NUM}/comments?per_page=100" \
+            --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2>/dev/null || echo "0")
 
-          The AI review action failed or timed out.
+          if [ "$RETRY_COUNT" -ge 1 ]; then
+            gh pr edit "$PR_NUM" --add-label "ai-review-failed" 2>/dev/null || true
+            gh pr comment "$PR_NUM" --body "${MARKER}
+          ## :x: AI Review Failed (auto-retry exhausted)
 
-          **Options:**
-          1. Re-run the workflow manually
-          2. Request manual human review
+          The AI review action failed or timed out twice in a row.
+
+          **Manual rerun:**
+          \`\`\`
+          gh workflow run impl-review.yml -f pr_number=$PR_NUM
+          \`\`\`
 
           ---
           :robot: *[impl-review](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+            exit 0
+          fi
+
+          gh pr comment "$PR_NUM" --body "${MARKER}
+          ## :wrench: AI Review Crashed — Auto-Retrying
+
+          The Claude Code Action failed or timed out. Auto-retrying review once...
+
+          ---
+          :robot: *[impl-review](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+
+          gh api repos/${{ github.repository }}/dispatches \
+            -f event_type=review-pr \
+            -f "client_payload[pr_number]=$PR_NUM"
+          echo "::notice::Auto-re-triggered impl-review.yml for PR #$PR_NUM"
+          # Mark this run as failed so the run status reflects that no verdict
+          # was produced. The auto-retry runs in a separate workflow run.
+          exit 1
 
       - name: Add verdict label and take action
         if: steps.review.conclusion == 'success' && steps.score.outputs.score != '0'
