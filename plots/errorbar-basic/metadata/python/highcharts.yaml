@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: errorbar-basic
 created: '2025-12-23T13:03:35Z'
-updated: '2026-04-25T09:53:48Z'
+updated: '2026-04-25T10:09:13Z'
 generated_by: claude-opus
 workflow_run: 24927384784
 issue: 973
@@ -12,87 +12,91 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/highcharts/plot-dark.html
-quality_score: 81
+quality_score: 91
 review:
   strengths:
-  - Both light and dark renders show correct theme-adaptive backgrounds, readable
-    chrome, and identical Okabe-Ito data color — a clean dual-theme result
-  - Native Highcharts errorbar series type with proper whisker cap configuration;
-    highcharts-more.js dependency handled correctly
-  - Clinical trial dataset (Control + Treatment A–E, Response mg/dL) is realistic,
-    neutral, and well-scaled with a clear analytical story
+  - Perfect theme adaptation in both light (#FAF8F1) and dark (#1A1A17) renders —
+    error bar colors flip correctly to INK token, all text readable in both themes
+  - Correct use of ErrorBarSeries from highcharts-more.js with ColumnSeries overlay
+    — the idiomatic Highcharts pattern for error bars; downloads both required JS
+    modules
+  - Analytical reference line (plotLines) at Control mean with labeled annotation
+    adds genuine analytical insight
+  - Font sizes explicitly set throughout (title 64px, axis labels 42px, tick labels
+    32px) and scaled appropriately for 4800x2700 canvas
+  - Clean deterministic clinical trial data with meaningful neutral context; KISS
+    flat-script structure with idiomatic from_array() usage
   weaknesses:
-  - Code file saves output as plot.png / plot.html instead of plot-{THEME}.png / plot-{THEME}.html;
-    missing os.getenv('ANYPLOT_THEME') block
-  - Uses raw json.dumps(dict) chart config instead of highcharts_core.chart.Chart
-    + HighchartsOptions idiomatic API
-  - Unnecessary PIL/Pillow dependency for screenshot crop — remove and call driver.save_screenshot(f'plot-{THEME}.png')
-    directly
-  - LM-01 capped by low-level JSON approach; refactoring to use highcharts_core classes
-    would raise both LM-01 and CQ-04
+  - All bars are the same brand green with no visual emphasis on the standout group
+    (Treatment C); a distinct color highlight or callout annotation on Treatment C
+    would strengthen DE-03 storytelling
+  - Legend error bar symbol renders as a filled circle rather than an I-bar due to
+    Highcharts limitation for errorbar series in legend
+  - 'Visual refinement could go further: reference line dashes are quite light in
+    dark mode; DE-03 storytelling relies on subtitle text rather than visual hierarchy'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — not pure white, correct theme surface
-      Chrome: Title "errorbar-basic · highcharts · anyplot.ai" in dark text (top-left); subtitle in muted gray; x-axis "Treatment Group" and y-axis "Response (mg/dL)" labels in dark text; tick labels clearly readable; legend top-right with light background
-      Data: Six bars in Okabe-Ito green (#009E73); black T-bar error bars with visible whisker caps; dashed reference line at y~47.2 labeled "Control mean (47.2)"; subtle y-axis grid lines
-      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "errorbar-basic · highcharts · anyplot.ai" bold large left-aligned dark (#1A1A17); subtitle descriptive dark text; x-axis "Treatment Group" and y-axis "Response (mg/dL)" labels at 42px dark; tick labels at 32px INK_SOFT; all clearly readable
+      Data: Six bars in brand green (#009E73); black I-beam error bars with visible horizontal caps; dashed reference line at 47.2 with italic annotation label; legend top-right with green circle (Mean response) and dark circle (± standard error)
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) — not pure black, correct dark surface
-      Chrome: Title and axis labels rendered in light text; tick labels in muted light-gray; legend uses elevated dark surface (#242420-ish) with light text; all chrome correctly flipped for dark theme
-      Data: Bars remain identical #009E73 green — data colors unchanged from light render; error bars render in white (correctly adapted for dark background); reference line clearly visible
-      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark failures detected
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, subtitle, axis labels, tick labels all adapt to light tokens (INK #F0EFE8 / INK_SOFT #B8B7B0); all clearly readable against dark background; no dark-on-dark failures detected
+      Data: Brand green (#009E73) bars identical to light render — data colors unchanged; error bars adapt to near-white (INK token #F0EFE8) making them clearly visible; reference line and annotation label are light-colored and readable
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set (64px title, 42px axes, 32px ticks); readable
-          in both themes
+        comment: Title 64px, axis labels 42px, tick labels 32px — all explicitly set,
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions; category labels well-spaced
+        comment: No overlapping elements; bars and error bars well-spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars prominent; T-bar whisker caps clearly visible; reference line
-          distinguishable
+        comment: Error bars with 8px stem/whisker, 55% whisker caps; clearly visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green + adaptive black/white error bars; no red-green-only
-          encoding
+        comment: Brand green + neutral dark/light error bars; CVD-safe, high contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~70-80% of canvas; balanced margins; nothing cut off
+        comment: Generous margins (240/220/280/200), balanced layout, legend close
+          to data
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units (mg/dL); X-axis descriptive (Treatment Group)
+        comment: 'X: Treatment Group, Y: Response (mg/dL) — descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; light bg #FAF8F1; dark bg #1A1A17; chrome
-          fully theme-adaptive'
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; chrome adapts
+          correctly in both themes'
     design_excellence:
       score: 12
       max: 20
@@ -102,22 +106,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Thoughtful design: brand-color bars, meaningful reference line,
-          narrative subtitle; above defaults but not publication-level'
+        comment: Reference line + analytical subtitle above default; professional
+          typography; but single-color bars with no visual emphasis on peak group
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: true
-        comment: Subtle y-axis grid, minimal frame; good whitespace; spines partially
-          cleaned up
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Subtitle calls out peak treatment and control baseline; reference
-          line anchors comparison visually
+        comment: Subtle y-axis grid (GRID token), no x-axis grid, generous margins,
+          legend with borderRadius; good attention to detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Reference line creates comparison context; subtitle calls out key
+          finding; but visual hierarchy through color contrast absent — all bars identical
+          green
     spec_compliance:
       score: 15
       max: 15
@@ -127,111 +132,117 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bar+errorbar chart; Highcharts native errorbar series type
-          used
+        comment: ColumnSeries + ErrorBarSeries overlay — correct Highcharts pattern
+          for error bar plots
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Visible T-bar caps; consistent widths; legend; multiple groups
+        comment: Visible caps (55% whiskerLength), consistent widths (8px), symmetric
+          ±SE errors, 6 groups
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categorical x-axis, numeric y-axis, error magnitudes correctly mapped
+        comment: 'X: categorical treatment groups, Y: response values, errors correctly
+          offset ±SE'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels descriptive
+        comment: Title 'errorbar-basic · highcharts · anyplot.ai'; legend labels 'Mean
+          response' and '± standard error'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows means with error bars, variation across groups, reference baseline;
-          missing asymmetric error bars
+        comment: Bars + error bars + reference line cover all aspects of the error
+          bar plot type
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Clinical trial with treatment groups and mg/dL response; neutral,
-          plausible domain
+        comment: Clinical trial scenario with treatment groups and mg/dL measurements;
+          neutral and realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-90 mg/dL range, error bars 3-6 units (reasonable standard errors)
+        comment: Values 47-72 mg/dL with ±3-5 mg/dL SE; realistic clinical measurement
+          range
     code_quality:
-      score: 6
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Linear structure; PIL cropping step adds unnecessary complexity
+        comment: 'Flat script: imports → tokens → data → chart → series → export;
+          no functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data hardcoded; fully deterministic
+        comment: Hardcoded deterministic data; no randomness
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: PIL/Pillow imported and used but unnecessary
+        passed: true
+        comment: All imports used (os, tempfile, time, urllib.request, Path, Chart,
+          HighchartsOptions, ColumnSeries, ErrorBarSeries, webdriver, Options)
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Raw json.dumps(dict) instead of highcharts_core API; PIL crop overhead
+        passed: true
+        comment: Clean, Pythonic; uses .from_array() idiomatically for both series
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves to plot.png/plot.html — must be plot-{THEME}.png/plot-{THEME}.html;
-          no ANYPLOT_THEME read
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 5
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
-        max: 5
-        passed: false
-        comment: Raw dict + json.dumps instead of highcharts_core Chart/HighchartsOptions/ErrorBarSeries
-          classes
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Native Highcharts errorbar series type with whiskerLength/whiskerWidth/stemWidth;
-          highcharts-more.js correctly loaded
-  verdict: REJECTED
+        comment: Correct Chart(container='container'), HighchartsOptions, ColumnSeries/ErrorBarSeries
+          class API, .from_array(), downloads both highcharts.js + highcharts-more.js
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: ErrorBarSeries (highcharts-more module), plotLines for annotated
+          reference line, whiskerLength/whiskerWidth/stemWidth customization
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
-  - pillow
   techniques:
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - grid-styling
