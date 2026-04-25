@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" anyplot.ai
 errorbar-basic: Basic Error Bar Plot
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Updated: 2026-04-25
+Library: plotly 6.7.0 | Python 3.14.4
+Quality: 85/100 | Updated: 2026-04-25
 """
 
 import os
