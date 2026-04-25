@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 area-mountain-panorama: Mountain Panorama Profile with Labeled Peaks
-Library: letsplot | Python 3.13
-Quality: pending | Created: 2026-04-25
+Library: letsplot 4.9.0 | Python 3.14.4
+Quality: 86/100 | Created: 2026-04-25
 """
 
 import os
