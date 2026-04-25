@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 errorbar-basic: Basic Error Bar Plot
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: seaborn 0.13.2 | Python 3.14.4
+Quality: 72/100 | Updated: 2026-04-25
 """
 
 import matplotlib.pyplot as plt
