@@ -22,7 +22,16 @@ vi.mock('../hooks', async () => {
 
 vi.mock('../hooks/useLayoutContext', async () => {
   const actual = await vi.importActual<typeof import('../hooks/useLayoutContext')>('../hooks/useLayoutContext');
-  return { ...actual, useTheme: () => ({ isDark: true, toggle: vi.fn() }) };
+  return {
+    ...actual,
+    useTheme: () => ({
+      mode: 'dark' as const,
+      effective: 'dark' as const,
+      isDark: true,
+      setMode: vi.fn(),
+      cycle: vi.fn(),
+    }),
+  };
 });
 
 vi.mock('./MastheadRule', () => ({ MastheadRule: () => <div data-testid="masthead" /> }));

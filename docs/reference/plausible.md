@@ -130,7 +130,7 @@ https://anyplot.ai/{spec_id}/{language}/{library}/{category}/{value}/...
 | `suggest_spec` | - | SpecsListPage.tsx | User clicks the `spec.suggest()` link on the specs list page. The mirror link on the landing page emits `nav_click` with `source: suggest_spec_link` instead. |
 | `report_issue` | `spec`, `library`? | SpecPage.tsx | User clicks "report issue" link |
 | `tag_click` | `param`, `value`, `source` | SpecTabs.tsx | User clicks a tag chip to filter |
-| `theme_toggle` | `to` | MastheadRule.tsx | User toggles dark/light mode (`to` ∈ `dark`, `light`) |
+| `theme_toggle` | `to` | MastheadRule.tsx | User cycles tri-state theme mode (`to` ∈ `system`, `light`, `dark`). The cycle order is `system → light → dark → system`. |
 | `potd_dismiss` | `spec`, `library` | PlotOfTheDay.tsx | User dismisses the plot-of-the-day banner |
 
 ### Landing Page Navigation (`nav_click`)
@@ -307,8 +307,8 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `param` | URL parameter name for tag | `tag_click` |
 | `source` | Source UI element / page context | `tag_click`, `nav_click` |
 | `target` | Click destination (route or external label) | `nav_click` |
-| `to` | New mode after toggle (`dark` / `light`) | `theme_toggle` |
-| `theme` | Ambient theme prop attached to **every** pageview & event (`dark` / `light`) | all events (set in RootLayout via `setAnalyticsAmbientProps`) |
+| `to` | New mode after toggle (`system` / `light` / `dark`) | `theme_toggle` |
+| `theme` | Ambient *effective* theme attached to **every** pageview & event (`dark` / `light`) — resolved from the tri-state mode so OS-followers still split cleanly | all events (set in RootLayout via `setAnalyticsAmbientProps`) |
 | `rating` | CWV rating (good, needs-improvement, poor) | `LCP`, `CLS`, `INP` |
 | `filter_lib` | Library filter value (for og:image) | `og_image_view` |
 | `filter_spec` | Specification filter value (for og:image) | `og_image_view` |

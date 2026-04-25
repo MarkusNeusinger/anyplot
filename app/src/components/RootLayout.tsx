@@ -27,13 +27,15 @@ export function RootLayout() {
   const { trackEvent } = useAnalytics();
   const { pathname, hash } = useLocation();
   const navigationType = useNavigationType();
-  const { isDark } = useTheme();
+  const { effective } = useTheme();
   const mastheadSticks = pathname !== '/plots';
 
   // Set synchronously during render so the first pageview from a child page's
   // useEffect (which runs before the parent's useEffect) carries the theme prop.
   // setAnalyticsAmbientProps merges into module state, so re-renders are safe.
-  setAnalyticsAmbientProps({ theme: isDark ? 'dark' : 'light' });
+  // The ambient prop tracks the *effective* theme so existing Plausible
+  // dark/light breakdowns keep working regardless of mode (system/light/dark).
+  setAnalyticsAmbientProps({ theme: effective });
 
   // Reset scroll on forward navigation (PUSH/REPLACE). In SPA route changes,
   // the next page can otherwise keep the previous page's scroll position,

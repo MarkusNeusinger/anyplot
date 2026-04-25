@@ -101,7 +101,7 @@ function pathSegments(pathname: string): Segment[] {
  * and the catchphrase is suppressed so the line stays uncluttered.
  */
 export function MastheadRule() {
-  const { isDark, toggle } = useTheme();
+  const { mode, cycle } = useTheme();
   const { trackEvent } = useAnalytics();
   const releaseTag = useLatestRelease();
   const location = useLocation();
@@ -109,9 +109,10 @@ export function MastheadRule() {
   const isLanding = segments.length === 0;
   const version = releaseTag ?? 'v1.0';
 
+  const NEXT_MODE = { system: 'light', light: 'dark', dark: 'system' } as const;
   const handleThemeToggle = () => {
-    trackEvent('theme_toggle', { to: isDark ? 'light' : 'dark' });
-    toggle();
+    trackEvent('theme_toggle', { to: NEXT_MODE[mode] });
+    cycle();
   };
 
   // Pick one random comment style per browser session (stable across client-side nav).
@@ -234,7 +235,7 @@ export function MastheadRule() {
         display: 'flex',
         justifyContent: 'flex-end',
       }}>
-        <ThemeToggle isDark={isDark} onToggle={handleThemeToggle} />
+        <ThemeToggle mode={mode} onCycle={handleThemeToggle} />
       </Box>
     </Box>
   );

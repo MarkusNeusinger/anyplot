@@ -10,6 +10,20 @@
     <meta name="theme-color" content="#0E0E10" media="(prefers-color-scheme: dark)" />
     <title>any.plot() — any library.</title>
 
+    <!-- Resolve theme before paint to avoid a flash-of-wrong-theme. Mirrors
+         useThemeMode: stored 'light'/'dark' wins, otherwise follow the OS. -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          var dark = stored === 'dark'
+            || (stored !== 'light' && window.matchMedia
+                && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        } catch (e) { /* private mode etc. — fall through to React-driven default */ }
+      })();
+    </script>
+
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://anyplot.ai/" />

@@ -1,19 +1,32 @@
 import Box from '@mui/material/Box';
 import { colors, typography } from '../theme';
+import type { ThemeMode } from '../hooks/useLayoutContext';
 
 interface ThemeToggleProps {
-  isDark: boolean;
-  onToggle: () => void;
+  mode: ThemeMode;
+  onCycle: () => void;
 }
 
-export function ThemeToggle({ isDark, onToggle }: ThemeToggleProps) {
-  const icon = isDark ? '☀' : '◐';
-  const label = isDark ? 'light' : 'dark';
+const NEXT_MODE: Record<ThemeMode, ThemeMode> = {
+  system: 'light',
+  light: 'dark',
+  dark: 'system',
+};
+
+const ICON: Record<ThemeMode, string> = {
+  system: '◑',
+  light: '☀',
+  dark: '☾',
+};
+
+export function ThemeToggle({ mode, onCycle }: ThemeToggleProps) {
+  const next = NEXT_MODE[mode];
   return (
     <Box
       component="button"
-      onClick={onToggle}
-      aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+      onClick={onCycle}
+      aria-label={`Switch to ${next} theme`}
+      title={`theme: ${mode}`}
       sx={{
         background: 'none',
         border: '1px solid var(--rule)',
@@ -32,9 +45,9 @@ export function ThemeToggle({ isDark, onToggle }: ThemeToggleProps) {
         },
       }}
     >
-      {icon}
+      {ICON[mode]}
       <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' }, ml: 0.5 }}>
-        {label}
+        {mode}
       </Box>
     </Box>
   );
