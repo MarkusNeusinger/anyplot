@@ -1,0 +1,248 @@
+library: plotly
+language: python
+specification_id: venn-labeled-items
+created: '2026-04-25T05:17:24Z'
+updated: '2026-04-25T05:22:07Z'
+generated_by: claude-opus
+workflow_run: 24923249738
+issue: 5364
+python_version: 3.14.4
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/plotly/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - 'Perfect spec compliance: all 7 interior zones populated, outside zone used, 15
+    items in range, semi-transparent fills, category labels outside circles — hits
+    every requirement'
+  - 'Excellent editorial Chartgeist aesthetic: Georgia serif font, bold color-matched
+    category labels, italic subtitle, witty pop-culture items fully capture the magazine
+    commentary vibe'
+  - 'Full theme adaptation: PAGE_BG, INK, INK_SOFT, INK_MUTED tokens applied throughout
+    — both renders pass legibility checks with no dark-on-dark failures'
+  - 'Perfect code quality: deterministic data, clean imports, flat KISS structure,
+    correct output filenames (plot-{THEME}.png + .html)'
+  - 'Good use of Plotly-specific features: hovertext on item markers, HTML-tagged
+    text in annotations (<b>, <i>), HTML export'
+  weaknesses:
+  - Large empty space (~25-30% of canvas) at the bottom — the Venn diagram sits in
+    the upper portion of the 3600×3600 canvas; vertical range or margin should be
+    adjusted so the diagram fills the canvas more evenly
+  - All text positions are hardcoded to 'middle right', meaning every item label extends
+    right of its dot; items on the left half of circles (e.g. Google Maps, VS Code,
+    Dishwasher in zone B) would read better with 'middle left' alignment
+  - zone_offsets table only covers up to 3 items per zone; the strict=False zip silently
+    truncates if a zone ever gets 4+ items — no guard or warning
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "CHARTGEIST · venn-labeled-items · plotly · anyplot.ai" in bold near-black serif font, clearly readable. Italic subtitle in muted dark text, readable. "Neither here nor there" caption in muted ink, readable. No axis labels (appropriate for Venn). Category labels "OVERHYPED" (green), "ACTUALLY USEFUL" (orange), "SECRETLY LOVED" (blue) are large, bold, and clearly visible outside their respective circles.
+      Data: Three overlapping circles — green (#009E73) at top, orange (#D55E00) bottom-left, blue (#0072B2) bottom-right — with semi-transparent fills (rgba ~0.26 alpha). All 15 item labels (NFTs, Crypto Bros, Metaverse in A; Google Maps, VS Code, Dishwasher in B; ABBA, Slippers, Crocs in C; ChatGPT/Slack in AB; Vinyl Records in AC; Dolly Parton in BC; Sourdough in ABC; Beige Walls outside) are visible with small black dot markers. Item labels are dark on the light surface and readable.
+      Legibility verdict: PASS — all text readable. Minor: bottom 25% of canvas is empty whitespace below the diagram.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title in off-white/light text, clearly readable against the dark background. Subtitle in muted light text, readable. "Neither here nor there" in muted lighter text, readable. Category labels "OVERHYPED" (green), "ACTUALLY USEFUL" (orange), "SECRETLY LOVED" (blue) remain in their Okabe-Ito colors — all readable against the dark background.
+      Data: Data colors are identical to light render — same green, orange, blue circles. The semi-transparent fills now appear darker (mixing with near-black background) creating a moodier editorial look. Item markers are white/light (#F0EFE8 INK token), labels are light text on dark — all readable. No dark-on-dark failures detected.
+      Legibility verdict: PASS — all text readable in dark mode; chrome properly inverted; no near-black text on near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=30, category=28, items=19); all
+          text readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text collisions; items well-spaced within each zone
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All circles, markers, and labels visible in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette (green/orange/blue) is CVD-safe; no red-green sole
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Significant empty space (~25-30%) at bottom of canvas; diagram positioned
+          too high in square canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title present with spec-id, library, anyplot.ai; no axis labels appropriate
+          for Venn
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First circle #009E73 (brand green), Okabe-Ito order preserved; PAGE_BG
+          correct for both themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Genuine editorial Chartgeist aesthetic: Georgia serif, color-matched
+          bold category labels, italic subtitle, witty pop-culture items'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No axes/spines (appropriate), clean gridless background, editorial
+          typography; penalized for empty bottom space
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through circle colors, witty content supports
+          editorial framing, 'Neither here nor there' caption adds personality
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Three-circle Venn diagram with labeled items, editorial Chartgeist
+          style
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 7 zones used, semi-transparent fills, markers+labels inside zones,
+          category names outside circles, outside zone present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Items correctly placed in their designated zones
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title contains spec-id, library, anyplot.ai; no legend (category
+          labels serve this role)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 7 interior zones plus outside populated; demonstrates full set-theory
+          coverage
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, witty pop-culture items (tech, music, food, trends); no
+          controversial content
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 15 items within 10-25 spec range; balanced distribution across zones
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; clear linear flow with well-named sections
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — no random numbers, all data hardcoded
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only os, numpy, plotly.graph_objects — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized; zone grouping and offset logic is appropriate
+          complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png (3600x3600px via scale=3) and plot-{THEME}.html
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Standard go.Scatter with fill='toself' for circles; add_annotation
+          for labels — correct but not advanced
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Hover tooltips (hovertext+hoverinfo), HTML-tagged text in annotations,
+          HTML export are Plotly-distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
