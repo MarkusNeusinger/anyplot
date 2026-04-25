@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 errorbar-basic: Basic Error Bar Plot
-Library: bokeh | Python 3.13
-Quality: pending | Updated: 2026-04-25
+Library: bokeh 3.9.0 | Python 3.14.4
+Quality: 84/100 | Updated: 2026-04-25
 """
 
 import os
