@@ -1,15 +1,230 @@
 library: letsplot
+language: python
 specification_id: errorbar-basic
 created: '2025-12-23T13:02:19Z'
-updated: '2025-12-23T13:08:14Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461379104
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/letsplot/plot.html
+updated: '2026-04-25T09:31:53Z'
+generated_by: claude-opus
+workflow_run: 24927471359
+issue: 973
+python_version: 3.14.4
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/letsplot/plot-dark.html
 quality_score: 91
+review:
+  strengths:
+  - Focal highlighting of Treatment D through Okabe-Ito vermillion creates genuine
+    data storytelling and a clear visual hierarchy
+  - All font sizes explicitly set (title 24pt, axis 20pt, ticks 16pt) and readable
+    in both themes
+  - Clean deterministic clinical data model (Control vs Treatment groups, mg/dL units)
+    with varied error magnitudes
+  - 'Theme adaptation correct and complete in both renders: backgrounds, ink tokens,
+    grid lines'
+  - Horizontal-only grid and no redundant legend demonstrate deliberate visual restraint
+  weaknesses:
+  - 'VQ-05 minor: title sits very close to canvas top edge — a small top plot margin
+    would improve breathing room'
+  - 'DE-02 minor: grid line color uses full INK_SOFT opacity rather than a semi-transparent
+    RULE token; could be subtler especially in dark mode'
+  - 'LM-02: HTML export used but no distinctively lets-plot-only features (e.g., tooltip
+    customization, stat layers) are leveraged'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "errorbar-basic · letsplot · anyplot.ai" in dark ink top-left; y-axis label "Measured Value (mg/dL)" and x-axis label "Experimental Group" in dark ink; tick labels (40-68 on y, group names on x) in INK_SOFT medium gray — all clearly readable
+      Data: Four groups in brand green (#009E73), Treatment D highlighted in Okabe-Ito vermillion (#D55E00); center-point markers size=6, error bars with clear horizontal caps (width=0.3); horizontal-only subtle grid lines
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, axis labels, and tick labels all appear in light text (F0EFE8/B8B7B0 range) — clearly readable against dark surface; no dark-on-dark failures observed; grid lines visible as subtle horizontal rules
+      Data: Colors identical to light render — four groups in #009E73, Treatment D in #D55E00; markers and error bar caps equally visible on dark background
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title 24pt, axis labels 20pt, tick labels 16pt — all explicitly set,
+          readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Five groups well-spaced, no text collision
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Points size=6, error bars size=1.5 with clear caps width=0.3
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Two Okabe-Ito colors, colorblind-safe, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions and data spread; title top-margin slightly tight
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis with mg/dL units, X-axis descriptive, title correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1/#1A1A17;
+          theme-adaptive chrome in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Focal highlighting of highest-error group is deliberate and thoughtful;
+          clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Horizontal-only grid, panel border removed, no legend; grid opacity
+          could be subtler
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Vermillion focal color on Treatment D guides viewer to the highest-uncertainty
+          group without annotations
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct error bar plot with center points and visible caps
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Error bars with caps, center points, consistent widths, varied error
+          magnitudes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categorical x-axis, numeric y-axis, symmetric error bars
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; no legend appropriate for categorical x-axis
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Five groups with error magnitudes 3.9-7.1 demonstrating full range
+          of error bar behavior
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Clinical/lab scenario with Control vs Treatment groups, mg/dL units
+          — neutral and plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 40-70 mg/dL with errors 3.9-7.1 realistic for clinical measurements
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports → data → theme → plot → save; no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Every import is used; no unused symbols
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic focal highlighting via idxmax() and list comprehension;
+          appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current API with
+          scale=3
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Grammar-of-graphics layering, ggsize/ggsave with scale=3, proper
+          theme composition
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HTML export and ggplot2-style color aesthetic mapping for focal highlighting;
+          could leverage more lets-plot-specific features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -19,189 +234,4 @@ impl_tags:
   - data-generation
   dataprep: []
   styling:
-  - minimal-chrome
-review:
-  strengths:
-  - Clean, professional visualization with proper error bar caps
-  - Excellent use of lets-plot ggplot2 grammar with geom_errorbar and geom_point layering
-  - Well-chosen experimental data scenario that perfectly illustrates error bar use
-    case
-  - Proper sizing for 4800x2700 output with appropriate text scaling
-  - Good variation in error magnitudes across groups showcases the visualization purpose
-  weaknesses:
-  - Axis labels lack units (e.g., Measured Value (units) would be better)
-  - Could demonstrate asymmetric error bars to show full feature coverage as mentioned
-    in spec
-  image_description: The plot displays a basic error bar chart with 5 experimental
-    groups (Control, Treatment A, Treatment B, Treatment C, Treatment D) on the x-axis
-    and "Measured Value" on the y-axis (range ~40-68). Each group shows a central
-    blue point marker with vertical error bars extending above and below, featuring
-    horizontal caps at both ends. The colors are a consistent blue (#306998) for both
-    points and error bars. The title correctly displays "errorbar-basic · letsplot
-    · pyplots.ai" at the top. The background is clean white with subtle gray grid
-    lines, using a minimal theme. The data shows variation across groups with Treatment
-    B having the highest mean (~61) and largest error range, while Control has the
-    lowest mean (~45).
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at appropriate
-          sizes
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements; all labels well-spaced
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Error bars and points are appropriately sized for the 5 data points
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space, balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Labels are descriptive ("Experimental Group", "Measured Value") but
-          lack units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: false
-        comment: Grid is subtle and appropriate; no legend needed for single series,
-          but grid lines are visible (acceptable)
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct error bar plot type
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X (categories) and Y (values) correctly assigned
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Error bars with caps present, symmetric errors shown
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Y-axis range (40-68) shows all data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: No legend needed for single series (appropriate)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "errorbar-basic · letsplot · pyplots.ai"'
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 6
-        max: 8
-        passed: true
-        comment: Shows varying error magnitudes and mean values, but all errors are
-          symmetric (spec mentions asymmetric as an option)
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Experimental treatment data is a perfect real-world scenario for
-          error bars
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
-        max: 5
-        passed: true
-        comment: Values in 40-68 range with errors of 4-7 are realistic for experimental
-          measurements
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
-      - id: CQ-02
-        name: Reproducibility
-        score: 2
-        max: 3
-        passed: false
-        comment: Data is deterministic (hardcoded), but no random seed comment for
-          clarity
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
-        max: 5
-        passed: false
-        comment: Uses ggplot2-style grammar correctly with geom_errorbar and geom_point,
-          but doesn't leverage advanced lets-plot features like tooltips or interactive
-          elements
-  verdict: APPROVED
+  - grid-styling

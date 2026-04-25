@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import { colors, typography } from '../theme';
+import { useAnalytics } from '../hooks';
 
 const DEBUG_CLICK_COUNT = 5;
 const DEBUG_CLICK_WINDOW_MS = 800;
@@ -56,6 +57,7 @@ const activeLinkSx = {
 export function NavBar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { trackEvent } = useAnalytics();
   const clickCountRef = useRef(0);
   const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -66,6 +68,7 @@ export function NavBar() {
   }, []);
 
   const handleSearch = () => {
+    trackEvent('nav_click', { source: 'nav_search', target: '/plots?focus=search' });
     navigate('/plots?focus=search');
   };
 
@@ -73,6 +76,7 @@ export function NavBar() {
   // Non-triggering clicks fall through to RouterLink's normal `/` navigation.
   const handleLogoClick = useCallback(
     (e: React.MouseEvent) => {
+      trackEvent('nav_click', { source: 'nav_logo', target: '/' });
       if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
       clickCountRef.current += 1;
       if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
@@ -84,7 +88,7 @@ export function NavBar() {
         navigate('/debug');
       }
     },
-    [navigate]
+    [navigate, trackEvent]
   );
 
   return (
@@ -140,6 +144,7 @@ export function NavBar() {
             <Box
               component={RouterLink}
               to={link.to}
+              onClick={() => trackEvent('nav_click', { source: `nav_${link.label}`, target: link.to })}
               sx={location.pathname === link.to ? activeLinkSx : linkSx}
             >
               {/* Full label on ≥md, short label on smaller screens where it saves room */}

@@ -1,0 +1,261 @@
+library: pygal
+language: python
+specification_id: area-mountain-panorama
+created: '2026-04-25T21:39:22Z'
+updated: '2026-04-25T21:46:37Z'
+generated_by: claude-opus
+workflow_run: 24941215162
+issue: 5365
+python_version: 3.14.4
+library_version: 3.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/pygal/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'Both light and dark renders fully theme-correct: backgrounds, text, and chrome
+    all adapt correctly; data colour (#009E73) is identical across themes.'
+  - Sky gradient is theme-aware (warm peach dusk for light; deep navy for dark), adding
+    atmospheric character that aligns with the spec's evening/dusk feel intent.
+  - 'Complete spec coverage: all 17 Wallis peaks annotated with staggered 3-tier labels,
+    leader lines, elevation sub-labels, and Matterhorn focal emphasis.'
+  - Real-world Wallis Alps data with accurate elevations gives the panorama genuine
+    geographic credibility.
+  - Interactive HTML export exploits pygal's native SVG interactivity — peak dots
+    carry hover labels, which is a genuinely pygal-distinctive feature.
+  weaknesses:
+  - to_svg() helper function violates KISS structure; the coordinate transform should
+    be inlined or absorbed into the SVG generation loop.
+  - Pygal's built-in title, axis label, and tick APIs are completely bypassed via
+    SVG string injection. Re-using pygal's built-in title, x_title, y_title features
+    would improve LM-01.
+  - Right-side label cluster (7 peaks from Strahlhorn to Dom over a 55 degree arc)
+    is slightly tight; consider adding a 4th tier or applying a minimum horizontal
+    offset between adjacent same-tier labels.
+  - Elevation sub-labels (22-26px) are slightly small for the 4800x2700 canvas; raising
+    to 28-30px would improve legibility on the full-resolution image.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface.
+      Chrome: Title "Wallis Alps · area-mountain-panorama · pygal · anyplot.ai" in dark #1A1A17 at top — clearly readable. Subtitle in INK_SOFT below title — readable. Y-axis label "Elevation (m)" rotated on left in dark ink — readable. Y-tick labels 3,000–6,000 in INK_SOFT left of axis — readable. Compass bearing labels (W, SW, S, SE, E) along bottom in INK_SOFT — readable. Peak name labels in INK_SOFT (28px) or INK (34px for Matterhorn) — readable; elevation sub-labels in INK_MUTED (22–26px) — readable but small.
+      Data: Brand green #009E73 filled area traces the ridgeline silhouette across the full width. Warm peach/dusk sky gradient fills the plot area above the ridgeline. Small black summit dots at each peak position connected by thin vertical leader lines to staggered tier labels above.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct theme surface.
+      Chrome: Title, subtitle, axis labels, tick labels, and compass labels all rendered in light ink (#F0EFE8 / #B8B7B0) — clearly readable against dark background. No dark-on-dark failures detected.
+      Data: Brand green #009E73 filled silhouette — identical colour to light render. Deep blue/navy sky gradient (#252D40 to #1A1A17) replaces the peach gradient. Summit dots change from black to white, remaining visible. Leader lines in light/muted ink.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures; brand green #009E73 clearly visible on dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (62px title, 42px y-axis, 36px ticks/compass,
+          28-34px peak names, 22-26px elevations). All readable in both themes. Slight
+          deduction: elevation sub-labels 22px are small for 4800x2700.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 3-tier staggering handles most clustering well. Right-side cluster
+          (Strahlhorn through Dom, 7 peaks in ~55 degrees) is slightly tight.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Brand-green silhouette, summit dots, and leader lines all clearly
+          sized and visible in both themes.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single-series, CVD-safe #009E73 with high contrast on both backgrounds.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700 landscape; plot fills canvas well with balanced margins.
+          Panoramic feel achieved.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: Elevation (m); X-axis: compass bearings W/SW/S/SE/E; full
+          title with spec-id and library.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; background #FAF8F1 light / #1A1A17 dark; theme-adaptive
+          chrome in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Theme-adaptive sky gradient adds atmospheric depth. Intentional typographic
+          hierarchy with Matterhorn focal emphasis. Clearly above defaults. Not quite
+          publication-ready — green silhouette trades off spec's intended dark photographic
+          mood.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped frame, no grid guides, subtle horizontal reference lines
+          at 500m intervals, generous margins. Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: W→E directional narrative via subtitle and compass labels. Matterhorn
+          focal point via typography. Staggered labels create visual rhythm.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Filled area / ridge silhouette panorama — correct chart type.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Filled ridge, sky gradient, peak annotations with leader lines, name+elevation
+          format, staggered labels (3 tiers), y-floor 2500m, compass bearings, landscape
+          16:9, Matterhorn focal emphasis — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: compass angle 0-262 degrees; Y: elevation 2500-6050m; all 17
+          peaks visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title contains spec-id and library name. No legend needed (single
+          series).
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Demonstrates all aspects: filled ridge, gradient sky, 17-peak annotation
+          set, label staggering, directional sweep, focal emphasis.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real Wallis Alps peaks with accurate elevations; neutral geography/earth-science
+          topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Peak range 4027-4634m accurate for Wallis 4000m summits; Y-axis 2500-6050m
+          sensible.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: def to_svg(ax, ay) helper function defined — technically violates
+          no-functions guideline. Required for the SVG coordinate system but should
+          be inlined.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: re (dot regex), sys (path fix), cairosvg (PNG
+          export), numpy, pygal, pygal.style.Style.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity for the spec; no fake UI or interactive
+          simulation.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses pygal.XY(fill=True) and Style for theming correctly. However
+          pygal's built-in title, label, tick, and grid API is completely bypassed
+          — all chrome injected as raw SVG strings.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HTML export with interactive SVG (peak dots with hover labels via
+          pygal label metadata) is genuinely pygal-distinctive. Uses series label
+          field and show_dots=True for interactive markers.
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - cairosvg
+  techniques:
+  - html-export
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - gradient-fill
+  - alpha-blending

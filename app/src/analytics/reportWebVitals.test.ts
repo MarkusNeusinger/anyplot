@@ -1,5 +1,14 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { reportWebVitals } from './reportWebVitals';
+import { setAnalyticsAmbientProps } from '../hooks/useAnalytics';
+
+// Single hoisted mock (vi.mock dedupes by module path — last call wins, so
+// keeping one shared mock avoids cross-test interference).
+vi.mock('web-vitals', () => ({
+  onLCP: (cb: (m: { value: number; rating: string }) => void) => cb({ value: 2500, rating: 'good' }),
+  onCLS: (cb: (m: { value: number; rating: string }) => void) => cb({ value: 0.15, rating: 'needs-improvement' }),
+  onINP: (cb: (m: { value: number; rating: string }) => void) => cb({ value: 200, rating: 'good' }),
+}));
 
 describe('reportWebVitals', () => {
   const originalLocation = window.location;
@@ -11,6 +20,7 @@ describe('reportWebVitals', () => {
       configurable: true,
     });
     delete window.plausible;
+    setAnalyticsAmbientProps({ theme: '' });
   });
 
   it('does nothing in non-production environment', () => {
@@ -44,16 +54,7 @@ describe('reportWebVitals', () => {
     });
     window.plausible = vi.fn();
 
-    // Mock the dynamic import
-    vi.mock('web-vitals', () => ({
-      onLCP: (cb: (m: { value: number; rating: string }) => void) => cb({ value: 2500, rating: 'good' }),
-      onCLS: (cb: (m: { value: number; rating: string }) => void) => cb({ value: 0.15, rating: 'needs-improvement' }),
-      onINP: (cb: (m: { value: number; rating: string }) => void) => cb({ value: 200, rating: 'good' }),
-    }));
-
     reportWebVitals();
-
-    // Wait for dynamic import to resolve
     await vi.dynamicImportSettled();
 
     expect(window.plausible).toHaveBeenCalledWith('LCP', {
@@ -65,7 +66,28 @@ describe('reportWebVitals', () => {
     expect(window.plausible).toHaveBeenCalledWith('INP', {
       props: { value: '200', rating: 'good' },
     });
+  });
 
-    vi.restoreAllMocks();
+  it('merges ambient analytics props (e.g. theme) into CWV events', async () => {
+    Object.defineProperty(window, 'location', {
+      value: { ...originalLocation, hostname: 'anyplot.ai' },
+      writable: true,
+      configurable: true,
+    });
+    window.plausible = vi.fn();
+    setAnalyticsAmbientProps({ theme: 'dark' });
+
+    reportWebVitals();
+    await vi.dynamicImportSettled();
+
+    expect(window.plausible).toHaveBeenCalledWith('LCP', {
+      props: { theme: 'dark', value: '2500', rating: 'good' },
+    });
+    expect(window.plausible).toHaveBeenCalledWith('CLS', {
+      props: { theme: 'dark', value: '0.15', rating: 'needs-improvement' },
+    });
+    expect(window.plausible).toHaveBeenCalledWith('INP', {
+      props: { theme: 'dark', value: '200', rating: 'good' },
+    });
   });
 });

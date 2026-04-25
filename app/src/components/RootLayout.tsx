@@ -1,8 +1,11 @@
-import { Outlet, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Outlet, useLocation, useNavigationType } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 
 import { useAnalytics } from '../hooks';
+import { setAnalyticsAmbientProps } from '../hooks/useAnalytics';
+import { useTheme } from '../hooks/useLayoutContext';
 import { MastheadRule } from './MastheadRule';
 import { NavBar } from './NavBar';
 import { Footer } from './Footer';
@@ -22,8 +25,27 @@ const containerSx = {
  */
 export function RootLayout() {
   const { trackEvent } = useAnalytics();
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
+  const navigationType = useNavigationType();
+  const { isDark } = useTheme();
   const mastheadSticks = pathname !== '/plots';
+
+  // Set synchronously during render so the first pageview from a child page's
+  // useEffect (which runs before the parent's useEffect) carries the theme prop.
+  // setAnalyticsAmbientProps merges into module state, so re-renders are safe.
+  setAnalyticsAmbientProps({ theme: isDark ? 'dark' : 'light' });
+
+  // Reset scroll on forward navigation (PUSH/REPLACE). In SPA route changes,
+  // the next page can otherwise keep the previous page's scroll position,
+  // which is especially noticeable on short pages like /legal. Skip on POP
+  // so browser back/forward keeps native scroll restoration; skip when a
+  // hash anchor is present so in-page anchors still work. Pages with their
+  // own saved-scroll restore in a later effect can still override this.
+  useEffect(() => {
+    if (hash) return;
+    if (navigationType === 'POP') return;
+    window.scrollTo(0, 0);
+  }, [pathname, hash, navigationType]);
 
   return (
     <Box sx={{

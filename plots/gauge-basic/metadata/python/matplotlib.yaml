@@ -1,159 +1,183 @@
 library: matplotlib
+language: python
 specification_id: gauge-basic
 created: '2025-12-23T13:03:17Z'
-updated: '2025-12-23T13:13:35Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461375658
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 95
-impl_tags:
-  dependencies: []
-  techniques:
-  - patches
-  - manual-ticks
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - minimal-chrome
+updated: '2026-04-25T12:37:58Z'
+generated_by: claude-opus
+workflow_run: 24930860636
+issue: 857
+python_version: 3.14.4
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent use of matplotlib low-level primitives (Wedge, Circle) for custom gauge
-    visualization
-  - Clean professional appearance with well-proportioned elements
-  - 'All spec requirements implemented: semi-circular gauge, color zones, needle,
-    value display, tick marks'
-  - Good canvas utilization with balanced layout
-  - Realistic Current Sales context with sensible threshold values
+  - 'Perfect theme adaptation: needle, tick labels, and center cap all flip correctly
+    between light and dark using INK tokens.'
+  - Okabe-Ito zone colors are semantically matched (brand green = good, vermillion
+    = bad) and match the palette exactly.
+  - 'Strong visual storytelling: the large green ''72'' focal point combined with
+    the needle in the green zone creates an immediately readable message.'
+  - 'Excellent code quality: linear KISS structure, no randomness needed, all imports
+    used.'
+  - Full spec compliance with all required features (zones, needle, thresholds, prominent
+    value display).
   weaknesses:
-  - Red/yellow/green color scheme follows spec convention but is not colorblind-accessible
-  - Could add minor tick marks between major values for finer reading
-  image_description: 'The plot displays a semi-circular gauge chart with a white background.
-    The gauge arc is divided into three colored zones: red (0-30), yellow (30-70),
-    and green (70-100). A dark navy needle points to the value 72, which falls in
-    the green zone. The needle has a round center cap. Tick marks with labels (0,
-    25, 50, 75, 100) are positioned around the outer edge of the arc. Below the gauge,
-    the value "72" is prominently displayed in large blue text, with "Current Sales"
-    in smaller gray text beneath it. The title "gauge-basic · matplotlib · pyplots.ai"
-    appears at the top of the image.'
+  - 'Minor canvas utilization: the landscape 16:9 format leaves some empty space on
+    the sides of the semi-circle; a square canvas could improve proportions.'
+  - DE-01 could reach 8/8 with more typographic refinement (e.g., subtle zone labels
+    like 'Poor / Fair / Good' inside or beneath the arcs to reduce reliance on color-only
+    encoding).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "gauge-basic · matplotlib · anyplot.ai" in dark INK (#1A1A17), clearly readable. Tick labels in INK_SOFT (#4A4A44), readable at fontsize 18. "Current Sales" subtitle in INK_MUTED, readable.
+      Data: Three zone arcs — vermillion (#D55E00) for bad (0-30), orange-gold (#E69F00) for warning (30-70), teal green (#009E73) for good (70-100). Black needle points to value 72 in the good zone. Value "72" displayed in brand green (#009E73) at fontsize 56. Two-tone center cap (dark outer, light inner hole).
+      Legibility verdict: PASS — all text clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light #F0EFE8 (INK dark token), clearly readable. Tick labels in #B8B7B0 (INK_SOFT dark token), readable. "Current Sales" in #A8A79F (INK_MUTED dark), readable. No dark-on-dark issues detected.
+      Data: Zone colors identical to light render — vermillion, orange-gold, teal green (Okabe-Ito positions 1-7 correctly theme-independent). Needle now renders in #F0EFE8 (INK dark) making it white/light, clearly visible against the dark surface. Value "72" still in brand green #009E73, highly readable on dark surface.
+      Legibility verdict: PASS — all text uses correct INK dark tokens, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: All text clearly readable; title 24pt, tick labels 18pt bold, value
-          48pt
+        comment: 'All font sizes explicitly set: title 24pt, tick labels 18pt, value
+          56pt, subtitle 20pt. Readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, clean label positioning
+        comment: Tick labels evenly spaced around semi-circle with no collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Gauge elements well-sized: thick needle, visible wedges, prominent
-          center cap'
+        comment: Zone wedges, needle, center cap, and all labels clearly visible in
+          both themes.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses spec-required red/yellow/green convention, but not colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent canvas utilization, balanced composition
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for gauge; contextual "Current Sales" label present
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: CVD-safe Okabe-Ito zone colors; needle contrasts with all zones in
+          both themes.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Well-proportioned; minor empty space on sides inherent to semi-circular
+          gauge in landscape format.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Clean design, no grid/legend needed for gauge
+        comment: Title matches required format; 'Current Sales' + '72' provide clear
+          contextual labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 for good zone and value label; Okabe-Ito zone
+          colors; correct backgrounds; all chrome tokens theme-adaptive.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Clearly above defaults: intentional Okabe-Ito zone colors, two-tone
+          center cap, custom tick rendering. Not yet at publication-ready level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent polish: axis off, wedge edges match PAGE_BG, inner cutout,
+          generous whitespace.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: zones (background) → needle (indicator)
+          → large green 72 (focal point). Message immediately clear.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct semi-circular gauge chart
+        comment: Correct semi-circular gauge with needle and color zones.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Value 72 on 0-100 range with thresholds at 30/70
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Needle, color zones, value label, tick marks all present
-      - id: SC-04
-        name: Data Range
+        comment: Color zones, prominent value display, needle, thresholds at [30,
+          70] all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 0-100 range displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: value=72, min=0, max=100; needle correctly positioned in good zone.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A; contextual label present
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct: "gauge-basic · matplotlib · pyplots.ai"'
+        comment: Title 'gauge-basic · matplotlib · anyplot.ai' correct; no legend
+          needed.
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows value in green zone, all three color zones visible
+        comment: 'Shows all gauge aspects: color zones, scale ticks, needle indicator,
+          numerical value, context label.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: '"Current Sales" at 72% is plausible business metric'
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 0-100 with 30/70 thresholds makes intuitive sense
+        comment: Current Sales = 72 on 0-100 scale is a neutral, real-world business
+          KPI scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100 range standard for percentage/score gauges; value 72 sits meaningfully
+          past warning threshold.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,39 +185,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: 'Linear script: imports → theme tokens → data → geometry → plot →
+          save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Deterministic data but no seed comment
+        comment: All data hardcoded; fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All four imports (os, mpatches, plt, np) are actively used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current API usage
+        comment: Clean, readable Python; appropriate complexity; well-named variables.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct DPI and facecolor.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of mpatches.Wedge, plt.Circle, custom coordinate transforms
+        comment: Proper fig/ax pattern, ax.add_patch() for geometry, correct Axes-method
+          approach throughout.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses mpatches.Wedge for arcs, plt.Circle for center cap, ax.plot
+          for custom tick marks — distinctively matplotlib primitive composition.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  - annotations
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome

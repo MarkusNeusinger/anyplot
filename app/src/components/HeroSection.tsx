@@ -5,6 +5,7 @@ import { colors, typography } from '../theme';
 import { TypewriterText } from './TypewriterText';
 import { PlotOfTheDayTerminal } from './PlotOfTheDayTerminal';
 import type { PlotOfTheDayData } from '../hooks/usePlotOfTheDay';
+import { useAnalytics } from '../hooks';
 
 interface HeroSectionProps {
   potd?: PlotOfTheDayData | null;
@@ -17,6 +18,7 @@ interface HeroSectionProps {
  * page reads as one continuous grid.
  */
 export function HeroSection({ potd = null }: HeroSectionProps) {
+  const { trackEvent } = useAnalytics();
   return (
     <Box
       sx={{
@@ -165,7 +167,13 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
             animation: 'rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s backwards',
           }}
         >
-          <PrimaryCta to="/plots" subject="plots" verb="browse" ariaLabel="Browse plots" />
+          <PrimaryCta
+            to="/plots"
+            subject="plots"
+            verb="browse"
+            ariaLabel="Browse plots"
+            onClick={() => trackEvent('nav_click', { source: 'hero_cta_browse', target: '/plots' })}
+          />
           <Box
             aria-hidden="true"
             sx={{
@@ -178,8 +186,21 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
             |
           </Box>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
-            <SecondaryLink to="/mcp" subject="mcp" verb="connect" ariaLabel="Connect via MCP" />
-            <SecondaryLink href="https://github.com/MarkusNeusinger/anyplot" subject="github" verb="clone" ariaLabel="Clone on GitHub" external />
+            <SecondaryLink
+              to="/mcp"
+              subject="mcp"
+              verb="connect"
+              ariaLabel="Connect via MCP"
+              onClick={() => trackEvent('nav_click', { source: 'hero_mcp', target: '/mcp' })}
+            />
+            <SecondaryLink
+              href="https://github.com/MarkusNeusinger/anyplot"
+              subject="github"
+              verb="clone"
+              ariaLabel="Clone on GitHub"
+              external
+              onClick={() => trackEvent('nav_click', { source: 'hero_github', target: 'github' })}
+            />
           </Box>
         </Box>
 
@@ -194,11 +215,12 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
   );
 }
 
-function PrimaryCta({ to, subject, verb, ariaLabel }: { to: string; subject: string; verb: string; ariaLabel: string }) {
+function PrimaryCta({ to, subject, verb, ariaLabel, onClick }: { to: string; subject: string; verb: string; ariaLabel: string; onClick?: () => void }) {
   return (
     <Box
       component={RouterLink}
       to={to}
+      onClick={onClick}
       aria-label={ariaLabel}
       sx={{
         textDecoration: 'none',
@@ -235,6 +257,7 @@ function SecondaryLink({
   verb,
   ariaLabel,
   external,
+  onClick,
 }: {
   to?: string;
   href?: string;
@@ -242,6 +265,7 @@ function SecondaryLink({
   verb: string;
   ariaLabel: string;
   external?: boolean;
+  onClick?: () => void;
 }) {
   const linkProps = external
     ? { component: 'a' as const, href, target: '_blank', rel: 'noopener noreferrer' }
@@ -250,6 +274,7 @@ function SecondaryLink({
   return (
     <Box
       {...linkProps}
+      onClick={onClick}
       aria-label={ariaLabel}
       sx={{
         textDecoration: 'none',

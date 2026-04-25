@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Box from '@mui/material/Box';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
@@ -6,7 +7,7 @@ import { HeroSection } from '../components/HeroSection';
 import { NumbersStrip } from '../components/NumbersStrip';
 import { LibrariesSection } from '../components/LibrariesSection';
 import { SectionHeader } from '../components/SectionHeader';
-import { useAppData } from '../hooks';
+import { useAppData, useAnalytics } from '../hooks';
 import { usePlotOfTheDay } from '../hooks/usePlotOfTheDay';
 import { useFeaturedSpecs, type FeaturedImpl } from '../hooks/useFeaturedSpecs';
 import { useTheme } from '../hooks/useLayoutContext';
@@ -21,6 +22,16 @@ export function LandingPage() {
   const potd = usePlotOfTheDay();
   const featured = useFeaturedSpecs(5);
   const navigate = useNavigate();
+  const { trackEvent, trackPageview } = useAnalytics();
+
+  useEffect(() => {
+    trackPageview('/');
+  }, [trackPageview]);
+
+  const handleLibraryClick = (lib: string) => {
+    trackEvent('nav_click', { source: 'library_card', target: '/plots', value: lib });
+    navigate(`/plots?lib=${encodeURIComponent(lib)}`);
+  };
 
   return (
     <>
@@ -52,7 +63,7 @@ export function LandingPage() {
 
       <LibrariesSection
         libraries={librariesData}
-        onLibraryClick={(lib) => navigate(`/plots?lib=${encodeURIComponent(lib)}`)}
+        onLibraryClick={handleLibraryClick}
         widthTier="catalog"
       />
 
@@ -66,6 +77,7 @@ export function LandingPage() {
  * the left, labelled palette strip on the right.
  */
 function PaletteSection() {
+  const { trackEvent } = useAnalytics();
   return (
     <Box sx={{ py: { xs: 2, md: 3 } }}>
       <SectionHeader prompt="❯" title={<em>palette</em>} linkText="palette.explore()" linkTo="/palette" />
@@ -95,6 +107,7 @@ function PaletteSection() {
               href="https://jfly.uni-koeln.de/color/"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackEvent('nav_click', { source: 'palette_okabe_ito', target: 'jfly_uni_koeln' })}
               sx={{
                 color: 'var(--ink)',
                 textDecoration: 'none',
@@ -202,6 +215,7 @@ function LabelledPaletteStrip() {
  * specs become.
  */
 function SpecsSection({ specCount, featured }: { specCount?: number; featured: FeaturedImpl[] | null }) {
+  const { trackEvent } = useAnalytics();
   return (
     <Box sx={{ py: { xs: 2, md: 3 } }}>
       <SectionHeader prompt="❯" title={<em>specifications</em>} linkText="specs.all()" linkTo="/specs" />
@@ -232,6 +246,7 @@ function SpecsSection({ specCount, featured }: { specCount?: number; featured: F
             subject="spec"
             verb="suggest"
             external
+            source="suggest_spec_link"
           />
         </Box>
       </Box>
@@ -241,6 +256,7 @@ function SpecsSection({ specCount, featured }: { specCount?: number; featured: F
         <Box
           component={RouterLink}
           to="/specs"
+          onClick={() => trackEvent('nav_click', { source: 'specs_more_link', target: '/specs' })}
           sx={{
             display: 'inline-block',
             mt: 2.5,
@@ -291,6 +307,7 @@ interface MethodLinkProps {
   subject: string;
   verb: string;
   external?: boolean;
+  source?: string;
 }
 
 /**
@@ -298,7 +315,11 @@ interface MethodLinkProps {
  * rendered muted (opacity 0.7), `.verb()` at the link's current colour.
  * Whole element turns primary-green on hover; subject brightens to full.
  */
-function MethodLink({ to, href, subject, verb, external }: MethodLinkProps) {
+function MethodLink({ to, href, subject, verb, external, source }: MethodLinkProps) {
+  const { trackEvent } = useAnalytics();
+  const handleClick = source
+    ? () => trackEvent('nav_click', { source, target: href ?? to ?? '' })
+    : undefined;
   const sx = {
     fontFamily: typography.mono,
     fontSize: '13px',
@@ -327,6 +348,7 @@ function MethodLink({ to, href, subject, verb, external }: MethodLinkProps) {
         href={href}
         target={external ? '_blank' : undefined}
         rel={external ? 'noopener noreferrer' : undefined}
+        onClick={handleClick}
         sx={sx}
       >
         {content}
@@ -334,7 +356,7 @@ function MethodLink({ to, href, subject, verb, external }: MethodLinkProps) {
     );
   }
   return (
-    <Box component={RouterLink} to={to ?? '#'} sx={sx}>
+    <Box component={RouterLink} to={to ?? '#'} onClick={handleClick} sx={sx}>
       {content}
     </Box>
   );
@@ -348,6 +370,7 @@ function MethodLink({ to, href, subject, verb, external }: MethodLinkProps) {
  */
 function FeaturedThumb({ item }: { item: FeaturedImpl | null }) {
   const { isDark } = useTheme();
+  const { trackEvent } = useAnalytics();
   const previewUrl = selectPreviewUrl(item, isDark);
   const cardSx = {
     display: 'flex',
@@ -430,7 +453,12 @@ function FeaturedThumb({ item }: { item: FeaturedImpl | null }) {
   }
 
   return (
-    <Box component={RouterLink} to={specPath(item.spec_id)} sx={cardSx}>
+    <Box
+      component={RouterLink}
+      to={specPath(item.spec_id)}
+      onClick={() => trackEvent('nav_click', { source: 'featured_thumb', target: 'spec_hub', spec: item.spec_id, library: item.library_id })}
+      sx={cardSx}
+    >
       <Box sx={imageSx}>
         <Box component="picture" key={previewUrl} sx={{ display: 'block', width: '100%', height: '100%' }}>
           <source type="image/webp" srcSet={buildSrcSet(previewUrl, 'webp')} sizes="(max-width: 599px) 50vw, 25vw" />

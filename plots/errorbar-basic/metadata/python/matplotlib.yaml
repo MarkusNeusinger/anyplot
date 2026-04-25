@@ -1,154 +1,185 @@
 library: matplotlib
+language: python
 specification_id: errorbar-basic
 created: '2025-12-23T13:02:03Z'
-updated: '2025-12-23T13:07:08Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461374073
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - edge-highlighting
+updated: '2026-04-25T08:43:38Z'
+generated_by: claude-opus
+workflow_run: 24926861415
+issue: 973
+python_version: 3.14.4
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Excellent implementation of asymmetric error bars demonstrating the feature mentioned
-    in the spec
-  - Clear experimental/clinical trial context with Control and Treatment groups
-  - Proper error bar styling with visible caps (capsize=10) and appropriate line thickness
-  - Perfect adherence to matplotlib style guide (Axes methods, proper font sizes,
-    tight_layout)
-  - Clean, readable code following KISS principles
+  - Perfect theme adaptation — all chrome tokens (background, text, grid, spine, tick
+    colors) correctly flip between light (#FAF8F1) and dark (#1A1A17) themes with
+    no dark-on-dark or light-on-light failures
+  - Asymmetric error bars correctly implemented using the 2×N yerr array format, with
+    capsize=10 and capthick=3 giving clear cap visibility
+  - Clean, flat KISS code with explicit font sizes (24/20/16pt), set_axisbelow(True),
+    and white marker edges (markeredgecolor=PAGE_BG) for definition
+  - Realistic clinical trial context (Control vs. Treatment groups) with plausible,
+    neutral data values and meaningful asymmetric uncertainties
   weaknesses:
-  - Could showcase more matplotlib-specific features like error bar color gradients
-    or connecting lines between points
-  - Y-axis only grid is acceptable but full grid could enhance readability
-  image_description: The plot displays 6 experimental groups (Control, Treatment A
-    through E) on the x-axis with their response values on the y-axis (ranging from
-    0 to ~55 units). Each group is represented by a blue circular marker (#306998
-    color) with vertical error bars extending above and below. The error bars have
-    visible caps at both ends. Treatment C and D show asymmetric error bars - Treatment
-    C has a notably larger lower error bar, while Treatment D has a larger upper range.
-    The title "errorbar-basic · matplotlib · pyplots.ai" is displayed at the top.
-    The y-axis is labeled "Response Value (units)" and x-axis is labeled "Experimental
-    Group". A subtle horizontal dashed grid (alpha=0.3) aids readability.
+  - 'DE-03 LOW (2/6): No visual hierarchy or emphasis — all six groups are rendered
+    identically in the same green with no focal point; the viewer must find the story
+    themselves. Consider coloring the highest-value group differently, adding a reference
+    line at the control mean, or varying marker size by uncertainty magnitude to guide
+    the eye.'
+  - 'DE-01 MODERATE (4/8): Single-color single-series plot looks like a well-configured
+    default but lacks aesthetic sophistication. Adding a horizontal reference line
+    (e.g., at the Control mean), a subtle background band for the acceptable range,
+    or per-group color coding would elevate the design significantly.'
+  - 'DQ-01 PARTIAL (5/6): All error bars are asymmetric; the spec mentions that consistent
+    widths and different error types are both valid. Showing at least one group with
+    symmetric errors alongside asymmetric ones would demonstrate fuller feature coverage.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "errorbar-basic · matplotlib · anyplot.ai" in dark near-black ink, clearly readable. Axis labels "Experimental Group" (x) and "Response Value (units)" (y) in dark ink, 20pt. Tick labels for six x-categories and y numeric values in medium-dark gray (INK_SOFT), 16pt, readable. Subtle horizontal grid lines at ~10% opacity. Left and bottom spines visible in medium gray; top and right spines removed (L-frame).
+      Data: Six data points with error bars all in brand green #009E73. Markers are large solid circles with white/off-white edge. Error bars have visible caps (capsize=10). Treatment C shows visibly larger lower error bar (asymmetric), Treatment D is the highest point (~48 units).
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title in light cream (#F0EFE8), clearly visible. Axis labels in light cream. Tick labels in medium light gray (#B8B7B0) — visible against dark background with no dark-on-dark failures. Grid lines remain subtle at ~10% opacity in a light rule color. Spines in medium gray, L-frame preserved.
+      Data: All six data points and error bars remain in identical brand green #009E73 — data colors unchanged from light render, only chrome flips. Marker white edges now appear as dark-surface-matching edges.
+      Legibility verdict: PASS — all text clearly readable against the dark background; no dark-on-dark text detected.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
+        comment: 'All sizes explicitly set: title 24pt, axis labels 20pt, ticks 16pt;
+          readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all category labels clearly separated
+        comment: No overlapping text or data elements; six well-spaced categories
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers (size=15) and error bars (linewidth=3, capsize=10) are well-sized
-          for 6 data points
+        comment: Large markers (markersize=15), thick error bars (elinewidth=3), clear
+          caps (capsize=10, capthick=3)
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color scheme, no colorblind concerns
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, good use of 16:9 aspect
-          ratio
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units "(units)", X-axis is descriptive "Experimental Group"
+        comment: 'Single CVD-safe brand green #009E73; good contrast on both surfaces'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well, balanced margins, tight_layout applied
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Axis labels include units: ''Response Value (units)''; x-axis labeled
+          ''Experimental Group'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) series is #009E73; backgrounds are #FAF8F1 (light)
+          and #1A1A17 (dark); chrome fully theme-adaptive'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Clean and professional but looks like a well-configured library default;
+          single-color with no emphasis techniques or visual hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed (L-frame), subtle grid (alpha=0.10), set_axisbelow,
+          white marker edges — good refinement but not fully polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed but not interpreted; all groups rendered identically
+          with no focal point or visual emphasis to guide the viewer
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct error bar plot implementation
+        comment: Correct errorbar plot using ax.errorbar()
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, values on Y, errors correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has caps (capsize=10), consistent widths, asymmetric errors demonstrated
-      - id: SC-04
-        name: Data Range
+        comment: Error bars with caps, asymmetric errors, consistent widths across
+          all points
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows 0 to max+15% padding, all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Categorical x-axis, numeric y-axis with full range displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series, N/A
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "errorbar-basic · matplotlib · pyplots.ai"
+        comment: Title 'errorbar-basic · matplotlib · anyplot.ai'; no legend (single
+          series, correct omission)
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows asymmetric errors (Treatment C, D) and symmetric errors (others),
-          but could show more variety in error magnitudes (-2)
+        comment: Shows asymmetric errors with varying magnitudes; all groups have
+          same error type — mixing symmetric and asymmetric would give fuller coverage
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Clinical/experimental trial context with Control and Treatment groups
-          is highly realistic
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values 25-48 with errors 2-6.5 are plausible for experimental measurements
+        comment: Clinical trial / experimental context (Control vs. Treatment groups)
+          is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 25–48 units with error margins 2–6.5; realistic for experimental
+          measurements
     code_quality:
       score: 10
       max: 10
@@ -158,33 +189,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → styling → save'
+        comment: 'Flat script: imports → theme tokens → data → plot → style → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy, both used
+        comment: Only os, matplotlib.pyplot, numpy — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Clean Pythonic code, no over-engineering, no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 2
-      max: 5
-      items: []
-  verdict: APPROVED
+        comment: Saves as plot-{THEME}.png with dpi=300 and facecolor=PAGE_BG
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of ax.errorbar() with named parameters, set_axisbelow(True),
+          axes-level methods throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses matplotlib-specific: asymmetric error format (2xN array), markeredgecolor
+          on errorbar markers, capthick/elinewidth controls, set_axisbelow'
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

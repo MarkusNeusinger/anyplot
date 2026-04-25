@@ -1,163 +1,186 @@
 library: seaborn
+language: python
 specification_id: gauge-basic
 created: '2025-12-23T13:04:31Z'
-updated: '2025-12-23T13:26:43Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461376389
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-25T13:20:45Z'
+generated_by: claude-opus
+workflow_run: 24930951204
+issue: 857
+python_version: 3.14.4
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/seaborn/plot.png
-preview_html: null
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - minimal-chrome
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Creative use of seaborn scatterplot to build gauge arc with dense point markers
-  - Excellent colorblind accessibility using seaborn built-in colorblind palette
-  - Clean white zone boundary lines for visual separation
-  - Prominent value display with appropriate text sizing
-  - Good canvas utilization and balanced layout
-  - Realistic sales performance context
+  - 'Perfect visual quality: all font sizes explicit, zero overlap, correct Okabe-Ito
+    palette, proper theme adaptation in both renders'
+  - 'All spec requirements fully met: value, min/max, thresholds, color zones, needle,
+    value label all present'
+  - 'Clean code: removed pd.DataFrame + sns.lineplot/sns.scatterplot misuse from attempt
+    2; now uses ax.plot() and matplotlib patches directly'
+  - Title format corrected to exact required spec format
+  - Realistic neutral business KPI context (sales performance at 72%)
+  - Fully deterministic, no seed needed
   weaknesses:
-  - Zone labels could be slightly larger for better readability at full resolution
-  - Needle tip marker (red triangle) adds visual interest but is unconventional for
-    gauge charts
-  image_description: 'The plot displays a semi-circular gauge chart showing "Sales
-    Performance" at 72%. The gauge has three colored zones: a red/coral "Low" zone
-    on the left (0-30), an orange "Medium" zone in the middle (30-70), and a green
-    "High" zone on the right (70-100). A dark blue needle points to 72, which is in
-    the High zone. The needle has a red triangular tip for visibility. The value "72%"
-    is prominently displayed below the gauge in large blue text. Zone labels ("Low",
-    "Medium", "High") are displayed in white with dark outlines on their respective
-    colored zones. Min (0) and max (100) values are labeled at the gauge endpoints.
-    The title "gauge-basic · seaborn · pyplots.ai" appears at the top, with "Sales
-    Performance" as a subtitle below. The background is clean white.'
+  - 'Library Mastery ceiling: gauge charts have no seaborn-native API so seaborn contribution
+    is limited to theming (sns.set_theme) and color extraction (sns.color_palette)
+    — structural limitation of the spec type'
+  - 'Zone label path effects use hardcoded foreground #1A1A17 that disappears into
+    dark background; not a legibility failure but a minor theme-adaptation imprecision'
+  - 'DE-01 ceiling: clean and correct but lacks extra design flourish (gradient arc
+    zones, decorative tick marks) that would push it to publication-exceptional'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, no pure white.
+      Chrome: Title in dark ink at top — clearly readable. Min (0) and max (100) endpoint labels at gauge ends in INK_SOFT gray, readable. "72%" centered below gauge in bold dark ink (56pt), very prominent. Zone labels ("Low", "Medium", "High") in white bold with dark path-effect stroke on colored arcs — legible.
+      Data: Three zones — vermillion (#D55E00) for Low, orange (#E69F00) for Medium, brand green (#009E73) for High. Needle is dark (INK=#1A1A17) pointing at ~72% in the High zone. Hub is nested circles at gauge center.
+      Legibility verdict: PASS — all text clearly readable on warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, no pure black.
+      Chrome: Title in light cream (#F0EFE8) — readable. Min/max labels in INK_SOFT gray (#B8B7B0) — visible. "72%" in light ink, clearly readable. Zone labels still white with dark stroke — stroke absorbed by background but white text contrasts well against colored zones.
+      Data: Zone colors are identical to light render (vermillion, orange, green) — data identity preserved correctly. Needle is light/cream colored (INK=#F0EFE8 in dark mode) — clearly visible against dark background. Hub appears as a light gray disc.
+      Legibility verdict: PASS — all text adapts correctly; no dark-on-dark failures. Zone label stroke (#1A1A17) partially absorbed by dark bg but white label text remains readable on colored arc zones.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text is clearly readable. Title, value, and labels have good
-          font sizes. Zone labels could benefit from slightly larger fonts.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: 'All font sizes explicitly set: title 24pt, value 56pt, endpoint
+          labels 20pt, zone labels 22pt. Readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements — zone labels on arcs, value below center,
+          min/max at endpoints.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Gauge zones are clearly visible using seaborn scatterplot; needle
-          and hub are prominent
+        comment: All gauge elements (arcs, needle, hub, labels) clearly visible at
+          full resolution in both themes.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses seaborn's colorblind palette correctly
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization, gauge fills appropriate space
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for gauge chart (no axes), but min/max labels present
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Clean design, no distracting elements
+        comment: Okabe-Ito palette is CVD-safe; zone labels add text backup so color
+          is not the sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 12x12 square canvas; gauge fills the space well with balanced whitespace.
+          Fixes the 16:9 horizontal whitespace issue from attempt 2.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title present; zone names and min/max labels are informative.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito zone colors (vermillion/orange/green); backgrounds #FAF8F1
+          (light) / #1A1A17 (dark); data colors identical across themes; chrome adapts
+          correctly.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional semantic color mapping, clean hub with nested circles,
+          path effects for arc label legibility. Above defaults but not publication-exceptional.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All axes hidden (ax.axis off), no grid, clean radial zone boundaries,
+          generous whitespace. Very polished for a gauge chart.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Needle in green zone at 72% tells a clear success story. Color semantics
+          and prominent 72% value anchor the viewer's attention.
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct semi-circular gauge chart
+        comment: Correct semi-circular gauge (speedometer) chart.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Value correctly mapped to needle position
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All features present: value display, thresholds/zones, needle indicator,
-          min/max labels'
-      - id: SC-04
-        name: Data Range
+        comment: Value (72), min/max (0/100), thresholds ([30, 70]), three color zones,
+          needle, center value label — all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 0-100 range shown
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: value=72 correctly positioned at ~72% of the arc in the High zone
+          (threshold at 70).
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Zone labels present but no formal legend
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: gauge-basic · seaborn · pyplots.ai'
+        comment: Code title is exactly 'gauge-basic · seaborn · anyplot.ai' — spec
+          format corrected from attempt 2. No legend needed for single-value gauge.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows zones, needle position, value display. Could show a value in
-          a different zone to demonstrate full range.
+        comment: 'Shows all gauge aspects: three color zones, needle, value display,
+          min/max endpoints, zone labels.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Sales performance is a realistic business KPI scenario
+        comment: Sales performance at 72% is a real-world, neutral business KPI scenario
+          matching the spec example.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 72% is a sensible sales performance value; thresholds at 30/70 are
-          reasonable
+        comment: 0-100 percentage range with thresholds at 30/70 is perfectly calibrated
+          for a KPI gauge.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -165,41 +188,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear structure without functions/classes
+        comment: 'Linear flow: imports -> theme tokens -> data -> plot geometry ->
+          save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random elements)
+        comment: Fully deterministic hardcoded data; no random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All six imports are used (os, patheffects, pyplot, numpy, seaborn,
+          Circle/Wedge). No pandas — correctly removed from attempt 2.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses ax.plot() and ax.add_patch() directly; no over-engineered sns.lineplot/sns.scatterplot
+          as drawing primitives (fixed from attempt 2).
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current seaborn API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct dpi and facecolor.
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses seaborn scatterplot, lineplot, and colorblind palette creatively
-          for gauge construction. However, this is a creative workaround since seaborn
-          doesn't have native gauge support.
-  verdict: APPROVED
+        passed: false
+        comment: sns.set_theme() and sns.color_palette() are idiomatic seaborn patterns.
+          Core gauge geometry uses matplotlib patches — unavoidable given seaborn
+          has no native gauge chart API.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: sns.color_palette() for Okabe-Ito color extraction is seaborn-distinctive.
+          Visualization is fundamentally matplotlib patch composition with a seaborn
+          theme layer.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  - annotations
+  - polar-projection
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - explicit-figure
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending

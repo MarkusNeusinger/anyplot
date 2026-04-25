@@ -1,0 +1,257 @@
+library: highcharts
+language: python
+specification_id: venn-labeled-items
+created: '2026-04-25T05:39:23Z'
+updated: '2026-04-25T05:46:56Z'
+generated_by: claude-opus
+workflow_run: 24923687515
+issue: 5364
+python_version: 3.14.4
+library_version: unknown
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/highcharts/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - 'Perfect editorial Chartgeist aesthetic: Georgia serif fonts, bold CHARTGEIST
+    masthead, witty subtitle, category labels color-coded to their circles — exactly
+    the magazine look the spec calls for'
+  - 'Full spec compliance: all 7 Venn zones + outside populated, semi-transparent
+    fills, category names outside circles, small pin markers, 15 items in range'
+  - 'Excellent theme handling: all chrome tokens (INK, INK_SOFT, INK_MUTED, PAGE_BG,
+    ELEVATED_BG) properly adaptive; text outlines flip from light to dark surface;
+    data colors stable across both renders'
+  - 'Distinctive Highcharts technique: polygon series with highcharts-more.js for
+    circle shapes, per-point dataLabels with useHTML for rich label styling'
+  weaknesses:
+  - 'Lower canvas underutilized: diagram shifted upward, leaving a disproportionate
+    empty area (~25%) below the bottom category labels — needs vertical re-centering
+    by adjusting yAxis.min to -2.8 or lower'
+  - Item labels (42px) are slightly undersized in dense overlap zones on a 3600px
+    canvas; increasing to 52-56px would improve readability
+  - circle_polygon helper function is a mild KISS violation — could be a one-line
+    list comprehension inline
+  - highcharts_core Python API not used — raw JSON config bypasses the intended Python
+    wrapper
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "CHARTGEIST · venn-labeled-items · highcharts · anyplot.ai" in bold Georgia serif, dark INK (#1A1A17) — clearly readable. Subtitle italic in INK_SOFT — readable. Category labels (OVERHYPED in green, ACTUALLY USEFUL in orange, SECRETLY LOVED in blue) in their Okabe-Ito colors outside circles — all clearly readable.
+      Data: Three overlapping circles — green (#009E73) top, orange (#D55E00) bottom-left, blue (#0072B2) bottom-right. Semi-transparent rgba fills show through overlapping regions. Item labels in dark INK with white text outline. All 15 items labeled: NFTs/Crypto Bros/Metaverse in A, Google Maps/VS Code/Dishwasher in B, ABBA/Slippers/Crocs in C, ChatGPT/Slack in AB, Vinyl Records in AC, Dolly Parton in BC, Sourdough in ABC, Beige Walls outside. "Neither here nor there" italic hint in upper-left.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct
+      Chrome: Title and subtitle in light #F0EFE8 — clearly readable. Category labels remain in vivid Okabe-Ito colors (green/orange/blue) — all readable against dark background. Item labels use dark PAGE_BG text outline ensuring white-on-dark legibility. No dark-on-dark text failures detected.
+      Data: Circle data colors identical to light render (#009E73, #D55E00, #0072B2) — only chrome flips. Fill regions appear slightly more muted on dark surface (rgba blending) but zones remain distinguishable.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 62px, subtitle 38px, category
+          labels 68px, item labels 42px). All readable in both themes. Item labels
+          in dense overlap zones slightly undersized for 3600px canvas.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 'No hard text collisions. Multi-item zones (AB: ChatGPT/Slack, A:
+          3 items) vertically stacked close but readable.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Circles fully visible with semi-transparent fills and Okabe-Ito strokes.
+          Scatter marker radius 9px is spec-appropriately small (editorial pin). All
+          item labels visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette, CVD-safe. INK markers with PAGE_BG borders for
+          contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Square 3600x3600 appropriate for Venn. Diagram shifted upward — disproportionate
+          empty area (~25%) below bottom category labels.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title contains required venn-labeled-items · highcharts · anyplot.ai.
+          Axes appropriately hidden.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First circle #009E73, order follows Okabe-Ito (#D55E00, #0072B2).
+          Background #FAF8F1/#1A1A17. Data colors stable across themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong editorial execution: bold CHARTGEIST masthead, Georgia serif
+          throughout, category labels color-coded to circles, witty subtitle. Clearly
+          above defaults; not yet at publication level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No grid/axes/ticks. Text outlines for cross-theme legibility. Neither
+          here nor there italic hint adds polish. Semi-transparent rgba fills well-calibrated.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Witty data choices tell editorial story (Dolly Parton in BC, Sourdough
+          in ABC). Category-level narrative clear. No focal-point emphasis through
+          size/color variation between items.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Three-circle Venn with labeled items, symmetric layout.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 7 interior zones + outside; semi-transparent fills; category
+          names outside circles; small point markers; editorial serif typography;
+          gridless background.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 15 items correctly distributed across zones per spec data model.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title contains venn-labeled-items · highcharts · anyplot.ai. No legend
+          needed. Editorial CHARTGEIST prefix acceptable given spec aesthetic guidance.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All 7 Venn interior zones populated plus outside. Good distribution:
+          3 items in A/B/C, 2 in AB, 1 each in AC/BC/ABC/outside.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Pop-culture/tech editorial taxonomy (NFTs, Dolly Parton, Sourdough,
+          VS Code) — neutral, entertaining, plausible for WIRED-style Chartgeist piece.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 15 items within 10-25 spec range; 3 circles as specified.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: One helper function circle_polygon defined (could be inlined as list
+          comprehension). Otherwise flat and procedural.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic; all data hardcoded.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: json, math, os, tempfile, time, urllib.request,
+          pathlib.Path, selenium.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic. Appropriate complexity for the task.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Bypasses highcharts_core Python package, using raw JSON config. Works
+          correctly but doesn't use the Python API idiomatically. Selenium/inline-JS
+          export approach is correct.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Highcharts polygon series type (requires highcharts-more.js),
+          per-point dataLabels with useHTML:true, textOutline for SVG text cross-theme
+          legibility, custom states.inactive.opacity. Distinctively Highcharts features.
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome

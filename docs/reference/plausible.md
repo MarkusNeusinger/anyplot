@@ -127,9 +127,36 @@ https://anyplot.ai/{spec_id}/{language}/{library}/{category}/{value}/...
 | `tab_toggle` | `action`, `tab`, `library` | SpecTabs.tsx | User opens or closes a tab |
 | `plot_rotate` | `spec` | SpecsListPage.tsx | User clicks image on specs page to rotate library |
 | `open_interactive` | `spec`, `library` | SpecOverview.tsx, SpecDetailView.tsx | User opens interactive HTML view |
-| `suggest_spec` | - | CatalogPage.tsx | User clicks "suggest spec" link |
+| `suggest_spec` | - | SpecsListPage.tsx | User clicks the `spec.suggest()` link on the specs list page. The mirror link on the landing page emits `nav_click` with `source: suggest_spec_link` instead. |
 | `report_issue` | `spec`, `library`? | SpecPage.tsx | User clicks "report issue" link |
 | `tag_click` | `param`, `value`, `source` | SpecTabs.tsx | User clicks a tag chip to filter |
+| `theme_toggle` | `to` | MastheadRule.tsx | User toggles dark/light mode (`to` ∈ `dark`, `light`) |
+| `potd_dismiss` | `spec`, `library` | PlotOfTheDay.tsx | User dismisses the plot-of-the-day banner |
+
+### Landing Page Navigation (`nav_click`)
+
+A single event captures every clickable surface on the chrome and the new
+editorial landing page so we can answer "where do users go from `/` and via
+which UI element". One event, one event-property pair: `source` (which UI
+element was clicked) + `target` (where it leads). Some sources additionally
+carry `spec`, `library`, or `value` for richer breakdowns.
+
+| `source` value | Where | Target |
+|----------------|-------|--------|
+| `nav_specs` / `nav_plots` / `nav_libraries` / `nav_stats` / `nav_palette` / `nav_mcp` | NavBar.tsx | top-level menu bar |
+| `nav_logo` | NavBar.tsx | logo → `/` |
+| `nav_search` | NavBar.tsx | `plots.search()` button → `/plots?focus=search` |
+| `masthead_logo` / `masthead_branch` / `masthead_release` | MastheadRule.tsx | masthead `~/anyplot.ai · main · v1.x.x` |
+| `breadcrumb` | MastheadRule.tsx | breadcrumb segments on non-landing routes |
+| `hero_cta_browse` / `hero_mcp` / `hero_github` | HeroSection.tsx | hero call-to-action + secondary links |
+| `potd_image` / `potd_title` / `potd_source_link` | PlotOfTheDay.tsx | dismissible plot-of-the-day banner |
+| `potd_terminal_image` / `potd_terminal_filename` / `potd_terminal_github` | PlotOfTheDayTerminal.tsx | hero terminal-framed POTD |
+| `featured_thumb` | LandingPage.tsx | featured plot grid |
+| `library_card` | LandingPage.tsx | library cards (carries `value=<library_id>`) |
+| `section_header` | SectionHeader.tsx | `specs.all()` / `libraries.all()` / `palette.explore()` headers |
+| `specs_more_link` | LandingPage.tsx | `+ N more in the catalogue →` |
+| `suggest_spec_link` | LandingPage.tsx | `spec.suggest()` GitHub-issue link |
+| `palette_okabe_ito` | LandingPage.tsx | external Okabe & Ito reference |
 
 **Random methods**:
 - `click`: Shuffle icon clicked
@@ -278,7 +305,10 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `action` | Toggle action (open, close) | `tab_toggle` |
 | `size` | Grid size (normal, compact) | `grid_resize` |
 | `param` | URL parameter name for tag | `tag_click` |
-| `source` | Source page context | `tag_click` |
+| `source` | Source UI element / page context | `tag_click`, `nav_click` |
+| `target` | Click destination (route or external label) | `nav_click` |
+| `to` | New mode after toggle (`dark` / `light`) | `theme_toggle` |
+| `theme` | Ambient theme prop attached to **every** pageview & event (`dark` / `light`) | all events (set in RootLayout via `setAnalyticsAmbientProps`) |
 | `rating` | CWV rating (good, needs-improvement, poor) | `LCP`, `CLS`, `INP` |
 | `filter_lib` | Library filter value (for og:image) | `og_image_view` |
 | `filter_spec` | Specification filter value (for og:image) | `og_image_view` |
@@ -315,6 +345,9 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `report_issue` | Custom Event | Track issue report clicks |
 | `tag_click` | Custom Event | Track tag filter clicks |
 | `plot_rotate` | Custom Event | Track plot image rotation on specs page |
+| `nav_click` | Custom Event | Track which UI element on landing/chrome leads users off the root |
+| `theme_toggle` | Custom Event | Track dark/light theme switches |
+| `potd_dismiss` | Custom Event | Track plot-of-the-day banner dismissals |
 | `og_image_view` | Custom Event | Track og:image requests from social media bots |
 | `LCP` | Custom Event | Largest Contentful Paint (Core Web Vital) |
 | `CLS` | Custom Event | Cumulative Layout Shift (Core Web Vital) |
@@ -398,16 +431,24 @@ User lands on anyplot.ai
 | `tag_click` | `param`, `value`, `source` | SpecTabs.tsx |
 | `plot_rotate` | `spec` | SpecsListPage.tsx |
 | `open_interactive` | `spec`, `library` | SpecOverview.tsx, SpecDetailView.tsx |
-| `suggest_spec` | - | CatalogPage.tsx |
+| `suggest_spec` | - | SpecsListPage.tsx (LandingPage mirror attributed via `nav_click` with `source: suggest_spec_link`) |
 | `report_issue` | `spec`, `library`? | SpecPage.tsx |
 | `external_link` | `destination`, `spec`?, `library`? | Footer.tsx, LegalPage.tsx |
 | `internal_link` | `destination`, `spec`, `library` | Footer.tsx |
+| `nav_click` | `source`, `target`, `spec`?, `library`?, `value`? | NavBar, MastheadRule, HeroSection, SectionHeader, PlotOfTheDay, PlotOfTheDayTerminal, LandingPage |
+| `theme_toggle` | `to` | MastheadRule.tsx |
+| `potd_dismiss` | `spec`, `library` | PlotOfTheDay.tsx |
 | `LCP` | `value`, `rating` | reportWebVitals.ts |
 | `CLS` | `value`, `rating` | reportWebVitals.ts |
 | `INP` | `value`, `rating` | reportWebVitals.ts |
 | `og_image_view` | `page`, `platform`, `spec`?, `language`?, `library`?, `filter_*`? | api/analytics.py (server-side) |
 
-**Total: 19 client-side + 1 server-side = 20 events**
+**Total: 22 client-side + 1 server-side = 23 events**
+
+> Every pageview and event additionally carries a `theme` ambient prop (`dark` /
+> `light`). Set in `RootLayout` via `setAnalyticsAmbientProps` whenever the user
+> toggles the theme — register `theme` as a custom property to see the
+> dark-vs-light split per URL.
 
 ---
 
@@ -554,6 +595,9 @@ window.plausible = function(...args) { console.log('Plausible:', args); };
 - [x] Plot rotation (`plot_rotate`)
 - [x] Core Web Vitals tracking (`LCP`, `CLS`, `INP`)
 - [x] Server-side og:image tracking (`og_image_view`) with platform detection
+- [x] Landing-page navigation tracking (`nav_click`)
+- [x] Theme tracking (`theme_toggle` event + `theme` ambient pageview prop)
+- [x] Plot-of-the-day dismissal (`potd_dismiss`)
 
 ### Plausible Dashboard Checklist
 
@@ -564,5 +608,5 @@ window.plausible = function(...args) { console.log('Plausible:', args); };
 
 ---
 
-**Last Updated**: 2026-03-10
-**Status**: Production-ready with full journey tracking, Core Web Vitals, and server-side og:image analytics
+**Last Updated**: 2026-04-25
+**Status**: Production-ready with full journey tracking, Core Web Vitals, server-side og:image analytics, landing-page nav tracking, and theme analytics

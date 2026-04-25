@@ -4,41 +4,43 @@ import { typography } from '../theme';
 
 SyntaxHighlighter.registerLanguage('python', python);
 
-// Custom dark theme using Okabe-Ito palette colors
-const okabeItoDark: Record<string, React.CSSProperties> = {
+// Theme-aware Okabe-Ito syntax theme. All colors come from CSS variables in
+// tokens.css so the block adapts to light (paper) and dark modes. Comments
+// use the brand green as a deliberate editorial accent.
+const okabeItoTheme: Record<string, React.CSSProperties> = {
   'pre[class*="language-"]': {
-    color: '#E8E8E0',
+    color: 'var(--code-text)',
     background: 'var(--code-bg)',
   },
   'code[class*="language-"]': {
-    color: '#E8E8E0',
+    color: 'var(--code-text)',
     background: 'none',
   },
-  comment: { color: '#666', fontStyle: 'italic' },
-  prolog: { color: '#666' },
-  doctype: { color: '#666' },
-  cdata: { color: '#666' },
-  keyword: { color: '#56B4E9' },       // sky blue
-  builtin: { color: '#56B4E9' },
-  operator: { color: '#E8E8E0' },
-  string: { color: '#009E73' },        // green
-  'attr-value': { color: '#009E73' },
-  'template-string': { color: '#009E73' },
-  function: { color: '#E69F00' },      // orange
-  'function-variable': { color: '#E69F00' },
-  'class-name': { color: '#E69F00' },
-  number: { color: '#F0E442' },        // yellow
-  boolean: { color: '#F0E442' },
-  variable: { color: '#CC79A7' },      // purple
-  property: { color: '#CC79A7' },
-  constant: { color: '#D55E00' },      // vermillion
-  decorator: { color: '#D55E00' },
-  punctuation: { color: '#8A8A82' },
-  selector: { color: '#009E73' },
-  tag: { color: '#D55E00' },
-  'attr-name': { color: '#E69F00' },
-  regex: { color: '#009E73' },
-  important: { color: '#D55E00', fontWeight: 'bold' },
+  comment: { color: 'var(--code-comment)', fontStyle: 'italic' },
+  prolog: { color: 'var(--code-comment)', fontStyle: 'italic' },
+  doctype: { color: 'var(--code-comment)' },
+  cdata: { color: 'var(--code-comment)' },
+  keyword: { color: 'var(--code-keyword)' },
+  builtin: { color: 'var(--code-keyword)' },
+  operator: { color: 'var(--code-operator)' },
+  string: { color: 'var(--code-string)' },
+  'attr-value': { color: 'var(--code-string)' },
+  'template-string': { color: 'var(--code-string)' },
+  function: { color: 'var(--code-function)', fontWeight: 600 },
+  'function-variable': { color: 'var(--code-function)', fontWeight: 600 },
+  'class-name': { color: 'var(--code-function)', fontWeight: 600 },
+  number: { color: 'var(--code-number)' },
+  boolean: { color: 'var(--code-number)' },
+  variable: { color: 'var(--code-variable)' },
+  property: { color: 'var(--code-variable)' },
+  constant: { color: 'var(--code-constant)' },
+  decorator: { color: 'var(--code-constant)' },
+  punctuation: { color: 'var(--code-punctuation)' },
+  selector: { color: 'var(--code-string)' },
+  tag: { color: 'var(--code-constant)' },
+  'attr-name': { color: 'var(--code-function)' },
+  regex: { color: 'var(--code-string)' },
+  important: { color: 'var(--code-constant)', fontWeight: 'bold' },
 };
 
 interface CodeHighlighterProps {
@@ -49,15 +51,19 @@ export default function CodeHighlighter({ code }: CodeHighlighterProps) {
   return (
     <SyntaxHighlighter
       language="python"
-      style={okabeItoDark}
+      style={okabeItoTheme}
       customStyle={{
         margin: 0,
-        padding: '28px 32px',
+        padding: '24px 28px',
         fontSize: '0.85rem',
         fontFamily: typography.fontFamily,
         background: 'var(--code-bg)',
-        borderRadius: '12px',
+        color: 'var(--code-text)',
+        border: '1px solid var(--code-border)',
+        borderRadius: '8px',
         lineHeight: 1.7,
+        overflow: 'auto',
+        maxWidth: '100%',
       }}
     >
       {code}

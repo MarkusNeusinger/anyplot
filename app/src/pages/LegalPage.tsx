@@ -126,9 +126,11 @@ export function LegalPage() {
               </Link>
               , a privacy-focused analytics tool. it collects no personal data, uses no cookies, and does
               not track you across websites. we track: page views, navigation patterns, code copies, image
-              downloads, search queries, filter usage, and UI interactions. when you share a link, we detect
-              which platform requests the preview (e.g., LinkedIn, WhatsApp). all data is aggregated and
-              anonymous.
+              downloads, search queries, filter usage, UI interactions (tab toggles, theme preference,
+              banner dismissals), and anonymized performance metrics (Core Web Vitals: LCP, CLS, INP) to
+              keep the site fast. when you share a link, we read the requesting bot&apos;s user-agent to
+              detect the platform (e.g., LinkedIn, WhatsApp) — no data about the eventual viewer is
+              collected at that step. all data is aggregated and anonymous.
             </Typography>
             <Typography sx={textStyle}>
               <strong>public dashboard.</strong> our analytics are{' '}

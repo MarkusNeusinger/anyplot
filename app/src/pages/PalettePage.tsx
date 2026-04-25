@@ -32,6 +32,7 @@ export function PalettePage() {
       <Helmet>
         <title>palette | anyplot.ai</title>
         <meta name="description" content="the Okabe-Ito colorblind-safe palette used across all anyplot.ai visualizations. 8 colors, validated for deuteranopia, protanopia, and tritanopia." />
+        <link rel="canonical" href="https://anyplot.ai/palette" />
       </Helmet>
 
       <Box sx={{ pb: 4 }}>

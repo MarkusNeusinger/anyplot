@@ -1,163 +1,199 @@
 library: letsplot
+language: python
 specification_id: gauge-basic
 created: '2025-12-23T13:09:15Z'
-updated: '2025-12-23T13:14:49Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461433716
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-04-25T14:03:55Z'
+generated_by: claude-opus
+workflow_run: 24931583580
+issue: 857
+python_version: 3.14.4
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/letsplot/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent implementation of a gauge chart using lets-plot polygon and segment
-    geoms
-  - Clean, well-structured code with clear comments explaining each section
-  - Proper use of grammar of graphics approach to build the gauge from primitives
-  - White borders between zones provide good visual separation
-  - Value display is prominent and well-positioned
-  - Correct title format following pyplots.ai conventions
+  - 'Perfect spec compliance: all gauge features (semi-circular arc, three color zones,
+    needle, pivot circle, prominent value label, min/max markers, zone labels) are
+    implemented correctly'
+  - 'Excellent data quality: realistic sales performance context at 72% with meaningful
+    thresholds at 30/70'
+  - 'Perfect code quality: clean KISS structure with no functions/classes, deterministic
+    data, all imports used'
+  - 'Correct theme-adaptive chrome: background (#FAF8F1 light / #1A1A17 dark), INK/INK_SOFT
+    tokens applied to needle, circle, and all text elements'
+  - 'Idiomatic lets_plot usage: multiple geom layers (polygon, segment, text) composed
+    with grammar-of-graphics pattern'
+  - HTML output generated alongside PNG for both themes
   weaknesses:
-  - Color scheme uses red/yellow/green which may not be fully accessible to colorblind
-    users
-  - Could add intermediate tick marks or labels for better readability of values between
-    0-100
-  image_description: 'The plot displays a semi-circular gauge chart (speedometer style)
-    with three distinct color zones: red on the left (0-30 range), yellow in the middle
-    (30-70 range), and green on the right (70-100 range). A dark navy/black needle
-    points to the value 72, which falls in the green zone. The gauge has a dark circular
-    pivot point at the center base. Min value "0" is labeled on the left edge and
-    max value "100" on the right edge. The current value "72" is prominently displayed
-    in large bold text below the gauge. The title "gauge-basic · letsplot · pyplots.ai"
-    appears in the top-left corner.'
+  - 'Design excellence limited (DE-01=5/8): the semantic red/yellow/green color scheme
+    is spec-required but the overall aesthetic is still workmanlike; consider adding
+    a subtle gradient arc or thicker ring, a drop shadow on the value label, or more
+    refined typography hierarchy to push toward publication quality'
+  - 'Library mastery is moderate (LM-01=3/5, LM-02=2/5): the polygon coordinate math
+    approach is correct but not uniquely leveraging lets_plot features; could use
+    lets_plot HTML interactivity (tooltip on hover showing zone details) or distinctive
+    animation capabilities'
+  - 'Color accessibility (VQ-04=1/2): red (#DC2626) and green (#22C55E) zones are
+    not CVD-safe for deuteranopes; zone text labels mitigate this but consider adding
+    a pattern or icon cue to zones to eliminate red-green reliance'
+  - Zone labels at size=13 and supporting text at size=14 are slightly below the 16pt
+    guideline (though readable at 3x scale)
+  - The element_text face=bold parameter for plot_title may not render bold in all
+    lets_plot versions (fontface= is the idiomatic parameter in geom_text)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "gauge-basic · letsplot · anyplot.ai" at top-left in dark ink (#1A1A17), clearly readable. No axis labels or tick labels (appropriate for gauge). Min/max values "0" and "100" at gauge edges in INK_SOFT gray. "Sales Performance Score" subtitle in muted gray. All chrome readable against light background.
+      Data: Semi-circular donut gauge with three color zones — red arc (Low, 0–30%), gold/yellow arc (Medium, 30–70%), green arc (High, 70–100%). Thin PAGE_BG-colored polygon border between zones. Black needle pointing to approximately 72% (just past the 70% High threshold). Black pivot circle at center base. Zone labels "Low", "Medium", "High" in bold INK_SOFT on the respective arcs. Large bold "72%" value centered below gauge.
+      Legibility verdict: PASS — all text readable, no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title in near-white (#F0EFE8 = INK for dark theme) — readable against dark background. Min/max "0" and "100" in light INK_SOFT (#B8B7B0). Subtitle in muted light gray. No dark-on-dark failures detected. Needle and pivot circle render in white/near-white (INK token). "72%" value in bold white.
+      Data: Same three zones (red/yellow/green) — data colors are identical to light render as required. Zone labels in light muted color on arcs. Visual hierarchy maintained: gauge → white needle → white "72%" → light gray subtitle.
+      Legibility verdict: PASS — all text readable, chrome fully theme-adaptive, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title, value label, and min/max labels are all clearly readable.
-          Title could be slightly larger but is acceptable.
+        comment: All font sizes explicitly set and readable in both renders; zone
+          labels at 13pt and subtitle at 14pt are below 16pt guideline though readable
+          at 3x scale
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels are well-positioned
+        comment: No text or element overlaps; zone labels, value, subtitle, and min/max
+          are in distinct well-spaced positions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Gauge zones are clearly visible with good contrast, needle is prominent
+        comment: Gauge arcs, needle, pivot circle all clearly visible in both themes;
+          needle adapts to INK token (dark/white)
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Uses red/yellow/green which is intuitive but not fully colorblind-safe
-          (red-green distinction)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Gauge is well-centered, good use of canvas space for a semi-circular
-          design
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
+        score: 1
         max: 2
+        passed: false
+        comment: Red (#DC2626) and green (#22C55E) zones are not CVD-safe for deuteranopes;
+          zone text labels (Low/Medium/High) provide text-based alternative encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: No axis labels needed for gauge, but min/max labels serve this purpose
-          (N/A for gauge type)
-      - id: VQ-07
-        name: Grid & Legend
+        comment: Gauge fills 50-65% of canvas; title at top, gauge center, value/subtitle
+          below; balanced whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Legend correctly hidden, clean background
+        comment: Title format 'gauge-basic · letsplot · anyplot.ai' correct; no axis
+          labels appropriate for gauge; metric subtitle provides context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Background #FAF8F1 (light) / #1A1A17 (dark) correct; chrome fully
+          theme-adaptive using INK/INK_SOFT tokens; zone colors red/yellow/green are
+          spec-required semantic convention'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: custom donut gauge arc, semantic zone colors, clean
+          needle+pivot design; not at FiveThirtyEight publication level'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All axes/ticks/grid/legend removed; PAGE_BG polygon borders between
+          zones; clean background; generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear story: 72% just past High threshold; visual hierarchy gauge→needle→value→subtitle;
+          zone labels guide interpretation immediately'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct semi-circular gauge chart as specified
+        comment: Correct semi-circular gauge/speedometer chart with all subtypes present
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Value of 72 correctly positioned between min (0) and max (100)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has color zones (red/yellow/green), needle indicator, prominent value
-          display, min/max labels
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: single value (72), min/max range (0-100),
+          thresholds (30/70), three color zones, needle indicator, prominent value
+          label'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full range 0-100 visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Value 72 correctly positioned at ~72% of gauge arc; needle mathematically
+          correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed, correctly hidden
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "gauge-basic · letsplot · pyplots.ai"'
+        comment: Title 'gauge-basic · letsplot · anyplot.ai' correct format; no legend
+          appropriate for single gauge
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows all gauge features (zones, needle, value display), but only
-          shows one value state
+        comment: 'Shows all gauge aspects: colored zones, needle, pivot, value display,
+          zone labels, min/max markers'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Sales performance at 72% is a realistic business metric scenario
+        comment: Sales Performance Score at 72% is a real, neutral business KPI scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 0-100 scale is appropriate, thresholds at 30/70 are sensible
+        comment: 0-100 scale for sales performance score is perfect; 30/70 thresholds
+          create meaningful Low/Medium/High zones
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -165,40 +201,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → calculations → plot → save'
+        comment: Imports → Data → Plot → Save; no functions or classes; polygon math
+          is necessarily complex for custom gauge
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (fixed values, no randomness)
+        comment: All data hardcoded (value=72, min=0, max=100, thresholds=[30,70]);
+          fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: math, os, pandas, and all lets_plot components'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; polygon arc computation is appropriately complex
+          for this visualization type
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html (correct)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; correct filenames;
+          current API
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Uses lets-plot's ggplot2-style grammar with geom_polygon, geom_segment,
-          and custom theming. Could leverage more interactive features.
-  verdict: APPROVED
+        comment: 'Correct ggplot grammar: geom_polygon + geom_segment + geom_text
+          + scale_fill_manual + theme; polygon coordinate math is the right approach
+          for custom shapes in lets_plot'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses scale_fill_manual and element_blank theme customization; HTML
+          export generated; but core approach could be replicated in plotnine with
+          minimal changes
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending

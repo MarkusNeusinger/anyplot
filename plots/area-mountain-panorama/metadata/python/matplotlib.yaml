@@ -1,0 +1,268 @@
+library: matplotlib
+language: python
+specification_id: area-mountain-panorama
+created: '2026-04-25T01:01:05Z'
+updated: '2026-04-25T01:23:49Z'
+generated_by: claude-opus
+workflow_run: 24918592166
+issue: 5365
+python_version: 3.14.4
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Sky gradient (LinearSegmentedColormap + imshow) added in attempt 2 correctly addresses
+    the prior review's top weakness and genuinely elevates the panoramic mood — theme-adaptive
+    (warm dusk in light, deep navy in dark)
+  - gaussian_smooth() function correctly inlined, fixing the KISS violation from attempt
+    1
+  - Peak label sizes raised to 14pt/16pt — a significant improvement over the previous
+    11pt/13pt
+  - All 17 real Wallis Alps summits with authentic elevations, geographically ordered
+    W to E
+  - 'Both themes fully correct: all chrome tokens threaded through, no dark-on-dark
+    or light-on-light failures'
+  - Matterhorn focal point (bold, 16pt, 1.4 linewidth leader, 0.85 alpha) is intentional
+    and effective
+  weaknesses:
+  - Non-anchor peak labels at 14pt remain slightly below the 16pt canvas minimum —
+    raising all labels to 16pt would fully satisfy VQ-01
+  - Spec calls for 'dark solid color (photo-like silhouette, evening/dusk feel)' —
+    brand green is palette-justified but produces a stylized illustration rather than
+    a dramatic photo-like silhouette; sky gradient partially compensates
+  - DE-03 could improve with elevation-based visual differentiation (e.g., subtle
+    highlight on the top 3 summits by elevation) to guide the viewer beyond the Matterhorn
+    focal point
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Wallis Alps · area-mountain-panorama · matplotlib · anyplot.ai" in dark ink (#1A1A17) at 24pt, clearly readable; y-axis label "Elevation (m)" in dark ink at 20pt; compass bearing x-ticks (W, SW, S, SE, E) in INK_SOFT (#4A4A44) at 16pt; y-axis tick values in INK_SOFT — all text readable
+      Data: Sky gradient from #FAF8F1 to warm peach #E8C8A0 above ridgeline (dusk mood); mountain silhouette filled solid brand green (#009E73) from y=2400 to synthetic ridgeline; 17 Wallis Alps peaks annotated at three staggered levels (5050/5320/5590 m) with thin vertical leader lines; Matterhorn in bold 16pt with 1.4 linewidth leader at 0.85 alpha; non-anchor peaks at 14pt regular weight with 0.8 linewidth leader at 0.45 alpha
+      Legibility verdict: PASS — all text readable against warm off-white background; non-anchor peak labels at 14pt are slightly below the 16pt canvas minimum but remain legible
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in #F0EFE8 (INK for dark theme) — clearly readable; axis labels and tick labels in #B8B7B0 (INK_SOFT for dark theme) — clearly readable against near-black; leader lines in INK/INK_SOFT tones with appropriate alpha; subtle grid at 10% opacity using INK token; no dark-on-dark text failures
+      Data: Sky gradient shifts to deep navy (#252D40) above ridgeline (night-alpine mood); mountain silhouette fill is identical brand green (#009E73) — data colors unchanged from light render; annotation labels use INK (#F0EFE8) for Matterhorn and INK_SOFT (#B8B7B0) for non-anchor peaks — readable against #1A1A17
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues; brand green #009E73 remains well-visible on #1A1A17; theme adaptation complete and correct
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 24pt, axis label 20pt, ticks 16pt explicitly set; Matterhorn
+          label 16pt; non-anchor peak labels 14pt — slightly below 16pt canvas minimum
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 3-level stagger (5050/5320/5590 m) prevents collisions across all
+          17 peaks; minor crowding risk in dense W-SW cluster but no visible collisions
+          in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Mountain silhouette prominently visible; sky gradient adds depth;
+          leader lines at 0.8-1.4 linewidth visible at full resolution
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single brand green (#009E73) on warm backgrounds — excellent contrast,
+          CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 landscape perfectly suits the panoramic subject; label zone
+          above 5000 m makes good use of upper canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Elevation (m)'' with units; X-axis: compass bearings (W,
+          SW, S, SE, E)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First/only series is #009E73; backgrounds #FAF8F1 (light) / #1A1A17
+          (dark); sky gradient uses theme-adaptive PAGE_BG and SKY_TOP (not data colors);
+          all chrome tokens correctly applied in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: theme-adaptive sky gradient (warm peach dusk in light,
+          deep navy in dark) elevates panoramic mood; Matterhorn focal point with
+          intentional bold/opacity hierarchy; composition clearly above configured
+          defaults'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed; x-axis tick marks hidden (length=0); y-grid
+          at 10% opacity; variable leader line alpha (0.45 non-anchor / 0.85 Matterhorn);
+          sky gradient fills background meaningfully
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sky gradient establishes panorama-from-a-viewpoint narrative; Matterhorn
+          is clear focal point through bold weight and stronger leader; W to E geographic
+          sweep provides orientation; elevation-based differentiation between minor
+          and major summits would push higher
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: filled area mountain silhouette from angular panoramic
+          vantage point'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Staggered leader-line annotations, sky gradient (added in attempt
+          2), y-axis in meters, compass x-axis, Matterhorn focal point all present;
+          spec requested 'dark solid color' silhouette but brand green used — palette-rule
+          justified deviation
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: horizontal viewing angle 0-262 degrees; Y: elevation in meters;
+          all 17 Wallis Alps peaks correctly positioned'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title contains 'area-mountain-panorama · matplotlib · anyplot.ai';
+          no legend needed for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Skyline curve with Gaussian peak construction, sky gradient background,
+          annotated summits with leader lines, staggered labels, compass orientation
+          — all spec features present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real Wallis Alps peaks with authentic names and accurate elevations
+          (Matterhorn 4478 m, Monte Rosa 4634 m, Weisshorn 4506 m, etc.)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 17 peaks spanning 0-262 degree panorama; elevations 4027-4634 m;
+          2500 m lower bound appropriate for high alpine scene
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: imports to tokens to data to ridge construction to
+          plot to save; gaussian_smooth() function from attempt 1 correctly inlined'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) before all random calls
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, matplotlib.pyplot, numpy, matplotlib.colors.LinearSegmentedColormap
+          — all actively used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable; Gaussian peak construction with np.maximum is elegant;
+          no fake UI elements
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with facecolor=PAGE_BG; current matplotlib
+          API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Consistent axes-object API (ax.fill_between, ax.plot, ax.text, ax.imshow);
+          proper subplot creation; environment-variable theming; tight_layout + bbox_inches='tight'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: LinearSegmentedColormap.from_list() for custom sky gradient; ax.imshow()
+          with custom extent as gradient background layer — sophisticated matplotlib-specific
+          technique; Gaussian kernel convolution for ridgeline smoothing
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - gradient-fill

@@ -1,158 +1,184 @@
 library: plotnine
+language: python
 specification_id: errorbar-basic
 created: '2025-12-23T13:02:20Z'
-updated: '2025-12-23T13:08:17Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461376273
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - minimal-chrome
+updated: '2026-04-25T09:38:18Z'
+generated_by: claude-opus
+workflow_run: 24927208728
+issue: 973
+python_version: 3.14.4
+library_version: 0.15.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
 review:
   strengths:
-  - Clean implementation using plotnine grammar of graphics idiom
-  - Error bars have visible caps (width=0.3) as specified in requirements
-  - Good font sizing for 4800x2700 output resolution
-  - Realistic lab measurement scenario with appropriate data values
-  - Proper use of theme_minimal() for clean appearance
+  - 'Perfect code quality: flat, reproducible, deterministic, clean imports, correct
+    output naming'
+  - 'Full spec compliance: geom_errorbar with visible caps, position_dodge for multi-series,
+    correct Okabe-Ito colors'
+  - 'Theme-adaptive implementation correct in both renders: token values, backgrounds,
+    and chrome all flip properly'
+  - Idiomatic plotnine grammar of graphics usage throughout
+  - 'Excellent visual refinement: no tick marks, horizontal-only subtle grid, no panel
+    border, L-shaped axis line only'
   weaknesses:
-  - Missing grid lines would improve readability (add panel_grid with subtle alpha)
-  - Axis labels lack units (e.g., Measurement Value (units) would be more informative)
-  image_description: The plot displays a basic error bar chart with 6 experimental
-    samples (Sample A through F) on the x-axis and Measurement Value on the y-axis
-    (ranging from ~30 to ~58). Each sample is represented by a blue point (#306998
-    color) with vertical error bars extending above and below. The error bars have
-    visible horizontal caps at both ends. The title "errorbar-basic · plotnine · pyplots.ai"
-    is displayed at the top. The plot uses a clean minimal theme with a light gray
-    background and subtle grid lines. All text is clearly legible with good font sizes.
+  - Three methods have nearly identical measurement values (within 3-5 mg/L per sample),
+    causing errorbars to cluster and overlap visually despite position_dodge — the
+    multi-method comparison loses informational value
+  - Sample ordering by mean (pd.Categorical) did not render in sorted order — x-axis
+    shows alphabetical order instead of ascending mean measurement
+  - 'DE-03 storytelling is weak: no visual emphasis, annotation, or data design that
+    guides the viewer to an insight'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "errorbar-basic · plotnine · anyplot.ai" in bold dark INK (#1A1A17), axis labels "Experimental Sample" and "Measurement Value (mg/L)" in dark INK at 20pt, tick labels at 16pt in INK_SOFT (#4A4A44) — all clearly readable
+      Data: Three methods shown with position-dodged errorbars and center points using Okabe-Ito: Method A (#009E73 green), Method B (#D55E00 orange), Method C (#0072B2 blue); six samples on x-axis (alphabetical order, not sorted by mean as intended); values cluster closely due to similar method measurements; subtle horizontal-only grid; no tick marks; small legend on right labeled "Method"
+      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light INK (#F0EFE8), axis labels in INK (#F0EFE8), tick labels in INK_SOFT (#B8B7B0) — all clearly readable against dark background; no dark-on-dark failures; horizontal grid lines and axis line adapt appropriately
+      Data: Data colors identical to light render (#009E73, #D55E00, #0072B2) — only chrome flips; brand green #009E73 reads well on dark surface; same clustering of three methods per sample group
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable with
-          appropriate font sizes (24pt title, 20pt axis labels, 16pt tick labels)
+        comment: 'All sizes explicitly set: title 24pt, axis labels 20pt, ticks 16pt;
+          readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; x-axis labels are well-spaced
+        comment: No text/label collisions; x-axis labels well-spaced for 6 categories
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Points (size=6) and error bars (size=1.5) are clearly visible and
-          well-proportioned for 6 data points
+        comment: Errorbars and points clearly visible, but three methods cluster tightly
+          due to similar values
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single blue color (#306998) with good contrast, no colorblind issues
+        comment: Okabe-Ito is CVD-safe; no red-green sole signal
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good canvas utilization with balanced margins, plot fills appropriate
-          space
+        comment: Good 16:9 proportions; canvas well-utilized; legend could be more
+          prominent
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Labels are descriptive ("Experiment", "Measurement Value") but lack
-          units
+        passed: true
+        comment: Measurement Value (mg/L) includes units; title format correct
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 2
         max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order; correct #FAF8F1/#1A1A17 backgrounds;
+          chrome tokens correct'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above library defaults: custom Okabe-Ito palette, panel border removed,
+          horizontal-only axis line, no tick marks; not yet FiveThirtyEight-level'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Notable refinements: panel_border blank, axis_ticks blank, panel_grid_major_x
+          blank, horizontal-only subtle grid (alpha=0.10), elevated legend background'
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
         passed: false
-        comment: No grid visible (theme_minimal removes it), which reduces readability
-          slightly
+        comment: Data displayed but no clear visual hierarchy; three methods too similar
+          in value to tell a story; intended sample ordering by mean did not render
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct error bar plot with points and error bars
+        comment: geom_errorbar + geom_point is correct error bar plot with center
+          points
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X (categorical samples) and Y (measurement values) correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Error bars with caps, consistent widths, symmetric errors - all present
-      - id: SC-04
-        name: Data Range
+        comment: Visible caps (width=0.35), symmetric errors, multiple series in different
+          colors, consistent widths
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: categorical samples, Y: measurement values, error: ±magnitude;
+          all data visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series (appropriate)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "errorbar-basic · plotnine · pyplots.ai"'
+        comment: Title format correct; legend 'Method' with Method A/B/C labels present
     data_quality:
-      score: 18
-      max: 20
+      score: 13
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
-        max: 8
+        score: 4
+        max: 6
         passed: true
-        comment: Shows variation in measurements and error sizes, but all errors are
-          symmetric (spec mentions asymmetric as a possibility)
+        comment: Shows symmetric error bars, multi-group comparison, variation in
+          error sizes; but three methods nearly identical in value per sample, making
+          comparison visually uninformative
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Lab measurements with uncertainty is a realistic scientific scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values in 30-55 range with errors of 2.8-5.5 are plausible for lab
-          measurements
+        comment: Lab methods measuring across experimental samples; scientific context
+          is neutral, realistic, and plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 33-57 mg/L with errors 2.5-5.5 mg/L are realistic; 6 samples
+          x 3 methods = appropriate scope
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -160,41 +186,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure
+        comment: 'Flat: imports -> theme tokens -> data -> ordering -> plot -> save;
+          no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random generation)
+        comment: Deterministic hardcoded data; no random calls
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All plotnine imports used; no unused imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic; no fake UI; appropriate complexity; no AR-08
+          violations
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as "plot.png" but missing bbox_inches equivalent
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png using plot.save() with correct parameters
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert ggplot grammar: ggplot() + geom layers, aes() mappings, position_dodge(),
+          scale_color_manual(), theme() with element_* system'
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot grammar correctly with geom_errorbar and geom_point,
-          theme_minimal, but doesn't leverage advanced plotnine features like faceting
-          or scale customization
+        comment: Uses position_dodge (grammar of graphics), pd.Categorical for factor
+          ordering (ggplot2-style), element_blank/element_line theming; could go further
+          with stat_* or annotate layers
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep: []
+  styling: []

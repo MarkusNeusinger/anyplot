@@ -1,161 +1,179 @@
 library: plotly
+language: python
 specification_id: gauge-basic
 created: '2025-12-23T13:02:46Z'
-updated: '2025-12-23T13:09:57Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461376271
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-04-25T13:03:02Z'
+generated_by: claude-opus
+workflow_run: 24931039693
+issue: 857
+python_version: 3.14.4
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/plotly/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent use of Plotly native gauge indicator (go.Indicator) with proper mode=gauge+number
-  - Clean implementation of threshold-based color zones (red/yellow/green) matching
-    spec exactly
-  - Prominent value display with large font size (72pt) for immediate readability
-  - Proper title format with spec-id and attribution in subtitle
-  - Both PNG and HTML outputs generated for static and interactive use
-  - Professional color scheme using Python blue (#306998) for indicator and borders
+  - CVD-safe Okabe-Ito zone colors (vermillion, amber, bluish-green) instead of the
+    conventional red/green palette — accessible and on-brand
+  - Slim needle (thickness=0.06) keeps zone colors fully visible while still indicating
+    the current value position
+  - '"✓ Target Exceeded" callout box with green border creates immediate data storytelling
+    — viewer grasps the insight without analysis'
+  - 'Perfect theme adaptation: all chrome tokens (INK, INK_SOFT, ELEVATED_BG, PAGE_BG)
+    propagate correctly to both light and dark renders with no dark-on-dark failures'
+  - Full spec compliance with clean, idiomatic Plotly code using go.Indicator with
+    steps, threshold, and bar
   weaknesses:
-  - Red/yellow/green color scheme may not be fully accessible to colorblind users;
-    consider adding patterns or alternative color palette
-  image_description: 'The plot displays a semi-circular gauge chart showing "Sales
-    Target Achievement" with a prominent "72%" value displayed in the center. The
-    gauge has three color zones: red (0-30%), yellow (30-70%), and green (70-100%),
-    following the intuitive red=bad, yellow=caution, green=good convention. A dark
-    blue (Python blue #306998) bar indicates the current value position at 72%, placing
-    it just into the green zone. Tick marks appear at 10% intervals (0%, 10%, 20%...
-    100%) around the arc with percentage labels. The title "Sales Target Achievement"
-    appears at the top with the subtitle "gauge-basic · plotly · pyplots.ai" below
-    it. The overall layout is clean with a white background and good use of canvas
-    space.'
+  - 'DE-01 has room to grow: gauge ring styling is Plotly-native with minimal customization
+    beyond colors; stronger typographic contrast or a custom gauge ring style could
+    push toward publication-ready (6+)'
+  - 'DE-02: the canvas could benefit from a subtle typographic variation in the value
+    annotation or a secondary context annotation to add visual depth'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "Sales Target Achievement" in bold dark text (32px) clearly readable; subtitle "gauge-basic · plotly · anyplot.ai" in INK_SOFT; gauge axis ticks (10% intervals) in INK_SOFT (18px); zone legend annotations in INK — all clearly readable against light background
+      Data: Three-zone gauge arc — vermillion #D55E00 (0–30%), amber #E69F00 (30–70%), bluish green #009E73 (70–100%); slim black needle + threshold marker at 72%; large "72%" value display in dark INK; color-coded legend chips match zone colors; green callout box at bottom
+      Legibility verdict: PASS — all text elements readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface; gauge elevated region at #242420
+      Chrome: Title, subtitle, tick labels, zone legend text, and "72%" value display all rendered in light tokens (#F0EFE8 / #B8B7B0) — clearly readable against dark background; slim needle and threshold marker flip to off-white (#F0EFE8) for visibility; no dark-on-dark failures detected
+      Data: Zone colors (vermillion, amber, bluish green) are identical to light render — data colors unchanged; brand green #009E73 callout box remains clearly visible on dark elevated background
+      Legibility verdict: PASS — all text readable in dark theme, theme adaptation complete
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, subtitle, value (72%), and tick labels are all clearly readable
-          at appropriate sizes
+        comment: 'All font sizes explicitly set: title 32px, ticks 18px, value 96px,
+          annotations 18-24px. Readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; all labels are well-spaced
+        comment: No overlapping elements. Tick marks at 10% intervals are well-spaced.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Gauge arc, color zones, and indicator bar are clearly visible and
-          well-proportioned
+        comment: Gauge zones vivid, needle and threshold marker clearly visible, value
+          display prominent.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Red/yellow/green zones are distinguishable, though red-green colorblind
-          users may have difficulty differentiating extreme zones
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization; gauge fills appropriate space with balanced
-          margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Tick labels include "%" suffix, making units clear
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito CVD-safe colors for all three zones; distinguishable without
+          relying on hue alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Gauge fills ~60% of canvas, balanced margins, zone legend and callout
+          well-placed below.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: N/A for gauge charts (no grid or legend needed)
+        comment: Descriptive title; gauge axis ticks carry % suffix via ticksuffix.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Zone colors are Okabe-Ito (green, vermillion, amber); backgrounds
+          #FAF8F1 / #1A1A17; all chrome tokens adapt correctly.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: CVD-safe zone colors, slim needle, color-coded legend chips, callout
+          box. Above configured default (4) but not publication-ready (6+).
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No unnecessary clutter, explicit margins, elevated-bg on gauge interior
+          and callout, subtle border. Relies on Plotly built-in renderer.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Target Exceeded callout, zone labels, threshold marker create immediate
+          narrative without analysis.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct gauge/speedometer chart type
+        comment: Semi-circular gauge using go.Indicator(mode=gauge+number).
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Value correctly mapped to gauge position
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: value display, min/max range, color zones
-          with thresholds'
-      - id: SC-04
-        name: Data Range
+        comment: Single value, min/max range, thresholds [30,70] creating three color
+          zones, prominent value display, needle, threshold line.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 0-100% range displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: value=72, min=0, max=100, thresholds=[30,70] all correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A (no legend needed for single-value gauge)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "gauge-basic · plotly · pyplots.ai" format in subtitle
+        comment: Title with correct spec-id format; zone legend clearly labeled.
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows value in yellow-green transition zone; could have demonstrated
-          a value in red or deep green zone as alternative
+        comment: 'Shows all gauge aspects: value, range, three threshold zones, needle,
+          numeric display, callout.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Sales target achievement is a realistic, relatable business scenario
+        comment: Quarterly sales target achievement (72% vs 70% goal) — genuine neutral
+          business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 72% is a sensible value; thresholds at 30/70 are reasonable for performance
-          tiers
+        comment: 0-100% range with thresholds at 30%/70% and value 72% are realistic
+          for KPI dashboards.
     code_quality:
       score: 10
       max: 10
@@ -165,41 +183,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure with no functions/classes
+        comment: 'Linear: constants -> data -> plot -> layout -> save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (hardcoded value=72), no random elements
+        comment: All data hardcoded; deterministic by nature.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only `plotly.graph_objects` imported and used
+        comment: Only os and plotly.graph_objects.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Clean and Pythonic; comments explain non-obvious choices.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as `plot.png` and `plot.html`
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current Plotly
+          API.
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Plotly's `go.Indicator` with gauge mode, threshold marker, and
-          HTML export for interactivity; could leverage more interactive features
-          like hover tooltips
+        comment: go.Indicator with mode=gauge+number is the canonical Plotly pattern
+          for gauges.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: go.Indicator with steps (zones), threshold (indicator line), and
+          bar (needle) is Plotly-exclusive.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns: []
+  dataprep: []
+  styling: []

@@ -5,6 +5,26 @@ interface EventProps {
   [key: string]: string | undefined;
 }
 
+// Module-level ambient props attached to every pageview and custom event.
+// Set by the layout once theme/locale-style values are known so we don't have
+// to thread them through every component that fires an event. Empty-string
+// values clear the key (so callers can effectively reset a prop).
+let ambientProps: Record<string, string> = {};
+
+export function setAnalyticsAmbientProps(props: Record<string, string>): void {
+  const merged: Record<string, string> = { ...ambientProps, ...props };
+  for (const key of Object.keys(merged)) {
+    if (!merged[key]) delete merged[key];
+  }
+  ambientProps = merged;
+}
+
+// Snapshot of current ambient props for callers that fire `window.plausible`
+// directly (e.g. reportWebVitals.ts, which runs outside React).
+export function getAnalyticsAmbientProps(): Record<string, string> {
+  return { ...ambientProps };
+}
+
 function debounce<T extends (...args: never[]) => void>(
   fn: T,
   delay: number,
@@ -90,7 +110,8 @@ export function useAnalytics() {
       if (url === lastPageviewRef.current) return;
       lastPageviewRef.current = url;
 
-      window.plausible?.("pageview", { url });
+      const props = Object.keys(ambientProps).length > 0 ? { ...ambientProps } : undefined;
+      window.plausible?.("pageview", props ? { url, props } : { url });
     },
     [isProduction],
   );
@@ -107,12 +128,11 @@ export function useAnalytics() {
         ? Object.fromEntries(
             Object.entries(props).filter(([, v]) => v !== undefined),
           )
-        : undefined;
+        : {};
+      const merged = { ...ambientProps, ...cleanProps } as Record<string, string>;
       window.plausible?.(
         name,
-        cleanProps
-          ? { props: cleanProps as Record<string, string> }
-          : undefined,
+        Object.keys(merged).length > 0 ? { props: merged } : undefined,
       );
     },
     [isProduction],

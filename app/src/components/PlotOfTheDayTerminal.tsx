@@ -6,6 +6,7 @@ import { colors, typography } from '../theme';
 import { buildSrcSet, getFallbackSrc } from '../utils/responsiveImage';
 import { selectPreviewUrl } from '../utils/themedPreview';
 import { useTheme } from '../hooks/useLayoutContext';
+import { useAnalytics } from '../hooks';
 import { specPath } from '../utils/paths';
 import type { PlotOfTheDayData } from '../hooks/usePlotOfTheDay';
 
@@ -37,6 +38,7 @@ export function PlotOfTheDayTerminal({
   maxPlotHeight = '55vh',
 }: PlotOfTheDayTerminalProps) {
   const { isDark } = useTheme();
+  const { trackEvent } = useAnalytics();
   const previewUrl = selectPreviewUrl(potd, isDark);
   if (!potd || !previewUrl) return null;
 
@@ -89,6 +91,7 @@ export function PlotOfTheDayTerminal({
           href={githubFileUrl}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackEvent('nav_click', { source: 'potd_terminal_filename', target: 'github', spec: potd.spec_id, library: potd.library_id })}
           sx={{
             flex: 1,
             minWidth: 0,
@@ -112,6 +115,7 @@ export function PlotOfTheDayTerminal({
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Open source on GitHub"
+          onClick={() => trackEvent('nav_click', { source: 'potd_terminal_github', target: 'github', spec: potd.spec_id, library: potd.library_id })}
           sx={{
             color: 'inherit',
             textDecoration: 'none',
@@ -131,6 +135,7 @@ export function PlotOfTheDayTerminal({
         component={RouterLink}
         to={implPath}
         aria-label={`Open ${potd.spec_title} implementation for ${potd.library_name}`}
+        onClick={() => trackEvent('nav_click', { source: 'potd_terminal_image', target: 'spec_detail', spec: potd.spec_id, library: potd.library_id })}
         sx={{
           display: 'block',
           mx: 'auto',

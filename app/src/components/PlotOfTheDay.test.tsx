@@ -1,5 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '../test-utils';
+
+const trackEvent = vi.fn();
+
+vi.mock('../hooks', async () => {
+  const actual = await vi.importActual<typeof import('../hooks')>('../hooks');
+  return {
+    ...actual,
+    useAnalytics: () => ({ trackEvent, trackPageview: vi.fn() }),
+  };
+});
+
 import { PlotOfTheDay } from './PlotOfTheDay';
 
 // Mock sessionStorage
@@ -38,6 +49,7 @@ describe('PlotOfTheDay', () => {
     vi.stubGlobal('sessionStorage', sessionStorageStub);
     sessionStorageStub.getItem.mockClear();
     sessionStorageStub.setItem.mockClear();
+    trackEvent.mockClear();
   });
 
   afterEach(() => {
@@ -142,6 +154,29 @@ describe('PlotOfTheDay', () => {
     // After dismiss, component should return null
     expect(container.firstChild).toBeNull();
     expect(sessionStorageStub.setItem).toHaveBeenCalledWith('potd_dismissed', 'true');
+    expect(trackEvent).toHaveBeenCalledWith('potd_dismiss', expect.objectContaining({ spec: 'scatter-basic', library: 'matplotlib' }));
+  });
+
+  it('tracks nav_click when the image, title and source link are clicked', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve(mockData),
+    });
+
+    const { userEvent } = await import('../test-utils');
+    const user = userEvent.setup();
+
+    render(<PlotOfTheDay />);
+
+    await waitFor(() => {
+      expect(screen.getByText('plot of the day')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByText('Basic Scatter Plot'));
+    expect(trackEvent).toHaveBeenCalledWith('nav_click', expect.objectContaining({ source: 'potd_title' }));
+
+    await user.click(screen.getByText(/python plots\/scatter-basic\/matplotlib\.py/));
+    expect(trackEvent).toHaveBeenCalledWith('nav_click', expect.objectContaining({ source: 'potd_source_link' }));
   });
 
   it('hides library version when it is "unknown"', async () => {

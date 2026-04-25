@@ -52,10 +52,11 @@ export function CodeShowcase() {
           </Box>
         </Box>
 
-        {/* Right: code block */}
+        {/* Right: code block — terminal showcase, intentionally dark in both themes
+            so the macOS-style window dots and drop shadow stay coherent. */}
         <Box sx={{
-          background: 'var(--code-bg)',
-          color: 'var(--code-text)',
+          background: '#1A1A17',
+          color: '#E8E8E0',
           p: { xs: 2.5, md: '28px 32px' },
           borderRadius: '12px',
           fontFamily: typography.mono,

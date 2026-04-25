@@ -1,0 +1,247 @@
+library: plotly
+language: python
+specification_id: area-mountain-panorama
+created: '2026-04-25T01:24:19Z'
+updated: '2026-04-25T01:30:49Z'
+generated_by: claude-opus
+workflow_run: 24919062809
+issue: 5365
+python_version: 3.14.4
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/plotly/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Perfect spec compliance: all 16 Valais peaks labeled with accurate elevations,
+    all required features present'
+  - Cosine smoothstep interpolation creates a natural, realistic ridgeline profile
+  - Three-tier label staggering elegantly avoids overlaps across 16 densely-packed
+    peaks
+  - 'Full theme adaptation: both renders are clean and readable; INK_MUTED used correctly
+    for elevation sub-labels'
+  - HTML annotation spans with per-peak font-size and weight hierarchy are idiomatic
+    and effective
+  weaknesses:
+  - No sky gradient above the ridgeline (spec describes optional sky-gradient for
+    photographic mood) — adding a linear gradient layer would significantly lift design
+    sophistication
+  - Matterhorn visually identical in silhouette body (same green fill as other peaks);
+    focal peak emphasis is only in the label, not in the chart shape; a subtle accent
+    treatment would strengthen storytelling
+  - Elevation sub-labels at 13px are borderline small at 4800x2700 canvas; bump to
+    15px
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct themed surface, not pure white
+      Chrome: Title "area-mountain-panorama · plotly · anyplot.ai" in dark ink (28px, centered); subtitle in INK_SOFT; Y-axis label "Elevation (m)" in dark ink (22px); tick labels 2500–5000m in INK_SOFT (18px); all clearly readable
+      Data: Mountain silhouette filled with #009E73 (brand green, Okabe-Ito position 1); 16 peak labels staggered at three tiers (4880/5040/5200m) with peak name + elevation; thin INK_SOFT leader lines; Matterhorn summit dot larger and bolder
+      Legibility verdict: PASS — all text elements readable; no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct themed surface, not pure black
+      Chrome: Title in warm light tone (#F0EFE8); subtitle in B8B7B0; axis labels and tick labels in light-colored ink tokens; all clearly readable against dark background; no dark-on-dark failures
+      Data: Silhouette retains identical #009E73 green — data colors unchanged from light render; leader lines appear white/light; peak name labels render in light-colored text
+      Legibility verdict: PASS — all text readable against dark surface; no dark-on-dark failures observed
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set (title 28px, y-label 22px, ticks 18px, peak
+          names 14-17px); elevation sub-labels at 13px borderline small
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Three-tier staggering effective; right cluster (132-174 deg) slightly
+          crowded horizontally but no actual overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Silhouette bold and clear; summit dots visible; leader lines render
+          well in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single Okabe-Ito brand green on themed background; CVD-safe; good
+          luminance contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 landscape; wide panoramic shape uses horizontal space efficiently;
+          generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis Elevation (m) with units; X hidden per spec guidance
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1 light / #1A1A17 dark;
+          chrome fully theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean and professional with typography hierarchy and natural ridgeline;
+          above defaults but no sky gradient limits photographic feel
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-axis suppressed; Y spine hidden; subtle grid on Y only; generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Matterhorn highlighted in labels/dot; geographic ordering; subtitle
+          context. Silhouette body gives equal visual weight to all peaks
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct filled area panorama silhouette
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Filled silhouette, 16 peaks labeled, leader lines, staggered tiers,
+          2500m floor, X hidden, wide aspect, Matterhorn focal point
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Angle 0-180 on X, elevation m on Y; all spec peaks with accurate
+          elevations
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; no legend needed for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full panoramic sweep with 16 summits, varied elevations, visible
+          saddles, focal peak emphasis
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real Valais Switzerland peaks with accurate elevations; neutral alpine
+          geography
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Elevation 2500-4634m realistic; saddle drops 420-820m realistic;
+          0-180 deg sweep reasonable
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: imports -> theme tokens -> data -> ridgeline math ->
+          plot traces -> layout -> save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before stochastic saddle placement
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only os, numpy, plotly.graph_objects; all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Cosine smoothstep well-implemented; per-peak loop readable; no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current Plotly
+          API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: go.Scatter fill=toself for silhouette polygon; HTML annotation styling;
+          write_image + write_html; idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HTML-styled annotations with inline span styling is Plotly-specific;
+          could leverage hovertemplate for interactive layer
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - minimal-chrome

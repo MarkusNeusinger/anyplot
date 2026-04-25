@@ -1,6 +1,7 @@
 import Box from '@mui/material/Box';
 import { Link } from 'react-router-dom';
 import { colors, typography } from '../theme';
+import { useAnalytics } from '../hooks';
 
 interface SectionHeaderProps {
   /** Prefix symbol — e.g. `§`, `❯`, `$`. Rendered at the same size as the title. */
@@ -13,6 +14,7 @@ interface SectionHeaderProps {
 const titleFontSize = { xs: '1.5rem', sm: '1.875rem', md: 'clamp(1.875rem, 3.5vw, 2.5rem)' };
 
 export function SectionHeader({ prompt, title, linkText, linkTo }: SectionHeaderProps) {
+  const { trackEvent } = useAnalytics();
   return (
     <Box sx={{
       display: 'grid',
@@ -55,6 +57,7 @@ export function SectionHeader({ prompt, title, linkText, linkTo }: SectionHeader
         <Box
           component={Link}
           to={linkTo}
+          onClick={() => trackEvent('nav_click', { source: 'section_header', target: linkTo })}
           sx={{
             fontFamily: typography.mono,
             fontSize: '12px',

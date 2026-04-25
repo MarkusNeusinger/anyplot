@@ -254,7 +254,7 @@ export function SpecTabs({
   // Lazy-loaded syntax highlighter - only loads when Code tab is opened
   const highlightedCode = code ? (
     <Suspense fallback={
-      <Box sx={{ fontFamily: typography.fontFamily, fontSize: '0.85rem', whiteSpace: 'pre-wrap', color: semanticColors.labelText }}>
+      <Box sx={{ fontFamily: typography.fontFamily, fontSize: '0.85rem', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', overflowX: 'auto', minWidth: 0, color: semanticColors.labelText }}>
         {code}
       </Box>
     }>
@@ -328,33 +328,26 @@ export function SpecTabs({
       {/* Code Tab - only in detail mode */}
       {!overviewMode && (
         <TabPanel value={tabIndex} index={0}>
-          <Box sx={{ position: 'relative' }}>
+          <Box sx={{ position: 'relative', minWidth: 0 }}>
             <Tooltip title={copied ? '.copied' : '.copy()'}>
               <IconButton
                 onClick={handleCopy}
                 aria-label="Copy code"
                 sx={{
                   position: 'absolute',
-                  top: 8,
-                  right: 8,
-                  bgcolor: 'rgba(255,255,255,0.9)',
+                  top: 12,
+                  right: 12,
+                  bgcolor: 'var(--bg-elevated)',
+                  border: '1px solid var(--code-border)',
                   zIndex: 1,
-                  '&:hover': { bgcolor: '#fff' },
+                  '&:hover': { bgcolor: 'var(--bg-surface)' },
                 }}
                 size="small"
               >
                 {copied ? <CheckIcon color="success" /> : <ContentCopyIcon fontSize="small" />}
               </IconButton>
             </Tooltip>
-            <Box
-              sx={{
-                bgcolor: 'var(--bg-page)',
-                p: 3,
-                borderRadius: 1,
-              }}
-            >
-              {highlightedCode}
-            </Box>
+            {highlightedCode}
           </Box>
         </TabPanel>
       )}

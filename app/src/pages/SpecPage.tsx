@@ -324,6 +324,26 @@ export function SpecPage() {
       ? specData.implementations.filter((i) => i.language === languageFilter)
       : specData.implementations;
 
+  const breadcrumbItems: { name: string; item: string }[] = [
+    { name: 'anyplot', item: 'https://anyplot.ai/' },
+    { name: 'specs', item: 'https://anyplot.ai/specs' },
+    { name: specData.title, item: `https://anyplot.ai/${specId}` },
+  ];
+  if (mode === 'detail' && urlLanguage && selectedLibrary) {
+    breadcrumbItems.push({ name: urlLanguage, item: `https://anyplot.ai/${specId}/${urlLanguage}` });
+    breadcrumbItems.push({ name: selectedLibrary, item: canonical });
+  }
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: breadcrumbItems.map((b, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: b.name,
+      item: b.item,
+    })),
+  };
+
   return (
     <>
       <Helmet>
@@ -334,6 +354,7 @@ export function SpecPage() {
         {currentImpl?.preview_url && <meta property="og:image" content={currentImpl.preview_url} />}
         <meta property="og:url" content={canonical} />
         <link rel="canonical" href={canonical} />
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd).replace(/</g, '\\u003c')}</script>
       </Helmet>
 
       <Box sx={{ pt: 1.5, pb: 4 }}>

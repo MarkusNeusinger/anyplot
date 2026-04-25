@@ -1,61 +1,78 @@
-""" pyplots.ai
+""" anyplot.ai
 gauge-basic: Basic Gauge Chart
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: pygal 3.1.0 | Python 3.14.4
+Quality: 87/100 | Updated: 2026-04-25
 """
 
-import pygal
-from pygal.style import Style
+import os
+import sys
+from pathlib import Path
 
 
-# Data - Current sales performance against target
-value = 72  # Current value to display
+# Remove script directory from path to avoid name collision with the pygal package
+_script_dir = str(Path(__file__).parent)
+sys.path = [p for p in sys.path if p != _script_dir]
+
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Data — quarterly sales performance against an annual target
+value = 72
+min_value = 0
 max_value = 100
-# Thresholds: 0-30 = Poor (red), 30-70 = Fair (yellow), 70-100 = Good (green)
+thresholds = [30, 70]
 
-# Determine zone color based on value position
-if value < 30:
-    value_color = "#E74C3C"  # Red for poor zone
-elif value < 70:
-    value_color = "#F1C40F"  # Yellow for fair zone
+# Semantic threshold colors using Okabe-Ito hues (bad → warn → good)
+ZONE_COLORS = ("#D55E00", "#E69F00", "#009E73")
+
+if value < thresholds[0]:
+    zone_label = "Poor"
+elif value < thresholds[1]:
+    zone_label = "Fair"
 else:
-    value_color = "#2ECC71"  # Green for good zone
+    zone_label = "Good"
 
-# Custom style for 4800x2700 px with large fonts
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#1a1a1a",
-    foreground_subtle="#666666",
-    colors=(value_color,),
-    title_font_size=72,
-    label_font_size=54,
-    major_label_font_size=54,
-    legend_font_size=52,
-    value_font_size=72,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=ZONE_COLORS,
+    title_font_size=64,
+    label_font_size=44,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=56,
     tooltip_font_size=40,
 )
 
-# Create SolidGauge chart (semi-circular gauge)
-chart = pygal.SolidGauge(
+chart = pygal.Pie(
     width=4800,
     height=2700,
+    title=f"Sales: {value}/{max_value} ({zone_label}) · gauge-basic · pygal · anyplot.ai",
     style=custom_style,
-    title="Sales Performance · gauge-basic · pygal · pyplots.ai",
-    inner_radius=0.60,
     half_pie=True,
+    inner_radius=0.55,
     show_legend=True,
     legend_at_bottom=True,
-    print_values=True,
-    value_formatter=lambda x: f"{x:.0f}%",
-    margin=100,
+    print_values=False,
+    margin=80,
 )
 
-# Add single gauge showing current value against max
-# Value 72 is in the "Good" zone (70-100)
-chart.add(f"Current Sales: {value}% (Good Zone)", [{"value": value, "max_value": max_value}])
+# Threshold zones render as colored arcs of the semi-circular gauge
+chart.add(f"Poor ({min_value}–{thresholds[0]})", thresholds[0] - min_value)
+chart.add(f"Fair ({thresholds[0]}–{thresholds[1]})", thresholds[1] - thresholds[0])
+chart.add(f"Good ({thresholds[1]}–{max_value}) — current: {value}", max_value - thresholds[1])
 
-# Save outputs
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Save
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())

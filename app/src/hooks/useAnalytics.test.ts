@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useAnalytics } from './useAnalytics';
+import { useAnalytics, setAnalyticsAmbientProps } from './useAnalytics';
 
 describe('useAnalytics', () => {
   const originalLocation = window.location;
@@ -8,6 +8,8 @@ describe('useAnalytics', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     window.plausible = vi.fn();
+    // Reset module-level ambient props between tests so each starts clean.
+    setAnalyticsAmbientProps({ theme: '' });
   });
 
   afterEach(() => {
@@ -166,6 +168,101 @@ describe('useAnalytics', () => {
 
       // The call should have gone through with buildPlausibleUrl(), not the invalid URL
       expect(window.plausible).toHaveBeenCalled();
+    });
+  });
+
+  describe('ambient props', () => {
+    function setHostname(hostname: string) {
+      Object.defineProperty(window, 'location', {
+        value: { ...originalLocation, hostname, search: '' },
+        writable: true,
+        configurable: true,
+      });
+    }
+
+    it('attaches ambient props to custom events', () => {
+      setHostname('anyplot.ai');
+      setAnalyticsAmbientProps({ theme: 'dark' });
+      const { result } = renderHook(() => useAnalytics());
+
+      act(() => {
+        result.current.trackEvent('nav_click', { source: 'nav_logo' });
+      });
+
+      expect(window.plausible).toHaveBeenCalledWith('nav_click', {
+        props: { theme: 'dark', source: 'nav_logo' },
+      });
+    });
+
+    it('attaches ambient props to events fired without explicit props', () => {
+      setHostname('anyplot.ai');
+      setAnalyticsAmbientProps({ theme: 'light' });
+      const { result } = renderHook(() => useAnalytics());
+
+      act(() => {
+        result.current.trackEvent('suggest_spec');
+      });
+
+      expect(window.plausible).toHaveBeenCalledWith('suggest_spec', {
+        props: { theme: 'light' },
+      });
+    });
+
+    it('attaches ambient props to pageviews', () => {
+      setHostname('anyplot.ai');
+      setAnalyticsAmbientProps({ theme: 'dark' });
+      const { result } = renderHook(() => useAnalytics());
+
+      act(() => {
+        result.current.trackPageview('/specs');
+        vi.advanceTimersByTime(200);
+      });
+
+      expect(window.plausible).toHaveBeenCalledWith('pageview', {
+        url: 'https://anyplot.ai/specs',
+        props: { theme: 'dark' },
+      });
+    });
+
+    it('omits the props key when no ambient props are set', () => {
+      setHostname('anyplot.ai');
+      const { result } = renderHook(() => useAnalytics());
+
+      act(() => {
+        result.current.trackPageview('/about');
+        vi.advanceTimersByTime(200);
+      });
+
+      expect(window.plausible).toHaveBeenCalledWith('pageview', {
+        url: 'https://anyplot.ai/about',
+      });
+    });
+
+    it('event-level props override ambient values for the same key', () => {
+      setHostname('anyplot.ai');
+      setAnalyticsAmbientProps({ theme: 'dark' });
+      const { result } = renderHook(() => useAnalytics());
+
+      act(() => {
+        result.current.trackEvent('theme_toggle', { theme: 'light' });
+      });
+
+      expect(window.plausible).toHaveBeenCalledWith('theme_toggle', {
+        props: { theme: 'light' },
+      });
+    });
+
+    it('clears a key when set to empty string', () => {
+      setHostname('anyplot.ai');
+      setAnalyticsAmbientProps({ theme: 'dark' });
+      setAnalyticsAmbientProps({ theme: '' });
+      const { result } = renderHook(() => useAnalytics());
+
+      act(() => {
+        result.current.trackEvent('search_no_results');
+      });
+
+      expect(window.plausible).toHaveBeenCalledWith('search_no_results', undefined);
     });
   });
 });

@@ -1,3 +1,5 @@
+import { getAnalyticsAmbientProps } from '../hooks/useAnalytics';
+
 /**
  * Core Web Vitals tracking via web-vitals library.
  * Reports LCP, CLS, and INP to Plausible as custom events.
@@ -15,6 +17,7 @@ export function reportWebVitals() {
     onLCP((metric) => {
       window.plausible?.('LCP', {
         props: {
+          ...getAnalyticsAmbientProps(),
           value: String(Math.round(metric.value / 100) * 100),
           rating: metric.rating,
         },
@@ -24,6 +27,7 @@ export function reportWebVitals() {
     onCLS((metric) => {
       window.plausible?.('CLS', {
         props: {
+          ...getAnalyticsAmbientProps(),
           value: String(Math.round(metric.value * 100) / 100),
           rating: metric.rating,
         },
@@ -33,6 +37,7 @@ export function reportWebVitals() {
     onINP((metric) => {
       window.plausible?.('INP', {
         props: {
+          ...getAnalyticsAmbientProps(),
           value: String(Math.round(metric.value / 50) * 50),
           rating: metric.rating,
         },

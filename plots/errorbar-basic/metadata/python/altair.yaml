@@ -1,167 +1,184 @@
 library: altair
+language: python
 specification_id: errorbar-basic
 created: '2025-12-23T13:02:24Z'
-updated: '2025-12-23T13:08:49Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461376227
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/altair/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-04-25T09:00:55Z'
+generated_by: claude-opus
+workflow_run: 24927121489
+issue: 973
+python_version: 3.14.4
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/altair/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent use of Altair layering to compose error bars from rule + tick marks
-    for caps
-  - Clean demonstration of asymmetric error bars (Treatment C and D show different
-    upper/lower bounds)
-  - Proper title format and descriptive axis labels with units
-  - Good font sizing throughout (18pt labels, 22pt titles, 28pt main title)
-  - Subtle dashed grid that does not distract from data
+  - 'Perfect visual quality: all font sizes explicitly set, both themes fully adapted,
+    no overlap or visibility issues'
+  - Asymmetric error bars with varied lower/upper bounds demonstrate feature coverage
+    and add realism
+  - 'Idiomatic Altair layer composition: three mark types layered cleanly with proper
+    encodings'
+  - Full theme adaptation with correct token usage throughout configure_* chain
   weaknesses:
-  - Y-axis starting at 0 creates unnecessary whitespace at bottom since all values
-    are above 20
-  - No tooltip added for interactivity (Altair strength not fully utilized)
-  image_description: The plot displays a basic error bar visualization with 6 experimental
-    groups (Control, Treatment A through E) on the x-axis and "Response Value (units)"
-    on the y-axis ranging from 0 to 54. Each data point is shown as a blue circle
-    (#306998) with vertical error bars extending above and below. The error bars have
-    visible caps (horizontal tick marks) at both ends. The title "errorbar-basic ·
-    altair · pyplots.ai" appears at the top in a clear, readable font. The y-axis
-    has a subtle dashed grid. Notably, Treatment C and Treatment D show asymmetric
-    error bars - Treatment C has a larger lower error than upper, while Treatment
-    D has a larger upper error than lower. All text is clearly legible with appropriate
-    font sizes.
+  - 'DE-01 (5/8): No visual emphasis or typography hierarchy to highlight key contrasts
+    — all elements styled identically; adding size or opacity variation to the highest-value
+    or most-uncertain group would lift the design'
+  - 'DE-03 (3/6): The asymmetric error asymmetry is the story but the viewer is not
+    guided to it — a subtle reference line, annotation, or color accent on Treatment
+    D would create a focal point'
+  - 'DE-02 (4/6): Top/right axis domain lines remain visible; configure_axis domainOpacity=0
+    needed to achieve full L-spine removal'
+  - 'LM-02 (3/5): No use of Altair-specific interactive or declarative features beyond
+    the basic layer pattern — condition-based encoding or a selection highlight would
+    demonstrate deeper library mastery'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct, not pure white
+      Chrome: Title "errorbar-basic · altair · anyplot.ai" in dark text (readable); Y-axis label "Response Value (units)" and X-axis label "Experimental Group" both readable in dark text; tick labels in medium gray (readable)
+      Data: All elements in brand green (#009E73) — error bar rules, horizontal cap ticks, center circles; six groups (Control, Treatment A–E); asymmetric errors visible with Treatment C showing wider lower bound
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct, not pure black
+      Chrome: Title, axis labels, tick labels all render in light-colored text — correctly theme-adapted; no dark-on-dark failures detected
+      Data: Colors identical to light render — all elements remain #009E73; brand green clearly visible on dark surface
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all perfectly
-          readable
+        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
+          labels 18px; readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, x-axis labels well-spaced with labelAngle=0
+        comment: Six category labels well-spaced at labelAngle=0, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points sized at 300, error bars with strokeWidth=3, caps clearly
-          visible
+        comment: Error bars (strokeWidth=3), caps (mark_tick size=22), circles (size=320)
+          all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color (#306998), high contrast, no colorblind issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, though starting y-axis at 0 creates some unused
-          space at bottom
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Experimental Group" and "Response Value (units)" - descriptive
-          with units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Single CVD-safe brand green with adequate contrast on both backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~65% of canvas, balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Response Value (units) with units; Experimental Group descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds #FAF8F1/#1A1A17; both renders
+          theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: single coherent brand green, clean layout, asymmetric
+          errors show intent — but lacks focal emphasis or typography hierarchy'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid at 10% opacity well-tuned; view border removed; L-shaped axis
+          frame still present (domain lines not suppressed)
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
         passed: false
-        comment: Grid is subtle (gridOpacity=0.3, dashed), but no legend present (not
-          strictly needed for single series)
+        comment: Asymmetric errors are a good data choice but no visual emphasis or
+          hierarchy guides viewer to key contrasts
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct error bar plot with points, bars, and caps
+        comment: 'Correct: error bar plot with center points, bars, and caps'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on x-axis, values on y-axis with error ranges
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has caps, consistent widths, asymmetric errors demonstrated
-      - id: SC-04
-        name: Data Range
+        comment: Caps (mark_tick), error bars (mark_rule), center points (mark_circle),
+          asymmetric errors all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis domain [0, 55] shows all data with room for error bars
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X = categorical groups, Y = response value with error_lower/error_upper
+          encoding
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "errorbar-basic · altair · pyplots.ai"
+        comment: Title is errorbar-basic · altair · anyplot.ai; no legend needed for
+          single series
     data_quality:
-      score: 18
-      max: 20
+      score: 13
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows symmetric (Control, Treatment E) AND asymmetric (Treatment
-          C, D) error bars; good variety
+        comment: Shows caps, bars, center points, asymmetric errors with visible variation;
+          asymmetric Treatment C is the best demonstration
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Experimental treatment comparison is a classic use case for error
-          bars
-      - id: DQ-03
-        name: Appropriate Scale
         score: 4
         max: 5
         passed: true
-        comment: Values are plausible for a treatment response; could be more specific
-          to a real domain
+        comment: Control + Treatment A-E is recognizable experimental design; Response
+          Value (units) is generic rather than domain-specific
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 25-50 with errors 2-7 in range 15-55; realistic for clinical/experimental
+          data
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,40 +186,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot elements → layer → save'
+        comment: Flat sequential code; no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas - all used
+        comment: altair, numpy, pandas all used; os, sys used for path handling
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean layer composition; no over-engineering
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair 6.x API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png and plot.html (correct)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of alt.layer(), correct encoding types (N, Q), proper
+          Scale/sort
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of Altair layering (mark_circle, mark_rule, mark_tick),
-          declarative encoding. Could leverage tooltips or selections for interactivity.
-  verdict: APPROVED
+        comment: Layer composition of mark_rule+mark_tick+mark_circle is distinctly
+          Altair; tooltips and HTML export included — no condition-based encoding
+          or selections
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

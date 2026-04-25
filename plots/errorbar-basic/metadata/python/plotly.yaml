@@ -1,166 +1,183 @@
 library: plotly
+language: python
 specification_id: errorbar-basic
 created: '2025-12-23T13:03:11Z'
-updated: '2025-12-23T13:13:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461373963
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-04-25T08:52:37Z'
+generated_by: claude-opus
+workflow_run: 24926953770
+issue: 973
+python_version: 3.14.4
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/plotly/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Clear, publication-quality visualization with excellent text legibility at all
-    sizes
-  - Error bars have prominent caps (width=16) making error ranges clearly visible
-  - Realistic experimental scenario with control and treatment groups
-  - Appropriate marker sizing (28) with clean border styling
-  - Correct title format and descriptive axis labels with units
-  - Generates both PNG and interactive HTML output
+  - 'Excellent code quality: clean KISS structure, correct theme tokens, idiomatic
+    Plotly patterns throughout'
+  - 'Full spec compliance: asymmetric error bars with visible caps, correct data mapping,
+    6 well-chosen clinical groups'
+  - 'Idiomatic Plotly hover: customdata + formatted hovertemplate showing group, mean,
+    and full CI range is a genuine library strength'
+  - 'Perfect palette and theme compliance: identical data colors across both renders,
+    correct background tokens'
   weaknesses:
-  - Only demonstrates symmetric error bars; could show asymmetric errors to better
-    showcase the plot type capabilities
-  - Legend could be positioned better (currently overlaps with potential data area
-    in top-left)
-  - Could leverage Plotly-specific features like custom hover templates showing exact
-    values
-  image_description: The plot displays a basic error bar chart with 6 experimental
-    groups (Control, Treatment A through E) on the x-axis and "Response Value (units)"
-    on the y-axis ranging from 0 to 90. Each data point is shown as a large blue circular
-    marker (#306998 color) with vertical error bars extending above and below. The
-    error bars have clearly visible horizontal caps at both ends. The title "errorbar-basic
-    · plotly · pyplots.ai" is centered at the top. A legend labeled "Mean ± SE" appears
-    in the top-left corner. The background is white with subtle horizontal gridlines.
-    All text is legible and appropriately sized.
+  - 'Design Excellence is low (9/20): single-color plot with no visual hierarchy or
+    data storytelling — no emphasis on key comparison (Treatment D highest), no color
+    differentiation between groups'
+  - Y-axis range starts at 0 but data clusters in 38-76, leaving the lower third of
+    the canvas empty — consider starting y-axis closer to the data range
+  - 'No visual focal point: all six groups have equal visual weight; consider using
+    Okabe-Ito colors per group, a control reference line, or size variation to create
+    emphasis'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "Clinical Response by Group · errorbar-basic · plotly · pyplots.ai" centered in dark ink — clearly readable. Y-axis label "Response (mg/dL)" and x-axis label "Experimental Group" in dark ink — both readable. Tick labels in muted dark (#4A4A44) — readable at size 18. Legend "Mean ± 95% CI" in top-right with elevated background.
+      Data: Six large scatter markers (size=28) in #009E73 with white edges. Asymmetric error bars in same green with visible horizontal caps. Only y-axis horizontal gridlines at ~10% opacity. No x-axis grid.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title in light (#F0EFE8) text — clearly readable. Axis labels in light ink — readable. Tick labels in secondary light (#B8B7B0) — readable. Legend has dark elevated background (#242420) with light text. No dark-on-dark failures observed.
+      Data: Colors are identical to light render — #009E73 markers and error bars, same size and shape. Grid lines are very subtle on dark background (rgba(240,239,232,0.10)) — visible but not intrusive.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, tick labels all clearly readable at the target
-          resolution
+        comment: 'All font sizes explicitly set: title=28, axis=22, ticks=18, legend=16.
+          Both renders fully readable.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; x-axis labels well-spaced
+        comment: Six well-spaced groups, no label collisions, legend placed in empty
+          upper-right area.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers sized appropriately (size=28), error bars clearly visible
-          with thickness=4 and width=16 caps
+        comment: Large markers (size=28) with error bar thickness=4 and width=18 caps
+          are prominent and clear.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single color scheme (#306998 blue) is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions, plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has "Response Value (units)" with units; X-axis has descriptive
-          "Experimental Group"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Single-color (#009E73) with strong contrast on both surfaces; CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Generous margins; y-axis range 0-90 leaves notable empty lower third
+          (data clusters in 38-76).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Response (mg/dL) and Experimental Group — descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series correctly uses #009E73; light bg=#FAF8F1; dark bg=#1A1A17;
+          all chrome tokens theme-adaptive.'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is subtle and good, but legend text could benefit from units
-          clarification
+        comment: Clean professional look with white marker edges but fundamentally
+          a single-color default-looking scatter plot. No visual hierarchy.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Only y-axis horizontal grid at 10% opacity, no x-axis grid, tick
+          marks hidden, generous explicit margins. Above defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed clearly in clinical context but no visual emphasis
+          guides viewer to key insight (Treatment D highest).
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct error bar plot type
+        comment: 'Correct: scatter markers with error bars implementing basic error
+          bar plot.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X mapped to categories, Y to means, error to error bars
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Error bars with visible caps, consistent widths, clear error range
-          markers
-      - id: SC-04
-        name: Data Range
+        comment: Visible caps (width=18), asymmetric error bars (symmetric=False),
+          consistent widths, 6 groups within 3-20 range.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis range [0, 90] shows all data points and error bars completely
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: x=categorical groups, y=mean values (mg/dL), error=asymmetric upper/lower
+          arrays. All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies "Mean ± SE"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format `{spec-id} · {library} · pyplots.ai`
+        comment: Title includes spec-id and library; legend label correctly describes
+          the error bars.
     data_quality:
-      score: 17
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows varying error magnitudes (3.6 to 9.3) demonstrating different
-          precision levels; however, only symmetric errors shown (spec mentions asymmetric
-          errors as a consideration)
+        comment: Multiple groups with varied means and asymmetric error bars. Missing
+          multi-series comparison mentioned in spec.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Experimental/clinical trial scenario with Control and Treatment groups
-          is realistic and comprehensible
+        comment: Clinical trial response in mg/dL is a real, neutral scientific scenario
+          with meaningful group names.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are plausible for a generic response metric; could be more
-          specific to a real-world domain
+        comment: Values 42-72 mg/dL are plausible for a clinical biomarker; y range
+          0-90 is realistic.
     code_quality:
       score: 10
       max: 10
@@ -170,41 +187,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure without functions/classes
+        comment: 'Linear: tokens -> data -> figure -> layout -> save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses `np.random.seed(42)` for reproducibility
+        comment: np.random.seed(42) set; data is hardcoded so fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used
+        comment: Only os, numpy, plotly.graph_objects — all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as `plot.png` and `plot.html`
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, appropriate complexity. No fake UI elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current plotly
+          API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses go.Scatter with error_y which is standard Plotly; also generates
-          interactive HTML output which is a Plotly strength. However, could leverage
-          more Plotly-specific features like hover templates or animations
-  verdict: APPROVED
+        passed: true
+        comment: 'Expert use: go.Scatter with error_y, customdata + hovertemplate
+          pattern, update_layout, write_image + write_html.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom hovertemplate with customdata showing group/mean/CI range
+          on hover; HTML export. Could also leverage layout.shapes for reference lines.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting

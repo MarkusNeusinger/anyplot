@@ -12,6 +12,7 @@ import { colors, typography, fontSize, semanticColors } from '../theme';
 import { buildSrcSet, getFallbackSrc } from '../utils/responsiveImage';
 import { selectPreviewUrl } from '../utils/themedPreview';
 import { useTheme } from '../hooks/useLayoutContext';
+import { useAnalytics } from '../hooks';
 import { specPath } from '../utils/paths';
 
 interface PlotOfTheDayData {
@@ -38,6 +39,7 @@ export function PlotOfTheDay() {
   const [loading, setLoading] = useState(true);
   const [dismissed, setDismissed] = useState(() => window.sessionStorage.getItem('potd_dismissed') === 'true');
   const { isDark } = useTheme();
+  const { trackEvent } = useAnalytics();
   const previewUrl = selectPreviewUrl(data, isDark);
 
   useEffect(() => {
@@ -51,9 +53,10 @@ export function PlotOfTheDay() {
 
   const handleDismiss = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
+    trackEvent('potd_dismiss', { spec: data?.spec_id, library: data?.library_id });
     setDismissed(true);
     window.sessionStorage.setItem('potd_dismissed', 'true');
-  }, []);
+  }, [trackEvent, data]);
 
   // Already dismissed — no space needed (user saw page before)
   if (dismissed) return null;
@@ -102,7 +105,10 @@ export function PlotOfTheDay() {
             href={`${GITHUB_URL}/blob/main/plots/${data.spec_id}/implementations/${data.library_id}.py`}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              trackEvent('nav_click', { source: 'potd_source_link', target: 'github', spec: data.spec_id, library: data.library_id });
+            }}
             sx={{
               fontFamily: mono, fontSize: fontSize.xxs, color: semanticColors.mutedText,
               flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
@@ -134,6 +140,7 @@ export function PlotOfTheDay() {
           <Link
             component={RouterLink}
             to={specPath(data.spec_id, data.language, data.library_id)}
+            onClick={() => trackEvent('nav_click', { source: 'potd_image', target: 'spec_detail', spec: data.spec_id, library: data.library_id })}
             sx={{
               display: 'block',
               textDecoration: 'none',
@@ -190,6 +197,7 @@ export function PlotOfTheDay() {
             <Link
               component={RouterLink}
               to={specPath(data.spec_id, data.language, data.library_id)}
+              onClick={() => trackEvent('nav_click', { source: 'potd_title', target: 'spec_detail', spec: data.spec_id, library: data.library_id })}
               sx={{
                 textDecoration: 'none',
                 color: 'var(--ink)',

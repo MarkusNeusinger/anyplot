@@ -3,7 +3,7 @@ import { Link as RouterLink, useLocation } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import { typography, colors } from '../theme';
 import { ThemeToggle } from './ThemeToggle';
-import { useTheme, useLatestRelease } from '../hooks';
+import { useTheme, useLatestRelease, useAnalytics } from '../hooks';
 import { RESERVED_TOP_LEVEL } from '../utils/paths';
 
 // Symmetric block-comment delimiters used when no language context is in the URL.
@@ -102,11 +102,17 @@ function pathSegments(pathname: string): Segment[] {
  */
 export function MastheadRule() {
   const { isDark, toggle } = useTheme();
+  const { trackEvent } = useAnalytics();
   const releaseTag = useLatestRelease();
   const location = useLocation();
   const segments = pathSegments(location.pathname);
   const isLanding = segments.length === 0;
   const version = releaseTag ?? 'v1.0';
+
+  const handleThemeToggle = () => {
+    trackEvent('theme_toggle', { to: isDark ? 'light' : 'dark' });
+    toggle();
+  };
 
   // Pick one random comment style per browser session (stable across client-side nav).
   const [randomIdx] = useState(() => Math.floor(Math.random() * COMMENT_POOL.length));
@@ -156,14 +162,26 @@ export function MastheadRule() {
         textOverflow: 'ellipsis',
       }}>
         {/* Always-visible root marker */}
-        <Box component={RouterLink} to="/" sx={linkSx}>
+        <Box
+          component={RouterLink}
+          to="/"
+          onClick={() => trackEvent('nav_click', { source: 'masthead_logo', target: '/' })}
+          sx={linkSx}
+        >
           ~/anyplot.ai
         </Box>
 
         {isLanding ? (
           <>
             {' · '}
-            <Box component="a" href={`${REPO_URL}/tree/main`} target="_blank" rel="noopener noreferrer" sx={linkSx}>
+            <Box
+              component="a"
+              href={`${REPO_URL}/tree/main`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackEvent('nav_click', { source: 'masthead_branch', target: 'github_main' })}
+              sx={linkSx}
+            >
               main
             </Box>
             {' · '}
@@ -172,6 +190,7 @@ export function MastheadRule() {
               href={releaseTag ? `${REPO_URL}/releases/tag/${releaseTag}` : `${REPO_URL}/releases`}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackEvent('nav_click', { source: 'masthead_release', target: version })}
               sx={linkSx}
             >
               {version}
@@ -182,7 +201,12 @@ export function MastheadRule() {
             <Box key={`${seg.label}-${i}`} component="span">
               {' · '}
               {seg.to ? (
-                <Box component={RouterLink} to={seg.to} sx={linkSx}>
+                <Box
+                  component={RouterLink}
+                  to={seg.to}
+                  onClick={() => trackEvent('nav_click', { source: 'breadcrumb', target: seg.to })}
+                  sx={linkSx}
+                >
                   {seg.label}
                 </Box>
               ) : (
@@ -210,7 +234,7 @@ export function MastheadRule() {
         display: 'flex',
         justifyContent: 'flex-end',
       }}>
-        <ThemeToggle isDark={isDark} onToggle={toggle} />
+        <ThemeToggle isDark={isDark} onToggle={handleThemeToggle} />
       </Box>
     </Box>
   );

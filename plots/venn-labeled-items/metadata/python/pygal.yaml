@@ -1,0 +1,247 @@
+library: pygal
+language: python
+specification_id: venn-labeled-items
+created: '2026-04-25T06:01:58Z'
+updated: '2026-04-25T06:07:53Z'
+generated_by: claude-opus
+workflow_run: 24923831951
+issue: 5364
+python_version: 3.14.4
+library_version: 3.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/pygal/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - 'Perfect spec compliance: all seven zones populated with 16 items correctly placed'
+  - 'Editorial aesthetic nailed: bold italic serif category labels in their circle
+    colors, witty subtitle, no axes/grid — genuinely magazine-style'
+  - Correct Okabe-Ito palette in canonical order with proper theme-adaptive chrome
+    in both light and dark renders
+  - SVG post-processing approach elegantly solves pygal's lack of native polygon fills
+    and per-label typography
+  - Deterministic, entirely reproducible layout with zero text collisions
+  weaknesses:
+  - Empty space below the Venn circle group is large (~35% of canvas below circles)
+    — zones could be shifted upward or subtitle repositioned to better balance the
+    canvas
+  - SVG regex post-processing is fragile (pattern matching against pygal's internal
+    class naming); minor refactoring would improve robustness
+  - The ABC triple-intersection zone (Sourdough/TikTok) — the most editorially interesting
+    region — is not visually differentiated or emphasized from other zones
+  - Item label font size (42px on 3600x3600) reads slightly small at full resolution;
+    bumping to 52-56px would improve readability without crowding
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "Pop Culture Vibes 2026 · venn-labeled-items · pygal · anyplot.ai" in dark serif at top — clearly readable. Category labels (OVERHYPED, ACTUALLY USEFUL, SECRETLY LOVED) in bold italic serif, colored in their respective Okabe-Ito color — readable. Italic subtitle in muted INK at bottom — readable.
+      Data: Circle A (OVERHYPED) = #009E73 green at bottom-left; Circle B (ACTUALLY USEFUL) = #D55E00 vermillion at bottom-right; Circle C (SECRETLY LOVED) = #0072B2 blue at top. Semi-transparent fills (~18% opacity). Item labels in dark INK text across all seven zones. All 16 items visible.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light/off-white text — clearly readable. Category labels retain Okabe-Ito colors (#009E73, #D55E00, #0072B2) — visible against dark background. Subtitle in muted light text — readable.
+      Data: Circle colors identical to light render (green, vermillion, blue). Fills appear darker due to dark background but circles remain distinguishable. Item labels in light/off-white text — readable over the dark-tinted zone fills. No dark-on-dark failure observed.
+      Legibility verdict: PASS — all text readable against dark background, no black-text-on-dark issues
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title 72px, category labels 64px, items
+          42px); all readable in both themes; item labels slightly small for 3600x3600
+          canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Items stacked with deliberate vertical spacing within zones; no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Circles clearly outlined, fills semi-transparent, all 16 item labels
+          distinctly readable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito positions 1-3; CVD-safe; no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Diagram fills ~65% of canvas; notable empty space below circles and
+          above subtitle
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title; axes intentionally hidden; category labels serve
+          as region identifiers
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Circle A = #009E73 (brand green), B = #D55E00, C = #0072B2; backgrounds
+          #FAF8F1/#1A1A17; chrome flips correctly'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Editorial serif typography, bold italic colored category labels,
+          witty subtitle — clearly above defaults, WIRED/Chartgeist aesthetic achieved
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No axes/grid/spines; semi-transparent fills; minor deduction for
+          empty space below diagram and margin imbalance
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Editorial category naming and zone placements feel intentional; loses
+          points for no visual emphasis on the most interesting ABC intersection
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Three-circle symmetric Venn with labeled items
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent fills, category names outside circles, item labels
+          in zones, all seven regions populated
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 16 items correctly placed in declared zones (A, B, C, AB, AC,
+          BC, ABC)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title contains venn-labeled-items · pygal · anyplot.ai; category
+          labels serve as legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 7 interior zones populated; 16 items; demonstrates solo, pairwise,
+          and triple membership
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Pop culture, technology, and food items — recognizable, neutral,
+          editorial-appropriate
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Set membership is the only scale; all items fit naturally
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Three helper functions break strict KISS; justified by pygal's lack
+          of native polygon fill and per-label typography API
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Entirely deterministic (hardcoded items and layout geometry)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: importlib, math, os, re, sys, collections.defaultdict'
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: SVG regex post-processing is inherently fragile, dependent on pygal's
+          internal class naming conventions
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Produces plot-{THEME}.svg, plot-{THEME}.html, plot-{THEME}.png; interactive
+          HTML correct for pygal
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct use of pygal.XY, pygal.Style with theme tokens, chart.render()
+          for SVG; significant non-pygal SVG post-processing required
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Leverages pygal's SVG output for post-processing; generates interactive
+          HTML; print_labels=True for in-plot text; cairosvg integration for PNG
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - cairosvg
+  techniques:
+  - html-export
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome

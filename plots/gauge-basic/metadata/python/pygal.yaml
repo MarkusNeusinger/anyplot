@@ -1,153 +1,181 @@
 library: pygal
+language: python
 specification_id: gauge-basic
 created: '2025-12-23T13:07:29Z'
-updated: '2025-12-23T13:14:36Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461380950
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-25T13:29:55Z'
+generated_by: claude-opus
+workflow_run: 24931399741
+issue: 857
+python_version: 3.14.4
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/pygal/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent use of pygal SolidGauge with half_pie=True for semi-circular display
-  - Clean color zone logic that changes gauge color based on value thresholds
-  - Professional custom styling with appropriate font sizes for high-resolution output
-  - Good use of value_formatter for percentage display
-  - Realistic sales performance context that matches spec applications
+  - 'Perfect code quality: clean, reproducible, idiomatic structure with correct theme-adaptive
+    tokens'
+  - 'Full spec compliance: all required gauge features implemented (zones, needle,
+    value display, range context)'
+  - Theme adaptation works correctly in both renders — needle color flips (black/white),
+    backgrounds and text adapt properly
+  - Okabe-Ito semantic zone colors (bad=#D55E00, warn=#E69F00, good=#009E73) are an
+    intentional and effective design choice
   weaknesses:
-  - The threshold zones (red/yellow/green) are not visually displayed on the gauge
-    - only the current zone color shows
-  - Title format includes extra text (Sales Performance) before the required format
-  - Legend is positioned far from the gauge in the bottom-left corner
-  image_description: 'The plot displays a semi-circular (half-pie) solid gauge chart
-    with a green (#2ECC71) filled arc representing 72% progress. The gauge has an
-    inner radius creating a donut-style appearance. The value "72%" is displayed twice
-    - once inside the colored arc and once at the bottom right of the gauge in the
-    unfilled (light gray) section. The title "Sales Performance · gauge-basic · pygal
-    · pyplots.ai" appears at the top in dark text. A legend at the bottom left shows
-    "Current Sales: 72% (Good Zone)" with a small green marker. The background is
-    white, and the overall layout is clean with the gauge centered in the canvas.'
+  - 'Code/image title mismatch: code produces ''Sales: 72/100 (Good) · ...'' but images
+    show ''Quarterly Sales Performance · ...'' — fix title to a stable descriptive
+    string'
+  - 'DE-01 (5/8): The gauge is clean but lacks a distinctive design signature — consider
+    adding subtle range markers at 0/100 endpoints on the arc, or a refined font-weight
+    hierarchy between the ''72'' and the subtitle'
+  - 'DE-02 (4/6): The center label area is plainly formatted; the gap between gauge
+    and legend could be tightened; the subtitle ''out of 100 · Good'' could benefit
+    from a slightly muted color to create text hierarchy'
+  - 'LM-02 (3/5): Not yet leveraging pygal-specific features like custom value_formatter
+    or creative legend styling'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "Quarterly Sales Performance · gauge-basic · pygal · anyplot.ai" in dark (#1A1A17) text at top — readable; legend at bottom in dark text — readable; subtitle "out of 100 · Good" in muted dark text — readable; needle is black (INK token)
+      Data: Three semi-circular arcs — green (#009E73) Good zone on left, amber (#E69F00) Fair zone in center, orange-brown (#D55E00) Poor zone on right; large bold "72" in center; needle points just past 70-threshold into Good zone
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title in light text — readable; legend at bottom in light text — readable; subtitle "out of 100 · Good" in muted light text — readable; needle is white (adapts to dark theme via foreground token)
+      Data: Same three arc zones present with same hue identities; colors appear slightly darker due to background contrast (perceptual effect, not actual color change — code defines ZONE_COLORS without theme modification); "72" in light/white text — clearly visible
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title and value labels are clearly readable; legend text is slightly
-          small but legible
+        comment: All font sizes explicitly set (title=64, labels=44, value=56, legend=44);
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text or elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Gauge arc is clearly visible with good contrast
+        comment: Gauge arcs clear and well-sized; needle is functional but thin
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Green color is distinguishable; single-color gauge doesn't require
-          colorblind considerations
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good centering but legend is isolated at bottom-left corner
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend present and informative
+        comment: Okabe-Ito hues used for zones, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions, slight excess vertical space between gauge and
+          legend
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title follows spec format; 'out of 100 · Good' provides clear context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito zone colors; correct backgrounds (#FAF8F1/#1A1A17); chrome
+          adapts correctly
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional zone-color design with functional needle; above default
+          but not publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No unnecessary chrome; generous margin; center label area plainly
+          styled
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Large value + zone status communicates clearly; zone colors tell
+          performance story
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct semi-circular gauge chart using SolidGauge
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Value correctly mapped to gauge fill
-      - id: SC-03
+        comment: Correct semi-circular gauge using half_pie=True with inner_radius
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Shows value, range (0-100), and color zone; missing visible threshold
-          boundaries
-      - id: SC-04
-        name: Data Range
+        comment: Current value, min/max, three color zones at thresholds, needle indicator
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 0-100 range displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Zone arcs correctly sized; needle correctly positioned at value=72
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows value and zone
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Title includes spec-id, library, and pyplots.ai but adds "Sales Performance"
-          prefix
+        comment: Title follows format; legend labels descriptive with range bounds
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows single value gauge well; doesn't demonstrate threshold zones
-          visually
+        comment: All main gauge features shown; uses spec's example scenario directly
+          without adding contrast
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Sales performance percentage is a realistic business KPI scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 72% is a realistic sales performance value
+        comment: Quarterly sales performance KPI is realistic, neutral business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100 scale with value=72; zone boundaries realistic for sales KPI
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -155,40 +183,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → style → chart → save'
+        comment: 'Linear structure: theme tokens → data → style → chart → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Deterministic data (hardcoded value), but no random seed needed
+        comment: Fully deterministic, no random data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pygal and Style imported, both used
+        comment: Only os, sys, pathlib.Path, pygal, pygal.style.Style — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API
+        comment: Clean, idiomatic; zone logic concise; no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Effectively uses pygal's SolidGauge with half_pie, inner_radius,
-          value_formatter, and custom Style
-  verdict: APPROVED
+        comment: pygal.Pie with half_pie=True and inner_radius; Style class for theme
+          tokens; PNG and HTML output
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: half_pie=True is pygal-native gauge approach; automatic needle; interactive
+          HTML export
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns: []
+  dataprep: []
+  styling: []

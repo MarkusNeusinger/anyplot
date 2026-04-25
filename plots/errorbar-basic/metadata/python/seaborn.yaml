@@ -1,159 +1,178 @@
 library: seaborn
+language: python
 specification_id: errorbar-basic
 created: '2025-12-23T13:03:10Z'
-updated: '2025-12-23T13:12:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461374251
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-25T09:00:32Z'
+generated_by: claude-opus
+workflow_run: 24926867981
+issue: 973
+python_version: 3.14.4
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent text legibility with proper font sizing for 4800x2700 canvas
-  - Clean visual design with prominent error bar caps (capsize=8, capthick=2.5)
-  - Correct title format following pyplots.ai convention
-  - Realistic experimental data scenario with treatment groups
-  - Uses modern seaborn API correctly (hue with palette, legend=False)
+  - 'Perfect theme adaptation: all chrome tokens (background, text, grid, error bar
+    colors) correctly flip between light and dark via INK/PAGE_BG/ELEVATED_BG tokens'
+  - 'Intentional two-color storytelling: BRAND green for all groups + ACCENT orange
+    for top performer creates immediate visual hierarchy using Okabe-Ito palette correctly'
+  - Idiomatic seaborn 0.13+ usage with hue-based dict palette for per-bar colors,
+    native errorbar='sd' with capsize and err_kws
+  - 'Perfect spec compliance: correct title format, visible error bar caps, consistent
+    cap widths, multiple groups with varying error magnitudes'
   weaknesses:
-  - Alternating blue/yellow colors have no semantic meaning - consider single color
-    or meaningful grouping
-  - Error bars added via matplotlib errorbar() instead of seaborn native errorbar
-    parameter in barplot
-  - Axis label uses generic units placeholder instead of specific measurement units
-  image_description: The plot displays a bar chart showing 6 treatment groups (Control,
-    Treatment A, B, C, D, E) on the x-axis with Response Value (units) on the y-axis
-    ranging from 0 to approximately 75. Each bar has prominent black error bars with
-    visible caps (capsize=8). The bars alternate between Python blue (#306998) and
-    Python yellow (#FFD43B) colors. The title correctly shows "errorbar-basic · seaborn
-    · pyplots.ai". Text is clearly legible with appropriate font sizes. The layout
-    uses a white grid background with subtle dashed gridlines on the y-axis only.
+  - No legend or annotation explaining why Treatment B is orange — the storytelling
+    intent ('best performer') is visually implicit but not explicitly communicated;
+    add a legend entry labeled 'Top Performer' or a text annotation above the bar
+  - DE-01 limited by absence of any subtitle or additional typographic refinement
+    — a fig.text() subtitle like 'Treatment B shows the highest symptom reduction
+    (SD)' would push into strong design territory
+  - Treatment labels 'Treatment A-E' are generic; using more specific names (drug
+    category abbreviations or intervention types) would improve DQ-02 realism
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "errorbar-basic · seaborn · anyplot.ai" in dark text, clearly readable; axis labels "Treatment Group" (x) and "Symptom Reduction (%)" (y) in dark text at 20pt, readable; tick labels at 16pt in dark muted color, readable
+      Data: 5 bars in Okabe-Ito #009E73 (brand green), 1 bar (Treatment B) in Okabe-Ito #D55E00 (vermillion) as top performer highlight; error bars with caps using dark INK color; y-only subtle grid beneath bars
+      Legibility verdict: PASS — all text clearly visible against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title, axis labels, and tick labels all rendered in light/cream text (#F0EFE8 / #B8B7B0), clearly readable; error bar caps flip to light/cream correctly via INK token; no dark-on-dark failures observed
+      Data: Data colors identical to light render — same #009E73 green bars and #D55E00 orange bar for Treatment B; color identity preserved across themes as required
+      Legibility verdict: PASS — all text clearly visible against dark surface; no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, tick labels 16pt - all perfectly readable
+        comment: Title 24pt, axis labels 20pt, ticks 16pt — all explicitly set, readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, x-axis labels well spaced
+        comment: x-axis labels well-spaced, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars well sized, error bars clearly visible with proper caps and
-          thickness
+        comment: Bars and error bar caps clearly visible, well-proportioned
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow alternating scheme is colorblind-friendly, but the alternating
-          pattern has no semantic meaning
+        comment: Okabe-Ito palette is CVD-safe; green/orange pair has strong luminance
+          contrast
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good canvas utilization, balanced margins
+        comment: Plot fills canvas well, balanced margins, nothing cut off
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Has units "(units)" but generic placeholder rather than specific
-          units like mg/dL or %
+        comment: Symptom Reduction (%) includes units; axes are descriptive
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3), but no legend explaining the color alternation
+        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1/#1A1A17;
+          all chrome tokens theme-adaptive'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional BRAND+ACCENT two-color strategy for emphasis; clean composition;
+          above default but lacks subtitle or typographic refinement
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: y-only grid, subtle alpha, set_axisbelow, bar edges set, top/right
+          spines removed; tick marks remain and grid linewidth unspecified
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Accent bar creates focal point but no legend/annotation explains
+          WHY Treatment B is highlighted; storytelling intent incomplete
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct error bar plot using bars with error bars
+        comment: Correct bar-with-errorbar chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=categories, Y=means, error bars correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Error bars with visible caps present as specified
-      - id: SC-04
-        name: Data Range
+        comment: Visible caps, consistent cap widths, SD error bars, multiple groups
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows all data including error bar extensions
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Categorical x, numeric y, all 6 groups visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for this single-series plot (colors are decorative)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses exact format: errorbar-basic · seaborn · pyplots.ai'
+        comment: Title exactly 'errorbar-basic · seaborn · anyplot.ai'; no legend
+          needed for single-series
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows error bars clearly, but only symmetric errors (spec mentions
-          asymmetric as a possibility)
+        comment: 6 groups, different error magnitudes, control group, comparison story
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Treatment groups with response values is a realistic clinical/experimental
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Values 43-61 with errors 4.5-7.1 are realistic for experimental measurements
+        comment: Clinical trial is plausible neutral scenario; 'Treatment A-E' labels
+          are slightly generic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Symptom reduction 43-61%, SD 4.5-7.1% — realistic clinical values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,41 +180,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: imports → data → theme → plot → save; no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib, numpy, pandas, seaborn)
+        comment: All 5 imports used, no extras
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic nested list comprehension, strict=True in zip, no over-engineering
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current seaborn API with hue parameter
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as 'plot.png' but sns.set_style called after figure creation
-          (minor)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png using current seaborn 0.13+ API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses seaborn's barplot with proper hue/palette API
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct seaborn 0.13+ hue+palette-dict pattern; errorbar='sd', err_kws;
+          sns.set_theme() for rcParams
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses sns.barplot correctly, but error bars added via matplotlib rather
-          than seaborn's native ci/errorbar parameter
-  verdict: APPROVED
+        comment: Uses seaborn-specific errorbar='sd', capsize, err_kws parameters
+          in barplot
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - grid-styling

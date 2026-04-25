@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 errorbar-basic: Basic Error Bar Plot
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: seaborn 0.13.2 | Python 3.14.4
+Quality: 89/100 | Updated: 2026-04-25
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,51 +12,76 @@ import pandas as pd
 import seaborn as sns
 
 
-# Data - experimental measurements with error ranges
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+BRAND = OKABE_ITO[0]
+ACCENT = OKABE_ITO[1]
+
+# Clinical trial: symptom reduction (%) measured for each treatment group
 np.random.seed(42)
 categories = ["Control", "Treatment A", "Treatment B", "Treatment C", "Treatment D", "Treatment E"]
 means = [45.2, 52.8, 61.3, 48.7, 57.4, 43.1]
-errors = [4.5, 6.2, 5.8, 7.1, 4.9, 5.5]
+stds = [4.5, 6.2, 5.8, 7.1, 4.9, 5.5]
+n_per_group = 30
 
-df = pd.DataFrame({"Treatment": categories, "Response": means, "Error": errors})
+records = [
+    {"Treatment": cat, "Symptom Reduction (%)": value}
+    for cat, mu, sigma in zip(categories, means, stds, strict=True)
+    for value in np.random.normal(mu, sigma, n_per_group)
+]
+df = pd.DataFrame(records)
 
-# Create plot
+top_performer = categories[int(np.argmax(means))]
+palette = {c: (ACCENT if c == top_performer else BRAND) for c in categories}
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
 fig, ax = plt.subplots(figsize=(16, 9))
-sns.set_style("whitegrid")
 
-# Plot using seaborn pointplot with custom error bars via matplotlib
-# Seaborn's barplot/pointplot can handle error bars; using pointplot for clarity
-colors = ["#306998", "#FFD43B", "#306998", "#FFD43B", "#306998", "#FFD43B"]
-
-# Use seaborn's barplot with error bars
-bars = sns.barplot(
+sns.barplot(
     data=df,
     x="Treatment",
-    y="Response",
+    y="Symptom Reduction (%)",
     hue="Treatment",
-    palette=colors,
+    palette=palette,
     legend=False,
+    errorbar="sd",
+    capsize=0.25,
+    err_kws={"color": INK, "linewidth": 2.5},
+    edgecolor=INK_SOFT,
+    linewidth=1.0,
     ax=ax,
-    edgecolor="black",
-    linewidth=1.5,
 )
 
-# Add error bars manually for control over appearance
-x_positions = range(len(categories))
-ax.errorbar(
-    x_positions, means, yerr=errors, fmt="none", color="black", capsize=8, capthick=2.5, elinewidth=2.5, zorder=5
-)
-
-# Labels and styling
 ax.set_xlabel("Treatment Group", fontsize=20)
-ax.set_ylabel("Response Value (units)", fontsize=20)
-ax.set_title("errorbar-basic · seaborn · pyplots.ai", fontsize=24)
+ax.set_ylabel("Symptom Reduction (%)", fontsize=20)
+ax.set_title("errorbar-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
 ax.tick_params(axis="both", labelsize=16)
-ax.grid(True, alpha=0.3, linestyle="--", axis="y")
+ax.yaxis.grid(True)
+ax.xaxis.grid(False)
 ax.set_axisbelow(True)
-
-# Adjust y-axis to give room for error bars
-ax.set_ylim(0, max([m + e for m, e in zip(means, errors, strict=True)]) * 1.15)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
