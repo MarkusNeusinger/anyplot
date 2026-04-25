@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 gauge-basic: Basic Gauge Chart
-Library: plotnine | Python 3.13
-Quality: pending | Updated: 2026-04-25
+Library: plotnine 0.15.3 | Python 3.14.4
+Quality: 86/100 | Created: 2026-04-25
 """
 
 import os
