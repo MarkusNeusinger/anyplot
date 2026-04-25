@@ -410,6 +410,7 @@ if __name__ == "__main__":
 
         sys.exit(0 if result["passed_review"] else 1)
 
-    except Exception as e:
-        logger.error("Error: %s", e)
+    except Exception:
+        # logger.exception preserves the traceback so CLI failures are debuggable.
+        logger.exception("Generation failed")
         sys.exit(1)

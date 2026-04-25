@@ -28,10 +28,13 @@ import subprocess
 import sys
 from pathlib import Path
 
-from core.config import settings
 
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+
+# Local imports must come AFTER sys.path is patched so the script remains
+# runnable from any working directory (Copilot review: PR #5414).
+from core.config import settings  # noqa: E402
 
 SUPPORTED_LIBRARIES = [
     "matplotlib", "seaborn", "plotly", "bokeh", "altair",
