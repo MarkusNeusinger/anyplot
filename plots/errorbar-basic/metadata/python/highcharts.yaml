@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: errorbar-basic
 created: '2025-12-23T13:03:35Z'
-updated: '2026-04-25T09:20:22Z'
+updated: '2026-04-25T09:35:13Z'
 generated_by: claude-opus
 workflow_run: 24927384784
 issue: 973
@@ -15,39 +15,44 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-
 quality_score: 74
 review:
   strengths:
-  - Both renders pass theme-readability checks in the images — correct backgrounds,
-    readable text, visible data elements
-  - Correct use of highcharts-more.js for the errorbar series type
-  - Clinical trial dataset is realistic, neutral, and well-scaled
-  - Error bars with whisker caps are clearly rendered and appropriately sized
+  - Both rendered images show correct theme-adaptive backgrounds and readable text
+    in light and dark themes
+  - Correct use of Highcharts native errorbar series type (from highcharts-more.js)
+    with visible T-bar caps
+  - Clinical trial dataset (Control + Treatment A–E, Response mg/dL) is realistic,
+    neutral, and well-scaled
   weaknesses:
-  - 'CRITICAL: No ANYPLOT_THEME support — code always renders one theme; output files
-    must be plot-{THEME}.html and plot-{THEME}.png'
-  - 'CRITICAL: Bar color hardcoded to #306998 (blue) instead of #009E73 (Okabe-Ito
+  - 'CRITICAL: No ANYPLOT_THEME support — os.getenv(''ANYPLOT_THEME'') never read;
+    must add import os and full theme-token block (PAGE_BG, INK, INK_SOFT, GRID, ELEVATED_BG)'
+  - 'CRITICAL: Series color hardcoded to #306998 (Python Blue) — must be #009E73 (Okabe-Ito
     position 1)'
-  - 'CRITICAL: Background hardcoded to #ffffff (pure white) instead of theme-adaptive
-    #FAF8F1/#1A1A17'
-  - 'CRITICAL: Title says pyplots.ai — must say anyplot.ai'
-  - 'Error bar color hardcoded to #1a1a1a — would be dark-on-dark in dark theme; must
-    use INK token'
-  - PIL/Pillow image crop hack is unnecessary and fragile — remove and use standard
-    selenium screenshot
-  - Uses raw JSON dict instead of highcharts_core library objects (Chart, HighchartsOptions,
-    series classes)
+  - 'CRITICAL: backgroundColor hardcoded to #ffffff (pure white) — must use PAGE_BG
+    (#FAF8F1 light / #1A1A17 dark)'
+  - 'CRITICAL: Title branding says ''pyplots.ai'' — must say ''anyplot.ai'''
+  - 'CRITICAL: Error bar color hardcoded to #1a1a1a — dark-on-dark failure in dark
+    theme; must use INK token'
+  - 'CRITICAL: Output saved as plot.png and plot.html — must save as plot-{THEME}.png
+    and plot-{THEME}.html'
+  - Unnecessary PIL/Pillow dependency for screenshot crop — remove entirely, use driver.save_screenshot(f'plot-{THEME}.png')
+    directly
+  - Uses raw json.dumps(dict) instead of highcharts_core Chart/HighchartsOptions/series
+    class API
+  - Design lacks visual hierarchy — no emphasis on best-performing group, subtitle
+    does not tell a story
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (~#FAF8F1) — correct for light theme
-      Chrome: Title "Clinical Response by Group · errorbar-basic · highcharts · anyplot.ai" in dark text clearly readable; y-axis label "Response (mg/dL)" and x-axis category labels (Control, Treatment A-E) all readable against light background; horizontal grid lines subtle
-      Data: Six vertical bars in #009E73 (Okabe-Ito brand green); error bars with visible whisker caps in dark color overlaid on each bar
+      Chrome: Title "errorbar-basic · highcharts · anyplot.ai" in bold dark text, clearly readable; subtitle "Clinical response by treatment group with standard error" in small gray text; y-axis label "Response (mg/dL)" rotated, dark text; x-axis label "Treatment Group" dark text; category tick labels (Control, Treatment A–E) small but readable; subtle dashed horizontal grid lines
+      Data: Six vertical bars in #009E73 (Okabe-Ito brand green); errorbar T-caps in dark black overlaid on each bar with visible upper and lower whiskers; legend upper-right showing "Mean response" (green) + "± standard error" (black)
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Dark near-black (~#1A1A17) — correct for dark theme
-      Chrome: Title and all axis/tick labels rendered in light text, fully readable against dark background; no dark-on-dark failures observed; grid lines subtle
-      Data: Bar colors identical to light render (#009E73); error bar whiskers appear white/light against dark surface, clearly visible
+      Background: Near-black (~#1A1A17) — correct for dark theme
+      Chrome: Title and all axis/tick labels rendered in light/white text, fully readable against dark background; subtitle in light gray; no dark-on-dark failures observed; grid lines are very subtle and light
+      Data: Bar colors identical to light render (#009E73); error bar whiskers appear white/light against dark surface, clearly visible; legend labels in light text on slightly elevated dark background
       Legibility verdict: PASS
 
-    CRITICAL NOTE: Images diverge from committed code. Code specifies #306998 (blue) bars, #ffffff background, and "pyplots.ai" branding. Images show #009E73 (green) bars, warm-tinted backgrounds, and "anyplot.ai" branding. Images were generated from a different/newer code version than what is currently committed. Code quality was scored against the committed file.
+    CRITICAL NOTE: Images diverge from the committed code. The code specifies #306998 (blue) bars, #ffffff background, "pyplots.ai" branding, "Sample A–F" categories, and no ANYPLOT_THEME support. The images show #009E73 (green) bars, warm/dark theme-correct backgrounds, "anyplot.ai" branding, and "Treatment A–E" categories. The images were generated from a different code version than what is currently committed to the PR branch. The code was scored on the committed file; visual quality was scored on the rendered images.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -58,46 +63,47 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both renders; font sizes adequate for 4800x2700
-          canvas
+        comment: Font sizes explicitly set and appropriate for 4800x2700; all text
+          readable in both renders; tick labels slightly small
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions; bars and error bars well-spaced
+        comment: No collisions; bars and error bars well-spaced across 6 categories
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars and error bar caps clearly visible in both themes
+        comment: Bars and error bar caps clearly visible in both light and dark renders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single Okabe-Ito series; CVD-safe
+        comment: Single Okabe-Ito series; CVD-safe; adequate contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions; nothing cut off
+        comment: Good proportions; chart fills canvas well; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units (mg/dL); categories labeled
+        comment: Y-axis has units (mg/dL); X-axis descriptive; title format correct
+          in images
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Images show correct #009E73 and theme-correct backgrounds, but committed
-          code hardcodes #306998 (blue) bars and #ffffff background with no ANYPLOT_THEME
-          support'
+        comment: 'Images show correct #009E73 and theme-correct backgrounds; but committed
+          code hardcodes #306998 (Python Blue) + #ffffff (pure white) with no ANYPLOT_THEME
+          — code would produce wrong output if run'
     design_excellence:
       score: 9
       max: 20
@@ -107,21 +113,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Standard defaults; single-color scheme with no custom typographic
-          hierarchy
+        comment: Well-configured library default; single green series is clean but
+          no custom typographic hierarchy or intentional emphasis
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Theme backgrounds rendered correctly in images; subtle grid; no explicit
-          spine removal
+        comment: Subtle grid (dashed horizontal lines); minimal spines; but no explicit
+          spine removal or generous whitespace beyond defaults
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Functional comparison but no visual emphasis or focal point
+        comment: Data is displayed functionally; clinical trial context is plausible
+          but no visual hierarchy, emphasis on standout treatment, or narrative subtitle
     spec_compliance:
       score: 14
       max: 15
@@ -131,27 +138,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Column + errorbar overlay is idiomatic Highcharts; whisker caps correctly
-          rendered
+        comment: Column + errorbar overlay is correct Highcharts approach; whisker
+          caps correctly rendered
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Error bars present, caps visible, multiple groups shown
+        comment: Error bars present with caps, consistent widths, multiple groups;
+          symmetric errors shown
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: categorical groups; Y: response values with error ranges'
+        comment: 'X: categorical treatment groups; Y: response values with error ranges
+          correctly mapped'
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
         passed: false
-        comment: Title contains required suffix but adds a prefix; legend not clearly
-          visible in renders
+        comment: Images show correct 'anyplot.ai' title; committed code says 'pyplots.ai'
+          — code would produce wrong branding
     data_quality:
       score: 14
       max: 15
@@ -161,21 +170,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Symmetric error bars with caps over 6 groups; asymmetric error bars
-          not shown
+        comment: Symmetric error bars with caps over 6 groups with varying magnitudes;
+          asymmetric error bars not demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Clinical trial (Control + Treatment A-E, Response in mg/dL) — plausible
+        comment: Clinical trial (Control + Treatment A–E, Response in mg/dL) — plausible
           and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 43-72 mg/dL with errors 4-7; range 0-90 is appropriate
+        comment: Response values ~47–72 mg/dL with errors 4–7; range 0–90 is appropriate
+          for this type of biomarker
     code_quality:
       score: 5
       max: 10
@@ -185,32 +195,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script; no functions or classes
+        comment: Flat script with no functions or classes; linear Imports→Data→Plot→Save
+          structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Deterministic hardcoded data; no randomness
       - id: CQ-03
         name: Clean Imports
         score: 0
         max: 2
         passed: false
-        comment: PIL imported for unnecessary image-crop hack
+        comment: PIL imported solely for an unnecessary screenshot-crop hack that
+          should be removed
       - id: CQ-04
         name: Code Elegance
         score: 0
         max: 2
         passed: false
-        comment: No ANYPLOT_THEME support; raw JSON dict instead of highcharts_core
-          API; PIL crop is fragile; branding says pyplots.ai
+        comment: 'No ANYPLOT_THEME support; hardcoded pure-white background; hardcoded
+          #306998 color; ''pyplots.ai'' branding; PIL crop is fragile; raw JSON dict
+          instead of highcharts_core API'
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves plot.html and plot.png — not plot-{THEME}.html and plot-{THEME}.png
+        comment: Saves plot.html and plot.png — pipeline expects plot-{THEME}.html
+          and plot-{THEME}.png for both light and dark
     library_mastery:
       score: 4
       max: 10
@@ -220,15 +234,16 @@ review:
         score: 2
         max: 5
         passed: false
-        comment: Uses raw JSON dict via json.dumps instead of highcharts_core Chart/HighchartsOptions
-          objects
+        comment: Uses raw json.dumps(dict) instead of highcharts_core Chart/HighchartsOptions/series
+          class objects; the Python library's API is not used idiomatically
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Downloads highcharts-more.js for errorbar type (correct); column+errorbar
-          combo is idiomatic; no other Highcharts-specific features used
+        comment: Downloads highcharts-more.js for errorbar type (correct and Highcharts-specific);
+          column+errorbar combo is idiomatic; whisker/stem width customization; no
+          further Highcharts-specific features leveraged
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -236,6 +251,7 @@ impl_tags:
   - pillow
   techniques:
   - html-export
-  patterns: []
+  patterns:
+  - data-generation
   dataprep: []
   styling: []
