@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 gauge-basic: Basic Gauge Chart
 Library: seaborn 0.13.2 | Python 3.14.4
 Quality: 84/100 | Updated: 2026-04-25
@@ -9,22 +9,18 @@ import os
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import seaborn as sns
-from matplotlib.patches import Wedge
+from matplotlib.patches import Circle, Wedge
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito zone colors (semantic gauge mapping: vermillion / orange / brand green)
-ZONE_LOW = "#D55E00"
-ZONE_MED = "#E69F00"
-ZONE_HIGH = "#009E73"
+# Okabe-Ito zone palette (semantic gauge mapping: vermillion / orange / brand green)
+ZONE_LOW, ZONE_MED, ZONE_HIGH = sns.color_palette(["#D55E00", "#E69F00", "#009E73"])
 
 # Data — sales performance gauge
 value = 72
@@ -33,9 +29,9 @@ max_value = 100
 thresholds = [30, 70]
 
 # Gauge geometry
-center = (0.5, 0.32)
-radius = 0.42
-width = 0.18
+center = (0.5, 0.45)
+radius = 0.40
+width = 0.16
 start_angle = 180
 end_angle = 0
 angle_range = start_angle - end_angle
@@ -57,7 +53,7 @@ sns.set_theme(
         "ytick.color": INK_SOFT,
     },
 )
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 # Arc — three coloured zones drawn as smooth Wedge patches
@@ -82,13 +78,15 @@ for i in range(len(zone_boundaries) - 1):
 for threshold in thresholds:
     boundary_angle = start_angle - (threshold - min_value) / value_range * angle_range
     rad = np.radians(boundary_angle)
-    boundary_df = pd.DataFrame(
-        {
-            "x": [center[0] + r * np.cos(rad) for r in np.linspace(radius - width / 2, radius + width / 2, 12)],
-            "y": [center[1] + r * np.sin(rad) for r in np.linspace(radius - width / 2, radius + width / 2, 12)],
-        }
+    rs = (radius - width / 2, radius + width / 2)
+    ax.plot(
+        [center[0] + r * np.cos(rad) for r in rs],
+        [center[1] + r * np.sin(rad) for r in rs],
+        color=INK_SOFT,
+        linewidth=3,
+        zorder=3,
+        solid_capstyle="butt",
     )
-    sns.lineplot(data=boundary_df, x="x", y="y", color=INK_SOFT, linewidth=3, ax=ax, legend=False, zorder=3)
 
 # Needle
 needle_angle = start_angle - (value - min_value) / value_range * angle_range
@@ -96,14 +94,11 @@ needle_rad = np.radians(needle_angle)
 needle_length = radius + width / 2 - 0.015
 needle_tip_x = center[0] + needle_length * np.cos(needle_rad)
 needle_tip_y = center[1] + needle_length * np.sin(needle_rad)
-
-needle_df = pd.DataFrame({"x": [center[0], needle_tip_x], "y": [center[1], needle_tip_y]})
-sns.lineplot(data=needle_df, x="x", y="y", color=INK, linewidth=6, ax=ax, legend=False, zorder=12)
+ax.plot([center[0], needle_tip_x], [center[1], needle_tip_y], color=INK, linewidth=6, zorder=12, solid_capstyle="round")
 
 # Hub — outer ring (page bg) + inner disc (ink) for clean contrast in both themes
-hub_df = pd.DataFrame({"x": [center[0]], "y": [center[1]]})
-sns.scatterplot(data=hub_df, x="x", y="y", s=1400, color=PAGE_BG, edgecolor="none", ax=ax, legend=False, zorder=13)
-sns.scatterplot(data=hub_df, x="x", y="y", s=900, color=INK, edgecolor="none", ax=ax, legend=False, zorder=14)
+ax.add_patch(Circle(center, radius=0.045, facecolor=PAGE_BG, edgecolor="none", zorder=13))
+ax.add_patch(Circle(center, radius=0.035, facecolor=INK, edgecolor="none", zorder=14))
 
 # Value display
 ax.text(center[0], center[1] - 0.20, f"{value}%", ha="center", va="center", fontsize=56, fontweight="bold", color=INK)
@@ -129,9 +124,7 @@ for v_center, label in zip(zone_label_centers, zone_names, strict=True):
     txt.set_path_effects([pe.withStroke(linewidth=3, foreground="#1A1A17")])
 
 # Title
-ax.set_title(
-    "Sales Performance · gauge-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", pad=20, color=INK
-)
+ax.set_title("gauge-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", pad=20, color=INK)
 
 # Axis settings — purely a canvas
 ax.set_xlim(0, 1)
