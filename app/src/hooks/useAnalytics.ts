@@ -7,11 +7,16 @@ interface EventProps {
 
 // Module-level ambient props attached to every pageview and custom event.
 // Set by the layout once theme/locale-style values are known so we don't have
-// to thread them through every component that fires an event.
+// to thread them through every component that fires an event. Empty-string
+// values clear the key (so callers can effectively reset a prop).
 let ambientProps: Record<string, string> = {};
 
 export function setAnalyticsAmbientProps(props: Record<string, string>): void {
-  ambientProps = { ...ambientProps, ...props };
+  const merged: Record<string, string> = { ...ambientProps, ...props };
+  for (const key of Object.keys(merged)) {
+    if (!merged[key]) delete merged[key];
+  }
+  ambientProps = merged;
 }
 
 function debounce<T extends (...args: never[]) => void>(

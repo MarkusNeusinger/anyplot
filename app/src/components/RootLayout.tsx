@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
@@ -29,9 +28,10 @@ export function RootLayout() {
   const { isDark } = useTheme();
   const mastheadSticks = pathname !== '/plots';
 
-  useEffect(() => {
-    setAnalyticsAmbientProps({ theme: isDark ? 'dark' : 'light' });
-  }, [isDark]);
+  // Set synchronously during render so the first pageview from a child page's
+  // useEffect (which runs before the parent's useEffect) carries the theme prop.
+  // setAnalyticsAmbientProps merges into module state, so re-renders are safe.
+  setAnalyticsAmbientProps({ theme: isDark ? 'dark' : 'light' });
 
   return (
     <Box sx={{

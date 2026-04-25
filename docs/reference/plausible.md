@@ -127,7 +127,7 @@ https://anyplot.ai/{spec_id}/{language}/{library}/{category}/{value}/...
 | `tab_toggle` | `action`, `tab`, `library` | SpecTabs.tsx | User opens or closes a tab |
 | `plot_rotate` | `spec` | SpecsListPage.tsx | User clicks image on specs page to rotate library |
 | `open_interactive` | `spec`, `library` | SpecOverview.tsx, SpecDetailView.tsx | User opens interactive HTML view |
-| `suggest_spec` | - | LandingPage.tsx (legacy) | User clicks "suggest spec" link — superseded by `nav_click` with `source: suggest_spec_link` |
+| `suggest_spec` | - | SpecsListPage.tsx | User clicks the `spec.suggest()` link on the specs list page. The mirror link on the landing page emits `nav_click` with `source: suggest_spec_link` instead. |
 | `report_issue` | `spec`, `library`? | SpecPage.tsx | User clicks "report issue" link |
 | `tag_click` | `param`, `value`, `source` | SpecTabs.tsx | User clicks a tag chip to filter |
 | `theme_toggle` | `to` | MastheadRule.tsx | User toggles dark/light mode (`to` ∈ `dark`, `light`) |

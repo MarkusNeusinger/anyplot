@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Box from '@mui/material/Box';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
@@ -21,7 +22,11 @@ export function LandingPage() {
   const potd = usePlotOfTheDay();
   const featured = useFeaturedSpecs(5);
   const navigate = useNavigate();
-  const { trackEvent } = useAnalytics();
+  const { trackEvent, trackPageview } = useAnalytics();
+
+  useEffect(() => {
+    trackPageview('/');
+  }, [trackPageview]);
 
   const handleLibraryClick = (lib: string) => {
     trackEvent('nav_click', { source: 'library_card', target: '/plots', value: lib });
