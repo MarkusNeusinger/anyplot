@@ -324,7 +324,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: "--model opus"
+          claude_args: "--model sonnet"
           # bulk-generate dispatches us from the github-actions bot; explicitly allow it.
           allowed_bots: '*'
           prompt: |
@@ -343,7 +343,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: "--model opus"
+          claude_args: "--model sonnet"
           # bulk-generate dispatches us from the github-actions bot; explicitly allow it.
           allowed_bots: '*'
           prompt: |
@@ -482,11 +482,11 @@ jobs:
               'specification_id': spec,
               'created': created_ts,
               'updated': ts,
-              # Reflects what claude_args=`--model opus` actually runs: whatever
-              # Claude Code's current "opus" alias resolves to (today Opus 4.7).
+              # Reflects what claude_args=`--model sonnet` actually runs: whatever
+              # Claude Code's current "sonnet" alias resolves to.
               # Use the family name instead of a frozen version string so the
               # metadata doesn't go stale every model release.
-              'generated_by': 'claude-opus',
+              'generated_by': 'claude-sonnet',
               'workflow_run': run_id,
               'issue': issue,
               'python_version': py_ver,
