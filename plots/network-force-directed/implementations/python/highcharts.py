@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 network-force-directed: Force-Directed Graph
 Library: highcharts unknown | Python 3.14.4
-Quality: 75/100 | Updated: 2026-04-26
+Quality: 80/100 | Updated: 2026-04-26
 """
 
 import os

@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: network-force-directed
 created: '2025-12-23T15:16:22Z'
-updated: '2026-04-26T09:52:37Z'
+updated: '2026-04-26T10:05:57Z'
 generated_by: claude-opus
 workflow_run: 24953021958
 issue: 990
@@ -12,42 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-f
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/highcharts/plot-dark.html
-quality_score: 75
+quality_score: 80
 review:
   strengths:
-  - 'Correct plot type: uses Highcharts networkgraph with working force-directed physics
-    simulation'
-  - 'Good data design: 32 nodes in 4 realistic corporate communities with dense intra-community
-    and sparse inter-community edges'
-  - Physics parameters well-tuned (Verlet integration, friction, linkLength, 1000
-    iterations) producing stable readable layout
-  - White text outline on node labels ensures readability across all node colors
-  - Deterministic data generation with random.seed(42)
-  - Clean flat script structure — easy to read and maintain
+  - 'Perfect palette compliance: Okabe-Ito positions 1-4 for four communities (#009E73,
+    #D55E00, #0072B2, #CC79A7), both themes render with correct backgrounds and theme-adaptive
+    chrome'
+  - 'Excellent data storytelling: subtitle ''Communication ties across four departments
+    — dense within, sparse between'' explains the insight, and community color-coding
+    immediately reveals group structure'
+  - Creative subtitle-as-legend with colored HTML dots avoids a separate legend element
+    and keeps the chart clean
+  - Correct use of Highcharts networkgraph module with force simulation parameters
+    (verlet integration, gravitationalConstant, maxIterations) — idiomatic for this
+    chart type
+  - 'Perfect spec and data quality: social network scenario is realistic and neutral,
+    32 nodes in 4 communities correctly shows intra-community density vs sparse inter-community
+    bridges'
+  - 'Code is clean: KISS structure, random.seed(42) for reproducibility, all imports
+    used, correct output filenames'
   weaknesses:
-  - 'Non-Okabe-Ito colors (UNFIXED from Attempt 1): uses #306998 (Python Blue), #FFD43B
-    (Python Yellow), #9467BD (Purple), #17BECF (Cyan) — replace with Okabe-Ito starting
-    with #009E73'
-  - 'No ANYPLOT_THEME support (UNFIXED from Attempt 1): hardcodes backgroundColor
-    #ffffff — must read os.getenv(ANYPLOT_THEME) and use PAGE_BG/INK/INK_SOFT tokens'
-  - 'Wrong output filenames (UNFIXED from Attempt 1): saves plot.png and plot.html
-    instead of plot-{THEME}.png and plot-{THEME}.html'
-  - 'JS title still says pyplots.ai (UNFIXED from Attempt 1): only the Python docstring
-    was changed, not the string literal inside chart_js on line 115'
+  - 'Canvas utilization is poor: the force-directed cluster occupies roughly 15% of
+    the 4800x2700 canvas (approx 27% width x 52% height), with large empty spaces
+    above the network, below it, and on both sides. Increase linkLength (try 400-600),
+    gravitationalConstant, or add a viewBox/zoom to make the graph fill at least 50%
+    of the canvas.'
+  - Some node overlap in the center of the cluster (Hugo, Bob, Finn, Quinn, Carol,
+    Ben area) — nodes are touching or slightly overlapping each other. Reducing the
+    marker radius slightly (from 45 to 35) or increasing linkLength would give more
+    breathing room between nodes.
+  - Raw JavaScript string construction instead of Python API reduces maintainability
+    — though highcharts_core does not natively support networkgraph, this approach
+    bypasses the type-safe Python layer entirely.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white approximately #FAF8F1 — visually correct for light theme, though code hardcodes #ffffff (pure white) in JS
-      Chrome: Title "network-force-directed · highcharts · anyplot.ai" in dark text, readable. Subtitle about department communication ties visible but small. Legend top-right with colored dots readable.
-      Data: Four community clusters — teal/green (Tech), orange (Marketing), blue (Finance), pink (Design). Nodes are circles with white-outlined name labels. Gray edges connecting nodes. Note: image colors differ from code's community_colors dict (#306998, #FFD43B, etc.) — images appear cached from prior better version.
-      Legibility verdict: PASS (all text readable against light background, no light-on-light issues)
+      Background: Warm off-white matching #FAF8F1 — correct, not pure white.
+      Chrome: Title "network-force-directed · highcharts · anyplot.ai" in dark text at top, clearly readable. Subtitle in slightly lighter dark text (INK_SOFT) shows department key with colored dots. Both are legible against the light background.
+      Data: 32 nodes arranged by force simulation into a loose cluster in the center-lower portion of the canvas. Four community colors: Tech (#009E73 green), Marketing (#D55E00 orange), Finance (#0072B2 blue), Design (#CC79A7 pink). Node names in white bold text with dark page-background outline, readable inside colored circles. Edges rendered in semi-transparent rgba (GRID color), subtle and non-intrusive. Some nodes in the center cluster (Hugo, Bob, Finn, Quinn, Carol, Ben) are tightly packed with visible overlap. Isolated nodes Sam (bottom-left) and Frank (far right) anchor the edges of the layout.
+      Canvas utilization: The entire graph cluster occupies approximately 27% of canvas width and 52% of height (~14% total area), leaving large empty spaces above and on both sides.
+      Legibility verdict: PASS — all title, subtitle, and node labels are readable against the light background. No light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Dark near-black approximately #1A1A17 — correct for dark theme, but code has no ANYPLOT_THEME handling to produce this; dark image must be from different code version
-      Chrome: Title and labels appear in light/white text against dark surface, readable. Legend labels readable. No dark-on-dark text failures observed.
-      Data: Node colors identical to light render (teal, orange, blue, pink). White text outline on node labels maintains readability on colored circles. Edges visible as lighter gray lines.
-      Legibility verdict: PASS (images look fine, but code cannot produce this dark render — it hardcodes #ffffff)
-
-    NOTE: Images appear generated from a different, better version of the code than what is in the PR. Code subtitle says "Social Network with 4 Communities (Tech: Blue, Marketing: Yellow, Finance: Purple, Design: Cyan)" but image shows "Communication ties across four departments — dense within, sparse between". PR code maps Tech to #306998 (Python Blue) but image shows Tech as teal/green. All scoring penalizes based on code-as-written.
+      Background: Warm near-black matching #1A1A17 — correct, not pure black.
+      Chrome: Title and subtitle text render in light colors (INK = #F0EFE8, INK_SOFT = #B8B7B0), clearly readable against the dark background. No dark-on-dark failures found.
+      Data: Data colors are identical to the light render — Tech #009E73, Marketing #D55E00, Finance #0072B2, Design #CC79A7. Node label outlines use the dark page background color, which creates good contrast. Edges use the dark-theme GRID (rgba(240,239,232,0.10)), faint but visible.
+      Legibility verdict: PASS — all text elements (title, subtitle, node labels) are clearly readable against the dark background. Chrome flips correctly; data colors are unchanged.
   criteria_checklist:
     visual_quality:
       score: 21
@@ -55,52 +64,59 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title 56px, subtitle 32px, node labels 26px explicitly set; readable
-          but node labels slightly small in dense central region
+        comment: 'All font sizes explicitly set: title 56px, subtitle 32px, node labels
+          26px. All readable in both themes. Minor: 26px node labels inside dense
+          nodes at 4800px canvas is slightly below ideal.'
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Force layout created some node/label crowding in central cluster
+        passed: false
+        comment: Center cluster nodes (Hugo, Bob, Finn, Quinn, Carol, Ben) overlap
+          each other physically. Labels remain readable inside their circles, but
+          node boundaries touch/overlap.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Nodes (radius 45) and edges visible; all distinguishable
+        comment: Nodes well-sized at radius 45, clearly visible. Edges at width 4
+          are clear. Colors provide strong contrast. Nodes slightly large given density.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Non-Okabe-Ito palette; #FFD43B yellow on off-white has marginal
-          contrast'
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe. Four distinct colors across communities
+          with adequate luminance differences.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 0
         max: 4
-        passed: true
-        comment: Network fills center well; some unused whitespace on right and bottom
+        passed: false
+        comment: Graph cluster fills approximately 27% width x 52% height = ~14% total
+          canvas area. Large empty spaces above, below, and on both sides. Well below
+          the 30% minimum threshold.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes appropriate for network graph; descriptive title
+        comment: Title format is correct. No axis labels needed for network graph.
+          Subtitle provides context.
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'FAIL: uses #306998 (Python Blue), #FFD43B, #9467BD, #17BECF — none
-          are Okabe-Ito. Background hardcoded #ffffff. No ANYPLOT_THEME reading. Unchanged
-          from Attempt 1.'
+        passed: true
+        comment: 'Perfect: first series #009E73, Okabe-Ito positions 1-4 for communities,
+          backgrounds #FAF8F1/#1A1A17, theme-adaptive chrome in both renders. Data
+          colors identical across themes.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -108,24 +124,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Community coloring shows design intent; physics parameters tuned.
-          Above defaults but not exceptional.
+        comment: 'Above well-configured default: Okabe-Ito used meaningfully for communities,
+          subtitle-as-legend is creative, text outlines on labels show attention to
+          readability. Not at publication level due to poor canvas utilization.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: White text outline on node labels is a nice touch; clean edge styling.
-          No grid/spine issues appropriate for network type.
+        comment: Subtle semi-transparent edge colors, text outline for label readability,
+          no unnecessary elements. Reduced by large empty canvas areas hurting overall
+          polish.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Community clustering and cross-community bridges create a readable
-          narrative; layout tells a coherent story.
+        comment: Subtitle explains the insight ('dense within, sparse between'), color-coding
+          creates immediate visual hierarchy showing community clusters. Viewer sees
+          the story.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -133,55 +152,57 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: Highcharts networkgraph type with force-directed physics
-          simulation'
+        comment: 'Correct chart type: force-directed graph using Highcharts networkgraph
+          module.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Nodes, edges, force simulation, community coloring, node labels all
-          present; degree-based sizing optional and absent
+        comment: 'Nodes and edges defined. Optional features (weight, degree-scaling)
+          not implemented but are explicitly optional per spec. maxIterations: 1000
+          ensures layout stabilization.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 32 nodes in 4 communities with intra- and inter-community edges correctly
-          mapped
+        comment: Node IDs and edge from/to correctly mapped for force layout.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: JavaScript title string on line 115 still reads pyplots.ai — only
-          the Python docstring comment was changed, not the rendered JS title
+        passed: true
+        comment: Title format 'network-force-directed · highcharts · anyplot.ai' is
+          correct. Community legend embedded in subtitle.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows nodes, edges, force layout, communities, cross-community bridges,
-          labels; degree-based sizing optional and absent
+        comment: 'Shows all key aspects: community clustering, dense intra-community
+          edges, sparse inter-community bridges, named nodes, force-directed layout
+          revealing topology.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Corporate social network (Tech, Marketing, Finance, Design departments)
-          — realistic, neutral, plausible
+        comment: 'Real, neutral scenario: company employees across Tech, Marketing,
+          Finance, Design departments. Plausible communication network.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 32 nodes within spec's 20-200 range; edge density appropriate
+        comment: 32 nodes within spec's 20-200 range. 2-4 intra-community edges and
+          1-2 inter-community bridges per community pair is realistic.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -189,34 +210,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat procedural script; no functions or classes
+        comment: Imports → data → chart → save. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: random.seed(42)
+        comment: random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported modules are used
+        comment: 'All imports used: os, random, tempfile, time, urllib.request, pathlib.Path,
+          selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable organization; no fake UI or simulated interactivity
+        comment: Clean, appropriate complexity. Raw JS string building is necessary
+          since highcharts_core lacks native networkgraph support.
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: 'FAIL: saves plot.png and plot.html instead of plot-{THEME}.png and
-          plot-{THEME}.html; no ANYPLOT_THEME reading. Unchanged from Attempt 1.'
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -224,23 +246,27 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses raw JavaScript string injection rather than highcharts_core
-          Python API; pragmatic for networkgraph but not recommended pattern
+        comment: Correct Highcharts networkgraph API usage including plotOptions.networkgraph.layoutAlgorithm.
+          Uses raw JS strings rather than the Python highcharts_core library, bypassing
+          the type-safe layer.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses Highcharts networkgraph module with Verlet integration physics;
-          configurable friction, linkLength, gravitationalConstant, maxIterations
+        comment: Uses Highcharts-specific networkgraph module with verlet integration,
+          friction, gravitationalConstant, and per-node color/size configuration —
+          features unique to Highcharts' force simulation.
   verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
