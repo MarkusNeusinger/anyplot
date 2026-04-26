@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 funnel-basic: Basic Funnel Chart
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 96/100 | Created: 2025-12-23
+Library: bokeh 3.9.0 | Python 3.14.4
+Quality: 86/100 | Updated: 2026-04-26
 """
 
 from bokeh.io import export_png, output_file, save

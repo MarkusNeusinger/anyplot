@@ -1,159 +1,181 @@
 library: plotnine
+language: python
 specification_id: funnel-basic
 created: '2025-12-23T13:01:58Z'
-updated: '2025-12-23T13:05:27Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461376756
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-04-26T05:49:44Z'
+generated_by: claude-opus
+workflow_run: 24949287748
+issue: 789
+python_version: 3.14.4
+library_version: 0.15.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Excellent visual representation of funnel concept using centered rectangles with
-    proportional widths
-  - Clear labeling with stage names, absolute values, and percentages on each segment
-  - Pleasing blue gradient color scheme that progresses naturally from dark to light
-  - Clean removal of axes, grid, and legend for a polished funnel appearance
-  - Correct title format following pyplots.ai conventions
+  - 'Perfect spec compliance: all spec features (trapezoidal segments, proportional
+    widths, dual value+% labels, distinct Okabe-Ito colors) implemented correctly'
+  - Creative use of geom_polygon within plotnine grammar of graphics to build a non-native
+    chart type without falling back to matplotlib
+  - 'Smart per-segment text contrast: dark INK on light amber fill in light mode shows
+    accessibility awareness'
+  - Both themes render correctly with right backgrounds and chrome tokens
   weaknesses:
-  - The sys.path manipulation workaround for import conflicts is not ideal (though
-    necessary given file naming constraints)
-  - Uses rectangular bars rather than true trapezoids, so it is technically a bar
-    funnel rather than a classic funnel shape
-  image_description: 'The plot displays a funnel chart with 5 horizontal rectangular
-    bars stacked vertically, representing a sales funnel. The bars progressively narrow
-    from top to bottom: "Awareness" (widest, dark blue #306998, showing 1,000/100%),
-    "Interest" (medium blue, 600/60%), "Consideration" (lighter blue, 400/40%), "Intent"
-    (even lighter, 200/20%), and "Purchase" (lightest blue, smallest bar, 100/10%).
-    Each bar has white text centered showing the stage name, value with comma formatting,
-    and percentage. The title "funnel-basic · plotnine · pyplots.ai" appears at the
-    top in bold black text. The background is white with no axes, grid, or legend
-    visible. The chart uses a blue gradient color scheme progressing from darker to
-    lighter shades.'
+  - 'Dark mode Purchase label (#F0EFE8 on #E69F00) has ~2.2:1 contrast — below WCAG
+    AA; should always use dark ink (#1A1A17) for the amber segment regardless of theme'
+  - No visual emphasis or focal point — the most dramatic drop-offs are not highlighted;
+    add typographic hierarchy or annotation to guide the viewer
+  - Data labels at size=14pt are below the 16pt recommendation for secondary text
+    at 4800x2700px; bump to at least 16pt
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "funnel-basic · plotnine · anyplot.ai" in dark ink (#1A1A17), centered, 24pt — clearly readable. No axis labels, ticks, or grid (theme_void). Segment separator lines use PAGE_BG color.
+      Data: Five Okabe-Ito trapezoids — Awareness (#009E73), Interest (#D55E00), Consideration (#0072B2), Intent (#CC79A7), Purchase (#E69F00). Each with bold two-line label (stage name + value + %). White text on first four; dark INK on amber Purchase.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct
+      Chrome: Title in light cream #F0EFE8 — clearly readable. Separator gaps switch to near-black, working correctly.
+      Data: Identical Okabe-Ito colors to light render — brand green #009E73 first. Segment labels for Awareness–Intent are white on colored fills — readable. Purchase segment uses INK token (#F0EFE8 in dark mode) on amber #E69F00 — contrast ~2.2:1, below WCAG AA but readable due to bold weight.
+      Legibility verdict: PASS overall; minor contrast issue on Purchase dark-mode text (not a critical failure)
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title is bold and readable at 24pt, labels on bars are readable but
-          slightly small for the canvas size
+        comment: Title explicitly at 24pt; data labels at 14pt below recommended 16pt
+          for secondary text
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all labels fit within their respective bars
+        comment: All labels perfectly centered within segments, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-sized and clearly visible, good proportions
+        comment: All five segments clearly visible including small Purchase rectangle
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue gradient is colorblind-safe, good contrast with white text
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Okabe-Ito is CVD-safe; dark mode Purchase text (#F0EFE8 on #E69F00)
+          is ~2.2:1 contrast, below WCAG AA'
       - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good use of canvas space, though some empty space at bottom
+        comment: Funnel fills ~60% height and ~80% width at top; minor dead space
+          below Purchase
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for funnel charts (no axes needed), appropriately removed
+        comment: Title in required format; no axis labels needed for funnel type
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Legend disabled which is appropriate, but no grid needed anyway
+        comment: 'First stage #009E73; Okabe-Ito canonical order; backgrounds #FAF8F1/#1A1A17;
+          chrome flips correctly'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: Okabe-Ito correctly applied, smart text-contrast
+          logic, bold labels, void theme. Typography hierarchy flat, no visual emphasis
+          on insight'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_void removes all axes/spines/grid; polygon gaps provide clean
+          separation; generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dual labels (absolute + %) help quantify drop-offs; funnel encodes
+          magnitude visually. Biggest story not emphasized — no focal point on sharpest
+          transitions
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct funnel chart visualization with narrowing bars
+        comment: Correct trapezoidal funnel narrowing proportionally top-to-bottom
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Stages correctly ordered top-to-bottom, widths proportional to values
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: distinct colors, value/percentage labels,
-          proportional widths'
-      - id: SC-04
-        name: Data Range
+        comment: Distinct colors per stage; value+% labels; widths proportional to
+          value/max_value; correct stage order
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 5 stages visible and properly scaled
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Stages correctly ordered largest-to-smallest; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend appropriately hidden (labels are on bars)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "funnel-basic · plotnine · pyplots.ai"'
+        comment: Title funnel-basic · plotnine · anyplot.ai; legend suppressed, replaced
+          by in-chart labels
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear progression with decreasing values at each stage
+        comment: Five stages with varied drop-off rates fully cover the funnel chart
+          concept
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Sales funnel scenario is realistic and commonly used
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values (1000→600→400→200→100) are realistic conversion rates
+        comment: Classic sales/marketing funnel (Awareness→Purchase) with plausible
+          neutral values
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 1000→100 with realistic intermediate steps; percentages accurately
+          computed
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,41 +183,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save'
+        comment: No functions or classes; clean linear flow
       - id: CQ-02
         name: Reproducibility
-        score: 0
-        max: 3
-        passed: false
-        comment: No random seed needed (deterministic data), but sys.path manipulation
-          is a code smell
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — no random operations
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; sys/os are standard library
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Clean polygon construction loop; no over-engineering or fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Grammar of graphics correctly composed throughout; scale_color_identity()
+          for per-row text colors is idiomatic
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot grammar (geom_rect, aes, theme_minimal), but funnel is
-          simulated with rectangles rather than using any special plotnine feature
-  verdict: APPROVED
+        comment: scale_color_identity() with per-row aesthetic mapping; geom_polygon
+          for non-native chart type; scale_y_reverse() integration
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
