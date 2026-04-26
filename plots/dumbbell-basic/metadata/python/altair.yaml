@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: dumbbell-basic
 created: '2025-12-23T13:02:07Z'
-updated: '2026-04-26T01:38:39Z'
+updated: '2026-04-26T01:54:58Z'
 generated_by: claude-opus
 workflow_run: 24945139784
 issue: 945
@@ -12,96 +12,91 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/altair/plot-dark.html
-quality_score: 75
+quality_score: 79
 review:
   strengths:
-  - Layer composition (mark_rule + mark_circle) is the correct Altair idiom for dumbbell
-    charts — using alt.X / alt.X2 for the spanning rule is exactly right
-  - Sorting by improvement with EncodingSortField applied consistently across both
-    layers is technically sound
-  - Employee satisfaction before/after is a realistic, neutral, engaging dataset
-  - Font sizes explicitly set throughout (labelFontSize=18, titleFontSize=22, legendFontSize=16)
-  - 10 categories sorted by difference creates genuine data storytelling
+  - Correct dumbbell chart structure using idiomatic Altair layer composition (mark_rule
+    + mark_circle)
+  - Excellent data storytelling through sorting by improvement magnitude
+  - Realistic, neutral business scenario with varied gap sizes
+  - Proper use of alt.X2 for horizontal span encoding — the right Altair idiom for
+    this chart type
+  - Both renders pass theme-readability check visually
   weaknesses:
-  - 'Critical: No ANYPLOT_THEME support — code must read os.getenv(''ANYPLOT_THEME'',
-    ''light'') and render both light and dark versions with theme-adaptive tokens
-    (PAGE_BG, ELEVATED_BG, INK, INK_SOFT) applied via configure_view/configure_axis/configure_title/configure_legend'
-  - 'Critical: Wrong output file names — must save as plot-{THEME}.png and plot-{THEME}.html,
-    not bare plot.png/plot.html'
-  - 'Wrong palette — colors must use Okabe-Ito: #009E73 (before) and #D55E00 (after),
-    not Python blue (#306998) / yellow (#FFD43B)'
-  - Wrong branding — title must end with anyplot.ai not pyplots.ai
-  - Dashed grid (gridDash=[4, 4]) should be replaced with solid low-opacity grid (gridOpacity=0.10)
-    or removed entirely
-  - 'Connecting line hardcoded color #999999 should use INK_SOFT token for theme adaptation'
-  - Legend title 'Period' should be more contextual (e.g., 'Policy Change')
+  - 'Code uses non-Okabe-Ito colors (#306998 Python Blue and #FFD43B): replace with
+    #009E73 (Before) and #D55E00 (After)'
+  - 'No ANYPLOT_THEME handling: must read os.getenv(ANYPLOT_THEME) and apply PAGE_BG/INK/INK_SOFT
+    tokens per altair.md template'
+  - 'Wrong output filenames: must save as plot-{THEME}.png and plot-{THEME}.html,
+    not plot.png/plot.html'
+  - 'Wrong domain in title code: has pyplots.ai, must be anyplot.ai'
+  - 'Grid styling: dashed lines (gridDash=[4,4]) should be solid, gridOpacity=0.3
+    should be 0.10'
+  - 'Connecting line color hardcoded as #999999 must use INK_SOFT theme token'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "Employee Satisfaction · dumbbell-basic · altair · anyplot.ai" in dark text (readable); Y-axis category labels dark and clear; X-axis "Employee Satisfaction Score (%)" readable; tick labels dark on light background — all readable
-      Data: "Before policy change" dots in teal (~#009E73), "After policy change" dots in orange (~#D55E00); connecting lines in gray; 10 categories sorted by improvement ascending; marker size appropriate; dashed vertical grid lines somewhat prominent
-      Legibility verdict: PASS — all text clearly readable against light background
-      NOTE: Images appear generated from a different code version than current file (code specifies #306998/#FFD43B but images show teal/orange; code title says "pyplots.ai" but image shows "anyplot.ai")
+      Background: Warm off-white (~#FAF8F1) — correct theme surface
+      Chrome: Title "Employee Satisfaction · dumbbell-basic · altair · anyplot.ai" in dark text (readable); X-axis label "Employee Satisfaction Score (%)" readable; tick labels (45-90) readable; legend "Policy Change" with Before/After labels readable
+      Data: Teal/green dots for "Before", orange dots for "After"; 10 categories sorted ascending by improvement; thin gray connecting lines; dots clearly visible at size=350
+      Legibility verdict: PASS — all text readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Near-black (~#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title in light/white text — readable; Y-axis category labels in light text — readable; X-axis label and tick labels in light text — readable; no dark-on-dark failures observed; legend shows dark elevated background with light text
-      Data: Teal and orange dot colors identical to light render — Okabe-Ito invariance confirmed; connecting lines visible in gray
-      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark failures
+      Background: Warm near-black (~#1A1A17) — correct theme surface
+      Chrome: Title in light/white text (readable); axis labels in light text (readable); tick labels in light text (readable); legend box has dark fill with light text — no dark-on-dark failures observed
+      Data: Dot colors are visually identical to light render (teal/green Before, orange After) — only chrome adapted
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (labelFontSize=18, titleFontSize=22, legend
-          16); readable in both themes
+        comment: Font sizes explicitly set (labelFontSize=18, titleFontSize=22, title
+          fontSize=28); all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No visible overlap; slight tightness on longer department name labels
+        comment: No overlapping text or elements
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: mark_circle(size=350) well-chosen for 10 categories; connecting lines
-          visible
+        comment: Dots at size=350 clearly visible; connecting lines clear
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Images show CVD-safe teal+orange; distinguishable without relying
-          solely on hue
+        comment: Positional encoding provides CVD-safe differentiation independent
+          of hue
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good proportions; legend floats somewhat isolated in top-right
+        comment: Good horizontal layout; some unused whitespace at canvas edges
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Employee Satisfaction Score (%) is descriptive with units
+        comment: X-axis labeled Employee Satisfaction Score (%) with units
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'Code uses #306998 (Python blue) and #FFD43B (Python yellow) — not
-          Okabe-Ito. No ANYPLOT_THEME support. Wrong output filenames (plot.png not
-          plot-{THEME}.png)'
+        comment: 'Code uses #306998 (Python Blue) and #FFD43B — explicitly non-compliant.
+          No ANYPLOT_THEME handling in code.'
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -109,24 +104,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default; sorted order intentional but no
-          custom typography or refined palette in code
+        comment: Well-configured library default; sorting is intentional but no custom
+          typography or color sophistication
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Dashed grid (gridDash=[4,4]) violates style guide; no explicit spine
-          removal; minimal chrome customization
+        comment: Dashed grid (gridDash=[4,4]) not per style guide; gridOpacity=0.3
+          exceeds 10-15% guideline; minimal refinement overall
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Sorting by improvement ascending is good storytelling; viewer immediately
-          sees least vs. most improved departments
+        passed: false
+        comment: Sorting by difference is strong storytelling; no further annotations
+          or visual emphasis on extreme values
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -134,54 +129,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct dumbbell: mark_rule for connecting lines + mark_circle for
-          dots, horizontal orientation'
+        comment: Correct horizontal dumbbell chart with mark_rule connecting dots
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Two dots per category, connecting line, distinct colors, sorted by
-          difference
+        comment: Two dots per category, thin connecting line, distinct colors, horizontal
+          orientation, sorted by difference
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on Y, satisfaction scores on X, scale domain [45,90] covers
-          all data [52-85]
+        comment: Categories on Y, scores on X, color encodes Before/After
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 2
         max: 3
         passed: false
-        comment: Code title uses 'pyplots.ai' instead of 'anyplot.ai'; legend title
-          is generic 'Period' instead of contextual
+        comment: Image shows anyplot.ai but code has pyplots.ai — will produce wrong
+          title on re-runs. Legend labels correct.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows varied differences (IT +5 to Customer Support +26); sorted
-          order reveals the pattern
+        comment: 'Shows all dumbbell aspects: varied gap sizes, all improvements visible,
+          10 categories'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee satisfaction before/after policy changes is realistic, neutral,
-          business-plausible
+        comment: Employee satisfaction before/after policy changes is neutral and
+          realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scores 52-85 on a 100-point scale are sensible for HR satisfaction
-          data
+        comment: Scores in 52-85 range are realistic for satisfaction surveys
     code_quality:
       score: 9
       max: 10
@@ -191,13 +183,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean top-level: imports → data → reshape → chart layers → save'
+        comment: 'Clean top-level flow: imports → data → chart → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data; no random seed needed
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -209,17 +201,16 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Elegant layer composition (lines + dots); alt.X2 for span encoding
-          is idiomatic
+        comment: Appropriate use of pd.melt(), mark_rule with x2, layer composition
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html;
-          no ANYPLOT_THEME env var handling
+        comment: Saves to plot.png/plot.html — must be plot-{THEME}.png and plot-{THEME}.html.
+          No ANYPLOT_THEME reading.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -227,15 +218,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of mark_rule + mark_circle layer composition; alt.X2
-          for horizontal span; EncodingSortField for consistent sort
+        comment: Good use of mark_rule with alt.X2, alt.EncodingSortField, and layer
+          composition via + operator
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: HTML export and tooltips leverage Altair's interactive nature; layer
-          composition is key Altair-specific pattern; otherwise fairly generic
+        passed: true
+        comment: Layer composition, alt.X2 horizontal span encoding, and encoding-level
+          sort are distinctive Altair features
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -244,7 +235,6 @@ impl_tags:
   - hover-tooltips
   - html-export
   patterns:
-  - data-generation
   - wide-to-long
   dataprep: []
   styling: []
