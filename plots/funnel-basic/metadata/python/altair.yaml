@@ -1,163 +1,185 @@
 library: altair
+language: python
 specification_id: funnel-basic
 created: '2025-12-23T13:03:09Z'
-updated: '2025-12-23T13:06:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461376408
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - layer-composition
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-04-26T05:44:11Z'
+generated_by: claude-opus
+workflow_run: 24949210482
+issue: 789
+python_version: 3.14.4
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/altair/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent funnel visualization using centered horizontal bars with x/x2 encoding
-  - Clear value labels with both absolute values and percentages
-  - Attractive Python-themed color gradient from blue to yellow
-  - Clean, declarative Altair code following the grammar of graphics
-  - Proper title format and good text sizing throughout
+  - 'Perfect palette compliance: #009E73 first, correct Okabe-Ito order, backgrounds
+    and chrome both theme-correct'
+  - Clean dual-metric labels (value + %) that let viewers read conversion rates at
+    a glance
+  - All text sizes explicitly set; both themes fully readable with no dark-on-dark
+    failures
+  - 'Excellent code quality: KISS structure, deterministic, all Altair idioms used
+    correctly'
+  - 'Spec fully satisfied: all required funnel features present with realistic sales
+    data'
   weaknesses:
-  - Could benefit from tooltips for enhanced interactivity in the HTML version
-  - Middle blue stages (Interest, Consideration, Intent) have subtle color differences
-    that could be more distinct
-  image_description: 'The plot displays a basic funnel chart with 5 stages arranged
-    vertically from top to bottom: Awareness (dark blue, 1000), Interest (medium blue,
-    600), Consideration (lighter blue, 400), Intent (light blue, 200), and Purchase
-    (yellow, 100). Each stage is represented as a horizontally centered bar with rounded
-    corners. The bars progressively narrow from top to bottom, creating the classic
-    funnel shape. Stage labels appear on the left y-axis in bold text, while value
-    labels with percentages (e.g., "1000 (100.0%)", "600 (60.0%)") are positioned
-    to the right of each bar. The title "funnel-basic · altair · pyplots.ai" is centered
-    at the top. The color scheme transitions from Python blue (#306998) to yellow
-    (#FFD43B), providing good visual differentiation between stages.'
+  - 'Title format deviates from required spec-id format: must be funnel-basic · altair
+    · anyplot.ai (remove Sales Funnel · prefix)'
+  - No visual emphasis on key conversion drop-offs; the largest drop (Awareness→Interest,
+    -40%) is not highlighted
+  - Canvas is slightly narrow (width=1400 → 4200px vs recommended 4800px); use width=1600
+  - Design sophistication is good but not exceptional; no typographic hierarchy or
+    focal point beyond bar widths
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "Sales Funnel · funnel-basic · altair · anyplot.ai" in bold dark #1A1A17 at top center; stage labels (Awareness, Interest, Consideration, Intent, Purchase) in bold dark text on the far left; value/percentage labels ("1000 · 100.0%" etc.) in bold dark text to the right of each bar
+      Data: Five centered horizontal bars in Okabe-Ito order — #009E73 (Awareness, widest), #D55E00 (Interest), #0072B2 (Consideration), #CC79A7 (Intent), #E69F00 (Purchase, smallest). Bars have rounded corners and narrow progressively, creating the funnel effect.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct, not pure black
+      Chrome: Title and all stage labels rendered in light off-white #F0EFE8 text; value/percentage labels also in light text. All clearly readable. No dark-on-dark failures detected — configure_axis labelColor=INK and mark_text color=INK correctly adapt between themes.
+      Data: Identical Okabe-Ito colors to light render — #009E73, #D55E00, #0072B2, #CC79A7, #E69F00. Only chrome elements flip between themes.
+      Legibility verdict: PASS — all text clearly readable against near-black background; brand green #009E73 remains visible and distinguishable
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, stage labels at 20pt bold, value labels at 18pt bold
-          - all clearly readable
+        comment: Title 28px, stage labels 20px bold, value text 20px bold — all explicitly
+          set; readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: Stage labels, bars, and value labels clearly separated with ample
+          spacing
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar heights of 70px are well-sized, good spacing between stages
+        comment: All five bars clearly visible including smallest (Purchase); rounded
+          corners aid definition
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue-to-yellow gradient is colorblind-friendly, but subtle blue variations
-          between middle stages may be hard to distinguish
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, bars well-centered, though some empty space
-          on the right side
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: No x-axis (hidden intentionally, appropriate), but y-axis has no
-          title (appropriate for this chart type) - N/A for funnel charts
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid disabled (appropriate), no legend needed as stages are labeled
+        comment: Okabe-Ito palette is CVD-safe; each stage distinctly identifiable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas 4200x2700px (width=1400 x scale 3.0) vs recommended 4800x2700;
+          well-balanced but slightly narrow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive stage names on Y axis; title is clear
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First stage #009E73, Okabe-Ito order followed, backgrounds #FAF8F1/#1A1A17,
+          chrome correctly flips'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Rounded bar corners, dual-metric labels, per-stage color mapping
+          elevate above plain defaults; not yet at publication-ready polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid disabled, Y-axis domain/ticks disabled, view border removed
+          — clear intentional refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Dual value+percentage labels provide conversion context; no visual
+          emphasis on largest drop-off; no focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct funnel chart type using centered horizontal bars
+        comment: 'Correct funnel chart: stages ordered largest to smallest, bars centered
+          and narrowing'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Stages correctly mapped to y-axis, values to bar width
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: distinct colors, value/percentage labels,
-          proportional widths'
-      - id: SC-04
-        name: Data Range
+        comment: Distinct colors per stage, value+percentage labels, width proportional
+          to value, stages ordered correctly
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, no clipping
-      - id: SC-05
-        name: Legend Accuracy
+        comment: Stages on Y axis, bar width encodes value, all 5 stages visible
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: No legend needed, stages clearly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "funnel-basic · altair · pyplots.ai"'
+        max: 3
+        passed: false
+        comment: Title is 'Sales Funnel · funnel-basic · altair · anyplot.ai'; required
+          format is '{spec-id} · {library} · anyplot.ai' = 'funnel-basic · altair
+          · anyplot.ai'
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear progressive decrease (1000→600→400→200→100), demonstrates
-          drop-offs between stages
+        comment: 'All funnel aspects shown: progressive narrowing, 5 distinct stages,
+          absolute and relative values'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Sales funnel scenario with realistic stage names matching spec example
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values are sensible for a sales funnel (1000 leads → 100 purchases
-          = 10% conversion)
+        comment: AIDAR sales funnel with plausible neutral marketing conversion data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values [1000, 600, 400, 200, 100] with 10% final conversion are realistic
+          for a sales pipeline
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -165,41 +187,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: 'Clean linear flow: theme tokens → data → chart components → compose
+          → save'
       - id: CQ-02
         name: Reproducibility
-        score: 0
-        max: 3
-        passed: false
-        comment: No random seed needed (deterministic data), but technically no seed
-          set - data is hardcoded so this is fine (3/3)
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both used
+        comment: Only os, altair, pandas imported; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: All Altair APIs are current
+        comment: Idiomatic Altair layer composition; no fake UI; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses x+x2 ranged bar encoding, layer composition with +, configure_*
+          chain for theme, alt.Title with properties
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Altair's declarative grammar well with mark_bar, encode, x/x2
-          for bar range. Could have used tooltips or interactivity for bonus points.
-  verdict: APPROVED
+        comment: x/x2 encoding for centered bars (Vega-Lite-distinctive); layer composition;
+          tooltip encoding; HTML export
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns: []
+  dataprep: []
+  styling: []
