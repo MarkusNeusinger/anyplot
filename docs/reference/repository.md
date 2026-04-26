@@ -90,8 +90,6 @@ anyplot/
 │   │   ├── models.py                  # SQLAlchemy ORM models
 │   │   ├── repositories.py            # Repository pattern
 │   │   └── types.py                   # Custom SQLAlchemy types
-│   └── generators/                    # Reusable code generators
-│       └── plot_generator.py          # Plot code generation utilities
 │
 ├── api/                               # FastAPI backend
 │   ├── __init__.py
@@ -422,7 +420,6 @@ plt.savefig('plot.png', dpi=300)
 - `database/connection.py` - Async database connection
 - `database/models.py` - SQLAlchemy ORM models
 - `database/repositories.py` - Repository pattern for data access
-- `generators/plot_generator.py` - Reusable plot code generation utilities
 
 ---
 

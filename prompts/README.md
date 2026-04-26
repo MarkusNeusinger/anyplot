@@ -12,40 +12,49 @@ Git history shows all changes (`git log -p prompts/plot-generator.md`).
 | File | Agent | Task |
 |------|-------|------|
 | `plot-generator.md` | Plot Generator | Base rules for all plot implementations |
+| `default-style-guide.md` | Plot Generator | Default visual style (colors, typography, layout) |
 | `library/*.md` | Plot Generator | Library-specific rules (9 files) |
 | `quality-criteria.md` | All | Definition of what "good code" means |
 | `quality-evaluator.md` | Quality Checker | AI quality evaluation |
 | `spec-validator.md` | Spec Validator | Validates plot request issues |
 | `spec-id-generator.md` | Spec ID Generator | Assigns unique spec IDs |
+| `spec-tags-generator.md` | Spec ID Generator | AI rules for spec-level tag assignment |
+| `impl-tags-generator.md` | Quality Checker | AI rules for impl-level tag assignment |
+| `templates/*.{md,yaml}` | Spec Validator | Starter templates for `specification.md` / `specification.yaml` |
 | `workflow-prompts/*.md` | GitHub Actions | Workflow-specific prompts (see below) |
 
 ## Workflow Prompts
 
-Located in `workflow-prompts/` - templates for GitHub Actions workflows:
+Located in `workflow-prompts/` — full instruction sets that the
+`anthropics/claude-code-action@v1` step in each workflow tells Claude to read.
+Variables are passed as plain text in the workflow's `prompt:` body (no
+`sed`-substitution step).
 
 | File | Workflow | Purpose |
 |------|----------|---------|
-| `generate-implementation.md` | impl-generate.yml | Initial code generation |
-| `improve-from-feedback.md` | impl-repair.yml | Code improvement after rejection |
-| `ai-quality-review.md` | impl-review.yml | Quality evaluation |
+| `impl-generate-claude.md` | `impl-generate.yml` | Initial code generation for one (spec, library) |
+| `impl-repair-claude.md` | `impl-repair.yml` | Repair after a rejected AI review (max 3 attempts) |
+| `ai-quality-review.md` | `impl-review.yml` | Quality evaluation of a generated implementation |
+| `report-analysis.md` | `report-validate.yml` | Triage and structure user-submitted issue reports |
 
-See `workflow-prompts/README.md` for variable reference and usage.
+See `workflow-prompts/README.md` for the wiring pattern + per-variable reference.
 
 ## Usage in Workflows
 
 ```yaml
-# Example: gen-new-plot.yml
-- name: Generate matplotlib plot
-  env:
-    PROMPT_BASE: ${{ steps.load_prompts.outputs.base }}
-    PROMPT_LIB: ${{ steps.load_prompts.outputs.library }}
-  run: |
-    claude --prompt "${PROMPT_BASE}
+# Example: from .github/workflows/impl-review.yml
+- uses: anthropics/claude-code-action@<sha>  # v1
+  with:
+    claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+    claude_args: "--model sonnet"
+    prompt: |
+      Read `prompts/workflow-prompts/ai-quality-review.md` and follow those instructions.
 
-    ${PROMPT_LIB}
-
-    ## Spec
-    $(cat plots/${{ inputs.spec_id }}/specification.md)"
+      Variables for this run:
+      - LIBRARY: ${{ steps.pr.outputs.library }}
+      - SPEC_ID: ${{ steps.pr.outputs.specification_id }}
+      - PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
+      - ATTEMPT: ${{ steps.attempts.outputs.display }}
 ```
 
 ## Prompt Structure

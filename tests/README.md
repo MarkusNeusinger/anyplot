@@ -14,7 +14,7 @@ tests/
 ├── integration/        # Component interaction tests
 │   └── test_repositories.py  # Repository + real DB
 └── e2e/               # Full stack end-to-end tests
-    └── test_api_endpoints.py  # API → Dependencies → Repositories → DB
+    └── test_api_postgres.py  # API → Dependencies → Repositories → DB
 ```
 
 ## Test Types
@@ -137,7 +137,7 @@ async def async_client():
 
 GitHub Actions runs tests on every PR:
 
-- **ci-unittest.yml**: Runs unit and integration tests with SQLite
+- **ci-tests.yml**: Runs unit and integration tests with SQLite
 - **Coverage**: Reports code coverage to ensure >90% coverage
 
 **Note**: Integration tests now work with SQLite thanks to custom database types that support both PostgreSQL and SQLite. E2E tests require database dependency override and are not yet included in CI.

@@ -176,7 +176,6 @@ module = [
     "core.database.types",
     "core.database.connection",
     "core.database.repositories",
-    "core.generators.plot_generator",
 ]
 ignore_errors = true
 
