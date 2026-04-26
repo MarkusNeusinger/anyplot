@@ -1,171 +1,182 @@
 library: plotly
+language: python
 specification_id: lollipop-basic
 created: '2025-12-23T15:41:19Z'
-updated: '2025-12-23T15:43:37Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20464997801
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-04-26T12:50:56Z'
+generated_by: claude-opus
+workflow_run: 24956801988
+issue: 934
+python_version: 3.14.4
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/plotly/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Clean, minimalist lollipop chart that perfectly matches the spec description
-  - Excellent text legibility with appropriately scaled fonts for high-resolution
-    output
-  - Good use of plotly Graph Objects for precise control over stems and markers
-  - Hover template provides formatted dollar values for interactivity
-  - Data is properly sorted descending for easy comparison
-  - White marker borders provide nice visual separation
+  - 'Perfect theme adaptation: both light and dark renders are fully correct, with
+    all chrome tokens properly threaded through'
+  - Single-trace None-separator stem technique is an efficient, idiomatic Plotly pattern
+  - All spec requirements met perfectly with correct data, axis mapping, and title
+    format
+  - Marker border matching PAGE_BG is a thoughtful refinement that makes markers pop
+    cleanly on both backgrounds
+  - Font sizes match the style guide pixel-based recommendations exactly
   weaknesses:
-  - Data values are too perfectly rounded (all multiples of 1000) - more realistic
-    data would have varied precision
-  - Could leverage more plotly-specific features like custom hover modes or improved
-    interactivity
-  image_description: The plot displays a basic lollipop chart showing product sales
-    by category. Ten categories are displayed on the x-axis (Electronics, Clothing,
-    Home & Garden, Sports, Books, Toys, Beauty, Automotive, Food & Grocery, Health)
-    with sales values on the y-axis ranging from $0 to approximately $137,500. Each
-    data point consists of a thin blue vertical stem (#306998) extending from the
-    baseline to a circular blue marker with a white border. The title "lollipop-basic
-    · plotly · pyplots.ai" is centered at the top. Category labels are rotated -45
-    degrees. Y-axis shows dollar formatting with grid lines. Data is sorted descending
-    from Electronics ($125,000) to Health ($31,000). The plot uses plotly_white template
-    for a clean background.
+  - 'Design Excellence is the primary gap (9/20): the plot is technically correct
+    but visually generic — no emphasis on any performer, no visual hierarchy, all
+    lollipops share identical color with no focal point'
+  - 'DE-03: No data storytelling — consider highlighting the top performer with a
+    distinct color or annotation'
+  - 'DE-01: Aesthetic sophistication could be elevated — for instance, accent the
+    highest value with a contrasting Okabe-Ito color to create intentional visual
+    emphasis'
+  - 'DE-02: Spines not explicitly managed — explicit showline/mirror settings would
+    make the intent clear'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "Product Sales by Category · lollipop-basic · plotly · anyplot.ai" in dark ink, clearly readable; axis labels "Product Category" and "Sales ($)" in dark ink; y-axis tick labels in dark ink with $ formatting; x-axis category labels angled at -35° in dark gray (INK_SOFT)
+      Data: All stems and circular markers in Okabe-Ito brand green #009E73; markers have background-toned border ring; stems are thin vertical lines; subtle horizontal grid lines on y-axis only
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in off-white/light text, clearly readable; axis labels in light text; y-axis tick labels in light gray (INK_SOFT #B8B7B0); x-axis category labels in lighter gray — all readable against dark background; no dark-on-dark text failure observed
+      Data: Colors identical to light render — stems and markers remain #009E73 (theme-independent data color); marker border adapts to dark PAGE_BG
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'All text is clearly readable: title, axis labels, tick labels all
-          appropriately sized for 4800x2700 px output'
+        comment: Title 28px, axis labels 22px, tick labels 18px — all explicitly set;
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, category labels are well-spaced with -45 degree
-          rotation
+        comment: 10 angled x-axis labels at -35° have no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers (size 18) and stems (width 3) are well-sized for the data
-          density of 10 points
+        comment: Markers size 22 with background border ring; stems width 3; clearly
+          visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color (#306998) is colorblind-safe, good contrast against
-          white background
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good proportions but margins could be slightly optimized; plot fills
-          canvas well
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Sales ($)" and "Product Category"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Single Okabe-Ito brand color, high contrast in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700px, balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Product Category (x), Sales ($) (y) with currency unit
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, light bg #FAF8F1, dark bg #1A1A17, all chrome
+          tokens correct'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is present and subtle, but no legend needed (single series);
-          slight deduction for missing y-axis at 0 baseline emphasis
+        comment: Well-configured default look; custom font family and hover labels
+          are nice but no intentional visual hierarchy or focal point
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: X-axis grid removed, subtle y-axis grid with GRID token, zero-line
+          styled; above default but spine handling relies on Plotly defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Sorted order is spec requirement not storytelling; all lollipops
+          identical color; no focal point emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct lollipop chart with stems and circular markers
+        comment: Correct vertical lollipop chart with stems and circular markers
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on x-axis, values on y-axis correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: thin stems, circular dots, vertical orientation,
-          sorted data'
-      - id: SC-04
-        name: Data Range
+        comment: Stems, circular markers, vertical orientation, sorted-by-value all
+          present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows 0 to max*1.1, all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Categories on x-axis, dollar values on y-axis, all 10 categories
+          displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series, correctly omitted
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "lollipop-basic · plotly · pyplots.ai"
+        comment: Title contains lollipop-basic · plotly · anyplot.ai; no legend needed
+          for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows good range of values across 10 categories; could demonstrate
-          more variation in value gaps
+        comment: Wide value range $31k-$125k demonstrates chart type's comparison
+          strength
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Product sales by category is a realistic, comprehensible business
-          scenario
+        comment: E-commerce product category sales — genuine neutral business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Sales values from $31K to $125K are realistic; slight deduction as
-          rounding is too clean (all multiples of 1000)
+        comment: Sales values realistic for mid-size retail categories
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,42 +184,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure with no functions/classes
+        comment: 'Flat structure: tokens → data → figure → traces → layout → save;
+          no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Data is deterministic (hardcoded), but no random seed comment explaining
-          this choice
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only plotly.graph_objects imported and used
+        comment: Only os and plotly.graph_objects, both actively used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotly API
+        comment: Single-trace None-separator stem technique; strict=True in zip; clean
+          variable naming
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with CDN; no bare plot.png
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: None-separator single-trace stems, cliponaxis=False, hovertemplate,
+          include_plotlyjs=cdn all demonstrate library expertise
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Good use of Graph Objects for precise control; hover template is
-          nice; could leverage more plotly-specific features like animations or better
-          interactivity configuration
-  verdict: APPROVED
+        passed: true
+        comment: Interactive hover tooltips with formatted template and theme-styled
+          hover labels; HTML output. Basic but correctly executed Plotly interactivity.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns: []
+  dataprep: []
+  styling:
+  - edge-highlighting

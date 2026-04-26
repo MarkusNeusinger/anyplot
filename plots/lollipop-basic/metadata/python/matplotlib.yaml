@@ -1,158 +1,190 @@
 library: matplotlib
+language: python
 specification_id: lollipop-basic
 created: '2025-12-23T15:33:44Z'
-updated: '2025-12-23T15:35:50Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20464835291
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-04-26T12:50:01Z'
+generated_by: claude-opus
+workflow_run: 24956604377
+issue: 934
+python_version: 3.14.4
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Clean, minimalist aesthetic that exemplifies the lollipop chart concept
-  - Excellent color scheme with Python-themed blue/yellow that is colorblind-accessible
-  - Data properly sorted by value descending for optimal readability
-  - Text sizing perfectly calibrated for 4800x2700 output
-  - Good use of rotated labels to prevent overlap with 10 categories
+  - 'All critical issues from attempt 1 fully resolved: ANYPLOT_THEME handling, correct
+    output filename, brand green palette, correct anyplot.ai branding'
+  - 'Clean code structure: flat imports→data→plot→save with no functions or classes'
+  - Correct lollipop chart type using ax.vlines() for stems (idiomatic matplotlib
+    primitive) and ax.scatter() for circular markers
+  - 'Fully theme-adaptive chrome: INK and INK_SOFT tokens applied to title, axis labels,
+    tick labels, spines, and grid — both renders pass legibility check'
+  - Data sorted descending creates immediate ranking story; 10 categories within spec-recommended
+    5-20 range
+  - 'Appropriate element sizing: stems at linewidth=2.5, markers at s=300 with PAGE_BG
+    edge for visual definition'
   weaknesses:
-  - No random seed set (though data is deterministic)
-  - Grid styling could include minor gridlines for enhanced readability
-  image_description: The plot displays a lollipop chart showing product sales by category.
-    Ten categories are shown on the x-axis (Electronics, Clothing, Home & Garden,
-    Sports, Books, Toys, Beauty, Automotive, Food & Beverages, Office Supplies), sorted
-    in descending order by value. Blue vertical stems (#306998) extend from y=0 to
-    each data point, topped with yellow circular markers (#FFD43B) featuring blue
-    borders. Y-axis shows "Sales (thousands)" ranging from 0 to approximately 95.
-    X-axis labels are rotated 45 degrees for readability. The title "lollipop-basic
-    · matplotlib · pyplots.ai" appears at the top. A subtle dashed horizontal grid
-    (alpha=0.3) aids value reading. The layout is clean with good use of canvas space.
+  - 'DE-01 (5/8): Single-color treatment with no visual emphasis on notable data points
+    (e.g., top performer Electronics or lowest Office Supplies); no value labels on
+    markers forcing readers to read the y-axis for exact values'
+  - 'DE-03 (3/6): Sorted order aids ranking but no additional storytelling — no focal
+    point, no annotation, no color variation to guide the viewer''s eye to the key
+    insight'
+  - 'LM-02 (2/5): Uses ax.vlines() and set_axisbelow() which are good library-specific
+    choices, but no other distinctive matplotlib features leveraged'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot.ai light surface, not pure white
+      Chrome: Title "lollipop-basic · matplotlib · anyplot.ai" in dark ink (#1A1A17), clearly readable. Y-axis label "Sales (thousands)" and X-axis label "Product Category" in dark ink, well-sized at 20pt. Category tick labels rotated 45° in dark gray (#4A4A44 INK_SOFT), all readable without overlap. Subtle horizontal y-axis grid lines (solid, alpha=0.15) visible but not dominant. Top and right spines removed; left and bottom spines in dark gray.
+      Data: Brand green (#009E73) stems (vlines, linewidth=2.5) and circular markers (scatter, s=300) for all 10 categories, sorted descending from Electronics (87K) to Office Supplies (25K). Markers have a thin PAGE_BG edge for visual definition. y-axis starts at 0 correctly.
+      Legibility verdict: PASS — all text clearly readable against light background. No light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot.ai dark surface, not pure black
+      Chrome: Title in light off-white (#F0EFE8 INK), clearly readable. Axis labels in light off-white, visible. Tick labels in light gray (#B8B7B0 INK_SOFT), all readable against dark background. Subtle grid lines in light color (alpha=0.15), visible but not dominant. Spines in INK_SOFT light gray.
+      Data: Brand green (#009E73) stems and markers — identical colors to the light render. Only chrome elements flip between themes; data colors remain constant. No dark-on-dark failures observed.
+      Legibility verdict: PASS — all text clearly readable against dark background. No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all clearly
-          readable
+        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, tick
+          labels 16pt. Both light and dark renders fully readable.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; rotated x-labels prevent collision
+        comment: Category labels rotated 45° with ha=right, no overlapping elements
+          in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers (s=300) are appropriately sized for 10 data points; stems
-          clearly visible
+        comment: Stems at linewidth=2.5 and markers at s=300 with PAGE_BG edge — optimal
+          for 10 data points.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow combination is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization; slight extra whitespace on right side
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Product Category" and "Sales (thousands)" are descriptive with
-          units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Single color (#009E73) throughout, high contrast against both light
+          and dark backgrounds.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas, tight_layout applied, nothing cut off, balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle and helpful; no legend needed for this plot type
+        comment: 'Y-axis: ''Sales (thousands)'' with units; X-axis: ''Product Category''
+          descriptive.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series uses #009E73 (brand green). Light bg=#FAF8F1, dark
+          bg=#1A1A17. INK/INK_SOFT tokens applied to all chrome elements. Both renders
+          theme-correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean single-color minimalist design above default (4). PAGE_BG edge
+          on markers adds subtle definition. Sorted data improves readability. No
+          emphasis techniques or visual hierarchy to elevate further.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, y-axis-only solid grid at alpha=0.15, set_axisbelow
+          ensures grid stays behind data. Above default.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Descending sort creates clear ranking story. No value labels, no
+          emphasis on extremes, no focal point. Above default (2) due to sorted presentation.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct lollipop chart with stems and circular markers
+        comment: Correct vertical lollipop chart with vlines stems and scatter circular
+          markers.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on x-axis, values on y-axis as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Thin stems, circular markers, vertical orientation, sorted by value
-      - id: SC-04
-        name: Data Range
+        comment: Stems from baseline (ymin=0), circular markers, vertical orientation,
+          data sorted by value — all spec requirements met.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows 0 to max*1.1, all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Categories on x-axis, values on y-axis, all 10 categories displayed,
+          y-axis starts at 0.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A (no legend needed)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "lollipop-basic · matplotlib · pyplots.ai"'
+        comment: Title exactly 'lollipop-basic · matplotlib · anyplot.ai'. No legend
+          appropriate for single series.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows good range of values with clear ranking; could benefit from
-          more dramatic spread
+        comment: 'All lollipop features shown: baseline start, stems, circular markers,
+          sorted order, 10 categories (within 5-20 spec range).'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Product sales by category is a plausible real-world scenario
+        comment: Product sales by retail category — realistic, neutral business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values 25-87 thousands are realistic; units clearly specified
+        comment: Values 25-87 (thousands) plausible for retail category sales. Good
+          spread showing ranking variation.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -160,40 +192,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Flat structure: theme tokens → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Data is deterministic (hardcoded), but sorting uses np which is reproducible
+        comment: Hardcoded data is fully deterministic. No randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy used, both necessary
+        comment: os (THEME), matplotlib.pyplot, numpy — all imported are used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Clean Pythonic code, appropriate complexity, no fake UI elements.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png using current matplotlib API.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses vlines() and scatter() effectively; standard matplotlib usage
-          without advanced features
-  verdict: APPROVED
+        comment: ax.vlines() is the natural matplotlib primitive for lollipop stems.
+          ax.scatter(), set_axisbelow(), Axes methods throughout — idiomatic and correct.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: ax.vlines() and set_axisbelow() are good matplotlib-specific choices,
+          but no other library-distinctive features leveraged beyond the basics.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - explicit-figure
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - grid-styling
