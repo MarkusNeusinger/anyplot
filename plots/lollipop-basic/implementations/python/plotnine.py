@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 lollipop-basic: Basic Lollipop Chart
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: plotnine 0.15.3 | Python 3.14.4
+Quality: 77/100 | Updated: 2026-04-26
 """
 
 import pandas as pd
