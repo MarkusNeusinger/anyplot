@@ -1,159 +1,183 @@
 library: seaborn
+language: python
 specification_id: lollipop-basic
 created: '2025-12-23T15:13:08Z'
-updated: '2025-12-23T15:16:06Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20464349882
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-26T12:46:25Z'
+generated_by: claude-opus
+workflow_run: 24956781593
+issue: 934
+python_version: 3.14.4
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/seaborn/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - minimal-chrome
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Excellent visual clarity with well-sized text and elements
-  - Correct horizontal orientation choice given category label lengths
-  - Beautiful color scheme with high contrast (blue/yellow)
-  - Clean minimalist aesthetic with removed spines
-  - Data sorted by value for easy comparison
-  - Proper use of units in axis labels
+  - Perfect visual quality with all font sizes explicitly set (title=24pt, labels=20pt,
+    ticks=16pt) and all elements readable in both themes
+  - 'Full spec compliance with correct lollipop features: stems via hlines, circular
+    markers via scatterplot, sorted data, horizontal orientation'
+  - Excellent data quality with realistic neutral product sales scenario and meaningful
+    10-category spread (18K-85K)
+  - Clean idiomatic seaborn code using sns.set_theme() with comprehensive rc dict,
+    flat KISS structure, deterministic data
+  - 'Thoughtful design touches: PAGE_BG edgecolor on markers for crisp definition,
+    alpha=0.85 on stems for subtle depth, set_axisbelow for correct grid layering,
+    INK_SOFT spine colors'
   weaknesses:
-  - Could add subtle value annotations at the markers to enhance readability
-  - Relies heavily on matplotlib for stems rather than seaborn-specific features
-  image_description: The plot displays a horizontal lollipop chart showing product
-    sales by category. Blue horizontal stems (#306998) extend from the y-axis baseline
-    (0) to yellow circular markers (#FFD43B with blue edge) at each data value. The
-    chart shows 10 product categories sorted by sales value in ascending order from
-    bottom (Health at ~$18,000) to top (Electronics at ~$85,000). The title correctly
-    uses the format "lollipop-basic · seaborn · pyplots.ai". Axis labels are descriptive
-    ("Sales ($)" and "Product Category"), with subtle dashed grid lines on the x-axis.
-    Top and right spines are removed for a minimalist aesthetic.
+  - 'DE-01/DE-03 LOW: No visual focal point or emphasis — the top performer (Electronics)
+    is not distinguished from others; no size variation, color accent, or value labels
+    create a clear story'
+  - 'LM-02 LOW: Seaborn-distinctive features unused — the lollipop is essentially
+    matplotlib with seaborn styling; no hue encoding, FacetGrid, statistical layers,
+    or sns.despine()'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "lollipop-basic · seaborn · anyplot.ai" at 24pt in dark INK (#1A1A17), clearly readable. Axis labels "Product Category" and "Sales ($)" at 20pt in INK, clearly readable. Y-tick labels (category names) and x-tick labels (0, 20000, 40000, 60000, 80000) at 16pt in INK_SOFT (#4A4A44), clearly readable.
+      Data: 10 horizontal lollipops in brand green #009E73 (Okabe-Ito position 1). Stems are thin lines (linewidth=2.5, alpha=0.85) from baseline to marker. Circular markers (s=450) with PAGE_BG edgecolor give crisp definition against the off-white surface.
+      Legibility verdict: PASS — all text elements are dark on light background, no contrast failures
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title, axis labels, and tick labels all render in light ink (INK=#F0EFE8 and INK_SOFT=#B8B7B0 tokens), clearly readable against the dark background. No dark-on-dark failures detected — all text is visibly light-colored.
+      Data: Lollipop colors (stems and markers) are identical to the light render (#009E73) — only chrome has flipped. Markers with PAGE_BG (#1A1A17) edgecolor blend naturally with background, making the green dots crisp.
+      Legibility verdict: PASS — all text elements are light on dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: 'All text is clearly readable: title at 24pt, labels at 20pt, ticks
-          at 16pt'
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements
+        comment: 'All font sizes explicitly set: title=24pt, labels=20pt, ticks=16pt;
+          readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 categories with ample vertical spacing; no overlap in either render
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers (s=400) are appropriately sized and visible; stems are well-proportioned
+        comment: Stems linewidth=2.5 and markers s=450 well-proportioned; PAGE_BG
+          edgecolor adds definition
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue stems and yellow markers provide excellent contrast and are
-          colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Sales ($)" and "Product Category"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Single-series #009E73 is CVD-safe Okabe-Ito; good contrast on both
+          backgrounds'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills canvas well, balanced margins at 16:9
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Sales ($) with units; Product Category descriptive; title format
+          correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct; backgrounds #FAF8F1/#1A1A17 correct;
+          chrome tokens flip correctly'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: false
-        comment: Grid present and subtle (alpha=0.3), but no legend needed (-0 for
-          grid is fine, deducting 0)
+        comment: 'Above configured default: PAGE_BG edgecolor, alpha on stems show
+          extra thought. Not strong-design level — no focal emphasis or additional
+          visual hierarchy.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Spines removed, x-axis grid alpha=0.10, y-axis grid off, set_axisbelow,
+          spine colors — clearly above minimal defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data sorted ascending which aids readability, but no focal point,
+          no emphasis on top performer, no visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct lollipop chart with stems and circular markers
+        comment: 'Correct horizontal lollipop: hlines stems + scatterplot markers;
+          sorted by value'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on y-axis, values on x-axis (horizontal orientation)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Thin stems, circular markers, sorted by value, baseline at 0
-      - id: SC-04
-        name: Data Range
+        comment: Stems, circular markers, horizontal orientation, sorted data — all
+          present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible from 0 to max value
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Values on X, categories on Y; all 10 data points visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed (single data series)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "lollipop-basic · seaborn · pyplots.ai"'
+        comment: Title format correct; no legend appropriate for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows 10 categories with varying values demonstrating comparison;
-          could show more variation in step sizes
+        comment: 10 categories with clear spread (18K-85K) demonstrating ranking capability
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Product sales by category is a real, comprehensible business scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Sales values in thousands of dollars are realistic for category-level
-          data
+        comment: 'Product sales by category: real, neutral, recognizable business
+          scenario'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Dollar sales values 18K-85K plausible for mid-size retailer
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,42 +185,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: 'Flat script: imports → tokens → data → plot → style → save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Uses deterministic data (no random generation needed), but no explicit
-          seed for documentation consistency
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: matplotlib.pyplot, pandas, seaborn'
+        comment: 'All four imports used: os, matplotlib, pandas, seaborn'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Clean Pythonic code, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses sns.scatterplot for markers but relies on matplotlib for stems
-          (hlines); seaborn doesn't have a native lollipop chart function, so this
-          hybrid approach is acceptable but not showcasing seaborn's unique strengths
-  verdict: APPROVED
+        comment: sns.set_theme() with rc dict is idiomatic; sns.scatterplot() axes-level
+          preferred pattern; proper matplotlib combination for lollipop
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Only sns.set_theme() and sns.scatterplot() used; no hue encoding,
+          FacetGrid, statistical layers, or sns.despine() — mostly matplotlib primitives
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
