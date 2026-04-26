@@ -1,168 +1,187 @@
 library: highcharts
+language: python
 specification_id: lollipop-basic
 created: '2025-12-23T15:14:03Z'
-updated: '2025-12-23T15:18:24Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20464354657
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-26T13:20:40Z'
+generated_by: claude-opus
+workflow_run: 24957289019
+issue: 934
+python_version: 3.14.4
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/highcharts/plot.html
-quality_score: 92
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/highcharts/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent implementation of lollipop chart using clever combination of scatter
-    (dots) and column (stems) series
-  - Data is properly sorted in descending order for optimal readability as recommended
-    in spec
-  - Data labels positioned above markers provide clear value indication
-  - Clean, professional appearance with appropriate color choice
-  - Title follows the exact required format
-  - Good use of marginBottom to prevent x-axis label clipping
+  - 'Perfect theme-adaptive implementation: all chrome tokens correctly flip between
+    light/dark with zero dark-on-dark failures'
+  - 'Excellent visual quality: large explicit font sizes, no overlap, clearly visible
+    markers and stems'
+  - Column+scatter combination correctly implements the lollipop chart pattern
+  - Marker white-edge ring (lineWidth=5, lineColor=PAGE_BG) adds subtle definition
+    that adapts correctly per theme
+  - Realistic, neutral retail sales data with good value variation (30k-125k units)
   weaknesses:
-  - Grid/legend score slightly reduced as grid style could be more subtle (alpha lower)
-  - Layout has slight imbalance due to large bottom margin creating extra whitespace
-  - 'Could leverage more Highcharts interactive features (tooltips are disabled via
-    enableMouseTracking: False on stems)'
-  image_description: The plot displays a basic lollipop chart showing product sales
-    by category. Eight categories are displayed on the x-axis (Electronics, Clothing,
-    Home & Garden, Sports, Books, Toys, Jewelry, Automotive), with "Sales (Units)"
-    on the y-axis ranging from 0 to 9000. Each data point consists of a thin blue
-    vertical stem (#306998) extending from the baseline to a circular blue marker
-    at the top. Data labels are positioned above each marker showing exact values
-    (8,500 down to 1,800). The data is sorted in descending order from left to right.
-    The title "lollipop-basic · highcharts · pyplots.ai" appears at the top. The background
-    is white with subtle dashed gray grid lines.
+  - 'Title format deviates from required spec: uses ''Product Sales by Category ·
+    lollipop-basic · highcharts · anyplot.ai'' instead of ''lollipop-basic · highcharts
+    · anyplot.ai'''
+  - 'Design storytelling lacks emphasis: no focal point (e.g., top performer highlighted
+    differently), no reference line for average/median'
+  - Does not use highcharts_core Python API (Chart, HighchartsOptions); uses raw dict/JSON
+    injection instead
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "Product Sales by Category · lollipop-basic · highcharts · anyplot.ai" in dark INK (#1A1A17), axis labels in INK (#1A1A17), tick labels in INK_SOFT (#4A4A44) — all clearly readable
+      Data: Brand green #009E73 lollipop chart with 10 categories; thin stems (8px column series) and circular markers (radius 36); data labels above each marker in dark INK; sorted descending from Electronics (124,820) to Health (30,945)
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and axis labels correctly switch to #F0EFE8 (INK dark), tick labels to #B8B7B0 (INK_SOFT dark) — all clearly readable against dark background; no dark-on-dark failures detected
+      Data: Brand green #009E73 stems and markers are identical to light render — only chrome elements flipped
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 48px, axis labels at 36px, tick labels at 28px - all clearly
-          readable
+        comment: 'All font sizes explicitly set: title 56px, axis labels 36px, tick
+          labels 26-28px, data labels 24px. Readable in both renders.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all labels are well-spaced
+        comment: All 10 category labels, stems, markers, and data labels well-spaced
+          with no collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers (radius 20) and stems (width 4) are perfectly sized for 8
-          data points
+        comment: Markers (radius 36) and stems (8px columns) clearly visible and appropriately
+          sized for the 4800x2700 canvas.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color (#306998) is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good layout but slight margin imbalance, extra bottom margin (250)
-          creates some unused space
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has "Sales (Units)" with unit, X-axis has "Product Category"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Single-series brand green on both backgrounds; CVD-safe Okabe-Ito
+          palette.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills canvas well with balanced margins; marginBottom=220 prevents
+          x-axis label clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with dashed style, legend disabled (appropriate for
-          single series)
+        comment: Product Category (x) and Sales (Units) (y) are descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First and only series is brand green #009E73; backgrounds #FAF8F1
+          (light) / #1A1A17 (dark); all chrome uses correct theme tokens.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic defaults: custom Inter font, white ring on markers,
+          theme-adaptive palette, disabled legend/credits. Not yet strong design —
+          single color with no hierarchy.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: x-axis grid disabled, y-axis grid subtle (0.10
+          opacity), generous spacing, legend/credits removed.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Descending sort creates staircase narrative; data labels eliminate
+          axis-reading. No focal point emphasis, no reference lines.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct lollipop chart with stems and circular markers
+        comment: Correct lollipop chart using 8px column stems + scatter markers.
+          Vertical orientation, sorted descending.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, values on Y as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Thin stems, circular markers, vertical orientation, sorted data -
-          all present
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: thin stems from baseline, circular markers at
+          data values, vertical orientation, sorted by value.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis starts at 0, shows all data with appropriate range
-      - id: SC-05
-        name: Legend Accuracy
+        comment: Categories on x-axis, values on y-axis, all 10 points visible with
+          min=0 baseline.
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Legend disabled (appropriate for single-series lollipop)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "lollipop-basic · highcharts · pyplots.ai"'
+        max: 3
+        passed: false
+        comment: Title has extra descriptive prefix 'Product Sales by Category · '
+          before the spec-id, deviating from required format. Legend correctly disabled
+          for single series.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows descending sorted data with good variation, but all values
-          are positive (could show more diversity)
+        comment: 10 categories with significant value variation (30,945-124,820) demonstrating
+          sorting and visual comparison strength.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Product sales by category is a realistic e-commerce scenario
+        comment: Product sales by retail category is a real-world, neutral business
+          scenario with recognizable categories.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic for sales units, though the range (1,800-8,500)
-          could be slightly more varied
+        comment: Sales values in 30k-125k unit range are realistic for retail product
+          comparisons.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -170,42 +189,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → chart config → render → save'
+        comment: 'Flat linear flow: theme tokens -> data -> chart options -> CDN download
+          -> HTML -> Selenium render -> save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Uses deterministic data (good), but no explicit seed for any random
-          operations
+        max: 2
+        passed: true
+        comment: All data hardcoded/deterministic; no random generation needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All 8 imports actively used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Highcharts API
+        comment: Clean, Pythonic; CDN fallback with second URL is practical; json.dumps
+          for options serialization is clean.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves both plot-{THEME}.png and plot-{THEME}.html for both themes.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts scatter+column combination creatively for lollipop
-          effect, but could leverage more Highcharts-specific features like animations
-          or tooltips
-  verdict: APPROVED
+        comment: Bypasses highcharts_core Python API entirely (no Chart, HighchartsOptions,
+          add_series calls). Uses raw Python dict -> json.dumps -> JS injection. Functionally
+          correct but not idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Column+scatter combination for lollipop is Highcharts-specific. Marker
+          lineWidth/lineColor for white-edge ring is Highcharts API. Category axis
+          with formatted data labels is idiomatic.
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns: []
+  dataprep: []
+  styling:
+  - edge-highlighting
