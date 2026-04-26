@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 dumbbell-basic: Basic Dumbbell Chart
-Library: pygal | Python 3.13
-Quality: pending | Updated: 2026-04-26
+Library: pygal 3.1.0 | Python 3.14.4
+Quality: 87/100 | Updated: 2026-04-26
 """
 
 import os
