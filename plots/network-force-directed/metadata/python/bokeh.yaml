@@ -1,218 +1,254 @@
 library: bokeh
+language: python
 specification_id: network-force-directed
 created: '2025-12-23T15:14:44Z'
-updated: '2025-12-23T15:22:23Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20464358437
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - hover-tooltips
-  - custom-legend
-  - html-export
-  patterns:
-  - columndatasource
-  - data-generation
-  dataprep: []
-  styling:
-  - minimal-chrome
+updated: '2026-04-26T09:08:01Z'
+generated_by: claude-opus
+workflow_run: 24952655092
+issue: 990
+python_version: 3.14.4
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/bokeh/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent implementation of Fruchterman-Reingold force-directed layout algorithm
-    with proper physics simulation
-  - 'Good use of Bokeh interactive features: hover tooltips showing team, node ID,
-    and connections'
-  - Clear visual separation of three communities through both color and spatial positioning
-  - Node sizing scaled by degree effectively highlights hub nodes
-  - Proper colorblind-safe color palette with good contrast
+  - 'Perfect code quality: clean KISS structure, seed set, no dead imports, correct
+    output filenames'
+  - 'Correct Okabe-Ito palette with first community as #009E73; all theme chrome tokens
+    properly adaptive in both renders'
+  - Hub labeling and degree-scaled node sizing provide genuine visual hierarchy and
+    data storytelling
+  - 'Idiomatic Bokeh: HoverTool scoped to node renderers gives genuine interactivity
+    in HTML output'
+  - Realistic company-team social network data with F-R algorithm implemented from
+    scratch
   weaknesses:
-  - Legend placement could be integrated better within the plot area rather than added
-    as separate layout
-  - Some peripheral nodes appear quite small at the edges of communities
-  image_description: 'The plot shows a force-directed network graph with 50 nodes
-    divided into 3 communities: Engineering (coral/red), Marketing (yellow), and Sales
-    (blue). The three communities are visually separated across the canvas - Engineering
-    in the upper left area, Marketing in the lower middle area, and Sales in the right
-    area. Nodes are connected by light gray edges. Hub nodes (with 7+ connections)
-    are labeled with "Hub" text above them. Node sizes vary based on their degree
-    (number of connections). The title "network-force-directed · bokeh · pyplots.ai"
-    appears at the top. A legend labeled "Teams" showing the three community colors
-    is positioned in the upper left. The white background is clean with no axes or
-    grid lines. Bokeh toolbar icons are visible in the upper right corner.'
+  - Hub label font size is 16pt — below the 18pt minimum recommended for pixel-based
+    Bokeh at 4800px; increase to 18-20pt
+  - Edge thickness is uniform for all edges; bridge (inter-community) edges should
+    be visually distinct (slightly thicker or higher alpha) to highlight community
+    boundaries and fulfill the optional spec edge-weight feature
+  - 'Design Excellence gap: the layout lacks final publication-ready polish; edge-type
+    differentiation and slightly more refined typography would push DE-01 from 5 to
+    6'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "network-force-directed · bokeh · anyplot.ai" centered at top in dark ink (#1A1A17), clearly readable. Legend in top-left with "Teams" title and three entries (Engineering, Marketing, Sales) in INK_SOFT. Hub labels in dark ink above high-degree nodes — readable but at 16pt (slightly small). No axis labels (axis hidden, appropriate for network graph).
+      Data: Engineering nodes in #009E73 (green, Okabe-Ito pos 1) form right cluster; Marketing in #0072B2 (blue, pos 3) in upper-left; Sales in #D55E00 (orange, pos 2) in lower-middle. Edges as gray segments at 30% alpha. Node sizes vary 22-40px by degree.
+      Legibility verdict: PASS — all text readable; hub labels at 16pt are marginal but visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and hub labels in light cream (#F0EFE8), clearly readable against dark surface. Legend text in #B8B7B0. No dark-on-dark failures observed. All annotations visible.
+      Data: Node colors identical to light render — Engineering #009E73, Marketing #0072B2, Sales #D55E00. Edge segments slightly more visible against dark background. Data colors theme-invariant as required.
+      Legibility verdict: PASS — no dark-on-dark issues; all chrome elements correctly adapted
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt is clearly readable, legend text at 18pt and 20pt is
-          legible, "Hub" labels at 14pt are appropriately sized
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text; hub labels positioned above nodes with adequate
-          spacing
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Nodes are well-sized with degree-based scaling (15 + degree*3), slightly
-          smaller nodes could be a bit larger for optimal visibility at edges
+        comment: Title 36pt, legend 20-22pt, hub labels 16pt — all explicitly set.
+          Hub labels below 18pt recommendation for pixel-based Bokeh.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal hub-label crowding in dense Engineering cluster; no serious
+          collisions elsewhere.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Node sizes 22-40px scale with degree; edges line_width=2, alpha=0.3
+          visible but subtle.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Three distinct colors (blue, yellow, coral) are colorblind-safe and
-          clearly distinguishable
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space; communities are well-separated but slightly
-          clustered toward center-right, leaving some empty space in corners
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for network graphs; appropriately no axes shown (axes hidden
-          as expected)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito positions 1-3; CVD-safe, good luminance separation.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Network fills ~50-60% of 4800x2700 canvas; some blank areas on left/lower-right.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend is functional but positioned via `add_layout` to "left" placing
-          it in upper-left corner; it works but could integrate better with the plot
-          area
+        comment: Axis deliberately hidden (correct for network graph). Title follows
+          required format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Engineering #009E73 (pos 1), Marketing #D55E00 (pos 2), Sales #0072B2
+          (pos 3). Background #FAF8F1/#1A1A17. All chrome tokens adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above plain configured default: correct palette, degree-scaled sizing,
+          white-border halo, hub labels. Not quite strong design or publication polish.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes/grid/outline fully removed; edge alpha adds depth; node white-border
+          creates clean separation; legend carefully styled.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Community structure immediately legible; hub nodes draw eye through
+          size variation and labels; bridge connections visible. Could be stronger
+          with bridge edge differentiation.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct force-directed graph implementation using Fruchterman-Reingold
-          algorithm
+        comment: Correct force-directed graph with Fruchterman-Reingold physics simulation.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Nodes correctly positioned using force simulation; edges connect
-          source to target
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: 'All spec features present: nodes, edges, community coloring, node
-          size scaling by degree, hub labels'
-      - id: SC-04
-        name: Data Range
+        comment: Nodes, edges, degree-scaled node sizes, hub labels all present. Edge
+          thickness does not vary by weight (optional spec feature unimplemented).
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full network visible within canvas bounds (normalized to [0.05, 0.95])
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: F-R positions normalized to canvas range; community and edge mapping
+          correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows three teams with accurate colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "network-force-directed · bokeh · pyplots.ai"'
+        comment: Title format exact. Legend lists all three teams with correct color
+          coding.
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows community structure, hub nodes, varying node degrees, inter-community
-          bridges; could show more variation in community sizes
+        comment: 'Shows community structure, dense intra-community connections, sparse
+          cross-community bridges, hub nodes, degree variation. Missing: edge-weight
+          differentiation.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Social network with Engineering/Marketing/Sales teams is a real,
-          comprehensible scenario
+        comment: Company social network (Engineering, Marketing, Sales) — neutral,
+          real-world plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 50 nodes with 3 communities is appropriate; edge density (~30% intra-community)
-          creates readable structure
+        comment: 50 nodes (within 20-200 spec range), 30% intra-community probability,
+          8 bridge edges — all realistic.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Code follows linear structure but is quite long at 199 lines; could
-          be more concise
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: '`np.random.seed(42)` set at the beginning'
+        comment: 'Linear flow: imports → theme tokens → data → F-R layout → plot →
+          save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, bokeh.io, bokeh.models, bokeh.plotting)
+        comment: All five imports used; no dead imports.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. F-R implemented directly and readably. Per-community
+          renderer loop is idiomatic.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png AND plot.html (both are correct for Bokeh)
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, HoverTool with tooltips, Legend with custom
-          items, segment glyphs for edges, interactive toolbar; good use of Bokeh's
-          interactive features
-  verdict: APPROVED
+        comment: ColumnDataSource per community, HoverTool scoped to node renderers,
+          legend_label for automatic legend, segment/text glyphs — very idiomatic
+          Bokeh.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool with per-field tooltips (Team, Node ID, Connections) is
+          Bokeh-native; HTML output makes it genuinely interactive in browser.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - columndatasource
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - minimal-chrome

@@ -1,171 +1,183 @@
 library: altair
+language: python
 specification_id: network-force-directed
 created: '2025-12-23T15:14:29Z'
-updated: '2025-12-23T15:22:20Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20464358277
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-04-26T09:08:40Z'
+generated_by: claude-opus
+workflow_run: 24952745058
+issue: 990
+python_version: 3.14.4
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/altair/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent implementation of Fruchterman-Reingold force-directed layout algorithm
-    with proper attractive/repulsive forces and cooling
-  - Clear community structure visualization with three well-separated clusters
-  - Good use of node size encoding to show degree (connection count)
-  - Colorblind-safe palette with strong differentiation between Engineering (blue),
-    Marketing (yellow), and Sales (coral)
-  - Proper use of Altair layered composition to combine edges, nodes, and labels
-  - Tooltips provide useful community and degree information on hover
+  - Implements complete Fruchterman-Reingold algorithm from scratch with temperature
+    cooling and 200 iterations
+  - 'Perfect spec compliance: 50-node organizational network, degree-scaled nodes,
+    hub labels, bridge edges'
+  - Both themes fully adaptive with all chrome elements switching correctly between
+    light and dark
+  - Idiomatic Altair layer composition using detail and order encodings for edge rendering
   weaknesses:
-  - Some Hub labels overlap in dense areas (particularly in the Engineering cluster)
-  - Edge opacity is quite low (0.4) making some connections difficult to trace visually
-  - Generates unnecessary plot.html file in addition to plot.png
-  image_description: 'The plot displays a force-directed network graph with 50 nodes
-    arranged in three distinct community clusters. The nodes are colored by team membership:
-    blue (Engineering) on the right side, yellow (Marketing) in the lower-left area,
-    and coral/salmon red (Sales) in the upper-left area. Gray edges connect nodes
-    within and between communities. Node sizes vary based on degree (number of connections),
-    with larger nodes having more connections. High-degree nodes are labeled "Hub"
-    in dark text above them. The title "network-force-directed · altair · pyplots.ai"
-    appears at the top. A legend labeled "Teams" appears in the upper-right corner
-    with color-coded entries for each community. The layout clearly reveals the three-community
-    structure with visible bridge connections between clusters.'
+  - Hub label fontSize=15 is below the 18px minimum guideline for 4800x2700px output
+  - Hub 0, Hub 14, Hub 10 labels cluster in a tight area causing mild visual congestion
+  - Design storytelling lacks a clear focal point or emphasized insight beyond showing
+    community structure
+  - Altair interactive selection API unused - community click-highlight would strengthen
+    library-distinctive showcase
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "network-force-directed · altair · anyplot.ai" in dark #1A1A17 text at top-left (28px, readable); legend box in elevated #FFFDF6 background with INK_SOFT border; hub labels in dark INK color (15px, slightly small but readable)
+      Data: Three communities — Engineering #009E73 (teal), Marketing #D55E00 (vermillion), Sales #0072B2 (blue); nodes sized by degree (200-900 range); edges in #6B6A63 at 55% opacity; node strokes in page background color for definition
+      Legibility verdict: PASS (all text readable, hub labels slightly small at 15px)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light #F0EFE8 text (readable against dark background); legend box in elevated #242420 background with INK_SOFT border; hub labels in #F0EFE8 (theme-adaptive INK for dark) — all readable; no dark-on-dark issues detected
+      Data: Colors identical to light render — Engineering #009E73, Marketing #D55E00, Sales #0072B2; edges in #A8A79F (lighter gray for dark theme); node strokes flip to dark page background
+      Legibility verdict: PASS (all text readable against dark surface; hub labels remain legible with correct INK token)
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title is large and readable (~28pt), legend labels are clear. Hub
-          labels are slightly small but legible.
+        comment: Title 28px and legend 16-18px explicitly set; hub annotation labels
+          at 15px below 18px guideline
       - id: VQ-02
         name: No Overlap
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Minor overlap of some Hub labels in the dense Engineering cluster
-          on the right side.
+        comment: Hub 0, Hub 14, Hub 10 labels cluster in tight area on right side;
+          readable but slightly crowded
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Node sizes are well-adapted with visible variation by degree. Alpha
-          0.85 provides good visibility with subtle transparency.
+        comment: Nodes sized by degree with 200-900 scale range; edges at 55% opacity;
+          node strokes for definition; all elements clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, and coral are colorblind-safe and highly distinguishable.
-          Excellent contrast.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization, three clusters well-distributed across the
-          space. Plot fills ~60% of canvas.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for network graph (axes hidden appropriately).
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette, CVD-safe, three communities distinguishable without
+          relying on hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 4800x2700px canvas used well; FR physics places communities toward
+          edges leaving some central void
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: 'Legend placed well in upper-right, but no grid needed for network
-          graphs. However, the edge color is very light (gray #AAAAAA with 0.4 opacity)
-          making some edges hard to trace.'
+        comment: Title format correct; no axis labels appropriate for network graph;
+          legend titled Team
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Engineering #009E73 first series; Marketing #D55E00, Sales #0072B2
+          follow Okabe-Ito order; backgrounds correct; both renders fully theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: degree-based node sizing, page-bg node strokes, hub
+          labels, edge opacity; not at FiveThirtyEight publication level'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes fully hidden, no unnecessary chrome, legend with rounded corners
+          and padding, edge opacity adds subtlety
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Community color-coding and hub labels direct attention but no singular
+          focal point or guiding narrative emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct force-directed graph visualization.
+        comment: Fruchterman-Reingold physics simulation with repulsive/attractive
+          forces and temperature cooling
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Node positions correctly computed via Fruchterman-Reingold algorithm.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has nodes, edges, community coloring, node size by degree, hub labels.
-      - id: SC-04
-        name: Data Range
+        comment: Node size by degree, community structure, bridge edges, hub labels
+          for top-4 nodes
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 50 nodes and edges visible within the canvas.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y from FR layout, color encodes community, size encodes degree;
+          all 50 nodes visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows Engineering, Marketing, Sales with matching
-          colors.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "network-force-directed · altair · pyplots.ai" format.
+        comment: Title format correct; legend labels match data communities
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows communities, hub nodes, varying degrees, bridge connections.
-          Could have shown weighted edges for complete coverage.
+        comment: Shows community structure, hub centrality, inter-community bridges,
+          degree variation, connection density differences
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Social network with Engineering, Marketing, Sales teams is a realistic
-          organizational scenario.
+        comment: Organizational network Engineering/Marketing/Sales - realistic, neutral,
+          comprehensible business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 50 nodes is appropriate. Intra-community edge probability of 0.3
-          is reasonable. Bridge edges are manually defined but sparse, which is realistic.
+        comment: 50 nodes, ~140 intra-community edges at 30% density plus 8 bridge
+          edges; realistic for org/social network
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,44 +185,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → seed → data generation → force layout → Altair
-          chart → save.'
+        comment: 'Flat script: imports -> data -> FR algorithm -> chart layers ->
+          save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses `np.random.seed(42)`.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only uses altair, numpy, pandas - all necessary.
+        comment: os, altair, numpy, pandas - all actively used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; FR algorithm inline with appropriate complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png (correct) but also saves plot.html. Minor deduction
-          for unnecessary output.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: detail=edge_id:N for edge grouping, order=order:O for line direction,
+          layer composition via + operator - idiomatic Altair grammar-of-graphics
+          patterns
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Altair's layered composition (edges + nodes + labels), mark_circle
-          with encoding, Color scale with domain/range, tooltips. However, doesn't
-          use Altair's more distinctive features like selections for interactivity
-          or compound marks.
-  verdict: APPROVED
+        comment: detail encoding and declarative layer composition are library-specific;
+          tooltips and HTML export leverage interactivity; Altair selection API unused
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome

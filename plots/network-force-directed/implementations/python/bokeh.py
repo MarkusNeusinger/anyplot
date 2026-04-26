@@ -1,140 +1,131 @@
-""" pyplots.ai
+""" anyplot.ai
 network-force-directed: Force-Directed Graph
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: bokeh 3.9.0 | Python 3.14.4
+Quality: 85/100 | Updated: 2026-04-26
 """
+
+import os
 
 import numpy as np
 from bokeh.io import export_png, output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, Legend, LegendItem
+from bokeh.models import ColumnDataSource, HoverTool
 from bokeh.plotting import figure
 
 
-# Set seed for reproducibility
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Data — A 50-node social network with 3 communities
 np.random.seed(42)
 
-# Data: A social network with 50 nodes in 3 communities
-# Demonstrates force-directed layout with clear community structure
-nodes = []
-edges = []
-
-# Create 3 communities
-community_sizes = [18, 17, 15]  # Total: 50 nodes
+community_sizes = [18, 17, 15]
 community_names = ["Engineering", "Marketing", "Sales"]
-node_id = 0
+# Okabe-Ito positions 1, 2, 3
+community_colors = ["#009E73", "#D55E00", "#0072B2"]
 
+nodes = []
+node_id = 0
 for comm_idx, size in enumerate(community_sizes):
     for _ in range(size):
         nodes.append({"id": node_id, "community": comm_idx})
         node_id += 1
 
-# Intra-community edges (dense connections within communities)
-# Engineering: nodes 0-17
-for i in range(18):
-    for j in range(i + 1, 18):
-        if np.random.random() < 0.3:
-            edges.append((i, j))
+# Intra-community edges (dense within each team)
+edges = []
+boundaries = [0, 18, 35, 50]
+for c in range(3):
+    start, end = boundaries[c], boundaries[c + 1]
+    for i in range(start, end):
+        for j in range(i + 1, end):
+            if np.random.random() < 0.3:
+                edges.append((i, j))
 
-# Marketing: nodes 18-34
-for i in range(18, 35):
-    for j in range(i + 1, 35):
-        if np.random.random() < 0.3:
-            edges.append((i, j))
-
-# Sales: nodes 35-49
-for i in range(35, 50):
-    for j in range(i + 1, 50):
-        if np.random.random() < 0.3:
-            edges.append((i, j))
-
-# Inter-community edges (sparse bridges between communities)
+# Inter-community bridges (sparse)
 bridge_edges = [(0, 18), (5, 20), (10, 25), (18, 35), (22, 40), (30, 45), (8, 38), (15, 48)]
 edges.extend(bridge_edges)
 
-# Force-directed layout algorithm (Fruchterman-Reingold)
+# Force-directed layout (Fruchterman-Reingold)
 n = len(nodes)
-positions = np.random.rand(n, 2) * 2 - 1  # Initial random positions
-
-# Optimal distance parameter
+positions = np.random.rand(n, 2) * 2 - 1
 k = 0.5
 iterations = 200
 
 for iteration in range(iterations):
     displacement = np.zeros((n, 2))
 
-    # Repulsive forces between all node pairs (nodes push apart)
     for i in range(n):
         for j in range(i + 1, n):
             diff = positions[i] - positions[j]
             dist = max(np.linalg.norm(diff), 0.01)
-            repulsive_force = (k * k / dist) * (diff / dist)
-            displacement[i] += repulsive_force
-            displacement[j] -= repulsive_force
+            repulsive = (k * k / dist) * (diff / dist)
+            displacement[i] += repulsive
+            displacement[j] -= repulsive
 
-    # Attractive forces along edges (connected nodes pull together)
     for src, tgt in edges:
         diff = positions[src] - positions[tgt]
         dist = max(np.linalg.norm(diff), 0.01)
-        attractive_force = (dist * dist / k) * (diff / dist)
-        displacement[src] -= attractive_force
-        displacement[tgt] += attractive_force
+        attractive = (dist * dist / k) * (diff / dist)
+        displacement[src] -= attractive
+        displacement[tgt] += attractive
 
-    # Apply displacement with cooling (decreasing temperature)
     temperature = 1 - iteration / iterations
     for i in range(n):
-        disp_norm = np.linalg.norm(displacement[i])
-        if disp_norm > 0:
-            # Limit movement by temperature
-            positions[i] += (displacement[i] / disp_norm) * min(disp_norm, 0.15 * temperature)
+        d = np.linalg.norm(displacement[i])
+        if d > 0:
+            positions[i] += (displacement[i] / d) * min(d, 0.15 * temperature)
 
-# Normalize positions to [0.05, 0.95] range
+# Normalize positions to [0.05, 0.95]
 pos_min = positions.min(axis=0)
 pos_max = positions.max(axis=0)
 positions = (positions - pos_min) / (pos_max - pos_min + 1e-6) * 0.9 + 0.05
 pos = {node["id"]: positions[i] for i, node in enumerate(nodes)}
 
-# Calculate node degrees (number of connections)
+# Node degrees
 degrees = {node["id"]: 0 for node in nodes}
 for src, tgt in edges:
     degrees[src] += 1
     degrees[tgt] += 1
 
-# Community colors (Python Blue and Yellow first, then accessible red)
-community_colors = ["#306998", "#FFD43B", "#FF6B6B"]
-
-# Create figure (4800x2700 px)
+# Plot
 p = figure(
     width=4800,
     height=2700,
-    title="network-force-directed · bokeh · pyplots.ai",
+    title="network-force-directed · bokeh · anyplot.ai",
     x_range=(-0.05, 1.05),
     y_range=(-0.05, 1.05),
     tools="pan,wheel_zoom,box_zoom,reset,save",
+    background_fill_color=PAGE_BG,
+    border_fill_color=PAGE_BG,
 )
 
-# Style the figure
-p.title.text_font_size = "28pt"
+p.title.text_font_size = "36pt"
+p.title.text_color = INK
+p.title.align = "center"
 p.axis.visible = False
 p.grid.visible = False
 p.outline_line_color = None
-p.background_fill_color = "white"
 
-# Draw edges as lines
+# Edges
 edge_x0 = [pos[src][0] for src, tgt in edges]
 edge_y0 = [pos[src][1] for src, tgt in edges]
 edge_x1 = [pos[tgt][0] for src, tgt in edges]
 edge_y1 = [pos[tgt][1] for src, tgt in edges]
 
 edge_source = ColumnDataSource(data={"x0": edge_x0, "y0": edge_y0, "x1": edge_x1, "y1": edge_y1})
-p.segment(x0="x0", y0="y0", x1="x1", y1="y1", source=edge_source, line_color="#AAAAAA", line_alpha=0.4, line_width=2)
+p.segment(x0="x0", y0="y0", x1="x1", y1="y1", source=edge_source, line_color=INK_SOFT, line_alpha=0.30, line_width=2)
 
-# Draw nodes by community for legend
-renderers = []
-for comm_idx, (color, name) in enumerate(zip(community_colors, community_names, strict=True)):
+# Nodes — one renderer per community so the legend lives inside the plot frame
+node_renderers = []
+for comm_idx, color, name in zip(range(3), community_colors, community_names, strict=True):
     comm_nodes = [node for node in nodes if node["community"] == comm_idx]
     x_vals = [pos[node["id"]][0] for node in comm_nodes]
     y_vals = [pos[node["id"]][1] for node in comm_nodes]
-    size_vals = [15 + degrees[node["id"]] * 3 for node in comm_nodes]  # Scale size by degree
+    # Wider base size + degree boost so peripheral nodes remain visible
+    size_vals = [22 + degrees[node["id"]] * 3 for node in comm_nodes]
     degree_vals = [degrees[node["id"]] for node in comm_nodes]
     node_ids = [node["id"] for node in comm_nodes]
 
@@ -150,27 +141,26 @@ for comm_idx, (color, name) in enumerate(zip(community_colors, community_names, 
     )
 
     renderer = p.scatter(
-        x="x", y="y", size="size", source=source, fill_color=color, fill_alpha=0.85, line_color="#333333", line_width=2
+        x="x",
+        y="y",
+        size="size",
+        source=source,
+        fill_color=color,
+        fill_alpha=0.9,
+        line_color=PAGE_BG,
+        line_width=2,
+        legend_label=name,
     )
-    renderers.append((name, [renderer]))
+    node_renderers.append(renderer)
 
-# Add legend
-legend = Legend(
-    items=[LegendItem(label=name, renderers=r) for name, r in renderers], location="top_left", title="Teams"
+# Hover tool — only on nodes
+p.add_tools(
+    HoverTool(
+        renderers=node_renderers, tooltips=[("Team", "@team"), ("Node ID", "@node_id"), ("Connections", "@degree")]
+    )
 )
-legend.label_text_font_size = "18pt"
-legend.title_text_font_size = "20pt"
-legend.background_fill_alpha = 0.9
-p.add_layout(legend, "left")
 
-# Add hover tool
-hover = HoverTool(
-    tooltips=[("Team", "@team"), ("Node ID", "@node_id"), ("Connections", "@degree")],
-    renderers=[r for _, rlist in renderers for r in rlist],
-)
-p.add_tools(hover)
-
-# Label hub nodes (high degree)
+# Hub labels — bold "Hub" text above high-degree nodes
 hub_x = []
 hub_y = []
 for node in nodes:
@@ -185,14 +175,31 @@ if hub_x:
         y="y",
         text="text",
         source=hub_source,
-        text_font_size="14pt",
+        text_font_size="16pt",
         text_font_style="bold",
         text_align="center",
         text_baseline="bottom",
-        text_color="#333333",
+        text_color=INK,
     )
 
-# Save outputs
-export_png(p, filename="plot.png")
-output_file("plot.html")
+# Legend — inside the plot frame, top-left
+p.legend.title = "Teams"
+p.legend.location = "top_left"
+p.legend.label_text_font_size = "20pt"
+p.legend.title_text_font_size = "22pt"
+p.legend.label_text_color = INK_SOFT
+p.legend.title_text_color = INK
+p.legend.background_fill_color = ELEVATED_BG
+p.legend.background_fill_alpha = 0.95
+p.legend.border_line_color = INK_SOFT
+p.legend.border_line_alpha = 0.4
+p.legend.spacing = 10
+p.legend.padding = 18
+p.legend.margin = 24
+p.legend.glyph_height = 28
+p.legend.glyph_width = 28
+
+# Save
+export_png(p, filename=f"plot-{THEME}.png")
+output_file(f"plot-{THEME}.html", title="network-force-directed · bokeh · anyplot.ai")
 save(p)
