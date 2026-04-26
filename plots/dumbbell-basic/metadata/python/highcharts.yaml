@@ -1,169 +1,185 @@
 library: highcharts
+language: python
 specification_id: dumbbell-basic
 created: '2025-12-23T13:02:39Z'
-updated: '2025-12-23T13:33:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461376458
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-26T02:14:03Z'
+generated_by: claude-opus
+workflow_run: 24945414160
+issue: 945
+python_version: 3.14.4
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-    - selenium
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/highcharts/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent use of Highcharts native dumbbell chart type with proper module loading
-  - Clean horizontal orientation with categories on y-axis as recommended by spec
-  - Data sorted by change magnitude to reveal patterns (spec suggestion implemented)
-  - Colorblind-safe blue/yellow palette with good contrast
-  - Data labels on dots make values immediately readable
-  - Realistic employee satisfaction scenario with appropriate department names
-  - Proper inline script embedding for headless Chrome compatibility
-  - Both PNG and HTML outputs generated for static and interactive viewing
+  - Correct use of native Highcharts dumbbell series type (requires highcharts-more
+    + dumbbell module) with horizontal inversion — no simulation
+  - 'Full theme-adaptive chrome: all six tokens (PAGE_BG, ELEVATED_BG, INK, INK_SOFT,
+    INK_MUTED, GRID, CONNECTOR) correctly wired to ANYPLOT_THEME; both renders pass
+    the theme-readability check'
+  - Data sorted by improvement (descending) adds genuine storytelling value; mix of
+    gains and declines demonstrates full feature range of dumbbell charts
+  - Clever dummy-scatter series trick to give Before/After legend entries without
+    overriding dumbbell series coloring
+  - 'CDP Page.captureScreenshot with captureBeyondViewport: true correctly prevents
+    bottom clipping at 4800x2700'
   weaknesses:
-  - All changes are positive (no negative changes shown) - adding one or two departments
-    with decreased satisfaction would demonstrate more feature coverage
-  - Legend text could be more descriptive with colors mentioned
-  - Y-axis title present but x-axis title is null - could benefit from clearer axis
-    labeling
-  image_description: 'The plot displays a horizontal dumbbell chart showing employee
-    satisfaction scores before and after policy changes across 8 departments. Each
-    department has two dots connected by a thin gray line: a blue dot (#306998) representing
-    the "before" score and a yellow dot (#FFD43B) representing the "after" score.
-    Data labels display the numeric values on each dot. Departments are listed on
-    the y-axis (Customer Support, Operations, Research & Development, Engineering,
-    Sales, Marketing, Human Resources, Finance) and sorted by the magnitude of change
-    in descending order. The title reads "Employee Satisfaction Before/After · dumbbell-basic
-    · highcharts · pyplots.ai" with a subtitle "Satisfaction scores before and after
-    policy changes by department". A legend in the top-right shows "Before → After".
-    The x-axis ranges from approximately 40 to 95 representing satisfaction scores.'
+  - Tooltip pointFormat uses {point.low} as Before and {point.high} as After; for
+    declining departments (IT Support, Legal) low is the After score and high is the
+    Before score — tooltip labels are inverted; fix by storing explicit before/after
+    as custom point properties and referencing {point.before}/{point.after} in pointFormat
+  - Data labels at 28px are slightly undersized relative to radius-24 markers; increasing
+    to 34-36px would improve scannability at full resolution
+  - 'Design excellence stays at default level: no reference line (e.g. zero-change
+    vertical), no color differentiation for positive vs. negative changes beyond dot
+    position, no annotation highlighting the largest gain or decline'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "dumbbell-basic · highcharts · anyplot.ai" in dark INK (#1A1A17) at 56px — readable. Subtitle at 30px in INK_SOFT — readable. Category labels (department names) on Y-axis at 32px in INK (#1A1A17) — readable. X-axis tick labels (30–100 range) at 30px in INK_SOFT — readable. Data labels at 28px in INK_SOFT flanking markers — readable but slightly small.
+      Data: First series (Before) = #009E73 green markers; second series (After) = #D55E00 orange markers. Connectors are semi-transparent gray (CONNECTOR token). Markers at radius 24 are clearly visible.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light #F0EFE8 — clearly readable against dark background. Subtitle in #B8B7B0 — readable. Category labels in #F0EFE8 (INK token flipped) — readable, no dark-on-dark issue. Tick labels in #B8B7B0 (INK_SOFT) — readable. Data labels in #B8B7B0 — readable. Legend background uses elevated #242420 with light text — readable.
+      Data: Colors identical to light render — #009E73 green Before dots, #D55E00 orange After dots. Connectors use CONNECTOR token (rgba(240,239,232,0.40)) — subtle and visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 52px, labels at 32px, axis labels at 28px, all clearly readable
+        comment: All text readable in both themes; data labels at 28px slightly small
+          relative to radius-24 markers but legible
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements, good spacing between categories
+        comment: No label collisions; minor crowding risk if axis range extended further
+          right
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers radius 18 is appropriate, connector width 5 is visible but
-          not overpowering
+        comment: Radius-24 markers and 6px connectors clearly prominent at 4800x2700
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow colorblind-safe palette, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good proportions but large left margin for category labels could
-          be reduced slightly
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Y-axis has "Satisfaction Score" but no units, categories are self-explanatory
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: 'Grid subtle with dashed style and #e0e0e0 color, legend well positioned
-          but text slightly small relative to other elements'
-    spec_compliance:
-      score: 24
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct dumbbell chart type using Highcharts dumbbell module
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on y-axis, values on x-axis (horizontal orientation as
-          spec recommends)
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Distinct colors for start/end, sorting by difference, thin connecting
-          line, all present
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Axis range 40-95 shows all data points with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
         score: 2
         max: 2
         passed: true
-        comment: '"Before → After" accurately describes the data'
-      - id: SC-06
-        name: Title Format
-        score: 1
+        comment: Okabe-Ito positions 1 & 2 are CVD-safe; no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Generous left margin for categories, good proportions, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: 'Uses format but slightly different: "Employee Satisfaction Before/After
-          · dumbbell-basic · highcharts · pyplots.ai" (should be simpler spec-id format
-          but includes context)'
-    data_quality:
-      score: 19
+        comment: Satisfaction Score (0-100) descriptive with units; categories self-explaining
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1/#1A1A17
+          correct in both renders'
+    design_excellence:
+      score: 11
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
         max: 8
+        passed: false
+        comment: Correct palette and clean layout; sorted order reveals pattern; dummy
+          scatter legend trick is clean; overall still standard Highcharts dumbbell
+          styling without exceptional creative choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtle semi-transparent CONNECTOR token, Y-axis grid only with opacity,
+          good whitespace; no spine manipulation beyond defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
         passed: true
-        comment: Shows before/after comparison with varying gaps, all positive changes
-          (no negative changes shown which would add variety)
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Employee satisfaction scores is a real, comprehensible scenario matching
-          spec example
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: Sorted descending by improvement tells story clearly; subtitle gives
+          domain context; data labels assist reading
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Scores 45-88 are realistic satisfaction percentages
+        comment: 'Native Highcharts dumbbell type with inverted: true for correct
+          horizontal orientation'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Two colored dots per category, connecting line, category labels,
+          data labels present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on Y-axis, satisfaction values on X-axis; both endpoints
+          shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title dumbbell-basic · highcharts · anyplot.ai; legend Before/After
+          with correct colors
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 departments; mix of strong gains, modest gains, and two declines;
+          full range of dumbbell chart behavior
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Employee satisfaction 0-100 scale is real-world plausible; before/after
+          policy changes is neutral and common
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values range 45-88; Y-axis 35-95 sensibly frames the data
     code_quality:
       score: 9
       max: 10
@@ -173,40 +189,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → config → render → save'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Data is deterministic (hardcoded values)
+        comment: All data hardcoded; deterministic
       - id: CQ-03
         name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports actually used (base64 for CDP decode, json for chart
+          options, etc.)
+      - id: CQ-04
+        name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: All imports used, but json import could be from standard position
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Highcharts API
+        comment: Per-point color override for declining departments is clever; but
+          tooltip pointFormat uses {point.low} as Before and {point.high} as After
+          — inverted for declining depts where low=After score
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; CDP Page.captureScreenshot
+          prevents viewport clipping
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses Highcharts dumbbell module with inverted chart for horizontal layout,
-          data labels, custom marker styling
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Good use but could leverage more interactive features in HTML output
+        comment: Correct use of dumbbell module with highcharts-more dependency; raw
+          JSON options is valid and clean; CDP screenshot is advanced technique
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses native dumbbell series, interactive tooltip, per-point lowColor/color
+          overrides for declining departments, inverted axis — all library-specific;
+          could go further with responsive rules or custom renderer annotations
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  - hover-tooltips
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
