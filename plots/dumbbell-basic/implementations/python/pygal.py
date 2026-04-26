@@ -1,85 +1,122 @@
-""" pyplots.ai
+""" anyplot.ai
 dumbbell-basic: Basic Dumbbell Chart
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 58/100 | Created: 2025-12-23
+Library: pygal 3.1.0 | Python 3.14.4
+Quality: 87/100 | Updated: 2026-04-26
 """
 
-import pygal
-from pygal.style import Style
+import os
+import sys
+from pathlib import Path
 
 
-# Data - Employee satisfaction scores before and after policy changes
-# Includes positive changes, no change, and slight decrease to demonstrate full capability
-categories = ["Engineering", "Marketing", "Sales", "HR", "Finance", "Operations", "Customer Support", "Product"]
-before = [65, 58, 72, 45, 71, 52, 70, 70]
-after = [82, 75, 78, 72, 65, 71, 70, 85]  # Finance decreased (-6), Customer Support unchanged (0)
+# Remove script directory from path to avoid name collision with the pygal package
+_script_dir = str(Path(__file__).parent)
+sys.path = [p for p in sys.path if p != _script_dir]
 
-# Sort by difference (improvement) for better pattern visibility
-differences = [a - b for a, b in zip(after, before, strict=True)]
-sorted_data = sorted(zip(categories, before, after, differences, strict=True), key=lambda x: x[3], reverse=True)
-categories = [item[0] for item in sorted_data]
-before = [item[1] for item in sorted_data]
-after = [item[2] for item in sorted_data]
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
 
-# Number of categories
+
+# Theme-adaptive chrome tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito data colors (theme-independent)
+BEFORE = "#009E73"  # position 1 — brand
+AFTER = "#D55E00"  # position 2
+CONNECTOR = INK_SOFT  # neutral chrome that adapts to theme
+
+# Data — Employee satisfaction scores before and after policy changes.
+# Hand-picked values include one regression (Legal) to exercise full data range.
+categories = [
+    "Engineering",
+    "Sales",
+    "Marketing",
+    "Customer Support",
+    "Finance",
+    "Human Resources",
+    "Operations",
+    "Product",
+    "Legal",
+]
+before = [62, 71, 58, 45, 68, 52, 64, 73, 70]
+after = [78, 82, 75, 69, 74, 71, 79, 85, 67]
+
+# Sort by improvement (largest at top)
+data = sorted(zip(categories, before, after, strict=True), key=lambda x: x[2] - x[1], reverse=True)
+categories = [d[0] for d in data]
+before = [d[1] for d in data]
+after = [d[2] for d in data]
 n = len(categories)
 
-# Custom style for 4800x2700 canvas
-# Colors: gray for connecting lines (8 series), then blue for before, yellow for after
-connector_colors = tuple(["#888888"] * n)  # Gray for each connector line
+# Y positions: top row = biggest improvement (first sorted item)
+y_positions = list(range(n, 0, -1))
+
+# Series colors map 1:1 to the order series are added below:
+#   n connector series (drawn first, underneath) then 2 dot series.
+colors_tuple = (CONNECTOR,) * n + (BEFORE, AFTER)
+
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#AAAAAA",
-    guide_stroke_color="rgba(200, 200, 200, 0.3)",  # Subtle grid with low opacity
-    guide_stroke_dasharray="5,5",  # Dashed grid for subtlety
-    colors=connector_colors + ("#306998", "#FFD43B"),  # Gray connectors, Blue before, Yellow after
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=42,
-    legend_font_size=56,
-    value_font_size=36,
-    value_label_font_size=36,
-    stroke_width=5,  # Default stroke width for connecting lines
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=colors_tuple,
+    title_font_size=32,
+    label_font_size=22,
+    major_label_font_size=20,
+    legend_font_size=20,
+    value_font_size=16,
+    stroke_width=4,
+    opacity=1.0,
+    opacity_hover=0.85,
 )
 
-# Create XY chart for dumbbell visualization
 chart = pygal.XY(
     width=4800,
     height=2700,
-    title="dumbbell-basic · pygal · pyplots.ai",
-    x_title="Satisfaction Score (%)",
     style=custom_style,
+    title="Employee Satisfaction · dumbbell-basic · pygal · anyplot.ai",
+    x_title="Satisfaction Score (out of 100)",
+    y_title="Department",
     show_legend=True,
     legend_at_bottom=True,
-    legend_box_size=28,
-    dots_size=20,
-    stroke=True,  # Enable stroke globally
-    show_y_guides=True,
-    show_x_guides=True,
+    legend_at_bottom_columns=2,
+    legend_box_size=36,
     margin=80,
-    margin_bottom=120,
-    xrange=(30, 100),
+    show_x_guides=True,
+    show_y_guides=False,
+    xrange=(35, 95),
     range=(0, n + 1),
-    y_labels=[{"label": cat, "value": n - i} for i, cat in enumerate(categories)],
+    y_labels=[{"label": cat, "value": pos} for cat, pos in zip(categories, y_positions, strict=True)],
+    truncate_legend=-1,
+    truncate_label=-1,
+    dots_size=22,
+    stroke=False,
 )
 
-# Add connecting lines (gray) - each dumbbell gets its own series with stroke enabled
-for i, (_cat, b, a) in enumerate(zip(categories, before, after, strict=True)):
-    y_pos = n - i
-    # Use explicit stroke and minimal dot size for connecting lines
-    chart.add(None, [(b, y_pos), (a, y_pos)], stroke=True, show_dots=False)
+# Connector lines first so they sit underneath the dots.
+# title=None suppresses the legend entry while still rendering the series.
+for b, a, pos in zip(before, after, y_positions, strict=True):
+    chart.add(None, [(b, pos), (a, pos)], stroke=True, show_dots=False, stroke_style={"width": 5, "linecap": "round"})
 
-# Add "Before" dots (Python Blue) - circles without connecting stroke
-before_points = [(b, n - i) for i, b in enumerate(before)]
-chart.add("Before Policy Change", before_points, dots_size=25, stroke=False)
+# Before dots — Okabe-Ito green
+before_points = [
+    {"value": (b, pos), "label": f"{cat}: {b}"} for cat, b, pos in zip(categories, before, y_positions, strict=True)
+]
+chart.add("Before policy change", before_points, stroke=False, dots_size=24)
 
-# Add "After" dots (Python Yellow) - circles without connecting stroke
-after_points = [(a, n - i) for i, a in enumerate(after)]
-chart.add("After Policy Change", after_points, dots_size=25, stroke=False)
+# After dots — Okabe-Ito vermillion
+after_points = [
+    {"value": (a, pos), "label": f"{cat}: {a}"} for cat, a, pos in zip(categories, after, y_positions, strict=True)
+]
+chart.add("After policy change", after_points, stroke=False, dots_size=24)
 
 # Save outputs
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
