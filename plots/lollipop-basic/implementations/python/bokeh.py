@@ -1,15 +1,25 @@
-""" pyplots.ai
+""" anyplot.ai
 lollipop-basic: Basic Lollipop Chart
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: bokeh 3.9.0 | Python 3.14.4
+Quality: 85/100 | Updated: 2026-04-26
 """
+
+import os
 
 from bokeh.io import export_png, output_file, save
 from bokeh.models import ColumnDataSource, NumeralTickFormatter
 from bokeh.plotting import figure
 
 
-# Data - Product sales by category, sorted by value
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"
+
+# Data — product sales by category (pre-sorted descending)
 categories = [
     "Electronics",
     "Clothing",
@@ -22,55 +32,60 @@ categories = [
     "Automotive",
     "Office",
 ]
-values = [85000, 72000, 58000, 45000, 42000, 38000, 35000, 28000, 22000, 15000]
+values = [85000, 72000, 61000, 53000, 47000, 39000, 33000, 28000, 22000, 15000]
 
-# Sort by value (descending) for better readability
-sorted_pairs = sorted(zip(categories, values, strict=True), key=lambda x: x[1], reverse=True)
-categories = [p[0] for p in sorted_pairs]
-values = [p[1] for p in sorted_pairs]
-
-# Create source
 source = ColumnDataSource(data={"categories": categories, "values": values, "zeros": [0] * len(values)})
 
-# Create figure with categorical x-axis
+# Plot
 p = figure(
     width=4800,
     height=2700,
     x_range=categories,
-    title="lollipop-basic · bokeh · pyplots.ai",
+    title="lollipop-basic · bokeh · anyplot.ai",
     x_axis_label="Product Category",
-    y_axis_label="Sales ($)",
+    y_axis_label="Sales (USD)",
+    toolbar_location=None,
 )
 
-# Draw stems (thin lines from baseline to value)
-p.segment(x0="categories", y0="zeros", x1="categories", y1="values", source=source, line_width=4, color="#306998")
+p.segment(x0="categories", y0="zeros", x1="categories", y1="values", source=source, line_width=4, color=BRAND)
 
-# Draw markers (circles at data values)
-p.scatter(x="categories", y="values", source=source, size=25, color="#FFD43B", line_color="#306998", line_width=3)
+p.scatter(x="categories", y="values", source=source, size=42, color=BRAND, line_color=PAGE_BG, line_width=3)
 
-# Styling for 4800x2700 canvas
-p.title.text_font_size = "32pt"
-p.xaxis.axis_label_text_font_size = "24pt"
-p.yaxis.axis_label_text_font_size = "24pt"
+# Style
+p.title.text_font_size = "28pt"
+p.title.text_color = INK
+p.title.text_font_style = "normal"
+
+p.xaxis.axis_label_text_font_size = "22pt"
+p.yaxis.axis_label_text_font_size = "22pt"
 p.xaxis.major_label_text_font_size = "18pt"
 p.yaxis.major_label_text_font_size = "18pt"
 
-# Rotate x-axis labels for readability
-p.xaxis.major_label_orientation = 0.7
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
 
-# Grid styling - subtle
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+p.xaxis.minor_tick_line_color = None
+p.yaxis.minor_tick_line_color = None
+
+p.xaxis.major_label_orientation = 0.6
+
 p.xgrid.grid_line_color = None
-p.ygrid.grid_line_alpha = 0.3
-p.ygrid.grid_line_dash = "dashed"
+p.ygrid.grid_line_color = INK
+p.ygrid.grid_line_alpha = 0.10
 
-# Background
-p.background_fill_color = "#fafafa"
-p.border_fill_color = "#ffffff"
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = None
 
-# Format y-axis with thousands separator
 p.yaxis.formatter = NumeralTickFormatter(format="$0,0")
 
-# Save as PNG and HTML
-export_png(p, filename="plot.png")
-output_file("plot.html")
+# Save
+export_png(p, filename=f"plot-{THEME}.png")
+output_file(f"plot-{THEME}.html")
 save(p)

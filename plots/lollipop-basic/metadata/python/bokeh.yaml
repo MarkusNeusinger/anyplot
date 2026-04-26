@@ -1,162 +1,169 @@
 library: bokeh
+language: python
 specification_id: lollipop-basic
 created: '2025-12-23T15:14:01Z'
-updated: '2025-12-23T15:20:19Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20464352206
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - columndatasource
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-04-26T12:54:40Z'
+generated_by: claude-opus
+workflow_run: 24956899574
+issue: 934
+python_version: 3.14.4
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/bokeh/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Clean lollipop chart implementation using segment + scatter glyphs
-  - Excellent use of ColumnDataSource for data management
-  - Good color scheme with Python colors (blue stems, yellow markers)
-  - Proper currency formatting on y-axis with NumeralTickFormatter
-  - Well-sized elements for the 4800x2700 canvas
-  - Rotated x-axis labels prevent overlap
+  - 'Perfect spec compliance: stems + markers + sorted data + correct title format'
+  - 'Excellent theme adaptation: all chrome tokens applied correctly, both renders
+    pass legibility check'
+  - Clean minimal code with proper KISS structure
+  - White-ring detail on markers (PAGE_BG as line_color) adds visual separation
+  - NumeralTickFormatter adds professional dollar formatting
   weaknesses:
-  - Redundant sorting code (data is already defined in sorted order)
-  - Bokeh toolbar icons visible in top-right corner could be hidden for cleaner static
-    output
-  image_description: The plot displays a lollipop chart showing product sales by category.
-    Ten categories are shown on the x-axis (Electronics, Clothing, Home & Garden,
-    Sports, Books, Toys, Food, Beauty, Automotive, Office) with sales values in dollars
-    on the y-axis ranging from $0 to ~$85,000. Each data point consists of a blue
-    vertical stem (#306998) extending from the baseline to a yellow circular marker
-    (#FFD43B) with a blue outline. The data is sorted in descending order from left
-    to right. Category labels are rotated at approximately 40 degrees for readability.
-    The background is light gray (#fafafa) with subtle dashed horizontal grid lines.
-    The title "lollipop-basic · bokeh · pyplots.ai" appears at the top left. Y-axis
-    values are formatted as currency with thousands separators.
+  - 'No data storytelling: sorted data is good but no emphasis on top performer, no
+    focal points, no value labels, no visual hierarchy to guide the viewer'
+  - 'Title not bold: style guide specifies bold/medium-weight for titles, text_font_style=normal
+    weakens typographic hierarchy'
+  - 'Design sophistication stays at well-configured default level: white ring on markers
+    is the only distinctive aesthetic choice'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "lollipop-basic · bokeh · anyplot.ai" top-left in dark INK color, readable; axis labels "Sales (USD)" and "Product Category" in dark INK, readable; y-axis tick labels in INK_SOFT ($0, $20,000, $40,000, etc.), readable; x-axis category labels rotated and readable
+      Data: 10 lollipops in brand green #009E73 — thin stems (line_width=4) rising from y=0 baseline to large circular markers (size=42) with white PAGE_BG ring; values sorted descending Electronics ($85K) to Office ($15K)
+      Legibility verdict: PASS — all text readable, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light F0EFE8 text, readable; axis labels in INK color (light), readable; tick labels in INK_SOFT (B8B7B0), readable; no dark-on-dark failures detected
+      Data: Brand green #009E73 lollipops identical to light render — stems, markers, and white ring all unchanged; only background and text colors flip
+      Legibility verdict: PASS — all text readable against dark background, data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 32pt, axis labels at 24pt, tick labels at 18pt - all clearly
-          readable, slightly smaller title would be ideal
+        comment: Sizes explicitly set (28pt/22pt/18pt), readable in both themes; title
+          not bold
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, rotated x-axis labels prevent collision
+        comment: Rotated x-axis labels well-spaced, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Stems (line_width=4) and markers (size=25) are well-sized for the
-          data density
+        comment: Stems line_width=4 and markers size=42 clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow combination is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, minor excess whitespace on right side
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Sales ($)" and "Product Category"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Single brand green series, good contrast, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Decent canvas utilization, minor empty space in upper plot area
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No legend needed, grid is subtle (alpha=0.3, dashed), but Bokeh toolbar
-          icons visible in corner
+        comment: Sales (USD) and Product Category with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, light #FAF8F1, dark #1A1A17, chrome correct'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured default with white ring on markers; not exceptional
+          design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No x-grid, subtle y-grid, no outline, minor ticks removed, no toolbar
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Sorted data but no visual hierarchy, focal points, or emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct lollipop chart with stems and circular markers
+        comment: 'Correct lollipop: segment stems + scatter markers, vertical orientation'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on x-axis, values on y-axis as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Thin stems, circular markers, vertical orientation, sorted data
-      - id: SC-04
-        name: Data Range
+        comment: Stems, markers, vertical, 10 categories, sorted descending
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full range from 0 to max value
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Categories on x with x_range, values on y, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "lollipop-basic · bokeh · pyplots.ai"'
+        comment: Title lollipop-basic · bokeh · anyplot.ai correct; no legend for
+          single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows good range of values with clear descending pattern, could show
-          more variation in middle values
+        comment: 'All lollipop aspects shown: varying heights, sorted order, 10 categories'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Product sales by category is a realistic business scenario
+        comment: Product sales by category - natural neutral business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values ($15K-$85K) are plausible retail sales figures, though slightly
-          generic
+        comment: $15K-$85K realistic for product category sales, good spread
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -164,41 +171,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Linear: imports -> tokens -> data -> figure -> styling -> save'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Deterministic data (hardcoded values), but sorting after definition
-          is redundant since data is already sorted
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All 4 imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Clean Pythonic code, no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: plot-{THEME}.png and plot-{THEME}.html both generated
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ColumnDataSource, x_range for categorical, segment+scatter pattern
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, segment + scatter glyphs, NumeralTickFormatter
-          - good Bokeh patterns but no interactive features beyond defaults
-  verdict: APPROVED
+        comment: NumeralTickFormatter and HTML export via output_file/save
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - columndatasource
+  dataprep: []
+  styling: []
