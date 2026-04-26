@@ -20,6 +20,16 @@ export function isFiltersEmpty(filters: ActiveFilters): boolean {
   return filters.length === 0 || filters.every((f) => f.values.length === 0);
 }
 
+/**
+ * Build a stable key from a list of plot images using their `spec_id` and
+ * `library` fields. Used by the sync-back effect to detect content changes
+ * (a re-shuffle or refresh that keeps the count would otherwise look identical
+ * to a length-only key). Exported for unit testing.
+ */
+export function imagesContentKey(images: readonly PlotImage[]): string {
+  return images.map((i) => `${i.spec_id}:${i.library}`).join('|');
+}
+
 interface UseFilterStateOptions {
   onTrackPageview: () => void;
   onTrackEvent: (event: string, props?: Record<string, string>) => void;
@@ -126,13 +136,12 @@ export function useFilterState({
   // a fetch when state echoes back through the context.
   // Use stable identifiers (spec_id + library) instead of just lengths, so a
   // re-shuffle or refresh that keeps the count but changes the content still
-  // re-syncs to context. Each PlotImage has stable `spec_id` and `library`.
-  const imagesKey = (imgs: typeof allImages) => imgs.map((i) => `${i.spec_id}:${i.library}`).join('|');
+  // re-syncs to context. `imagesContentKey` is exported above and unit-tested.
   const syncKey = useMemo(
     () =>
       JSON.stringify({
-        allImagesIds: imagesKey(allImages),
-        displayedIds: imagesKey(displayedImages),
+        allImagesIds: imagesContentKey(allImages),
+        displayedIds: imagesContentKey(displayedImages),
         activeFilters,
         filterCounts,
         globalCounts,
