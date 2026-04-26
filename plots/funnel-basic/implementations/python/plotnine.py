@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 funnel-basic: Basic Funnel Chart
-Library: plotnine | Python 3.13
-Quality: pending | Updated: 2026-04-26
+Library: plotnine 0.15.3 | Python 3.14.4
+Quality: 87/100 | Updated: 2026-04-26
 """
 
 # Script filename "plotnine.py" shadows the plotnine package on sys.path.
