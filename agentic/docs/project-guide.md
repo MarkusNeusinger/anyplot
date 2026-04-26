@@ -439,6 +439,7 @@ The `prompts/` directory contains AI agent prompts for code generation, quality 
 | File | Purpose |
 |------|---------|
 | `plot-generator.md` | Base rules for all plot implementations |
+| `default-style-guide.md` | Default visual style rules (colors, typography, layout) |
 | `library/*.md` | Library-specific rules (9 files) |
 | `quality-criteria.md` | Definition of code/visual quality |
 | `quality-evaluator.md` | AI quality evaluation prompt |
@@ -446,6 +447,8 @@ The `prompts/` directory contains AI agent prompts for code generation, quality 
 | `spec-id-generator.md` | Assigns unique spec IDs |
 | `spec-tags-generator.md` | AI rules for spec-level tag assignment |
 | `impl-tags-generator.md` | AI rules for impl-level tag assignment |
+| `templates/*.{md,yaml}` | Spec + metadata starter templates |
+| `workflow-prompts/*.md` | Per-workflow prompts (impl-generate, impl-repair, impl-review, report-validate) — see `prompts/workflow-prompts/README.md` |
 
 ### Using Prompts
 
@@ -664,9 +667,15 @@ The new architecture separates specification and implementation processes:
 
 ## GitHub Issue Labels
 
-The project uses a structured labeling system. Setup labels with:
+The project uses a structured labeling system. Labels are managed with the
+`label_manager.py` helper:
+
 ```bash
-bash .github/scripts/setup-labels.sh
+# Sync labels from the canonical definition file to the repo
+uv run python -m automation.scripts.label_manager sync
+
+# List current labels
+uv run python -m automation.scripts.label_manager list
 ```
 
 ### Specification Labels
