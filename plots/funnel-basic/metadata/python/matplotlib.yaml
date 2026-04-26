@@ -1,166 +1,176 @@
 library: matplotlib
+language: python
 specification_id: funnel-basic
 created: '2025-12-23T13:02:34Z'
-updated: '2025-12-23T13:09:06Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461373659
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - patches
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - edge-highlighting
-  - minimal-chrome
+updated: '2026-04-26T05:23:31Z'
+generated_by: claude-opus
+workflow_run: 24948891521
+issue: 789
+python_version: 3.14.4
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Excellent trapezoid geometry calculation with proper width proportions relative
-    to first stage value
-  - Smart text color switching (white on dark backgrounds, black on light) for optimal
-    readability
-  - Clean use of matplotlib.patches.Polygon for custom shapes
-  - Proper formatting with comma separators and percentage display
-  - Follows KISS principle with straightforward linear code structure
-  - Uses the exact example data from the specification
+  - 'Flawless spec compliance: all 5 stages, correct data, exact title format, widths
+    proportional to value'
+  - Correct Okabe-Ito palette applied in canonical order with brand green as first
+    stage
+  - Theme adaptation fully correct — backgrounds, title, stage labels all flip correctly
+    in both renders; no dark-on-dark failures
+  - Clever use of fill_betweenx to construct trapezoids without needing Polygon patches
+  - In-segment labels combining absolute counts and percentages is clear and informative
+  - Clean code structure with deterministic data and no unnecessary abstractions
   weaknesses:
-  - Does not leverage matplotlib's built-in horizontal bar functionality or other
-    distinctive features that could simplify the code
-  - Color palette uses similar blue shades for first two stages which reduces visual
-    distinction
-  image_description: 'The plot displays a funnel chart with 5 stages arranged vertically
-    from top to bottom. The stages are: Awareness (1,000 - 100%), Interest (600 -
-    60%), Consideration (400 - 40%), Intent (200 - 20%), and Purchase (100 - 10%).
-    Each stage is rendered as a trapezoid segment that narrows progressively. The
-    color scheme transitions from dark blue (#306998) at the top through lighter blue
-    (#4A8BBF), yellow (#FFD43B), orange (#FFB347), to coral red (#FF6B6B) at the bottom.
-    White edge lines separate each segment. Text labels are centered within each segment
-    showing the stage name, count with comma formatting, and percentage. The top two
-    stages use white text while the bottom three use black text for contrast. The
-    title "funnel-basic · matplotlib · pyplots.ai" appears at the top in bold black
-    text. The background is white.'
+  - Stage index labels on the left are fontsize=14, below the 16pt guideline for secondary
+    text at 4800x2700 resolution — increase to 16–18pt
+  - Roughly 20% of lower canvas is empty below the Purchase segment — reduce the figure
+    height or adjust y-limits to tighten the layout
+  - Design excellence is functional but not polished; could benefit from a subtle
+    percentage drop-off annotation between stages (e.g. ↓ 40% between Awareness and
+    Interest)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct per style guide
+      Chrome: Title "funnel-basic · matplotlib · anyplot.ai" in dark INK (#1A1A17), clearly readable. Stage index labels ("Stage 1"–"Stage 5") in INK_SOFT (#4A4A44) on the left, readable but small (fontsize=14).
+      Data: Five funnel segments in Okabe-Ito order — #009E73 (Awareness), #D55E00 (Interest), #0072B2 (Consideration), #CC79A7 (Intent), #E69F00 (Purchase). White bold text on first four segments; dark INK text on golden Purchase segment.
+      Legibility verdict: PASS — all text readable; stage index labels slightly small but legible.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct per style guide
+      Chrome: Title in light cream #F0EFE8, clearly readable. Stage index labels in #B8B7B0 (INK_SOFT dark), readable against near-black background. No dark-on-dark failures observed.
+      Data: Identical Okabe-Ito data colors as light render — only chrome flips. White text on first four segments; near-white #F0EFE8 text on golden Purchase segment.
+      Legibility verdict: PASS — all text readable in dark theme; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: All text is clearly readable with appropriate font sizes (18pt for
-          labels, 24pt for title)
+        comment: Title 24pt and segment labels 18pt bold are readable in both themes.
+          Stage index labels at 14pt are slightly below 16pt guideline.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels centered within their segments
+        comment: No text collisions; all labels fit within their segments.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Trapezoid segments are well-sized and clearly visible with good proportions
+        comment: All five funnel segments clearly visible with distinct Okabe-Ito
+          colors.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Distinct colors for each stage, though the blue shades are similar;
-          not purely red-green dependent
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins, funnel is centered
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for funnel chart (axis is off), but labels on segments compensate
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid needed for funnel chart, no legend needed as labels are embedded
+        comment: Okabe-Ito palette used; CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Clean centered layout; ~20% dead space at bottom below Purchase segment.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct title format; axis off is appropriate for funnel chart.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First stage #009E73; stages 2-5 follow Okabe-Ito order; backgrounds
+          correct for both themes.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean functional design with deliberate palette and stage index labels;
+          not artistically elevated.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Axes fully off; segment gaps via edgecolor are refined. Bottom empty
+          space weakens canvas use.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Funnel shape + count + percentage clearly communicates conversion
+          drop-off. No inter-stage delta labels.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct funnel chart with trapezoid segments narrowing from top to
-          bottom
+        comment: Correct funnel chart with trapezoidal segments narrowing top to bottom.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Stages and values correctly mapped to segment widths and labels
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: distinct colors, value/percentage labels,
-          proportional widths'
-      - id: SC-04
-        name: Data Range
+        comment: Distinct colors per stage, value+percentage labels, widths proportional
+          to value, largest-to-smallest ordering.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 5 stages visible with appropriate proportions
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 5 stages matching spec example; widths computed as value/max_value.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A (embedded labels serve this purpose effectively)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "funnel-basic · matplotlib · pyplots.ai"'
+        comment: Title matches required format; no legend needed as labels are embedded
+          in segments.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows progressive decrease across 5 stages; could show more dramatic
-          variation between stages
+        comment: Shows relative widths, absolute values, percentages, stage ordering.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Sales funnel scenario from spec is realistic and comprehensible
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values (1000 → 100) are realistic for a sales funnel
+        comment: Sales pipeline scenario with realistic drop-off rates; neutral topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1000 to 100 across 5 stages is realistic for a marketing funnel.
     code_quality:
       score: 10
       max: 10
@@ -170,40 +180,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save, no functions/classes'
+        comment: No functions or classes; clean sequential script.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random generation needed)
+        comment: Fully deterministic; no random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.patches and matplotlib.pyplot are imported and used
+        comment: Only os, matplotlib.pyplot, numpy imported and all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Geometry computation clean and concise; fill_betweenx constructs
+          trapezoids elegantly.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves plot-{THEME}.png correctly.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses basic Polygon patches; could leverage matplotlib's more advanced
-          features
+        passed: true
+        comment: Standard fig/ax pattern; axes-method API; fill_betweenx is idiomatic
+          and elegant for this use case.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: fill_betweenx is a distinctive matplotlib feature used non-trivially
+          to build the funnel trapezoids. Could leverage more advanced matplotlib
+          features.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - iteration-over-groups
+  - explicit-figure
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - edge-highlighting
