@@ -1,197 +1,244 @@
 library: pygal
+language: python
 specification_id: network-force-directed
 created: 2025-12-17 10:04:33+00:00
-updated: 2025-12-17 10:04:33+00:00
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20298900805
+updated: '2026-04-26T10:03:29Z'
+generated_by: claude-opus
+workflow_run: 24952933179
 issue: 990
-python_version: 3.13.11
+python_version: 3.14.4
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/pygal/plot.html
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/pygal/plot-dark.html
+quality_score: 83
+review:
+  strengths:
+  - Complete Fruchterman-Reingold force-directed layout from scratch with no external
+    graph library
+  - 'Degree-based node sizing using pygal per-point SVG attribute overrides ({"node":
+    {"r": ...}}) — distinctive pygal feature'
+  - Three-community corporate social network (Engineering/Marketing/Sales) — realistic,
+    neutral scenario
+  - Full theme adaptation in both renders; all token assignments (background, foreground,
+    foreground_subtle) correctly derived from ANYPLOT_THEME
+  - 'Perfect code quality: seed set, clean imports, linear structure, appropriate
+    complexity; full output (PNG + SVG + HTML)'
+  weaknesses:
+  - 'First pygal series Connections uses EDGE_COLOR (#9A988F light / #5A5852 dark)
+    rather than #009E73 — palette position 1 is not the brand green; reorder series
+    so Engineering comes first'
+  - Some node crowding in dense Engineering and Marketing clusters; increase repulsion
+    constant k from 0.95 to 1.1 for better node separation
+  - Legend font appears small relative to canvas at rendered scale despite legend_font_size=44
+    being set
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "network-force-directed · pygal · anyplot.ai" in dark text at top center — readable. No axis labels (appropriate for network graph). Legend at bottom with four entries (Connections, Engineering, Marketing, Sales) in dark text — readable.
+      Data: Three community clusters: Engineering (teal #009E73, right side), Marketing (orange #D55E00, lower-left), Sales (blue #0072B2, upper-center). Edges as light gray lines (#9A988F). Node sizes vary by degree — hub nodes noticeably larger.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct theme surface
+      Chrome: Title in light off-white text at top center — clearly readable. Legend at bottom in light-colored text — readable. No dark-on-dark text issues detected.
+      Data: Community colors identical to light render — Engineering green, Marketing orange, Sales blue. Edges appear as lighter gray on dark background. Node sizing preserved.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=72, legend=44, labels=40); all text
+          readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Some node crowding in dense clusters inherent to 50-node network;
+          no text overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Nodes clearly visible with degree-based sizing; edges rendered as
+          clean gray lines
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito community colors (green/orange/blue); CVD-safe; muted edges
+          don't compete
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Network fills ~65-70% of canvas; slight wasted space at canvas edges
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correctly formatted; no axis labels appropriate for network
+          graph type
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Community colors correctly use Okabe-Ito; but first series Connections
+          uses EDGE_COLOR not #009E73; both theme backgrounds correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: degree-based sizing, muted edges vs bright community
+          nodes creates hierarchy'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No grid or axis decorations; clean margins; legend neat; above library
+          defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Three communities immediately apparent; hub nodes visually stand
+          out; bridge edges tell inter-community connectivity story
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Force-directed graph with manual Fruchterman-Reingold implementation
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Node degree scaling, edge representation, community structure present;
+          edge thickness for weights not implemented (spec optional)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct network topology; three-community structure clearly shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title network-force-directed · pygal · anyplot.ai correct; legend
+          labels correct
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Shows communities, hub nodes, bridge edges, degree variation; minor:
+          no strongly isolated peripheral nodes'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Corporate social network (Engineering, Marketing, Sales) — realistic,
+          neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 50 nodes, 30% intra-community edge probability, 8 bridge edges; all
+          plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports -> tokens -> data -> layout -> plot -> save; no
+          functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: sys, pathlib.Path, os, numpy, pygal, pygal.style.Style — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Force-directed layout computation appropriate complexity; clean readable
+          code
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png, .svg, .html
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses pygal.XY, Style object for full theming, per-point node dict
+          for radius overrides, correct stroke/dots_size API
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Per-point SVG attribute overrides for degree-based radii; None-break
+          technique for edges; interactive HTML export
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling: []
-review:
-  strengths: []
-  weaknesses: []
-  improvements: []
-  image_description: 'The plot displays a force-directed network graph with 50 nodes
-    organized into 3 clearly visible communities. The title "network-force-directed
-    · pygal · pyplots.ai" is displayed at the top. Nodes are colored by community:
-    **blue** (Sales) cluster on the right side, **yellow** (Marketing) cluster in
-    the lower-center, and **red/coral** (Engineering) cluster in the upper-left. Gray
-    lines connect nodes representing edges/relationships. The communities are visually
-    separated with sparse bridge connections between them. A legend at the bottom
-    identifies the four series: "Connections", "Engineering", "Marketing", and "Sales".
-    The layout shows the force-directed algorithm successfully clustering related
-    nodes together.'
-  criteria_checklist:
-    visual_quality:
-      score: 32
-      max: 35
-      items:
-      - id: VQ-01
-        name: Axis labels
-        score: 7
-        max: 7
-        passed: true
-        comment: Appropriately hidden (not applicable for network graphs)
-      - id: VQ-02
-        name: No overlapping text
-        score: 6
-        max: 6
-        passed: true
-        comment: Clean layout, no text overlap
-      - id: VQ-03
-        name: Color choice
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, red are distinguishable and colorblind-safe
-      - id: VQ-04
-        name: Element clarity
-        score: 5
-        max: 5
-        passed: true
-        comment: Nodes are clearly visible with appropriate dot size (25)
-      - id: VQ-05
-        name: Layout balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good proportions, communities well separated
-      - id: VQ-06
-        name: Grid subtlety
-        score: 3
-        max: 3
-        passed: true
-        comment: Grid appropriately disabled for network visualization
-      - id: VQ-07
-        name: Legend placement
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend at bottom, does not obscure data
-      - id: VQ-08
-        name: Image size
-        score: 0
-        max: 2
-        passed: true
-        comment: 4800x2700 specified but aspect ratio appears slightly off
-    spec_compliance:
-      score: 33
-      max: 35
-      items:
-      - id: SC-01
-        name: Correct plot type
-        score: 10
-        max: 10
-        passed: true
-        comment: Force-directed network graph correctly implemented
-      - id: SC-02
-        name: Data mapped correctly
-        score: 7
-        max: 7
-        passed: true
-        comment: Nodes and edges properly positioned via physics simulation
-      - id: SC-03
-        name: Required features present
-        score: 7
-        max: 7
-        passed: true
-        comment: Shows communities, connections, force-directed layout
-      - id: SC-04
-        name: Data range
-        score: 4
-        max: 4
-        passed: true
-        comment: All nodes visible with appropriate padding
-      - id: SC-05
-        name: Legend accuracy
-        score: 2
-        max: 4
-        passed: true
-        comment: Legend shows series but could be more descriptive
-      - id: SC-06
-        name: Title format
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses `{spec-id} · {library} · pyplots.ai` format correctly
-    data_quality:
-      score: 14
-      max: 15
-      items:
-      - id: DQ-01
-        name: Feature coverage
-        score: 5
-        max: 6
-        passed: true
-        comment: Shows communities, varying node degrees, bridge connections; node
-          size by degree mentioned in spec but not implemented
-      - id: DQ-02
-        name: Realistic context
-        score: 5
-        max: 5
-        passed: true
-        comment: Social network with Engineering/Marketing/Sales teams is plausible
-      - id: DQ-03
-        name: Appropriate scale
-        score: 4
-        max: 4
-        passed: true
-        comment: 50 nodes is appropriate, edge density is reasonable
-    code_quality:
-      score: 13
-      max: 15
-      items:
-      - id: CQ-01
-        name: KISS structure
-        score: 4
-        max: 4
-        passed: true
-        comment: Sequential structure, no functions/classes
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Library idioms
-        score: 3
-        max: 3
-        passed: true
-        comment: Proper pygal XY chart usage with Style
-      - id: CQ-04
-        name: Clean imports
-        score: 2
-        max: 2
-        passed: true
-        comment: Only numpy, pygal, and Style imported
-      - id: CQ-05
-        name: Helpful comments
-        score: 0
-        max: 1
-        passed: true
-        comment: Comments present but minimal
-      - id: CQ-06
-        name: No deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Current pygal API used
-      - id: CQ-07
-        name: Output correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves plot.png but also saves plot.svg and plot.html (extra files)
-  verdict: APPROVED
