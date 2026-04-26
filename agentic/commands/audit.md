@@ -1,6 +1,6 @@
 # Code Quality Audit
 
-> Team-based code quality audit for the anyplot repository. Spawns up to eight specialized Opus agents (backend, frontend, infra, quality, llm-pipeline, db, security, observability) that analyze the codebase in parallel. Lead cross-validates high-severity findings, synthesizes a prioritized, effort-rated, auto-fix-aware action plan, and persists the report for regression tracking.
+> Team-based code quality audit for the anyplot repository. Spawns up to fifteen specialized Opus agents (backend, frontend, infra, quality, llm-pipeline, db, security, observability, agentic, gcloud, github, plausible, pagespeed, seo, catalog) that analyze the codebase and live systems in parallel. Lead cross-validates high-severity findings, synthesizes a prioritized, effort-rated, auto-fix-aware action plan, and persists the report for regression tracking. Auditors that touch external systems degrade gracefully when credentials are missing — they never block the rest of the run.
 
 ## Context
 
@@ -14,10 +14,10 @@ You are the **audit-lead**. Your job is to coordinate a team of specialist audit
 ### Phase 1: Setup
 
 1. **Parse scope from `$ARGUMENTS`:**
-   - Empty / `all` → spawn all 8 auditors
+   - Empty / `all` → spawn all 15 auditors
    - Single keyword → spawn only that auditor (see Scope Table)
    - Directory path → Lead determines which auditor(s) cover that path
-   - Optional `since=<git-ref>` (e.g. `since=main`, `since=HEAD~10`) → **Incremental mode**: Lead computes the changed file list once via `git diff --name-only <ref>...HEAD` and passes the relevant subset to each auditor. Auditors must restrict their analysis to those files (plus their direct importers if a quick `mcp__serena__find_referencing_symbols` lookup is cheap). If `since=` is omitted, auditors run a full sweep of their scope.
+   - Optional `since=<git-ref>` (e.g. `since=main`, `since=HEAD~10`) → **Incremental mode**: Lead computes the changed file list once via `git diff --name-only <ref>...HEAD` and passes the relevant subset to each auditor. Auditors must restrict their analysis to those files (plus their direct importers if a quick `mcp__serena__find_referencing_symbols` lookup is cheap). If `since=` is omitted, auditors run a full sweep of their scope. The five external-system auditors (`gcloud`, `github`, `plausible`, `pagespeed`, `seo`) ignore `since=` because their scope is live systems, not files.
 
 2. **Run baseline measurements** (these are the ONLY Bash commands the Lead runs in this phase):
    ```bash
@@ -34,7 +34,7 @@ You are the **audit-lead**. Your job is to coordinate a team of specialist audit
 
 3. **Build a new agent team:** Create an "audit" team with the specialists matching the active scope. Each auditor is `general-purpose, opus`:
 
-   | Auditor | Primary Paths |
+   | Auditor | Primary Paths / Surface |
    |---|---|
    | `backend-auditor` | `api/`, `core/`, `automation/` |
    | `frontend-auditor` | `app/src/` |
@@ -44,16 +44,28 @@ You are the **audit-lead**. Your job is to coordinate a team of specialist audit
    | `db-auditor` | `alembic/`, `core/database/`, `alembic.ini` |
    | `security-auditor` | repo-wide (primarily `api/`, `core/config.py`, `agentic/workflows/`, `.github/workflows/`) |
    | `observability-auditor` | `api/analytics.py`, `api/cache.py`, `app/src/analytics/`, `docs/reference/plausible.md` |
+   | `agentic-auditor` | `CLAUDE.md`, `agentic/`, `prompts/`, `.claude/`, `agentic/commands/` (TAC-style: agent ergonomics) |
+   | `gcloud-auditor` | live `anyplot` GCP project (Cloud Run, Cloud SQL, GCS, Cloud Build, Logs, IAM, Secret Manager) — **read-only** |
+   | `github-auditor` | `MarkusNeusinger/anyplot` GitHub repo via `gh` (branches, PRs, issues, runs, labels, secrets/vars, branch protection) — **read-only** |
+   | `plausible-auditor` | live Plausible Stats API for `anyplot.ai`, cross-checked against `api/analytics.py`, `app/src/analytics/`, `docs/reference/plausible.md` — **read-only** |
+   | `pagespeed-auditor` | live `anyplot.ai` via PageSpeed Insights v5 REST (mobile + desktop) — **read-only** |
+   | `seo-auditor` | live `anyplot.ai` via Google Search Console API + structural fetches (sitemap, robots, canonical, meta, JSON-LD) — **read-only** |
+   | `catalog-auditor` | the plot catalog itself: `plots/` filesystem, Postgres rows, GCS preview integrity (sampled) — **read-only** |
 
-   Create one task per active auditor, spawn them in parallel, and assign tasks.
+   Create one task per active auditor, spawn them in parallel, and assign tasks. Catalog runs in parallel with the others; any cross-references against Plausible/SEO findings are computed by the Lead in Phase 3, not by `catalog-auditor` itself.
 
-4. **Tool-budget hint** (paste into every auditor prompt): each auditor should keep itself under ~30 read/search tool calls. If they cannot finish within budget, they must report partial findings + a `COVERAGE: partial` flag rather than running unbounded.
+4. **Tool-budget hint** (paste into every auditor prompt): each auditor should keep itself under ~30 read/search tool calls (the `gcloud-auditor` may use ~50 because each `gcloud` invocation is one shell call). If they cannot finish within budget, they must report partial findings + a `COVERAGE: partial` flag rather than running unbounded.
+
+5. **Read-only and degraded-mode contract** (applies to every auditor that touches a system outside this repo — `gcloud`, `github`, `plausible`, `pagespeed`, `seo`, plus any HTTP fetches used by `catalog`):
+   - **Read-only is absolute.** Do not run any command, API call, or HTTP method that creates, updates, deletes, sets, enables/disables, deploys, grants, patches, merges, closes, comments, dispatches, restarts, rotates, or otherwise changes anything — anywhere. This includes any `gcloud … create/update/delete/set/enable/disable/deploy/patch/add-iam-policy-binding/run-services-update-traffic`, any `gh pr/issue/run/secret/variable/label/workflow` write, any non-`GET`/`HEAD` HTTP call, any `bq` mutation, any `gcloud auth login/application-default login`. If unsure whether a command is read-only, do not run it.
+   - **Auth never blocks the run.** If a credential is missing or the wrong project/account is active, the auditor reports `COVERAGE: blocked` (or `COVERAGE: degraded` if it can still do part of its job) plus a single `LIMITATION:` line explaining what was unavailable, then returns no/partial findings. Other auditors are unaffected. The Lead never aborts `/audit` because of one auditor's auth failure — it just notes the limitation in the Coverage section.
+   - **Flexibility.** The starter checks listed in each specialist prompt are *ideas*, not a checklist to grind through. Each auditor uses judgment about what is most worth surfacing for THIS run within the tool budget, and is free to drop low-signal areas or follow a thread that is producing real findings.
 
 ### Scope Table
 
 | `$ARGUMENTS` | Active Auditors |
 |------------|----------------|
-| _(empty / `all`)_ | backend, frontend, infra, quality, llm-pipeline, db, security, observability |
+| _(empty / `all`)_ | backend, frontend, infra, quality, llm-pipeline, db, security, observability, agentic, gcloud, github, plausible, pagespeed, seo, catalog |
 | `backend` | backend-auditor only |
 | `frontend` | frontend-auditor only |
 | `infra` | infra-auditor only |
@@ -62,12 +74,19 @@ You are the **audit-lead**. Your job is to coordinate a team of specialist audit
 | `db` or `database` | db-auditor only |
 | `security` or `sec` | security-auditor only |
 | `observability` or `obs` | observability-auditor only |
-| `since=<ref>` (alone or combined) | Incremental mode for the selected scope |
+| `agentic` | agentic-auditor only |
+| `gcloud` or `gcp` | gcloud-auditor only |
+| `github` or `gh` | github-auditor only |
+| `plausible` | plausible-auditor only |
+| `pagespeed` or `psi` | pagespeed-auditor only |
+| `seo` | seo-auditor only |
+| `catalog` | catalog-auditor only |
+| `since=<ref>` (alone or combined) | Incremental mode for the selected scope (ignored by the five external-system auditors) |
 | directory path | Lead determines which auditor(s) cover that path |
 
 ### Phase 2: Parallel Analysis
 
-Each specialist receives a focused prompt (see below). They:
+Each specialist receives a focused prompt loaded from `agentic/commands/audit/<name>-auditor.md` (see the Specialist Prompts index below). They:
 - Use **Serena tools** (`mcp__serena__get_symbols_overview`, `mcp__serena__find_symbol`, `search_for_pattern`, `list_dir`, `find_file`, `mcp__serena__find_referencing_symbols`) and **Glob/Grep/Read** for code analysis. **Tool-naming note:** `mcp__serena__*` is the canonical MCP-registered prefix that matches `.claude/settings.json` (`mcp__serena__*` is in `permissions.allow`); some other repo docs (`CLAUDE.md`, `.serena/project.yml`, `agentic/commands/prime.md`) still reference legacy aliases like `jet_brains_*` or unprefixed names — treat those as the same tools and prefer the `mcp__serena__*` form here.
 - Use `think_about_collected_information` after non-trivial research sequences
 - Do **NOT** use Bash for file discovery or code searching — only for the per-auditor whitelisted shell commands
@@ -91,11 +110,18 @@ Auditors MUST self-check against this table before assigning a number; if unsure
 
 Before synthesis, the Lead runs a sanity pass on every finding with `IMPORTANCE >= 4`:
 
-1. Route each such finding to **a different** auditor whose scope overlaps the affected files:
+1. Route each such finding to **a different** auditor whose scope overlaps the affected files / surface:
    - Backend ↔ security / db / llm-pipeline (depending on the file)
    - Frontend ↔ observability (analytics paths) or quality (test gaps)
-   - Infra ↔ security (workflow injection / secret exposure)
+   - Infra ↔ security (workflow injection / secret exposure) or github (workflow runs side) or gcloud (deploy-target side)
    - llm-pipeline ↔ infra (workflow side) or backend (SDK call site)
+   - Agentic ↔ quality (commands/docs overlap) or infra (prompts and workflow integration)
+   - Gcloud ↔ observability (logs/metrics overlap) or infra (deploy/workflow side) or security (IAM/secrets)
+   - Github ↔ infra (workflow files) or quality (issue/docs hygiene) or security (branch protection, secret hygiene)
+   - Plausible ↔ observability (event drift) or frontend (Web Vitals → component code)
+   - Pagespeed ↔ frontend (perf opportunities → component code) or infra (caching/headers/Cloud Run config)
+   - Seo ↔ frontend (missing meta/JSON-LD → component code) or infra (robots/sitemap/headers) or pagespeed (lab vs field Web Vitals)
+   - Catalog ↔ db (FS/DB drift) or llm-pipeline (specs failing generation) or infra (sync workflow)
 2. The reviewing auditor responds with one of:
    - `KEEP` — finding stands as rated
    - `DOWNGRADE` — drop one importance level (with one-sentence reason)
@@ -121,11 +147,15 @@ After all specialists report back and cross-validation has run:
    - This score is reproducible and trend-comparable across runs
 6. **Build Quick Wins list:** every finding with `IMPORTANCE >= 4` AND `EFFORT == S`. This list answers "what should we tackle first?" and goes near the top of the report.
 7. **Sort** within each importance bucket: Effort ascending, then Auto-fix `ruff` / `eslint` / `format` / `codemod` / `manual` (auto-fixable first)
+7b. **Optional cross-auditor synthesis** — only when the relevant auditors all ran in this session and produced data:
+   - **Deprecation candidates** (Catalog × Plausible × SEO): specs that show up as low-traffic in Plausible AND zero-impression in Search Console AND have low coverage / low quality in catalog → emit a single Medium-importance finding listing the candidate spec-ids with effort `M` and auto-fix `manual`.
+   - **Web Vitals lab vs field divergence** (Pagespeed × Plausible / Pagespeed × SEO): URLs where lab CWV passes but field CWV fails (or vice-versa) → emit one finding per affected URL, importance derived from how far off the field metric is.
+   - These are computed from the auditors' findings, not by re-querying. If any required auditor is `COVERAGE: blocked`, skip the synthesis silently.
 8. **Persist** the final report to disk:
    - Path: `agentic/audits/{YYYY-MM-DD}-{scope_slug}.md` (e.g. `agentic/audits/2026-04-25-all.md`, `agentic/audits/2026-04-25-backend.md`, `agentic/audits/2026-04-25-since_main.md`)
    - **Build `scope_slug` deterministically from `$ARGUMENTS`:**
      - Empty / `all` → `all`
-     - Single keyword (`backend`, `frontend`, `infra`, `quality`, `tests`, `llm`, `pipeline`, `db`, `database`, `security`, `sec`, `observability`, `obs`) → that keyword verbatim
+     - Single keyword (`backend`, `frontend`, `infra`, `quality`, `tests`, `llm`, `pipeline`, `db`, `database`, `security`, `sec`, `observability`, `obs`, `agentic`, `gcloud`, `gcp`, `github`, `gh`, `plausible`, `pagespeed`, `psi`, `seo`, `catalog`) → that keyword verbatim
      - Directory path → replace `/` with `_`, drop leading/trailing `_`, lowercase (e.g. `core/database/` → `core_database`)
      - `since=<ref>` → `since_<ref>` with `<ref>` sanitized: replace any character not matching `[A-Za-z0-9._-]` with `_` (e.g. `since=feature/foo` → `since_feature_foo`, `since=HEAD~10` → `since_HEAD_10`)
      - Combinations (e.g. `backend since=main`) → join the parts with `_` (`backend_since_main`)
@@ -143,6 +173,13 @@ After all specialists report back and cross-validation has run:
 **Date:** {date} | **Scope:** {scope} | **Mode:** {full | incremental since=<ref>, N files}
 **Health Score:** {0-100} | **Baseline:** ruff: {N issues}, format: {status}
 **Auditors:** {n} ran ({list}) | **Findings:** {total} | **Auto-fixable:** {n}/{total}
+**External sources:** {only include lines that apply}
+- GCP project: {project-id} (gcloud-auditor)
+- Plausible site: {anyplot.ai} (plausible-auditor)
+- PageSpeed analysisUTCTimestamps: {url → ts list} (pagespeed-auditor)
+- Search Console mode: {full | structural-only} | freshness: {date} (seo-auditor)
+- GitHub: {gh user / repo} (github-auditor)
+- Catalog DB rows: {n specs / n implementations} (catalog-auditor)
 
 ## Summary
 {2-3 sentences: overall health, key themes, biggest risks}
@@ -176,9 +213,9 @@ After all specialists report back and cross-validation has run:
 - Total: {N} | Critical: {n}, High: {n}, Medium: {n}, Low: {n}
 - Effort: S {n}, M {n}, L {n}, XL {n}
 - Auto-fix: ruff {n}, eslint {n}, format {n}, codemod {n}, manual {n}
-- By Auditor: backend {n}, frontend {n}, infra {n}, quality {n}, llm {n}, db {n}, security {n}, obs {n}
+- By Auditor: backend {n}, frontend {n}, infra {n}, quality {n}, llm {n}, db {n}, security {n}, obs {n}, agentic {n}, gcloud {n}, github {n}, plausible {n}, pagespeed {n}, seo {n}, catalog {n}
 - Cross-validation: {n} reviewed, {n} dropped, {n} downgraded
-- Coverage: {n} auditors complete, {n} partial
+- Coverage: {n} auditors complete, {n} partial, {n} blocked (auth/credentials missing — list which)
 ```
 
 ### Exclusions (apply to ALL auditors)
@@ -195,223 +232,27 @@ Do NOT flag:
 
 ## Specialist Prompts
 
-### backend-auditor
+Each auditor's full prompt lives in its own file under `agentic/commands/audit/`. The Lead reads the file for each active auditor and passes its content as the spawn prompt. Editing one auditor's prompt does not touch the others.
 
-You are the **backend-auditor** on the audit team. Analyze `api/`, `core/`, and `automation/` directories.
+| Auditor | Prompt file |
+|---|---|
+| `backend-auditor` | `agentic/commands/audit/backend-auditor.md` |
+| `frontend-auditor` | `agentic/commands/audit/frontend-auditor.md` |
+| `infra-auditor` | `agentic/commands/audit/infra-auditor.md` |
+| `quality-auditor` | `agentic/commands/audit/quality-auditor.md` |
+| `llm-pipeline-auditor` | `agentic/commands/audit/llm-pipeline-auditor.md` |
+| `db-auditor` | `agentic/commands/audit/db-auditor.md` |
+| `security-auditor` | `agentic/commands/audit/security-auditor.md` |
+| `observability-auditor` | `agentic/commands/audit/observability-auditor.md` |
+| `agentic-auditor` | `agentic/commands/audit/agentic-auditor.md` |
+| `gcloud-auditor` | `agentic/commands/audit/gcloud-auditor.md` |
+| `github-auditor` | `agentic/commands/audit/github-auditor.md` |
+| `plausible-auditor` | `agentic/commands/audit/plausible-auditor.md` |
+| `pagespeed-auditor` | `agentic/commands/audit/pagespeed-auditor.md` |
+| `seo-auditor` | `agentic/commands/audit/seo-auditor.md` |
+| `catalog-auditor` | `agentic/commands/audit/catalog-auditor.md` |
 
-**Your scope:**
-- **FastAPI patterns**: Router organization, REST conventions, dependency injection, response schemas, async/await correctness
-- **Repository pattern**: Implementation in `core/`, data access consistency, query patterns
-- **Type safety**: Missing type hints, `Any` overuse, incorrect types, Protocol/ABC usage
-- **Code smells**: Dead code, duplication, overly complex functions (high cyclomatic complexity), god classes
-- **Error handling**: Consistency, missing error handlers, bare except clauses, error propagation
-- **Python modernization**: Old patterns that could use 3.14 features, deprecated APIs
-- **Performance**: N+1 queries, unnecessary computations, inefficient patterns, missing caching opportunities
-- **Import hygiene**: Unused imports, circular imports, import order
+**Spawn pattern (Lead):** for each active auditor, Read the corresponding file and use its full contents as the task prompt. Prepend the shared rules from Phase 1 (tool budget, severity calibration, read-only / degraded-mode contract for external auditors) so each spawned subagent has the full context without the per-auditor file having to repeat them. The auditor files describe scope and how-to-work; the orchestrator (this file) owns the cross-cutting rules.
 
-**How to work:**
-1. Use `list_dir` to understand directory structure of `api/`, `core/`, `automation/`
-2. Use `mcp__serena__get_symbols_overview` on key files to understand architecture
-3. Use `mcp__serena__find_symbol` with `depth=1` to inspect classes and their methods
-4. Use `search_for_pattern` to find anti-patterns (e.g. `bare except`, `type: ignore`, `Any`, `TODO`, `FIXME`)
-5. Use `mcp__serena__find_referencing_symbols` to check if code is actually used
-6. Use `think_about_collected_information` after research sequences
-7. **Do NOT use Bash** for `find`, `ls`, `grep`, `cat` — use Serena/Glob/Grep/Read tools instead
-8. You MAY use Bash for: `uv run ruff check api/ core/ automation/` or `uv run pytest tests/unit -x -q`
+**Adding a new auditor:** create `agentic/commands/audit/<name>-auditor.md`, add a row to the Auditor table in Phase 1 + a Scope-Table entry + a Statistics-line key in Phase 3 + a row above. No other code changes required.
 
-**Report format:** Send findings to `audit-lead` via `SendMessage`. Start the message with one `COVERAGE: full` or `COVERAGE: partial` line, then list findings:
-```
-COVERAGE: full | partial
----
-FINDING: {short title}
-IMPORTANCE: {1-5}     # see Severity Calibration table
-EFFORT: {S/M/L/XL}
-AUTO-FIX: {ruff | eslint | format | codemod | manual}
-FILES: {comma-separated file paths}
-DESCRIPTION: {what's wrong and why it matters}
-HINT: {one-line fix suggestion}
-```
-
-### frontend-auditor
-
-You are the **frontend-auditor** on the audit team. Analyze the `app/src/` directory.
-
-**Your scope:**
-- **Component quality**: Structure, reusability, separation of concerns, prop drilling vs context
-- **TypeScript strictness**: `any` usage, missing interfaces, proper generics, type-only imports
-- **Hooks**: Custom hook patterns, missing dependency arrays, stale closures, unnecessary re-renders
-- **Performance**: Missing `memo`/`useMemo`/`useCallback` where needed, large bundles, unnecessary renders
-- **Accessibility**: Missing aria-labels, keyboard navigation, focus management, color contrast
-- **MUI 9 patterns**: Correct theme usage, sx prop vs styled, consistent component usage
-- **Dead code**: Unused components, unused imports, unreachable code, commented-out code
-- **Error handling**: Error boundaries, loading states, empty states, fallbacks
-- **Consistency**: Naming conventions, file organization, export patterns
-
-**How to work:**
-1. Use `list_dir` to understand `app/src/` structure
-2. Use Glob to find all `.tsx` and `.ts` files: `**/*.tsx`, `**/*.ts` in `app/src/`
-3. Use `mcp__serena__get_symbols_overview` on key components
-4. Use Grep to search for anti-patterns (e.g. `: any`, `eslint-disable`, `@ts-ignore`, `console.log`)
-5. Use `search_for_pattern` for cross-file patterns
-6. Use `think_about_collected_information` after research sequences
-7. **Do NOT use Bash** for `find`, `ls`, `grep`, `cat` — use Serena/Glob/Grep/Read tools instead
-8. You MAY use Bash for: `cd app && yarn type-check 2>&1 | tail -20`
-
-**Report format:** Same as backend-auditor — send findings to `audit-lead` via `SendMessage`.
-
-### infra-auditor
-
-You are the **infra-auditor** on the audit team. Analyze `.github/workflows/`, `prompts/`, Dockerfiles, and configuration files.
-
-**Your scope:**
-- **GitHub Workflows**: Consistency, naming, job dependencies, parallelization, secret handling, security (script injection), concurrency settings, reusable workflows vs duplication, trigger conditions, error handling
-- **Prompt quality**: Clarity, structure, consistency across prompt files, outdated references, missing edge cases, template completeness, library-specific rules alignment
-- **Docker**: Dockerfile best practices, layer optimization, security (running as root), base image freshness
-- **Configuration**: `pyproject.toml` consistency, `tsconfig.json` strictness, Vite config, ESLint config, Ruff config
-- **Security**: Exposed secrets, insecure permissions, missing pinning of actions, `${{ github.event }}` injection risks
-- **Config drift**: Mismatches between workflow configs and actual project structure
-
-**How to work:**
-1. Use `list_dir` to find all workflow files, prompt files, Docker files, config files
-2. Use `find_file` with masks like `*.yml`, `*.yaml`, `Dockerfile*`, `*.toml`, `*.json`
-3. Use Read to examine workflow files (they're YAML, not code — Serena symbols won't help)
-4. Use `search_for_pattern` to find patterns across workflows (e.g. inconsistent action versions, missing `concurrency:`)
-5. Use Grep to check for security anti-patterns (e.g. `${{ github.event`, `pull_request_target`, insecure permissions)
-6. Use `think_about_collected_information` after research sequences
-7. **Do NOT use Bash** for `find`, `ls`, `grep`, `cat` — use Serena/Glob/Grep/Read tools instead
-
-**Report format:** Same as backend-auditor — send findings to `audit-lead` via `SendMessage`.
-
-### quality-auditor
-
-You are the **quality-auditor** on the audit team. Analyze `tests/`, `docs/`, `agentic/commands/`, and documentation files.
-
-**Your scope:**
-- **Test coverage gaps**: Which modules in `api/`, `core/`, `automation/` lack corresponding tests? Compare `tests/` structure with source structure
-- **Test quality**: Assertion quality (not just `assert True`), fixture organization, mock patterns, test naming, parametrize usage
-- **Documentation staleness**: Do docs match actual code behavior? Are there broken internal links? Outdated instructions?
-- **Cross-references**: Do workflows reference existing files? Are library names consistent across `prompts/`, `core/`, workflows?
-- **Command consistency**: Are agentic commands in `agentic/commands/` well-structured, up-to-date, consistent with each other?
-- **README quality**: Is the main README accurate and helpful? Does it reflect current project state?
-- **CLAUDE.md accuracy**: Does CLAUDE.md match the actual project structure and conventions?
-
-**How to work:**
-1. Use `list_dir` to map `tests/` structure and compare with `api/`, `core/`, `automation/` structure
-2. Use `mcp__serena__get_symbols_overview` on test files to check test method quality
-3. Use `search_for_pattern` to find test anti-patterns (e.g. `assert True`, `pass`, empty test bodies)
-4. Use Glob to find all `.md` docs files, then Read key ones to check staleness
-5. Use Grep to verify cross-references (e.g. file paths mentioned in docs actually exist)
-6. Use `think_about_collected_information` after research sequences
-7. **Do NOT use Bash** for `find`, `ls`, `grep`, `cat` — use Serena/Glob/Grep/Read tools instead
-8. You MAY use Bash for: `uv run pytest tests/ --co -q 2>&1 | tail -20` (list collected tests)
-
-**Report format:** Same as backend-auditor — send findings to `audit-lead` via `SendMessage`.
-
-### llm-pipeline-auditor
-
-You are the **llm-pipeline-auditor** on the audit team. anyplot's core is a spec→impl LLM pipeline; you own its end-to-end quality. Your scope spans `core/generators/`, `prompts/`, the `claude_*` knobs in `core/config.py`, the orchestration in `agentic/workflows/`, and the AI-pipeline GitHub workflows (`.github/workflows/{spec,impl,bulk,daily}-*.yml`).
-
-**Your scope:**
-- **Anthropic SDK usage**: Correct `client.messages.create` shape; explicit `max_tokens`, `timeout`, and retry on `RateLimitError` / `APIStatusError`; streaming used where it should be; no swallowed `APIError`
-- **Model selection**: Per-task model choice (Haiku for cheap classification, Sonnet for generation, Opus for review) is consistent with `core/config.py` `claude_model` / `claude_review_model`; no hardcoded model strings sneaking past config
-- **Token & cost discipline**: `max_tokens` matched to expected output size; system-prompt sizes reasonable; no obviously redundant context concatenation
-- **Prompt caching**: For long, stable system prompts and library guides, are `cache_control` blocks present (`{"type": "ephemeral"}`)? Missing caching on ≥1k-token static prefixes is a finding
-- **Prompt quality** (in `prompts/`): clarity of role + task + format; explicit refusal of unsafe outputs; consistent placeholder syntax; library-guides aligned with what `core/generators/` actually requests; no dangling references to renamed/removed files
-- **Output schema stability**: When prompts demand JSON, is parsing defensive (try/except around `json.loads`, schema validation)? Are tool-use blocks preferred over freeform JSON for structured outputs?
-- **Hallucination mitigation**: Grounding via examples, explicit "say I don't know" instructions for uncertain answers, retrieval/context separation
-- **Pipeline resilience**: spec→impl→review→merge in workflows handles failures (impl-repair path), no infinite retry loops, idempotent re-runs, clear failure modes
-- **Workflow ↔ code drift**: Do workflow inputs/outputs match what `core/generators/` and `agentic/workflows/modules/` expect?
-
-**How to work:**
-1. `list_dir` on `prompts/`, `core/generators/`, `agentic/workflows/`
-2. `mcp__serena__get_symbols_overview` on `core/generators/plot_generator.py` and any sibling generators
-3. `mcp__serena__find_symbol` on the `Anthropic` / `client.messages.create` call sites
-4. Grep for: `anthropic\.`, `messages.create`, `max_tokens`, `cache_control`, hardcoded model strings (`claude-`, `sonnet`, `haiku`, `opus`), bare `except` around SDK calls
-5. Read each prompt file at least skim-depth; look for placeholder mismatches and library references
-6. `mcp__serena__find_referencing_symbols` on each prompt-loader function to see who consumes which prompt
-7. `think_about_collected_information` after the SDK + prompt scan
-8. **Do NOT use Bash** for file discovery
-9. You MAY use Bash for: `uv run python -c "from core.config import settings; print(settings.claude_model, settings.claude_max_tokens)"` to confirm runtime config
-
-**Tool budget:** ~30 calls. If insufficient, set `COVERAGE: partial` and prioritize the SDK call sites + the 5 most-loaded prompts.
-
-**Report format:** Same as backend-auditor.
-
-### db-auditor
-
-You are the **db-auditor** on the audit team. Analyze `alembic/`, `core/database/`, and `alembic.ini`. anyplot uses async SQLAlchemy 2.0 with asyncpg locally and a hybrid Cloud SQL Connector / pg8000 path in CI — migration safety and async-correctness matter.
-
-**Your scope:**
-- **Alembic migrations** (`alembic/versions/`, ~15 files): every migration has a real `downgrade()` (not `pass`); no destructive ops without an explicit data-migration step; long-running ALTERs flagged for production lock risk; revision chain unbroken; no merged divergent heads left behind
-- **Schema design** (`core/database/models.py`): Indexes on every FK and on every column used in WHERE/ORDER BY in repositories; sane `ON DELETE` cascades; nullable vs not-null deliberate; appropriate column types (no TEXT where ENUM/VARCHAR fits); composite indexes for multi-column filters
-- **Async correctness**: `AsyncSession` usage consistent; no sync DB calls inside async paths; greenlet-safe attribute access (`selectinload`/`joinedload` rather than lazy-loaded attributes after session close); proper `await session.commit()` / `rollback()` around units of work
-- **Repository layer** (`core/database/repositories/`): N+1 queries, missing eager loads, raw-SQL strings (and whether they're parameterized), repository methods returning domain objects vs leaking ORM models
-- **Connector hybrid (asyncpg vs pg8000)**: Code paths cleanly separated; no asyncpg-only features used where pg8000 is the connector
-- **Migration ↔ model drift**: Models declare columns/indexes that aren't in any migration, or vice versa
-
-**How to work:**
-1. `list_dir` on `alembic/versions/` and `core/database/`
-2. `mcp__serena__get_symbols_overview` on `core/database/models.py` and each repository file
-3. Read each migration file (they're typically small — Read the whole list); flag missing `downgrade()` or `op.execute(...)` raw-SQL without a parameterization story
-4. Grep for: `op\.drop_`, `op\.alter_column`, `pass\s*$` inside `def downgrade`, `lazy=`, `selectinload`, `joinedload`, raw `text("...")` in repositories, `await .* commit\(\)`
-5. `mcp__serena__find_referencing_symbols` on each model class to find query call sites (N+1 hunting)
-6. `think_about_collected_information` after the migration sweep
-7. **Do NOT use Bash** for file discovery
-8. You MAY use Bash for: `uv run alembic check` (catches model↔migration drift) and `uv run alembic history --indicate-current 2>&1 | tail -20`
-
-**Tool budget:** ~30 calls. If insufficient, set `COVERAGE: partial` and prioritize the latest 5 migrations + repository files with the most call sites.
-
-**Report format:** Same as backend-auditor.
-
-### security-auditor
-
-You are the **security-auditor** on the audit team. anyplot has a public, unauthenticated API surface, calls Anthropic + GCS, and runs many GitHub workflows including some triggered by external events. Your scope is repo-wide but focused on `api/`, `core/config.py`, `agentic/workflows/`, and `.github/workflows/`.
-
-**Your scope:**
-- **Secret handling**: Where are secrets read (`os.getenv`, `os.environ`, settings)? Are any logged, echoed, or returned in error responses? Are GCS service account credentials handled correctly? Any hardcoded fallbacks?
-- **Workflow injection**: `${{ github.event.* }}` interpolated directly into `run:` blocks (script injection); use of `pull_request_target` without a pinned, sanitized checkout; missing `permissions:` block (default-write tokens); third-party actions referenced by tag instead of SHA
-- **Public API surface**: Endpoints in `api/routers/` that touch the DB or the LLM pipeline without rate limiting; CORS configuration; reflection of user input into responses (XSS via SVG/HTML); SSRF risk in any proxy / fetch endpoint
-- **SQL injection**: Any raw SQL constructed via f-strings or `%`-formatting (must be parameterized via `text(...).bindparams()` or ORM)
-- **Dependency CVEs**: `uv run --with pip-audit pip-audit` for Python deps (ephemeral; `pip-audit` is intentionally not a project dep) and `yarn audit` (Yarn 1.22 syntax) for frontend deps — flag any High/Critical
-- **MCP server (`api/mcp/`)**: Authentication on the MCP endpoints (or deliberate lack thereof, documented); input validation
-- **CSP / security headers**: Frontend response headers (if served from FastAPI), iframe restrictions for og-image endpoints
-
-**How to work:**
-1. `list_dir` on `.github/workflows/` and `api/routers/`
-2. Grep across the repo for: `os\.getenv`, `os\.environ`, `\${{\s*github\.event\.`, `pull_request_target`, `permissions:`, `actions/checkout@`, `f"\s*SELECT`, `f"\s*INSERT`, `f"\s*UPDATE`, `\.format\(.*SELECT`, `eval\(`, `exec\(`, `subprocess\.`, `shell=True`
-3. `mcp__serena__find_symbol` on each FastAPI router function to see what it accepts and reflects
-4. Read every workflow file that triggers on `pull_request_target`, `issue_comment`, or `workflow_dispatch` end-to-end
-5. `think_about_collected_information` after the workflow + API scan
-6. **Do NOT use Bash** for file discovery
-7. You MAY use Bash for: `uv run --with pip-audit pip-audit 2>&1 | tail -30` (ephemeral install — `pip-audit` is intentionally NOT a project dep) and `cd app && yarn audit --level high --groups dependencies 2>&1 | tail -30` (Yarn 1.22 syntax, matches `packageManager` in `app/package.json`)
-
-**Tool budget:** ~30 calls. If insufficient, set `COVERAGE: partial` and prioritize: workflow injection vectors, secret leakage paths, and any raw-SQL site.
-
-**Report format:** Same as backend-auditor.
-
-### observability-auditor
-
-You are the **observability-auditor** on the audit team. anyplot uses Plausible (server-side via `api/analytics.py` + client-side via `app/src/analytics/`) and has a TTL cache layer in `api/cache.py` plus Web-Vitals reporting. Your job is to detect drift between code, docs, and frontend usage.
-
-**Your scope:**
-- **Plausible event consistency**: Every event emitted from `api/analytics.py` and `app/src/analytics/useAnalytics.ts` is documented in `docs/reference/plausible.md`, and vice versa — no orphan events on either side. Event names use a consistent naming convention.
-- **Web Vitals pipeline** (`app/src/analytics/reportWebVitals.ts`): Reports LCP / CLS / INP / FCP / TTFB; metrics actually arrive at Plausible (correct event payload shape); no dev-only console-noise leaking into prod
-- **Server-side analytics correctness**: Fire-and-forget pattern in `api/analytics.py` doesn't block the main response; failures are caught and logged, not raised; respects DNT / opt-out if applicable
-- **Cache observability** (`api/cache.py`): Hit/miss logging or counters present; TTL values reasonable (not "never expire" for content that changes); refresh task failures surfaced
-- **Structured logging**: Use of `logging.getLogger(__name__)` consistently; no `print()` in production paths; log levels sensible (no INFO-spam, no missed ERRORs); log context (request IDs, spec IDs) carried through async boundaries
-- **LLM observability**: Around each Anthropic SDK call there should be at minimum: input-token-count log, output-token-count log, latency log, and error log. Missing instrumentation is a Medium-to-High finding for a system whose largest cost driver is LLM calls.
-- **Tracing / metrics**: No Sentry or OpenTelemetry detected — flag this as a known gap (Importance 3) only if logging coverage is also weak; otherwise note as Positive Pattern that the team has chosen logs-only
-
-**How to work:**
-1. `list_dir` on `app/src/analytics/`, plus Read `api/analytics.py`, `api/cache.py`, `docs/reference/plausible.md`
-2. `mcp__serena__find_symbol` on the Plausible event-emitting functions in both backend and frontend
-3. `mcp__serena__find_referencing_symbols` on each event-emitter to count call sites and check naming
-4. Grep for: `print\(`, `logging\.`, `logger\.`, `plausible`, `track`, `event\(`, around the Anthropic SDK call sites
-5. Read `docs/reference/plausible.md` and cross-check every documented event against actual emit sites; flag mismatches in both directions
-6. `think_about_collected_information` after the analytics + logging scan
-7. **Do NOT use Bash** for file discovery
-8. You MAY use Bash for: `cd app && yarn build 2>&1 | tail -20` to check that the analytics bundle builds cleanly
-
-**Tool budget:** ~30 calls. If insufficient, set `COVERAGE: partial` and prioritize Plausible event drift first, LLM-call instrumentation second.
-
-**Report format:** Same as backend-auditor.
