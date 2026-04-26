@@ -94,7 +94,7 @@ tags:
 
 Impl-Level Tags are assigned during implementation review and vary PER LIBRARY.
 
-Stored in: `plots/{spec-id}/metadata/{library}.yaml`
+Stored in: `plots/{spec-id}/metadata/python/{library}.yaml`
 
 ### The 5 Impl Tag Dimensions
 
@@ -142,7 +142,7 @@ Distinctive visual/aesthetic choices that deviate from defaults.
 ### Impl Tag Example
 
 ```yaml
-# plots/chord-basic/metadata/matplotlib.yaml
+# plots/chord-basic/metadata/python/matplotlib.yaml
 impl_tags:
   dependencies: []
   techniques:
@@ -165,7 +165,7 @@ impl_tags:
 | Aspect | Spec-Level Tags | Impl-Level Tags |
 |--------|-----------------|-----------------|
 | **Describes** | WHAT is visualized | HOW it is implemented |
-| **Storage Location** | `specification.yaml` | `metadata/{library}.yaml` |
+| **Storage Location** | `specification.yaml` | `metadata/python/{library}.yaml` |
 | **Applies to** | All 9 libraries | Only this library |
 | **Assigned by** | `spec-create.yml` | `impl-review.yml` |
 | **Dimensions** | 4 (plot_type, data_type, domain, features) | 5 (dependencies, techniques, patterns, dataprep, styling) |

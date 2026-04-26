@@ -186,7 +186,7 @@ plots/{specification-id}/
 - ✅ Easy to navigate (one folder = one plot type)
 - ✅ Synced to PostgreSQL via `sync-postgres.yml`
 - ✅ No merge conflicts (per-library metadata files)
-- ✅ Quality reports in `metadata/{library}.yaml` (review section)
+- ✅ Quality reports in `metadata/python/{library}.yaml` (review section)
 - ❌ NO preview images (stored in GCS)
 
 **Example**: `plots/scatter-basic/` contains everything for the basic scatter plot.
@@ -233,7 +233,7 @@ tags:
 
 ---
 
-### `plots/{specification-id}/metadata/{library}.yaml`
+### `plots/{specification-id}/metadata/python/{library}.yaml`
 
 **Purpose**: Per-library metadata (one file per library)
 
@@ -524,7 +524,7 @@ Always named by library: `{library}.py`
 - **Why**: Security
 - **Note**: `.env.example` shows required variables without values
 
-**Note**: Quality reports ARE stored in the repository in `metadata/{library}.yaml` (the `review:` section with strengths, weaknesses, criteria_checklist, verdict).
+**Note**: Quality reports ARE stored in the repository in `metadata/python/{library}.yaml` (the `review:` section with strengths, weaknesses, criteria_checklist, verdict).
 
 ---
 

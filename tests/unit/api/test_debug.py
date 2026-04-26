@@ -19,6 +19,7 @@ from fastapi.testclient import TestClient
 
 from api.cache import clear_cache
 from api.main import app, fastapi_app
+from api.routers.debug import require_admin
 from core.database import get_db
 
 
@@ -40,6 +41,8 @@ def db_client():
         yield mock_session
 
     fastapi_app.dependency_overrides[get_db] = mock_get_db
+    # Bypass admin auth in tests — require_admin is exercised separately in dedicated auth tests.
+    fastapi_app.dependency_overrides[require_admin] = lambda: None
 
     with patch(DB_CONFIG_PATCH, return_value=True):
         client = TestClient(app)

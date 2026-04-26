@@ -10,7 +10,7 @@ Validate the spec file and provide feedback on missing or problematic elements.
 
 ## Input
 
-Markdown specification from `plots/{spec-id}/spec.md`
+Markdown specification from `plots/{spec-id}/specification.md`
 
 ## Output
 

@@ -54,7 +54,7 @@ x='date:T'
 ```python
 # Target: 4800 × 2700 px (see default-style-guide.md)
 # 1600 × 3 = 4800, 900 × 3 = 2700
-chart.save('plot.png', scale_factor=3.0)
+chart.save(f'plot-{THEME}.png', scale_factor=3.0)
 ```
 
 **Note**: Requires `vl-convert-python` for PNG export.

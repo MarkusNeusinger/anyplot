@@ -4,9 +4,14 @@ Standardized exception handling for anyplot API.
 Provides consistent error responses and HTTP status codes.
 """
 
+import logging
+
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+
+
+logger = logging.getLogger(__name__)
 
 
 # ===== Error Response Schemas =====
@@ -103,10 +108,15 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
 
 
 async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    """Handle unexpected exceptions with 500 status."""
+    """Handle unexpected exceptions with 500 status.
+
+    Never reflects the raw exception text back to clients — `str(exc)` can leak
+    DSN fragments, table names, file-path traceback fragments, and other internal
+    state. The full traceback goes to the server log instead.
+    """
+    logger.exception("Unhandled exception on %s", request.url.path)
     return JSONResponse(
-        status_code=500,
-        content={"status": 500, "message": "Internal server error", "detail": str(exc), "path": request.url.path},
+        status_code=500, content={"status": 500, "message": "Internal server error", "path": request.url.path}
     )
 
 

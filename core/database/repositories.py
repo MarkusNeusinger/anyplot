@@ -177,7 +177,12 @@ class SpecRepository(BaseRepository[Spec]):
         for tag in tags:
             filters.append(cast(Spec.tags, String).contains(f'"{tag}"'))
 
-        result = await self.session.execute(select(Spec).where(or_(*filters)).options(selectinload(Spec.impls)))
+        # Eager-load Spec.impls AND each impl's library — callers (e.g. MCP
+        # search_specifications) iterate impls and read impl.library on an async
+        # session, which would otherwise raise sqlalchemy.exc.MissingGreenlet.
+        result = await self.session.execute(
+            select(Spec).where(or_(*filters)).options(selectinload(Spec.impls).selectinload(Impl.library))
+        )
         return list(result.scalars().all())
 
     async def upsert(self, spec_data: dict) -> Spec:
@@ -274,11 +279,16 @@ class ImplRepository(BaseRepository[Impl]):
         Defaults to language_id="python" so existing callers keep working. Pass ``language_id``
         explicitly to disambiguate when multiple languages exist for the same (spec, library).
         """
+        # selectinload(Impl.library) — MCP get_implementation reads impl.library
+        # on an async session; without eager-load it raises MissingGreenlet.
         result = await self.session.execute(
             select(Impl)
             .where(Impl.spec_id == spec_id, Impl.library_id == library_id, Impl.language_id == language_id)
             .options(
-                undefer(Impl.code), undefer(Impl.review_image_description), undefer(Impl.review_criteria_checklist)
+                selectinload(Impl.library),
+                undefer(Impl.code),
+                undefer(Impl.review_image_description),
+                undefer(Impl.review_criteria_checklist),
             )
         )
         return result.scalar_one_or_none()

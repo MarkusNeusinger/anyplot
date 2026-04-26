@@ -64,7 +64,7 @@ plot = plot + theme(
 ## Save (PNG)
 
 ```python
-plot.save('plot.png', dpi=300)
+plot.save(f'plot-{THEME}.png', dpi=300)
 ```
 
 ## Brewer Palettes

@@ -150,6 +150,12 @@ class Settings(BaseSettings):
     and as a GitHub Actions secret so sync-postgres can invalidate the cache after
     writing new data to PostgreSQL."""
 
+    admin_token: Optional[str] = None
+    """Shared secret required by sensitive /debug/* endpoints (status, ping).
+    When unset, those endpoints return 503 instead of leaking quality scores,
+    weakness aggregates, and DB latency to the public internet. Set via Secret
+    Manager in Cloud Run; pass via the `X-Admin-Token` request header."""
+
     # =============================================================================
     # CORS
     # =============================================================================
