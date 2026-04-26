@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 dumbbell-basic: Basic Dumbbell Chart
 Library: bokeh 3.9.0 | Python 3.14.4
-Quality: 91/100 | Updated: 2026-04-26
+Quality: 88/100 | Updated: 2026-04-26
 """
 
 import os
