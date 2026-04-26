@@ -1,172 +1,192 @@
 library: plotly
+language: python
 specification_id: dumbbell-basic
 created: '2025-12-23T13:02:26Z'
-updated: '2025-12-23T13:09:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461372259
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/plotly/plot.html
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-04-26T01:24:53Z'
+generated_by: claude-opus
+workflow_run: 24944963786
+issue: 945
+python_version: 3.14.4
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/plotly/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent implementation of the dumbbell chart with proper horizontal orientation
-    as specified
-  - Smart sorting by improvement magnitude reveals patterns effectively (Customer
-    Support had biggest gain)
-  - Clean, professional color scheme using Python brand colors (blue/yellow) that
-    are colorblind-safe
-  - 'Good use of Plotly features: custom hover templates, clean layout, interactive
-    HTML export'
-  - Well-proportioned marker size (18) and subtle connecting lines (width 2, gray)
-    create clear visual hierarchy
+  - 'Correct Okabe-Ito palette: #009E73 (Before) and #D55E00 (After) in canonical
+    order'
+  - 'Full theme adaptation: #FAF8F1 light / #1A1A17 dark backgrounds with all chrome
+    tokens propagated through title, axes, ticks, legend, and grid'
+  - All font sizes explicitly set (title=28, axis=22, tick=18, legend=16px) — readable
+    in both themes
+  - Data sorted by improvement magnitude with a deliberate regression case (Legal)
+    for narrative interest
+  - Clean KISS code structure with deterministic hand-picked data and no RNG
+  - 'Idiomatic Plotly use: hovertemplate with formatted tooltips, hoverinfo=skip for
+    connecting lines, HTML+PNG dual output'
+  - 'Marker edge borders (line={color: PAGE_BG}) adapt to theme for clean dot definition
+    against both surfaces'
   weaknesses:
-  - X-axis label Satisfaction Score could include units like (%) or (out of 100) for
-    clarity
-  - All changes are positive; including one department with negative/minimal change
-    would demonstrate fuller data range
-  - Grid shows only vertical lines; adding horizontal gridlines at low alpha could
-    aid reading values
-  image_description: 'The plot displays a horizontal dumbbell chart showing employee
-    satisfaction scores before and after policy changes across 8 departments. Each
-    department is represented on the y-axis with categories sorted by improvement
-    magnitude (Customer Support showing largest improvement at top, Finance smallest
-    at bottom). Blue dots (Python Blue #306998) represent "Before" scores and yellow
-    dots (Python Yellow #FFD43B) represent "After" scores, connected by thin gray
-    lines. The x-axis shows "Satisfaction Score" ranging from 40 to 90. The title
-    "Employee Satisfaction · dumbbell-basic · plotly · pyplots.ai" is centered at
-    the top with a horizontal legend below it showing "Before" and "After" markers.
-    The background is clean white with subtle vertical gridlines.'
+  - Title domain is 'pyplots.ai' instead of 'anyplot.ai' — SC-04 non-compliance
+  - Y-axis horizontal gridlines are shown (showgrid=True on yaxis) but add noise to
+    a dumbbell chart — only x-axis vertical gridlines are needed to trace values
+  - 'No visual emphasis for the extreme cases: the largest-gap department (Customer
+    Support: +24 pts) and the only regression (Legal: -3 pts) look identical to mid-range
+    entries — conditional coloring or size variation for the regression row would
+    add storytelling'
+  - Design sophistication is above-default but not exceptional — no data labels showing
+    delta values, no annotation callouts, no conditional color to flag negative vs.
+    positive changes
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct per spec, not pure white.
+      Chrome: Title "Employee Satisfaction · dumbbell-basic · plotly · pyplots.ai" in dark ink (#1A1A17), 28px, centered. X-axis label "Satisfaction Score (out of 100)" and Y-axis label "Department" both in dark text, 22px. Tick labels in slightly lighter #4A4A44 at 18px. All text is clearly readable against the light background. Horizontal legend above plot area with green (#009E73) "Before" and orange (#D55E00) "After" entries in elevated (#FFFDF6) box.
+      Data: 9 horizontal dumbbell entries sorted by improvement (Customer Support at top with largest gap ~45→69, Legal at bottom with regression ~70→67). Before dots are Okabe-Ito green (#009E73) with white borders; After dots are Okabe-Ito vermillion (#D55E00) with white borders. Connecting lines are thin and in #4A4A44.
+      Legibility verdict: PASS — all text clearly readable, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct per spec, not pure black.
+      Chrome: Title in light #F0EFE8, axis labels in #F0EFE8, tick labels in #B8B7B0. Legend box uses elevated dark (#242420) with light text. All text is clearly readable against the dark background — no dark-on-dark failures observed.
+      Data: Green (#009E73) and vermillion (#D55E00) data colors are IDENTICAL to the light render — only connecting lines flip to #B8B7B0 (light gray) and legend box fill changes. Brand green #009E73 is clearly visible on the dark surface.
+      Legibility verdict: PASS — all text clearly readable, proper light-on-dark rendering throughout.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick fonts at 18pt - all perfectly
-          readable
+        comment: 'All font sizes explicitly set: title=28, axis=22, tick=18, legend=16px.
+          Readable in both light and dark themes.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, department names well-spaced
+        comment: 9 categories well-spaced. No label or element overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Marker size 18 is well-suited for 8 categories, connecting lines
-          visible but subtle
+        comment: Markers size=18 clearly visible. Connecting lines at width=2 visible
+          but subtle.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow combination is colorblind-safe, high contrast
+        comment: Okabe-Ito green and vermillion are CVD-safe and distinguishable without
+          relying on hue alone.
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good use of canvas space, left margin accommodates long department
-          names, slight excess space on right
+        comment: 4800x2700px canvas. Generous margins (l=170, r=60, t=110, b=90).
+          Nothing cut off. Good canvas utilization.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: '"Satisfaction Score" is descriptive but lacks units (e.g., "/100"
-          or "%")'
+        comment: 'X-axis: ''Satisfaction Score (out of 100)'' with units. Y-axis:
+          ''Department''. Both descriptive.'
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle at alpha 0.1, legend well-placed; however grid is vertical
-          only
+        comment: 'First series #009E73 (Before). Second series #D55E00 (After). Backgrounds
+          #FAF8F1 (light) / #1A1A17 (dark). Both renders theme-correct.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: Okabe-Ito correctly applied, marker edge borders
+          adapt to theme, clean legend placement. Professional but not publication-extraordinary.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Custom margins, subtle 10% opacity grid, theme-adaptive connecting
+          lines. Y-axis gridlines shown unnecessarily. No explicit spine removal.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Sorted by improvement magnitude reveals pattern. Deliberate regression
+          case (Legal) adds narrative. No visual emphasis distinguishing the extreme
+          outlier or the regression case.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct dumbbell/connected dot plot implementation
+        comment: Correct horizontal dumbbell chart with connecting lines.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on y-axis, values on x-axis (horizontal orientation as
-          spec prefers)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Distinct colors for start/end dots, sorted by difference, thin connecting
-          lines
-      - id: SC-04
-        name: Data Range
+        comment: Two distinct-color dots per category, thin connecting lines, horizontal
+          orientation, sorted by difference.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis range [35, 95] shows all data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
+        comment: Categories on y-axis, values on x-axis. All 9 departments visible.
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly shows "Before" and "After" with matching colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses "{topic} · {spec-id} · {library} · pyplots.ai" format correctly
+        max: 3
+        passed: false
+        comment: Title includes spec-id and library but uses 'pyplots.ai' instead
+          of 'anyplot.ai'. Legend labels 'Before'/'After' are correct.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varied improvements across departments, all positive changes;
-          could show one negative change for full range
+        comment: 'Shows all dumbbell chart aspects: multiple categories, before/after
+          comparison, sorted order, includes a negative change for full range demonstration.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Employee satisfaction before/after policy changes is a perfect real-world
-          scenario matching spec example
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Satisfaction scores 45-85 are realistic percentages
+        comment: Employee satisfaction scores before/after policy changes — realistic,
+          neutral, comprehensible scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Satisfaction scores 45-85 on a 100-point scale. Realistic range for
+          employee surveys.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,35 +194,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → sort → figure → traces → layout
-          → save'
+        comment: 'Clean flat structure: tokens → data → sort → figure → traces → layout
+          → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Data is deterministic (hardcoded), but no explicit seed comment;
-          minor deduction
+        max: 2
+        passed: true
+        comment: Fully deterministic hand-picked data, no RNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only plotly.graph_objects imported, which is used
+        comment: Only os and plotly.graph_objects imported; both used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Clean iteration over categories for connecting lines. Pythonic sorted()
+          with lambda. Appropriate complexity.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
-      items: []
-  verdict: APPROVED
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No bare plot.png. Current
+          API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: go.Figure() with explicit trace management per Plotly idiom. Proper
+          update_layout. showlegend=False on non-legend traces. Good but not expert-level
+          (could use shapes for lines instead of Scatter for slightly cleaner approach).
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Plotly-specific: hovertemplate with formatted tooltips showing department
+          and score, hoverinfo=skip for connecting lines to prevent hover clutter,
+          HTML export alongside PNG.'
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
