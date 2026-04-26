@@ -1,62 +1,87 @@
-""" pyplots.ai
+""" anyplot.ai
 funnel-basic: Basic Funnel Chart
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: altair 6.1.0 | Python 3.14.4
+Quality: 87/100 | Updated: 2026-04-26
 """
+
+import os
 
 import altair as alt
 import pandas as pd
 
 
-# Data - Sales funnel example
+# Theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito categorical palette — first stage is brand green (#009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+
+# Data — sales funnel example from the specification
 stages = ["Awareness", "Interest", "Consideration", "Intent", "Purchase"]
 values = [1000, 600, 400, 200, 100]
 
-# Create DataFrame with centered positioning for funnel shape
-df = pd.DataFrame({"stage": stages, "value": values, "order": range(len(stages))})
-
-# Calculate percentage of initial value for display
+df = pd.DataFrame({"stage": stages, "value": values})
 df["percentage"] = (df["value"] / df["value"].iloc[0] * 100).round(1)
-df["label"] = df["value"].astype(str) + " (" + df["percentage"].astype(str) + "%)"
+df["label"] = df["value"].astype(str) + "  ·  " + df["percentage"].astype(str) + "%"
 
-# For centered funnel: calculate x start and end positions
+# Centered funnel: bars span [-value/2, +value/2]; mid is always 0
 df["x_start"] = -df["value"] / 2
 df["x_end"] = df["value"] / 2
+df["x_mid"] = 0
 
-# Colors for each stage (Python Blue gradient to Yellow)
-colors = ["#306998", "#3D7AAF", "#4A8BC6", "#579CDD", "#FFD43B"]
+x_scale = alt.Scale(domain=[-620, 620])
 
-# Create centered horizontal bars to form funnel shape
+# Funnel bars (centered, narrowing)
 bars = (
     alt.Chart(df)
-    .mark_bar(cornerRadius=4, height=70)
+    .mark_bar(cornerRadius=6, height=110, stroke=PAGE_BG, strokeWidth=2)
     .encode(
-        x=alt.X("x_start:Q", axis=None, scale=alt.Scale(domain=[-600, 600])),
+        x=alt.X("x_start:Q", axis=None, scale=x_scale),
         x2="x_end:Q",
-        y=alt.Y(
-            "stage:N", sort=stages, axis=alt.Axis(labelFontSize=20, labelFontWeight="bold", title=None, labelPadding=15)
-        ),
-        color=alt.Color("stage:N", scale=alt.Scale(domain=stages, range=colors), legend=None),
+        y=alt.Y("stage:N", sort=stages, axis=alt.Axis(title=None, labelPadding=18, ticks=False, domain=False)),
+        color=alt.Color("stage:N", scale=alt.Scale(domain=stages, range=OKABE_ITO), legend=None),
+        tooltip=[
+            alt.Tooltip("stage:N", title="Stage"),
+            alt.Tooltip("value:Q", title="Count", format=","),
+            alt.Tooltip("percentage:Q", title="% of top", format=".1f"),
+        ],
     )
 )
 
-# Add value labels to the right of bars
-text = (
+# Value + percentage labels positioned to the right of each bar
+labels = (
     alt.Chart(df)
-    .mark_text(align="left", baseline="middle", dx=15, fontSize=18, fontWeight="bold")
-    .encode(x=alt.X("x_end:Q"), y=alt.Y("stage:N", sort=stages), text=alt.Text("label:N"), color=alt.value("#333333"))
+    .mark_text(align="left", baseline="middle", dx=14, fontSize=20, fontWeight="bold", color=INK)
+    .encode(x=alt.X("x_end:Q", scale=x_scale, axis=None), y=alt.Y("stage:N", sort=stages), text="label:N")
 )
 
-# Combine bars and text
 chart = (
-    (bars + text)
+    (bars + labels)
     .properties(
-        width=1600, height=900, title=alt.Title(text="funnel-basic · altair · pyplots.ai", fontSize=28, anchor="middle")
+        width=1400,
+        height=900,
+        background=PAGE_BG,
+        title=alt.Title(
+            "Sales Funnel · funnel-basic · altair · anyplot.ai", fontSize=28, color=INK, anchor="middle", offset=20
+        ),
     )
-    .configure_view(strokeWidth=0)
-    .configure_axis(grid=False)
+    .configure_view(fill=PAGE_BG, stroke=None)
+    .configure_axis(
+        labelFontSize=20,
+        labelFontWeight="bold",
+        labelColor=INK,
+        titleColor=INK,
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        grid=False,
+    )
+    .configure_title(color=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save as PNG (target 4800x2700) and HTML
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
