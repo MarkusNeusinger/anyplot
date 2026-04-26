@@ -33,9 +33,9 @@ on:
         type: boolean
         default: false
       pace_seconds:
-        description: "Seconds to wait between dispatches (0 = fire all at once, default 300 = 5 min)"
+        description: "Seconds to wait between dispatches (0 = fire all at once, default 120 = 2 min)"
         required: false
-        default: '300'
+        default: '120'
 
 env:
   ALL_LIBRARIES: "matplotlib seaborn plotly bokeh altair plotnine pygal highcharts letsplot"
@@ -134,7 +134,7 @@ jobs:
           echo "## Bulk Generation Plan"
           echo ""
           echo "**Total items:** $COUNT"
-          echo "**Pacing:** ${{ inputs.pace_seconds || '300' }}s between dispatches (0 = fire all)"
+          echo "**Pacing:** ${{ inputs.pace_seconds || '120' }}s between dispatches (0 = fire all)"
           echo "**Dry run:** $DRY_RUN"
           echo ""
           echo "### Items to generate:"
@@ -145,8 +145,8 @@ jobs:
   #
   # One runner loops through every (spec, library) pair and dispatches
   # impl-generate.yml with a configurable pause between each call. Default
-  # pace is 300 s (5 min) to stay under the Claude Max concurrency budget and
-  # avoid spinning up 9 heavy generation runs at once.
+  # pace is 120 s (2 min) to stay under the Claude Max concurrency budget on
+  # Sonnet and avoid spinning up 9 heavy generation runs at once.
   # ============================================================================
   generate:
     needs: [build-matrix, preview]
@@ -155,7 +155,7 @@ jobs:
     permissions:
       contents: read
       actions: write
-    # Enough headroom: 9 libs × (300 s pace + ~30 s dispatch) ≈ 50 min;
+    # Enough headroom: 9 libs × (120 s pace + ~30 s dispatch) ≈ 23 min;
     # bulk "all for all" could be very long — clamp at 6 h.
     timeout-minutes: 360
 
@@ -167,7 +167,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MATRIX: ${{ needs.build-matrix.outputs.matrix }}
-          PACE_SECONDS: ${{ inputs.pace_seconds || '300' }}
+          PACE_SECONDS: ${{ inputs.pace_seconds || '120' }}
         run: |
           set -u
 
