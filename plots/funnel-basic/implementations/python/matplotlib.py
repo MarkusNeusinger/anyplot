@@ -1,83 +1,79 @@
-""" pyplots.ai
+"""anyplot.ai
 funnel-basic: Basic Funnel Chart
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: matplotlib | Python 3.13
+Quality: pending | Updated: 2026-04-26
 """
 
-import matplotlib.patches as patches
+import os
+
 import matplotlib.pyplot as plt
+import numpy as np
 
 
-# Data - Sales funnel example from specification
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette — first stage is brand green (#009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+# Light orange #E69F00 needs dark text; pick INK so the label also
+# stays legible where it overflows the narrow bottom segment.
+TEXT_ON_FILL = ["white", "white", "white", "white", INK]
+
+# Data — sales funnel example from specification
 stages = ["Awareness", "Interest", "Consideration", "Intent", "Purchase"]
-values = [1000, 600, 400, 200, 100]
+values = np.array([1000, 600, 400, 200, 100])
 
-# Colors for each stage - distinct colors for visual differentiation
-colors = ["#306998", "#4A8BBF", "#FFD43B", "#FFB347", "#FF6B6B"]
-
-# Calculate widths proportional to first stage value
+# Geometry: widths proportional to first stage value, equal-height segments
 max_value = values[0]
-widths = [v / max_value for v in values]
+widths = values / max_value
+n = len(stages)
+y_edges = np.linspace(n, 0, n + 1)
+gap = 0.06
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Funnel parameters
-n_stages = len(stages)
-stage_height = 0.8 / n_stages  # Total funnel height is 80% of plot
-gap = 0.02  # Small gap between stages
-y_start = 0.9  # Start from top
-
-# Draw funnel segments as trapezoids
-for i in range(n_stages):
-    # Current stage width
+for i in range(n):
+    y_top = y_edges[i] - gap / 2
+    y_bot = y_edges[i + 1] + gap / 2
     w_top = widths[i]
-    # Next stage width (or smaller for last stage)
-    w_bottom = widths[i + 1] if i < n_stages - 1 else widths[i] * 0.6
+    # Flat bottom on the last segment — trapezoid ends at the actual
+    # data width instead of tapering to a decorative point.
+    w_bot = widths[i + 1] if i + 1 < n else widths[i]
 
-    # Calculate y positions
-    y_top = y_start - i * (stage_height + gap)
-    y_bottom = y_top - stage_height
+    y = np.array([y_top, y_bot])
+    x_left = np.array([-w_top / 2, -w_bot / 2])
+    x_right = np.array([w_top / 2, w_bot / 2])
+    ax.fill_betweenx(y, x_left, x_right, facecolor=OKABE_ITO[i], edgecolor=PAGE_BG, linewidth=2)
 
-    # Calculate x positions (centered)
-    x_center = 0.5
-    x_top_left = x_center - w_top / 2
-    x_top_right = x_center + w_top / 2
-    x_bottom_left = x_center - w_bottom / 2
-    x_bottom_right = x_center + w_bottom / 2
-
-    # Create trapezoid vertices
-    trapezoid = patches.Polygon(
-        [(x_top_left, y_top), (x_top_right, y_top), (x_bottom_right, y_bottom), (x_bottom_left, y_bottom)],
-        closed=True,
-        facecolor=colors[i],
-        edgecolor="white",
-        linewidth=2,
-    )
-    ax.add_patch(trapezoid)
-
-    # Add stage label and value
-    y_mid = (y_top + y_bottom) / 2
-    percentage = (values[i] / max_value) * 100
-    label_text = f"{stages[i]}\n{values[i]:,} ({percentage:.0f}%)"
+    y_mid = (y_top + y_bot) / 2
+    pct = (values[i] / max_value) * 100
     ax.text(
-        x_center,
+        0,
         y_mid,
-        label_text,
+        f"{stages[i]}\n{values[i]:,}  ·  {pct:.0f}%",
         ha="center",
         va="center",
         fontsize=18,
         fontweight="bold",
-        color="white" if i < 2 else "black",
+        color=TEXT_ON_FILL[i],
     )
 
-# Styling
-ax.set_xlim(0, 1)
-ax.set_ylim(0, 1)
-ax.set_aspect("equal")
+# Style
+ax.set_xlim(-0.65, 0.65)
+ax.set_ylim(-0.2, n + 0.2)
+ax.set_aspect("auto")
 ax.axis("off")
+ax.set_title("funnel-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
 
-ax.set_title("funnel-basic · matplotlib · pyplots.ai", fontsize=24, fontweight="bold", pad=20)
+# Stage index axis on the left
+for i in range(n):
+    y_mid = (y_edges[i] + y_edges[i + 1]) / 2
+    ax.text(-0.62, y_mid, f"Stage {i + 1}", ha="left", va="center", fontsize=14, color=INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
