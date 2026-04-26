@@ -124,11 +124,15 @@ export function useFilterState({
   // references for the same data. Combined with useFilterFetch.ts's
   // filtersKey memoization, this prevents the sync-back from re-triggering
   // a fetch when state echoes back through the context.
+  // Use stable identifiers (spec_id + library) instead of just lengths, so a
+  // re-shuffle or refresh that keeps the count but changes the content still
+  // re-syncs to context. Each PlotImage has stable `spec_id` and `library`.
+  const imagesKey = (imgs: typeof allImages) => imgs.map((i) => `${i.spec_id}:${i.library}`).join('|');
   const syncKey = useMemo(
     () =>
       JSON.stringify({
-        allImagesLen: allImages.length,
-        displayedLen: displayedImages.length,
+        allImagesIds: imagesKey(allImages),
+        displayedIds: imagesKey(displayedImages),
         activeFilters,
         filterCounts,
         globalCounts,

@@ -20,6 +20,7 @@ from fastapi.testclient import TestClient
 from api.cache import clear_cache
 from api.main import app, fastapi_app
 from api.routers.debug import require_admin
+from core.config import settings
 from core.database import get_db
 
 
@@ -41,12 +42,34 @@ def db_client():
         yield mock_session
 
     fastapi_app.dependency_overrides[get_db] = mock_get_db
-    # Bypass admin auth in tests — require_admin is exercised separately in dedicated auth tests.
+    # Bypass admin auth in tests — require_admin behaviour is asserted separately
+    # in `TestRequireAdmin` below.
     fastapi_app.dependency_overrides[require_admin] = lambda: None
 
     with patch(DB_CONFIG_PATCH, return_value=True):
         client = TestClient(app)
         yield client, mock_session
+
+    fastapi_app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def auth_client():
+    """Test client WITHOUT the require_admin override — exercises the real gate.
+
+    Used by TestRequireAdmin to assert /debug/* fail-closed behaviour.
+    """
+    mock_session = AsyncMock()
+
+    async def mock_get_db():
+        yield mock_session
+
+    fastapi_app.dependency_overrides[get_db] = mock_get_db
+    # NB: do NOT override require_admin — we want the real gate.
+
+    with patch(DB_CONFIG_PATCH, return_value=True):
+        client = TestClient(app)
+        yield client
 
     fastapi_app.dependency_overrides.clear()
 
@@ -336,3 +359,68 @@ class TestDebugStatus:
         assert system["timestamp"]  # Non-empty ISO timestamp
         assert system["total_specs_in_db"] == 0
         assert system["total_impls_in_db"] == 0
+
+
+class TestRequireAdmin:
+    """Tests for the /debug/* admin auth gate (fail-closed behaviour).
+
+    The gate (`api/routers/debug.require_admin`) protects /debug/status and
+    /debug/ping behind a shared `X-Admin-Token` header. When `settings.admin_token`
+    is unset the endpoints are disabled (503) so a misconfigured prod deploy
+    fails closed; with the secret set, missing/wrong headers return 401.
+    """
+
+    def test_status_503_when_admin_token_unset(self, auth_client) -> None:
+        """admin_token unset → 503 (disabled, fail-closed)."""
+        with patch.object(settings, "admin_token", None):
+            response = auth_client.get("/debug/status")
+        assert response.status_code == 503
+        assert "not configured" in response.json()["message"].lower()
+
+    def test_ping_503_when_admin_token_unset(self, auth_client) -> None:
+        """admin_token unset → 503 on /debug/ping too."""
+        with patch.object(settings, "admin_token", None):
+            response = auth_client.get("/debug/ping")
+        assert response.status_code == 503
+
+    def test_status_401_when_token_set_and_header_missing(self, auth_client) -> None:
+        """admin_token set, no header → 401."""
+        with patch.object(settings, "admin_token", "supersecret"):
+            response = auth_client.get("/debug/status")
+        assert response.status_code == 401
+        assert "invalid admin token" in response.json()["message"].lower()
+
+    def test_status_401_when_token_set_and_header_wrong(self, auth_client) -> None:
+        """admin_token set, wrong header value → 401."""
+        with patch.object(settings, "admin_token", "supersecret"):
+            response = auth_client.get("/debug/status", headers={"X-Admin-Token": "wrong"})
+        assert response.status_code == 401
+
+    def test_status_200_when_token_set_and_header_correct(self, auth_client) -> None:
+        """admin_token set, correct header → 200."""
+        mock_repo = MagicMock()
+        mock_repo.get_all = AsyncMock(return_value=[])
+        with (
+            patch.object(settings, "admin_token", "supersecret"),
+            patch("api.routers.debug.SpecRepository", return_value=mock_repo),
+        ):
+            response = auth_client.get("/debug/status", headers={"X-Admin-Token": "supersecret"})
+        assert response.status_code == 200
+
+    def test_ping_200_when_token_set_and_header_correct(self, auth_client) -> None:
+        """admin_token set, correct header → 200 on /debug/ping too."""
+        with patch.object(settings, "admin_token", "supersecret"):
+            response = auth_client.get("/debug/ping", headers={"X-Admin-Token": "supersecret"})
+        # ping mocks the DB session (returns truthy on execute), so it should 200
+        assert response.status_code == 200
+
+    def test_cache_invalidate_unaffected_by_admin_token(self, auth_client) -> None:
+        """`/debug/cache/invalidate` has its own token gate (cache_invalidate_token);
+        the admin_token gate must NOT apply to it."""
+        with (
+            patch.object(settings, "admin_token", None),
+            patch.object(settings, "cache_invalidate_token", "cachesecret"),
+        ):
+            # Without X-Admin-Token, cache invalidate still works given correct X-Cache-Token.
+            response = auth_client.post("/debug/cache/invalidate", headers={"X-Cache-Token": "cachesecret"})
+        assert response.status_code == 200

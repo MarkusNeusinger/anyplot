@@ -3,7 +3,7 @@
 import html
 import re
 from datetime import datetime
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
@@ -326,12 +326,19 @@ async def seo_spec_language(spec_id: str, language: str):
     del language  # referenced for route matching only; deliberately not forwarded
     if not _SPEC_ID_RE.fullmatch(spec_id):
         raise HTTPException(status_code=404, detail="Spec not found")
-    # spec_id is already constrained by _SPEC_ID_RE (lowercase alphanum + hyphens),
-    # so quote() is effectively a no-op — but the explicit sanitizer call makes
-    # CodeQL's py/url-redirection check happy and locks in the invariant if
-    # someone ever loosens the regex.
+    # Belt-and-braces redirect-target sanitisation:
+    #   1. _SPEC_ID_RE.fullmatch() above already constrains spec_id to
+    #      lowercase alphanum + hyphens.
+    #   2. urllib.parse.quote() percent-encodes anything outside [-A-Za-z0-9],
+    #      which is a CodeQL-recognised sanitizer for `py/url-redirection`.
+    #   3. urlparse() + scheme/netloc check guarantees the assembled URL is
+    #      a same-origin path (no `//evil.com` or `https://evil.com`).
     safe_spec = quote(spec_id, safe="-")
-    return RedirectResponse(url=f"/seo-proxy/{safe_spec}", status_code=301)
+    target = "/seo-proxy/" + safe_spec
+    parsed = urlparse(target)
+    if parsed.scheme or parsed.netloc or not target.startswith("/seo-proxy/"):
+        raise HTTPException(status_code=400, detail="Invalid redirect target")
+    return RedirectResponse(url=target, status_code=301)
 
 
 @router.get("/seo-proxy/{spec_id}/{language}/{library}")

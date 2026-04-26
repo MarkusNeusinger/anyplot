@@ -44,7 +44,8 @@ def _get_lock(key: str) -> asyncio.Lock:
     """
     if key not in _locks:
         _locks[key] = asyncio.Lock()
-    return _locks[key]
+    # cast() — cachetools.LRUCache is not generic, so item access returns Any.
+    return cast(asyncio.Lock, _locks[key])
 
 
 def cache_key(*parts: str) -> str:
