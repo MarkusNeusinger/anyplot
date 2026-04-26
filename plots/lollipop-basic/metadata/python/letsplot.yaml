@@ -1,162 +1,178 @@
 library: letsplot
+language: python
 specification_id: lollipop-basic
 created: '2025-12-23T15:13:47Z'
-updated: '2025-12-23T15:18:02Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20464355950
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - minimal-chrome
+updated: '2026-04-26T13:18:00Z'
+generated_by: claude-opus
+workflow_run: 24957386120
+issue: 934
+python_version: 3.14.4
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/letsplot/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Clean, minimalist lollipop chart that perfectly matches the spec requirements
-  - Excellent use of geom_segment + geom_point combination for the lollipop effect
-  - Data sorted by value improves readability as recommended in spec
-  - Well-chosen realistic business context (product category sales)
-  - Proper text sizing for 4800x2700 output with scale=3
-  - Removed x-axis gridlines for cleaner look
+  - 'Perfect theme-adaptive chrome: both renders use correct backgrounds and ink tokens
+    for all text and grid elements with no dark-on-dark failures'
+  - 'Correct lollipop implementation: geom_segment + geom_point is the idiomatic lets-plot
+    approach'
+  - Clean flat code structure with proper ANYPLOT_THEME environment handling
+  - 'Full spec compliance: title format, sorting, vertical orientation, single series
+    with brand green #009E73'
   weaknesses:
-  - Y-axis gridlines could be more subtle (add alpha or lighter color)
-  - Could demonstrate more lets-plot specific features like interactive tooltips
-  image_description: The plot displays a basic lollipop chart showing product sales
-    by category. Eight categories are shown on the x-axis (Beauty, Grocery, Toys,
-    Books, Sports, Home & Garden, Clothing, Electronics), sorted in ascending order
-    by sales value. Each data point consists of a thin blue vertical stem (#306998)
-    extending from baseline 0 to a filled circular blue dot at the data value. The
-    y-axis shows "Sales ($)" ranging from 0 to 50,000. Category labels are rotated
-    45 degrees for readability. The title "lollipop-basic · letsplot · pyplots.ai"
-    is centered at the top. The layout uses a minimal theme with subtle gray gridlines
-    and no x-axis grid. Overall, the plot is clean, well-proportioned, and effectively
-    communicates the ranking of categories by sales.
+  - Y-axis limit hardcoded to 50000 leaves ~10% wasted headroom above the max data
+    value (~45200); use scale_y_continuous(limits=[0, None]) or a computed ceiling
+  - 'No data storytelling: no annotations, value labels, or emphasis on top/bottom
+    performers — the plot presents data but does not guide the viewer'
+  - 'LM-02 opportunity: lets-plot native tooltip feature is unused, missing a distinctive
+    interactive showcase'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface
+      Chrome: Title "lollipop-basic · letsplot · anyplot.ai" in dark ink, clearly readable. Axis labels "Product Category" and "Sales ($)" in dark ink, readable. X-tick labels rotated 45° in muted dark (#4A4A44), readable. Y-tick labels in muted dark, readable.
+      Data: 8 lollipops using brand green #009E73. Stems (geom_segment) extend from baseline 0 to data value; circular dots (geom_point) sit at data values. Horizontal y-axis grid lines only, subtle.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title in light ink, clearly readable. Axis labels in light ink, clearly readable. X-tick labels in muted light (#B8B7B0), readable. Y-tick labels in muted light, readable. No dark-on-dark failures detected.
+      Data: Colors identical to light render — brand green #009E73 for stems and dots. Grid lines subtle on dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 24pt, axis titles at 20pt, tick labels at 16pt - all clearly
-          readable
+        comment: 'Title 24pt, axis labels 20pt, tick labels 16pt; all readable in
+          both themes. Minor: rotated x-tick labels slightly tight at full scale.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Category labels rotated 45° prevent overlap, all text fully readable
+        comment: 45-degree rotation on x-axis labels prevents any collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Stems (size=1.5) and dots (size=8) are well-proportioned for 8 data
-          points
+        comment: Stems (size=1.5) and dots (size=10) well-proportioned for 8 data
+          points.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color (#306998), no colorblind issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good proportions, plot fills canvas well, minor extra space at top
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Product Category" and "Sales ($)" are descriptive with units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Single brand green #009E73, CVD-safe, no red-green conflict.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions; y-axis limit at 50000 leaves unnecessary headroom
+          above max data value ~45200.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No legend needed, but y-axis gridlines could be more subtle (currently
-          default)
+        comment: Product Category and Sales ($) are descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green used as first (only) series; backgrounds correctly #FAF8F1
+          light / #1A1A17 dark; both renders theme-correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean professional look with proper theme-adaptive chrome. Lacks
+          annotations, value labels, or emphasis on key performers.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, y-axis-only grid, theme_minimal() base
+          with active customization.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Ascending sort creates natural ranking narrative. No annotations
+          or emphasis to guide viewer to key insight.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct lollipop chart with stems and circular markers
+        comment: Correct lollipop chart with geom_segment stems and geom_point circular
+          markers.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on x-axis, values on y-axis as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Thin stems, circular dots, vertical orientation, sorted by value
-      - id: SC-04
-        name: Data Range
+        comment: Thin stems, circular dots, vertical orientation, data sorted by value
+          ascending.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis 0-50,000 shows all data appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Categories on x-axis, values on y-axis, all 8 data points visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single-series data
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Exactly matches "{spec-id} · {library} · pyplots.ai"
+        comment: Title exactly matches lollipop-basic · letsplot · anyplot.ai; no
+          legend needed for single series.
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows 8 categories with clear value differentiation; could show more
-          variation in value gaps
+        comment: 'Shows all key aspects: stems, dots, baseline, sorted ranking. 8
+          categories provides good coverage.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Product sales by category is a real, comprehensible business scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Sales values $9,800-$45,200 are realistic for category-level retail
-          data
+        comment: Product sales by category is a real-world plausible, neutral scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sales values $9800-$45200 are realistic for retail category data.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -164,41 +180,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Flat structure: imports, theme tokens, data, plot, save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Data is deterministic (hardcoded), but no random seed comment/documentation
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data; no random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imported symbols are used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Clean, readable, no fake interactivity.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with scale=3.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'ggplot grammar applied correctly: layer composition, scale_x_continuous
+          with custom breaks/labels, theme() system used properly.'
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot grammar (geom_segment, geom_point, theme_minimal), but
-          could leverage more lets-plot specific features like tooltips or coordFlip
-          for horizontal variant
+        comment: HTML export and ggplot grammar layer composition. Could leverage
+          lets-plot native tooltip feature for a more distinctive showcase.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - html-export
+  - manual-ticks
+  patterns: []
+  dataprep: []
+  styling:
+  - grid-styling
