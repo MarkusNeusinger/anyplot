@@ -5,7 +5,7 @@
  * Composes useUrlSync and useFilterFetch for cleaner separation of concerns.
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import type { PlotImage, FilterCategory, ActiveFilters, FilterCounts } from '../types';
 import { FILTER_CATEGORIES } from '../types';
@@ -117,22 +117,54 @@ export function useFilterState({
     skipInitialFetch: shouldSkipInitialFetch,
   });
 
-  // Sync state changes back to persistent context
-  useEffect(() => {
-    if (allImages.length > 0 || displayedImages.length > 0) {
-      setHomeState((prev) => ({
-        ...prev,
-        allImages,
-        displayedImages,
+  // Sync state changes back to persistent context.
+  //
+  // Coalesce on a stringified key so the effect only fires when CONTENT
+  // actually changes, not when the parent re-renders and passes new array
+  // references for the same data. Combined with useFilterFetch.ts's
+  // filtersKey memoization, this prevents the sync-back from re-triggering
+  // a fetch when state echoes back through the context.
+  const syncKey = useMemo(
+    () =>
+      JSON.stringify({
+        allImagesLen: allImages.length,
+        displayedLen: displayedImages.length,
         activeFilters,
         filterCounts,
         globalCounts,
         orCounts,
         hasMore,
-        initialized: true,
-      }));
-    }
-  }, [allImages, displayedImages, activeFilters, filterCounts, globalCounts, orCounts, hasMore, setHomeState]);
+      }),
+    [allImages, displayedImages, activeFilters, filterCounts, globalCounts, orCounts, hasMore]
+  );
+  const lastSyncedKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (allImages.length === 0 && displayedImages.length === 0) return;
+    if (syncKey === lastSyncedKeyRef.current) return;
+    lastSyncedKeyRef.current = syncKey;
+    setHomeState((prev) => ({
+      ...prev,
+      allImages,
+      displayedImages,
+      activeFilters,
+      filterCounts,
+      globalCounts,
+      orCounts,
+      hasMore,
+      initialized: true,
+    }));
+  }, [
+    syncKey,
+    allImages,
+    displayedImages,
+    activeFilters,
+    filterCounts,
+    globalCounts,
+    orCounts,
+    hasMore,
+    setHomeState,
+  ]);
 
   // Add a new filter group (creates new chip - AND with other groups)
   const handleAddFilter = useCallback((category: FilterCategory, value: string) => {
