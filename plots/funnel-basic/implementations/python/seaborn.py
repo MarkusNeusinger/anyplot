@@ -1,12 +1,10 @@
-""" anyplot.ai
+"""anyplot.ai
 funnel-basic: Basic Funnel Chart
 Library: seaborn 0.13.2 | Python 3.14.4
-Quality: 83/100 | Updated: 2026-04-26
 """
 
 import os
 
-import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.patches import Polygon
@@ -22,87 +20,142 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Okabe-Ito palette — first series always #009E73
 OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
 
-# Data — sales funnel from specification
+# Sales funnel data
 stages = ["Awareness", "Interest", "Consideration", "Intent", "Purchase"]
 values = [1000, 600, 400, 200, 100]
 max_value = values[0]
 percentages = [v / max_value * 100 for v in values]
+conversions = [values[i + 1] / values[i] * 100 for i in range(len(values) - 1)]
+# Stage transition with the largest drop-off (lowest retention)
+worst_idx = min(range(len(conversions)), key=conversions.__getitem__)
 
-# Seaborn theme (chrome only — funnel polygons drawn directly)
-sns.set_theme(style="white", rc={"figure.facecolor": PAGE_BG, "axes.facecolor": PAGE_BG, "text.color": INK})
+sns.set_theme(
+    style="white",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "text.color": INK,
+        "axes.labelcolor": INK,
+        "ytick.color": INK,
+        "xtick.color": INK_SOFT,
+    },
+)
 
-# Plot
 fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Funnel geometry
-n_stages = len(stages)
-funnel_height = 0.78
-stage_gap = 0.015
-stage_height = (funnel_height - (n_stages - 1) * stage_gap) / n_stages
-center_x = 0.55  # shift right to leave room for stage names on left
-max_width = 0.55
+# Seaborn draws the rectangular core of each stage; trapezoidal panels added
+# below tie the cores into a continuous funnel silhouette in stage colors.
+sns.barplot(
+    x=values,
+    y=stages,
+    hue=stages,
+    order=stages,
+    palette=OKABE_ITO[: len(stages)],
+    ax=ax,
+    legend=False,
+    width=0.50,
+    edgecolor="none",
+)
 
-# Draw trapezoidal segments
-for i in range(n_stages):
-    top_width = values[i] / max_value * max_width
-    if i < n_stages - 1:
-        bottom_width = values[i + 1] / max_value * max_width
-    else:
-        bottom_width = top_width * 0.6
+# Center each bar on x=0 so the silhouette narrows symmetrically
+bars = list(ax.patches)[: len(stages)]
+for patch in bars:
+    patch.set_x(-patch.get_width() / 2)
 
-    y_top = 1 - 0.12 - i * (stage_height + stage_gap)
-    y_bottom = y_top - stage_height
+# Trapezoidal panels between stages — each panel inherits the upper stage color
+# so visually each stage = rectangle + tapering trapezoid below it.
+for i in range(len(bars) - 1):
+    p_top, p_bot = bars[i], bars[i + 1]
+    top_y = p_top.get_y() + p_top.get_height()
+    bot_y = p_bot.get_y()
+    ax.add_patch(
+        Polygon(
+            [
+                (p_top.get_x(), top_y),
+                (p_top.get_x() + p_top.get_width(), top_y),
+                (p_bot.get_x() + p_bot.get_width(), bot_y),
+                (p_bot.get_x(), bot_y),
+            ],
+            facecolor=OKABE_ITO[i],
+            edgecolor="none",
+            zorder=1,
+        )
+    )
 
-    vertices = [
-        (center_x - top_width / 2, y_top),
-        (center_x + top_width / 2, y_top),
-        (center_x + bottom_width / 2, y_bottom),
-        (center_x - bottom_width / 2, y_bottom),
-    ]
-    trapezoid = Polygon(vertices, facecolor=OKABE_ITO[i], edgecolor=PAGE_BG, linewidth=3, closed=True)
-    ax.add_patch(trapezoid)
+# Closing tail below the last stage so the funnel ends with a proper taper
+last_bar = bars[-1]
+last_top_y = last_bar.get_y() + last_bar.get_height()
+tail_height = 0.50
+tail_bot_w = last_bar.get_width() * 0.5
+ax.add_patch(
+    Polygon(
+        [
+            (last_bar.get_x(), last_top_y),
+            (last_bar.get_x() + last_bar.get_width(), last_top_y),
+            (tail_bot_w / 2, last_top_y + tail_height),
+            (-tail_bot_w / 2, last_top_y + tail_height),
+        ],
+        facecolor=OKABE_ITO[-1],
+        edgecolor="none",
+        zorder=1,
+    )
+)
 
-    center_y = (y_top + y_bottom) / 2
+# Emphasise the bar after the worst drop-off with a thicker outline accent
+worst_bar = bars[worst_idx + 1]
+worst_bar.set_edgecolor(INK)
+worst_bar.set_linewidth(2.5)
+worst_bar.set_zorder(3)
 
-    # Stage name on the left (fixed x to avoid collision with value text in narrow segments)
-    ax.text(0.20, center_y, stages[i], ha="right", va="center", fontsize=20, fontweight="medium", color=INK)
-
-    # Value + percentage centered on the segment. Path-effect stroke keeps the white
-    # text readable when narrow segments force it to overflow onto the page background.
-    value_text = ax.text(
-        center_x,
-        center_y,
-        f"{values[i]:,} ({percentages[i]:.0f}%)",
-        ha="center",
+# Value + percentage labels are placed OUTSIDE bars (right) so narrow stages
+# never overflow onto the page background.
+right_offset = max_value * 0.04
+for i, patch in enumerate(bars):
+    cy = patch.get_y() + patch.get_height() / 2
+    x_right = patch.get_x() + patch.get_width()
+    ax.text(
+        x_right + right_offset,
+        cy,
+        f"{values[i]:,}  ·  {percentages[i]:.0f}%",
+        ha="left",
         va="center",
         fontsize=18,
-        fontweight="bold",
-        color="#FFFFFF",
+        fontweight="medium",
+        color=INK,
     )
-    value_text.set_path_effects([pe.withStroke(linewidth=2.5, foreground=OKABE_ITO[i])])
 
-    # Conversion rate between stages — placed inside the gap, right of the funnel
-    if i < n_stages - 1:
-        conversion_rate = values[i + 1] / values[i] * 100
-        ax.text(
-            center_x + max_width / 2 + 0.04,
-            y_bottom - stage_gap / 2,
-            f"↓ {conversion_rate:.0f}%",
-            ha="left",
-            va="center",
-            fontsize=14,
-            color=INK_MUTED,
-            style="italic",
-        )
+# Conversion-rate annotations on the LEFT, with the largest drop-off
+# rendered bolder and in full-strength ink for visual emphasis.
+left_anchor = -max_value / 2 - max_value * 0.06
+for i in range(len(conversions)):
+    p_top, p_bot = bars[i], bars[i + 1]
+    y_mid = (p_top.get_y() + p_top.get_height() + p_bot.get_y()) / 2
+    is_worst = i == worst_idx
+    ax.text(
+        left_anchor,
+        y_mid,
+        f"↓ {conversions[i]:.0f}%",
+        ha="right",
+        va="center",
+        fontsize=16 if is_worst else 13,
+        fontweight="bold" if is_worst else "normal",
+        style="italic",
+        color=INK if is_worst else INK_MUTED,
+    )
 
-# Axis frame
-ax.set_xlim(0, 1)
-ax.set_ylim(0, 1)
-ax.set_aspect("equal")
-ax.axis("off")
+# Awareness on top — matplotlib's default places the first category at the bottom
+ax.invert_yaxis()
+ax.set_ylim(len(stages) - 1 + tail_height + 0.25, -0.45)
 
-# Title
+sns.despine(ax=ax, left=True, bottom=True)
+ax.set_xticks([])
+ax.set_xlabel("")
+ax.set_ylabel("")
+ax.tick_params(axis="y", labelsize=20, length=0, pad=10)
+
+ax.set_xlim(-max_value * 0.95, max_value * 0.85)
+
 ax.set_title("funnel-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
 
 plt.tight_layout()
