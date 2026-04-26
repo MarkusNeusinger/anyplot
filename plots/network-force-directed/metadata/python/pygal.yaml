@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: network-force-directed
 created: 2025-12-17 10:04:33+00:00
-updated: '2026-04-26T09:33:37Z'
+updated: '2026-04-26T09:52:57Z'
 generated_by: claude-opus
 workflow_run: 24952933179
 issue: 990
@@ -12,128 +12,128 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-f
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/pygal/plot-dark.html
-quality_score: 81
+quality_score: 84
 review:
   strengths:
-  - Correct Fruchterman-Reingold force-directed physics simulation with 250 iterations,
-    cooling schedule, and proper repulsive/attractive forces producing a realistic
-    network layout
-  - 'Excellent theme adaptation: all chrome correctly flips between #FAF8F1/#1A1A17
-    while Okabe-Ito data colors remain constant across both renders'
-  - Perfect code quality — clean KISS structure, reproducible with seed(42), correct
-    output files including interactive HTML
-  - Corporate department network dataset is realistic, neutral, and effectively demonstrates
-    community structure with bridge edges
-  - Interactive pygal HTML with degree-based node tooltips is a distinctive, library-native
-    feature
+  - Force-directed layout using Fruchterman-Reingold algorithm with proper cooling,
+    resulting in well-separated community clusters
+  - Theme-adaptive styling correctly applied in both light and dark renders with correct
+    background colors (#FAF8F1/#1A1A17)
+  - Interactive pygal tooltips with node degree and hub status information fully leveraged
+  - Clean Okabe-Ito community colors (Engineering=#009E73, Marketing=#D55E00, Sales=#0072B2)
+    with muted edge styling
+  - Reproducible with np.random.seed(42) and correct output files (PNG + SVG + HTML)
   weaknesses:
-  - 'First chart series (Connections/edges) uses neutral gray (#9A988F), breaking
-    the first-series = #009E73 rule — affects VQ-07. Consider restructuring color
-    assignment so Engineering gets position 1 in the Okabe-Ito cycle.'
-  - 'Canvas utilization ~55%: force-directed layout leaves significant empty space,
-    especially in lower-left. Expand node normalization spread or reduce chart range
-    from (0,12) to fill the canvas better.'
-  - Node size is uniform — degree-based scaling would improve visual sophistication
-    (DE-01) and spec feature coverage (SC-02). Hub nodes (degree >= 7) should be visually
-    larger in the static render, not just labeled in tooltips.
-  - dots_size=28 is slightly small for 50 nodes at 4800x2700px; 32-36 would improve
-    VQ-03.
+  - 'First chart series is the edge/Connections series using muted gray rather than
+    #009E73 — technically violates first-series=green rule (minor, edges as structural
+    element is the correct design choice)'
+  - Some node overlap in dense cluster areas (Engineering right cluster, Sales top-left
+    cluster) due to uniform node sizing
+  - Node size does not scale by degree — degree information is only available via
+    tooltip, missing a visual encoding opportunity
+  - DE-02 visual refinement is functional but not exceptional — legend box styling
+    and overall polish could be higher
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "network-force-directed · pygal · anyplot.ai" in dark text at top — fully readable. Legend at bottom with labels "Connections", "Engineering", "Marketing", "Sales" — readable. No axis labels (intentionally hidden for network graph).
-      Data: Three community clusters visible — green Engineering (right-center), orange Marketing (lower-left), blue Sales (upper-left). Gray edges connect nodes within and between communities. 50 nodes total. Canvas utilization ~55%, with empty space in lower-left.
-      Legibility verdict: PASS — all text is readable against the light background
+      Background: Warm off-white (#FAF8F1) - correctly applied, not pure white.
+      Chrome: Title "network-force-directed · pygal · anyplot.ai" rendered in dark ink, clearly readable at top. No axis labels or tick labels (intentional for network graph). Legend at bottom shows Engineering (green square), Marketing (orange square), Sales (blue square), Connections (gray square) — all labels clearly readable in dark text on light background.
+      Data: Three distinct community clusters visible — Engineering (teal #009E73, right side), Marketing (vermillion #D55E00, bottom center), Sales (blue #0072B2, top left). Edge/connection lines rendered as muted gray (#9A988F), appropriately subtle. Node sizes are uniform (dots_size=28 global parameter). Bridge edges between clusters are clearly visible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct, not pure black
-      Chrome: Title text is light-colored and readable against dark background. Legend text is light-colored. No dark-on-dark failures detected.
-      Data: Data colors are identical to light render — Engineering nodes remain #009E73 green, Marketing nodes remain #D55E00 orange, Sales nodes remain #0072B2 blue. Edge gray is slightly darker (#5A5852) but still subtly visible. Layout identical to light render.
-      Legibility verdict: PASS — all text is readable against the dark background; no chrome failures
+      Background: Warm near-black (#1A1A17) - correctly applied, not pure black.
+      Chrome: Title in light/off-white text clearly visible against dark background. Legend labels (Engineering, Marketing, Sales, Connections) rendered in light text on dark background — fully readable, no dark-on-dark issues. No axis labels or tick labels present.
+      Data: Node colors identical to light render — Engineering (#009E73 teal), Marketing (#D55E00 orange), Sales (#0072B2 blue). Edge lines rendered as darker muted gray (#5A5852), subtler on dark background but still visible. Community cluster separation is clearly maintained. Brand green #009E73 remains visible on the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=72, legend=44, label=40, major_label=36).
-          All readable in both themes. Minor deduction for tooltip_font_size=28.
+        comment: All font sizes explicitly set in Style object (title_font_size=72,
+          label_font_size=40, major_label_font_size=36, legend_font_size=44). Title
+          and legend text clearly readable in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Mostly clean. Engineering cluster slightly dense but not severely
-          overlapping.
+        comment: Some node overlap in dense cluster areas (Engineering right cluster,
+          Sales top-left cluster) due to uniform node sizing and force-directed layout
+          density.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: dots_size=28 at 4800x2700px is visible but on the smaller side. Acceptable
-          for 50 nodes.
+        comment: Nodes and edges clearly visible. dots_size=28 appropriate for canvas
+          size. Slight deduction for missing degree-based size scaling.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, CVD-safe, good contrast between communities and
-          gray edges.
+        comment: Okabe-Ito palette CVD-safe. Three communities distinguishable by
+          hue and luminance. opacity=0.9 appropriate.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Canvas utilization ~55%. Notable empty space in lower-left. Network
-          spread does not fill the 4800x2700 canvas well.
+        passed: true
+        comment: Good canvas utilization (~70%). Legend at bottom. Force-directed
+          layout leaves some empty center-right space due to Engineering cluster being
+          pushed right.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correctly formatted. Axis labels intentionally hidden (appropriate
-          for network graph).
+        comment: 'Title format correct: ''network-force-directed · pygal · anyplot.ai''.
+          No axis labels — appropriate for force-directed network graph where XY coordinates
+          have no semantic meaning.'
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
-        passed: false
-        comment: 'Partial. First series (Connections) uses gray #9A988F, not #009E73.
-          First categorical community (Engineering) correctly uses #009E73. Backgrounds
-          are correct (#FAF8F1/#1A1A17). Chrome is theme-correct.'
+        passed: true
+        comment: 'Backgrounds correct (#FAF8F1 light, #1A1A17 dark). Community colors
+          follow Okabe-Ito in order. Chrome theme-correct in both renders. Partial
+          deduction: first chart series (Connections/edges) uses muted gray rather
+          than #009E73, technically violating first-series rule despite being semantically
+          correct for edge rendering.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured with Okabe-Ito and theme-adaptive styling. All nodes
-          same size regardless of degree — hub nodes not visually distinguished. Not
-          exceptional.
+        passed: true
+        comment: Professional network graph appearance. Thoughtful edge/node color
+          separation. Theme-adaptive styling. Above configured default but not publication-exceptional.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Axes hidden (appropriate), grid disabled, margins 80px. Clean chrome.
-          No spines visible. Some refinement evident but could push further.
+        passed: true
+        comment: Axes and grid guides appropriately hidden. Legend at bottom. Good
+          margins. Clean network layout. Functional refinement for network graph type.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Three distinct community clusters with bridges tell connectivity
-          story naturally. Color coding by department creates clear visual grouping.
-          Hub nodes only labeled in tooltips, not visually distinct in static render.
+        passed: true
+        comment: Three community clusters with bridge edges tell a clear organizational
+          network story. Community separation through color creates immediate visual
+          insight. Hub nodes labeled in tooltips.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -141,30 +141,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct force-directed graph with full Fruchterman-Reingold physics
-          simulation including cooling.
+        comment: Force-directed graph with Fruchterman-Reingold physics simulation.
+          Correct node/edge structure.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'Community structure, edges, force-directed layout, inter-community
-          bridges all present. Missing: node size scaling by degree, edge thickness
-          variation.'
+        passed: true
+        comment: Nodes with unique IDs, edges, force-directed layout, community structure
+          — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Nodes placed by force-directed positions, edges correctly drawn between
-          source/target pairs.
+        comment: Position mapped to force-directed coordinates. Communities mapped
+          to Okabe-Ito colors. Edges correctly drawn between node positions.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'network-force-directed · pygal · anyplot.ai' correct. Legend
-          labels match data.
+        comment: 'Title: ''network-force-directed · pygal · anyplot.ai'' correct.
+          Legend: Engineering, Marketing, Sales, Connections — all correctly labeled.'
     data_quality:
       score: 14
       max: 15
@@ -173,24 +172,24 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        passed: false
-        comment: 'Shows community structure (3 groups), intra-community dense connectivity
-          (~30%), inter-community sparse bridges (8 edges), 50 nodes. Missing: visual
-          degree variation, edge weight differences.'
+        passed: true
+        comment: 'Shows intra-community edges, inter-community bridge edges, community
+          clustering, hub nodes labeled in tooltips. Missing: visual degree-based
+          node sizing.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Corporate social network with Engineering, Marketing, Sales departments.
-          Real-world, neutral, comprehensible.
+        comment: Corporate social network (Engineering/Marketing/Sales departments)
+          — realistic, neutral, comprehensible scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 50 nodes, 30% intra-community edge probability, 8 bridge edges. Realistic
-          for force-directed network.
+        comment: 50 nodes, 3 communities (18/17/15 nodes), ~80+ edges. Appropriate
+          scale for force-directed network visualization.
     code_quality:
       score: 10
       max: 10
@@ -200,8 +199,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data generation, force-directed layout,
-          normalization, chart creation, save. No classes or functions.'
+        comment: 'Clear procedural structure: imports → constants → data generation
+          → layout → styling → chart → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -213,22 +212,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: sys, Path, os, numpy, pygal, Style — all used. noqa comments are
-          necessary for sys.path manipulation.
+        comment: All imports used. sys/Path workaround for name collision is explained.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: O(n^2) Fruchterman-Reingold is the standard algorithm. Code is clean
-          and Pythonic. None-break technique for XY edges is correct pygal idiom.
+        comment: Clean Pythonic code. FR algorithm well-structured. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, .svg, and .html. Correct for pygal as interactive
-          library.
+        comment: Saves plot-{THEME}.svg, plot-{THEME}.png, plot-{THEME}.html. Current
+          pygal API used.
     library_mastery:
       score: 7
       max: 10
@@ -238,28 +235,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses pygal.XY with stroke for edges and dots for nodes. Style object
-          carries all theme tokens. None-break technique for line segments is idiomatic
-          pygal approach.
+        comment: Uses pygal.XY with Style object, series-based structure, interactive
+          tooltip labels. Correct stroke/show_dots per series. Good idiomatic usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Interactive HTML with per-node tooltips showing degree and hub status
-          is pygal-distinctive. XY None-break for edges is creative. But it is a workaround
-          rather than a built-in network feature.
-  verdict: REJECTED
+        passed: true
+        comment: Interactive tooltips with node info (degree, hub status), HTML output
+          for interactive chart, None-break technique for edge line series — distinctive
+          pygal features utilized.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - force-directed-layout
-  - hover-tooltips
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
   - minimal-chrome
+  - alpha-blending
