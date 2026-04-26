@@ -1,65 +1,84 @@
-""" pyplots.ai
+""" anyplot.ai
 lollipop-basic: Basic Lollipop Chart
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: pygal 3.1.0 | Python 3.14.4
+Quality: 86/100 | Updated: 2026-04-26
 """
 
-import pygal
-from pygal.style import Style
+import os
+import sys
+from pathlib import Path
 
 
-# Data - Product sales by category (sorted by value for better readability)
+# Remove script directory from path to avoid name collision with pygal package
+_script_dir = str(Path(__file__).parent)
+sys.path = [p for p in sys.path if p != _script_dir]
+
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+BRAND = "#009E73"  # Okabe-Ito position 1
+OKABE_ITO = (BRAND, "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+
+# Data — Product sales by category (sorted descending)
 categories = ["Smartphones", "Laptops", "Tablets", "Headphones", "Smartwatches", "Cameras", "Speakers", "Gaming"]
 values = [892, 654, 478, 312, 287, 198, 156, 134]
 
-# Sort by value descending (already sorted in this example)
 sorted_data = sorted(zip(categories, values, strict=True), key=lambda x: x[1], reverse=True)
 categories = [item[0] for item in sorted_data]
 values = [item[1] for item in sorted_data]
 
-# Custom style for 4800x2700 canvas with visible stroke
+# Style — theme-adaptive chrome, brand-green data
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998",) * len(categories),  # Python Blue for all series
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=42,
-    legend_font_size=42,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=(BRAND,) * len(categories),
+    title_font_size=64,
+    label_font_size=44,
+    major_label_font_size=40,
+    legend_font_size=40,
     value_font_size=36,
     value_label_font_size=36,
-    stroke_width=8,  # Line width in style
+    stroke_width=8,
+    opacity=1,
+    opacity_hover=0.9,
 )
 
-# Create horizontal lollipop chart using XY
-# Categories on y-axis, values on x-axis (horizontal orientation)
+# Plot — horizontal lollipop via XY: stem from x=0 to value, baseline node hidden
 n = len(categories)
 chart = pygal.XY(
     width=4800,
     height=2700,
-    title="lollipop-basic · pygal · pyplots.ai",
+    title="lollipop-basic · pygal · anyplot.ai",
     x_title="Sales (units)",
+    y_title="Product Category",
     style=custom_style,
     show_legend=False,
-    dots_size=24,
-    stroke=True,  # Enable stroke/lines
-    show_y_guides=True,
+    dots_size=28,
+    stroke=True,
     show_x_guides=True,
-    margin=100,
+    show_y_guides=False,
+    margin=120,
     xrange=(0, max(values) * 1.1),
     range=(0.5, n + 0.5),
     y_labels=[{"label": cat, "value": n - i} for i, cat in enumerate(categories)],
 )
 
-# Add lollipop data - each is a line from x=0 to value
 for i, (cat, val) in enumerate(zip(categories, values, strict=True)):
     y_pos = n - i
-    # Hide dot at baseline (r=0), show large dot at value end
     chart.add(cat, [{"value": (0, y_pos), "node": {"r": 0}}, {"value": (val, y_pos)}])
 
-# Save outputs
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Save
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())

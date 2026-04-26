@@ -1,15 +1,229 @@
 library: altair
+language: python
 specification_id: lollipop-basic
 created: '2025-12-23T15:13:50Z'
-updated: '2025-12-23T15:18:07Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20464352338
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/altair/plot.html
-quality_score: 92
+updated: '2026-04-26T12:58:40Z'
+generated_by: claude-opus
+workflow_run: 24956996445
+issue: 934
+python_version: 3.14.4
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/altair/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Perfect Visual Quality (30/30): all font sizes explicitly set to spec, correct
+    canvas dimensions, fully readable in both light and dark themes'
+  - 'Complete spec compliance: correct lollipop chart with sorted data, stems, and
+    markers as specified'
+  - 'Excellent theme adaptation: PAGE_BG dot stroke is a subtle but effective refinement;
+    both renders pass readability checks with no chrome failures'
+  - Idiomatic Altair layer composition pattern (stems + dots) with proper declarative
+    encodings
+  weaknesses:
+  - 'DE-01 moderate: No focal-point emphasis on the top-performing category (Electronics);
+    a different marker color, size, or subtle annotation would elevate storytelling'
+  - 'LM-02 moderate: Implementation does not leverage Altair interactive selection
+    features (e.g., point selection to highlight/dim lollipops) which would be distinctively
+    Altair in the HTML output'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — correct light theme surface
+      Chrome: Title "Product Sales by Category · lollipop-basic · altair · anyplot.ai" in bold dark text (top-left anchor); Y-axis label "Sales (USD)" and X-axis label "Category" in dark text; tick labels in slightly softer dark — all clearly readable
+      Data: 10 lollipop stems and circular markers in brand green (#009E73) with PAGE_BG ring stroke; Y-axis dollar-formatted ($0–$440,000); subtle horizontal grid lines at 10% opacity; X-axis category labels rotated at -35°
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17) — correct dark theme surface
+      Chrome: Title, axis labels, and tick labels all appear in light-colored text — clearly readable against dark background; no dark-on-dark failures; grid lines appear as subtle lighter marks
+      Data: Brand green (#009E73) markers and stems are identical in color to the light render — theme-independent as required
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=28px, axis titles=22px, tick
+          labels=18px — matches style guide'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Category labels rotated -35deg, no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Stems at strokeWidth=4, dots at size=550 — clearly visible at 4800x2700
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series in Okabe-Ito #009E73, CVD-safe'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600x900 @ scale_factor=3.0 = 4800x2700, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Sales (USD) with unit on Y-axis, Category on X-axis
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17, all chrome tokens
+          adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: dot stroke uses PAGE_BG, dollar-formatted Y ticks,
+          left-anchored title. Not FiveThirtyEight-level — no focal emphasis on top
+          performer'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-axis grid disabled, Y-axis grid at 10% opacity, no view border
+          stroke, titlePadding=18
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Descending sort creates ranking hierarchy; no additional emphasis
+          on leader
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct lollipop chart: mark_rule stems + mark_circle dots, vertical
+          orientation'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Thin stems from baseline, circular markers at values, vertical orientation,
+          sorted by value
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=category (N), Y=value (Q), all 10 categories visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title contains spec-id, library, anyplot.ai; no legend (single series
+          — correct)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 categories spanning $95K-$425K; good value variation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: E-commerce product categories with plausible sales figures — real,
+          neutral business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sales values $95K-$425K realistic for product category sales
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports -> tokens -> data -> stems -> dots -> layer
+          -> save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only os, altair, pandas — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean layer composition, no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Layer composition via stems+dots, declarative encodings, sort=-y,
+          configure_* for theming
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Layer composition and tooltip are Altair-distinctive; no selection-based
+          interactivity
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -20,191 +234,5 @@ impl_tags:
   - data-generation
   dataprep: []
   styling:
+  - edge-highlighting
   - grid-styling
-review:
-  strengths:
-  - Clean implementation of lollipop chart using Altair layered approach (mark_rule
-    for stems + mark_circle for dots)
-  - Proper sorting by value for optimal readability
-  - Excellent text legibility with appropriate font sizes (title 28pt, labels 16-20pt)
-  - Rotated x-axis labels (-45°) prevent overlap with 10 categories
-  - Tooltips with currency formatting enhance usability
-  - Realistic product sales data scenario
-  - Subtle grid styling (opacity 0.3) does not distract from data
-  weaknesses:
-  - Grid lines appear only on y-axis; adding subtle vertical grid lines could improve
-    category-value alignment reading
-  - Layout could utilize more canvas space (plot area is somewhat compact relative
-    to total canvas)
-  image_description: 'The plot displays a lollipop chart showing "Product Sales by
-    Category" with 10 categories on the x-axis and sales values in dollars on the
-    y-axis. Each category has a vertical blue stem (line) extending from 0 to its
-    value, topped with a blue circular dot. Categories are sorted in descending order
-    from left to right: Electronics ($425,000), Clothing ($312,000), Home & Garden
-    ($287,000), Sports ($234,000), Books ($198,000), Toys ($176,000), Beauty ($152,000),
-    Automotive ($134,000), Food & Grocery ($118,000), and Pet Supplies ($95,000).
-    The color used is a consistent blue (#306998) for both stems and dots. X-axis
-    labels are rotated -45 degrees to prevent overlap. The title "lollipop-basic ·
-    altair · pyplots.ai" appears at the top center. A subtle grid is visible on the
-    y-axis.'
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 20pt, tick labels at 16pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: X-axis labels rotated -45° to avoid overlap, no text collision
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Stems (strokeWidth=3) and dots (size=400) are clearly visible and
-          well-proportioned for 10 data points
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single color scheme (#306998 blue) is accessible, no colorblind issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of canvas space, though plot could be slightly larger relative
-          to canvas
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: Y-axis has "Sales ($)" with currency unit, X-axis has "Category"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: true
-        comment: Grid is subtle (gridOpacity=0.3), but no legend needed for single-series
-          data; grid only on y-axis
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct lollipop chart with stems and circular markers
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X-axis, values on Y-axis as specified
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Thin stems, circular dots, vertical orientation, sorted by value
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Y-axis shows 0-440,000, covering all data points properly
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: No legend needed for single series, N/A applies
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "lollipop-basic · altair · pyplots.ai"
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows 10 categories with varying values demonstrating the ranking
-          nature of lollipop charts
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Product sales by category is a realistic business scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Values in $95K-$425K range are realistic for retail sales data
-    code_quality:
-      score: 10
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Simple script: imports → data → plot → save, no functions/classes'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Deterministic data (no random seed needed)
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: Only altair and pandas imported, both used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Using current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png with scale_factor=3
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses Altair's declarative layering with mark_rule + mark_circle,
-          proper encoding types (:N, :Q), and tooltips with formatting. Could have
-          added interactivity.
-  verdict: APPROVED
