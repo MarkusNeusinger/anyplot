@@ -1,171 +1,184 @@
 library: altair
+language: python
 specification_id: dumbbell-basic
 created: '2025-12-23T13:02:07Z'
-updated: '2025-12-23T13:07:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461374250
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/altair/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - layer-composition
-    - html-export
-  patterns:
-    - data-generation
-    - wide-to-long
-  dataprep: []
-  styling: []
+updated: '2026-04-26T02:08:06Z'
+generated_by: claude-opus
+workflow_run: 24945139784
+issue: 945
+python_version: 3.14.4
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/altair/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent horizontal dumbbell chart matching spec requirements perfectly
-  - Smart data reshaping using pd.melt for the dots while keeping original data for
-    lines
-  - Effective use of Altair layering (lines + dots) to create the dumbbell effect
-  - Data sorted by improvement reveals clear patterns as recommended in spec
-  - Blue/yellow color scheme provides excellent contrast and accessibility
-  - Appropriate sizing with scale_factor=3.0 for output resolution
-  - Tooltips add interactivity for the HTML output
+  - 'Perfect visual quality across both themes: all font sizes explicitly set, correct
+    Okabe-Ito palette, correct backgrounds, readable in both light and dark modes'
+  - Excellent use of Altair's layer composition (mark_rule + mark_circle) with the
+    idiomatic x/x2 encoding for connecting lines
+  - Clean KISS code structure with pd.melt for proper long-form data; dot stroke halos
+    add professional polish
+  - 'Fully spec-compliant: horizontal orientation, sorted by difference, correct title
+    format, distinct colors for Before/After'
   weaknesses:
-  - X-axis label Satisfaction Score could include units (e.g., Satisfaction Score
-    (%) or Satisfaction Score (out of 100))
-  - All improvements are positive; including one department with no change or decline
-    would demonstrate fuller range of dumbbell chart capabilities
-  - Legend title Period could be more descriptive (e.g., Policy Change)
-  image_description: 'The plot displays a horizontal dumbbell chart showing employee
-    satisfaction scores before and after policy changes for 10 departments. Each department
-    is represented on the y-axis (from IT at the top to Customer Support at the bottom).
-    The x-axis shows "Satisfaction Score" ranging from 45 to 90. Each department has
-    two dots connected by a thin gray line: blue dots represent "before" scores and
-    yellow dots represent "after" scores. The title reads "Employee Satisfaction ·
-    dumbbell-basic · altair · pyplots.ai" at the top. A legend in the top-right corner
-    identifies the "before" (blue) and "after" (yellow) periods. The data is sorted
-    by improvement amount, with smallest improvements at top (IT) and largest at bottom
-    (Customer Support). The grid is subtle with dashed lines.'
+  - 'DE-03: Sorting reveals the pattern but there is no visual emphasis on the extremes
+    — color contrast variation, a size differential on the largest-gain category,
+    or a subtle annotation would help the viewer immediately see the story'
+  - 'DE-01: The overall design is clean but flat — all categories are presented with
+    equal visual weight; a focal point (e.g., slightly larger or brighter dot for
+    the max-difference row) would elevate sophistication'
+  - 'LM-02: The implementation uses Altair''s correct dumbbell idiom but misses an
+    opportunity to use Altair-specific transforms (e.g., calculate transform for diff
+    labels) or interactive selection for highlighting individual dumbbells'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Employee Satisfaction · dumbbell-basic · altair · anyplot.ai" in dark ink, clearly readable. Y-axis category labels (IT, R&D, Legal, Operations, Finance, HR, Marketing, Sales, Engineering, Customer Support) in dark ink. X-axis label "Employee Satisfaction Score (%)" clearly visible. Tick labels visible at appropriate size.
+      Data: Green dots (#009E73) for Before, orange dots (#D55E00) for After, each with a PAGE_BG stroke halo. Thin semi-transparent gray connecting lines. Legend box with elevated light fill, labeled "Policy Change" with Before/After entries.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light-colored text, clearly readable against dark surface. Y-axis category labels in light text — no dark-on-dark failures. X-axis label in light text, clearly visible. Tick labels in light tone, readable.
+      Data: Green (#009E73) and orange (#D55E00) dots identical to light render — only chrome flips. Legend box uses elevated dark fill (#242420) with light-colored labels.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'All text readable; title 28pt, axis labels 18pt, tick labels appropriately
-          sized. Minor: legend could be slightly larger.'
+        comment: All font sizes explicitly set (title=28, axis=22, ticks=18, legend=16);
+          both themes fully readable
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: 10 categories evenly spaced on Y-axis; no label collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Dots are clearly visible at size 350, connecting lines are appropriately
-          subtle at strokeWidth=2
+        comment: Dots size=420 with stroke halo; connecting lines strokeWidth=3 at
+          55% opacity
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) provide excellent contrast and
-          are colorblind-safe
+        comment: 'Okabe-Ito positions 1+2 (#009E73 vs #D55E00); high contrast, CVD-safe'
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Good use of canvas space, chart fills appropriately. Minor: some
-          empty space on right side near legend'
+        comment: 4800x2700px canvas; chart fills canvas well; legend not overlapping
+          data
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: '"Satisfaction Score" is descriptive but lacks units (e.g., "out
-          of 100" or "%")'
+        comment: X-axis includes units '(%)'; Y-axis title=None acceptable for labeled
+          categories
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with alpha=0.3 and dashed lines. Legend placement
-          is good but slightly isolated from chart
+        comment: 'Before=#009E73, After=#D55E00; backgrounds #FAF8F1/#1A1A17 correct;
+          both renders theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above configured-default look with dot stroke halos and correct palette;
+          no focal point or emphasis on extremes
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: configure_view(stroke=None) removes border; gridOpacity=0.10 very
+          subtle; connecting line opacity=0.55
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Sort by difference is good but all dots same size/weight; viewer
+          must find the insight themselves
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct dumbbell chart with connected dots
+        comment: Correct horizontal dumbbell/connected dot plot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on y-axis, values on x-axis as spec recommends
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Horizontal orientation, distinct colors for start/end, sorted by
-          difference, thin connecting lines
-      - id: SC-04
-        name: Data Range
+        comment: Two distinct-color dots, thin connecting line, sorted by difference,
+          horizontal orientation
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within scale domain [45, 90]
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Categories on Y-axis, score values on X-axis; all 10 categories shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies "before" and "after" periods
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format with spec-id, library, and pyplots.ai
+        comment: Title contains dumbbell-basic, altair, anyplot.ai; legend labels
+          Before/After with Policy Change title
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows various improvement magnitudes (small: IT at 5pts, large:
-          Customer Support at 26pts). Could show a negative change for fuller coverage.'
+        comment: 'Shows all dumbbell aspects: paired endpoints, connecting lines,
+          multiple categories, variation in differences (6-26 pts)'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Employee satisfaction scores before/after policy changes is a realistic
-          scenario directly from spec example
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Satisfaction scores in 52-85 range are realistic for such surveys
+        comment: Employee satisfaction before/after policy changes; neutral business
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Score range 45-90 with data 52-85%; realistic for employee satisfaction
+          surveys; 10 categories appropriate
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,42 +186,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple script structure: imports → data → plot → save'
+        comment: 'Linear: imports -> constants -> data -> chart layers -> configure
+          -> save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Deterministic data (no random), but explicit seed comment would be
-          clearer
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both used
+        comment: os, altair, pandas — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Clean layer composition; pd.melt for long-form conversion; no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png (scale_factor=3.0) and plot-{THEME}.html
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: mark_rule with x+x2 encoding is correct Altair idiom; layer composition
+          and configure_* API all used properly
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of Altair's declarative grammar with mark_rule + mark_circle
-          layering, proper encoding types, and tooltips. Could leverage more Altair-specific
-          features like selections or conditional encoding.
-  verdict: APPROVED
+        comment: mark_rule with x2 for dumbbell connector and layer composition are
+          distinctively Altair; misses calculate transform or interactive selection
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - wide-to-long
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
