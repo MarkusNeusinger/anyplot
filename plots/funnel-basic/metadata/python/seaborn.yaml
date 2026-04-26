@@ -1,146 +1,189 @@
 library: seaborn
+language: python
 specification_id: funnel-basic
 created: '2025-12-23T13:04:46Z'
-updated: '2025-12-23T13:38:26Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20461374089
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-26T05:57:01Z'
+generated_by: claude-opus
+workflow_run: 24949059229
+issue: 789
+python_version: 3.14.4
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - patches
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - minimal-chrome
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent visual design with well-proportioned trapezoidal segments
-  - Clear blue-to-gold color progression that aids visual hierarchy
-  - 'Perfect text contrast: white text on blue, dark text on gold backgrounds'
-  - Uses exact data from specification (sales funnel example)
-  - Clean code structure following KISS principles
-  - Proper title format matching specification requirements
+  - Creative use of sns.barplot as scaffold for a custom funnel shape with trapezoidal
+    Polygon patches
+  - 'Correct Okabe-Ito palette (first series #009E73), both themes properly themed
+    with no dark-on-dark failures'
+  - 'Visual storytelling: worst drop-off highlighted with bold conversion annotation
+    and edge outline on the next stage bar'
+  - Perfect spec compliance — ordered stages, distinct per-stage colors, value+percentage
+    labels, proportional widths
+  - Clean, deterministic flat code with correct seaborn 0.14+ hue/palette/legend=False
+    API
   weaknesses:
-  - Conversion rate annotations (coded in lines 88-99) are not visible in the rendered
-    output - may be positioned outside canvas bounds
-  - Could use seaborn color palette more distinctively (e.g., using a named sequential
-    palette)
-  image_description: 'The plot displays a funnel chart for a sales pipeline with 5
-    stages arranged vertically from top to bottom: Awareness (1,000 / 100%), Interest
-    (600 / 60%), Consideration (400 / 40%), Intent (200 / 20%), and Purchase (100
-    / 10%). Each stage is rendered as a trapezoidal segment with widths proportional
-    to their values. The color palette transitions from deep blue (#306998) at the
-    top through lighter blues to gold/yellow (#FFD43B, #E8C547) at the bottom. Stage
-    names appear on the left side in bold dark gray text, while values with percentages
-    are centered within each segment in white (for blue segments) or dark text (for
-    gold segments). The title "funnel-basic · seaborn · pyplots.ai" appears at the
-    top. The layout is clean with a white background and good spacing between segments.'
+  - Non-emphasized conversion-rate annotations at 13pt fall below the 16pt guideline
+    for secondary labels — raise all to 16pt or remove distinction
+  - 16:9 landscape canvas leaves noticeable horizontal whitespace; a square canvas
+    (3600×3600) or taller aspect would suit the funnel shape better
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "funnel-basic · seaborn · anyplot.ai" in dark ink at 24pt — clearly readable. Stage names (Awareness, Interest, Consideration, Intent, Purchase) in dark INK on left at 20pt — all readable. Conversion-rate annotations (↓60%, ↓67%, ↓50%, ↓50%) in INK_MUTED on the right — visible. Worst drop-off annotation (↓50% between Consideration and Intent) rendered bold and in full INK for emphasis.
+      Data: Five trapezoidal segments in Okabe-Ito order — #009E73 (Awareness), #D55E00 (Interest), #0072B2 (Consideration), #CC79A7 (Intent), #E69F00 (Purchase). Value+percentage labels ("1,000 · 100%", "600 · 60%", etc.) positioned to the right of each bar in INK color. The Intent bar carries a bold dark edge outline highlighting the worst conversion drop-off. Closing tail gives the funnel a clean pointed tip.
+      Legibility verdict: PASS — all text readable; minor concern: non-emphasized conversion labels at 13pt are slightly below the 16pt guideline but still legible at full resolution.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title in near-white #F0EFE8 — clearly readable against dark background. Stage names in light INK token — readable. Conversion-rate annotations in muted #A8A79F — visible. No dark-on-dark failures detected anywhere.
+      Data: Identical Okabe-Ito colors to light render (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00) — data identity preserved across themes. Value labels in near-white INK, clean contrast on dark background. Intent bar edge outline switches to INK (#F0EFE8) — visible as a light edge on the dark surface.
+      Legibility verdict: PASS — all text elements readable in dark theme; value labels on dark background are highly legible.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 24pt, stage names at 20pt, values at 18pt - all perfectly
-          readable
+        comment: Title 24pt, stage names 20pt, value labels 18pt, worst conversion
+          16pt — all explicitly set. Non-emphasized conversion labels at 13pt fall
+          below 16pt guideline for secondary text.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all labels clearly separated
+        comment: Stage names, value labels, and conversion annotations cleanly separated
+          across all stages including the narrowest ones
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Trapezoid segments are well-sized and clearly visible
+        comment: All five funnel segments visible including narrow Intent and Purchase
+          stages; closing tail provides a clean bottom tip
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue-to-gold gradient is colorblind-friendly, though the gold shades
-          are similar
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, funnel is well-centered, though conversion rate
-          annotations on the right are missing from the rendered output
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct funnel chart with trapezoidal segments narrowing top to bottom
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Stages correctly ordered from largest to smallest
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Has value labels, percentages, distinct colors; conversion rates
-          coded but not visible in output
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All 5 stages displayed with correct proportions
-      - id: SC-06
-        name: Title Format
         score: 2
         max: 2
         passed: true
-        comment: 'Correct format: "funnel-basic · seaborn · pyplots.ai"'
-    data_quality:
-      score: 20
+        comment: Okabe-Ito palette is CVD-safe; five distinct hues, no red-green sole
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Funnel well-centered and proportioned; 16:9 canvas leaves noticeable
+          horizontal whitespace since the funnel is taller than wide
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches required format; stage names serve as labels; no traditional
+          axis labels needed for funnel chart
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First stage #009E73, Okabe-Ito order through position 5, FAF8F1/1A1A17
+          backgrounds correct in both themes, chrome flips correctly'
+    design_excellence:
+      score: 15
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
         max: 8
         passed: true
-        comment: Shows progressive decrease across all stages, demonstrates funnel
-          drop-off pattern well
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
+        comment: 'Strong design clearly above defaults: custom funnel geometry, Okabe-Ito
+          per-stage colors, intentional typography hierarchy, and storytelling emphasis
+          on worst drop-off'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
         passed: true
-        comment: Uses the exact sales funnel example from the specification
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: 'All spines removed, no grid, x-axis ticks hidden, y-axis tick marks
+          hidden, clean closing tail — near-perfect refinement. Minor: horizontal
+          whitespace in 16:9 canvas for tall funnel.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Funnel shape narrates conversion; worst drop-off highlighted with
+          bold conversion annotation (↓50%, bold+italic+INK) and edge outline on Intent
+          bar; visual hierarchy guides reader to key insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Values (1000→100) are realistic for a conversion funnel
+        comment: Correct funnel chart with trapezoidal segments narrowing proportionally
+          top to bottom
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Ordered stages largest to smallest, distinct per-stage colors, value+percentage
+          labels, proportional widths — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Sales funnel stages as y-axis, values as bar width, properly decreasing
+          top to bottom
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'funnel-basic · seaborn · anyplot.ai' correct; no legend needed
+          as stage names serve as labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All funnel aspects shown: widths, stage names, absolute values,
+          percentage of total, stage-to-stage conversion rates with varying drop-offs'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic marketing funnel (Awareness→Purchase) is a real-world, neutral,
+          widely-recognized business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1000 to 100 with 50-67% conversion rates reflects typical sales pipeline;
+          realistic and appropriate
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -148,42 +191,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save, no functions/classes'
+        comment: 'Flat script: imports → tokens → data → theme → plot → labels → save;
+          no functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: numpy imported but seed not strictly necessary for deterministic
-          data
+        comment: Fully deterministic hardcoded data; no random generation needed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os, matplotlib.pyplot, seaborn, matplotlib.patches.Polygon'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib/seaborn APIs
+        comment: Appropriate complexity for custom chart type; clean loops; comments
+          explain non-obvious geometry decisions; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct parameters
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches=tight, facecolor=PAGE_BG
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses seaborn styling
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses seaborn 0.14+ idiomatic API: hue=stages+palette+legend=False
+          for per-bar coloring, sns.set_theme() for comprehensive chrome configuration,
+          sns.despine() for spine management. Core funnel geometry unavoidably uses
+          matplotlib patches (no seaborn funnel primitive).'
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses sns.set_theme() and sns.color_palette(), but core drawing uses
-          matplotlib Polygon; this is acceptable since seaborn doesn't have a native
-          funnel chart
+        comment: hue-based per-bar coloring with legend=False is a seaborn-distinctive
+          pattern not easily replicated in plain matplotlib; sns.set_theme() and sns.despine()
+          are seaborn-specific. Core polygon geometry is matplotlib.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  - annotations
+  - manual-ticks
+  patterns:
+  - explicit-figure
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting

@@ -1,111 +1,163 @@
-""" pyplots.ai
+""" anyplot.ai
 funnel-basic: Basic Funnel Chart
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: seaborn 0.13.2 | Python 3.14.4
+Quality: 90/100 | Updated: 2026-04-26
 """
 
+import os
+
 import matplotlib.pyplot as plt
-import numpy as np
 import seaborn as sns
 from matplotlib.patches import Polygon
 
 
-# Set seed for reproducibility
-np.random.seed(42)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Data - Sales funnel example from specification
+# Okabe-Ito palette — first series always #009E73
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+
+# Sales funnel data
 stages = ["Awareness", "Interest", "Consideration", "Intent", "Purchase"]
 values = [1000, 600, 400, 200, 100]
 max_value = values[0]
-
-# Calculate percentages
 percentages = [v / max_value * 100 for v in values]
+conversions = [values[i + 1] / values[i] * 100 for i in range(len(values) - 1)]
+# Stage transition with the largest drop-off (lowest retention)
+worst_idx = min(range(len(conversions)), key=conversions.__getitem__)
 
-# Seaborn styling
-sns.set_theme(style="white")
+sns.set_theme(
+    style="white",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "text.color": INK,
+        "axes.labelcolor": INK,
+        "ytick.color": INK,
+        "xtick.color": INK_SOFT,
+    },
+)
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Color palette using Python Blue to Gold progression
-colors = sns.color_palette(["#306998", "#4078A8", "#6AA8D1", "#FFD43B", "#E8C547"])
+# Seaborn draws the rectangular core of each stage; trapezoidal panels added
+# below tie the cores into a continuous funnel silhouette in stage colors.
+sns.barplot(
+    x=values,
+    y=stages,
+    hue=stages,
+    order=stages,
+    palette=OKABE_ITO[: len(stages)],
+    ax=ax,
+    legend=False,
+    width=0.50,
+    edgecolor="none",
+)
 
-# Funnel parameters
-n_stages = len(stages)
-funnel_height = 0.8  # Total height of funnel
-stage_gap = 0.02  # Gap between stages
-stage_height = (funnel_height - (n_stages - 1) * stage_gap) / n_stages
-center_x = 0.5
+# Center each bar on x=0 so the silhouette narrows symmetrically
+bars = list(ax.patches)[: len(stages)]
+for patch in bars:
+    patch.set_x(-patch.get_width() / 2)
 
-# Draw trapezoidal funnel segments
-for i in range(n_stages):
-    # Calculate widths - proportional to value relative to max
-    top_width = values[i] / max_value * 0.8
-    # Bottom width is the next stage's width, or smaller for last stage
-    if i < n_stages - 1:
-        bottom_width = values[i + 1] / max_value * 0.8
-    else:
-        bottom_width = values[i] / max_value * 0.8 * 0.6  # Narrower bottom for last stage
-
-    # Calculate y positions (top to bottom)
-    y_top = 1 - 0.1 - i * (stage_height + stage_gap)
-    y_bottom = y_top - stage_height
-
-    # Create trapezoid vertices (clockwise from top-left)
-    vertices = [
-        (center_x - top_width / 2, y_top),  # Top-left
-        (center_x + top_width / 2, y_top),  # Top-right
-        (center_x + bottom_width / 2, y_bottom),  # Bottom-right
-        (center_x - bottom_width / 2, y_bottom),  # Bottom-left
-    ]
-
-    # Draw trapezoid using matplotlib Polygon
-    trapezoid = Polygon(vertices, facecolor=colors[i], edgecolor="white", linewidth=3, closed=True)
-    ax.add_patch(trapezoid)
-
-    # Calculate center of trapezoid for label placement
-    center_y = (y_top + y_bottom) / 2
-
-    # Add stage name on the left
-    ax.text(
-        center_x - top_width / 2 - 0.05,
-        center_y,
-        stages[i],
-        ha="right",
-        va="center",
-        fontsize=20,
-        fontweight="bold",
-        color="#333333",
+# Trapezoidal panels between stages — each panel inherits the upper stage color
+# so visually each stage = rectangle + tapering trapezoid below it.
+for i in range(len(bars) - 1):
+    p_top, p_bot = bars[i], bars[i + 1]
+    top_y = p_top.get_y() + p_top.get_height()
+    bot_y = p_bot.get_y()
+    ax.add_patch(
+        Polygon(
+            [
+                (p_top.get_x(), top_y),
+                (p_top.get_x() + p_top.get_width(), top_y),
+                (p_bot.get_x() + p_bot.get_width(), bot_y),
+                (p_bot.get_x(), bot_y),
+            ],
+            facecolor=OKABE_ITO[i],
+            edgecolor="none",
+            zorder=1,
+        )
     )
 
-    # Add value and percentage label in center
-    label_text = f"{values[i]:,} ({percentages[i]:.0f}%)"
-    # Choose text color based on background brightness
-    text_color = "white" if i < 3 else "#333333"
-    ax.text(center_x, center_y, label_text, ha="center", va="center", fontsize=18, fontweight="bold", color=text_color)
+# Closing tail below the last stage so the funnel ends with a proper taper
+last_bar = bars[-1]
+last_top_y = last_bar.get_y() + last_bar.get_height()
+tail_height = 0.50
+tail_bot_w = last_bar.get_width() * 0.5
+ax.add_patch(
+    Polygon(
+        [
+            (last_bar.get_x(), last_top_y),
+            (last_bar.get_x() + last_bar.get_width(), last_top_y),
+            (tail_bot_w / 2, last_top_y + tail_height),
+            (-tail_bot_w / 2, last_top_y + tail_height),
+        ],
+        facecolor=OKABE_ITO[-1],
+        edgecolor="none",
+        zorder=1,
+    )
+)
 
-    # Add conversion rate between stages
-    if i < n_stages - 1:
-        conversion_rate = values[i + 1] / values[i] * 100
-        ax.text(
-            center_x + top_width / 2 + 0.05,
-            y_bottom,
-            f"↓ {conversion_rate:.0f}%",
-            ha="left",
-            va="center",
-            fontsize=14,
-            color="#666666",
-            style="italic",
-        )
+# Emphasise the bar after the worst drop-off with a thicker outline accent
+worst_bar = bars[worst_idx + 1]
+worst_bar.set_edgecolor(INK)
+worst_bar.set_linewidth(2.5)
+worst_bar.set_zorder(3)
 
-# Set axis limits and remove decorations
-ax.set_xlim(0, 1)
-ax.set_ylim(0, 1)
-ax.set_aspect("equal")
-ax.axis("off")
+# Value + percentage labels are placed OUTSIDE bars (right) so narrow stages
+# never overflow onto the page background.
+right_offset = max_value * 0.04
+for i, patch in enumerate(bars):
+    cy = patch.get_y() + patch.get_height() / 2
+    x_right = patch.get_x() + patch.get_width()
+    ax.text(
+        x_right + right_offset,
+        cy,
+        f"{values[i]:,}  ·  {percentages[i]:.0f}%",
+        ha="left",
+        va="center",
+        fontsize=18,
+        fontweight="medium",
+        color=INK,
+    )
 
-# Title
-ax.set_title("funnel-basic · seaborn · pyplots.ai", fontsize=24, fontweight="bold", pad=20)
+# Conversion-rate annotations on the LEFT, with the largest drop-off
+# rendered bolder and in full-strength ink for visual emphasis.
+left_anchor = -max_value / 2 - max_value * 0.06
+for i in range(len(conversions)):
+    p_top, p_bot = bars[i], bars[i + 1]
+    y_mid = (p_top.get_y() + p_top.get_height() + p_bot.get_y()) / 2
+    is_worst = i == worst_idx
+    ax.text(
+        left_anchor,
+        y_mid,
+        f"↓ {conversions[i]:.0f}%",
+        ha="right",
+        va="center",
+        fontsize=16 if is_worst else 13,
+        fontweight="bold" if is_worst else "normal",
+        style="italic",
+        color=INK if is_worst else INK_MUTED,
+    )
+
+# Awareness on top — matplotlib's default places the first category at the bottom
+ax.invert_yaxis()
+ax.set_ylim(len(stages) - 1 + tail_height + 0.25, -0.45)
+
+sns.despine(ax=ax, left=True, bottom=True)
+ax.set_xticks([])
+ax.set_xlabel("")
+ax.set_ylabel("")
+ax.tick_params(axis="y", labelsize=20, length=0, pad=10)
+
+ax.set_xlim(-max_value * 0.95, max_value * 0.85)
+
+ax.set_title("funnel-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
