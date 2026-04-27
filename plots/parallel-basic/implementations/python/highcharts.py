@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 parallel-basic: Basic Parallel Coordinates Plot
-Library: highcharts | Python 3.13
-Quality: 97/100 | Updated: 2026-04-27
+Library: highcharts unknown | Python 3.14.4
+Quality: 86/100 | Updated: 2026-04-27
 """
 
 import json
