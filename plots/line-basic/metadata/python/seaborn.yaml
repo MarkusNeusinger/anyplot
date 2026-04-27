@@ -1,162 +1,171 @@
 library: seaborn
+language: python
 specification_id: line-basic
 created: '2025-12-23T00:23:04Z'
-updated: '2025-12-23T00:26:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20447575572
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-27T03:36:04Z'
+generated_by: claude-sonnet
+workflow_run: 24975107488
+issue: 653
+python_version: 3.14.4
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-basic/seaborn/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep: []
-  styling:
-  - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent text sizing following the library guidelines (24/20/16pt hierarchy)
-  - Clean sinusoidal data pattern effectively demonstrates seasonal trends
-  - Proper use of seaborn lineplot with appropriate styling (linewidth=3, marker=o,
-    markersize=12)
-  - Realistic temperature scenario with plausible values for temperate climate
-  - Perfect title format following the spec-id · library · pyplots.ai convention
-  - Well-balanced 16:9 layout with no clipping or overlap
+  - 'Perfect theme-adaptive chrome in both renders: all INK/PAGE_BG/ELEVATED_BG tokens
+    correctly threaded through seaborn RC, axis params, legend, and spine colors'
+  - Seaborn's automatic CI aggregation from 5-year repeated data is idiomatic and
+    showcases the library's statistical aggregation power
+  - All font sizes explicitly set at correct values for the 4800x2700 canvas
   weaknesses:
-  - Data shows a very smooth sinusoidal pattern; could benefit from slightly more
-    variation to show real-world noise
-  - Does not leverage seaborn distinctive statistical features (confidence intervals,
-    error bands)
-  image_description: The plot displays a line chart showing monthly temperature data
-    over 12 months. A single blue line (#306998) connects 12 data points with circular
-    markers. The line shows a clear sinusoidal pattern typical of seasonal temperature
-    variation - starting low around 4°C in January/February, peaking at approximately
-    30°C in July, then declining back to about 4°C in December. The x-axis is labeled
-    "Month" with integer values 1-12, and the y-axis is labeled "Temperature (°C)"
-    ranging from approximately 5 to 30. The title correctly displays "line-basic ·
-    seaborn · pyplots.ai". A subtle dashed grid is visible in the background. The
-    overall layout is clean with good proportions.
+  - 'DE-03 could be stronger: no visual emphasis draws the viewer to a specific insight
+    (e.g., peak summer month, seasonal range spread); the data is displayed but not
+    interpreted'
+  - DE-01 lacks a distinctive design touch beyond well-executed requirements; consider
+    a subtle annotation, a highlighted peak marker, or a title with a descriptive
+    subtitle
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "line-basic · seaborn · anyplot.ai" in dark ink, clearly readable; X-axis label "Month" and Y-axis label "Temperature (°C)" in dark ink, readable; tick labels (Jan-Dec, 0-30) in INK_SOFT (#4A4A44), readable
+      Data: Single brand-green (#009E73) line with circular markers (size 12), linewidth=3; transparent CI band (alpha=0.20) in matching green; first series is #009E73 ✓
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct, warm near-black not pure black
+      Chrome: Title in warm light (#F0EFE8), clearly readable; axis labels in light ink, readable; tick labels in #B8B7B0 (INK_SOFT dark), readable against dark background; no dark-on-dark failures observed
+      Data: Same #009E73 green line and markers — identical to light render (only chrome flipped); CI band now darker forest-green against near-black surface, still distinguishable
+      Legibility verdict: PASS — all text clearly readable against near-black background; no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all perfectly readable
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          legend 16pt; readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: 12 month labels evenly spaced, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width of 3 and marker size of 12 perfectly adapted for 12 data
-          points
+        comment: linewidth=3, markersize=12, CI band alpha=0.20; all elements clearly
+          visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single blue color with good contrast, no colorblind issues
+        comment: 'Single CVD-safe brand color #009E73'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions, 16:9 aspect ratio well utilized
+        comment: 16:9 figsize with tight_layout, balanced margins
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Month" and "Temperature (°C)"'
+        comment: Month and Temperature (°C) with units; title format correct
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
-        passed: false
-        comment: → 0/2 - Grid at alpha=0.3 is good, but no legend present (though
-          not strictly required for single line)
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; all theme tokens
+          correct in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above-default polish with brand color, CI band, spine removal; lacks
+          distinctive design flourish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, y-axis grid at alpha=0.10, legend frame
+          uses ELEVATED_BG tokens
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Seasonal arc clear, CI shows variability; no focal emphasis highlighting
+          a specific insight
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line chart type
+        comment: Correct basic line plot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=Month (sequential), Y=Temperature (continuous) correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Single line, clear axis labels, grid lines, markers on data points
-          - all present
-      - id: SC-04
-        name: Data Range
+        comment: Minimal design, axis labels, grid lines, optional markers all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all 12 data points without clipping
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Month (Jan-Dec), Y=Temperature (°C), all 12 months displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Single line, legend not required
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "line-basic · seaborn · pyplots.ai"'
+        comment: Title 'line-basic · seaborn · anyplot.ai' correct; legend 'Mean ±
+          95% CI' appropriate
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows trend clearly, but could demonstrate more variation patterns
-          (e.g., some noise or anomalies)
+        comment: Trend over ordered sequence with CI variability; core line chart
+          aspects represented
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly temperature readings is a perfect real-world scenario mentioned
-          in spec
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature range ~4-30°C is realistic for temperate climate annual
-          variation
+        comment: Monthly temperature data is canonical, neutral, real-world scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-30°C range for temperate city is physically realistic
     code_quality:
       score: 10
       max: 10
@@ -166,41 +175,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: 'Linear flow: theme setup, data generation, plot, style, save; no
+          functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set before data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (matplotlib, numpy, pandas, seaborn) are used
+        comment: os, matplotlib, numpy, pandas, seaborn — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Concise, no over-engineering, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; uses current seaborn 0.14+ API with errorbar='ci'
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Axes-level sns.lineplot with errorbar='ci'; sns.set_theme for RC
+          configuration — textbook seaborn idiom
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses sns.lineplot which is seaborn's main line plotting function,
-          but doesn't leverage more distinctive features like confidence intervals
-          or hue grouping
+        comment: Automatic mean + 95% CI aggregation from multi-year repeated data
+          is a distinctive seaborn capability
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
