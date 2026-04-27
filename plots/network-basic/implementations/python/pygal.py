@@ -1,13 +1,22 @@
-""" pyplots.ai
+""" anyplot.ai
 network-basic: Basic Network Graph
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-23
+Library: pygal 3.1.0 | Python 3.14.4
+Quality: 78/100 | Updated: 2026-04-27
 """
+
+import os
 
 import numpy as np
 import pygal
 from pygal.style import Style
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7")
 
 # Set seed for reproducibility
 np.random.seed(42)
@@ -118,9 +127,7 @@ for iteration in range(200):
 # Normalize positions to centered range for pygal (better canvas utilization)
 pos_min = positions.min(axis=0)
 pos_max = positions.max(axis=0)
-# Scale to fit in range and center on canvas
 positions = (positions - pos_min) / (pos_max - pos_min + 1e-6)  # Normalize to [0, 1]
-# For 16:9 aspect ratio canvas with range 0-12, center the network
 positions[:, 0] = positions[:, 0] * 6 + 3  # X: [3, 9] - centered horizontally
 positions[:, 1] = positions[:, 1] * 6 + 3  # Y: [3, 9] - centered vertically
 pos = {node["id"]: positions[i] for i, node in enumerate(nodes)}
@@ -131,17 +138,15 @@ for src, tgt in edges:
     degrees[src] += 1
     degrees[tgt] += 1
 
-# Define colors for groups
-group_colors = ["#306998", "#FFD43B", "#4CAF50", "#FF7043"]
-
-# Custom style for the chart
+# Custom style: theme-adaptive chrome, Okabe-Ito data colors
+# Edge series comes first so its color is the neutral gray slot
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#888888", "#306998", "#FFD43B", "#4CAF50", "#FF7043"),
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=("#888888",) + OKABE_ITO,
     title_font_size=72,
     label_font_size=40,
     major_label_font_size=36,
@@ -157,7 +162,7 @@ chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="network-basic · pygal · pyplots.ai",
+    title="network-basic · pygal · anyplot.ai",
     show_legend=True,
     x_title="",
     y_title="",
@@ -189,46 +194,20 @@ for src, tgt in edges:
 # Add edges (using None title to exclude from legend)
 chart.add(None, edge_points, stroke=True, show_dots=False, fill=False)
 
-# Since pygal doesn't support per-point sizing, we create multiple series per group
-# based on degree ranges to encode connectivity visually
-# Note: pygal XY charts use dots_size from chart config; we enhance tooltips with degree info
-
 # Group nodes by community
 group_names = ["Community A", "Community B", "Community C", "Community D"]
 for group_idx in range(4):
     group_nodes = [node for node in nodes if node["group"] == group_idx]
-    # Create points with labels showing degree for tooltips
     node_points = []
     for node in group_nodes:
         x, y = pos[node["id"]]
         degree = degrees[node["id"]]
-        # Include degree in tooltip for interactivity
         node_points.append({"value": (x, y), "label": f"{node['label']} ({degree} connections)"})
     chart.add(group_names[group_idx], node_points, stroke=False)
 
-# Save outputs
-chart.render_to_file("plot.svg")
-chart.render_to_png("plot.png")
+# Save themed outputs
+chart.render_to_file(f"plot-{THEME}.svg")
+chart.render_to_png(f"plot-{THEME}.png")
 
-# Also save HTML for interactive version
-with open("plot.html", "w") as f:
-    f.write(
-        """<!DOCTYPE html>
-<html>
-<head>
-    <title>network-basic · pygal · pyplots.ai</title>
-    <style>
-        body { margin: 0; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 100%; margin: 0 auto; }
-        object { width: 100%; height: auto; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <object type="image/svg+xml" data="plot.svg">
-            Network graph not supported
-        </object>
-    </div>
-</body>
-</html>"""
-    )
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())

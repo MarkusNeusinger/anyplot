@@ -1,162 +1,197 @@
 library: pygal
+language: python
 specification_id: network-basic
 created: '2025-12-23T15:14:50Z'
-updated: '2025-12-23T15:38:22Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20464357519
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-27T02:09:10Z'
+generated_by: claude-sonnet
+workflow_run: 24971696691
+issue: 989
+python_version: 3.14.4
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/network-basic/pygal/plot.html
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/pygal/plot-dark.html
+quality_score: 78
 review:
   strengths:
-  - Creative use of pygal XY chart to represent network graph despite pygal lacking
-    native network support
-  - Excellent force-directed layout algorithm implementation that clearly separates
-    communities
-  - Good color scheme with four distinct, colorblind-safe community colors
-  - Interactive tooltips showing person name and connection count in SVG/HTML output
-  - Clean code structure with well-commented sections
+  - Network graph correctly implemented using pygal XY chart with manual edge/node
+    drawing — the best approximation possible for a library without a native network
+    type
+  - Force-directed spring layout implemented from scratch with group-seeded initial
+    positions, producing clear community separation
+  - 'Four communities correctly color-coded using Okabe-Ito palette in canonical order;
+    Community A (first data series) correctly uses #009E73'
+  - Both light (#FAF8F1) and dark (#1A1A17) renders are clean and fully readable with
+    correct background and chrome tokens
+  - Interactive HTML output with per-node tooltips showing connection count (e.g.,
+    'Alice (4 connections)') leverages pygal's distinctive interactive feature
+  - Correct title format 'network-basic · pygal · anyplot.ai' and community legend
+    at bottom
+  - Reproducible with np.random.seed(42); clean KISS structure with no functions or
+    classes
   weaknesses:
-  - 'Title format incorrect: should be "network-basic · pygal · pyplots.ai" not "Social
-    Network · network-basic · pygal · pyplots.ai"'
-  - Network layout has diagonal bias leaving upper-right and lower-left corners mostly
-    empty
-  image_description: 'The plot displays a network graph visualization with 20 circular
-    nodes arranged in a diagonal pattern from upper-left to lower-right. Four distinct
-    community groups are visible, each colored differently: blue (Group A) in the
-    upper-left, yellow (Group B) in the center-left, green (Group C) in the center,
-    and orange (Group D) in the lower-right. Gray lines represent edges connecting
-    nodes both within and between communities. The title "Social Network · network-basic
-    · pygal · pyplots.ai" appears at the top. A legend at the bottom shows "Connections",
-    "Group A", "Group B", "Group C", "Group D". The node sizes are uniform, and the
-    force-directed layout successfully separates the communities while showing cross-group
-    bridges.'
+  - Node degree is calculated but not used to vary dot size — dots_size=30 is fixed
+    for all nodes, missing the spec requirement to encode degree through node size
+  - Node person-name labels are not rendered in static PNG (print_labels=False); they
+    appear only on hover in the interactive HTML, so the spec's legibility requirement
+    is unmet in the PNG export
+  - The edge series passed as chart.add(None, ...) appears in the legend as 'Bridges'
+    with an unexpected golden/yellow color rather than the intended gray (#888888),
+    indicating a pygal color-cycling or None-title rendering artifact
+  - Three nodes in each render display a thick ring artifact (active/selected state
+    styling from pygal) which creates an inconsistent and distracting visual
+  - Network layout is diagonally oriented, leaving upper-right and lower-left corners
+    mostly empty; canvas utilization is uneven
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "network-basic · pygal · anyplot.ai" clearly readable in dark ink at top center; no axis labels or tick labels (appropriate for network graph); legend at bottom shows "Bridges", "Community A", "Community B", "Community C", "Community D" in readable dark text
+      Data: 20 nodes spread across canvas via force-directed layout. Community A (teal #009E73), Community B (orange #D55E00), Community C (blue #0072B2), Community D (pink #CC79A7). Gray edges connect intra-community nodes; a warm golden/yellow set of edges connects cross-community pairs (labeled "Bridges" in legend with unexpected color). Three nodes display a thick black ring artifact (active/hover state). No node name labels visible in static PNG.
+      Legibility verdict: PASS — title and legend readable; no node labels shown in PNG (only in HTML tooltips); no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title clearly readable in light text; legend at bottom readable in light text; no dark-on-dark failures observed
+      Data: Data colors are identical to light render — Community A still #009E73, B orange, C blue, D pink. Edges still gray/golden. Three nodes now display thick white rings (same active-state artifact, theme-adapted). Canvas layout identical to light render.
+      Legibility verdict: PASS — all chrome text readable against dark background; brand green #009E73 remains visible; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title and legend text are clearly readable at full size
+        comment: Font sizes explicitly set (title=72, legend=40, value=32); title
+          and legend readable in both themes; but node name labels not rendered in
+          static PNG (print_labels=False)
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: No text overlap; force-directed layout spreads nodes without collision;
+          no labels to overlap in static PNG
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Nodes are visible with good dot size, edges visible but thin
+        comment: All 20 nodes and edges clearly visible; dots_size=30 appropriate;
+          three nodes have distracting ring artifacts
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Four distinct colors (blue, yellow, green, orange) are colorblind-distinguishable
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Network fills canvas reasonably but has diagonal bias leaving corners
-          empty
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for network graphs, no axis labels needed
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed at bottom, no distracting grid
+        comment: Okabe-Ito palette; communities distinguishable without hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Network occupies ~60% of canvas; diagonal orientation leaves corners
+          empty; legend well-positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct title format; no axis labels appropriate for network graph
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Community A correctly uses #009E73; communities follow Okabe-Ito
+          order; backgrounds correct; but edge series rendered with unexpected golden/yellow
+          color in legend instead of intended #888888 gray'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured; manual spring layout is impressive effort; Okabe-Ito
+          community colors; but ring artifacts and no degree-size encoding limit polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: No axes or grid (appropriate); theme-adaptive chrome; but ring artifacts,
+          unexpected Bridges legend entry, and uneven canvas utilization
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Four communities clearly distinguished; cross-community bridges visually
+          apparent; social network context gives meaning; viewer sees the community
+          structure story
     spec_compliance:
-      score: 23
-      max: 25
+      score: 12
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correctly implements network graph (node-link diagram)
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Nodes and edges correctly mapped
-      - id: SC-03
+        comment: Network/node-link diagram correctly implemented using XY chart —
+          best approximation in pygal
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Has force-directed layout, community colors, edges; missing variable
-          node sizing by degree (spec says "optional")
-      - id: SC-04
-        name: Data Range
+        score: 2
+        max: 4
+        passed: false
+        comment: Force-directed layout present; community coloring present; but node
+          size does not encode degree (dots_size fixed at 30 despite degree calculation),
+          and node labels visible only in HTML tooltips not static PNG
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 20 nodes and connections visible
-      - id: SC-05
-        name: Legend Accuracy
+        comment: All 20 nodes and 31 edges correctly placed; community grouping correct
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly identifies communities
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Title has extra "Social Network ·" prefix; should be just "network-basic
-          · pygal · pyplots.ai"
+        max: 3
+        passed: false
+        comment: Title format correct; community labels in legend correct; but unexpected
+          'Bridges' legend entry with wrong color for the None/edge series
     data_quality:
-      score: 19
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows communities, bridges between groups, internal connections;
-          uniform node size limits degree visibility
+        comment: Shows community structure, intra- and cross-community connections,
+          varied node degrees, and clear network topology
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Social network with 20 people in 4 communities is realistic and relatable
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 20 nodes with clear connections, appropriate for static visualization
+        comment: Social network with 20 real-name people in 4 friend groups; cross-community
+          bridge connections; neutral topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 20 nodes within spec range (10-50); 31 edges sparse enough for clear
+          visualization
     code_quality:
       score: 10
       max: 10
@@ -166,42 +201,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → layout calculation → chart creation
-          → save'
+        comment: 'Linear: imports → data → layout → plot → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pygal, and Style used
+        comment: os, numpy, pygal, Style — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current pygal API
+        comment: Force-directed layout is appropriately complex for this unusual plot
+          type; clean data structures
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png, plot.svg, and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.svg, plot-{THEME}.png, plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: pygal.XY used correctly; Style object for theme; series-level stroke/dots
+          overrides idiomatic
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal XY chart creatively for network visualization, custom
-          Style, SVG interactivity with tooltips showing degree info; however pygal
-          is not designed for network graphs so the approach is a workaround
+        comment: Interactive HTML export with per-node tooltips showing connection
+          count; pygal's interactive JS feature leveraged
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling: []
