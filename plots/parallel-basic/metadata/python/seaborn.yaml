@@ -1,173 +1,198 @@
 library: seaborn
+language: python
 specification_id: parallel-basic
 created: '2025-12-23T18:12:41Z'
-updated: '2025-12-23T18:19:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468186498
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-27T05:40:37Z'
+generated_by: claude-sonnet
+workflow_run: 24978096482
+issue: 820
+python_version: 3.14.4
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  - custom-legend
-  patterns:
-  - dataset-loading
-  - wide-to-long
-  dataprep: []
-  styling:
-  - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Excellent visualization clarity with well-separated species clusters visible in
-    the parallel coordinates
-  - Smart use of two-line x-axis labels showing both dimension names and original
-    data ranges
-  - Good transparency handling allows overlapping patterns to remain visible
-  - Clean, readable code structure with proper data normalization
-  - Colorblind-friendly palette choice
+  - 'Perfect spec compliance (15/15): parallel coordinates correctly implemented with
+    all required features — normalization, color coding, alpha transparency, and all
+    4 Iris dimensions'
+  - 'Excellent code quality (10/10): clean procedural structure, deterministic data
+    via sns.load_dataset, all imports used, saves as plot-{THEME}.png'
+  - 'Full Okabe-Ito palette compliance: setosa = #009E73 (first series), correct order
+    for versicolor and virginica; both light and dark renders are theme-correct with
+    no dark-on-dark issues'
+  - 'Creative seaborn adaptation: uses sns.lineplot with units/estimator=None — the
+    idiomatic seaborn pattern for individual trajectory lines in the absence of a
+    native parallel-coordinates function'
+  - Informative x-axis labels include min-max ranges in parentheses (e.g., Sepal Length
+    (4.3–7.9 cm)), and Min/Max annotations on the y-axis orient the viewer
   weaknesses:
-  - External data dependency (URL fetch) reduces reproducibility compared to inline
-    data generation with fixed seed
-  - Could leverage more seaborn-specific features rather than relying on lineplot
-    as a workaround
-  image_description: 'The plot displays a parallel coordinates visualization using
-    the Iris dataset. Four vertical axes represent the normalized measurements: Sepal
-    Length (4.3-7.9 cm), Sepal Width (2.0-4.4 cm), Petal Length (1.0-6.9 cm), and
-    Petal Width (0.1-2.5 cm). Lines connect each observation across all dimensions,
-    colored by species: blue (#306998) for setosa, yellow (#FFD43B) for versicolor,
-    and green (#4CAF50) for virginica. The title follows the required format "parallel-basic
-    · seaborn · pyplots.ai". The legend is positioned in the upper right corner with
-    clear species labels. Lines have good transparency (alpha=0.5) allowing overlap
-    patterns to be visible. The y-axis shows "Normalized Value" from 0 to 1.'
+  - 'DE-01/DE-03 weak: design is well-configured but not publication-ready — no visual
+    emphasis on the key insight (setosa clearly separates from versicolor/virginica
+    at the petal dimensions). Improve by varying alpha by species (e.g., setosa more
+    opaque), adding a concise annotation, or using line width to foreground one species'
+  - 'DE-02 partial: spines removed and grid added, but vertical axis lines (axvline)
+    are subtly styled at alpha=0.4 — overall refinement is good but not polished;
+    consider adding subtle tick markers at 0.25/0.5/0.75 on each axis, or a faint
+    bounding box per axis column for visual clarity'
+  - 'VQ-03 minor: 150 semi-transparent lines at alpha=0.45 are readable but congested
+    in the sepal-width/petal-length crossing region — could reduce alpha further (0.30–0.35)
+    or increase linewidth slightly (1.8–2.0) to improve legibility through density'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, matches the light surface spec.
+      Chrome: Title "parallel-basic · seaborn · anyplot.ai" in dark ink (24pt, medium weight), clearly readable. Y-axis label "Normalized Value" (20pt) readable. X-axis tick labels are 2-line strings (dimension name + range in cm, 18pt) readable. Y-axis ticks (0.0–1.0, 16pt) readable. "Min"/"Max" tertiary annotations on left (14pt) visible. Legend ("Species") in upper right with dark title and secondary-ink text, readable.
+      Data: Three species plotted as semi-transparent lines (alpha=0.45): setosa = #009E73 (green), versicolor = #D55E00 (orange), virginica = #0072B2 (blue). Vertical axis guides at each dimension (INK_SOFT, alpha=0.4). Lines slightly dense in the sepal-width → petal-length crossing but data pattern is readable.
+      Legibility verdict: PASS — all text is dark on warm-off-white background, no readability issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, matches the dark surface spec.
+      Chrome: Title, Y-axis label, x-tick labels, y-axis ticks, Min/Max annotations, and legend text all rendered in light ink (#F0EFE8 / #B8B7B0 range) — all clearly readable against the dark background. Legend frame uses elevated-dark (#242420) background with INK_SOFT edge. No dark-on-dark failures observed.
+      Data: Colors identical to light render — setosa = #009E73, versicolor = #D55E00, virginica = #0072B2. Vertical axis guides visible. Same line density pattern as light render.
+      Legibility verdict: PASS — all text is light on near-black background, no dark-on-dark issues, brand green #009E73 remains clearly visible.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 18pt+, y-axis ticks at 16pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, x-axis labels are well-spaced with
-          two-line format
+        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, x-ticks
+          18pt, y-ticks 16pt, legend 16-18pt, annotations 14pt. Both themes readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 2-line x-axis labels well-spaced, legend not covering critical data
+          area, no text collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Lines well-visible with linewidth=2 and alpha=0.5, good balance for
-          150 observations. Minor deduction as some lines could be slightly more distinct
+        comment: alpha=0.45, linewidth=1.5 appropriate for 150 observations. Slightly
+          congested in middle sepal-width/petal-length region but readable.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, and green palette is colorblind-friendly with good
-          contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, though slight margin imbalance on the right
-          side
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (cm) shown in the x-axis tick labels
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette is CVD-safe. Alpha blending aids distinction of
+          overlapping series.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 format fills canvas well. Nothing cut off. Legend in upper right
+          doesn't obstruct data.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with whitegrid style, but legend could be slightly
-          better positioned to avoid potential overlap with data lines in upper right
+        comment: 'Title in exact format. Y-axis: ''Normalized Value''. X-axis labels
+          include dimension names with value ranges in cm.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: setosa=#009E73 (1st), versicolor=#D55E00 (2nd), virginica=#0072B2
+          (3rd). Light bg=#FAF8F1, dark bg=#1A1A17. Both renders theme-correct.
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: Okabe-Ito palette, Min/Max annotations, vertical
+          axis guides, informative x-labels with ranges. Not yet publication-ready
+          — no focal point or emphasis on key pattern.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle y-grid, vertical guides styled with INK_SOFT
+          and low alpha, legend carefully styled with theme colors. Good but not fully
+          polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Classic Iris story visible (setosa separates at petal dimensions)
+          but not highlighted. Color helps track species; Min/Max aids normalization
+          context. No visual emphasis on the key insight.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct parallel coordinates implementation using seaborn lineplot
-          with units parameter
+        comment: Correct parallel coordinates plot with lines connecting observations
+          across multiple axes.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Four dimensions correctly mapped to x-axis categories, normalized
-          values to y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: normalization, color by category, transparency
-          for overlapping lines'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features: normalization, color coding by category, alpha transparency,
+          4 dimensions.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis properly shows 0-1 normalized range with slight padding (-0.05
-          to 1.05)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Dimensions as x-positions, normalized values on y-axis, all 150 observations
+          shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Species labels correctly match the data categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "parallel-basic · seaborn · pyplots.ai"
+        comment: 'Title: ''parallel-basic · seaborn · anyplot.ai'' (exact format).
+          Legend shows all 3 species.'
     data_quality:
-      score: 19
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows clear cluster separation (setosa distinct from others), correlation
-          patterns visible between petal dimensions
+        comment: 'Shows crossing patterns, species clustering, normalization behavior,
+          density variation. Minor: setosa separation insight not emphasized.'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Iris dataset is a classic, real dataset. Minor deduction as the spec
-          suggested custom scenarios like health metrics or product features
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Original data ranges shown in axis labels, normalized values make
-          sense
+        comment: 'Iris dataset: classic, neutral, well-established scientific measurements
+          in cm.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Real iris measurements, correctly normalized to 0-1. Original ranges
+          shown in axis labels.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -175,44 +200,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → normalization → reshape
-          → plot → save'
+        comment: Clean Imports → Tokens → Data → Plot → Save. No functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 1
-        max: 3
-        passed: false
-        comment: Uses external URL for data without fixed seed. The iris dataset is
-          deterministic but loading from URL adds external dependency
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses sns.load_dataset('iris') — deterministic, no random state needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib, pandas, and seaborn imported, all are used
+        comment: os, sys, matplotlib.pyplot, seaborn — all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current seaborn API correctly
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. sys.path manipulation is a practical workaround
+          for local module shadowing, not over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches='tight', facecolor=PAGE_BG.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses sns.lineplot with units parameter which is a valid approach,
-          but seaborn doesn't have a native parallel coordinates function. The implementation
-          is more of a matplotlib solution with seaborn theming. Could have leveraged
-          more seaborn-specific features.
-  verdict: APPROVED
+        passed: true
+        comment: 'Good seaborn patterns: sns.load_dataset, sns.set_theme with rc dict,
+          sns.lineplot with hue/palette/hue_order. Correct units+estimator=None for
+          individual lines.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses seaborn's units parameter with estimator=None — the key seaborn-specific
+          technique for drawing individual observation trajectories without aggregation.
+          Cleverly adapts lineplot for parallel coords.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  patterns:
+  - dataset-loading
+  - wide-to-long
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
