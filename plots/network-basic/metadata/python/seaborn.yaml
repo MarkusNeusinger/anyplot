@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: network-basic
 created: '2025-12-23T15:36:16Z'
-updated: '2026-04-27T01:10:39Z'
+updated: '2026-04-27T01:26:38Z'
 generated_by: claude-sonnet
 workflow_run: 24971593758
 issue: 989
@@ -12,96 +12,99 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 73
+quality_score: 70
 review:
   strengths:
   - Correct node-link network diagram with working force-directed layout producing
-    clearly separated communities
-  - Node degree encoded in marker size adds meaningful visual dimension
-  - Realistic comprehensible social network scenario with named individuals (workplace
-    teams)
-  - Clean KISS code structure with reproducibility seed
-  - Both renders are visually readable despite code-level theme handling gaps
+    clearly separated community clusters
+  - Node degree encoded in marker size adds a meaningful visual dimension consistent
+    with the spec
+  - Realistic, comprehensible social-network scenario (named individuals, workplace
+    teams, bridge edges between teams)
+  - Clean KISS code structure with reproducibility seed; all imports used
   weaknesses:
-  - 'CRITICAL: Non-Okabe-Ito custom palette (#306998 Python Blue, #FFD43B, #4CAF50,
-    #FF7043) — must use Okabe-Ito: first group #009E73, then #D55E00, #0072B2, #CC79A7'
-  - 'CRITICAL: No ANYPLOT_THEME environment variable handling — must read os.getenv
-    and apply theme-adaptive chrome tokens (PAGE_BG, INK, INK_SOFT) for background,
-    text, edges, legend'
-  - 'CRITICAL: Saves as plot.png (bare) — must save as plot-light.png and plot-dark.png'
-  - 'CRITICAL: Title says pyplots.ai — must be anyplot.ai'
-  - 'Node label color hardcoded to #222222 — must use INK token from theme (#1A1A17
-    light / #F0EFE8 dark)'
-  - Node label fontsize=11pt is too small for 4800x2700 canvas (minimum 16pt); legend
-    items at 14pt also below minimum
-  - Manual spring layout algorithm (25 lines of nested loops) should be replaced with
-    networkx for cleaner more correct layout
+  - 'CRITICAL (repair failed): Palette is still non-Okabe-Ito — #306998 (Python Blue,
+    explicitly forbidden), #FFD43B, #4CAF50, #FF7043. Must use Okabe-Ito starting
+    with #009E73, then #D55E00, #0072B2, #CC79A7'
+  - 'CRITICAL (repair failed): No ANYPLOT_THEME environment variable handling — must
+    read os.getenv(ANYPLOT_THEME, light) and apply PAGE_BG, INK, INK_SOFT tokens to
+    background, text, edges, and legend'
+  - 'CRITICAL (repair failed): Saves as plot.png (bare) — must save as plot-light.png
+    and plot-dark.png'
+  - 'CRITICAL (repair failed): Title string still says pyplots.ai in ax.set_title()
+    — must be anyplot.ai. Only the docstring was changed in Attempt 2.'
+  - 'Node label colour hardcoded to #222222 — must use INK token (#1A1A17 light /
+    #F0EFE8 dark)'
+  - Node label fontsize=11 and legend fontsize=14 are below the 16pt minimum for a
+    4800x2700 canvas; increase both to >=16pt
+  - 'Background set via facecolor=white (pure #FFFFFF) instead of PAGE_BG (#FAF8F1
+    light / #1A1A17 dark)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white close to #FAF8F1 (seaborn white theme)
-      Chrome: Title "Social Network · network-basic · seaborn · pyplots.ai" at 24pt is clearly readable in dark text. Legend in upper-left with "Community" title and 4 team entries is readable. No axis labels (axis is off, appropriate for network graph).
-      Data: 20 named nodes colored by team (4 groups using custom non-Okabe-Ito palette). Nodes sized by degree (400-1200 range). Grey edges at alpha=0.4 connect nodes. Spring layout produces diagonal band from upper-left (Team A) to lower-right (Team D) with community clustering visible.
-      Legibility verdict: PASS — all text readable against light background, but node labels (11pt) and legend items (14pt) are below the 16pt minimum for the large canvas.
+      Background: Warm off-white approximately #FAF8F1 (seaborn white style produces creamy appearance)
+      Chrome: Title "Social Network · network-basic · seaborn · anyplot.ai" at 24pt clearly readable in dark text. Legend in upper-left with "Community" title and 4 team entries readable. No axis elements (axis=off, appropriate for network graph).
+      Data: 20 named nodes colored by team (4 groups). Node sizes vary by degree. Grey edges at alpha=0.4 connect communities. Spring layout produces diagonal band from upper-left (Team A) to lower-right (Team D). First series appears teal-green (possibly #009E73-like from prior code version) but CURRENT CODE specifies #306998 (Python Blue, non-compliant).
+      Legibility verdict: PASS for rendered image — all text readable against light background. NOTE: node labels (11pt) and legend items (14pt) are below the 16pt minimum for 4800x2700 canvas.
 
     Dark render (plot-dark.png):
-      Background: Dark near-black close to #1A1A17
-      Chrome: Title appears white/light and is readable. Legend text appears light and readable. No axis elements (axis off).
-      Data: Node colors are identical to light render — community colors unchanged between themes as expected. Network structure identical.
-      Legibility verdict: PASS for the rendered output — node labels inside colored circles appear readable. HOWEVER, the code hardcodes node label color as #222222 (near-black) and does not implement ANYPLOT_THEME handling. Readability in dark mode appears preserved only because colored circles provide intermediate contrast, not due to proper theme implementation. This is a code compliance failure even if the visual result appears acceptable.
+      Background: Near-black approximately #1A1A17
+      Chrome: Title and legend text appear in light colours and are readable against dark background. No dark-on-dark failures visible in the rendered image. Node labels inside coloured circles appear readable.
+      Data: Community colours are identical to light render — only the background and chrome have changed. Network structure identical.
+      Legibility verdict: PASS for the rendered images shown. CRITICAL NOTE: The current code on the PR branch has NO ANYPLOT_THEME handling, saves as plot.png (bare), and uses facecolor=white (pure #FFFFFF). The dark render in plot_images/ appears to be from a prior implementation run with correct theme handling. Attempt 2 repair only changed docstring comments, leaving all 6 critical issues from Attempt 1 unresolved.
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 19
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 3
         max: 8
-        passed: true
-        comment: Title explicitly set to 24pt; node labels 11pt and legend 14pt below
-          16pt minimum for large canvas
+        passed: false
+        comment: Title explicitly set at 24pt (correct); node labels hardcoded to
+          11pt and legend to 14pt, both below 16pt minimum for 4800x2700 canvas
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No significant label or element overlap; spring layout provides good
-          node spacing
+        comment: Spring layout provides good separation; minor crowding in bottom-right
+          cluster but all labels readable
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Nodes clearly visible; edges slightly thin at linewidth=2 for 4800x2700
-          canvas
+        comment: Nodes clearly visible at sizes=(400,1200); edges at linewidth=2 slightly
+          thin for large canvas
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: true
-        comment: Four colors have different luminance; not optimally CVD-safe as palette
-          was not designed for it
+        comment: Four groups have distinct luminance but custom palette was not designed
+          for CVD safety
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Network fills ~65% of canvas in diagonal band; some canvas wasted
-          at corners
+        comment: Network fills ~60% of canvas in diagonal band; corners wasted but
+          acceptable for force-directed layout
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for network graph; title is descriptive
+        comment: axis=off appropriate for network graph; title is descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'Non-Okabe-Ito custom palette (#306998 Python Blue explicitly non-compliant,
-          #FFD43B, #4CAF50, #FF7043); no ANYPLOT_THEME handling; saves as plot.png
-          not plot-{THEME}.png; facecolor=white is pure #FFFFFF not #FAF8F1'
+        comment: '#306998 (Python Blue) explicitly non-compliant; #FFD43B, #4CAF50,
+          #FF7043 are arbitrary custom hexes not Okabe-Ito; facecolor=white is pure
+          #FFFFFF not #FAF8F1; no ANYPLOT_THEME handling; saves as plot.png not plot-{THEME}.png'
     design_excellence:
       score: 10
       max: 20
@@ -111,22 +114,24 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: 'Well-configured default: spring layout, degree-sized nodes, edge
-          alpha. Not publication-ready; diagonal layout inelegant.'
+        comment: 'Well-configured: spring layout, degree-sized nodes, edge alpha blending.
+          Not publication-ready; diagonal band layout inelegant; bridge nodes receive
+          no visual emphasis'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: axis=off appropriate for network; edge alpha blending and node borders
-          are nice touches; legend could be more refined
+        comment: axis=off appropriate; edge transparency and node border colour (#333333)
+          are nice refinements; legend frame present with no custom styling
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Communities visible through color and layout but no emphasis on bridge
-          nodes (the most interesting feature)
+        comment: Communities colour-coded and spatially clustered (good), but bridge
+          nodes are not highlighted despite being the most analytically interesting
+          network feature
     spec_compliance:
       score: 14
       max: 15
@@ -136,14 +141,14 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct node-link network diagram with spring/force-directed layout
+        comment: Correct node-link network diagram with force-directed spring layout
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Nodes, edges, spring layout, node sizing by degree, labels, community
-          coloring all present
+        comment: Nodes, edges, spring layout, degree-encoded node size, node labels,
+          and community colouring all present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -155,8 +160,9 @@ review:
         score: 2
         max: 3
         passed: false
-        comment: Title uses 'pyplots.ai' instead of 'anyplot.ai'; legend correctly
-          shows 4 community groups
+        comment: Title format structurally correct but reads pyplots.ai (wrong brand);
+          ax.set_title() unchanged by Attempt 2 repair. Legend correctly shows 4 community
+          groups.
     data_quality:
       score: 14
       max: 15
@@ -166,15 +172,15 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 'Shows communities, bridge nodes, degree variation; slight gap: no
-          hub-and-spoke extremes'
+        comment: 'Demonstrates communities, bridge nodes, degree variation; slight
+          gap: no hub-and-spoke extremes'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Named individuals in workplace teams — real, comprehensible, neutral
-          scenario
+        comment: Named individuals in workplace teams (Alice, Bob, Carol...) — neutral,
+          comprehensible, real-world scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
@@ -191,8 +197,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports -> data -> algorithm -> plot ->
-          save'
+        comment: 'Clean linear flow: imports -> data -> spring layout -> plot -> save'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -204,20 +209,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports (matplotlib, numpy, pandas, seaborn) are actually used
+        comment: All four imports (matplotlib, numpy, pandas, seaborn) are used
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Manual spring layout (~25 lines nested loops) is over-engineered;
-          networkx provides nx.spring_layout() and would be cleaner
+        comment: Manual spring layout (~25 lines of nested loops) is verbose; networkx.spring_layout()
+          would replace it with one line
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
         comment: Saves as plot.png (bare); must save as plot-light.png and plot-dark.png
+          by reading ANYPLOT_THEME
     library_mastery:
       score: 5
       max: 10
@@ -227,15 +233,15 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: sns.scatterplot with hue and size is appropriate; surrounding code
-          (layout, edges, labels) is pure matplotlib
+        comment: sns.scatterplot with hue and size is the correct seaborn approach;
+          surrounding code (spring layout, edge drawing, labels) is pure matplotlib
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: seaborn's automatic legend for combined hue+size is a modest library-specific
-          advantage; overall contribution is one plot call
+        comment: Seaborn's automatic combined hue+size legend is a modest library-specific
+          advantage; overall contribution limited to one scatter call
   verdict: REJECTED
 impl_tags:
   dependencies: []
