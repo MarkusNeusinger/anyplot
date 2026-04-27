@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 qq-basic: Basic Q-Q Plot
-Library: plotly | Python 3.13
-Quality: pending | Created: 2026-04-27
+Library: plotly 6.7.0 | Python 3.14.4
+Quality: 82/100 | Updated: 2026-04-27
 """
 
 import os
