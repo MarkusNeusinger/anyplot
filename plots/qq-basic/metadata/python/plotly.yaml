@@ -1,163 +1,184 @@
 library: plotly
+language: python
 specification_id: qq-basic
 created: '2025-12-23T18:13:50Z'
-updated: '2025-12-23T18:20:59Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468193206
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/qq-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/qq-basic/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-04-27T05:47:09Z'
+generated_by: claude-sonnet
+workflow_run: 24977689058
+issue: 977
+python_version: 3.14.4
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/plotly/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent visual presentation with proper font sizing for high-resolution output
-  - Clean implementation of Q-Q plot methodology using Blom's plotting positions
-  - Good use of plotly's styling capabilities with plotly_white template
-  - Reference line clearly visible with contrasting color and dash style
-  - Data demonstrates meaningful deviation from normality for educational value
+  - Perfect theme implementation — both light (#FAF8F1) and dark (#1A1A17) renders
+    are correct with all chrome tokens properly adapted
+  - Correct Q-Q plot using Blom plotting positions and Winitzki erfinv approximation
+    without scipy dependency
+  - 'Full spec compliance: proper axis labels (Theoretical Quantiles / Sample Quantiles),
+    visible reference line, and correct title format'
+  - Clean KISS code structure with seed, no over-engineering
+  - Intentional two-component mixture data that demonstrates non-normal Q-Q behavior
+    (right-tail deviation), making the plot educational
   weaknesses:
-  - Manual implementation of inverse normal CDF is overly complex when scipy.stats
-    could simplify this significantly
-  - Axis labels lack context (could note these are standardized quantiles)
-  image_description: The plot displays a Q-Q (Quantile-Quantile) plot with a white
-    background and subtle gray grid lines. Blue circular markers (#306998) represent
-    the sample quantiles plotted against theoretical quantiles. A yellow/gold dashed
-    diagonal reference line (y=x) runs from the lower-left to upper-right. The title
-    "qq-basic · plotly · pyplots.ai" appears at the top in dark text. The x-axis is
-    labeled "Theoretical Quantiles" and the y-axis "Sample Quantiles", both ranging
-    approximately from -2.5 to 2.5. A legend in the upper-left shows "Sample Quantiles"
-    (blue circle) and "Reference (y=x)" (yellow dashed line). The data points largely
-    follow the reference line but show slight deviation in the upper-right portion,
-    indicating the positive skew from the mixed distribution in the data.
+  - No plotly frame/spine removal — top and right axes are still visible; removing
+    them (showline=False or axis zeroline/mirror settings) would add visual refinement
+  - LM-02 is weak — no custom hovertemplate to show exact quantile values on hover,
+    which is the key interactive benefit of Plotly for Q-Q plots
+  - DE-01 could be elevated with a confidence band (QQ-band) around the reference
+    line, which is a common Q-Q plot enhancement and would add analytical depth
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — not pure white, clearly theme-correct.
+      Chrome: Title "qq-basic · plotly · anyplot.ai" in dark ink at top-left, fully readable. Axis labels "Theoretical Quantiles" (x) and "Sample Quantiles" (y) in dark ink, clearly legible. Tick labels in dark gray (INK_SOFT), readable. Legend box with border at top-left showing green circle for "Sample Quantiles" and orange dashed line for "Reference (y=x)" — both readable.
+      Data: 100 scatter points in #009E73 (brand green), forming a roughly diagonal pattern that deviates from the orange dashed reference line (#D55E00) at the upper-right, showing right-tail behavior of the two-component mixture. Subtle gray grid visible in background.
+      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black consistent with #1A1A17 — not pure black, theme-correct.
+      Chrome: Title in light text (#F0EFE8), fully readable against dark background. Axis labels in light ink, clear. Tick labels in lighter gray (B8B7B0 range), readable. Legend box with slightly elevated dark background and border, labels in lighter gray — no dark-on-dark issues observed.
+      Data: Same #009E73 green scatter points and #D55E00 orange dashed reference line — data colors are identical to the light render, only chrome has flipped. The green brand color remains clearly visible against the dark background.
+      Legibility verdict: PASS — all text elements are clearly readable against the warm near-black background. No dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick fonts at 18pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, ticks
+          18px, legend 18px. All readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap. Data markers naturally cluster but no collision
+          issues.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers sized at 14 with 0.7 opacity work well for 100 points, though
-          slightly on the larger side
+        comment: Markers at size=14 with opacity=0.85 are well-adapted for 100 data
+          points.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue markers and yellow line provide excellent contrast, colorblind-safe
+        comment: 'Okabe-Ito palette — #009E73 and #D55E00 are CVD-safe and have adequate
+          contrast against both backgrounds.'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: Good canvas utilization for 16:9 format. Margins well-balanced.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no units (though none are needed for standardized
-          quantiles)
+        comment: 'Descriptive labels: ''Theoretical Quantiles'' and ''Sample Quantiles''.
+          No units needed for standardized quantiles.'
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid at 0.1 alpha is appropriately subtle, legend well-positioned
-          but could use slightly more prominence
+        comment: 'First series #009E73 correct. Reference line #D55E00 (Okabe-Ito
+          pos 2). Backgrounds #FAF8F1 (light) / #1A1A17 (dark). Chrome tokens fully
+          applied.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured library defaults with correct palette and sizing,
+          but no exceptional design choices.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtle grid via GRID color token, zeroline=False, styled legend.
+          No explicit spine/frame removal.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Intentional two-component mixture data shows right-tail deviation
+          clearly. Two-color scheme guides eye from scatter to reference line pattern.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Q-Q plot implementation
+        comment: Correct Q-Q plot with scatter points and reference line.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Theoretical quantiles on X, sample quantiles on Y as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: comparison to normal distribution, diagonal
-          reference line, proper axis labels'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: Q-Q scatter, 45-degree reference line, correct
+          axis labels, Blom plotting positions.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show complete data range with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Theoretical Quantiles, Y=Sample Quantiles — correct per spec.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies both traces
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format `qq-basic · plotly · pyplots.ai`
+        comment: Title 'qq-basic · plotly · anyplot.ai' correct. Legend labels match
+          traces.
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows deviation from normality (positive skew) which demonstrates
-          Q-Q plot interpretation; could show more extreme deviations
+        comment: 'Shows non-normal Q-Q behavior: deviation from reference line, right-tail
+          pattern from two-component mixture.'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Plausible statistical data scenario; mixture of normals is a valid
-          demonstration
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Standardized values in appropriate range (-2.5 to 2.5)
+        comment: Plausible dataset (mixture of normals) but no explicit real-world
+          domain labeling. Axis labels are inherently abstract for standardized Q-Q.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standardized data in [-3, 3] range is correct for standard normal
+          Q-Q comparison.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -165,42 +186,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save'
+        comment: 'Clean flat structure: imports → tokens → data → plot → save.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects used
+        comment: Only os, numpy, plotly.graph_objects — all used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Manual erfinv approximation (Winitzki) is elegant and avoids scipy
+          dependency. No fake UI.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly, but the manual inverse normal calculation
-          is unnecessarily complex
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_features:
-      score: 3
-      max: 5
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses plotly's interactive features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses go.Scatter, proper layout configuration, generates HTML for
-          interactivity. However, could leverage plotly's built-in statistical features
-          more
-  verdict: APPROVED
+        comment: Correct use of go.Figure, add_trace, update_layout patterns. Appropriate
+          for multi-trace plot.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: HTML export with Plotly interactivity is distinctive, but no custom
+          hovertemplate or Plotly-specific interactive features were added. Q-Q plots
+          particularly benefit from hover showing quantile values.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
