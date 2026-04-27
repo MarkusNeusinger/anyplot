@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: qq-basic
 created: '2025-12-23T18:15:01Z'
-updated: '2026-04-27T05:50:10Z'
+updated: '2026-04-27T06:05:25Z'
 generated_by: claude-sonnet
 workflow_run: 24977971695
 issue: 977
@@ -12,37 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/highcharts/plot-dark.html
-quality_score: 81
+quality_score: 84
 review:
   strengths:
-  - Both light and dark themes fully implemented with correct background colors (#FAF8F1/#1A1A17),
-    all chrome using theme-adaptive tokens
-  - Brand green (#009E73) correctly applied as first categorical series with tasteful
-    alpha blending
-  - 'Spec compliance is perfect: correct Q-Q plot type, both required elements (scatter
-    + reference line), correct axis labels'
-  - Code is clean, reproducible, and well-structured; container-only screenshot is
-    precise
+  - Correct Q-Q plot implementation with properly scaled theoretical quantiles and
+    brand-green scatter points
+  - 'Both renders pass readability with correct theme-adaptive chrome (#FAF8F1 light
+    / #1A1A17 dark)'
+  - Data storytelling through mixed-normal distribution purposefully demonstrates
+    right-skew upper-tail departure
+  - Reproducible with np.random.seed(42) and uses stdlib NormalDist for quantile calculation
+  - Proper inline Highcharts JS embedding solves headless Chrome CDN limitation
   weaknesses:
-  - 'Design Excellence is modest: chart looks like a configured Highcharts default,
-    no visual polish beyond correct theming'
-  - Reference line dashing and gray color are correct but the overall composition
-    lacks visual hierarchy — nothing draws the eye to the skew in the upper tail
-  - LineSeries imported from highcharts_core.options.series.area instead of the canonical
-    highcharts_core.options.series.line
-  - 'LM-02 is underutilized: no Highcharts-specific tooltip formatting, plotBands,
-    or zones that could add interpretive value'
+  - Images include features (subtitle, shaded plotBand, annotation) not present in
+    current code - likely from prior attempt; implement via chart.options.subtitle,
+    xAxis.plotBands, and annotations module
+  - LineSeries imported from highcharts_core.options.series.area instead of correct
+    highcharts_core.options.series.line module
+  - Shaded band in dark render is not theme-adaptive (appears brownish rather than
+    a warm accent)
+  - Lower-tail behavior not highlighted - symmetric emphasis would improve feature
+    coverage
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "qq-basic · highcharts · anyplot.ai" in large bold dark ink (#1A1A17); axis titles "Theoretical Quantiles" and "Sample Quantiles" in dark ink (48px); tick labels in INK_SOFT (#4A4A44) at 36px — dense along x-axis due to many auto-generated ticks but individually legible; legend frame with ELEVATED_BG (#FFFDF6) background
-      Data: Brand green #009E73 (rgba at 0.75 alpha) scatter points forming a right-skewed Q-Q curve; dashed gray reference line (y=x) running corner to corner
+      Chrome: Title "qq-basic · highcharts · anyplot.ai" in large bold dark text, subtitle readable, Y-axis label "Sample Quantiles" rotated, tick labels (0-120) dark on light — all readable
+      Data: Brand-green (#009E73) circular scatter markers with alpha transparency following diagonal dashed reference line; orange/salmon shaded band in upper-tail region with "Upper-tail deviation" annotation
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title in light text (#F0EFE8); axis titles and tick labels in INK_SOFT (#B8B7B0) — all clearly visible on dark background; legend frame with ELEVATED_BG (#242420); grid lines subtle (rgba at 0.10 opacity)
-      Data: Identical brand green #009E73 scatter points (same as light render — data colors unchanged); same dashed reference line in lighter INK_SOFT; no dark-on-dark failures detected
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title and subtitle in light text, Y-axis label and tick labels in light INK_SOFT color — all readable against dark background, no dark-on-dark failures detected
+      Data: Same brand-green (#009E73) scatter markers identical to light render; reference line appears as lighter dashed line; shaded band renders brownish/dark-orange (semi-transparent on dark surface, less polished than light render)
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -51,76 +52,77 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 72px, axis titles 48px, tick
-          labels 36px, legend 36px; readable in both themes'
+        comment: 'Font sizes explicitly set: 72px title, 48px axis labels, 36px ticks.
+          Both renders readable. Minor concern about X-axis title bottom margin.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text overlap; x-axis labels are dense but not colliding
+        comment: Some scatter point overlap in dense central region, mitigated by
+          alpha transparency.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Radius-18 markers clearly visible for 100 points with 0.75 alpha;
-          reference line at lineWidth 6 is clear
+        comment: Markers (radius 18, alpha 0.75) and dashed reference line clearly
+          visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single categorical color (brand green) + neutral gray reference line;
-          CVD-safe
+        comment: Brand green vs dashed gray line distinguishable by color and line
+          style. CVD-safe Okabe-Ito palette.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Data fills 60-70% of canvas; some empty space on the far right beyond
-          data range; margins generous
+        comment: Good canvas utilization; slight excess whitespace on left and bottom.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Theoretical Quantiles and Sample Quantiles are descriptive
+        comment: Theoretical Quantiles (X) and Sample Quantiles (Y) are descriptive
+          per spec.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series uses #009E73 with alpha; backgrounds are #FAF8F1/#1A1A17;
-          all chrome is theme-adaptive'
+        comment: 'rgba(0,158,115,0.75)=#009E73 brand green. Backgrounds #FAF8F1 light
+          / #1A1A17 dark. Theme-adaptive chrome correct.'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: 'Well-configured default: theme-adaptive chrome, alpha blending on
-          scatter. No particular design innovation beyond correct implementation.'
+        passed: true
+        comment: 'Intentional: alpha scatter, dashed reference line, shaded upper-tail
+          band. Above default, not publication-quality.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Dashed grid at low opacity, credits disabled, generous bottom margin.
-          Spines still present; layout doesn't feel polished.
+        passed: true
+        comment: Dashed grid, alpha markers, styled reference line. Dark-mode shaded
+          band not fully theme-adaptive.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Mixed-normal data creates a clear right-skew story; legend labels
-          describe series meaningfully. No visual emphasis guides viewer to the skew.
+        passed: true
+        comment: Mixed-normal data designed for right-skew story; shaded band and
+          annotation guide viewer; subtitle explains insight.
     spec_compliance:
       score: 15
       max: 15
@@ -130,29 +132,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Q-Q plot: scatter series + reference line'
+        comment: 'Correct Q-Q plot: scatter of (theoretical quantile, sample quantile)
+          pairs.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sample quantiles vs theoretical quantiles, 45-degree reference line,
-          correct axis labels
+        comment: Sample quantiles vs theoretical quantiles; 45-degree reference line;
+          deviations reveal right-skew.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = scaled theoretical quantiles, Y = sorted sample quantiles
+        comment: X=Theoretical Quantiles, Y=Sample Quantiles. All 100 points shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct; legend entries: Reference Line (y=x) and Sample
-          Quantiles (N=100)'
+        comment: 'Title: qq-basic · highcharts · anyplot.ai. Legend: Reference Line
+          (y=x), Sample Quantiles (N=100).'
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -160,21 +163,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Demonstrates right-skew deviation at upper tail; shows characteristic
-          Q-Q curvature
+        comment: Right-skew upper tail departure clearly shown. Lower tail could be
+          more emphasized.
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Exam-score-like values (50+-15 and 75+-10 mixture); plausible and
-          neutral, though series name is somewhat abstract
+        comment: Mixed-normal exam scores (N=100) is plausible, neutral real-world
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 100 data points, values in ~5-100 range; sensible for the domain
+        comment: Values 0-120 for exam scores; np.random.seed(42) ensures reproducibility.
     code_quality:
       score: 10
       max: 10
@@ -184,32 +187,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear code: tokens -> data -> chart setup -> series -> HTML export
-          -> screenshot'
+        comment: 'Flat procedural flow: tokens -> data -> Q-Q calculation -> chart
+          -> series -> HTML -> screenshot.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used. LineSeries from area module is atypical but used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; container.screenshot() is precise
+        comment: Clean, no fake UI. NormalDist from stdlib is elegant.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly. Element-level
+          screenshot for precision.
     library_mastery:
       score: 6
       max: 10
@@ -219,17 +223,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good use of Chart, HighchartsOptions, typed series objects; minor:
-          LineSeries imported from series.area instead of series.line'
+        comment: Proper Chart(container), HighchartsOptions, add_series pattern. Theme-adaptive
+          chrome wired via ANYPLOT_THEME.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: 'Uses enable_mouse_tracking=False, dash_style=Dash, container.screenshot().
-          Missing: tooltip formatter, plotBands, zones, or other Highcharts-distinctive
-          capabilities.'
-  verdict: REJECTED
+        comment: Uses dashStyle, enableMouseTracking=False, Selenium HTML export.
+          No native plotBands or annotations module.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium

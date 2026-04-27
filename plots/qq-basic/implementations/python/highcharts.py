@@ -1,7 +1,7 @@
 """ anyplot.ai
 qq-basic: Basic Q-Q Plot
 Library: highcharts unknown | Python 3.14.4
-Quality: 81/100 | Updated: 2026-04-27
+Quality: 84/100 | Updated: 2026-04-27
 """
 
 import os
