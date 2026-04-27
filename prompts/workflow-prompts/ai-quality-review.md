@@ -17,7 +17,7 @@ Evaluate if the **${LIBRARY}** implementation matches the specification for `${S
 - Note all required features
 
 ### 2. Read the Implementation
-`plots/${SPEC_ID}/implementations/${LIBRARY}.py`
+`plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}.py`
 
 ### 3. Read Library-Specific Rules
 `prompts/library/${LIBRARY}.md`

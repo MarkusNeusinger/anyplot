@@ -39,7 +39,7 @@ fig = g.figure
 ## Save
 
 ```python
-plt.savefig('plot.png', dpi=300, bbox_inches='tight')
+plt.savefig(f'plot-{THEME}.png', dpi=300, bbox_inches='tight')
 ```
 
 ## Sizing for 4800×2700 px

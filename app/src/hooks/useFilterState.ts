@@ -5,7 +5,7 @@
  * Composes useUrlSync and useFilterFetch for cleaner separation of concerns.
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import type { PlotImage, FilterCategory, ActiveFilters, FilterCounts } from '../types';
 import { FILTER_CATEGORIES } from '../types';
@@ -18,6 +18,21 @@ import { useFilterFetch } from './useFilterFetch';
  */
 export function isFiltersEmpty(filters: ActiveFilters): boolean {
   return filters.length === 0 || filters.every((f) => f.values.length === 0);
+}
+
+/**
+ * Build a stable key from a list of plot images.
+ *
+ * `PlotImage.spec_id` is optional; falling back to `${library}` alone would
+ * collapse every image without a spec_id into the same `undefined:<library>`
+ * token, hiding genuine content changes from the sync-back effect. Use the
+ * image URL as a tail-breaker so the key still differs when content does.
+ * Exported for unit testing.
+ */
+export function imagesContentKey(images: readonly PlotImage[]): string {
+  return images
+    .map((i) => `${i.spec_id ?? `url:${i.url}`}:${i.library}`)
+    .join('|');
 }
 
 interface UseFilterStateOptions {
@@ -117,22 +132,57 @@ export function useFilterState({
     skipInitialFetch: shouldSkipInitialFetch,
   });
 
-  // Sync state changes back to persistent context
-  useEffect(() => {
-    if (allImages.length > 0 || displayedImages.length > 0) {
-      setHomeState((prev) => ({
-        ...prev,
-        allImages,
-        displayedImages,
+  // Sync state changes back to persistent context.
+  //
+  // Coalesce on a stringified key so the effect only fires when CONTENT
+  // actually changes, not when the parent re-renders and passes new array
+  // references for the same data. Combined with useFilterFetch.ts's
+  // filtersKey memoization, this prevents the sync-back from re-triggering
+  // a fetch when state echoes back through the context.
+  // Use stable identifiers (spec_id + library) instead of just lengths, so a
+  // re-shuffle or refresh that keeps the count but changes the content still
+  // re-syncs to context. `imagesContentKey` is exported above and unit-tested.
+  const syncKey = useMemo(
+    () =>
+      JSON.stringify({
+        allImagesIds: imagesContentKey(allImages),
+        displayedIds: imagesContentKey(displayedImages),
         activeFilters,
         filterCounts,
         globalCounts,
         orCounts,
         hasMore,
-        initialized: true,
-      }));
-    }
-  }, [allImages, displayedImages, activeFilters, filterCounts, globalCounts, orCounts, hasMore, setHomeState]);
+      }),
+    [allImages, displayedImages, activeFilters, filterCounts, globalCounts, orCounts, hasMore]
+  );
+  const lastSyncedKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (allImages.length === 0 && displayedImages.length === 0) return;
+    if (syncKey === lastSyncedKeyRef.current) return;
+    lastSyncedKeyRef.current = syncKey;
+    setHomeState((prev) => ({
+      ...prev,
+      allImages,
+      displayedImages,
+      activeFilters,
+      filterCounts,
+      globalCounts,
+      orCounts,
+      hasMore,
+      initialized: true,
+    }));
+  }, [
+    syncKey,
+    allImages,
+    displayedImages,
+    activeFilters,
+    filterCounts,
+    globalCounts,
+    orCounts,
+    hasMore,
+    setHomeState,
+  ]);
 
   // Add a new filter group (creates new chip - AND with other groups)
   const handleAddFilter = useCallback((category: FilterCategory, value: string) => {

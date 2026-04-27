@@ -1,6 +1,10 @@
 import { useEffect } from 'react';
 import { Link as RouterLink, isRouteErrorResponse, useRouteError } from 'react-router-dom';
-import { Alert, Box, Button, CircularProgress, Typography } from '@mui/material';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
+import Typography from '@mui/material/Typography';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import HomeIcon from '@mui/icons-material/Home';
 import { NotFoundPage } from '../pages/NotFoundPage';
@@ -104,7 +108,7 @@ export function RouteErrorBoundary() {
         }}
       >
         <CircularProgress size={32} />
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{ color: 'var(--ink-muted)' }}>
           Loading the latest version…
         </Typography>
       </Box>
@@ -132,7 +136,7 @@ export function RouteErrorBoundary() {
         <Typography variant="h6" component="div" sx={{ fontWeight: 600, mb: 1 }}>
           {title}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{ color: 'var(--ink-muted)' }}>
           {body}
         </Typography>
         {import.meta.env.DEV && (
@@ -142,7 +146,8 @@ export function RouteErrorBoundary() {
             sx={{
               mt: 2,
               p: 1,
-              bgcolor: 'grey.100',
+              bgcolor: 'var(--bg-surface)',
+              color: 'var(--ink-soft)',
               borderRadius: 1,
               overflow: 'auto',
               maxHeight: 120,

@@ -160,10 +160,32 @@ function pingColor(ms: number): string {
   return colors.error;
 }
 
+// Admin-token storage. /debug endpoints require X-Admin-Token in prod
+// (require_admin gate, api/routers/debug.py); we keep the token in
+// sessionStorage so it survives reloads of the same tab without persisting
+// across browser sessions.
+const ADMIN_TOKEN_KEY = 'anyplot.adminToken';
+const readAdminToken = (): string => {
+  try { return sessionStorage.getItem(ADMIN_TOKEN_KEY) ?? ''; } catch { return ''; }
+};
+const writeAdminToken = (value: string): void => {
+  try { sessionStorage.setItem(ADMIN_TOKEN_KEY, value); } catch { /* sessionStorage may be unavailable */ }
+};
+const clearAdminToken = (): void => {
+  try { sessionStorage.removeItem(ADMIN_TOKEN_KEY); } catch { /* noop */ }
+};
+
+const adminFetch = (url: string, token: string): Promise<Response> =>
+  fetch(url, token ? { headers: { 'X-Admin-Token': token } } : undefined);
+
 export function DebugPage() {
   const [data, setData] = useState<DebugStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authRequired, setAuthRequired] = useState(false);
+  const [adminToken, setAdminToken] = useState<string>(() => readAdminToken());
+  const [tokenInput, setTokenInput] = useState('');
+  const [reloadCounter, setReloadCounter] = useState(0);
   const [sortKey, setSortKey] = useState<SortKey>('updated');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
 
@@ -175,19 +197,30 @@ export function DebugPage() {
   const [pings, setPings] = useState<Array<{ ms: number; ok: boolean }>>([]);
 
   useEffect(() => {
-    fetch(`${API_URL}/debug/status`)
-      .then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json(); })
+    setLoading(true);
+    setError(null);
+    adminFetch(`${API_URL}/debug/status`, adminToken)
+      .then(r => {
+        if (r.status === 401 || r.status === 503) {
+          setAuthRequired(true);
+          throw new Error(r.status === 503 ? 'admin auth not configured on server' : 'admin token required');
+        }
+        if (!r.ok) throw new Error(`${r.status}`);
+        setAuthRequired(false);
+        return r.json();
+      })
       .then(setData)
       .catch(e => setError(e.message || 'failed to load'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [adminToken, reloadCounter]);
 
   useEffect(() => {
+    if (authRequired) return;
     let cancelled = false;
     const tick = async () => {
       const started = performance.now();
       try {
-        const r = await fetch(`${API_URL}/debug/ping`);
+        const r = await adminFetch(`${API_URL}/debug/ping`, adminToken);
         const totalMs = performance.now() - started;
         if (!r.ok) throw new Error(`${r.status}`);
         const json: { database_connected: boolean } = await r.json();
@@ -202,7 +235,22 @@ export function DebugPage() {
     tick();
     const id = setInterval(tick, PING_INTERVAL_MS);
     return () => { cancelled = true; clearInterval(id); };
-  }, []);
+  }, [adminToken, authRequired]);
+
+  const handleTokenSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = tokenInput.trim();
+    if (!trimmed) return;
+    writeAdminToken(trimmed);
+    setAdminToken(trimmed);
+    setTokenInput('');
+  };
+
+  const handleTokenClear = () => {
+    clearAdminToken();
+    setAdminToken('');
+    setReloadCounter(c => c + 1);
+  };
 
   const countImpls = (spec: SpecStatus): number =>
     LIBRARIES.filter(lib => spec[lib as keyof SpecStatus] !== null).length;
@@ -247,6 +295,57 @@ export function DebugPage() {
       setSortDir(key === 'updated' || key === 'avg_score' ? 'desc' : 'asc');
     }
   };
+
+  if (authRequired) {
+    return (
+      <Box sx={{ py: 4, maxWidth: 420, mx: 'auto' }}>
+        <SectionHeader prompt="❯" title={<em>debug · admin auth</em>} />
+        <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mb: 2 }}>
+          {error || 'admin token required'}
+        </Typography>
+        <Box component="form" onSubmit={handleTokenSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Box
+            component="input"
+            type="password"
+            autoFocus
+            placeholder="X-Admin-Token"
+            value={tokenInput}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTokenInput(e.target.value)}
+            sx={nativeControlSx}
+          />
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Box
+              component="button"
+              type="submit"
+              sx={{
+                ...nativeControlSx,
+                cursor: 'pointer',
+                bgcolor: colors.primary,
+                color: 'var(--bg-page)',
+                borderColor: colors.primary,
+                fontWeight: 600,
+              }}
+            >
+              unlock
+            </Box>
+            {adminToken && (
+              <Box
+                component="button"
+                type="button"
+                onClick={handleTokenClear}
+                sx={{ ...nativeControlSx, cursor: 'pointer' }}
+              >
+                clear stored token
+              </Box>
+            )}
+          </Box>
+          <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText, mt: 1 }}>
+            stored in sessionStorage — clears when this tab closes.
+          </Typography>
+        </Box>
+      </Box>
+    );
+  }
 
   if (loading) {
     return (

@@ -496,7 +496,10 @@ spec_detail   # SpecPage showing single library
 twitter | facebook | linkedin | pinterest | reddit | tumblr | mastodon
 
 # Messaging Apps
-slack | discord | telegram | whatsapp | signal | viber | skype | teams | snapchat
+# NB: Signal spoofs the WhatsApp UA (see line 260 above), so the analytics
+# pipeline never emits `signal` as a platform value — Signal traffic surfaces
+# as `whatsapp-lite`.
+slack | discord | telegram | whatsapp | whatsapp-lite | viber | skype | teams | snapchat
 
 # Search Engines
 google | bing | yandex | duckduckgo | baidu | apple

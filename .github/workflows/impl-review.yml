@@ -15,6 +15,10 @@ on:
   repository_dispatch:
     types: [review-pr]
 
+concurrency:
+  group: impl-review-${{ inputs.pr_number || github.event.client_payload.pr_number || github.ref }}
+  cancel-in-progress: false
+
 jobs:
   review:
     runs-on: ubuntu-latest
@@ -27,7 +31,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
         with:
           fetch-depth: 0
 
@@ -88,14 +92,14 @@ jobs:
       - name: Authenticate to GCP
         id: gcs
         continue-on-error: true
-        uses: google-github-actions/auth@v3
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093  # v3
         with:
           project_id: anyplot
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
 
       - name: Setup gcloud CLI
         if: steps.gcs.outcome == 'success'
-        uses: google-github-actions/setup-gcloud@v3
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db  # v3
 
       - name: Download plot images from staging
         if: steps.gcs.outcome == 'success'
@@ -132,7 +136,7 @@ jobs:
         id: review
         continue-on-error: true
         timeout-minutes: 30
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-action@567fe954a4527e81f132d87d1bdbcc94f7737434  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: "--model sonnet"
@@ -420,34 +424,41 @@ jobs:
             # Get title from specification.yaml
             TITLE=$(python3 -c "import yaml; print(yaml.safe_load(open('plots/${SPEC_ID}/specification.yaml'))['title'])" 2>/dev/null || echo "${SPEC_ID}")
 
-            # Replace old header using Python
-            python3 -c "
+            # Replace old header using Python.
+            # All inputs are passed via env (NOT shell-interpolated into the
+            # Python source), and the heredoc uses single-quoted 'EOF' so bash
+            # does not expand $TITLE. This blocks the prior triple-quoted
+            # literal injection (a TITLE containing ''' would have escaped
+            # the string and executed arbitrary Python in the runner).
+            export IMPL_FILE SPEC_ID TITLE LIBRARY LIBRARY_VERSION PYTHON_VERSION SCORE DATE_INFO
+            python3 - <<'EOF'
+          import os
           import re
 
-          impl_file = '$IMPL_FILE'
-          spec_id = '${SPEC_ID}'
-          title = '''${TITLE}'''
-          library = '${LIBRARY}'
-          lib_version = '${LIBRARY_VERSION}'
-          py_version = '${PYTHON_VERSION}'
-          score = '${SCORE}'
-          date_info = '${DATE_INFO}'
+          impl_file = os.environ["IMPL_FILE"]
+          spec_id = os.environ["SPEC_ID"]
+          title = os.environ["TITLE"]
+          library = os.environ["LIBRARY"]
+          lib_version = os.environ["LIBRARY_VERSION"]
+          py_version = os.environ["PYTHON_VERSION"]
+          score = os.environ["SCORE"]
+          date_info = os.environ["DATE_INFO"]
 
-          new_header = f'''\"\"\" anyplot.ai
+          new_header = f'''""" anyplot.ai
           {spec_id}: {title}
           Library: {library} {lib_version} | Python {py_version}
           Quality: {score}/100 | {date_info}
-          \"\"\"'''
+          """'''
 
-          with open(impl_file, 'r') as f:
+          with open(impl_file, "r") as f:
               content = f.read()
 
-          pattern = r'^\"\"\".*?\"\"\"'
+          pattern = r'^""".*?"""'
           new_content = re.sub(pattern, new_header, content, count=1, flags=re.DOTALL)
 
-          with open(impl_file, 'w') as f:
+          with open(impl_file, "w") as f:
               f.write(new_content)
-          "
+          EOF
 
             echo "::notice::Updated implementation header with quality score ${SCORE}"
           fi

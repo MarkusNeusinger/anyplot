@@ -1,5 +1,5 @@
 name: "Report: Validate"
-run-name: "Validate Report: ${{ github.event.issue.title }}"
+run-name: "Validate Report: issue #${{ github.event.issue.number }}"
 
 # Validates and structures user-submitted issue reports
 # Flow:
@@ -41,7 +41,7 @@ jobs:
 
       - name: Checkout repository
         if: steps.check.outputs.should_run == 'true'
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
 
       - name: React with eyes emoji
         if: steps.check.outputs.should_run == 'true'
@@ -56,7 +56,7 @@ jobs:
         id: validate
         continue-on-error: true
         timeout-minutes: 10
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-action@567fe954a4527e81f132d87d1bdbcc94f7737434  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: "--model opus"

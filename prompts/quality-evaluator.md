@@ -37,7 +37,7 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
 ## Input
 
 1. **Specification**: From `plots/{spec-id}/specification.md`
-2. **Code**: From `plots/{spec-id}/implementations/{library}.py`
+2. **Code**: From `plots/{spec-id}/implementations/{language}/{library}.py`
 3. **Previews**: BOTH theme renders of the plot image — `plot-light.png` and `plot-dark.png`. You must inspect both. For interactive libraries, also `plot-light.html` and `plot-dark.html`.
 4. **Library Rules**: From `prompts/library/{library}.md`
 5. **Style Guide** (canonical palette + theme tokens): `prompts/default-style-guide.md` — consult its "Categorical Palette", "Continuous Data", "Background", and "Theme-adaptive Chrome" sections for VQ-07 scoring.

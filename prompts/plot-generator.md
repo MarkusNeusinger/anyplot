@@ -13,8 +13,8 @@ Create a Python script for the specified plot type and library. The code should 
 1. **Spec**: Markdown specification from `plots/{spec-id}/specification.md`
 2. **Library**: matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, or letsplot
 3. **Library Rules**: Specific rules from `prompts/library/{library}.md`
-4. **Previous Metadata** (if regenerating): `plots/{spec-id}/metadata/{library}.yaml`
-5. **Previous Code** (if regenerating): `plots/{spec-id}/implementations/{library}.py`
+4. **Previous Metadata** (if regenerating): `plots/{spec-id}/metadata/{language}/{library}.yaml`
+5. **Previous Code** (if regenerating): `plots/{spec-id}/implementations/{language}/{library}.py`
 
 ## Available Standard Packages
 
@@ -34,7 +34,7 @@ All plot implementations have access to: `numpy`, `pandas`, `scipy`, `scikit-lea
 When regenerating an existing implementation, read the metadata file for review feedback:
 
 ```yaml
-# plots/{spec-id}/metadata/{library}.yaml
+# plots/{spec-id}/metadata/{language}/{library}.yaml
 review:
   strengths:
     - "Clean code structure"

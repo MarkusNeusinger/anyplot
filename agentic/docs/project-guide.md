@@ -165,8 +165,8 @@ Example: `plots/scatter-basic/` contains everything for the basic scatter plot.
 - **`plots/{specification-id}/`**: Plot-centric directories (spec, metadata, implementations together)
   - `specification.md`: Library-agnostic specification (Description, Applications, Data, Notes)
   - `specification.yaml`: Spec-level metadata (tags, created, issue, suggested, updates)
-  - `metadata/{library}.yaml`: Per-library metadata (preview_url, quality_score, review feedback)
-  - `implementations/{library}.py`: Library-specific implementations
+  - `metadata/python/{library}.yaml`: Per-library metadata (preview_url, quality_score, review feedback)
+  - `implementations/python/{library}.py`: Library-specific implementations
 - **`prompts/`**: AI agent prompts for code generation, quality evaluation, and tagging
   - `templates/`: Spec and metadata templates
   - `library/`: Library-specific generation rules (9 files)
@@ -186,7 +186,7 @@ Example: `plots/scatter-basic/` contains everything for the basic scatter plot.
 
 1. **Repository Pattern**: Data access layer in `core/database/repositories.py`
 2. **Async Everything**: FastAPI + SQLAlchemy async + asyncpg
-3. **Clean Repo**: Only production code in git. Quality reports -> `metadata/{library}.yaml`. Preview images -> GCS.
+3. **Clean Repo**: Only production code in git. Quality reports -> `metadata/python/{library}.yaml`. Preview images -> GCS.
 4. **Issue-Based Workflow**: GitHub Issues as state machine for plot lifecycle
 
 ### Metadata System
@@ -209,7 +209,7 @@ tags:
   data_type: [numeric, continuous]
 ```
 
-**2. Per-library metadata:** `plots/{specification-id}/metadata/{library}.yaml`
+**2. Per-library metadata:** `plots/{specification-id}/metadata/python/{library}.yaml`
 
 ```yaml
 library: matplotlib
@@ -220,7 +220,7 @@ created: 2025-01-10T08:00:00Z
 updated: 2025-01-15T10:30:00Z
 
 # Generation
-generated_by: claude-opus-4-5-20251101
+generated_by: claude-opus-4-7
 workflow_run: 12345678
 issue: 42
 
@@ -280,7 +280,7 @@ review:
     - "Grid could be more subtle"
 ```
 
-**3. Implementation headers:** `plots/{specification-id}/implementations/{library}.py`
+**3. Implementation headers:** `plots/{specification-id}/implementations/python/{library}.py`
 
 ```python
 """ anyplot.ai
@@ -412,7 +412,7 @@ uv run python -c "from core.database import is_db_configured; print(is_db_config
 - Everything in `plots/{specification-id}/`:
   - `specification.md` - specification description
   - `specification.yaml` - spec-level metadata (tags, created, issue, etc.)
-  - `metadata/{library}.yaml` - per-library metadata (quality score, review feedback)
+  - `metadata/python/{library}.yaml` - per-library metadata (quality score, review feedback)
   - `implementations/*.py` - library implementations
 
 **What's NOT Stored in DB**:
@@ -439,6 +439,7 @@ The `prompts/` directory contains AI agent prompts for code generation, quality 
 | File | Purpose |
 |------|---------|
 | `plot-generator.md` | Base rules for all plot implementations |
+| `default-style-guide.md` | Default visual style rules (colors, typography, layout) |
 | `library/*.md` | Library-specific rules (9 files) |
 | `quality-criteria.md` | Definition of code/visual quality |
 | `quality-evaluator.md` | AI quality evaluation prompt |
@@ -446,6 +447,8 @@ The `prompts/` directory contains AI agent prompts for code generation, quality 
 | `spec-id-generator.md` | Assigns unique spec IDs |
 | `spec-tags-generator.md` | AI rules for spec-level tag assignment |
 | `impl-tags-generator.md` | AI rules for impl-level tag assignment |
+| `templates/*.{md,yaml}` | Spec + metadata starter templates |
+| `workflow-prompts/*.md` | Per-workflow prompts (impl-generate, impl-repair, impl-review, report-validate) — see `prompts/workflow-prompts/README.md` |
 
 ### Using Prompts
 
@@ -538,7 +541,7 @@ Located in `.github/workflows/`:
 | **impl-generate.yml** | `generate:{library}` label OR workflow_dispatch | Generates single library implementation |
 | **impl-review.yml** | Called by impl-generate | AI quality review, adds `quality:XX` and `ai-approved`/`ai-rejected` |
 | **impl-repair.yml** | Called by impl-review (on rejection) | Fixes rejected implementation (max 3 attempts) |
-| **impl-merge.yml** | `ai-approved` label OR workflow_dispatch | Merges approved PR, creates metadata/{library}.yaml |
+| **impl-merge.yml** | `ai-approved` label OR workflow_dispatch | Merges approved PR, creates metadata/python/{library}.yaml |
 | **bulk-generate.yml** | workflow_dispatch only | Dispatches multiple implementations (max 3 parallel) |
 
 ### Report Workflows (`report-*.yml`)
@@ -595,7 +598,7 @@ impl-review.yml
     |-- If APPROVED -> triggers impl-merge.yml
     |       |-- Validates PR completeness (blocks merge if implementation file missing)
     |       |-- Squash-merges PR to main
-    |       |-- Creates metadata/{library}.yaml
+    |       |-- Creates metadata/python/{library}.yaml
     |       |-- Promotes GCS: staging -> production
     |       |-- sync-postgres.yml triggers (updates database)
     |       +-- Updates issue: impl:{library}:done
@@ -664,9 +667,15 @@ The new architecture separates specification and implementation processes:
 
 ## GitHub Issue Labels
 
-The project uses a structured labeling system. Setup labels with:
+The project uses a structured labeling system. Labels are managed with the
+`label_manager.py` helper:
+
 ```bash
-bash .github/scripts/setup-labels.sh
+# Sync labels from the canonical definition file to the repo
+uv run python -m automation.scripts.label_manager sync
+
+# List current labels
+uv run python -m automation.scripts.label_manager list
 ```
 
 ### Specification Labels
@@ -707,7 +716,7 @@ bash .github/scripts/setup-labels.sh
 
 Quality scores are added as labels in format `quality:XX` (e.g., `quality:92`, `quality:85`).
 
-These are set automatically by `impl-review.yml` after AI evaluation and used by `impl-merge.yml` to create metadata/{library}.yaml.
+These are set automatically by `impl-review.yml` after AI evaluation and used by `impl-merge.yml` to create metadata/python/{library}.yaml.
 
 ### Development Labels
 
@@ -829,7 +838,7 @@ See `.env.example` for full list with comments.
 
 ```bash
 # Run implementation file directly
-python plots/scatter-basic/implementations/matplotlib.py
+python plots/scatter-basic/implementations/python/matplotlib.py
 ```
 
 ## Cloud Deployment
@@ -906,4 +915,4 @@ pytest --pdb       # Debug on failure
 - **Your data first**: Examples work with real user data, not fake data
 - **Community-driven**: Anyone can propose plots via GitHub Issues
 - **AI quality review**: Claude evaluates quality (>=90 instant merge, <90 repair loop, >=50 minimum)
-- **Full transparency**: All quality feedback stored in repository (`metadata/{library}.yaml`)
+- **Full transparency**: All quality feedback stored in repository (`metadata/python/{library}.yaml`)

@@ -4,22 +4,11 @@
  * Handles API calls, image shuffling, and pagination state.
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 
 import type { PlotImage, ActiveFilters, FilterCounts } from '../types';
 import { API_URL, BATCH_SIZE } from '../constants';
-
-/**
- * Fisher-Yates shuffle algorithm.
- */
-function shuffleArray<T>(array: T[]): T[] {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
+import { shuffleArray } from '../utils/shuffle';
 
 interface FilterFetchState {
   filterCounts: FilterCounts | null;
@@ -67,9 +56,15 @@ export function useFilterFetch({
   const skipRef = useRef(skipInitialFetch);
   const initialFiltersRef = useRef(JSON.stringify(activeFilters));
 
+  // Stringify the filters so the effect reruns when CONTENTS change, not when
+  // the parent happens to re-render and hand us a fresh array reference.
+  // Without this memo every parent render re-fired the fetch even when the
+  // filter contents were identical.
+  const filtersKey = useMemo(() => JSON.stringify(activeFilters), [activeFilters]);
+
   useEffect(() => {
     // Skip fetch on first mount if requested and filters match
-    if (skipRef.current && JSON.stringify(activeFilters) === initialFiltersRef.current) {
+    if (skipRef.current && filtersKey === initialFiltersRef.current) {
       skipRef.current = false;
       return;
     }
@@ -81,9 +76,13 @@ export function useFilterFetch({
       setLoading(true);
 
       try {
+        // Parse from the stable string key so the effect doesn't depend on
+        // `activeFilters` directly (whose reference changes per render).
+        const filters: ActiveFilters = JSON.parse(filtersKey);
+
         // Build query string from filters
         const params = new URLSearchParams();
-        activeFilters.forEach(({ category, values }) => {
+        filters.forEach(({ category, values }) => {
           if (values.length > 0) {
             params.append(category, values.join(','));
           }
@@ -125,7 +124,7 @@ export function useFilterFetch({
     fetchFilteredImages();
 
     return () => abortController.abort();
-  }, [activeFilters]);
+  }, [filtersKey]);
 
   return {
     filterCounts,

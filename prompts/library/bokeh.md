@@ -50,7 +50,7 @@ source = ColumnDataSource(data={
 ```python
 from bokeh.io import export_png
 
-export_png(p, filename='plot.png')
+export_png(p, filename=f'plot-{THEME}.png')
 ```
 
 **Note**: Requires `selenium` and WebDriver for PNG export.

@@ -131,7 +131,7 @@ CREATE TABLE impls
     quality_score   FLOAT,                      -- 0-100
     generated_at    TIMESTAMP,
     updated         TIMESTAMP,                  -- Last update
-    generated_by    VARCHAR,                    -- Model ID: "claude-opus-4-5-20251101"
+    generated_by    VARCHAR,                    -- Model ID: "claude-opus-4-7"
     issue           INTEGER,                    -- GitHub Issue number
     workflow_run    BIGINT,                     -- GitHub Actions run ID
 
@@ -236,7 +236,7 @@ INSERT INTO libraries (id, name, version, documentation_url) VALUES
   "library_version": "3.9.0",
   "quality_score": 92.0,
   "generated_at": "2025-01-15T10:30:00Z",
-  "generated_by": "claude-opus-4-5-20251101",
+  "generated_by": "claude-opus-4-7",
   "issue": 42,
   "workflow_run": 12345678
 }

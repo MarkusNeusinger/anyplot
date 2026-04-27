@@ -121,7 +121,10 @@ async def _send_plausible_event(user_agent: str, client_ip: str, name: str, url:
                 json={"name": name, "url": url, "domain": DOMAIN, "props": props},
             )
     except Exception as e:
-        logger.debug(f"Plausible tracking failed (non-critical): {e}")
+        # warning (not debug) so prod outages of the Plausible pipeline are
+        # actually visible — Cloud Run typically suppresses DEBUG, which made
+        # full-pipeline failures invisible in incident triage.
+        logger.warning("Plausible tracking failed (non-critical): %s", e)
 
 
 def _handle_task_exception(task: asyncio.Task) -> None:

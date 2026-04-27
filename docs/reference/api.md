@@ -70,7 +70,7 @@ The anyplot API is a **FastAPI-based REST API** serving plot data to the fronten
       "quality_score": 92.0,
       "code": "import matplotlib.pyplot as plt...",
       "generated_at": "2025-01-15T10:30:00Z",
-      "generated_by": "claude-opus-4-5-20251101",
+      "generated_by": "claude-opus-4-7",
       "python_version": "3.13",
       "library_version": "3.10.0",
       "review_strengths": ["Clean code structure"],

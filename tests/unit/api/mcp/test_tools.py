@@ -83,7 +83,8 @@ def mock_spec():
 async def test_list_specs(mock_db_context, mock_spec):
     """Test list_specs tool."""
     mock_repo = MagicMock()
-    mock_repo.get_all = AsyncMock(return_value=[mock_spec])
+    # list_specs reads impl.code on every spec → eager-loaded variant.
+    mock_repo.get_all_with_code = AsyncMock(return_value=[mock_spec])
 
     with patch("api.mcp.server.SpecRepository", return_value=mock_repo):
         result = await list_specs(limit=10, offset=0)
@@ -100,7 +101,7 @@ async def test_list_specs_pagination(mock_db_context):
     specs = [MagicMock(id=f"spec-{i}", title=f"Spec {i}", description="", tags={}, impls=[]) for i in range(5)]
 
     mock_repo = MagicMock()
-    mock_repo.get_all = AsyncMock(return_value=specs)
+    mock_repo.get_all_with_code = AsyncMock(return_value=specs)
 
     with patch("api.mcp.server.SpecRepository", return_value=mock_repo):
         result = await list_specs(limit=2, offset=1)
@@ -130,7 +131,9 @@ async def test_search_specs_by_tags_spec_level(mock_db_context, mock_spec):
 async def test_search_specs_by_tags_impl_level(mock_db_context, mock_spec):
     """Test search_specs_by_tags with impl-level filters."""
     mock_repo = MagicMock()
-    mock_repo.get_all = AsyncMock(return_value=[mock_spec])
+    # No spec-level tag filter → search_specs falls back to get_all_with_code
+    # because the impl-level filter loop reads `impl.code`.
+    mock_repo.get_all_with_code = AsyncMock(return_value=[mock_spec])
 
     with patch("api.mcp.server.SpecRepository", return_value=mock_repo):
         result = await search_specs_by_tags(library=["matplotlib"], patterns=["data-generation"])
@@ -143,7 +146,7 @@ async def test_search_specs_by_tags_impl_level(mock_db_context, mock_spec):
 async def test_search_specs_by_tags_no_matches(mock_db_context, mock_spec):
     """Test search_specs_by_tags filtering out non-matching impls."""
     mock_repo = MagicMock()
-    mock_repo.get_all = AsyncMock(return_value=[mock_spec])
+    mock_repo.get_all_with_code = AsyncMock(return_value=[mock_spec])
 
     with patch("api.mcp.server.SpecRepository", return_value=mock_repo):
         result = await search_specs_by_tags(library=["seaborn"])  # matplotlib impl, not seaborn
@@ -155,7 +158,7 @@ async def test_search_specs_by_tags_no_matches(mock_db_context, mock_spec):
 async def test_search_specs_by_tags_dataprep_styling(mock_db_context, mock_spec):
     """Test search_specs_by_tags with dataprep and styling filters."""
     mock_repo = MagicMock()
-    mock_repo.get_all = AsyncMock(return_value=[mock_spec])
+    mock_repo.get_all_with_code = AsyncMock(return_value=[mock_spec])
 
     with patch("api.mcp.server.SpecRepository", return_value=mock_repo):
         # Test dataprep filter - should not match (mock_spec has no dataprep tags)
