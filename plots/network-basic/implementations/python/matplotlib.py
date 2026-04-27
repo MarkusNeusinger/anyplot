@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-basic: Basic Network Graph
 Library: matplotlib 3.10.9 | Python 3.14.4
 Quality: 84/100 | Updated: 2026-04-27
@@ -88,7 +88,18 @@ edges = [
 
 # Spring layout (force-directed algorithm)
 n = len(nodes)
-positions = np.random.rand(n, 2) * 2 - 1
+# Initialize by department quadrant so clusters are spatially separated
+quadrant_centers = np.array(
+    [
+        [-0.5, 0.5],  # Engineering: upper-left
+        [0.5, 0.5],  # Research: upper-right
+        [0.5, -0.5],  # Marketing: lower-right
+        [-0.5, -0.5],  # Design: lower-left
+    ]
+)
+positions = np.zeros((n, 2))
+for i, node in enumerate(nodes):
+    positions[i] = quadrant_centers[node["group"]] + np.random.randn(2) * 0.2
 k = 0.4
 
 for iteration in range(150):
@@ -130,6 +141,8 @@ cross_edge_set = {(src, tgt) for src, tgt in edges if nodes[src]["group"] != nod
 fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
+BRIDGE_COLOR = "#E69F00"  # Okabe-Ito amber — distinct cross-department highlight
+
 # Draw curved edges using FancyArrowPatch
 for src, tgt in edges:
     is_cross = (src, tgt) in cross_edge_set or (tgt, src) in cross_edge_set
@@ -138,9 +151,9 @@ for src, tgt in edges:
         tuple(pos[tgt]),
         connectionstyle="arc3,rad=0.18",
         arrowstyle="-",
-        color=INK_SOFT,
-        linewidth=2.2 if is_cross else 1.4,
-        alpha=0.65 if is_cross else 0.30,
+        color=BRIDGE_COLOR if is_cross else INK_SOFT,
+        linewidth=2.5 if is_cross else 1.4,
+        alpha=0.80 if is_cross else 0.30,
         zorder=1,
     )
     ax.add_patch(patch)
@@ -155,7 +168,7 @@ for node in nodes:
 # Draw labels inside nodes
 for node in nodes:
     x, y = pos[node["id"]]
-    ax.text(x, y, node["label"], fontsize=11, fontweight="bold", ha="center", va="center", color=INK, zorder=3)
+    ax.text(x, y, node["label"], fontsize=14, fontweight="bold", ha="center", va="center", color=INK, zorder=3)
 
 # Style
 ax.set_title(
