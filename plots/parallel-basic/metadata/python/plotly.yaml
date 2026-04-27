@@ -1,173 +1,180 @@
 library: plotly
+language: python
 specification_id: parallel-basic
 created: '2025-12-23T18:12:00Z'
-updated: '2025-12-23T18:18:02Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468186492
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/plotly/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-04-27T06:26:17Z'
+generated_by: claude-sonnet
+workflow_run: 24978151326
+issue: 820
+python_version: 3.14.4
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/plotly/plot-dark.html
+quality_score: 83
 review:
   strengths:
-  - Excellent use of Iris dataset as a realistic, well-understood multivariate example
-  - Clean three-species color coding makes patterns immediately visible
-  - Proper axis labeling with units (cm) throughout
-  - Well-structured code following KISS principles
-  - Good font sizing for 4800x2700 output
-  - Appropriate use of colorbar with categorical labels instead of continuous scale
-    interpretation
+  - 'Full Okabe-Ito compliance: Setosa #009E73 first, correct positions 1-3 in order'
+  - 'Complete theme-adaptive chrome: PAGE_BG, ELEVATED_BG, INK, INK_SOFT tokens applied
+    to all non-data elements including colorbar font, bgcolor, and bordercolor'
+  - Discrete colorscale with hard-stop breakpoints is the correct Plotly idiom for
+    categorical colors on go.Parcoords
+  - 'Perfect code quality: flat structure, seeded random, clean imports, correct output
+    filenames'
   weaknesses:
-  - Could add alpha/opacity to lines for better handling of overlapping paths when
-    species overlap
-  - Missing explicit Plotly interactivity configuration (hover templates, axis brushing
-    hints) that would showcase library strengths
-  - Yellow-green color distinction in colorscale may be challenging for some colorblind
-    users; consider using a more distinct three-color discrete palette
-  image_description: 'The plot displays a parallel coordinates visualization of Iris
-    flower measurements with four vertical axes: Sepal Length (cm), Sepal Width (cm),
-    Petal Length (cm), and Petal Width (cm). Lines connect data points across all
-    dimensions, colored by species using a blue-yellow-green gradient colorscale.
-    A vertical colorbar on the right indicates three species: Setosa (blue at bottom),
-    Versicolor (yellow in middle), and Virginica (green at top). The background is
-    white/clean. The three species clusters are clearly distinguishable - Setosa lines
-    (blue) show notably smaller petal measurements clustering at the lower range of
-    petal axes, Versicolor (yellow) occupies middle ranges, and Virginica (green)
-    shows higher values especially for petal length and width. The title "Iris Flower
-    Measurements · parallel-basic · plotly · pyplots.ai" is centered at the top.'
+  - tickfont (16px) and rangefont (14px) are below the 18px minimum recommendation
+    for Plotly at 4800x2700px
+  - No explicit opacity set in the line dict for 150 overlapping parallel coordinate
+    lines; spec recommends transparency for dense data
+  - Title format deviates from required {spec-id} · {library} · anyplot.ai by prepending
+    Iris Flower Measurements ·
+  - No storytelling emphasis — no annotation highlighting the key insight (Setosa
+    clusters distinctly at low petal dimensions)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark
+      Chrome: Title "Iris Flower Measurements · parallel-basic · plotly · anyplot.ai" in dark INK at 28px — clearly readable. Axis dimension labels (Sepal Length cm, Sepal Width cm, Petal Length cm, Petal Width cm) in dark INK at 22px — readable. Tick labels in INK_SOFT at 16px — readable but slightly below 18px guideline. Range font labels at 14px — small but acceptable as secondary info. Colorbar title "Species" at 20px and ticktext labels (Setosa, Versicolor, Virginica) at 18px — readable. Colorbar background is elevated #FFFDF6 with INK_SOFT border — correctly themed.
+      Data: 150 parallel coordinate lines color-coded by species: Setosa in #009E73 (bluish green), Versicolor in #D55E00 (vermillion), Virginica in #0072B2 (blue). Correct Okabe-Ito positions 1-3. Setosa lines cluster tightly at low petal dimension values; Virginica lines occupy the high petal dimension range; Versicolor occupies the middle.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black, consistent with #1A1A17 — not pure black, not light
+      Chrome: Title renders in light #F0EFE8 — clearly readable. Axis labels in INK (#F0EFE8 for dark theme) — readable. Tick and range labels in INK_SOFT (#B8B7B0) — readable. Colorbar background adapts to ELEVATED_BG (#242420) with INK_SOFT border — correctly themed. No dark-on-dark failures — all chrome elements use light tokens against the dark surface.
+      Data: Line colors identical to light render — #009E73 (Setosa), #D55E00 (Versicolor), #0072B2 (Virginica) — confirming data colors are theme-independent.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title at 28pt, labels at 22pt, ticks at 16pt - all clearly readable,
-          slightly small axis labels relative to canvas
+        comment: Title 28px, labelfont 22px; tickfont 16px and rangefont 14px below
+          18px guideline
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No text overlap, all labels and values are distinct
+        comment: No text overlap; inherent line overlap with 150 polylines, no explicit
+          opacity set
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Lines are visible with good color distinction, though with 150 lines
-          some overlap is inevitable; transparency could be slightly higher for better
-          clarity
+        comment: Lines clearly visible but no explicit opacity/alpha for 150 overlapping
+          lines
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue-yellow-green colorscale is reasonably colorblind-friendly, though
-          yellow-green distinction may be challenging for some
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good margins, plot fills canvas appropriately, colorbar positioned
-          well
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: All axes have descriptive labels with units (cm)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Full Okabe-Ito, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700px, balanced margins, colorbar well-positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Colorbar serves as legend with species labels; no explicit grid but
-          clean white background works well for parallel coords
+        comment: All four axes include units (cm)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Setosa #009E73 first; Versicolor #D55E00; Virginica #0072B2; backgrounds
+          #FAF8F1/#1A1A17 correct'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom discrete colorscale, themed colorbar with ELEVATED_BG/INK
+          tokens; above defaults but not publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Generous margins, themed colorbar border; Parcoords lacks traditional
+          spines; no additional axis refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Color coding shows species clusters naturally; no explicit annotation
+          or emphasis element guiding the viewer
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct parallel coordinates plot type
+        comment: go.Parcoords is correct
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Four numeric dimensions correctly mapped to vertical axes
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: multiple dimensions, categorical coloring,
-          normalized display'
-      - id: SC-04
-        name: Data Range
+        comment: 4 dimensions, 150 observations, color by category, explicit axis
+          ranges
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis ranges
-      - id: SC-05
-        name: Legend Accuracy
+        comment: Correct mapping of Iris-like measurements
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Colorbar correctly labels all three species
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Title follows `{context} · {spec-id} · {library} · pyplots.ai` format
+        max: 3
+        passed: false
+        comment: Title prepends 'Iris Flower Measurements · ' before required spec-id
+          format; colorbar legend correct
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows clustering patterns for all three species with clear separation
-          between groups, demonstrates the power of parallel coords for multivariate
-          analysis; minor: could show more overlap/ambiguity between versicolor/virginica
-          which exists in real Iris data'
+        comment: 'All parallel coordinates features shown: axes, polylines, color-coded
+          groups, ranges, cluster separation'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Iris dataset is a classic, real-world botanical dataset perfect for
-          demonstrating parallel coordinates
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values match realistic Iris flower measurements (sepal length 4-8cm,
-          petal length 1-7cm, etc.)
+        comment: Iris-like botanical dataset; scientifically neutral, ideal for parallel
+          coordinates
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic iris measurements (sepal 4-8cm, petal 0.5-7cm)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -175,44 +182,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data generation → plot creation
-          → save'
+        comment: 'Linear: theme tokens -> data -> plot -> layout -> save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, and plotly.graph_objects imported, all used
+        comment: os, numpy, pandas, plotly.graph_objects — all used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Outputs both plot.png and plot.html which is correct for Plotly,
-          but technically spec says plot.png (minor)
-    library_features:
-      score: 2
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 2
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses go.Parcoords which is Plotly-specific, but doesn't leverage
-          interactivity features that make Plotly distinctive (hover tooltips, brushing/filtering
-          on axes, custom hover templates). HTML output is generated but no interactive
-          features are explicitly configured beyond defaults.
+        passed: true
+        comment: go.Parcoords with labelfont/tickfont/rangefont; colorbar in line
+          dict is idiomatic Parcoords pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Discrete colorscale with hard-stop breakpoints is Plotly-specific;
+          HTML interactive output
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

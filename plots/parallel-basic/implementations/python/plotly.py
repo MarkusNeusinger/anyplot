@@ -1,21 +1,37 @@
-""" pyplots.ai
+""" anyplot.ai
 parallel-basic: Basic Parallel Coordinates Plot
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: plotly 6.7.0 | Python 3.14.4
+Quality: 83/100 | Updated: 2026-04-27
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito discrete colorscale: Setosa=#009E73, Versicolor=#D55E00, Virginica=#0072B2
+OI_COLORSCALE = [
+    [0.0, "#009E73"],
+    [0.33, "#009E73"],
+    [0.33, "#D55E00"],
+    [0.67, "#D55E00"],
+    [0.67, "#0072B2"],
+    [1.0, "#0072B2"],
+]
+
 # Data - Iris-like dataset for multivariate demonstration
 np.random.seed(42)
-
-# Generate data for 3 species with distinct characteristics
 n_per_species = 50
 
-# Setosa: small petals, medium sepals
 setosa = pd.DataFrame(
     {
         "sepal_length": np.random.normal(5.0, 0.35, n_per_species),
@@ -26,7 +42,6 @@ setosa = pd.DataFrame(
     }
 )
 
-# Versicolor: medium petals, medium sepals
 versicolor = pd.DataFrame(
     {
         "sepal_length": np.random.normal(5.9, 0.52, n_per_species),
@@ -37,7 +52,6 @@ versicolor = pd.DataFrame(
     }
 )
 
-# Virginica: large petals, large sepals
 virginica = pd.DataFrame(
     {
         "sepal_length": np.random.normal(6.6, 0.64, n_per_species),
@@ -49,25 +63,28 @@ virginica = pd.DataFrame(
 )
 
 df = pd.concat([setosa, versicolor, virginica], ignore_index=True)
-
-# Map species to numeric for color scale
 species_map = {"setosa": 0, "versicolor": 1, "virginica": 2}
 df["species_code"] = df["species"].map(species_map)
 
-# Create parallel coordinates plot
+# Plot
 fig = go.Figure(
     data=go.Parcoords(
         line={
             "color": df["species_code"],
-            "colorscale": [[0, "#306998"], [0.5, "#FFD43B"], [1, "#4CAF50"]],
+            "colorscale": OI_COLORSCALE,
             "showscale": True,
+            "cmin": 0,
+            "cmax": 2,
             "colorbar": {
-                "title": {"text": "Species", "font": {"size": 20}},
+                "title": {"text": "Species", "font": {"size": 20, "color": INK}},
                 "tickvals": [0, 1, 2],
                 "ticktext": ["Setosa", "Versicolor", "Virginica"],
-                "tickfont": {"size": 18},
+                "tickfont": {"size": 18, "color": INK_SOFT},
                 "len": 0.6,
                 "y": 0.5,
+                "bgcolor": ELEVATED_BG,
+                "bordercolor": INK_SOFT,
+                "borderwidth": 1,
             },
         },
         dimensions=[
@@ -76,27 +93,26 @@ fig = go.Figure(
             {"label": "Petal Length (cm)", "values": df["petal_length"], "range": [0.5, 7]},
             {"label": "Petal Width (cm)", "values": df["petal_width"], "range": [0, 2.8]},
         ],
-        labelfont={"size": 22},
-        tickfont={"size": 16},
-        rangefont={"size": 14},
+        labelfont={"size": 22, "color": INK},
+        tickfont={"size": 16, "color": INK_SOFT},
+        rangefont={"size": 14, "color": INK_SOFT},
     )
 )
 
-# Layout - sized for 4800x2700 px output
 fig.update_layout(
     title={
-        "text": "Iris Flower Measurements · parallel-basic · plotly · pyplots.ai",
-        "font": {"size": 28},
+        "text": "Iris Flower Measurements · parallel-basic · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
         "x": 0.5,
         "xanchor": "center",
         "y": 0.95,
     },
-    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     margin={"l": 80, "r": 180, "t": 120, "b": 80},
-    paper_bgcolor="white",
-    plot_bgcolor="white",
 )
 
-# Save as PNG (4800x2700 px) and HTML
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html")
+# Save
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

@@ -1,15 +1,29 @@
-""" pyplots.ai
+""" anyplot.ai
 parallel-basic: Basic Parallel Coordinates Plot
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 83/100 | Created: 2025-12-23
+Library: pygal 3.1.0 | Python 3.14.4
+Quality: 83/100 | Updated: 2026-04-27
 """
+
+import os
+import sys
+
+
+# Remove script directory from sys.path so local pygal.py doesn't shadow the installed package
+sys.path.pop(0)
 
 import pygal
 from pygal.style import Style
 
 
-# Data - Iris dataset for parallel coordinates visualization
-# 15 samples per species across 4 dimensions (sepal/petal length/width)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette — Setosa=brand green, Versicolor=vermillion, Virginica=blue
+SPECIES_COLORS = {"Setosa": "#009E73", "Versicolor": "#D55E00", "Virginica": "#0072B2"}
+
+# Data - Iris dataset, 15 samples per species across 4 dimensions
 iris_data = {
     "Setosa": [
         [5.1, 3.5, 1.4, 0.2],
@@ -64,53 +78,50 @@ iris_data = {
     ],
 }
 
-# Compute min/max for each dimension across all species (for normalization)
+species_list = list(iris_data.keys())
+
+# Per-dimension min/max for normalization
 all_values = [[row[i] for species in iris_data.values() for row in species] for i in range(4)]
 mins = [min(col) for col in all_values]
 maxs = [max(col) for col in all_values]
 
-# Species colors - Python Blue, Python Yellow, and complementary teal (colorblind-friendly)
-species_colors = {"Setosa": "#306998", "Versicolor": "#FFD43B", "Virginica": "#4ECDC4"}
-species_list = list(iris_data.keys())
+# Pygal cycles through `colors` sequentially per series added.
+# Order: 3 mean lines (legend entries) then 45 individual observation lines.
+color_list = [SPECIES_COLORS[s] for s in species_list]
+for species_name in species_list:
+    color_list.extend([SPECIES_COLORS[species_name]] * len(iris_data[species_name]))
 
-# Build color list - one color per series added to the chart
-# Order: 3 legend entries (mean lines) first, then 45 observation lines grouped by species
-color_list = [species_colors[s] for s in species_list]  # 3 mean line colors
-for species_name in species_list:  # 45 observation colors (15 per species)
-    color_list.extend([species_colors[species_name]] * len(iris_data[species_name]))
-
-# Create custom style for 4800x2700 px output with larger fonts and visible grids
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#888888",  # Darker for better grid visibility
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
     colors=tuple(color_list),
     title_font_size=84,
     label_font_size=56,
     major_label_font_size=52,
     legend_font_size=52,
     value_font_size=36,
-    opacity=0.55,
+    opacity=0.50,
     opacity_hover=1.0,
-    guide_stroke_color="#AAAAAA",  # Explicit grid line color for visibility
-    major_guide_stroke_color="#888888",  # Major grid lines more visible
+    stroke_width=3,
+    guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED,
 )
 
-# Create line chart to simulate parallel coordinates
+# Plot
 chart = pygal.Line(
     width=4800,
     height=2700,
     style=custom_style,
-    title="parallel-basic · pygal · pyplots.ai\nIris Flower Measurements Across Species",
+    title="parallel-basic · pygal · anyplot.ai",
     x_title="Dimensions",
-    y_title="Normalized Value (0-1)",
-    show_dots=True,
-    dots_size=14,
+    y_title="Normalized Value (0–1)",
+    show_dots=False,
     stroke_style={"width": 3},
     show_y_guides=True,
-    show_x_guides=True,
+    show_x_guides=False,
     x_label_rotation=0,
     legend_at_bottom=True,
     legend_box_size=52,
@@ -122,24 +133,22 @@ chart = pygal.Line(
     show_legend=True,
 )
 
-# X-axis labels for dimensions
 chart.x_labels = ["Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Petal Width (cm)"]
 
-# Add mean lines for each species - these have labels and appear in the legend
-# Mean lines are thicker (width=6) to distinguish from individual observations
+# Mean lines per species — thicker stroke, appear in legend
 for species_name in species_list:
     rows = iris_data[species_name]
     mean_row = [sum(row[i] for row in rows) / len(rows) for i in range(4)]
     normalized_mean = [(mean_row[i] - mins[i]) / (maxs[i] - mins[i]) for i in range(4)]
-    chart.add(species_name, normalized_mean, stroke_style={"width": 6})
+    chart.add(species_name, normalized_mean, stroke_style={"width": 7})
 
-# Add each observation as a separate line without legend entry
+# Individual observation lines — thinner, no legend entry
 for species_name in species_list:
     for row in iris_data[species_name]:
         normalized = [(row[i] - mins[i]) / (maxs[i] - mins[i]) for i in range(4)]
-        # Allow interruptions prevents secondary adding to legend
         chart.add(None, normalized, stroke_style={"width": 3}, allow_interruptions=True)
 
-# Save as PNG and HTML
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Save
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
