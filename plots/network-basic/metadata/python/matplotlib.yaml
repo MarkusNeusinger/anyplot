@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: network-basic
 created: '2025-12-23T15:13:20Z'
-updated: '2026-04-27T01:14:31Z'
+updated: '2026-04-27T01:26:06Z'
 generated_by: claude-sonnet
 workflow_run: 24971431014
 issue: 989
@@ -12,49 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 80
+quality_score: 83
 review:
   strengths:
-  - 'Dual edge styling: thin grey for internal connections and thick amber for cross-department
-    bridges creates excellent visual hierarchy and immediate storytelling impact'
-  - FancyArrowPatch with arc3 connectionstyle renders elegant curved edges that are
-    idiomatic and aesthetically pleasing in matplotlib
-  - Degree-based node sizing encodes connectivity information seamlessly without cluttering
-    the graph
-  - 'Full theme-adaptive chrome: backgrounds, text, legend frame, and node borders
-    all flip correctly between light (#FAF8F1) and dark (#1A1A17) themes'
-  - Correct Okabe-Ito palette in canonical order for all 4 department groups
-  - Realistic, neutral scenario (company social network with named individuals) with
-    plausible departmental bridging
-  - No networkx dependency — custom spring layout avoids extra package requirement
+  - Amber cross-department edge highlighting creates elegant storytelling — inter-team
+    bridges are immediately visible
+  - FancyArrowPatch with connectionstyle=arc3 produces professional curved edges —
+    distinctively matplotlib
+  - Custom force-directed spring layout from scratch (no networkx) demonstrates strong
+    numpy/matplotlib mastery
+  - Full theme-adaptive chrome with all tokens correctly applied in both light and
+    dark renders
+  - Degree-encoded node sizes effectively communicate hub nodes at a glance
   weaknesses:
-  - Node labels at 14pt are below the 16pt minimum guideline — increase to 16pt or
-    18pt for compliance with style guide text legibility requirements
-  - Title format is 'Social Network · network-basic · matplotlib · anyplot.ai' but
-    required format is exactly '{spec-id} · {library} · anyplot.ai' (= 'network-basic
-    · matplotlib · anyplot.ai') — the extra prefix causes spec compliance deduction
-  - The center-right cluster (Bob, Carol, Alice, Frank, Grace, Henry, Ivy, Leo area)
-    is visually crowded, with nodes overlapping neighbours and edges cutting through
-    labels — spring layout needs stronger repulsion or better initial separation to
-    spread these nodes more
-  - Spring layout code is ~35 lines of explicit O(n²) iteration that inflates the
-    script considerably; using networkx (added as an import dependency) would reduce
-    this to a one-line call and improve Library Mastery score
+  - Node labels at fontsize=14 are below the 16pt minimum guideline for the 4800x2700
+    canvas
+  - Spring layout initialization by quadrant does not produce well-separated clusters
+    — nodes end up in a diagonal band rather than 4 distinct spatial communities
+  - Internal department edges are very faint (alpha=0.30) — barely visible in dark
+    mode
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white matching #FAF8F1 — correct, no pure white.
-      Chrome: Title "Social Network · network-basic · matplotlib · anyplot.ai" rendered in dark ink (#1A1A17), clearly readable at top. Legend box in upper-left shows "Departments" header and four group labels (Engineering, Research, Marketing, Design) in dark text on elevated off-white frame — all readable. No axis labels (axis off — appropriate for network graph).
-      Data: 20 nodes spread across canvas, colored in Okabe-Ito order — green #009E73 (Engineering), orange-vermillion #D55E00 (Research), blue #0072B2 (Marketing), reddish-purple #CC79A7 (Design). Cross-department edges drawn in amber (#E69F00) at higher opacity/thickness; internal edges in light grey at lower opacity. Node labels in dark ink (#1A1A17) at 14pt bold inside each node circle. Node sizes vary by degree. Center-right area (Engineering + Research clusters) shows noticeable crowding — nodes Bob, Carol, Alice, Frank, Grace are tightly packed with edge lines intersecting label areas.
-      Legibility verdict: PASS overall — title and legend fully readable; node labels readable but 14pt is below the 16pt guideline; crowded center-right area reduces per-label clarity but no text is invisible.
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "Social Network · network-basic · matplotlib · anyplot.ai" at fontsize=24 in dark ink — clearly readable. Legend box with ELEVATED_BG frame labels 4 departments at fontsize=16/18 — readable. Node labels in bold dark INK at fontsize=14 — readable but slightly small for canvas size.
+      Data: 20 nodes color-coded by department: Engineering (#009E73 green), Research (#D55E00 orange), Marketing (#0072B2 blue), Design (#CC79A7 pink). Node sizes vary by degree. Cross-department edges in amber #E69F00 at alpha=0.80, internal edges in INK_SOFT gray at alpha=0.30.
+      Legibility verdict: PASS — all text readable; node labels slightly small (fontsize=14 vs 16pt guideline) but still legible.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black matching #1A1A17 — correct, not pure black.
-      Chrome: Title in light ink (#F0EFE8) — clearly readable against the dark surface. Legend box in elevated dark frame (#242420) with light text — all readable. Node labels rendered in #F0EFE8 (INK in dark mode) — clearly visible on the dark background and against the coloured node circles. No "dark-on-dark" failure observed.
-      Data: Node colors are identical to the light render — green, orange-vermillion, blue, and reddish-purple Okabe-Ito positions 1–4. Amber cross-department edges and grey internal edges maintain the same visual hierarchy. Layout is identical to light render.
-      Legibility verdict: PASS — all text is readable; dark-on-dark failure is absent; data colours identical to light render confirming correct theme separation.
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title in near-white #F0EFE8 — clearly readable against dark background. Legend text in #B8B7B0 — readable. Node labels in #F0EFE8 (near-white) inside colored nodes — good contrast. No dark-on-dark failures detected.
+      Data: Identical node colors to light render — Engineering green, Research orange, Marketing blue, Design pink unchanged. Amber cross-department edges still visible. Internal edges barely visible (alpha=0.30 on dark background is very faint).
+      Legibility verdict: PASS — all text readable; internal edges are slightly too faint but data colors and key elements are all distinguishable.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 23
       max: 30
       items:
       - id: VQ-01
@@ -62,51 +53,49 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Title 24pt and legend 16pt explicitly set and readable in both themes;
-          node labels at 14pt bold are below 16pt guideline but still readable
+        comment: Title (24pt) and legend (16/18pt) explicitly set; node labels at
+          fontsize=14 below 16pt guideline
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
         passed: true
-        comment: Center-right cluster (Engineering+Research groups) is visually crowded;
-          edges intersect label areas; Design cluster well separated
+        comment: Some crowding in central diagonal band (Henry/Kate/Ivy/Leo area);
+          labels touch but remain readable
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All 20 nodes clearly visible with degree-based sizing; internal edges
-          at 30% alpha are faint but present; cross-department edges at 80% alpha
-          are prominent
+        comment: Nodes well-sized (900-2500s); amber cross-dept edges vivid; internal
+          edges very faint at alpha=0.30
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; no red-green as sole signal; adequate
-          contrast between groups
+        comment: Full Okabe-Ito CVD-safe palette; no red-green sole-signal issue
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
         passed: true
-        comment: Graph fills most canvas; some wasted space in lower-center area;
-          slight tilt/skew toward right side
+        comment: Network in diagonal band; 4 community clusters not spatially distinct;
+          empty corners upper-left and lower-right
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Network graph with axis off — no axis labels appropriate; title is
-          descriptive
+        comment: Descriptive title present; axis labels N/A (axis off for network
+          graph)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 Engineering; Okabe-Ito positions 1-4 in canonical
-          order; light #FAF8F1 and dark #1A1A17 backgrounds correct; all chrome theme-adaptive'
+        comment: 'First series #009E73; Okabe-Ito order correct; backgrounds #FAF8F1/#1A1A17;
+          chrome theme-correct in both renders'
     design_excellence:
       score: 13
       max: 20
@@ -116,25 +105,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: curved FancyArrowPatch edges, dual edge styling (amber
-          bridges vs. grey internal), degree-sized nodes — clear design intent; not
-          yet publication-ready'
+        comment: 'Above default: curved edges via FancyArrowPatch, amber cross-dept
+          accent, degree-encoded sizes, theme-adaptive chrome; layout result not as
+          elegant as design intent'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: axis off, edge alpha hierarchy, white node borders, styled legend
-          frame, zorder management — solid refinement above defaults
+        comment: Axis fully off (no spines/ticks/grid); styled legend frame with ELEVATED_BG;
+          node outline color matches PAGE_BG
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Cross-department bridges in amber create clear focal point; degree
-          sizing adds information layer; community structure spatially readable
+        comment: Amber cross-dept bridges create clear visual hierarchy showing inter-team
+          connections; node size encoding reveals hubs; diagonal layout reduces community
+          legibility
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -142,55 +132,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct node-link network diagram
+        comment: Correct node-link network diagram with force-directed spring layout
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Spring/force-directed layout, degree-encoded node size, labels, sparse
-          enough network — all spec features present
+        comment: Spring layout, node size encoding degree, node labels, sparse enough
+          to see connections
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 20 nodes, 31 edges correctly mapped; spring layout positions computed
-          correctly
+        comment: 20 nodes, 31 edges, 4 groups, correct mapping throughout
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title is 'Social Network · network-basic · matplotlib · anyplot.ai'
-          but required format is exactly '{spec-id} · {library} · anyplot.ai'; legend
-          labels and colors are correct
+        passed: true
+        comment: Title contains network-basic · matplotlib · anyplot.ai; legend labels
+          match 4 department groups
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows community structure, hub nodes, cross-group bridges, degree
-          variation — good coverage; could show one more topological feature
+        comment: Shows nodes, edges, group color coding, degree variation, cross-department
+          bridging
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real company social network with named individuals across 4 departments
-          — neutral, plausible, concrete
+        comment: Named employees across 4 real company departments; cross-department
+          connections plausible; neutral business context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 20 nodes within 10-50 spec range; 31 edges gives reasonable density
+        comment: 20 nodes and 31 edges within 10-50 node guideline; density allows
+          individual connections to remain visible
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -198,65 +187,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports -> data -> layout -> plot -> save; no functions
-          or classes'
+        comment: 'Flat script: imports → data → layout → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All 4 imports used: os, matplotlib.pyplot, numpy, FancyArrowPatch'
+        comment: os, matplotlib.pyplot, numpy, FancyArrowPatch — all imported and
+          used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Spring layout is ~35 lines of explicit O(n^2) iteration — verbose
-          but functional; acceptable, not gross over-engineering
+        passed: true
+        comment: Clean, Pythonic; spring layout verbose but necessary without networkx;
+          no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches=tight, facecolor=PAGE_BG
+        comment: Saves as plot-{THEME}.png with correct dpi and facecolor
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Axes methods used correctly; FancyArrowPatch and custom legend handles
-          are idiomatic; but the bulk of the complexity (spring layout) is pure numpy,
-          not matplotlib
+        comment: Uses ax.scatter, ax.text, ax.add_patch (Axes methods), plt.tight_layout(),
+          plt.savefig() — good idiomatic patterns
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: FancyArrowPatch with connectionstyle=arc3 is distinctive matplotlib;
-          zorder layering is matplotlib-specific; custom legend handles are idiomatic
+        comment: FancyArrowPatch with connectionstyle=arc3 for curved edges is distinctively
+          matplotlib; custom spring layout via numpy without networkx also shows library
+          mastery
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - patches
-  - annotations
   - custom-legend
+  - annotations
+  - patches
   patterns:
   - data-generation
   - iteration-over-groups
   - explicit-figure
   dataprep: []
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending
   - edge-highlighting
