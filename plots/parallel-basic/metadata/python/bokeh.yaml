@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: parallel-basic
 created: '2025-12-23T18:12:33Z'
-updated: '2026-04-27T05:45:24Z'
+updated: '2026-04-27T06:03:38Z'
 generated_by: claude-sonnet
 workflow_run: 24978206561
 issue: 820
@@ -12,91 +12,106 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/bokeh/plot-dark.html
-quality_score: 72
+quality_score: 74
 review:
   strengths:
-  - Correct parallel coordinates with proper [0,1] normalization enabling fair cross-dimension
-    comparison
-  - Iris-like dataset effectively demonstrates species separation across petal/sepal
-    dimensions
-  - Custom x-axis labels with range annotations (e.g., Sepal Length 4.1-8.2 cm) are
-    highly informative
-  - Appropriate alpha=0.5 transparency for 150 overlapping lines with readable density
-  - Reproducible with fixed random seed, clean KISS code structure
+  - 'Correct parallel coordinates implementation: each variable gets a vertical axis,
+    each observation is a line connecting values across all dimensions'
+  - Normalization to [0,1] enables fair cross-dimension comparison with original scale
+    ranges shown in x-axis tick labels
+  - Realistic iris-like dataset with three biologically distinct species, seed set
+    for reproducibility
+  - Alpha blending (0.5) handles 150 overlapping lines without obscuring species-level
+    patterns
+  - Font sizes correctly set for 4800×2700 canvas (title 28pt, axis labels 22pt, tick
+    labels 18pt)
+  - Custom legend via LegendItem and major_label_overrides show Bokeh-specific API
+    usage
   weaknesses:
-  - 'Non-Okabe-Ito colors: #306998 (Python Blue, banned), #FFD43B, #4CAF50 — replace
-    with #009E73 (setosa), #D55E00 (versicolor), #0072B2 (virginica)'
-  - 'Missing theme-adaptive code entirely: add ANYPLOT_THEME env var and apply PAGE_BG/INK/INK_SOFT
-    tokens to background, border, all text elements and grid colors'
-  - 'Wrong output filenames: saves to plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html'
-  - Title contains pyplots.ai instead of anyplot.ai (line 67 and 126)
-  - No spine removal — consider removing top/right borders for cleaner look
+  - 'Non-Okabe-Ito palette: uses Python-logo colors (#306998, #FFD43B, #4CAF50) —
+    first series must be #009E73 (brand green); #306998 is specifically listed as
+    non-compliant in VQ-07 criteria'
+  - 'Missing ANYPLOT_THEME handling: no os.getenv(''ANYPLOT_THEME'') — backgrounds,
+    text colors, grid colors not theme-adaptive; code must set p.background_fill_color,
+    p.title.text_color, etc. from theme tokens'
+  - 'Wrong output filenames: exports to ''plot.png'' instead of ''plot-{THEME}.png'';
+    Bokeh as an interactive library must also save ''plot-{THEME}.html'''
+  - Title in source code says 'pyplots.ai' instead of 'anyplot.ai' (lines 67 and 126)
+    — even though rendered images appear correct, the code would regenerate with wrong
+    domain
+  - 'Missing HoverTool: Bokeh''s most distinctive feature (interactive tooltips) unused
+    — missed opportunity for library mastery; showing species name and dimension values
+    on hover would be natural here'
+  - 'No ColumnDataSource pattern: Bokeh''s idiomatic data container not used; iterating
+    df.iterrows() and calling p.line() per row is correct but not the recommended
+    Bokeh approach'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), correct for light theme
-      Chrome: Title "parallel-basic · bokeh · anyplot.ai" in dark text (readable); y-axis label "Normalized Value" and x-axis label "Dimension" readable; tick labels and range annotations visible; legend "Species" with Setosa/Versicolor/Virginica readable in top-right
-      Data: 150 parallel coordinate lines in 3 colors — blue (#306998) for setosa, yellow/orange (#FFD43B) for versicolor, teal-green (#4CAF50) for virginica. None are Okabe-Ito colors; first series must be #009E73. Lines have alpha=0.5 appropriate for density.
-      Legibility verdict: PASS (text readable) — but palette is non-compliant
+      Background: warm off-white (~#FAF8F1) — correct theme surface, not pure white
+      Chrome: title "parallel-basic · bokeh · anyplot.ai" readable at top-left (dark text); y-axis label "Normalized Value" and x-axis label "Dimension" clearly visible; tick labels show dimension names with original measurement ranges (e.g., "Sepal Length / (3.1-8.1 cm)") — all dark text readable against light background; legend at top-right with "Species / Setosa / Versicolor / Virginica" readable
+      Data: Three species rendered as parallel coordinate lines — setosa in blue (#306998), versicolor in gold/yellow (#FFD43B), virginica in green (#4CAF50); all with alpha=0.5; the setosa cluster distinctly drops at petal dimensions (x=2,3) while versicolor and virginica stay at higher normalized values; 150 lines visible but dense
+      Legibility verdict: PASS — all text readable; however none of the colors match Okabe-Ito palette; first series (setosa) is #306998 (Python Blue) not #009E73 (brand green)
 
     Dark render (plot-dark.png):
-      Background: Near-black dark background, appears close to #1A1A17 in the render
-      Chrome: Title visible in lighter text; axis labels and tick labels appear in lighter tones readable against dark background; legend text appears readable. However, the code contains NO ANYPLOT_THEME handling — the dark-themed appearance is inconsistent with the source code (which has no theme tokens for background, text, or chrome), suggesting the images may derive from a different code version.
-      Data: Colors appear identical to light render (blue/orange/teal-green) — correct behavior for data colors
-      Legibility verdict: PASS visually — but FAIL in code (no theme-adaptive tokens means this cannot be reliably reproduced)
+      Background: dark near-black (~#1A1A17) — correct dark theme surface, not pure black
+      Chrome: title readable with light-colored text on dark background; axis labels, tick labels, and legend all appear light-colored and readable; no dark-on-dark failures detected
+      Data: Same colors as light render (setosa blue, versicolor gold, virginica green) — data colors are identical between themes as required; same patterns visible with setosa dropping at petal dimensions
+      Legibility verdict: PASS — text readable in dark mode; however the code does not contain ANYPLOT_THEME handling, raising questions about how these themed images were generated (likely from a previous code version or the pipeline renames plot.png output)
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 22
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=28pt, axis=22pt, ticks=18pt, legend=18pt);
-          both renders appear readable but missing theme-adaptive text color tokens
+        comment: Font sizes explicitly set (28pt title, 22pt axis labels, 18pt ticks,
+          18pt legend) — all readable; minor density at x-axis labels
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minimal overlap; x-axis labels with range annotations fit without
-          collision
+        comment: No significant text overlaps; axis label multiline format works;
+          legend does not overlap data
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Lines visible with alpha=0.5 for 150 observations, line_width=2 appropriate
+        comment: 150 lines with alpha=0.5 and line_width=2 are visible but dense;
+          individual observation lines hard to trace in converging regions
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
-        passed: true
-        comment: Blue/yellow/green combination has acceptable contrast but FFD43B
-          vs 4CAF50 may be indistinguishable for some CVD types
+        passed: false
+        comment: Not red-green only; but yellow (#FFD43B) has low luminance contrast
+          on light background; non-standard palette
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization ~70%, legend well-placed, minimal wasted
-          space
+        comment: 4800x2700 landscape; data fills canvas well; margins adequate
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Y-axis label Normalized Value is descriptive; X-axis label Dimension
-          is too generic
+        comment: X-axis tick labels show dimension names with measurement ranges;
+          y-axis 'Normalized Value' descriptive; title correctly formatted in rendered
+          images
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'Uses #306998 (Python Blue, banned), #FFD43B, #4CAF50 — none are
-          Okabe-Ito; first series must be #009E73; no theme-adaptive chrome code;
-          background is Bokeh default not #FAF8F1/#1A1A17'
+        comment: 'First series uses #306998 (Python Blue) — explicitly listed as non-compliant
+          in VQ-07 criteria; must use #009E73 as first series; all three colors are
+          custom non-Okabe-Ito hexes'
     design_excellence:
       score: 10
       max: 20
@@ -105,23 +120,24 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
-        comment: Well-configured with custom legend, range-annotated axis labels,
-          subtle dashed grid; but colors are non-compliant brand colors rather than
-          intentional design
+        passed: false
+        comment: Well-configured defaults with intentional but non-compliant custom
+          palette; resembles a configured default rather than exceptional design
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Grid customized (alpha=0.3, dashed); no spine removal; no theme adaptation
+        passed: false
+        comment: Grid customized with alpha=0.3 and dashed style (6,4); some refinement
+          beyond defaults but no spine removal or typography polish
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: true
-        comment: Setosa distinct small-petal profile creates natural separation; species
-          clustering visible; no explicit emphasis or annotation
+        passed: false
+        comment: Iris dataset naturally shows setosa's distinctive small-petal pattern;
+          three-color distinction provides visual hierarchy; but no deliberate emphasis
+          or focal point design
     spec_compliance:
       score: 14
       max: 15
@@ -131,29 +147,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parallel coordinates — each observation is a line connecting
-          values across all axes
+        comment: 'Correct parallel coordinates: each of 4 dimensions as vertical axis,
+          each observation as a connecting line'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Normalization to [0,1], category color coding by species, transparency
-          for overlap, 4 dimensions shown
+        comment: Normalization to [0,1] present; color coding by species category;
+          alpha transparency; 4 iris dimensions
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X positions map to dimensions, Y axis is normalized value, all 150
-          observations rendered
+        comment: X positions map to 4 dimensions (0-3), Y shows normalized values;
+          all data visible
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
         passed: false
-        comment: Code uses pyplots.ai instead of anyplot.ai in title; legend labels
-          Setosa/Versicolor/Virginica with Species header are correct
+        comment: Rendered image shows correct 'parallel-basic · bokeh · anyplot.ai'
+          title; legend labels correct (Setosa/Versicolor/Virginica); but source code
+          has 'pyplots.ai' on lines 67 and 126 — regression risk
     data_quality:
       score: 14
       max: 15
@@ -163,24 +180,25 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Demonstrates inter-variable correlation, species clustering, and
-          pattern detection; setosa distinctly separated on petal dimensions
+        comment: Shows three distinct species with varied multi-dimensional patterns;
+          normalization demonstrates cross-axis comparison; alpha shows observation
+          density
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris-like flower measurement dataset — neutral scientific context
-          with realistic cm measurements
+        comment: Iris-like botanical measurements are scientifically standard and
+          neutral; biologically plausible values for sepal/petal dimensions
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sepal length ~4-8 cm, petal width ~0-3 cm — all values match real
-          iris plant measurements
+        comment: Original scale ranges displayed in axis labels; normalized to [0,1];
+          50 observations per species (150 total) is appropriate
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -188,7 +206,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data generation → normalization → figure
+        comment: 'Flat sequential structure: imports → data → normalization → figure
           → styling → legend → save'
       - id: CQ-02
         name: Reproducibility
@@ -204,18 +222,18 @@ review:
         comment: 'All imports used: numpy, pandas, bokeh.io, bokeh.models, bokeh.plotting'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: iterrows() over 150 rows acceptable but slightly inefficient; legend
-          and axis override construction is clean
+        comment: Clean Pythonic code; LegendItem construction appropriate; no fake
+          UI elements
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves to plot.png and plot.html instead of plot-{THEME}.png and plot-{THEME}.html;
-          no theme-based output naming
+        comment: Exports to 'plot.png' not 'plot-{THEME}.png'; saves 'plot.html' not
+          'plot-{THEME}.html'; no ANYPLOT_THEME environment variable handling
     library_mastery:
       score: 5
       max: 10
@@ -224,16 +242,19 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses figure(), p.line(), and Bokeh layout tools correctly; misses
-          ColumnDataSource pattern which is more idiomatic for multi-series data
+        passed: false
+        comment: Correct Bokeh figure/line API; custom Legend and LegendItem usage;
+          major_label_overrides for custom tick labels; but missing ColumnDataSource
+          (Bokeh's idiomatic data container) and iterrows pattern is not recommended
+          Bokeh approach
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: Uses major_label_overrides (Bokeh-specific) and Legend/LegendItem
-          API for custom legend; Bokeh-specific but not deeply distinctive
+        passed: false
+        comment: Custom Legend with LegendItem construction and major_label_overrides
+          are Bokeh-specific; but critically misses HoverTool — Bokeh's most distinctive
+          interactive feature that would add species/dimension values on hover
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -248,4 +269,3 @@ impl_tags:
   - normalization
   styling:
   - alpha-blending
-  - grid-styling
