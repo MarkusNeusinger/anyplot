@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: parallel-basic
 created: '2025-12-23T18:11:57Z'
-updated: '2026-04-27T05:49:42Z'
+updated: '2026-04-27T06:01:21Z'
 generated_by: claude-sonnet
 workflow_run: 24978040577
 issue: 820
@@ -15,35 +15,37 @@ preview_html_dark: null
 quality_score: 74
 review:
   strengths:
-  - 'Excellent dataset choice: iris data shows clear species separation showcasing
-    all parallel coordinates features'
-  - Multi-line x-tick labels with measurement ranges embedded are a thoughtful matplotlib-idiomatic
-    touch
-  - Custom legend with Line2D handles is clean and idiomatic
-  - 'Data quality is perfect: realistic botanical data, reproducible with seed, correct
-    scale'
+  - 'Excellent dataset choice: iris data demonstrates clear species separation across
+    all four dimensions, ideal for parallel coordinates'
+  - Multi-line x-tick labels with embedded measurement ranges (e.g. 4.3-7.9 cm) are
+    informative and idiomatic
+  - Custom legend using plt.Line2D handles is clean matplotlib pattern
+  - 'Data quality is perfect: realistic botanical data, reproducible with np.random.seed(42),
+    realistic measurement bounds'
   weaknesses:
-  - 'Wrong palette: uses #306998/#FFD43B/#4CAF50 (Python colors) instead of Okabe-Ito;
-    must use #009E73 (setosa), #D55E00 (versicolor), #0072B2 (virginica)'
-  - 'Missing ANYPLOT_THEME handling: no os.getenv, no PAGE_BG/INK/INK_SOFT tokens,
-    no fig.set_facecolor(PAGE_BG), no ax.set_facecolor(PAGE_BG), no adaptive text/spine/grid
-    colors'
-  - 'Wrong output filename: plt.savefig("plot.png") must be plt.savefig(f"plot-{THEME}.png")'
-  - 'Title branding error: line 85 says "pyplots.ai" must be "anyplot.ai"'
-  - 'Dashed grid at alpha=0.3: use solid linestyle at alpha=0.10 for y-axis only'
-  - 'Spines not removed: add ax.spines[top].set_visible(False) and ax.spines[right].set_visible(False)'
+  - 'Wrong palette: code uses #306998 (Python blue), #FFD43B (yellow), #4CAF50 (green)
+    — must use Okabe-Ito positions 1-3: setosa=#009E73, versicolor=#D55E00, virginica=#0072B2'
+  - 'Missing ANYPLOT_THEME handling: no os.getenv(ANYPLOT_THEME), no PAGE_BG/INK/INK_SOFT
+    tokens, no fig.set_facecolor(PAGE_BG), no ax.set_facecolor(PAGE_BG), no adaptive
+    text/spine/grid colors'
+  - 'Wrong output filename: plt.savefig(plot.png) must be plt.savefig(f"plot-{THEME}.png",
+    facecolor=PAGE_BG)'
+  - 'Title branding error: line 85 uses pyplots.ai instead of anyplot.ai'
+  - 'Dashed grid (linestyle=--) at alpha=0.3 too prominent: use solid linestyle with
+    alpha=0.10 for y-axis only'
+  - 'Top/right spines not removed: add ax.spines[top].set_visible(False) and ax.spines[right].set_visible(False)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct for light theme
-      Chrome: Title "parallel-basic · matplotlib · anyplot.ai" in dark text — readable. Y-axis label "Normalized Value" readable. X-tick labels with variable names and cm ranges readable. Legend in upper right with species labels readable.
-      Data: 150 lines across 4 parallel axes colored by species. Non-Okabe-Ito palette: Setosa=steel blue (#306998), Versicolor=yellow (#FFD43B), Virginica=green (#4CAF50). alpha=0.5 handles density well.
-      Legibility verdict: PASS — all text readable, though yellow lines have poor contrast against off-white
+      Background: Warm off-white (~#FAF8F1) — correct for light theme. Pipeline-injected theming despite code lacking ANYPLOT_THEME logic.
+      Chrome: Title "parallel-basic · matplotlib · anyplot.ai" in dark text — readable (images show anyplot.ai; code line 85 has pyplots.ai regression). Y-axis label "Normalized Value" readable. X-tick labels with variable names and cm ranges clearly readable. Legend in upper right with species labels readable.
+      Data: 150 lines across 4 parallel axes colored by species with alpha=0.5. Colors appear as teal, orange, blue (likely pipeline-corrected from code's #306998/#FFD43B/#4CAF50). Clear species separation visible especially at petal axes. Setosa cluster distinctly low on petal dimensions.
+      Legibility verdict: PASS — all text readable against light background. No light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) — correct for dark theme
-      Chrome: Title, axis labels, tick labels, and legend all appear as light-colored text — readable against dark background. No dark-on-dark failures visible. Theme adaptation appears to be pipeline-injected (code lacks ANYPLOT_THEME logic).
-      Data: Colors are identical to light render — same non-Okabe-Ito blue/yellow/green. Yellow lines are actually more legible on the dark background than on light.
-      Legibility verdict: PASS — all text readable in both themes
+      Background: Warm near-black (~#1A1A17) — correct for dark theme. Pipeline-injected theming.
+      Chrome: Title, axis labels, tick labels, and legend all appear as light-colored text — readable against dark background. No dark-on-dark failures visible.
+      Data: Line colors appear identical to light render — correct Okabe-Ito-like behavior from pipeline. Same species separation pattern visible. Setosa cluster still clearly identifiable in petal dimensions.
+      Legibility verdict: PASS — all text readable in dark render. No dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
       score: 22
@@ -54,42 +56,42 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (24/20/18/16 pt), both renders readable.
-          No fontweight medium on title.
+        comment: All font sizes explicitly set (title 24, ylabel 20, xticklabels 18,
+          ytick 16, legend 16). Both renders readable. No fontweight medium on title.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Multi-line x-tick labels well-spaced, legend clear. Minor line density
-          overlap expected for 150 obs.
+        comment: Multi-line x-tick labels well-spaced, legend clear. Minor inherent
+          line density overlap expected for 150 observations.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
         comment: alpha=0.5 appropriate for 150 lines. linewidth=2 at minimum recommended
-          threshold.
+          threshold for 4800x2700.
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: false
-        comment: 'Non-Okabe-Ito palette. #FFD43B yellow has poor luminance contrast
-          on light background, not CVD-optimized.'
+        comment: 'Code uses non-Okabe-Ito palette. #FFD43B yellow has poor luminance
+          contrast on light background, not CVD-optimized.'
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good 16:9 proportions, tight_layout, nothing cut off.
+        comment: Good 16:9 proportions, tight_layout applied, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Excellent: x-tick labels include variable names and cm ranges. Y-axis:
-          Normalized Value.'
+        comment: 'X-tick labels include variable names and measurement ranges. Y-axis:
+          Normalized Value. Informative.'
       - id: VQ-07
         name: Palette Compliance
         score: 0
@@ -121,8 +123,8 @@ review:
         score: 3
         max: 6
         passed: false
-        comment: Iris dataset is excellent for showing species separation. No visual
-          emphasis on the clear Setosa petal cluster.
+        comment: Iris dataset excellent for showing species separation. No visual
+          emphasis on clear Setosa petal cluster pattern.
     spec_compliance:
       score: 13
       max: 15
@@ -132,14 +134,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parallel coordinates implementation.
+        comment: Correct parallel coordinates implementation with lines connecting
+          values across vertical axes.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Normalization, color coding, alpha transparency, 4 dimensions, 150
-          observations.
+        comment: Normalization to [0,1], color coding by category, alpha transparency,
+          4 dimensions, 150 observations.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -151,8 +154,8 @@ review:
         score: 1
         max: 3
         passed: false
-        comment: 'Title regression: code line 85 uses ''pyplots.ai'' instead of ''anyplot.ai''.
-          Legend labels correct.'
+        comment: Code line 85 has 'pyplots.ai' instead of 'anyplot.ai' — title branding
+          error. Legend labels are correct.
     data_quality:
       score: 15
       max: 15
@@ -176,8 +179,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Realistic iris measurement ranges, clipped to known bounds. seed=42
-          reproducible.
+        comment: Realistic iris measurement ranges, clipped to known botanical bounds.
+          seed=42 reproducible.
     code_quality:
       score: 9
       max: 10
@@ -187,13 +190,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports -> data -> plot -> save.'
+        comment: 'Flat script: imports -> data -> normalize -> plot -> save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -205,7 +208,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. iterrows() appropriate for line-per-row plotting.
+        comment: Clean, Pythonic. iterrows() appropriate for line-per-row parallel
+          coordinate plotting.
       - id: CQ-05
         name: Output & API
         score: 0
@@ -223,14 +227,14 @@ review:
         max: 5
         passed: true
         comment: 'Uses ax methods, explicit figsize, tight_layout. Missing: facecolor
-          setup, theme-adaptive tick_params.'
+          setup, theme-adaptive tick_params, ax.spines styling.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
         comment: Custom legend with plt.Line2D handles, multi-line x-tick labels with
-          measurement ranges — good matplotlib-specific design.
+          measurement ranges — good matplotlib-specific design choices.
   verdict: REJECTED
 impl_tags:
   dependencies: []
