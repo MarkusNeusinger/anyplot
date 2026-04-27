@@ -1,173 +1,190 @@
 library: plotly
+language: python
 specification_id: marimekko-basic
 created: '2025-12-23T15:14:03Z'
-updated: '2025-12-23T15:19:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20464353289
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/plotly/plot.html
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling:
-  - edge-highlighting
+updated: '2026-04-27T03:24:58Z'
+generated_by: claude-sonnet
+workflow_run: 24974737884
+issue: 1002
+python_version: 3.14.4
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/plotly/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent implementation of Marimekko chart logic with correct proportional widths
-    and stacked heights
-  - Value labels inside segments provide immediate readability of actual dollar amounts
-  - Clean, professional appearance with white borders separating segments
-  - Descriptive axis labels explain the dual-encoding concept (width = market size)
-  - Well-structured hover templates with rich information (region, product, value,
-    share)
+  - Correct marimekko implementation with proportional widths and stacked heights
+  - Full Okabe-Ito palette compliance with Enterprise=#009E73 as first series
+  - Value labels inside segments showing absolute dollar amounts
+  - Well-formatted hover tooltips using customdata for rich interactivity
+  - Explicitly set font sizes at all hierarchy levels (28/22/18px)
+  - Theme-adaptive chrome fully implemented for both light and dark renders
+  - Clean deterministic data with realistic business context (software market by region)
+  - HTML export alongside PNG for interactive use
   weaknesses:
-  - Grid lines are too subtle (alpha 0.1) making it difficult to read exact percentage
-    values
-  - Color palette could be more colorblind-friendly; blue and teal may be hard to
-    distinguish for some viewers
-  image_description: 'The plot displays a Marimekko chart showing market share by
-    region and product line. Four regions are shown on the x-axis: North America,
-    Europe, Asia Pacific, and Latin America, with bar widths proportional to market
-    size (Asia Pacific is widest, Latin America is narrowest). Each bar is divided
-    into three stacked segments representing product lines: Enterprise (dark blue
-    #306998), SMB (yellow #FFD43B), and Consumer (teal #4ECDC4). Value labels in white
-    text show dollar amounts (e.g., $120M, $180M) inside each segment. The y-axis
-    shows percentage from 0% to 100%. A horizontal legend at the top identifies the
-    three product lines. The title reads "Market Share by Region · marimekko-basic
-    · plotly · pyplots.ai".'
+  - 'DE-03 LOW: No visual storytelling or hierarchy - the chart displays data without
+    directing the viewer to the key insight (Asia Pacific is largest market but Consumer-dominated).
+    No emphasis technique used (color contrast variation, callout annotation, focal
+    highlight).'
+  - 'DE-01 MODERATE: Design is clean and correct but not publication-quality. Missing
+    refinements: chart frame appears as a box (top/right spines not suppressed), bar
+    edge color PAGE_BG makes separators invisible in dark mode.'
+  - 'LM-02 MODERATE: Hover tooltips with customdata are plotly-distinctive but the
+    marimekko construction itself (go.Bar with base+width) is generic. Consider leveraging
+    plotly-specific layout features more creatively.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "Market Share by Region · marimekko-basic · plotly · anyplot.ai" in dark ink (#1A1A17), clearly readable. X-axis label "Region (width = market size)" and Y-axis label "Product Mix (share within region)" both dark and legible. Tick labels in dark secondary ink (#4A4A44), fully readable. Horizontal legend at top center with "Product Line" header — all readable.
+      Data: 4 variable-width columns (North America, Europe, Asia Pacific, Latin America), each stacked with Enterprise (#009E73, bottom), SMB (#D55E00, middle), Consumer (#0072B2, top). White segment separators (2px). Dollar value labels inside each segment in white text — all readable. Asia Pacific widest column. Latin America narrowest.
+      Legibility verdict: PASS — all text fully readable against warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Near-black warm dark #1A1A17 — correct, not pure black.
+      Chrome: Title, axis labels, and tick labels render in light off-white/cream text — all clearly readable against the dark background. Legend box uses elevated dark background (#242420) with light border. No dark-on-dark text failures detected.
+      Data: Data colors are identical to light render — Enterprise (#009E73 teal), SMB (#D55E00 orange), Consumer (#0072B2 blue) — unchanged as expected. Note: bar edge color PAGE_BG=#1A1A17 matches the dark background, making within-stack separator lines invisible; segment colors still clearly distinguish the three products.
+      Legibility verdict: PASS — all text readable against dark background.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt, value labels
-          at 18pt - all clearly readable
+        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
+          labels 18px, legend 18-20px, value labels 18px — all readable in both renders'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; value labels fit within segments, axis labels
-          well spaced
+        comment: No overlapping text. X-axis category labels spaced correctly under
+          each variable-width bar.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar segments are clearly visible with white borders separating them
+        comment: All bar segments clearly visible with contrasting colors. Value labels
+          in white inside each segment.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Colors are distinguishable but the blue-teal combination could be
-          slightly challenging for some colorblind viewers
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of canvas space, plot fills ~70% of area with balanced
-          margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with context: "Region (width = market size)"
-          and "Product Mix (share within region)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe. Three distinct colors (green, orange,
+          blue) are clearly distinguishable.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills approximately 70% of canvas. Balanced margins (l:80,
+          r:40, t:120, b:80). Legend positioned at top without wasted space.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend is well positioned but grid lines are extremely subtle (alpha
-          0.1), making percentage benchmarks hard to reference
+        comment: 'X-axis: ''Region (width = market size)'' explains encoding. Y-axis:
+          ''Product Mix (share within region)'' is descriptive.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Enterprise=#009E73, SMB=#D55E00, Consumer=#0072B2 —
+          correct Okabe-Ito order. Light bg #FAF8F1, dark bg #1A1A17. Theme-adaptive
+          chrome correct in both renders.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Between well-configured default (4) and strong design (6). White
+          segment separators, correct palette, clean layout. Missing: top/right spine
+          removal, more typography finesse.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-axis grid hidden, Y-axis grid subtle (15% opacity), bargap=0.02
+          for tight marimekko appearance. No excessive decoration.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed correctly but no visual hierarchy guides the viewer.
+          Asia Pacific dominance and Consumer-heavy mix is notable but not emphasized.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Marimekko/mekko chart with variable-width stacked bars
+        comment: 'Correct marimekko chart: proportional bar widths (column totals)
+          and proportional heights (product share within column).'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-categories (regions) determine bar width, Y-categories (products)
-          are stacked, values determine proportions
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: proportional widths, stacked heights,
-          value labels on segments'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: proportional widths, proportional heights,
+          color coding, legend, value labels on segments, category names centered
+          under bars.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full 0-100%, all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X positions calculated as cumulative widths (centered). Y shows 0-100%
+          proportion. All regions and products displayed correctly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three product lines
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "Market Share by Region · marimekko-basic · plotly
-          · pyplots.ai"'
+        comment: 'Title ''Market Share by Region · marimekko-basic · plotly · anyplot.ai''
+          contains required format. Legend labels match data: Enterprise, SMB, Consumer.'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation in both width and segment proportions; Asia Pacific
-          has largest market and different product mix than others
+        comment: 'Shows both dimensions: varying bar widths (different market sizes)
+          and varying product mix per region. Strong variation across all 4 regions.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Market share by region and product line is a classic real-world use
-          case for Marimekko charts
+        comment: Software market share by region (Enterprise/SMB/Consumer product
+          lines) — real-world business scenario, neutral topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values in millions USD are realistic; however, some regions have
-          very similar totals (NA=270, EU=250) which doesn't maximize width variation
-          demonstration
+        comment: Values $30M-$180M per segment. Region totals ($120M-$450M) are plausible
+          for software product revenues by major world region.
     code_quality:
       score: 10
       max: 10
@@ -177,41 +194,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → calculations → figure
-          → layout → save'
+        comment: 'Clean linear flow: imports → theme tokens → data → marimekko calculation
+          → figure → layout → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic hardcoded data, no random elements
+        comment: 'Fully deterministic: all data hardcoded, no random generation needed.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only plotly.graph_objects imported and used
+        comment: Only os and plotly.graph_objects imported, both used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Clean Pythonic code. Marimekko calculation is appropriate complexity.
+          No over-engineering.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current plotly API
+          used.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of go.Bar with base parameter for stacking, custom widths,
+          hovertemplate with customdata, barmode=stack, HTML export — all idiomatic
+          plotly patterns.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses go.Bar with customdata for hover templates, but could leverage
-          more Plotly interactivity features
-  verdict: APPROVED
+        comment: Uses plotly-distinctive customdata+hovertemplate for rich interactive
+          tooltips with region name, dollar value, and share percentage. HTML export
+          adds interactivity. Could leverage more plotly-specific layout capabilities.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  - manual-ticks
+  patterns:
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - edge-highlighting
