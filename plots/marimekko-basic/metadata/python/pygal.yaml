@@ -1,227 +1,252 @@
 library: pygal
+language: python
 specification_id: marimekko-basic
 created: '2025-12-23T15:14:27Z'
-updated: '2025-12-23T16:15:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20464357044
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-27T03:32:36Z'
+generated_by: claude-sonnet
+workflow_run: 24974947489
+issue: 1002
+python_version: 3.14.4
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - edge-highlighting
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/pygal/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent custom implementation extending pygal Graph class to create a chart
-    type not natively supported
-  - Clear visual distinction between all segments with white borders and colorblind-safe
-    palette
-  - Proper variable-width bars with widths proportional to regional totals (clearly
-    labeled below each bar)
-  - Percentage labels within segments enhance readability without cluttering
-  - Y-axis percentage scale with subtle dashed gridlines provides good reference
-  - Realistic market share scenario that perfectly demonstrates Marimekko use case
-  - Clean SVG output with HTML wrapper for interactive viewing
+  - Correctly implements a Marimekko chart using pygal's Graph extension pattern —
+    the only viable approach since pygal has no native Marimekko type
+  - 'Perfect Okabe-Ito palette compliance with #009E73 as first series and correct
+    theme-adaptive chrome in both light and dark renders'
+  - 'Strong spec compliance: variable bar widths proportional to column totals, proportional
+    stacking, percentage annotations, and x-axis labels with width percentages all
+    present'
+  - Excellent data quality with a realistic, varied, neutral market share scenario
+    (5 regions x 4 product categories) that demonstrates all Marimekko chart features
   weaknesses:
-  - Custom class violates KISS principle, though unavoidable since pygal lacks native
-    Marimekko support
-  - Legend placement at bottom creates some visual distance from the chart
-  - Smallest segments (MEA region) are quite narrow, making labels cramped
-  image_description: 'The plot displays a Marimekko chart showing market share data
-    across 5 regions (North America, Europe, Asia Pacific, Latin America, MEA) with
-    4 product categories (Enterprise, Consumer, SMB, Government). Bar widths vary
-    proportionally to represent regional market sizes - Asia Pacific is widest (32%),
-    followed by North America (27%), Europe (23%), Latin America (11%), and MEA (7%).
-    Each bar is stacked with 4 segments in distinct colors: blue (Enterprise), yellow
-    (Consumer), teal (SMB), and coral/pink (Government). Percentage labels appear
-    within larger segments. The Y-axis shows "Share within Region (%)" from 0% to
-    100% with dashed gridlines at 25% intervals. Category labels with width percentages
-    appear below each bar. A legend at the bottom identifies the 4 product lines.
-    The title "marimekko-basic · pygal · pyplots.ai" appears at the top.'
+  - Missing x-axis title — only individual region names appear centered under bars,
+    but no axis-level label like 'Region' or 'Market' is present
+  - 'Bottom area is visually crowded: x-axis category labels and bottom legend items
+    occupy the same horizontal zone, creating confusion about which elements are legend
+    vs. axis labels'
+  - No focal point or visual emphasis for data storytelling — all segments and regions
+    are treated equally with no hierarchy to draw the viewer's eye to the key insight
+    (e.g., Asia Pacific as the largest market at 32%)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "marimekko-basic · pygal · anyplot.ai" in dark text (#1A1A17) — clearly readable. Y-axis label "Share within Region (%)" in dark text — readable. Y-axis tick labels (0%, 25%, 50%, 75%, 100%) in muted gray — readable. X-axis category labels (North America, Europe, Asia Pacific, Latin America, MEA) in dark text — readable. Width percentages in italic muted gray below category names — readable. Legend items (Enterprise, Consumer, SMB, Government) at bottom in dark text — readable.
+      Data: Five variable-width stacked bars. First series Enterprise = #009E73 (teal) at bottom. Consumer = #D55E00 (orange) second. SMB = #0072B2 (blue) third. Government = #CC79A7 (pink-purple) at top. Bold white percentage labels inside segments.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light text (#F0EFE8) — clearly readable against dark background. Y-axis tick labels in muted light gray — readable. X-axis category labels and italic width percentages in light gray — readable. Legend text in light gray — readable. No dark-on-dark failures detected. Dashed grid lines are subtle and visible.
+      Data: Data colors identical to light render — Enterprise #009E73, Consumer #D55E00, SMB #0072B2, Government #CC79A7. White bold percentage labels remain readable inside segments on dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: 'All text is clearly readable; title, axis labels, and percentage
-          labels are well-sized. Minor: some percentage labels in smaller segments
-          are slightly cramped.'
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text; labels are well-spaced and the legend items
-          don't collide.
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: 'Segments are clearly visible with good sizing; white borders between
-          segments provide excellent separation. Minor: smallest segments (MEA columns)
-          are narrow but still visible.'
+        comment: Font sizes explicitly set (title 60px, legend 48px, labels 42px,
+          segment labels 36px, SVG y-axis 34px); all text readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding in bottom zone where x-axis labels and legend coexist;
+          no hard overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All segments clearly visible; percentage labels within segments clear
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, teal, and coral provide excellent contrast and are
-          colorblind-friendly (no red-green reliance).
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Good use of canvas space; plot fills most of the area. Minor: slightly
-          more bottom margin than needed.'
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has descriptive label "Share within Region (%)"; X-axis shows
-          region names with market share percentages.
-      - id: VQ-07
-        name: Grid & Legend
+        comment: Okabe-Ito palette is CVD-safe; good contrast between all segments
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization; some unused whitespace in bottom margin
+          below legend
+      - id: VQ-06
+        name: Axis Labels & Title
         score: 1
         max: 2
+        passed: false
+        comment: Y-axis has 'Share within Region (%)' with units; no x-axis title
+          (only individual category labels, no axis-level 'Region' or 'Market' label)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
         passed: true
-        comment: Dashed gridlines are subtle (good). Legend placement at bottom is
-          functional but slightly far from the chart.
+        comment: 'First series #009E73 correct; Okabe-Ito order maintained; #FAF8F1
+          light / #1A1A17 dark backgrounds correct; all chrome theme-adaptive'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom chart implementation above defaults; professional look with
+          correct palette; not publication-ready — lacks intentional visual hierarchy
+          or emphasis
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle dashed grid lines at 25% intervals, gap spacing between bars,
+          bold percentage annotations; more than minimal defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Variable bar widths encode market size naturally; no emphasis or
+          focal point to highlight key insight — all regions treated equally
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Marimekko/mekko chart with variable-width bars and stacked
-          segments.
+        comment: 'Correct Marimekko chart: bar widths proportional to column totals,
+          segment heights proportional to share within column'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-categories (regions) determine bar widths; Y-categories (products)
-          are stacked within bars.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Variable bar widths, stacked segments, color-coded categories, percentage
-          labels on larger segments, legend present.
-      - id: SC-04
-        name: Data Range
+        comment: Variable bar widths, proportional stacking, color-coded y-categories,
+          value labels on larger segments, x-axis category names with width percentages
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible; bars sum to 100% height, widths sum to 100%.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Regions as x-categories, products as y-categories, revenue values
+          correctly encode widths and heights
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all 4 product categories with matching
-          colors.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "marimekko-basic · pygal · pyplots.ai"'
+        comment: Title 'marimekko-basic · pygal · anyplot.ai' exactly correct; legend
+          shows Enterprise, Consumer, SMB, Government
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows variation in both dimensions: different region sizes and different
-          product mixes per region. Minor: could show more extreme variation between
-          regions.'
+        comment: 5 regions x 4 product categories; varied bar widths (7-32%) and segment
+          compositions demonstrate all Marimekko features
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Market share by region and product line is a perfect real-world use
-          case for Marimekko charts.
+        comment: Market share by region and product line in USD millions — realistic,
+          neutral business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Revenue values in millions are realistic for enterprise software.
-          Minor: Latin America and MEA values seem proportionally small but plausible.'
+        comment: Revenue values 10-200M USD are realistic for a mid-to-large enterprise
+          software company
     code_quality:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
+        score: 2
         max: 3
         passed: false
-        comment: Uses a custom class (Marimekko) which violates KISS principle. However,
-          this is NECESSARY because pygal has no native Marimekko chart type - the
-          custom class is the only way to implement this spec.
+        comment: Class extension necessary (pygal has no native Marimekko type) but
+          adds meaningful structural complexity beyond Imports→Data→Plot→Save
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random values).
+        comment: Fully deterministic hardcoded data; no random seed needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used.
+        comment: Only os, sys, pygal.graph.graph.Graph, pygal.style.Style imported
+          and used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API.
+        comment: Clean, Pythonic custom chart implementation; SVG node construction
+          is clear and well-structured
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png (and plot.svg, plot.html).
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses current pygal
+          API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Excellent use of pygal's SVG capabilities by extending the Graph
-          base class. Custom implementation leverages pygal's SVG node creation, styling
-          system, and rendering pipeline. The solution demonstrates deep understanding
-          of pygal's architecture.
-  verdict: APPROVED
+        comment: Extends pygal.graph.graph.Graph, overrides _compute and _plot, uses
+          pygal's self.svg.node, self.view, self.nodes — correct idiomatic pattern
+          for custom pygal chart types
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses pygal's internal SVG API (self.svg.node) and viewport system
+          (self.view.x, self.view.y) to render custom geometry — distinctly pygal-specific
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling: []
