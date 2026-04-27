@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: heatmap-calendar
 created: '2025-12-23T15:16:38Z'
-updated: '2026-04-27T01:13:59Z'
+updated: '2026-04-27T01:38:36Z'
 generated_by: claude-sonnet
 workflow_run: 24971332386
 issue: 1010
@@ -12,41 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/pygal/plot-dark.html
-quality_score: 84
+quality_score: 82
 review:
   strengths:
-  - 'Complete spec compliance: weekday labels, month labels, sequential viridis palette,
-    missing-date handling, and color scale legend all present'
-  - Correct viridis-derived continuous palette; both themes render with accurate background
-    colors and readable chrome in both light and dark
-  - Strong data storytelling via GitHub contribution graph framing plus summary statistics
-    (total contributions, active days, streak, average per active day)
-  - 'Advanced pygal usage: correctly extends Graph and uses pygal''s SVG node API
-    for a fully custom chart type not natively supported by the library'
+  - Correct viridis sequential colormap for continuous data — exactly right choice
+    per style guide
+  - Both themes render cleanly with correct backgrounds (#FAF8F1/#1A1A17) and fully
+    readable text
+  - 'Full spec compliance: weekday labels, month labels, sequential colormap, empty
+    cell handling, color scale legend'
+  - GitHub-style contribution pattern is realistic and immediately recognizable
+  - Summary statistics (total contributions, streak, average) add meaningful storytelling
+    context
+  - Rounded cell corners and consistent gap spacing give a polished appearance
   weaknesses:
-  - 'Canvas utilization (VQ-05): approximately 45% of the 4800x2700 canvas is empty
-    below the content — switch to 3600x3600 square format or reduce bottom padding
-    to fill the canvas properly'
-  - 'Class structure (CQ-01): five-method CalendarHeatmap class violates KISS; inline
-    _get_color and _calculate_streak into _plot to reduce class surface area'
-  - 'Aesthetic polish (DE-01): no compositional anchor around the calendar area; add
-    a subtle rounded-rectangle background panel in ELEVATED_BG behind the calendar
-    grid to frame the data'
+  - Custom class with 4 methods violates KISS; the class structure is necessary given
+    pygal's limitations but creates structural complexity
+  - sys.path manipulation and chart.add('', [0]) dummy data are inelegant workarounds
+  - Uses internal pygal.graph.graph.Graph API rather than pygal's public interface
+  - Vertical gap between the two calendar sections (Jan-Jul / Aug-Dec) creates some
+    wasted canvas space
+  - Secondary stats text font size is at the lower boundary of comfortable readability
+    at full resolution
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "heatmap-calendar · pygal · anyplot.ai" in dark text at top center (readable). Month labels Jan-Dec in bold dark text above grid (readable). Weekday labels Mon-Sun in bold dark text on left margin (readable). Legend "Less"/"More" labels and value-range annotations in dark/muted text (readable). Summary stats in dark/muted text (readable, slightly small).
-      Data: Calendar cells in viridis-derived palette — light gray for empty/zero, dark violet (#42337A) for low, teal-blue (#2A788E) for medium-low, teal-green (#38B277) for medium-high, yellow-green (#BCDC3B) for highest. First colored series uses viridis (continuous data, correct choice).
-      Legibility verdict: PASS — all text readable, no light-on-light failures. Notable: bottom ~45% of canvas is empty (layout/canvas utilization issue, not a legibility failure).
+      Background: Warm off-white #FAF8F1 — correctly matches the light theme surface
+      Chrome: Title "heatmap-calendar · pygal · anyplot.ai" in bold dark ink at top — clearly readable. Weekday labels (Mon–Sun) in bold dark text on left of both calendar sections — readable. Month labels (Jan–Jul top, Aug–Dec bottom) in bold dark text above each section — readable. Legend "Less/More" labels in bold dark ink — readable. Summary stats in dark/muted ink — readable.
+      Data: Two-section calendar layout; cells use viridis-inspired sequential palette (neutral gray → dark violet → teal-blue → teal-green → yellow-green). Empty days show as neutral gray (#D8D7CF). Active days show color intensity matching contribution level.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title in light text (readable). Month labels and weekday labels in light text (readable). Legend labels and value-range text in light/muted text (readable). Summary stats in light/muted text (readable). No dark-on-dark failures detected.
-      Data: Cell colors identical to light render (viridis palette unchanged across themes). Empty-cell color switches from light gray to dark near-black (#2A2A27) — theme-correct adaptation.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures. Same canvas utilization issue as light render.
+      Background: Warm near-black #1A1A17 — correctly matches the dark theme surface
+      Chrome: Title in warm near-white (#F0EFE8) — clearly readable against dark background. Weekday and month labels in warm near-white — readable. Legend labels in warm near-white — readable. Summary stats text in muted warm gray (#A8A79F) — readable. No dark-on-dark failures observed.
+      Data: Same viridis-palette colors (dark violet, teal-blue, teal-green, yellow-green) — identical to light render. Empty cells adapt to dark gray (#2A2A27), clearly distinct from the near-black background while remaining visually quiet.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -54,49 +56,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set (title_font_size=72, weekday/month via
-          max(54, int(cell_size*0.70))). All text readable in both themes. Minor deduction:
-          summary stats line slightly small.'
+        comment: Font sizes explicitly set (72px title, 42px labels, 56px+ month/weekday);
+          all text readable in both themes; secondary stats text at lower boundary
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping elements in either render.
+        comment: No significant text collisions; month labels well-spaced; rightmost
+          month label close to edge
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Calendar cells clearly visible, well-sized, good color differentiation
-          across viridis scale.
+        comment: Calendar cells clearly visible; color progression works in both themes;
+          empty cells contrast correctly
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis palette is perceptually uniform and colorblind-safe.
+        comment: Viridis is perceptually uniform and colorblind-safe; progressive
+          encoding
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Content occupies ~45-50% of the 4800x2700 canvas. Bottom ~45% is
-          empty. Square format or reduced padding would fix this.
+        passed: true
+        comment: Two-section layout works; notable vertical gap between Jan-Jul and
+          Aug-Dec sections
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format; month and weekday labels present.
+        comment: Title format correct; weekday and month labels serve as descriptive
+          axes
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous data uses viridis-derived sequential palette. Backgrounds
-          #FAF8F1 (light) and #1A1A17 (dark). Theme-adaptive chrome correct in both
-          renders.'
+        comment: '#FAF8F1 light / #1A1A17 dark backgrounds; viridis sequential for
+          continuous data; data colors identical across themes'
     design_excellence:
       score: 13
       max: 20
@@ -106,23 +109,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom SVG-based calendar heatmap via Graph extension is genuinely
-          ambitious; GitHub contribution graph visual language is polished. Deducted
-          for empty canvas area and lack of compositional anchor.
+        comment: GitHub-style aesthetic polished; viridis palette strong choice; rounded
+          corners and summary stats add sophistication; not quite publication-ready
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Rounded corners, consistent cell gap, theme-appropriate empty-cell
-          color, typographic hierarchy. Empty bottom half is unpolished.
+        comment: Rounded cell corners, consistent gaps, clean legend; no unnecessary
+          elements
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: GitHub contribution framing with weekday bias creates meaningful
-          pattern. Summary stats (total, streak, avg) add genuine data context.
+        comment: Viridis progression communicates activity; summary stats tell a story;
+          GitHub-style immediately recognizable
     spec_compliance:
       score: 15
       max: 15
@@ -132,28 +134,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct calendar heatmap: days as cells, weeks as columns, months
-          as sections.'
+        comment: Calendar heatmap with days as cells, weeks as columns, months as
+          sections
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Weekday labels, month labels, sequential colormap, empty cell handling,
-          color scale legend — all present.
+        comment: Weekday labels, month labels, sequential colormap, missing dates
+          handled, color scale legend — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 366 days (1 year), daily contribution values, correct temporal layout.
+        comment: Date maps to calendar position; value maps to color intensity; all
+          366 days present
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'heatmap-calendar · pygal · anyplot.ai' correct. Color scale
-          legend with Less/More labels present.
+        comment: 'Title: heatmap-calendar · pygal · anyplot.ai; color legend with
+          Less/More and value ranges'
     data_quality:
       score: 15
       max: 15
@@ -163,22 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows empty days, sparse days, medium activity, high-burst days;
-          weekday vs weekend bias; realistic variety.
+        comment: Calendar structure, color encoding, weekday patterns, month organization,
+          color legend, summary statistics
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: GitHub-style daily contribution counts — canonical, neutral, immediately
-          comprehensible.
+        comment: GitHub-style developer contribution tracking for 2024; realistic
+          weekday bias; neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 366 days, values 0-14 contributions, plausible distribution with
-          weekday weighting.
+        comment: 366 days (2024 leap year); values 0-14 (realistic commit counts);
+          ~111 active days
     code_quality:
       score: 7
       max: 10
@@ -188,64 +191,59 @@ review:
         score: 1
         max: 3
         passed: false
-        comment: CalendarHeatmap class with 5 methods (__init__, _get_color, _plot,
-          _calculate_streak, _compute) significantly exceeds KISS. Necessary for pygal
-          but criterion expects flat structure.
+        comment: Custom class CalendarHeatmap with 4 methods violates KISS; required
+          by pygal architecture
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, sys, datetime, numpy, pygal) are used.
+        comment: All imports used; sys import used for path workaround
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
-        passed: false
-        comment: sys.path.pop(0)/insert hack is inelegant; overall complexity is high.
-          strict=True in zip is a good touch. No fake UI elements.
+        passed: true
+        comment: sys.path manipulation and chart.add('', [0]) dummy data hack are
+          inelegant necessary workarounds
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Extending pygal.graph.graph.Graph and using self.svg.node() for SVG
-          construction is the correct advanced pattern for custom chart types. Style
-          object used correctly.
+        comment: Correctly uses pygal Style system; but relies on internal pygal.graph.graph.Graph
+          (not public API) and low-level svg.node() manipulation
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses class_='calendar-cell reactive' for pygal JS interactivity hooks;
-          renders both interactive HTML and static PNG — leveraging pygal's dual SVG+interactive
-          output.
-  verdict: REJECTED
+        comment: Generates interactive HTML via pygal SVG engine; uses reactive CSS
+          class; leverages Style for theme-adaptive theming
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
-  - annotations
+  - custom-legend
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - time-series
-  styling:
-  - custom-colormap
+  styling: []
