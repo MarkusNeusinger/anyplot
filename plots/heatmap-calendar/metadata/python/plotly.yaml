@@ -1,52 +1,253 @@
 library: plotly
+language: python
 specification_id: heatmap-calendar
 created: '2025-12-23T15:14:21Z'
-updated: '2025-12-23T15:21:15Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20464348047
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/plotly/plot.html
-quality_score: 93
+updated: '2026-04-27T00:50:07Z'
+generated_by: claude-sonnet
+workflow_run: 24971154446
+issue: 1010
+python_version: 3.14.4
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/plotly/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Fully theme-adaptive rendering: background, text, colorbar, and empty-cell color
+    all adapt correctly between light and dark themes.'
+  - All font sizes explicitly set and readable at 4800x2700px resolution.
+  - Realistic GitHub-style commit data with weekday/weekend patterns and burst days
+    creates an authentic, immediately recognizable visual story.
+  - 'Perfect code quality: KISS structure, seed set, clean imports, correct output
+    files.'
+  - Hover tooltips with custom date labels demonstrate Plotlys interactive advantage
+    over static libraries.
+  weaknesses:
+  - 'VQ-07: Custom sequential green colorscale (#9be9a8 to #216e39) is not among the
+    approved colormaps. Replace with Plotlys built-in Greens colorscale or viridis
+    to satisfy palette compliance.'
+  - 'SC-04: Title prefix GitHub Activity 2024 breaks required format heatmap-calendar
+    · plotly · anyplot.ai. Move descriptive context to a subtitle annotation or remove
+    it.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme-adaptive surface, not pure white.
+      Chrome: Title "GitHub Activity 2024 · heatmap-calendar · plotly · anyplot.ai" in dark ink, centered. Month labels (Jan–Dec) at top in dark secondary text. Day labels (Mon–Sun) on left in dark secondary text. Colorbar labeled "Daily commits" with dark tick labels. All chrome elements readable.
+      Data: Calendar heatmap grid spanning 52 weeks of 2024. Cells colored from light lavender-blue (#dde1e7) for zero/empty days to deep forest green (#216e39) for burst activity days. Light-to-medium greens (#9be9a8, #40c463, #30a14e) for mid-range activity. Clear visual differentiation of activity levels.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme-adaptive surface, not pure black.
+      Chrome: Title in light text (#F0EFE8), month and day labels in light secondary text (#B8B7B0). Colorbar in dark elevated-surface box (#242420) with light-colored labels. All chrome elements readable. No dark-on-dark failures detected.
+      Data: Green data colors are identical to the light render — same shades of bright green for high-activity days, same mid-greens for moderate days. Empty cells switch from lavender-blue to dark blue-gray (#2d333b), which is theme-appropriate. The data identity between renders is confirmed.
+      Legibility verdict: PASS — all text clearly readable against warm near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=28px, tick labels=18px, colorbar
+          title=20px, colorbar ticks=16px. All readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Month labels, day labels, and colorbar text are well-spaced with
+          no collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Calendar cells sized appropriately with xgap=3/ygap=3 gaps; color
+          gradation is easy to perceive.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential colorscale with perceptually distinct empty-cell color
+          provides good contrast. No red-green only discrimination.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Heatmap fills canvas well; margins balanced; colorbar well-positioned.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title; weekday and month labels serve as axis labels;
+          colorbar labeled Daily commits.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Custom green gradient not among approved colormaps (viridis/cividis/Greens/Blues/Reds).
+          Theme chrome is fully correct in both renders.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above library default: theme-adaptive empty-cell color, cohesive
+          GitHub-style green palette, month labels at top. Not publication-ready but
+          intentional design.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid disabled on both axes, xgap/ygap cell separation, colorbar styled
+          with theme-adaptive bgcolor/bordercolor.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Weekday vs weekend cadence, burst days, and zero-activity gaps all
+          visible; creates genuine visual hierarchy via color intensity.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct calendar heatmap: days as cells, weeks as columns, months
+          as sections.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Weekday labels Mon-Sun, month labels at top, sequential colormap,
+          NaN for missing dates, colorbar legend — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Dates mapped to columns (weeks), day-of-week to rows, values to color
+          intensity. All 365 days of 2024 represented.
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: false
+        comment: Title has extra prefix GitHub Activity 2024 · before required heatmap-calendar
+          · plotly · anyplot.ai format. Required elements present in right order but
+          format non-standard.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero, low, medium, and burst-activity days shown; weekday/weekend
+          patterns present; full year coverage.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: GitHub commit activity is canonical real-world use case for calendar
+          heatmaps. Neutral and plausible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-19 commits per day is realistic for a developer; weekend reduction
+          realistic; scale appropriate.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports -> Theme tokens -> Data generation -> Matrix construction
+          -> Plot -> Save. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (os, sys, numpy, pandas, plotly.graph_objects) are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and well-organized. sys.path manipulation is a necessary defensive
+          pattern. iterrows loop for matrix filling is slightly verbose but clear.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html using current Plotly
+          API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses go.Heatmap with customdata + hovertemplate for rich hover, colorbar
+          configuration, proper layout update patterns. Slightly manual matrix construction.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Interactive hover tooltips with custom date/commit format (customdata),
+          HTML export for interactivity, hoverongaps=False for clean gap handling
+          — distinctively Plotly.
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-    - colorbar
-    - hover-tooltips
-    - html-export
+  - colorbar
+  - hover-tooltips
+  - manual-ticks
+  - html-export
   patterns:
-    - data-generation
-    - matrix-construction
-  dataprep: []
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - time-series
   styling:
-    - custom-colormap
-review:
-  strengths:
-  - Excellent visual implementation of GitHub-style calendar heatmap with authentic
-    green colorscale
-  - Realistic data generation with weekend effect, burst days, and zero days showing
-    natural activity patterns
-  - Clean code structure following KISS principles with reproducible seed
-  - Proper handling of week numbering at year boundaries
-  - Appropriate cell gaps creating the classic GitHub contribution graph look
-  - Good font sizing throughout for readability at 4800x2700 resolution
-  - Interactive HTML export leverages Plotly core strength
-  weaknesses:
-  - Title includes extra context beyond the required format
-  - Could leverage more Plotly-specific features like custom hover data showing actual
-    dates
-  - Colorbar title could include more context
-  image_description: 'The plot displays a GitHub-style calendar heatmap for 2024 showing
-    contribution activity over the full year. The layout uses a grid with 7 rows (Mon-Sun)
-    and approximately 53 columns (weeks). Days are represented as cells with gaps
-    between them. A sequential green colorscale (from light gray #ebedf0 for zero/empty
-    to dark green #216e39 for high values) encodes contribution counts. Month labels
-    (Jan-Dec) appear along the top axis. Weekday labels (Mon-Sun) are on the left
-    y-axis. A vertical colorbar on the right shows the "Contributions" scale from
-    0-18. The title "GitHub Activity 2024 · heatmap-calendar · plotly · pyplots.ai"
-    is centered at the top in large font. The data shows realistic patterns: weekends
-    (Sat/Sun) have generally lighter activity, with occasional burst days showing
-    dark green.'
-  verdict: APPROVED
+  - custom-colormap
