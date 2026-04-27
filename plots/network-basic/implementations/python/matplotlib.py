@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 network-basic: Basic Network Graph
 Library: matplotlib 3.10.9 | Python 3.14.4
-Quality: 84/100 | Updated: 2026-04-27
+Quality: 80/100 | Updated: 2026-04-27
 """
 
 import os
