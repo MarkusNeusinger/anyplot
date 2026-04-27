@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: parallel-basic
 created: '2025-12-23T18:13:04Z'
-updated: '2026-04-27T05:55:16Z'
+updated: '2026-04-27T06:07:21Z'
 generated_by: claude-sonnet
 workflow_run: 24978492191
 issue: 820
@@ -12,92 +12,97 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/letsplot/plot-dark.html
-quality_score: 72
+quality_score: 83
 review:
   strengths:
-  - 'Excellent data choice: Iris dataset is ideal for parallel coordinates, naturally
-    showing species separation'
-  - 'Correct parallel coordinates technique: normalized data, vertical axes as segments,
-    line-connected observations'
-  - Clean code structure with deterministic hardcoded data
-  - Appropriate alpha blending (0.7) for handling overlapping lines
-  - Good dimension labels with units in (cm)
+  - 'Full spec compliance: all parallel coordinates features present (normalization,
+    multi-axis, color coding by species, alpha transparency)'
+  - 'Perfect code quality: clean KISS structure, deterministic data, all imports used,
+    correct output files'
+  - 'Correct Okabe-Ito palette with #009E73 as first series; both renders use theme-adaptive
+    chrome correctly'
+  - Iris dataset is an excellent choice — real scientific data with clear inter-species
+    patterns that naturally demonstrate parallel coordinates
+  - Custom axis construction (geom_segment + geom_text) is well-implemented and adapts
+    to theme tokens
   weaknesses:
-  - 'Critical: Code uses #306998 (Python Blue) palette — must use Okabe-Ito starting
-    with #009E73 as first series'
-  - 'Critical: No ANYPLOT_THEME environment variable handling, no theme-adaptive chrome
-    — background and text colors are hardcoded; output file names are plot.png / plot.html
-    instead of plot-{THEME}.png / plot-{THEME}.html'
-  - Title uses pyplots.ai instead of anyplot.ai
-  - 'Font sizes: Dimension labels at size=14 (need >=20) and tick value labels at
-    size=11 (need >=16) are too small for the 4800x2700 canvas'
+  - 'Design Excellence is below threshold: no visual hierarchy beyond color coding;
+    data is displayed but not interpreted — consider group mean/centroid lines or
+    focal point emphasis to guide the viewer to the key insight (Setosa separation)'
+  - 'Library Mastery (LM-02): Does not leverage lets-plot''s distinctive interactive
+    features; the HTML output could include tooltips showing species and original
+    (un-normalized) values on hover'
+  - Legend placement creates noticeable empty whitespace on the right side of the
+    canvas; consider inside-plot positioning or a more compact layout
+  - Line thickness (size=1.5) may appear thin at 4800x2700px with 30 overlapping observations;
+    consider size=2.0-2.5 for stronger visibility
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) - correct theme surface
-      Chrome: Title "parallel-basic · letsplot · anyplot.ai" visible top-left; dimension labels with (cm) units at bottom of axes; min/max tick values left of each axis; legend on right with "Species" title
-      Data: Three species color-coded — Setosa (teal/green), Versicolor (orange), Virginica (blue); 30 lines connecting normalized values across 4 vertical axes; alpha=0.7 transparency for overlap handling
-      Legibility verdict: PARTIAL PASS — title and legend are readable; dimension labels (size=14) and tick labels (size=11) are undersized for the 4800x2700 canvas (should be >=20pt and >=16pt respectively)
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "parallel-basic · letsplot · anyplot.ai" in dark ink at top-left; dimension labels "Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Petal Width (cm)" in dark text below axes; min/max tick values in secondary dark tone at each axis; legend "Species" with Setosa/Versicolor/Virginica entries — all readable against light background
+      Data: Four vertical axis lines in dark tone; data lines in #009E73 (Setosa), #D55E00 (Versicolor), #0072B2 (Virginica) with alpha=0.7; Setosa (green) shows notably small petal values clustering at bottom of petal axes; Versicolor and Virginica spread across wider ranges
+      Legibility verdict: PASS — all text elements are clearly readable against the light background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Near-black (~#1A1A17) - correct dark theme surface
-      Chrome: Title and dimension labels appear in light-colored text; axis lines appear as bright white/light strokes; legend box visible on right with light text — all readable against dark background; no dark-on-dark failures visible
-      Data: Colors are identical to light render (teal/green, orange, blue) — data colors correctly theme-independent
-      Legibility verdict: PASS (based on rendered images) — however, the source code has NO ANYPLOT_THEME handling and uses hardcoded dark colors (#333333 for axis lines, #222222/#555555 for text labels); the rendered images appear to have been generated from a different (corrected) version of the code file, as these hardcoded dark values would be invisible on a dark background
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light ink (#F0EFE8) at top-left; dimension labels in light ink; tick values in secondary light tone (#B8B7B0); legend text readable in light secondary tone; axis lines rendered in adaptive light color — all readable against dark background
+      Data: Same #009E73 (Setosa), #D55E00 (Versicolor), #0072B2 (Virginica) colors — identical to light render, only chrome flips; species patterns remain clearly distinguishable
+      Legibility verdict: PASS — all text elements readable; no dark-on-dark failures; data colors are theme-independent as required
   criteria_checklist:
     visual_quality:
-      score: 19
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 3
+        score: 7
         max: 8
-        passed: false
-        comment: Title 28pt ok; dimension labels size=14 (needs >=20pt); tick labels
-          size=11 (needs >=16pt)
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, dimension labels 20pt,
+          tick labels 16pt, legend 18pt/20pt — all readable at full resolution'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Labels use line-breaks, tick labels offset left; minor crowding but
-          no severe overlap
+        comment: No overlapping text; tick labels well-positioned left of axis lines
+          with hjust=1
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines visible with size=1.5 and alpha=0.7; slightly thin for 4800x2700
-          canvas
+        comment: Lines visible at size=1.5 with alpha=0.7; slightly thin at full 4800x2700px
+          resolution with 30 overlapping observations
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Non-Okabe-Ito palette in code; #FFD43B yellow has poor luminance
-          contrast on light background'
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; alpha=0.7 helps distinguish overlapping
+          lines
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas use; parallel axes fill most width; legend placement
-          clean
+        comment: Good layout; plot fills ~60-70% of canvas width but legend creates
+          noticeable whitespace on right
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Dimension labels include (cm) units; title present
+        comment: Dimension labels include units (cm); title in correct format
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Code uses #306998 (Python Blue) — explicitly flagged non-compliant;
-          no ANYPLOT_THEME handling; hardcoded dark colors for chrome'
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito positions 1-3 in canonical order;
+          backgrounds #FAF8F1/#1A1A17; all chrome adaptive in both renders'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -105,24 +110,26 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: Clean parallel coordinates layout; but non-compliant palette and
-          small labels hold it at default level
+        comment: 'Well-configured: custom adaptive theme, correct palette, clean parallel
+          coordinates construction; not publication-ready — no exceptional design
+          choices'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Grid removed, panel background hidden, ticks hidden — all appropriate;
-          some whitespace refinement present
+        comment: Grid removed, default axis hidden, custom axis/label construction,
+          clean background; legend placement could be more refined
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Iris dataset naturally shows Setosa separation on petal dimensions;
-          visual hierarchy through color coding
+        comment: Iris dataset naturally shows clear Setosa separation; color coding
+          helps; no additional emphasis, focal point, or viewer guidance beyond raw
+          display
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -130,28 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct parallel coordinates: vertical axes, normalized data, line-connected
-          observations'
+        comment: Correct parallel coordinates plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Normalization, alpha, color coding, 4 dimensions, min/max tick values
-          all present
+        comment: 'All features: vertical axes, connecting lines, color by category,
+          normalization, alpha transparency'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 4 variables correctly mapped to axes
+        comment: Each dimension is a vertical axis; lines connect observations across
+          all axes; correct group-based coloring
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Code title uses pyplots.ai instead of anyplot.ai; legend correctly
-          shows Species with 3 categories
+        passed: true
+        comment: Title 'parallel-basic · letsplot · anyplot.ai' correct; Species legend
+          with Setosa/Versicolor/Virginica
     data_quality:
       score: 15
       max: 15
@@ -161,24 +168,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows multiple dimensions, inter-species comparison, overlapping
-          lines, clear cluster separation
+        comment: 'Shows all parallel coordinates features: multi-axis, crossing patterns,
+          distinct group clustering, normalization across different scales'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris dataset is real scientific data; species separation is meaningful;
-          neutral topic
+        comment: Classic iris botanical dataset — real scientific measurements, neutral
+          context, comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sepal lengths 4.4-7.6 cm, petal widths 0.1-2.5 cm — realistic botanical
-          measurements
+        comment: Actual iris dataset values; realistic cm measurements for sepal/petal
+          dimensions
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -186,33 +193,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → normalize → reshape → plot → save'
+        comment: 'Clean linear structure: imports → data → normalize → long-format
+          → plot layers → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data fully hardcoded, deterministic
+        comment: Hard-coded iris dataset values; fully deterministic, no random seed
+          needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All lets_plot imports are used
+        comment: All imports used; only required lets-plot functions imported explicitly
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Manual geom_segment + geom_line approach is correct for lets-plot;
-          appropriate complexity
+        comment: Clean, Pythonic code; appropriate complexity for manual parallel
+          coordinates construction
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves to plot.png / plot.html instead of plot-{THEME}.png / plot-{THEME}.html;
-          no ANYPLOT_THEME env var read
+        passed: true
+        comment: Saves plot-{THEME}.png (scale=3) and plot-{THEME}.html correctly
     library_mastery:
       score: 5
       max: 10
@@ -222,26 +230,25 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: ggplot grammar used correctly; scale_color_manual, labs, theme all
-          idiomatic; doesn't leverage lets-plot strengths beyond basics
+        comment: 'Correct grammar of graphics: aes(), geom layers, scale_color_manual,
+          theme; idiomatic but not leveraging advanced lets-plot patterns'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: HTML output present but no interactive features exploited; layer
-          composition shows grammar fluency but not distinctively lets-plot
+        comment: HTML export is lets-plot-specific; but interactive features (tooltips
+          for species and original values on hover) not utilized, which would be the
+          distinctive advantage of lets-plot here
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - html-export
   - manual-ticks
+  - html-export
   patterns:
-  - data-generation
   - wide-to-long
-  - iteration-over-groups
   dataprep:
   - normalization
   styling:
