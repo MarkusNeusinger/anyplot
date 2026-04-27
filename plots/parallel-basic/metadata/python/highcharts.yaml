@@ -1,155 +1,179 @@
 library: highcharts
+language: python
 specification_id: parallel-basic
 created: '2025-12-23T18:11:56Z'
-updated: '2025-12-23T18:18:23Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468191198
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-27T05:55:19Z'
+generated_by: claude-sonnet
+workflow_run: 24978434180
+issue: 820
+python_version: 3.14.4
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/highcharts/plot.html
-quality_score: 97
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - html-export
-  patterns: []
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/highcharts/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent use of the Highcharts parallel-coordinates module with proper axis configuration
-  - Clear species separation visible in the visualization, demonstrating the power
-    of parallel coordinates
-  - Well-chosen colorblind-safe color palette (blue, yellow, purple)
-  - Proper transparency (0.7 alpha) for handling overlapping lines
-  - Correct title format and comprehensive axis labels with units
-  - Clean legend handling with showInLegend flag to avoid duplicate entries
-  - Generates both PNG and interactive HTML output
+  - Expertly uses Highcharts native parallel-coordinates module with proper per-axis
+    yAxis configuration and parallelAxes styling
+  - 'Full theme-adaptive chrome: all text, grid, legend, and background tokens flip
+    correctly between light and dark renders'
+  - Okabe-Ito palette applied correctly in canonical order (positions 1→3) with appropriate
+    alpha blending for 30 overlapping lines
+  - Clean flat code structure with deterministic hardcoded Iris data; all output files
+    (PNG + HTML) generated correctly
+  - Canvas utilization is excellent at ~75% with balanced margins on all sides
   weaknesses:
-  - Y-axis tick label font size could be slightly larger for better readability at
-    a glance
-  image_description: 'The plot displays a parallel coordinates visualization of the
-    Iris dataset with 4 vertical axes: Sepal Length (cm), Sepal Width (cm), Petal
-    Length (cm), and Petal Width (cm). Three species are color-coded: Setosa (blue),
-    Versicolor (yellow/gold), and Virginica (purple). Each species has 10 polylines
-    connecting values across the axes. The Setosa lines cluster at the bottom of the
-    Petal Length and Petal Width axes, clearly separating from the other species.
-    The title "Iris Dataset · parallel-basic · highcharts · pyplots.ai" appears at
-    the top. A horizontal legend at the bottom identifies the three species. The layout
-    is clean with good margins and readable text.'
+  - Title prefix 'Iris Dataset · ' breaks the required {spec-id} · {library} · anyplot.ai
+    format — must be removed
+  - 'Design lacks storytelling: no visual hierarchy, emphasis, or focal point guiding
+    the viewer toward the key insight that petal dimensions separate Setosa cleanly
+    from other species'
+  - Aesthetic sophistication is at configured-default level; no typographic hierarchy,
+    per-axis color differentiation, or design flourish elevates it beyond standard
+    Highcharts parallel-coordinates output
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "Iris Dataset · parallel-basic · highcharts · anyplot.ai" at 72px in dark ink (#1A1A17). Axis dimension labels (40px bold, dark ink) at top of each vertical axis. Tick labels (32px) along each vertical axis in INK_SOFT. Legend at bottom with bordered box (ELEVATED_BG fill). All text is clearly readable against the light background.
+      Data: Four vertical parallel axes spanning the full canvas width for Sepal Length, Sepal Width, Petal Length, Petal Width. Lines in Okabe-Ito colors at 65% alpha: teal/green (#009E73) for Setosa, orange (#D55E00) for Versicolor, blue (#0072B2) for Virginica. 30 total lines (10 per species) crossing between axes. Classic Iris crossing pattern visible — Setosa clusters at lower petal values while Versicolor and Virginica fan upward.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title in light ink (#F0EFE8), axis labels in light ink, tick labels in INK_SOFT (#B8B7B0). Legend box uses ELEVATED_BG (#242420). All text renders in light tones against the dark background — no dark-on-dark failures observed.
+      Data: Identical Okabe-Ito colors to light render — teal Setosa, orange Versicolor, blue Virginica. Data colors are unchanged between themes as required. Lines are clearly distinguishable against the dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
-        max: 10
-        passed: true
-        comment: Title and axis labels are readable; tick labels slightly small but
-          legible
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Lines are well-visible with appropriate transparency
+        comment: All sizes explicitly set and above minimums (72/40/32/44px). Tick
+          labels at 32px on tall vertical axes are readable but slightly dense.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Axis labels well-separated; no text collision.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 4px lines with 0.65 alpha handle 30 overlapping paths well; some
+          expected crowding in center crossing zone.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow/purple palette is colorblind-safe
+        comment: Okabe-Ito positions 1/2/3; CVD-safe throughout.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions, plot fills canvas well
+        comment: Data area fills ~75% of 4800x2700 canvas with balanced margins.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All axes labeled with units (cm)
+        comment: All dimension names include units (cm); title is descriptive.
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed at bottom, axes visible
+        comment: Okabe-Ito 1→3 used correctly. Both backgrounds theme-correct; chrome
+          adapts fully in both renders.
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured Highcharts default. No typographic hierarchy, design
+          flourish, or visual elevation beyond standard output.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Custom margins, alpha-blended lines, styled legend with border, theme-adaptive
+          grid. Good but not fully polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed without emphasis. No focal point or hierarchy guiding
+          viewer to petal-dimension separation insight.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct parallel coordinates chart type
+        comment: 'Correct: Highcharts parallel-coordinates module with parallelCoordinates:
+          true.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: 4 dimensions correctly mapped to parallel axes
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Color coding by category, transparency for overlap
-      - id: SC-04
-        name: Data Range
+        comment: Multiple numeric dimensions, category color-coding, alpha transparency,
+          30 observations.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data ranges properly shown
-      - id: SC-05
-        name: Legend Accuracy
+        comment: All 4 Iris dimensions mapped with per-axis min/max ranges.
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Three species correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses {description} · {spec-id} · {library} · pyplots.ai
+        max: 3
+        passed: false
+        comment: Legend correct. Title has non-standard prefix 'Iris Dataset · ' before
+          the required spec-id format.
     data_quality:
-      score: 20
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Clear species separation visible, shows clustering and variation
+        comment: Three species with distinct patterns; could use more data points
+          per species (10 each, 30 total is at spec minimum).
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Classic Iris dataset, real botanical measurements
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Authentic Iris measurement values
+        comment: Classic Iris dataset; neutral, scientific, well-understood context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All values match biologically realistic Iris flower measurements.
     code_quality:
       score: 10
       max: 10
@@ -159,15 +183,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → config → render → save'
+        comment: 'Flat: imports → theme tokens → data → series config → JS → HTML
+          → export.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic hardcoded data, no random seed needed
-    library_features:
-      score: 5
-      max: 5
-      items: []
-  verdict: APPROVED
+        comment: Deterministic hardcoded Iris data; no randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are actually used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic; loop over species rows to build series list is
+          clear.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Properly loads parallel-coordinates.js module; configures parallelCoordinates:
+          true and parallelAxes; sets per-axis yAxis min/max.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Highcharts parallel-coordinates module with parallelAxes configuration
+          is library-specific and cannot be trivially replicated elsewhere.
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending

@@ -1,172 +1,182 @@
 library: altair
+language: python
 specification_id: parallel-basic
 created: '2025-12-23T18:13:47Z'
-updated: '2025-12-23T18:20:59Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468188506
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - layer-composition
-  patterns:
-  - data-generation
-  - wide-to-long
-  dataprep: []
-  styling:
-  - alpha-blending
-  - grid-styling
+updated: '2026-04-27T05:56:35Z'
+generated_by: claude-sonnet
+workflow_run: 24978264939
+issue: 820
+python_version: 3.14.4
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/altair/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent data transformation approach using melt() to create long-format data
-    suitable for Altair declarative API
-  - Clean normalization implementation allowing fair comparison across all dimensions
-  - Good use of opacity (0.6) for handling 150 overlapping lines
-  - Colorblind-safe color palette with good contrast between species
-  - Correct title format and professional axis labeling with units
-  - Appropriate chart sizing (1500x850 with 3.0 scale factor) for target resolution
+  - Perfect theme-adaptive chrome in both renders — INK/INK_SOFT/ELEVATED_BG applied
+    across all chrome elements with no dark-on-dark failures.
+  - 'Correct Okabe-Ito palette (positions 1–3) with first series at #009E73.'
+  - All font sizes explicitly set at appropriate scale (18–30px range).
+  - 'Genuinely idiomatic Altair: legend-bound selection + conditional opacity is a
+    showcase Vega-Lite pattern.'
+  - Clean iris-like dataset with realistic units and visible species differentiation.
   weaknesses:
-  - Does not leverage Altair distinctive interactive features (tooltips, brush selection,
-    or click interactions) that would make the parallel coordinates plot more exploratory
-  - Dashed grid lines add visual noise in a line-heavy parallel coordinates visualization;
-    a cleaner background would improve readability
-  image_description: 'The plot displays a parallel coordinates visualization with
-    four vertical axes representing Iris flower measurements: Sepal Length (cm), Sepal
-    Width (cm), Petal Length (cm), and Petal Width (cm). Each axis shows normalized
-    values from 0 to 1. Three species are color-coded: Setosa (blue #306998), Versicolor
-    (yellow #FFD43B), and Virginica (pink/coral #E85D75). 150 lines (50 per species)
-    traverse across all four axes, with transparency (0.6 opacity) allowing overlapping
-    patterns to be visible. The title "parallel-basic · altair · pyplots.ai" appears
-    at the top center in gray. A legend on the right identifies the species with colored
-    line markers. A subtle dashed grid (0.3 opacity) provides reference. The species
-    show distinct clustering patterns: Setosa (blue) has notably lower Petal Length
-    and Petal Width values, while Virginica (pink) tends toward higher values on those
-    dimensions.'
+  - 'DE-01 (5/8): Design lacks visual sophistication beyond palette + theme. No subtitle,
+    no intentional typographic hierarchy beyond font sizes.'
+  - 'DE-03 (3/6): Static renders do not guide the viewer to the key insight (Setosa
+    separation in petal dimensions). All lines render at uniform opacity=0.70 in PNG.'
+  - 'VQ-03 (5/6): 150 overlapping lines at 0.70 opacity creates moderate density.
+    A slightly lower opacity or thinner strokeWidth could reduce visual noise.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "parallel-basic · altair · anyplot.ai" in dark ink (#1A1A17), clearly readable. X-axis labels (Sepal Length (cm), Sepal Width (cm), Petal Length (cm), Petal Width (cm)) in #4A4A44, readable. Y-axis "Normalized Value" label in #1A1A17, readable. Tick labels in #4A4A44 (INK_SOFT). Legend box uses #FFFDF6 (ELEVATED_BG) with #4A4A44 label text.
+      Data: Three species rendered in Okabe-Ito positions 1–3: Setosa #009E73 (green), Versicolor #D55E00 (orange), Virginica #0072B2 (blue). 150 individual lines at strokeWidth=2.5, opacity=0.70. Lines bundle clearly by species, with visible separation in petal dimensions.
+      Legibility verdict: PASS — all text readable against warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title in #F0EFE8 (INK on dark), clearly readable against near-black. Axis labels and tick labels in #B8B7B0 (INK_SOFT on dark), visible. Legend box uses #242420 (ELEVATED_BG on dark) with #B8B7B0 label text. No dark-on-dark failures observed.
+      Data: Colors identical to light render — Setosa #009E73, Versicolor #D55E00, Virginica #0072B2. Line structure matches exactly.
+      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 30pt, axis labels at 20pt, tick labels at 18pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, axis labels well spaced
+        comment: 'All font sizes explicitly set: title 30px, x-labels 20px, y-label
+          22px, y-ticks 18px, legend 20/22px. Readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Four axis labels spread cleanly with labelAngle=0. No text collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Lines at 2.5 strokeWidth with 0.6 opacity work well for 150 observations,
-          though some middle sections get dense
+        comment: Lines at strokeWidth=2.5 (effective ~7.5px at 3x) clearly visible
+          but 150 lines at 0.70 opacity creates moderate density.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, and coral pink are colorblind-safe and distinguishable
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Chart uses canvas well at 1500×850 with scale_factor=3.0, good proportions
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Normalized Value" on Y-axis with units implied, dimension names
-          include "(cm)" units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito positions 1-3 (green/orange/blue) clearly distinguishable,
+          CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: width=1500, height=850 at scale_factor=3.0 yields ~4500x2550px (slightly
+          under target 4800x2700). Layout balanced, legend integrated.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend is well-placed on the right; however, the grid uses gridDash
-          which creates visual noise in a parallel coordinates plot where the lines
-          are the focus
+        comment: Dimension labels include units (cm). Y-axis 'Normalized Value' appropriate.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct. Okabe-Ito positions 1-3 canonical
+          order. Backgrounds #FAF8F1/#1A1A17 correct. Chrome fully theme-adaptive.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful Okabe-Ito palette and full theme-adaptive chrome. Above
+          defaults but no subtitle, no visual emphasis on key Setosa separation insight.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid at opacity=0.10 subtle. View stroke removed. Legend border uses
+          INK_SOFT. No top/right spine removal but parallel coords axes don't apply
+          conventional spine removal.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Iris dataset smart choice with clear Setosa separation. Interactive
+          selection in HTML is good but static PNG shows all lines at equal opacity=0.70
+          with no visual emphasis on the key insight.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct parallel coordinates chart type
+        comment: 'True parallel coordinates: each dimension is a vertical axis, each
+          observation is an individual line via detail=''id:N''.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Dimensions correctly mapped to X-axis, values to Y-axis, categories
-          to color
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Normalization, color coding by category, transparency for overlap
-          handling all present
-      - id: SC-04
-        name: Data Range
+        comment: Normalization 0-1, alpha (0.70 selected / 0.08 dimmed), color coding
+          by category, interactive legend selection.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within 0-1 normalized range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Dimension(N), Y=Normalized Value(Q), Color=Species, Detail=id.
+          Correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all three species with matching colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "parallel-basic · altair · pyplots.ai"
+        comment: Title 'parallel-basic · altair · anyplot.ai' with proper middle dot.
+          Legend labels match species names.
     data_quality:
-      score: 20
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows distinct species clustering patterns, overlapping regions,
-          and clear separation on Petal dimensions
+        comment: Shows clustering, separation (Setosa), partial overlap (Versicolor/Virginica).
+          Demonstrates typical parallel coords patterns.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Iris dataset is a classic, well-understood real-world scenario for
-          parallel coordinates
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Measurements are realistic for Iris flowers (sepal 4.5-7cm, petal
-          1-6cm)
+        comment: Iris-like botanical dataset; scientifically grounded, neutral, universally
+          recognizable.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sepal 4-8cm, petal 0-3cm — biologically realistic values for iris
+          species.
     code_quality:
       score: 10
       max: 10
@@ -176,42 +186,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear script: imports → data generation → transformation
-          → plot → save'
+        comment: 'Linear: sys.path fix → imports → theme tokens → data → normalize
+          → melt → chart → save. No classes or functions.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas imported and all used
+        comment: importlib loads altair/numpy/pandas; os and sys used for path cleanup
+          and theme. All necessary.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Clean, Pythonic. importlib pattern required due to filename collision
+          with altair library.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves plot-{THEME}.png (scale_factor=3.0) and plot-{THEME}.html.
+          Correct for interactive library.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: While the implementation works, it doesn't leverage Altair's distinctive
-          features like interactive selections, tooltips, or the grammar-of-graphics
-          layering capabilities that make Altair unique
-  verdict: APPROVED
+        passed: true
+        comment: Declarative encoding with proper type annotations (N/Q), alt.condition
+          for conditional opacity, alt.Scale/alt.Legend customization, .add_params
+          for selections. Expert Altair usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: alt.selection_point bound to legend (bind='legend') with empty=True
+          is distinctly Vega-Lite/Altair. HTML export provides full interactivity.
+          Genuine library-specific feature use.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  - layer-composition
+  patterns:
+  - data-generation
+  - wide-to-long
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending

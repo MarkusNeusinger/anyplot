@@ -1,15 +1,240 @@
 library: letsplot
+language: python
 specification_id: qq-basic
 created: '2025-12-23T18:18:29Z'
-updated: '2025-12-23T18:22:20Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468203031
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/qq-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/qq-basic/letsplot/plot.html
-quality_score: 91
+updated: '2026-04-27T05:50:45Z'
+generated_by: claude-sonnet
+workflow_run: 24978026205
+issue: 977
+python_version: 3.14.4
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/letsplot/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - Perfect spec and data quality (30/30 combined) — bimodal exam-score data demonstrates
+    QQ plot diagnostic power with clear S-curve deviation
+  - 'Complete theme-adaptive implementation: both light and dark renders have correct
+    backgrounds (#FAF8F1 / #1A1A17), no readability failures in either theme'
+  - Explicit font sizing (title 24, labels 20, ticks 16) and correct 4800x2700px canvas
+    via scale=3
+  - 'Correct Okabe-Ito brand green #009E73 for all data markers; reference line uses
+    adaptive INK_SOFT token for theme compatibility'
+  weaknesses:
+  - 'Design Excellence is the ceiling limiter (11/20): no visual storytelling emphasis
+    or confidence band to guide viewer to the deviation-from-normality insight'
+  - Manual Abramowitz & Stegun inverse-normal CDF implementation (50+ lines of magic
+    constants) is over-engineered; scipy.stats.norm.ppf achieves the same in one line
+  - lets-plot v4.x ships stat_qq / geom_qq — not using them misses the most distinctive
+    feature for this plot type, lowering LM-02 (2/5)
+  - Grid lines at size=0.3 are moderately prominent; spines not explicitly removed
+    — tightening to size=0.15 and removing top/right spines would improve visual refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "qq-basic · letsplot · anyplot.ai" in dark ink top-left; y-axis "Sample Quantiles (Exam Scores)" rotated 90°; x-axis "Theoretical Quantiles"; tick labels dark (#4A4A44); all clearly readable
+      Data: 100 scatter points in Okabe-Ito #009E73 (brand green), size 6, alpha 0.75; dark gray diagonal reference line spans full canvas; y-axis ~25–105 (raw exam scores), x-axis −2.5 to 2.6 (z-scores); characteristic S-curve deviation visible in upper tail
+      Legibility verdict: PASS — all text readable, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title and all axis/tick labels flip to light text (INK token #F0EFE8 / INK_SOFT #B8B7B0); reference line becomes lighter gray — all readable against dark surface; no dark-on-dark failures detected
+      Data: Scatter points remain #009E73 — identical to light render; data colors unchanged between themes as required
+      Legibility verdict: PASS — all text legible in dark mode; no black-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'Explicit sizes: title 24, axis labels 20, ticks 16; all text readable
+          in both renders'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 100 points at size 6 alpha 0.75 well-adapted to density; reference
+          line clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green on off-white/near-black — excellent contrast; CVD-safe
+          Okabe-Ito color
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization; minor empty corners in upper-left and lower-right
+          inherent to QQ plot extent
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Sample Quantiles (Exam Scores) and Theoretical Quantiles — descriptive
+          with domain context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Data #009E73; light bg #FAF8F1; dark bg #1A1A17; INK/INK_SOFT tokens
+          correctly applied in both themes'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured minimal default — correct brand colors, clean layout
+          — but not distinctive or publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: theme_minimal base and subtle grid (size 0.3); spines not explicitly
+          removed; grid still moderately prominent
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Bimodal data choice is thoughtful and shows interesting deviation,
+          but no confidence band or emphasis guides viewer to the key insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct QQ plot: scatter points against diagonal reference line'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sample vs theoretical quantiles, visible reference line, deviation
+          from normality clearly shown
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = Theoretical Quantiles (z-scores), Y = Sample Quantiles; all data
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title qq-basic · letsplot · anyplot.ai correct; no legend needed
+          for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Bimodal mixture N(50,10)+N(75,5) shows S-curve, upper-tail deviation,
+          and outlier behavior — full QQ diagnostic capability
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Exam score context is neutral and plausible; heterogeneous cohort
+          narrative is believable
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 100 observations within 30-500 range; scores 25-105 realistic for
+          academic exams
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports → data generation → QQ computation → plot →
+          save; no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imported symbols are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Manual Abramowitz & Stegun ppf implementation (50+ lines of magic
+          constants) is over-engineered; scipy.stats.norm.ppf is the standard approach
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; ggsave with scale=3
+          for 4800x2700px
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Correct ggplot grammar composition: ggplot() + geom_*() + labs()
+          + theme() + ggsize(); ggsave with scale parameter'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: HTML export is lets-plot strength; but lets-plot v4.x has stat_qq/geom_qq
+          which was not used — manual QQ computation misses the library's built-in
+          for this exact plot type
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
@@ -18,198 +243,4 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling:
-  - minimal-chrome
-review:
-  strengths:
-  - Excellent manual implementation of the inverse normal CDF (ppf) using Abramowitz
-    & Stegun approximation, avoiding scipy dependency
-  - Correct use of Blom formula for plotting positions, which is statistically appropriate
-  - Good demonstration of Q-Q plot interpretation with intentionally skewed data showing
-    deviation from normality
-  - Proper scaling (3x scale factor) to achieve target 4800×2700 resolution
-  - 'Clean visual design with Python brand colors (blue #306998, gold #FFD43B) and
-    minimal theme'
-  weaknesses:
-  - Grid lines could be slightly more subtle (current alpha appears around 0.5, could
-    be 0.3)
-  - Wildcard import from lets_plot requires multiple noqa comments
-  image_description: The plot displays a Q-Q (Quantile-Quantile) plot comparing sample
-    data against a theoretical normal distribution. Blue points (#306998, Python blue)
-    represent the quantile pairs, plotted against a yellow dashed reference line (#FFD43B,
-    Python gold) indicating the y=x line for perfect normality. The X-axis is labeled
-    "Theoretical Quantiles" and the Y-axis "Sample Quantiles", both ranging from approximately
-    -3 to 3. The title correctly shows "qq-basic · letsplot · pyplots.ai". The plot
-    clearly demonstrates right skewness in the data - points follow the reference
-    line closely in the lower/middle region but deviate upward above the line in the
-    upper quantiles (above ~0.5 theoretical quantiles), indicating the sample has
-    heavier right tail than a normal distribution. The visualization uses a minimal
-    theme with subtle gray dashed grid lines on a white background.
-  criteria_checklist:
-    visual_quality:
-      score: 37
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable at the
-          target resolution
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Points are well-sized (size=6) with appropriate alpha (0.75) for
-          100 data points; slightly larger could help
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue points on white background with yellow line; excellent contrast
-          and colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas appropriately with 16:9 aspect ratio, balanced
-          margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels "Theoretical Quantiles" and "Sample Quantiles"
-          but no units (though not applicable for standardized quantiles)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Subtle dashed grid with alpha, no legend needed for single series;
-          grid could be slightly more subtle
-    spec_compliance:
-      score: 24
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Q-Q plot implementation
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Theoretical quantiles on X-axis, sample quantiles on Y-axis as specified
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Diagonal reference line present and clearly visible, quantile comparison
-          shown
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Axes show full range of data
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: No legend needed/no issues
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Title "qq-basic · letsplot · pyplots.ai" is correct but slightly
-          small in appearance
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows right skewness deviation pattern; could also show other distribution
-          characteristics
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Simulated data with intentional skew is appropriate for demonstrating
-          Q-Q plot interpretation
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Standardized quantiles with appropriate range (-2.5 to 2.5); 100
-          points is within recommended range
-    code_quality:
-      score: 8
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Linear script: imports → data → plot → save'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: np.random.seed(42) used
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
-        max: 2
-        passed: false
-        comment: Uses "from lets_plot import *" with noqa comments; functional but
-          wildcard import
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Current API usage
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves both plot.png and plot.html correctly
-    library_features:
-      score: 4
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses lets-plot grammar of graphics
-        score: 4
-        max: 5
-        passed: true
-        comment: ggplot() + geom_point/geom_line with theme_minimal; good use of ggsize
-          for scaling. Manual ppf calculation is thorough but could potentially use
-          scipy for cleaner code if available.
-  verdict: APPROVED
+  styling: []
