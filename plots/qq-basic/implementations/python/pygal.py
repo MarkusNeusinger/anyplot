@@ -1,15 +1,28 @@
-""" anyplot.ai
+"""anyplot.ai
 qq-basic: Basic Q-Q Plot
 Library: pygal 3.1.0 | Python 3.14.4
 Quality: 72/100 | Updated: 2026-04-27
 """
 
-import math
+import sys
+
+
+sys.path.pop(0)  # prevent this file from shadowing the installed pygal package
+
+import os
+from statistics import NormalDist
 
 import numpy as np
 import pygal
 from pygal.style import Style
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
 
 # Data - sample with slight right skew to show deviation from normality
 np.random.seed(42)
@@ -22,49 +35,10 @@ sample = np.concatenate(
 sample = np.sort(sample)
 n = len(sample)
 
-# Calculate theoretical quantiles using Beasley-Springer-Moro algorithm
-# Coefficients for the approximation
-a = [
-    -3.969683028665376e01,
-    2.209460984245205e02,
-    -2.759285104469687e02,
-    1.383577518672690e02,
-    -3.066479806614716e01,
-    2.506628277459239e00,
-]
-b = [-5.447609879822406e01, 1.615858368580409e02, -1.556989798598866e02, 6.680131188771972e01, -1.328068155288572e01]
-c = [
-    -7.784894002430293e-03,
-    -3.223964580411365e-01,
-    -2.400758277161838e00,
-    -2.549732539343734e00,
-    4.374664141464968e00,
-    2.938163982698783e00,
-]
-d = [7.784695709041462e-03, 3.224671290700398e-01, 2.445134137142996e00, 3.754408661907416e00]
-p_low, p_high = 0.02425, 1 - 0.02425
-
+# Calculate theoretical quantiles using standard library
+_nd = NormalDist()
 probabilities = (np.arange(1, n + 1) - 0.5) / n
-theoretical_quantiles = []
-for p in probabilities:
-    if p < p_low:
-        q = math.sqrt(-2 * math.log(p))
-        val = (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / (
-            (((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1
-        )
-    elif p <= p_high:
-        q = p - 0.5
-        r = q * q
-        val = ((((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q) / (
-            ((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1
-        )
-    else:
-        q = math.sqrt(-2 * math.log(1 - p))
-        val = -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / (
-            (((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1
-        )
-    theoretical_quantiles.append(val)
-theoretical_quantiles = np.array(theoretical_quantiles)
+theoretical_quantiles = np.array([_nd.inv_cdf(float(p)) for p in probabilities])
 
 # Determine axis range for reference line
 min_val = min(theoretical_quantiles.min(), sample.min())
@@ -73,28 +47,26 @@ margin = (max_val - min_val) * 0.1
 line_min = min_val - margin
 line_max = max_val + margin
 
-# Custom style for 4800x2700 px
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333",
-    foreground_strong="#333",
-    foreground_subtle="#666",
-    colors=("#306998", "#888888"),  # Blue for sample points, gray for reference line
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=42,
-    legend_font_size=42,
-    value_font_size=36,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=18,
+    major_label_font_size=16,
+    legend_font_size=16,
+    value_font_size=14,
     stroke_width=3,
 )
 
-# Create XY chart
 chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="qq-basic · pygal · pyplots.ai",
+    title="qq-basic · pygal · anyplot.ai",
     x_title="Theoretical Quantiles",
     y_title="Sample Quantiles",
     show_legend=True,
@@ -105,14 +77,12 @@ chart = pygal.XY(
     show_y_guides=True,
 )
 
-# Prepare Q-Q data points
 qq_points = list(zip(theoretical_quantiles, sample, strict=True))
 chart.add("Sample Data", qq_points)
 
-# Add reference line (y = x)
 reference_line = [(line_min, line_min), (line_max, line_max)]
 chart.add("Reference (y=x)", reference_line, stroke=True, show_dots=False, dots_size=0)
 
-# Save as PNG and HTML
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
