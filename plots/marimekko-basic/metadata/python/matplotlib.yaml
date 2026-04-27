@@ -1,170 +1,192 @@
 library: matplotlib
+language: python
 specification_id: marimekko-basic
 created: '2025-12-23T15:13:08Z'
-updated: '2025-12-23T15:16:18Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20464352488
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - manual-ticks
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling:
-  - edge-highlighting
+updated: '2026-04-27T03:21:13Z'
+generated_by: claude-sonnet
+workflow_run: 24974637672
+issue: 1002
+python_version: 3.14.4
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
 review:
   strengths:
-  - Excellent implementation of the Marimekko concept with proportional bar widths
-    and stacked segments
-  - Clear value labels on larger segments with smart color contrast (white on dark
-    blue, black on light colors)
-  - Professional appearance with Python signature colors and colorblind-safe palette
-  - Region totals displayed below each bar provide useful context
-  - Clean code structure following KISS principles
+  - 'Perfect spec compliance: variable-width bars, proportional stacking, value labels,
+    and legend all correctly implemented'
+  - 'Smart label contrast: white text on dark segments (#009E73, #D55E00, #0072B2),
+    dark ink on light pink (#CC79A7)'
+  - Both themes render correctly with no dark-on-dark or light-on-light failures
+  - Fully deterministic data with realistic market context
+  - Subtitle explicitly explains the bar-width encoding
+  - Clean three-spine removal and subtle grid refinement (alpha=0.10)
   weaknesses:
-  - Legend placement outside plot creates empty space in upper right corner; could
-    be positioned inside the plot area
-  - The y-axis label is clear but the plot would benefit from a subtitle explaining
-    the width interpretation
-  image_description: 'The plot displays a Marimekko chart with 4 variable-width bars
-    representing global regions (North America, Europe, Asia Pacific, Latin America).
-    Bar widths are proportional to each region''s total market size—Asia Pacific is
-    widest ($500M) while Latin America is narrowest ($120M). Each bar is vertically
-    divided into 4 stacked segments representing product lines: Electronics (Python
-    blue #306998), Apparel (Python yellow #FFD43B), Home & Garden (green #4DAF4A),
-    and Sports (purple #984EA3). The y-axis shows percentage share (0%-100%) labeled
-    "Share within Region". Value labels (e.g., "$120M", "$200M") appear on larger
-    segments with white text on blue backgrounds and black text on lighter colors.
-    Region names with total market sizes appear below each bar. A legend titled "Product
-    Lines" sits outside the plot to the upper right. The title correctly follows the
-    format: "marimekko-basic · matplotlib · pyplots.ai".'
+  - Segment value labels (14pt) and region labels (14pt) are below the 16pt minimum
+    for secondary text — use fontsize=16
+  - No focal point or visual hierarchy to emphasize the key insight (Asia Pacific
+    dominance at $500M vs others)
+  - Subtitle explains the mechanic but not the insight — add a callout or use subtle
+    emphasis on the dominant category
+  - 'LM-02: Marimekko bars use generic ax.bar() without showcasing distinctive matplotlib
+    capabilities like patches or PathEffects'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "marimekko-basic · matplotlib · anyplot.ai" in dark ink, readable; subtitle in muted dark ink, readable; Y-axis label "Share within Region" in dark ink, readable; Y-axis tick labels (0%-100%) in dark secondary ink, readable; region labels below bars in dark ink, readable
+      Data: Four variable-width bars for regions (NA, Europe, Asia Pacific, Latin America); four product segments per bar in Okabe-Ito order: Electronics #009E73 (bottom), Apparel #D55E00, Home & Garden #0072B2, Sports #CC79A7 (top); white value labels on dark segments, dark ink label on pink Sports segment; dollar amounts shown for segments above 12% threshold
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light cream text (#F0EFE8 equivalent), readable; subtitle in muted light text, readable; Y-axis label in light ink, readable; Y-axis tick labels in light secondary color (#B8B7B0 equivalent), readable; region labels below bars in light ink, readable; legend frame uses elevated dark background (#242420) with light legend text — no dark-on-dark failures observed
+      Data: Data colors identical to light render — Electronics #009E73, Apparel #D55E00, Home & Garden #0072B2, Sports #CC79A7 confirmed; value labels unchanged in white/dark contrast as appropriate
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt, all perfectly readable
+        comment: Title 24pt, Y-label 20pt, tick labels 16pt, legend 16pt explicitly
+          set; segment value labels and region labels at 14pt are slightly below 16pt
+          minimum
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all elements well-spaced
+        comment: No overlapping text; all segments well-spaced; region labels clearly
+          separated
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar segments clearly visible with good contrast and white borders
+        comment: All bar segments clearly visible; color distinction strong; value
+          labels readable; missing Sports/Europe label intentional (below 12% threshold)
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses colorblind-safe palette (blue, yellow, green, purple)
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good proportions but legend placement creates some empty space in
-          upper right
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Y-axis label is descriptive but lacks unit context (already shows
-          %)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle y-axis grid (alpha 0.3, dashed), legend well-placed with title
+        comment: Okabe-Ito palette is CVD-safe; per-segment label contrast (white
+          on dark, dark on pink) correctly handled
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Chart fills most of canvas; noticeable empty space between bar area
+          and bottom legend due to bbox_to_anchor placement
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis labeled 'Share within Region' with percentage ticks; region
+          totals shown below bars; descriptive title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Electronics=#009E73; all four series follow Okabe-Ito
+          canonical order; light background #FAF8F1, dark #1A1A17; chrome tokens adapt
+          correctly'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: correct Okabe-Ito, smart per-segment label contrast,
+          white edgecolors for segment separation, two-level title/subtitle. Not at
+          strong design level — no distinctive typography or visual hierarchy.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Three spines removed, very subtle grid (alpha=0.10), ax.set_axisbelow(True),
+          themed legend frame. Clear refinement above library defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Dollar-value labels and region totals aid interpretation; bar widths
+          encode market size. No focal point or emphasis on key insight (Asia Pacific
+          dominance).
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Marimekko chart with variable-width bars and stacked segments
+        comment: Correct Marimekko chart with both bar width and segment height proportional
+          to data values
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-categories (regions) correctly determine bar widths, Y-categories
-          (products) correctly stacked
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: proportional widths, stacked heights,
-          value labels, legend, category names'
-      - id: SC-04
-        name: Data Range
+        comment: Bar widths proportional to column totals; segment heights show within-column
+          proportion; value labels on larger segments; color-coded legend; region
+          names centered under bars
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, y-axis spans 0-100%
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: x_category=regions (bar widths), y_category=products (stacking),
+          value matrix correctly drives both dimensions
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly match product lines
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "marimekko-basic · matplotlib · pyplots.ai"'
+        comment: Title format 'marimekko-basic · matplotlib · anyplot.ai' exact; legend
+          labels match data categories; 'Product Lines' title added
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows different bar widths and varying proportions across regions,
-          but distributions are somewhat similar
+        comment: Shows variable-width bars (4 regions of different sizes), proportional
+          stacking (4 product lines), value labels, all aspects of Marimekko demonstrated
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Market share by region and product line is a real, comprehensible
-          business scenario
+        comment: 'Market share by region and product line: neutral, classic business
+          scenario with real-world plausible structure'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are plausible ($15M to $200M range), though some proportions
-          could show more variation
+        comment: Revenue values ($120M-$500M regional totals) realistic for consumer
+          goods company
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -172,42 +194,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: 'Linear: imports -> data -> plot -> style -> save; no functions or
+          classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Uses deterministic data (no random), but no seed needed since data
-          is explicit
+        comment: Deterministic hardcoded data; no random generation required
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: Only os, matplotlib.pyplot, numpy; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Clean Pythonic code; nested loop appropriate for Marimekko; smart
+          label contrast list is concise; no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches='tight'
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; no deprecated API usage
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Good use of ax.bar with bottom parameter for stacking, ax.text for
-          annotations, but no advanced matplotlib features like custom patches or
-          transforms
-  verdict: APPROVED
+        comment: Uses Axes methods throughout, fig.suptitle + ax.set_title for two-level
+          title, plt.setp for batch legend styling, correct bbox_inches='tight' pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: ax.set_axisbelow(True), plt.setp(leg.get_texts()), leg.get_title().set_color()
+          are matplotlib-specific but Marimekko construction uses generic bar() without
+          distinctive matplotlib capabilities
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - custom-legend
+  patterns:
+  - iteration-over-groups
+  - matrix-construction
+  dataprep:
+  - normalization
+  - cumulative-sum
+  styling:
+  - edge-highlighting
+  - grid-styling

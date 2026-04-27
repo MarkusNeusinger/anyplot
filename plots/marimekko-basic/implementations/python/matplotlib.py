@@ -1,16 +1,24 @@
-""" pyplots.ai
+""" anyplot.ai
 marimekko-basic: Basic Marimekko Chart
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: matplotlib 3.10.9 | Python 3.14.4
+Quality: 85/100 | Updated: 2026-04-27
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
 # Data: Market share by region (x-category) and product line (y-category)
-# Regions have different total market sizes (determines bar widths)
-# Products have different shares within each region (determines segment heights)
 regions = ["North America", "Europe", "Asia Pacific", "Latin America"]
 products = ["Electronics", "Apparel", "Home & Garden", "Sports"]
 
@@ -25,42 +33,37 @@ values = np.array(
     ]
 )
 
-# Colors - Python blue/yellow first, then colorblind-safe additions
-colors = ["#306998", "#FFD43B", "#4DAF4A", "#984EA3"]
+# Okabe-Ito palette (positions 1-4 in canonical order)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+# Smart label contrast: white on dark segments, ink on lighter #CC79A7
+label_colors = ["white", "white", "white", INK]
 
 # Calculate bar widths (proportional to column totals)
 column_totals = values.sum(axis=0)
 total = column_totals.sum()
 bar_widths = column_totals / total
-
-# Calculate cumulative widths for x-positioning
 cum_widths = np.concatenate([[0], np.cumsum(bar_widths)[:-1]])
 
-# Create figure (4800x2700 px at dpi=300)
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Draw each segment
-for i, (product, color) in enumerate(zip(products, colors, strict=True)):
-    # Calculate heights as proportion of column total
+for i, (product, color, label_color) in enumerate(zip(products, OKABE_ITO, label_colors, strict=True)):
     heights = values[i] / column_totals
-
-    # Calculate bottom positions (cumulative heights of products below)
     bottoms = values[:i].sum(axis=0) / column_totals if i > 0 else np.zeros(len(regions))
 
-    # Draw bars for this product across all regions
     for j in range(len(regions)):
         ax.bar(
             cum_widths[j] + bar_widths[j] / 2,
             heights[j],
-            width=bar_widths[j] * 0.98,  # Small gap between bars
+            width=bar_widths[j] * 0.98,
             bottom=bottoms[j],
             color=color,
-            edgecolor="white",
+            edgecolor=PAGE_BG,
             linewidth=2,
             label=product if j == 0 else None,
         )
 
-        # Add value labels on larger segments
         if heights[j] > 0.12:
             ax.text(
                 cum_widths[j] + bar_widths[j] / 2,
@@ -70,10 +73,10 @@ for i, (product, color) in enumerate(zip(products, colors, strict=True)):
                 va="center",
                 fontsize=14,
                 fontweight="bold",
-                color="white" if color == "#306998" else "black",
+                color=label_color,
             )
 
-# Add region labels at the bottom
+# Region labels below bars
 for j, region in enumerate(regions):
     ax.text(
         cum_widths[j] + bar_widths[j] / 2,
@@ -81,35 +84,46 @@ for j, region in enumerate(regions):
         f"{region}\n(${column_totals[j]:.0f}M)",
         ha="center",
         va="top",
-        fontsize=16,
+        fontsize=14,
         fontweight="bold",
+        color=INK,
     )
 
-# Style the plot
+# Style
 ax.set_xlim(0, 1)
-ax.set_ylim(-0.15, 1)
-ax.set_ylabel("Share within Region", fontsize=20)
-ax.set_title("marimekko-basic · matplotlib · pyplots.ai", fontsize=24)
+ax.set_ylim(-0.20, 1.05)
+ax.set_ylabel("Share within Region", fontsize=20, color=INK)
 
-# Format y-axis as percentage
+fig.suptitle("marimekko-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, y=0.99)
+ax.set_title("Bar width proportional to total regional market size", fontsize=16, color=INK_MUTED, pad=10)
+
 ax.set_yticks([0, 0.25, 0.5, 0.75, 1.0])
 ax.set_yticklabels(["0%", "25%", "50%", "75%", "100%"])
-ax.tick_params(axis="y", labelsize=16)
-
-# Remove x-axis ticks (we have custom labels)
+ax.tick_params(axis="y", labelsize=16, colors=INK_SOFT)
 ax.set_xticks([])
 
-# Add legend
-ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1), fontsize=16, title="Product Lines", title_fontsize=18)
+# Legend below the chart, horizontal layout
+leg = ax.legend(
+    loc="upper center",
+    bbox_to_anchor=(0.5, -0.16),
+    ncol=len(products),
+    fontsize=16,
+    title="Product Lines",
+    title_fontsize=16,
+    frameon=True,
+)
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+plt.setp(leg.get_texts(), color=INK_SOFT)
+leg.get_title().set_color(INK_SOFT)
 
-# Subtle grid on y-axis only
-ax.yaxis.grid(True, alpha=0.3, linestyle="--")
+# Grid and spines
+ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
 ax.set_axisbelow(True)
-
-# Remove top and right spines
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 ax.spines["bottom"].set_visible(False)
+ax.spines["left"].set_color(INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
