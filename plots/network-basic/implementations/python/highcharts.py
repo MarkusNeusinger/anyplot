@@ -1,14 +1,14 @@
-""" pyplots.ai
+"""anyplot.ai
 network-basic: Basic Network Graph
-Library: highcharts unknown | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-23
+Library: highcharts | Python 3.13
+Quality: 90/100 | Updated: 2026-04-27
 """
 
 import json
 import math
+import os
 import tempfile
 import time
-import urllib.request
 from pathlib import Path
 
 from highcharts_core.chart import Chart
@@ -18,6 +18,16 @@ from highcharts_core.options.series.scatter import ScatterSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette positions 1–4 for the four communities
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Data: A small social network with 20 people in 4 communities
 nodes = [
@@ -45,35 +55,35 @@ nodes = [
 
 # Edges: Friendship connections (within and between groups)
 edges = [
-    # Group 0 internal connections
+    # Group 0 internal
     ("Alice", "Bob"),
     ("Alice", "Carol"),
     ("Bob", "Carol"),
     ("Bob", "David"),
     ("Carol", "Eve"),
     ("David", "Eve"),
-    # Group 1 internal connections
+    # Group 1 internal
     ("Frank", "Grace"),
     ("Frank", "Henry"),
     ("Grace", "Ivy"),
     ("Henry", "Ivy"),
     ("Henry", "Jack"),
     ("Ivy", "Jack"),
-    # Group 2 internal connections
+    # Group 2 internal
     ("Kate", "Leo"),
     ("Kate", "Mia"),
     ("Leo", "Noah"),
     ("Mia", "Noah"),
     ("Mia", "Olivia"),
     ("Noah", "Olivia"),
-    # Group 3 internal connections
+    # Group 3 internal
     ("Paul", "Quinn"),
     ("Paul", "Ryan"),
     ("Quinn", "Sara"),
     ("Ryan", "Sara"),
     ("Ryan", "Tom"),
     ("Sara", "Tom"),
-    # Cross-group connections (bridges between communities)
+    # Cross-group bridges
     ("Alice", "Frank"),
     ("Eve", "Kate"),
     ("Jack", "Paul"),
@@ -83,55 +93,46 @@ edges = [
     ("Noah", "Quinn"),
 ]
 
-# Colors for groups (colorblind-safe: Python Blue, Python Yellow, teal, purple)
-group_colors = ["#306998", "#FFD43B", "#17BECF", "#9467BD"]
-
-# Calculate node degrees for sizing
+# Calculate node degrees for size scaling
 degrees = {node["id"]: 0 for node in nodes}
 for src, tgt in edges:
     degrees[src] += 1
     degrees[tgt] += 1
 
-# Pre-calculated fixed initial positions for reproducibility (4 groups in quadrants)
-# Using deterministic circular positions within each group's quadrant - centered for better balance
+# Deterministic circular positions within each group's quadrant
 group_centers = [
-    (1700, 900),  # Group 0: top-left quadrant
-    (2900, 900),  # Group 1: top-right quadrant
-    (1700, 1700),  # Group 2: bottom-left quadrant
-    (2900, 1700),  # Group 3: bottom-right quadrant
+    (1500, 900),  # Group 0: top-left
+    (3100, 900),  # Group 1: top-right
+    (1500, 1700),  # Group 2: bottom-left
+    (3100, 1700),  # Group 3: bottom-right
 ]
 
-# Build nodes config with colors, markers based on degree, and fixed initial positions
 nodes_config = []
-group_indices = {0: 0, 1: 0, 2: 0, 3: 0}  # Track index within each group
+group_indices = {0: 0, 1: 0, 2: 0, 3: 0}
 for node in nodes:
     node_id = node["id"]
     group = node["group"]
-    color = group_colors[group]
-    # Scale marker radius based on degree (base 60, plus 8 per connection)
-    radius = 60 + degrees[node_id] * 8
-    # Calculate fixed initial position in a circle around group center
+    color = OKABE_ITO[group]
+    radius = 65 + degrees[node_id] * 8
     center_x, center_y = group_centers[group]
     idx = group_indices[group]
     group_indices[group] += 1
-    angle = (2 * math.pi * idx) / 5  # 5 nodes per group
-    offset = 300
-    init_x = center_x + offset * math.cos(angle)
-    init_y = center_y + offset * math.sin(angle)
+    angle = (2 * math.pi * idx) / 5
+    init_x = center_x + 300 * math.cos(angle)
+    init_y = center_y + 300 * math.sin(angle)
     nodes_config.append(
         {
             "id": node_id,
             "color": color,
-            "marker": {"radius": radius, "fillColor": color, "lineWidth": 3, "lineColor": "#333333"},
+            "marker": {"radius": radius, "fillColor": color, "lineWidth": 3, "lineColor": INK_SOFT},
             "plotX": init_x,
             "plotY": init_y,
         }
     )
 
-# Group names for legend
 group_names = ["Community A", "Community B", "Community C", "Community D"]
 
-# Create network graph series
+# Plot
 series = NetworkGraphSeries()
 series.name = "Network"
 series.data = [{"from": src, "to": tgt} for src, tgt in edges]
@@ -139,47 +140,41 @@ series.data_labels = {
     "enabled": True,
     "format": "{point.id}",
     "linkFormat": "",
-    "style": {"fontSize": "20px", "fontWeight": "bold", "textOutline": "2px white", "color": "#000000"},
+    "style": {"fontSize": "22px", "fontWeight": "bold", "textOutline": f"3px {PAGE_BG}", "color": INK},
     "allowOverlap": True,
 }
-series.marker = {"radius": 60}
+series.marker = {"radius": 65}
 series.layout_algorithm = {
     "enableSimulation": True,
     "linkLength": 380,
     "gravitationalConstant": 0.025,
     "friction": -0.85,
     "initialPositions": "circle",
-    "maxIterations": 200,
+    "maxIterations": 300,
     "integration": "verlet",
 }
 series.animation = False
-series.link = {"width": 3, "color": "#aaaaaa"}
+series.link = {"width": 3, "color": INK_SOFT}
 series.show_in_legend = False
 
-# Create chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 chart.options.chart = {
     "type": "networkgraph",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
-    "margin": [120, 250, 100, 150],
-    "spacingTop": 60,
-    "spacingBottom": 60,
+    "backgroundColor": PAGE_BG,
+    "margin": [120, 300, 100, 80],
 }
 chart.options.title = {
-    "text": "network-basic · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
+    "text": "network-basic · highcharts · anyplot.ai",
+    "style": {"fontSize": "48px", "fontWeight": "bold", "color": INK},
 }
-# Hide axes (not needed for network graph)
 chart.options.x_axis = {"visible": False}
 chart.options.y_axis = {"visible": False}
-# Set plot options for networkgraph
 chart.options.plot_options = {
-    "networkgraph": {"keys": ["from", "to"], "marker": {"radius": 60, "lineWidth": 3, "lineColor": "#333333"}}
+    "networkgraph": {"keys": ["from", "to"], "marker": {"radius": 65, "lineWidth": 3, "lineColor": INK_SOFT}}
 }
-# Add legend explaining the 4 community groups - positioned closer to the network
 chart.options.legend = {
     "enabled": True,
     "align": "right",
@@ -187,93 +182,71 @@ chart.options.legend = {
     "layout": "vertical",
     "x": -20,
     "y": 0,
-    "itemStyle": {"fontSize": "32px", "fontWeight": "normal"},
+    "itemStyle": {"fontSize": "32px", "fontWeight": "normal", "color": INK_SOFT},
     "itemMarginBottom": 15,
     "symbolRadius": 14,
     "symbolWidth": 28,
     "symbolHeight": 28,
-    "backgroundColor": "rgba(255, 255, 255, 0.9)",
+    "backgroundColor": ELEVATED_BG,
     "borderWidth": 1,
-    "borderColor": "#cccccc",
+    "borderColor": INK_SOFT,
     "padding": 15,
 }
 chart.add_series(series)
 
-# Add dummy scatter series for legend (to show community colors)
-for color, name in zip(group_colors, group_names, strict=True):
+for color, name in zip(OKABE_ITO, group_names, strict=True):
     legend_series = ScatterSeries()
     legend_series.name = name
     legend_series.color = color
-    legend_series.data = []  # Empty data - just for legend display
+    legend_series.data = []
     legend_series.marker = {"symbol": "circle", "radius": 16}
     legend_series.show_in_legend = True
     chart.add_series(legend_series)
 
-# Generate JS and inject nodes into the first series (highcharts-core doesn't support nodes property directly)
+# Inject nodes config into JS (highcharts-core doesn't expose nodes property directly)
 js_literal = chart.to_js_literal()
 nodes_js = json.dumps(nodes_config)
-# Inject nodes into the networkgraph series (series[0])
 js_literal = js_literal.replace("series: [{", f"series: [{{\n  nodes: {nodes_js},")
+# highcharts-core omits linkFormat; inject it to suppress labels on edges
+js_literal = js_literal.replace("format: '{point.id}'", "format: '{point.id}', linkFormat: ''")
 
-# Download Highcharts JS (required for headless Chrome)
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Load Highcharts JS from local npm package (CDN blocked in CI; install via: npm install highcharts --prefix /tmp/hc-tmp)
+HC_NPM = Path("/tmp/hc-tmp/node_modules/highcharts")
+highcharts_js = (HC_NPM / "highcharts.js").read_text(encoding="utf-8")
+highcharts_more_js = (HC_NPM / "highcharts-more.js").read_text(encoding="utf-8")
+networkgraph_js = (HC_NPM / "modules/networkgraph.js").read_text(encoding="utf-8")
 
-# Download highcharts-more.js for networkgraph
-highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
-with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
-    highcharts_more_js = response.read().decode("utf-8")
-
-# Download networkgraph module
-networkgraph_url = "https://code.highcharts.com/modules/networkgraph.js"
-with urllib.request.urlopen(networkgraph_url, timeout=30) as response:
-    networkgraph_js = response.read().decode("utf-8")
-
-# Cleanup JS to remove unwanted link labels and fix label positions after simulation
-cleanup_js = """
-function fixLabels() {
+# Center node labels on circle midpoints after the simulation settles.
+# node.plotX/plotY are already in SVG coordinate space for networkgraph — no plotLeft/Top offset.
+center_labels_js = """
+function centerLabels() {
     var chart = Highcharts.charts[0];
-    if (!chart || !chart.series[0]) return;
-
-    // Remove unwanted link labels
-    document.querySelectorAll('.highcharts-data-label text').forEach(function(label) {
-        if (label.textContent && label.textContent.indexOf('highcharts-') === 0) {
-            label.parentNode.style.display = 'none';
+    if (!chart || !chart.series || !chart.series[0]) return;
+    var series = chart.series[0];
+    if (!series.nodes) return;
+    series.nodes.forEach(function(node) {
+        if (node.dataLabel && typeof node.plotX !== 'undefined') {
+            node.dataLabel.attr({ x: node.plotX, y: node.plotY, 'text-anchor': 'middle' });
+            var textEl = node.dataLabel.element.querySelector('text');
+            if (textEl) {
+                textEl.setAttribute('dominant-baseline', 'central');
+                textEl.setAttribute('text-anchor', 'middle');
+            }
         }
     });
-
-    // Reposition node labels to be centered
-    var series = chart.series[0];
-    if (series.nodes) {
-        series.nodes.forEach(function(node) {
-            if (node.dataLabel && node.graphic) {
-                var cx = node.plotX;
-                var cy = node.plotY;
-                node.dataLabel.attr({
-                    x: cx,
-                    y: cy + 5,
-                    'text-anchor': 'middle'
-                });
-            }
-        });
-    }
 }
-
-// Run fixLabels multiple times to catch simulation movements
-[3000, 6000, 9000, 12000, 14000].forEach(function(ms) {
-    setTimeout(fixLabels, ms);
+[1000, 3000, 5000, 8000, 11000, 14000, 15500].forEach(function(ms) {
+    setTimeout(centerLabels, ms);
 });
 """
 
-# Generate HTML with inline scripts and CSS for label centering
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <style>
         .highcharts-data-label text {{
-            dominant-baseline: middle !important;
+            dominant-baseline: central !important;
             text-anchor: middle !important;
         }}
     </style>
@@ -281,35 +254,33 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_more_js}</script>
     <script>{networkgraph_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{js_literal}</script>
-    <script>{cleanup_js}</script>
+    <script>{center_labels_js}</script>
 </body>
 </html>"""
 
-# Write temp HTML
+# Save HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Write temp HTML and take screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
-# Take screenshot with headless Chrome
 chrome_options = Options()
 chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2800")
+chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(15)  # Wait for chart to render, simulation to stabilize, and cleanup JS to run
-driver.save_screenshot("plot.png")
+time.sleep(17)  # Allow simulation to settle and all centerLabels() calls to complete
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-# Save HTML
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
-
-# Clean up temp file
 Path(temp_path).unlink()
