@@ -1,211 +1,237 @@
 library: seaborn
+language: python
 specification_id: qq-basic
 created: '2025-12-23T18:12:43Z'
-updated: '2025-12-23T18:19:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468192347
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-27T05:21:34Z'
+generated_by: claude-sonnet
+workflow_run: 24977632424
+issue: 977
+python_version: 3.14.4
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/qq-basic/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent visual quality with proper font sizes and colorblind-safe palette
-  - Correct title format following pyplots.ai conventions
-  - Proper axis labels as specified (Theoretical Quantiles and Sample Quantiles)
-  - Reference line (y=x) is clearly visible and properly labeled in legend
-  - Data demonstrates right-skewed distribution deviation from normality
-  - Good marker sizing (s=200) and alpha (0.7) for the data density
+  - 'Perfect spec compliance: correct plot type, all required features, proper axis
+    labels, correct title format'
+  - 'Data storytelling: bimodal mixture data produces characteristic QQ deviations
+    that clearly demonstrate the diagnostic value of the chart'
+  - 'Full theme adaptation: all chrome elements use adaptive tokens; both renders
+    pass legibility checks'
+  - 'Zero external dependencies: Abramowitz and Stegun quantile approximation keeps
+    the implementation self-contained'
   weaknesses:
-  - Manual implementation of inverse normal CDF adds unnecessary complexity when scipy.stats.norm.ppf
-    could be used (though acceptable for dependency-free code)
-  - Could leverage more distinctive seaborn features beyond basic scatterplot
-  - Data example shows only right skewness but not other Q-Q characteristics like
-    heavy tails or S-curves mentioned in specification
-  image_description: 'The plot displays a Q-Q (Quantile-Quantile) plot with 200 blue
-    scatter points (color #306998) plotted against theoretical normal distribution
-    quantiles. A yellow dashed reference line (y=x, color #FFD43B) runs diagonally
-    from lower-left to upper-right. The X-axis is labeled "Theoretical Quantiles"
-    and the Y-axis is labeled "Sample Quantiles", both ranging approximately from
-    -3 to +3. The title correctly follows the format "qq-basic · seaborn · pyplots.ai".
-    Points follow the reference line closely in the center but deviate above the line
-    in the upper right tail, demonstrating the intended right skewness from the mixture
-    distribution. A legend in the upper-left corner indicates "Reference (y=x)". The
-    grid uses subtle dashed lines with low alpha. The plot uses the full 16:9 canvas
-    effectively with balanced margins.'
+  - 'DE-01 moderate: No confidence band or annotations to add statistical depth and
+    visual richness'
+  - 'LM-02 low: Seaborn distinctive features (statistical layers, CI bands, FacetGrid)
+    are not used — implementation is essentially a styled matplotlib scatter with
+    seaborn theme setup'
+  - 'VQ-02 minor: Overlap in dense central band could be reduced with slightly larger
+    edge linewidth or smaller marker size'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "qq-basic · seaborn · anyplot.ai" in dark ink — readable. Axis labels "Theoretical Quantiles" / "Sample Quantiles" in dark ink — readable. Tick labels in INK_SOFT dark grey — readable. Legend in upper-left with dashed line icon — readable.
+      Data: Brand green (#009E73) scatter markers at s=200 with alpha=0.7 and PAGE_BG edge color. Dashed reference line (y=x) in INK_SOFT grey. Bimodal mixture produces visible S-curve deviation and lower-left outliers.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title and all labels rendered in light ink (#F0EFE8 / #B8B7B0) — clearly readable against dark background. No dark-on-dark text failure. Reference line appears as white/light-grey dashed line.
+      Data: Colors identical to light render — same green (#009E73) markers; only chrome (text, line color) flips to light values. Brand green remains fully visible on dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
+        comment: Font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Minor clustering in dense central region; alpha=0.7 helps; edge linewidth=0.5
+          is minimal
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Marker size s=200 with alpha=0.7 is well-suited for 200 data points
+        comment: Markers at s=200 clearly visible; reference line distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue points with yellow reference line, high contrast, colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels ("Theoretical Quantiles", "Sample Quantiles")
-          but no units (quantiles are dimensionless, so acceptable)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid with alpha=0.3 dashed lines, legend well-placed in upper
-          left
+        comment: '#009E73 on both backgrounds is CVD-safe; no red-green sole signal'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions; tight_layout prevents clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with standard QQ terminology
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series uses BRAND (#009E73); backgrounds #FAF8F1/#1A1A17;
+          both renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: PAGE_BG edge color creates floating-dot effect; deliberate alpha
+          blending; consistent theme token usage
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed; grid at alpha=0.10 is subtle; whitespace
+          adequate
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bimodal mixture data produces characteristic S-curve deviation and
+          outliers; reference line creates strong visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Q-Q plot comparing sample to theoretical normal distribution
+        comment: 'Correct Q-Q plot: sample quantiles vs. theoretical quantiles'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=theoretical quantiles, Y=sample quantiles correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: Q-Q scatter, reference line, correct
-          axis labels'
-      - id: SC-04
-        name: Data Range
+        comment: Diagonal reference line present; deviations from line clearly visible;
+          axes labeled correctly
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data points including extremes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X = Theoretical Quantiles, Y = Sample Quantiles; full range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels reference line as "Reference (y=x)"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "qq-basic · seaborn · pyplots.ai"'
+        comment: Title is 'qq-basic · seaborn · anyplot.ai'; legend labels reference
+          line
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows right tail deviation (skewness) but does not demonstrate other
-          Q-Q characteristics like heavy tails or S-curves mentioned in spec
+        comment: Shows central quantiles near diagonal, left-tail outliers, right-tail
+          compression; S-curve deviation pattern visible
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Plausible scenario with mixture distribution representing real-world
-          data (e.g., measurements with outliers)
+        comment: Bimodal normal mixture is plausible and domain-neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Standardized quantiles in sensible range (-3 to +3), though original
-          data scale not shown
+        comment: 200 observations within spec-recommended 30-500 range; standardized
+          quantile axes at [-3,3] are appropriate
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Structure is imports → data → plot → save, but the manual inverse
-          normal CDF implementation adds complexity
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Flat script, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (matplotlib.pyplot, numpy, seaborn)
+        comment: Only os, matplotlib.pyplot, numpy, seaborn imported
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Clean code; Abramowitz and Stegun approximation avoids scipy dependency
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct facecolor
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses sns.scatterplot() which is seaborn's axes-level function, but
-          does not leverage seaborn's statistical capabilities like regplot or more
-          distinctive seaborn features
+        comment: sns.set_theme with rc dict, sns.scatterplot with ax; appropriate
+          since seaborn has no native QQ plot function
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Seaborn statistical/aesthetic features not leveraged; QQ computation
+          is pure numpy; reference line is matplotlib ax.plot
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

@@ -1,116 +1,124 @@
-""" pyplots.ai
+""" anyplot.ai
 qq-basic: Basic Q-Q Plot
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: bokeh 3.9.0 | Python 3.14.4
+Quality: 88/100 | Updated: 2026-04-27
 """
+
+import os
 
 import numpy as np
 from bokeh.io import export_png, output_file, save
-from bokeh.models import ColumnDataSource, Slope
+from bokeh.models import ColumnDataSource, HoverTool
 from bokeh.plotting import figure
+from scipy import stats
 
 
-# Data - sample with slight right skew to demonstrate Q-Q plot characteristics
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1
+
+# Data - adult heights (cm) with a few outliers to showcase Q-Q interpretation
 np.random.seed(42)
-sample = np.concatenate(
-    [
-        np.random.normal(loc=50, scale=10, size=80),  # Main bulk of data
-        np.random.normal(loc=75, scale=5, size=20),  # Slight right tail for asymmetry
-    ]
-)
+core = np.random.normal(loc=170, scale=8, size=88)
+outliers = np.array([145.0, 147.0, 149.0, 196.0, 199.0, 202.0, 148.0, 198.0, 200.0, 203.0, 145.5, 201.5])
+sample = np.concatenate([core, outliers])
 
-# Sort sample and calculate quantile positions
+# Theoretical and sample quantiles (standardised to z-scores)
 sample_sorted = np.sort(sample)
 n = len(sample_sorted)
 probabilities = (np.arange(1, n + 1) - 0.5) / n
+theoretical_quantiles = stats.norm.ppf(probabilities)
 
-# Inverse normal CDF using Abramowitz & Stegun approximation (accurate to ~1.5e-7)
-a = [
-    -3.969683028665376e01,
-    2.209460984245205e02,
-    -2.759285104469687e02,
-    1.383577518672690e02,
-    -3.066479806614716e01,
-    2.506628277459239e00,
-]
-b = [-5.447609879822406e01, 1.615858368580409e02, -1.556989798598866e02, 6.680131188771972e01, -1.328068155288572e01]
-c = [
-    -7.784894002430293e-03,
-    -3.223964580411365e-01,
-    -2.400758277161838e00,
-    -2.549732539343734e00,
-    4.374664141464968e00,
-    2.938163982698783e00,
-]
-d = [7.784695709041462e-03, 3.224671290700398e-01, 2.445134137142996e00, 3.754408661907416e00]
-
-p_low, p_high = 0.02425, 1 - 0.02425
-theoretical_quantiles = np.zeros(n)
-
-# Low region
-mask_low = probabilities < p_low
-q = np.sqrt(-2 * np.log(probabilities[mask_low]))
-theoretical_quantiles[mask_low] = (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / (
-    (((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1
-)
-
-# Central region
-mask_mid = (probabilities >= p_low) & (probabilities <= p_high)
-q = probabilities[mask_mid] - 0.5
-r = q * q
-theoretical_quantiles[mask_mid] = (
-    (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5])
-    * q
-    / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1)
-)
-
-# High region
-mask_high = probabilities > p_high
-q = np.sqrt(-2 * np.log(1 - probabilities[mask_high]))
-theoretical_quantiles[mask_high] = -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / (
-    (((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1
-)
-
-# Standardize sample to z-scores for comparison with standard normal quantiles
-sample_mean = np.mean(sample_sorted)
-sample_std = np.std(sample_sorted, ddof=1)
+sample_mean = np.mean(sample)
+sample_std = np.std(sample, ddof=1)
 sample_quantiles = (sample_sorted - sample_mean) / sample_std
 
-# Create ColumnDataSource
-source = ColumnDataSource(data={"theoretical": theoretical_quantiles, "sample": sample_quantiles})
+source = ColumnDataSource(
+    data={"theoretical": theoretical_quantiles, "sample": sample_quantiles, "value": sample_sorted}
+)
 
-# Create figure (4800 × 2700 px)
+# Reference line (y=x, bounded to data range)
+pad = 0.3
+x_min = theoretical_quantiles.min() - pad
+x_max = theoretical_quantiles.max() + pad
+
+# Figure
 p = figure(
     width=4800,
     height=2700,
-    title="qq-basic · bokeh · pyplots.ai",
+    title="qq-basic · bokeh · anyplot.ai",
     x_axis_label="Theoretical Quantiles",
     y_axis_label="Sample Quantiles",
     toolbar_location=None,
 )
 
-# Add reference line (y=x) showing perfect normal distribution match
-slope = Slope(gradient=1, y_intercept=0, line_color="#FFD43B", line_width=4, line_dash="dashed")
-p.add_layout(slope)
+# Reference line drawn as a line glyph so it can carry a legend label
+p.line(
+    [x_min, x_max],
+    [x_min, x_max],
+    line_color=INK_SOFT,
+    line_width=4,
+    line_dash="dashed",
+    legend_label="Normal reference",
+)
 
-# Plot Q-Q points
-p.scatter(x="theoretical", y="sample", source=source, size=20, color="#306998", alpha=0.7)
+# Q-Q scatter points
+p.scatter(
+    x="theoretical",
+    y="sample",
+    source=source,
+    size=20,
+    color=BRAND,
+    alpha=0.75,
+    line_color=PAGE_BG,
+    line_width=1,
+    legend_label="Sample quantiles",
+)
 
-# Styling for 4800×2700 px
+# Hover tooltips
+hover = HoverTool(
+    tooltips=[("Theoretical Q", "@theoretical{0.00}"), ("Sample Q", "@sample{0.00}"), ("Height", "@value{0.0} cm")]
+)
+p.add_tools(hover)
+
+# Theme-adaptive chrome
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
+
+p.title.text_color = INK
 p.title.text_font_size = "36pt"
+
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
 p.xaxis.axis_label_text_font_size = "28pt"
 p.yaxis.axis_label_text_font_size = "28pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
 p.xaxis.major_label_text_font_size = "22pt"
 p.yaxis.major_label_text_font_size = "22pt"
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 
-# Grid styling
-p.grid.grid_line_alpha = 0.3
-p.grid.grid_line_dash = "dashed"
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.10
 
-# Background
-p.background_fill_color = "#fafafa"
+if p.legend:
+    p.legend.background_fill_color = ELEVATED_BG
+    p.legend.border_line_color = INK_SOFT
+    p.legend.label_text_color = INK_SOFT
+    p.legend.label_text_font_size = "20pt"
+    p.legend.location = "top_left"
 
-# Save as PNG and HTML
-export_png(p, filename="plot.png")
-output_file("plot.html")
+# Save
+export_png(p, filename=f"plot-{THEME}.png")
+output_file(f"plot-{THEME}.html")
 save(p)
