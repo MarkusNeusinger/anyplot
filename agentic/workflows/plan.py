@@ -166,7 +166,8 @@ def main(prompt: str, task_type: str, model: str, working_dir: str, cli: str):
 
     # ── Phase 1: Classify ───────────────────────────────────────────
     if task_type is None:
-        console.print(Rule(f"[bold yellow]Phase 1: Classification ({model} model)[/bold yellow]"))
+        classifier_model = "small"  # Always use small model for simple classification
+        console.print(Rule(f"[bold yellow]Phase 1: Classification ({classifier_model} model)[/bold yellow]"))
         console.print()
 
         try:
@@ -184,7 +185,7 @@ def main(prompt: str, task_type: str, model: str, working_dir: str, cli: str):
             prompt=classify_prompt,
             run_id=run_id,
             agent_name="classifier",
-            model=model,
+            model=classifier_model,
             cli=cli,
             dangerously_skip_permissions=True,
             output_file=os.path.join(classify_output_dir, OUTPUT_JSONL),

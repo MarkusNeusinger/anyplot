@@ -12,7 +12,7 @@
 """
 Standalone document workflow.
 
-Runs the dokument.md template against a spec file and records
+Runs the document.md template against a spec file and records
 the output documentation path in state.
 
 Usage:
@@ -42,7 +42,7 @@ from template import load_template, render_template
 
 
 # Template path
-DOCUMENT_TEMPLATE = "agentic/commands/dokument.md"
+DOCUMENT_TEMPLATE = "agentic/commands/document.md"
 
 # Usage hint for resolve_state error message
 DOCUMENT_USAGE_HINT = (
