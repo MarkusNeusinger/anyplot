@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-basic: Basic Network Graph
 Library: plotly 6.7.0 | Python 3.14.4
 Quality: 83/100 | Updated: 2026-04-27
@@ -176,7 +176,7 @@ for group_id, (color, name) in enumerate(zip(GROUP_COLORS, GROUP_NAMES, strict=F
             marker={"size": node_sizes, "color": color, "line": {"width": 2, "color": PAGE_BG}},
             text=node_labels,
             textposition="middle center",
-            textfont={"size": 13, "color": "#FFFFFF", "family": "Arial Black"},
+            textfont={"size": 16, "color": "#FFFFFF", "family": "Arial Black"},
             customdata=customdata,
             hovertemplate=(
                 "<b>%{text}</b><br>"
@@ -195,7 +195,7 @@ fig = go.Figure(data=[edge_trace] + node_traces)
 
 fig.update_layout(
     title={
-        "text": "Social Network · network-basic · plotly · anyplot.ai",
+        "text": "network-basic · plotly · anyplot.ai",
         "font": {"size": 28, "color": INK},
         "x": 0.5,
         "xanchor": "center",
@@ -216,14 +216,7 @@ fig.update_layout(
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     xaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "range": [-0.05, 1.05]},
-    yaxis={
-        "showgrid": False,
-        "zeroline": False,
-        "showticklabels": False,
-        "range": [-0.05, 1.05],
-        "scaleanchor": "x",
-        "scaleratio": 1,
-    },
+    yaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "range": [-0.05, 1.05]},
     margin={"l": 20, "r": 20, "t": 80, "b": 20},
 )
 
