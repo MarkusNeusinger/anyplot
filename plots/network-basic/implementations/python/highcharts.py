@@ -1,7 +1,7 @@
 """ anyplot.ai
 network-basic: Basic Network Graph
 Library: highcharts unknown | Python 3.14.4
-Quality: 80/100 | Updated: 2026-04-27
+Quality: 83/100 | Updated: 2026-04-27
 """
 
 import json
