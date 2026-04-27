@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: heatmap-calendar
 created: '2025-12-23T15:34:54Z'
-updated: '2026-04-27T01:07:09Z'
+updated: '2026-04-27T01:22:48Z'
 generated_by: claude-sonnet
 workflow_run: 24971109245
 issue: 1010
@@ -12,40 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 79
 review:
   strengths:
-  - Correct calendar heatmap structure with weeks as columns and weekdays as rows
-  - Greens sequential colormap is well-chosen for contribution-style data and is perceptually
-    appropriate
-  - Realistic GitHub-style contribution data with weekday boost and zero-day injection
-  - Clean KISS code structure with seed for reproducibility
-  - Good colorbar sizing and labeling (shrink, aspect, pad tuned)
+  - 'Correct calendar heatmap structure: weekdays as rows, weeks as columns, months
+    as labeled sections — matches spec exactly'
+  - Realistic GitHub-style contribution data with weekday boost and zero-day injection;
+    exponential distribution is domain-appropriate
+  - Clean KISS code structure with reproducible seed (42); pivot-table approach to
+    calendar layout is elegant
+  - Stats annotation (total contributions + peak week) elevates storytelling without
+    clutter
+  - Greens colormap is perceptually appropriate and CVD-safe for single-polarity contribution
+    data
   weaknesses:
-  - Code saves to plot.png instead of plot-{THEME}.png — must read ANYPLOT_THEME env
-    var and output plot-light.png / plot-dark.png
-  - 'No theme adaptation: missing ANYPLOT_THEME env var, no sns.set_theme() with adaptive
-    PAGE_BG/INK/INK_SOFT tokens, no adaptive linecolor'
-  - linecolor=white is harsh in dark render — near-zero cells render as bright white
-    boxes on dark background, creating jarring contrast
-  - Title in code says pyplots.ai instead of anyplot.ai
-  - 'Library Mastery: sns.set_context() not used for scaling, no seaborn-specific
-    palette tools leveraged'
+  - plt.savefig("plot.png") — code must read ANYPLOT_THEME env var and save as plot-light.png
+    / plot-dark.png; also needs sns.set_theme(rc={...}) with PAGE_BG/INK/INK_SOFT
+    tokens for proper light/dark adaptation
+  - 'linecolor=white is hardcoded — in dark render creates harsh high-contrast white
+    grid lines and near-zero cells appear as jarring bright-white patches; fix: use
+    adaptive linecolor token (PAGE_BG) for invisible cell separators'
+  - Title code mismatch — ax.set_title(...pyplots.ai...) must be changed to anyplot.ai
+  - Stats annotation overlaps x-axis month tick labels — reposition or adjust layout
+    padding to prevent overlap
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1 range) — correct for light theme.
-      Chrome: Title "heatmap-calendar · seaborn · anyplot.ai" in dark text at ~24pt clearly readable. Y-axis label "Day of Week" and x-axis label "Month — 2024" in dark text, readable. Weekday tick labels (Mon–Sun) and month tick labels (Jan–Dec) at ~16pt, readable. Colorbar label "Daily Contributions" readable. Small stats annotation at bottom ("961 contributions in 2024 · peak week #8: 48 commits") is small but legible. White cell borders between heatmap cells are subtle and appropriate on the light background.
-      Data: Greens colormap from light-green (low activity) to deep forest green (high activity). Weekday vs. weekend differential clearly visible — Mon–Fri noticeably more active than Sat–Sun. Seasonal variation across months visible.
+      Background: Warm off-white (~#FAF8F1) — correct for light theme.
+      Chrome: Title "heatmap-calendar · seaborn · anyplot.ai" at ~24pt in dark text, clearly readable. Y-axis label "Day of Week" in dark text, readable. Weekday tick labels Mon–Sun at ~16pt, readable. Month labels Jan–Dec along x-axis at ~16pt, readable. Colorbar label "Daily Contributions" at ~16pt, tick labels at ~14pt — all readable. Stats annotation at bottom center readable but partially overlaps x-axis tick labels.
+      Data: Greens sequential colormap from pale green (near-zero) to deep forest green (high activity). First series is green — consistent with Greens sequential palette for contribution data. Weekday vs. weekend differential clearly visible (Mon–Fri darker than Sat–Sun). Seasonal variation across months visible.
       Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Very dark near-black (#1A1A17 range) — correct for dark theme.
-      Chrome: Title, axis labels, tick labels, colorbar text all rendered in light/white text — readable against dark background. No dark-on-dark text failures detected.
-      Data: Greens colormap data colors appear identical to light render. However, near-zero value cells render as bright white/near-white boxes (the low end of the Greens colormap), creating jarring high-contrast bright patches on the dark background. White cell borders (linecolor='white') are very stark against the dark surface, much more prominent than in the light render.
-      Legibility verdict: PASS for text (all chrome elements readable). PARTIAL FAIL for data element adaptation — the near-white low-value cells and hardcoded white linecolor create harsh, unintended visual noise in dark mode. The cmap minimum renders as near-white which clashes with the dark background.
+      Background: Warm near-black (~#1A1A17) — correct for dark theme.
+      Chrome: Title, axis labels, weekday labels, month labels, colorbar label and ticks all rendered in light/white text — fully readable against dark surface. No dark-on-dark text failures detected.
+      Data: Greens colormap data colors are identical to light render (only chrome flips). ISSUE: linecolor='white' (hardcoded) creates very stark, high-contrast white cell borders on the dark surface — much more visually prominent than in light render. ISSUE: near-zero-value cells render as very bright near-white (low end of Greens cmap), creating jarring bright patches on the dark background. Stats annotation in light text, slightly overlapping month tick labels.
+      Legibility verdict: PASS for text (all chrome elements readable, no dark-on-dark). PARTIAL FAIL for data element adaptation — hardcoded white linecolor and near-white low-value cells create harsh, unintended visual noise in dark mode.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -53,56 +57,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Sizes explicitly set (title=24, ticks=16, colorbar label=16, colorbar
-          ticks=14). All readable in both themes. Minor: colorbar ticks at 14pt not
-          16pt.'
+        comment: 'Title 24pt, ticks 16pt, colorbar label 16pt — all readable in both
+          themes. Minor: colorbar ticks at 14pt (below 16pt guideline).'
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No text overlap in either theme. Month labels well-spaced. Weekday
-          labels clear.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 'Calendar cells clearly visible and differentiated. Minor: near-zero
-          cells render as very bright white on dark background due to Greens cmap
-          minimum.'
+        comment: Stats annotation partially overlaps x-axis month tick labels in both
+          renders; otherwise no overlaps.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Cells clearly visible in light render. In dark render, near-zero
+          cells render as bright near-white and white cell borders are very harsh
+          — elements visible but with jarring contrast artifacts.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single sequential Greens colormap — CVD-safe. No problematic color
-          combinations.
+        comment: Greens sequential (single-hue) — CVD-safe, no red-green conflict.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 'Calendar fills ~65% of canvas. Colorbar sized appropriately. Balanced
-          layout. Minor: slight extra whitespace at top.'
+        comment: Good proportions, calendar fills ~70% of canvas width, colorbar well-sized.
+          Minor whitespace at top; stats annotation slightly cramped at bottom.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y: ''Day of Week'', X: ''Month — 2024'', Title: correct format in
-          generated images.'
+        comment: Day of Week y-label, month names x-axis, title in correct format
+          in rendered images.
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Greens approved for single-polarity continuous data. Backgrounds
-          correct (#FAF8F1 light, #1A1A17 dark). Text adapts. However linecolor=''white''
-          is hardcoded and harsh in dark render. Near-zero cells appear as bright
-          white on dark background. Partial compliance.'
+        comment: 'Greens approved for single-polarity sequential data; light/dark
+          backgrounds correct. Partial fail: linecolor=''white'' hardcoded — harsh
+          white borders in dark render; near-zero cells appear bright white on dark
+          background.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -110,24 +112,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Greens colormap well-chosen for contribution data. Clean layout with
-          sized colorbar. Stats annotation adds value. Clearly above library defaults
-          but not publication-ready.
+        comment: Greens colormap well-chosen for contribution context. Stats annotation
+          adds analytical value. Above library defaults but not publication-ready.
+          Dark mode harshness lowers polish.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Tick marks removed (tick_params). tight_layout used. White cell borders
-          add grid structure. Good but not perfectly polished (dark mode harsh borders).
+        comment: Tick marks removed, no axis spines, tight_layout used. Cell borders
+          helpful in light mode but harsh in dark mode — between some refinement (4)
+          and minimal customization (2).
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Calendar pattern tells clear story about daily patterns. Weekday
-          vs. weekend differential immediately visible. Stats annotation (total contributions,
-          peak week) highlights key insight.
+        comment: Calendar pattern clearly shows daily/weekly patterns. Weekday vs.
+          weekend differential immediately visible. Stats annotation highlights key
+          quantitative insight.
     spec_compliance:
       score: 14
       max: 15
@@ -137,31 +140,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct calendar heatmap with weekdays as rows, weeks as columns,
-          months as sections.
+        comment: 'Correct calendar heatmap: weekdays as rows, weeks as columns, months
+          as sections.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Weekday labels Mon-Sun on y-axis. Month labels on x-axis. Sequential
-          Greens colormap. Color scale legend (colorbar). Missing dates handled via
-          pivot NaN.
+        comment: Weekday labels Mon-Sun on y-axis, month labels on x-axis, sequential
+          colormap, colorbar legend — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Weekdays correctly on y-axis. Week numbers on x-axis with month label
-          overlay. Color intensity encodes value.
+        comment: Weekdays on y-axis, weeks as columns, color intensity encodes value
+          correctly.
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
         passed: false
-        comment: Images show correct 'heatmap-calendar · seaborn · anyplot.ai' format.
-          However the code file has 'pyplots.ai' instead of 'anyplot.ai' — this will
-          produce wrong title on next run. -1 for code mismatch.
+        comment: Images show correct anyplot.ai format. But code has ax.set_title('...pyplots.ai...')
+          — will produce wrong title on next run. Colorbar correctly labeled.
     data_quality:
       score: 15
       max: 15
@@ -171,23 +172,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full year (365 days). Zero days, low activity, and high activity
-          all represented. Weekday vs. weekend differential visible. Good seasonal
-          variation.
+        comment: Full year (365 days), zero-activity days, low/medium/high cells all
+          visible. Weekday/weekend differential and seasonal variation demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: GitHub-style contribution graph — well-known, neutral, and realistic.
-          Exponential distribution with weekday boost is domain-accurate.
+        comment: 'GitHub-style contribution graph: well-known, neutral, domain-accurate.
+          Exponential distribution with weekday boost matches real developer patterns.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-15 daily contributions is realistic for a developer. 15% zero days
-          is plausible. Exponential distribution appropriate.
+        comment: 0-15 daily contributions realistic; 15% zero-day rate plausible;
+          exponential distribution appropriate.
     code_quality:
       score: 9
       max: 10
@@ -197,7 +197,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: Imports → Data → Pivot → Plot → Style → Save. No functions
+        comment: 'Linear: imports → data → pivot → plot → style → save. No functions
           or classes.'
       - id: CQ-02
         name: Reproducibility
@@ -210,7 +210,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: matplotlib, numpy, pandas, seaborn.'
+        comment: Only matplotlib, numpy, pandas, seaborn — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -223,39 +223,40 @@ review:
         score: 0
         max: 1
         passed: false
-        comment: Saves to plot.png instead of plot-{THEME}.png. No ANYPLOT_THEME env
-          var reading. No sns.set_theme() with adaptive colors. This is a critical
-          pipeline requirement violation.
+        comment: plt.savefig('plot.png') — wrong filename. No ANYPLOT_THEME env var
+          reading. No sns.set_theme() with adaptive tokens. Critical pipeline requirement
+          violation.
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: sns.heatmap() is the right seaborn API for this visualization. cmap,
-          linewidths, linecolor, cbar_kws, vmin/vmax are all native seaborn parameters
-          used correctly. sns.set_context() not leveraged.
+        comment: sns.heatmap() is the correct high-level API. cmap, linewidths, linecolor,
+          cbar_kws, vmin/vmax are native seaborn parameters used correctly. sns.set_context()
+          and sns.set_theme() not leveraged.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Built-in colorbar with cbar_kws is a seaborn/matplotlib feature.
-          Cell-level linewidths is seaborn heatmap specific. But overall could be
-          partially replicated in matplotlib directly. No seaborn-specific palette
-          tools or styling APIs used.
+        comment: cbar_kws for integrated colorbar and linewidths for cell borders
+          are seaborn heatmap-specific. But overall could be largely replicated in
+          matplotlib. No seaborn palette tools or statistical features used.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - manual-ticks
+  - annotations
   patterns:
   - data-generation
   - long-to-wide
+  - matrix-construction
   dataprep:
   - time-series
   styling:
