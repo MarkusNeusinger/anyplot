@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 parallel-basic: Basic Parallel Coordinates Plot
 Library: pygal 3.1.0 | Python 3.14.4
 Quality: 83/100 | Updated: 2026-04-27
@@ -118,11 +118,10 @@ chart = pygal.Line(
     title="parallel-basic · pygal · anyplot.ai",
     x_title="Dimensions",
     y_title="Normalized Value (0–1)",
-    show_dots=True,
-    dots_size=12,
+    show_dots=False,
     stroke_style={"width": 3},
     show_y_guides=True,
-    show_x_guides=True,
+    show_x_guides=False,
     x_label_rotation=0,
     legend_at_bottom=True,
     legend_box_size=52,
@@ -147,7 +146,7 @@ for species_name in species_list:
 for species_name in species_list:
     for row in iris_data[species_name]:
         normalized = [(row[i] - mins[i]) / (maxs[i] - mins[i]) for i in range(4)]
-        chart.add(None, normalized, stroke_style={"width": 2}, allow_interruptions=True)
+        chart.add(None, normalized, stroke_style={"width": 3}, allow_interruptions=True)
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
