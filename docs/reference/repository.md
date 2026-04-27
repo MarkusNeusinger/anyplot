@@ -456,8 +456,13 @@ plt.savefig('plot.png', dpi=300)
 
 **Purpose**: FastAPI REST API
 
-**Key Files**:
-- `main.py` - FastAPI app with all endpoints
+**Structure**:
+- `main.py` - Application entry point and app factory
+- `routers/` - Modular route handlers (specs, plots, analytics, etc.)
+- `dependencies.py` - Shared FastAPI dependencies
+- `schemas.py` - Pydantic request/response schemas
+- `analytics.py` - Server-side Plausible tracking
+- `cache.py` - Server-side TTL caching layer
 
 ---
 
