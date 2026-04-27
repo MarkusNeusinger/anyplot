@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: qq-basic
 created: '2025-12-23T18:13:19Z'
-updated: '2026-04-27T05:35:29Z'
+updated: '2026-04-27T05:50:29Z'
 generated_by: claude-sonnet
 workflow_run: 24977801843
 issue: 977
@@ -12,93 +12,99 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/altair/plot-dark.html
-quality_score: 75
+quality_score: 83
 review:
   strengths:
-  - Correct Q-Q plot structure with scatter points and diagonal reference line
-  - Bimodal synthetic data creates educationally interesting right-tail deviation
-    from normality
-  - Layer composition using Altair + operator is idiomatic and clean
-  - Tooltip encoding adds interactivity appropriate for Altair
-  - configure_view(strokeWidth=0) is a nice polish touch
+  - Correct Q-Q plot with brand green (#009E73) scatter points and theme-adaptive
+    dashed reference line
+  - 'Full theme adaptation: PAGE_BG, INK, INK_SOFT tokens applied correctly; both
+    renders legible'
+  - Title format 'qq-basic · altair · anyplot.ai' correct; output filenames plot-{THEME}.png/.html
+    correct
+  - Layer composition (reference_line + points) is idiomatic Altair; tooltip encoding
+    adds interactivity
+  - Subtle dashed grid (gridDash=[4,4], gridOpacity=0.10) and strokeWidth=0 remove
+    clutter cleanly
+  - scale(zero=False) on both axes maximizes data area without wasted space
   weaknesses:
-  - 'Data point color is #306998 (Python blue) - must be #009E73 (Okabe-Ito position
-    1 / brand green)'
-  - 'Reference line color is #FFD43B (Python yellow) - should use neutral adaptive
-    token (INK_SOFT)'
-  - No theme adaptation - missing os.getenv(ANYPLOT_THEME), PAGE_BG, INK, INK_SOFT
-    tokens and all configure_* theme calls
-  - Output filename is plot.png - must be plot-light.png / plot-dark.png (run twice
-    per theme)
-  - Title says pyplots.ai - must be anyplot.ai
-  - Grid opacity 0.3 is too heavy; style guide recommends 10-15% (0.10)
+  - def norm_ppf(p) is a 30-line helper function defined at the top of the script
+    — violates CQ-01 (no functions/classes); replace with scipy.stats.norm.ppf(p)
+    and add scipy to dependencies, or use np.percentile-based quantile approach inline
+  - Design sophistication (DE-01) is a configured default — consider opacity gradient
+    on off-diagonal points, or color-encoding deviation from the reference line (e.g.,
+    distance from y=x) to add visual interest
+  - Data storytelling (DE-03) is implicit — the bimodal deviation is visible but not
+    emphasized; consider coloring points by deviation magnitude using a viridis colorscale,
+    or adding a subtitle explaining the bimodal mixture
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) - correct theme surface
-      Chrome: Title "qq-basic · altair · anyplot.ai" visible in dark text; axis labels "Theoretical Quantiles" and "Sample Quantiles" in dark text; tick labels clearly readable in dark
-      Data: Teal/green dots (~#009E73) scattered along a dark dashed reference line; bimodal skew visible as upper-right points deviate above line
-      Legibility verdict: PASS (GCS image)
-      NOTE: Images appear to be from GCS production (older correct version), not generated from current code which uses #306998 (Python blue) and #FFD43B (yellow) with no theme adaptation
+      Background: Warm off-white (~#FAF8F1) — correct light theme surface, not pure white
+      Chrome: Title "qq-basic · altair · anyplot.ai" in dark text, clearly readable; x-axis label "Theoretical Quantiles" and y-axis label "Sample Quantiles" in dark text; tick labels (values ~10–90) in dark gray, all clearly readable against the light background
+      Data: Brand green (#009E73) circular markers scattered along a dashed gray reference line (INK_SOFT token); ~100 points with moderate overlap in the central cluster; bimodal skew visible as upper-right points deviate above the 45-degree line
+      Legibility verdict: PASS — all text readable, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) - correct dark theme surface
-      Chrome: Title, axis labels, tick labels all in light text - clearly visible against dark background; no dark-on-dark failures observed
-      Data: Same teal/green dots as light render (Okabe-Ito colors preserved between themes); reference line appears as light dashed line
-      Legibility verdict: PASS (GCS image)
-      NOTE: Current code has no theme adaptation; if run today it would produce identical light/dark renders with wrong colors and Altair default (light) background
+      Background: Warm near-black (~#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title, axis labels, and tick labels all render in light text (F0EFE8 / B8B7B0 tokens), clearly visible against the dark background; no dark-on-dark failures observed
+      Data: Same brand green (#009E73) markers as light render (Okabe-Ito color preserved between themes); reference line appears as a light dashed line (INK_SOFT in dark = #B8B7B0) — clearly visible
+      Legibility verdict: PASS — all text readable, theme chrome flips correctly
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
-        passed: false
-        comment: Font sizes 18/22px set correctly; readable in GCS images but code
-          lacks theme-adaptive text colors (no labelColor/titleColor in configure_axis,
-          no configure_title color)
+        passed: true
+        comment: Title fontSize=28, titleFontSize=22, labelFontSize=18 all explicitly
+          set per style guide; all text readable in both light and dark renders
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean scatter with no collisions
+        comment: No text element overlap; scatter points overlap in dense middle region
+          but that is expected for a QQ plot
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Points and reference line clearly distinguishable
+        comment: size=200 and opacity=0.7 for 100 points is at the upper bound of
+          the guideline (100-200 recommended); markers are slightly large causing
+          central overlap, but reference line and points are clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: No red-green sole signal; CVD-safe
+        comment: '#009E73 is CVD-safe; single series requires no hue-only distinction'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions; y-axis anchored at 0 wastes space when data
-          starts at ~18
+        comment: scale(zero=False) on both axes maximizes data area; 1600x900 landscape
+          fills canvas well with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Theoretical Quantiles and Sample Quantiles correctly labeled
+        comment: Theoretical Quantiles and Sample Quantiles are descriptive and correct
+          for a QQ plot context
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Code uses #306998 (Python blue) instead of #009E73; #FFD43B instead
-          of neutral adaptive; no theme adaptation; no background color set'
+        passed: true
+        comment: 'First and only data series is #009E73; PAGE_BG correctly #FAF8F1
+          (light) and #1A1A17 (dark); INK/INK_SOFT tokens applied to all chrome elements;
+          both renders theme-correct'
     design_excellence:
-      score: 9
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -106,24 +112,27 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Default Altair styling with no distinctive design touches; layer
-          composition correct but minimal design intent
+        comment: Clean and correct but still a configured library default — brand
+          green on off-white/near-black is good, but no distinctive design touches
+          beyond correct token usage
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: configure_view(strokeWidth=0) removes border (good); grid opacity
-          0.3 too heavy (guideline 10-15%); spines not removed
+        comment: 'strokeWidth=0 removes border (good), gridDash=[4,4] with gridOpacity=0.10
+          is refined; domainColor and tickColor set to INK_SOFT keeps axes minimal;
+          missing: explicit padding/margins or annotation refinement'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: true
-        comment: Bimodal mixture creates visible right-tail deviation; reference line
-          makes distribution departure interpretable
+        passed: false
+        comment: Bimodal mixture (N(50,10) + N(75,5)) creates visible S-curve departure
+          from normality which is educationally meaningful, but the visual gives no
+          emphasis or guide to where the departure is — viewer must find it themselves
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -131,27 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Q-Q plot structure
+        comment: 'Correct QQ plot: sample quantiles vs theoretical normal quantiles'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Scatter points, 45-degree reference line, correct axis labels all
-          present
+        comment: Scatter points, 45-degree dashed reference line, correct axis labels
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Theoretical quantiles on x, sample quantiles on y
+        comment: Theoretical quantiles on x-axis, sample quantiles on y-axis — correct
+          per spec
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title is 'qq-basic · altair · pyplots.ai' - should be 'qq-basic ·
-          altair · anyplot.ai'
+        passed: true
+        comment: Title is exactly 'qq-basic · altair · anyplot.ai'; no legend needed
+          for single series
     data_quality:
       score: 14
       max: 15
@@ -161,32 +171,34 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows Q-Q mechanics well; bimodal mixture demonstrates skew interpretation;
-          could show confidence bands
+        comment: Bimodal mixture demonstrates deviation from normality well; could
+          additionally show confidence bands (95% envelope) for richer feature coverage
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated measurement data with realistic distribution mixing; neutral
-          and plausible
+        comment: Simulated measurement data mixing two normal populations; neutral
+          and plausible scientific/QC scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 100 observations appropriate for Q-Q; values in realistic numeric
-          range
+        comment: 100 observations in realistic numeric range (15-90); appropriate
+          for meaningful QQ comparison
     code_quality:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: No functions or classes; clean procedural script
+        passed: false
+        comment: def norm_ppf(p) is a 30-line helper function defined at top of script
+          — violates no-functions/classes rule; should use scipy.stats.norm.ppf()
+          directly
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -198,22 +210,22 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas imported
+        comment: os, altair, numpy, pandas — all used, none extra
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: 30-line manual Abramowitz & Stegun inverse CDF with polynomial constants
-          is gratuitously complex; simpler quantile approach or scipy.special.ndtri
-          would suffice
+        comment: Custom Abramowitz & Stegun ppf implementation (30 lines, 10 polynomial
+          constants) is over-engineered; scipy.stats.norm.ppf() would be one line
+          and more readable
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves plot.png and plot.html instead of required plot-{THEME}.png
-          and plot-{THEME}.html; pipeline-breaking filename error
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly; scale_factor=3.0
+          for high-res PNG
     library_mastery:
       score: 7
       max: 10
@@ -223,15 +235,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper mark_point, alt.X/alt.Y with field types, configure_axis;
-          scale_factor=3.0 for high-res PNG
+        comment: Proper mark_point, alt.X/alt.Y with field types and scale overrides,
+          layer composition, configure_* methods; scale_factor=3.0 for high-res PNG
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
         comment: Layer composition (+) is idiomatic Altair; tooltip encoding; HTML
-          export; but no transforms or selections leveraged
+          export; but no Altair transforms (fold, regression) or selections leveraged
   verdict: REJECTED
 impl_tags:
   dependencies: []
