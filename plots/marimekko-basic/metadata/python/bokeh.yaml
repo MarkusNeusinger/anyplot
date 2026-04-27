@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: marimekko-basic
 created: '2025-12-23T15:16:22Z'
-updated: '2026-04-27T03:25:20Z'
+updated: '2026-04-27T03:39:21Z'
 generated_by: claude-sonnet
 workflow_run: 24974790809
 issue: 1002
@@ -12,30 +12,10 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/marimekko
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/bokeh/plot-dark.html
-quality_score: 84
+quality_score: 88
 review:
-  strengths:
-  - 'Perfect spec compliance: all Marimekko requirements met (variable widths, proportional
-    heights, value labels, legend)'
-  - 'Excellent text sizing: all font sizes explicitly set above minimum thresholds
-    for the 4800x2700 canvas'
-  - Correct Okabe-Ito palette (#009E73 first) with full theme-adaptive chrome — both
-    light and dark renders pass legibility checks
-  - Data is realistic (global e-commerce market) with varied proportions across regions
-    and products that exercise the chart type well
-  - Clean flat KISS code with no functions/classes; correct PNG + HTML output for
-    an interactive library
-  weaknesses:
-  - Legend positioned at data-coordinate x=0.83, placing all four legend items entirely
-    inside the Asia Pacific bar's Food & Beverage (pink) segment (y=0.71-0.92 within
-    segment y=0.717-1.0) — move legend outside the chart area
-  - Pink Food & Beverage legend swatch is camouflaged against the matching pink bar
-    segment — legend needs contrast separation from bar content
-  - Legend ordering is inverted relative to bar stacking (Electronics at legend top
-    = bar bottom; Food & Beverage at legend bottom = bar top) — reverse legend order
-    to match visual reading direction
-  - Minimal data storytelling — no emphasis or focal point to direct viewer attention;
-    consider visual hierarchy technique such as reduced alpha on non-dominant regions
+  strengths: []
+  weaknesses: []
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct, not pure white
