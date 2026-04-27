@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-basic: Basic Line Plot
-Library: seaborn | Python 3.13
-Quality: 92/100 | Updated: 2026-04-27
+Library: seaborn 0.13.2 | Python 3.14.4
+Quality: 90/100 | Updated: 2026-04-27
 """
 
 import os
