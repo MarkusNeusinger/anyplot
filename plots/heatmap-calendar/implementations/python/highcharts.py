@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-calendar: Basic Calendar Heatmap
-Library: highcharts | Python 3.13
-Quality: pending | Updated: 2026-04-27
+Library: highcharts unknown | Python 3.14.4
+Quality: 82/100 | Updated: 2026-04-27
 """
 
 import os
