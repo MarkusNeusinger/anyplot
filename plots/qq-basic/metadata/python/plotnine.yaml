@@ -1,160 +1,176 @@
 library: plotnine
+language: python
 specification_id: qq-basic
 created: '2025-12-23T18:12:18Z'
-updated: '2025-12-23T18:18:35Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468197593
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/qq-basic/plotnine/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies:
-  - scipy
-  techniques:
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - minimal-chrome
+updated: '2026-04-27T05:31:06Z'
+generated_by: claude-sonnet
+workflow_run: 24977857380
+issue: 977
+python_version: 3.14.4
+library_version: 0.15.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
 review:
   strengths:
-  - Clean, professional visualization following ggplot2 grammar of graphics
-  - Excellent text sizing for 4800x2700 output resolution
-  - Data effectively demonstrates Q-Q diagnostic capability with intentional right-tail
-    deviation
-  - Yellow reference line provides clear visual contrast against blue points
-  - Proper standardization of sample quantiles using scipy.stats
+  - 'Perfect visual quality: all font sizes explicitly set (title=24, axis=20, ticks=16),
+    both renders fully legible'
+  - 'Idiomatic plotnine: stat_qq + stat_qq_line are the canonical ggplot2-style built-in
+    stats for Q-Q plots'
+  - Clean minimal code with seed for reproducibility; full spec compliance including
+    correct title format
+  - Theme-adaptive chrome works correctly in both light and dark renders with no dark-on-dark
+    failures
+  - 'Correct palette: brand green #009E73 for data, warm backgrounds #FAF8F1 / #1A1A17'
   weaknesses:
-  - Does not use plotnine built-in stat_qq or stat_qq_line for more idiomatic implementation
-  - Axis labels could include context (e.g., Standard Normal in theoretical quantile
-    label)
-  image_description: The plot displays a Q-Q (Quantile-Quantile) plot comparing sample
-    quantiles against theoretical normal quantiles. Blue circular points (#306998)
-    with alpha=0.7 are plotted along a yellow dashed diagonal reference line (#FFD43B).
-    The title "qq-basic · plotnine · pyplots.ai" is centered at the top. The x-axis
-    is labeled "Theoretical Quantiles" and the y-axis is labeled "Sample Quantiles",
-    both ranging roughly from -2.5 to 2.5. The plot uses a clean minimal theme with
-    subtle gray gridlines. The 100 data points follow the reference line closely in
-    the center but show slight deviation in the upper right tail (above the line),
-    correctly demonstrating the right-skewed data generation. The layout is well-balanced
-    with good use of the 16:9 canvas.
+  - 'DE-01 (4/8): Design stays at configured-defaults level — no design choices beyond
+    the style guide template; needs intentional visual hierarchy or polish'
+  - 'DE-03 (2/6): Upper-tail departure is visible but not emphasized — no annotation,
+    color contrast, or emphasis guides the viewer to the insight'
+  - 'DQ-02 (3/5): No domain context for sample data — purely abstract values with
+    no real-world label or narrative'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white
+      Chrome: Title "qq-basic · plotnine · anyplot.ai" in dark ink, clearly readable; X-axis "Theoretical Quantiles (Standard Normal)" and Y-axis "Sample Quantiles" both in dark text; tick labels in secondary dark ink — all readable
+      Data: ~100 points in brand green #009E73 (alpha=0.7, size=4); dashed gray reference line; upper-tail points visibly deviate above the line indicating heavy right tail
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
+      Chrome: Title, axis labels, and tick labels all rendered in light ink (#F0EFE8 / #B8B7B0); all clearly readable against dark background; no dark-on-dark failures detected; reference line adapts to lighter dashed gray
+      Data: Identical brand green #009E73 points — data colors unchanged from light render; same deviation pattern visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis titles at 20pt, tick labels at 16pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24pt, axis=20pt, ticks=16pt;
+          readable in both renders'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
         passed: true
         comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points well-sized (size=4) with good alpha=0.7 for 100 points; slightly
-          larger could help
+        comment: 100 points at size=4, alpha=0.7; well-adapted to data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow contrast is colorblind-safe
+        comment: Single series, good contrast, CVD-safe Okabe-Ito palette
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins
+        comment: Good canvas utilization, balanced margins, 16:9 landscape
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no units (N/A for standardized quantiles)
+        comment: X includes '(Standard Normal)' qualifier; both axes descriptive
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (minimal theme), no legend needed
+        comment: 'Data=#009E73, backgrounds #FAF8F1/#1A1A17, chrome fully theme-adaptive'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults with brand green and warm background, no
+          design choices beyond template
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Spines removed via theme_minimal, subtle grid alpha 0.10/0.05, good
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Bimodal data choice is intentional but no visual emphasis on tail
+          departure; viewer must find the insight themselves
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Q-Q plot type
+        comment: Correct Q-Q plot with scatter points and reference line
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Theoretical on X, Sample on Y - correct assignment
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Diagonal reference line clearly visible, points show distribution
-          comparison
-      - id: SC-04
-        name: Data Range
+        comment: Points, dashed diagonal line, normal distribution, correct axis labels
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data points
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=theoretical quantiles, Y=sample quantiles, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for this plot type
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: qq-basic · plotnine · pyplots.ai'
+        comment: Title matches 'qq-basic · plotnine · anyplot.ai'; no legend needed
+          for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 12
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows deviation from normality in right tail, but could show more
-          varied distribution characteristics
+        comment: Bimodal mixture shows departure from normality (heavy upper tail);
+          diagnostic capability demonstrated but S-curve and lower-tail effects are
+          understated
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Demonstrates normality testing context well with mixed normal components
+        score: 3
+        max: 5
+        passed: false
+        comment: Plausible measurement data but no domain label; purely abstract 'sample'
+          values with no interpretive context
       - id: DQ-03
         name: Appropriate Scale
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Standardized quantiles in sensible range (-2.5 to 2.5)
+        comment: 100 observations within 30-500 recommended range; values ~5-100 are
+          realistic
     code_quality:
       score: 10
       max: 10
@@ -164,40 +180,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple script structure: imports → data → plot → save'
+        comment: 'Clean linear flow: imports -> tokens -> data -> plot -> save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Fixed seed (np.random.seed(42))
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used, no extras
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; stat_qq + stat_qq_line is idiomatic
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses ggplot grammar correctly but no advanced plotnine features like
-          stat_qq or faceting
-  verdict: APPROVED
+        passed: true
+        comment: Uses stat_qq/stat_qq_line exactly as intended; aes(sample=) mapping
+          is canonically correct
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: stat_qq and stat_qq_line are ggplot2/plotnine-specific built-in statistical
+          transformations; uses distinctive + layer composition
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
