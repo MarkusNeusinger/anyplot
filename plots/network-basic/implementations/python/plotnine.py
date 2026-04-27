@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-basic: Basic Network Graph
 Library: plotnine 0.15.3 | Python 3.14.4
 Quality: 82/100 | Created: 2026-04-27
@@ -14,6 +14,7 @@ import pandas as pd
 try:
     from plotnine import (
         aes,
+        annotate,
         coord_cartesian,
         element_blank,
         element_rect,
@@ -22,10 +23,10 @@ try:
         geom_segment,
         geom_text,
         ggplot,
-        guides,
+        guide_legend,
         labs,
         scale_color_manual,
-        scale_size_continuous,
+        scale_size_area,
         theme,
     )
 except ImportError:
@@ -33,6 +34,7 @@ except ImportError:
     sys.path = [p for p in sys.path if os.path.abspath(p) != os.path.dirname(os.path.abspath(__file__))]
     from plotnine import (
         aes,
+        annotate,
         coord_cartesian,
         element_blank,
         element_rect,
@@ -41,10 +43,10 @@ except ImportError:
         geom_segment,
         geom_text,
         ggplot,
-        guides,
+        guide_legend,
         labs,
         scale_color_manual,
-        scale_size_continuous,
+        scale_size_area,
         theme,
     )
 
@@ -125,7 +127,7 @@ for src, tgt in edges:
     degrees[src] += 1
     degrees[tgt] += 1
 
-# Spring layout: quadrant-based initialization for balanced 4-cluster arrangement
+# Quadrant-based initialization for balanced 4-cluster arrangement
 quadrant_centers = {
     "Team A": np.array([-0.6, 0.6]),
     "Team B": np.array([0.6, 0.6]),
@@ -134,33 +136,28 @@ quadrant_centers = {
 }
 positions = np.zeros((n, 2))
 for i, node in enumerate(nodes):
-    center = quadrant_centers[node["group"]]
-    positions[i] = center + np.random.randn(2) * 0.12
+    positions[i] = quadrant_centers[node["group"]] + np.random.randn(2) * 0.12
 
+# Vectorized Fruchterman-Reingold spring layout
 k = 0.45
 for iteration in range(200):
-    displacement = np.zeros((n, 2))
-
-    for i in range(n):
-        for j in range(i + 1, n):
-            diff = positions[i] - positions[j]
-            dist = max(np.linalg.norm(diff), 0.01)
-            force = (k * k / dist) * (diff / dist)
-            displacement[i] += force
-            displacement[j] -= force
+    diff = positions[:, None, :] - positions[None, :, :]  # (n, n, 2)
+    dist = np.linalg.norm(diff, axis=2, keepdims=True).clip(0.01)
+    repulsion = (k * k / dist**2) * diff
+    np.fill_diagonal(repulsion[:, :, 0], 0)
+    np.fill_diagonal(repulsion[:, :, 1], 0)
+    disp = repulsion.sum(axis=1)
 
     for src, tgt in edges:
-        diff = positions[src] - positions[tgt]
-        dist = max(np.linalg.norm(diff), 0.01)
-        force = (dist * dist / k) * (diff / dist)
-        displacement[src] -= force
-        displacement[tgt] += force
+        d = positions[src] - positions[tgt]
+        dn = max(np.linalg.norm(d), 0.01)
+        f = d * dn / k
+        disp[src] -= f
+        disp[tgt] += f
 
-    cooling = 1 - iteration / 200
-    for i in range(n):
-        disp_norm = np.linalg.norm(displacement[i])
-        if disp_norm > 0:
-            positions[i] += (displacement[i] / disp_norm) * min(disp_norm, 0.1 * cooling)
+    norms = np.linalg.norm(disp, axis=1, keepdims=True).clip(1e-10)
+    step = np.minimum(norms, 0.1 * (1 - iteration / 200))
+    positions += (disp / norms) * step
 
 pos_min = positions.min(axis=0)
 pos_max = positions.max(axis=0)
@@ -186,18 +183,36 @@ edge_df = pd.DataFrame(
 
 group_colors = {"Team A": OKABE_ITO[0], "Team B": OKABE_ITO[1], "Team C": OKABE_ITO[2], "Team D": OKABE_ITO[3]}
 
+# Hub nodes for emphasis — top 20% by degree
+hub_threshold = node_df["degree"].quantile(0.8)
+hub_df = node_df[node_df["degree"] >= hub_threshold].copy()
+top_hub = node_df.loc[node_df["degree"].idxmax()]
+
 # Plot
 plot = (
     ggplot()
     + geom_segment(
         data=edge_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK_SOFT, size=0.7, alpha=0.45
     )
+    # Halo layer highlights hub nodes — uses scale_size_area's proportional area encoding
+    + geom_point(data=hub_df, mapping=aes(x="x", y="y"), size=26, color=INK_SOFT, alpha=0.18, show_legend=False)
     + geom_point(data=node_df, mapping=aes(x="x", y="y", color="group", size="degree"), alpha=0.92)
-    + geom_text(data=node_df, mapping=aes(x="x", y="y", label="label"), color=INK, size=11, nudge_y=0.05, va="bottom")
+    + geom_text(data=node_df, mapping=aes(x="x", y="y", label="label"), color=INK, size=14, nudge_y=0.05, va="bottom")
+    # Annotate top hub node to draw reader's eye
+    + annotate(
+        "text",
+        x=float(top_hub["x"]),
+        y=float(top_hub["y"]) - 0.10,
+        label="hub",
+        color=INK_SOFT,
+        size=12,
+        ha="center",
+        fontstyle="italic",
+    )
     + scale_color_manual(values=group_colors, name="Community")
-    + scale_size_continuous(range=(6, 18))
-    + guides(size=None)
-    + coord_cartesian(xlim=(-0.05, 1.05), ylim=(-0.05, 1.05))
+    # scale_size_area ensures area (not radius) is proportional to degree value
+    + scale_size_area(max_size=20, guide=guide_legend(title="Degree", override_aes={"color": INK_SOFT, "alpha": 0.85}))
+    + coord_cartesian(xlim=(-0.05, 1.05), ylim=(-0.12, 1.05))
     + labs(title="network-basic · plotnine · anyplot.ai")
     + theme(
         figure_size=(16, 9),
