@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 network-basic: Basic Network Graph
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-04-27
+Library: plotnine 0.15.3 | Python 3.14.4
+Quality: 76/100 | Created: 2026-04-27
 """
 
 import os
