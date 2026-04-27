@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 network-basic: Basic Network Graph
 Library: plotnine 0.15.3 | Python 3.14.4
+Quality: 82/100 | Created: 2026-04-27
 """
 
 import os
