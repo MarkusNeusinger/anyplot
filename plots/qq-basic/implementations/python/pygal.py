@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 qq-basic: Basic Q-Q Plot
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: pygal 3.1.0 | Python 3.14.4
+Quality: 72/100 | Updated: 2026-04-27
 """
 
 import math
