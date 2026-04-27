@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 heatmap-calendar: Basic Calendar Heatmap
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: bokeh 3.9.0 | Python 3.14.4
+Quality: 85/100 | Updated: 2026-04-27
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,6 +13,13 @@ from bokeh.models import BasicTicker, ColorBar, ColumnDataSource, FixedTicker, L
 from bokeh.palettes import Greens9
 from bokeh.plotting import figure
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Generate daily values for one year
 np.random.seed(42)
@@ -22,30 +31,21 @@ dates = pd.date_range(start=start_date, end=end_date, freq="D")
 values = []
 for date in dates:
     weekday = date.weekday()
-    # Lower activity on weekends
     base = 2 if weekday >= 5 else 5
-    # Random variation
     val = np.random.poisson(base)
-    # Occasional bursts of high activity
     if np.random.random() < 0.05:
         val += np.random.randint(5, 15)
-    # Some days with no activity
     if np.random.random() < 0.15:
         val = 0
     values.append(val)
 
 df = pd.DataFrame({"date": dates, "value": values})
-
-# Extract calendar components
 df["weekday"] = df["date"].dt.weekday
-
-# Compute continuous week index from start of year
 df["week_of_year"] = (df["date"] - start_date).dt.days // 7
+df["month"] = df["date"].dt.month
 
-# Weekday names for y-axis
 weekday_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
-# Create ColumnDataSource
 source = ColumnDataSource(
     data={
         "week": df["week_of_year"].tolist(),
@@ -55,30 +55,28 @@ source = ColumnDataSource(
     }
 )
 
-# Color mapper - Greens palette from light to dark
-colors = list(reversed(Greens9))
-mapper = LinearColorMapper(palette=colors, low=0, high=df["value"].max())
+# Color mapper — reversed Greens so low=light, high=dark green
+palette = list(reversed(Greens9))
+mapper = LinearColorMapper(palette=palette, low=0, high=df["value"].max())
 
-# Get month start positions for x-axis labels
-df["month"] = df["date"].dt.month
-months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+# Month positions for x-axis labels
+month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 month_starts = df.groupby("month")["week_of_year"].min().to_dict()
 month_ticks = list(month_starts.values())
-month_labels = {v: months[k - 1] for k, v in month_starts.items()}
+month_labels = {v: month_names[k - 1] for k, v in month_starts.items()}
 
-# Create figure with categorical y-axis (weekdays)
+# Plot
 p = figure(
     width=4800,
     height=2700,
-    title="GitHub Contributions 2024 · heatmap-calendar · bokeh · pyplots.ai",
+    title="GitHub Contributions 2024 · heatmap-calendar · bokeh · anyplot.ai",
     x_axis_label="Month",
     y_axis_label="Day of Week",
-    y_range=list(reversed(weekday_names)),  # Mon at top, Sun at bottom
+    y_range=list(reversed(weekday_names)),
     tools="hover",
     tooltips=[("Date", "@date"), ("Contributions", "@value")],
 )
 
-# Draw rectangles for each day
 p.rect(
     x="week",
     y="weekday",
@@ -86,48 +84,58 @@ p.rect(
     height=0.9,
     source=source,
     fill_color={"field": "value", "transform": mapper},
-    line_color="white",
+    line_color=PAGE_BG,
     line_width=2,
 )
 
-# Add color bar
+# Color bar
 color_bar = ColorBar(
     color_mapper=mapper,
     ticker=BasicTicker(desired_num_ticks=6),
     label_standoff=12,
     major_label_text_font_size="18pt",
+    major_label_text_color=INK_SOFT,
     title="Contributions",
     title_text_font_size="20pt",
+    title_text_color=INK,
+    background_fill_color=ELEVATED_BG,
     width=40,
     location=(0, 0),
 )
 p.add_layout(color_bar, "right")
 
-# Configure x-axis to show month labels
+# Month labels on x-axis
 p.xaxis.ticker = FixedTicker(ticks=month_ticks)
 p.xaxis.major_label_overrides = month_labels
 
-# Styling for 4800x2700 px
+# Text sizes
 p.title.text_font_size = "32pt"
+p.title.text_color = INK
 p.xaxis.axis_label_text_font_size = "22pt"
 p.yaxis.axis_label_text_font_size = "22pt"
 p.xaxis.major_label_text_font_size = "20pt"
 p.yaxis.major_label_text_font_size = "20pt"
 
-# Grid styling - disable grid for heatmap
+# Chrome colors
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+
+# No grid for heatmap
 p.xgrid.grid_line_color = None
 p.ygrid.grid_line_color = None
 
 # Background
-p.background_fill_color = "#fafafa"
-p.border_fill_color = "#ffffff"
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
-# Axis styling
-p.xaxis.axis_line_color = "#cccccc"
-p.yaxis.axis_line_color = "#cccccc"
-
-# Save as PNG and HTML
-export_png(p, filename="plot.png")
-
-output_file("plot.html")
+# Save
+export_png(p, filename=f"plot-{THEME}.png")
+output_file(f"plot-{THEME}.html")
 save(p)

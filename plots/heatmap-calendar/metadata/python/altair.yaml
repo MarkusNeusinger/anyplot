@@ -1,169 +1,208 @@
 library: altair
+language: python
 specification_id: heatmap-calendar
 created: '2025-12-23T15:13:28Z'
-updated: '2025-12-23T15:17:19Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20464351320
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - layer-composition
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-04-27T00:56:41Z'
+generated_by: claude-sonnet
+workflow_run: 24971242960
+issue: 1010
+python_version: 3.14.4
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/altair/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent GitHub-style calendar heatmap that perfectly matches the spec requirements
-  - Well-implemented layered approach with heatmap and month text overlays
-  - Good use of weekday/weekend patterns in the simulated data for realism
-  - Clean sequential green colormap that is colorblind accessible
-  - Proper use of tooltips for interactivity showing date, contributions, and day
-    name
-  - Rounded corners (cornerRadius=3) give a polished appearance
+  - GitHub-style calendar heatmap with semantically appropriate 'greens' sequential
+    colormap — light-to-dark green matches the contributions domain perfectly
+  - Altair layer composition (alt.layer) used idiomatically to overlay month labels
+    as a text mark on top of the rect heatmap — distinctive Vega-Lite pattern
+  - All font sizes explicitly set and match pixel-based guidelines (title=28, tick
+    labels=18, legend=16)
+  - Rounded corners on rect marks (cornerRadius=3) add visual polish without clutter
+  - Grid explicitly removed and strokeWidth=0 — clean, minimal aesthetic
+  - Full year of realistic synthetic contribution data (365 days) with plausible weekday/weekend
+    activity distribution
+  - Hover tooltips with date, value, and day-of-week labels leverage Altair's interactive
+    capabilities
+  - Reproducible with np.random.seed(42)
   weaknesses:
-  - Legend could be positioned closer to the heatmap for better visual association
-  - Missing dates (if any existed) would not be visually distinct from zero-value
-    cells
-  - Could benefit from Altair interactivity features (selection, zoom/pan)
-  image_description: The plot displays a GitHub-style calendar heatmap showing "Daily
-    Contributions 2024". The visualization uses a green sequential colormap ranging
-    from very light green (0 contributions) to dark green (15 contributions). The
-    layout shows weekdays (Mon-Sun) on the y-axis and weeks of the year on the x-axis,
-    with month labels (Jan-Dec) positioned at the top. Each day is represented as
-    a rounded rectangle cell. The legend at the bottom shows the "Contributions" scale
-    from 0 to 15. The title correctly includes the spec-id, library name, and pyplots.ai
-    branding. Weekend days (Sat, Sun) visibly show lighter colors indicating less
-    activity, while weekdays show more variation and higher contribution levels.
+  - 'Missing ANYPLOT_THEME support: code does not read os.getenv(''ANYPLOT_THEME'')
+    and has no theme-adaptive chrome tokens (PAGE_BG, INK, INK_SOFT, ELEVATED_BG).
+    The library guide requires explicit theme adaptation in the implementation.'
+  - 'Wrong output filenames: code saves to ''plot.png'' and ''plot.html'' instead
+    of ''plot-{THEME}.png'' and ''plot-{THEME}.html'' as required by the altair.md
+    library guide.'
+  - 'Title contains incorrect branding in code: ''pyplots.ai'' instead of ''anyplot.ai''.
+    The rendered images show correct branding (likely pipeline-corrected), but the
+    source code is wrong.'
+  - Design storytelling is minimal — no emphasis or focal point highlights notable
+    periods of high/low activity. Weekend vs weekday patterns are visible but not
+    guided.
+  - Legend placed at bottom-left with large empty space to its right — could use orient='right'
+    or 'bottom' with better horizontal distribution for the wide canvas.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface (~#FAF8F1) — correct, not pure white.
+      Chrome: Title "Daily Contributions 2024 · heatmap-calendar · altair · anyplot.ai" in dark ink at top-left, clearly readable. Y-axis day labels (Mon–Sun) in dark secondary ink, clearly readable. Month labels (Jan–Dec) integrated as bold dark text at top of each month column, clearly readable. Legend "Contributions" title and tick values (0, 5, 10, 15) in dark ink on a light legend box, clearly readable.
+      Data: Sequential "greens" colormap from pale mint (0 contributions) to deep forest green (~15 contributions). Clear variation across the year; weekdays show denser dark cells than weekends. All 365 cells visible, rounded corners (cornerRadius=3) give a polished look.
+      Legibility verdict: PASS — all text is dark on warm off-white; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface (~#1A1A17) — correct, not pure black.
+      Chrome: Title in light/white ink, clearly readable against dark background. Y-axis day labels (Mon–Sun) in light ink, clearly readable. Month labels in white bold text, clearly readable. Legend "Contributions" and numeric tick labels in light ink on a dark legend box, clearly readable. No dark-on-dark failures detected.
+      Data: Same "greens" colormap — data colors are identical to the light render (only the background/chrome flips). Cell patterns match the light render. Very minor dot artifacts visible at cell-boundary intersections in the dark render (likely cornerRadius rendering difference) but does not affect data readability.
+      Legibility verdict: PASS — all text is light on near-black; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 28pt, weekday labels at 18pt, month labels at 20pt - all
-          clearly readable but tick labels could be slightly larger
+        comment: 'All major font sizes explicitly set: title=28px, month labels=20px,
+          y-axis tick labels=18px, legend=16px. Month labels slightly below the 22px
+          axis-label guideline but all text clearly readable at 3x scale.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, month labels are well-spaced
+        comment: No text overlap anywhere. Y-axis labels, month labels, title, and
+          legend are all well-separated.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Calendar cells are perfectly sized with rounded corners, appropriate
-          for the 365-day data density
+        comment: All 365 calendar cells clearly visible. Color gradient from pale
+          mint to deep green shows clear value variation. Rounded corners add definition.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Green sequential colormap is colorblind-safe
+        comment: Sequential single-hue 'greens' colormap uses luminance variation
+          — CVD-safe and distinguishable for most forms of color blindness.
       - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good canvas utilization, though slight imbalance with empty space
-          on right side
+        comment: Calendar fills canvas well horizontally. Legend at bottom-left with
+          significant empty space to its right is slightly awkward for the wide 16:9
+          canvas.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Y-axis has day names but no explicit label; legend provides value
-          context but no axis title
+        comment: Title 'Daily Contributions 2024' is descriptive. Y-axis shows weekday
+          names. Legend title 'Contributions' explains the color encoding.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Legend well-placed at bottom, but no visible grid (appropriate for
-          heatmap, but legend could be better positioned)
+        comment: Sequential 'greens' colormap is acceptable for single-polarity data
+          that ties to brand context. Light render background appears ~#FAF8F1, dark
+          render background appears ~#1A1A17. Text chrome adapts correctly in both
+          renders. Data colors identical between themes.
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above library defaults: rounded corners, semantic green color, integrated
+          month labels via text layer, no grid. GitHub-style aesthetic is intentional
+          and polished. Not yet at ''strong design'' level due to no custom typography
+          hierarchy or intentional data emphasis.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid explicitly removed, strokeWidth=0, domain lines hidden, ticks
+          removed from both axes. Clean axes setup. Missing refined padding/margin
+          tokens and theme-adaptive background config reduces score.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Weekday vs weekend activity contrast is naturally visible through
+          the data. Calendar structure makes temporal patterns recognizable. No intentional
+          emphasis on notable periods or focal points.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct calendar heatmap type with days as cells
+        comment: 'Correct calendar heatmap: days as cells, weeks as columns, weekdays
+          as rows, months as sections.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Dates on calendar grid, values to color intensity
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Weekday labels on y-axis ✓, month labels at top ✓, sequential colormap
-          ✓, color legend
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec requirements met: weekday labels on Y-axis, month labels
+          at top, sequential colormap, color scale legend, 365-day coverage.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full year 2024 displayed (365 days)
-      - id: SC-05
-        name: Legend Accuracy
+        comment: Weeks on X, weekdays on Y, contribution value as color. All 365 days
+          displayed correctly.
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
+        max: 3
         passed: true
-        comment: '"Contributions" legend correctly shows 0-15 scale'
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: '"Daily Contributions 2024 · heatmap-calendar · altair · pyplots.ai"
-          follows format'
+        comment: Title in images shows correct format (anyplot.ai branding, spec-id,
+          library). However, source code contains wrong branding 'pyplots.ai' — pipeline
+          appears to auto-correct. Legend title 'Contributions' is appropriate.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows weekday/weekend patterns well, variation across months, but
-          missing dates (neutral cells) are not distinctly shown
+        comment: 'Full year (365 days) showing all calendar heatmap features: zero
+          days, low activity, high activity, weekday/weekend patterns, and month-level
+          variation.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: GitHub-style contribution graph is a perfect, recognizable scenario
+        comment: GitHub-style developer contribution graph — highly recognizable,
+          real-world use case, neutral topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 0-15 contributions per day is realistic, though scale could show
-          more variation in high values
+        comment: Values 0-15 commits per day with higher weekday vs weekend probability
+          are realistic for developer activity.
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -171,42 +210,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save (no functions/classes)'
+        comment: 'Clean linear flow: imports → data generation → calendar feature
+          extraction → chart definition → layer composition → save.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) present
+        comment: np.random.seed(42) set before all random operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas used
+        comment: Only altair, numpy, pandas imported — all used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Uses current Altair API
+        max: 2
+        passed: false
+        comment: Code is clean and readable, but completely missing ANYPLOT_THEME
+          environment variable reading and theme-adaptive token definitions. The altair.md
+          library guide requires this.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as plot.png AND plot.html (correct, but filename is just "plot.png"
-          not in proper directory)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves to 'plot.png' and 'plot.html' instead of 'plot-{THEME}.png'
+          and 'plot-{THEME}.html'. No ANYPLOT_THEME logic in output path.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses mark_rect with cornerRadius, layered charts for month labels,
-          tooltips, but could leverage more Altair-specific features like interactivity
-          or selection
-  verdict: APPROVED
+        comment: 'Excellent idiomatic Altair: mark_rect with typed encodings (:O,
+          :Q, :T, :N), alt.Axis with full configuration, alt.Legend with orient/direction,
+          alt.Title with anchor/offset, ordinal sort specification.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses alt.layer() to compose heatmap + text annotations — distinctive
+          Vega-Lite grammar-of-graphics pattern. Ordinal encoding with explicit sort
+          list for weekday ordering. Tooltip interactivity with formatted date. These
+          are characteristic Altair patterns not easily replicated in other libraries.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep:
+  - time-series
+  styling:
+  - custom-colormap
