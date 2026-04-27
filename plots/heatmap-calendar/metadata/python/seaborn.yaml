@@ -1,167 +1,192 @@
 library: seaborn
+language: python
 specification_id: heatmap-calendar
 created: '2025-12-23T15:34:54Z'
-updated: '2025-12-23T15:37:01Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20464838957
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-27T01:39:55Z'
+generated_by: claude-sonnet
+workflow_run: 24971109245
+issue: 1010
+python_version: 3.14.4
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/seaborn/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - colorbar
-    - manual-ticks
-  patterns:
-    - data-generation
-    - long-to-wide
-  dataprep: []
-  styling:
-    - custom-colormap
-    - edge-highlighting
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 80
 review:
   strengths:
-  - Excellent calendar layout with weeks as columns and weekdays as rows
-  - Realistic GitHub-style contribution data with weekday/weekend patterns
-  - Clean green sequential colormap that is accessible and intuitive
-  - Well-proportioned layout with proper cell spacing using white borders
-  - All text is clearly readable at the target resolution
+  - 'Calendar structure (pivot: weekday x week_num) is correctly implemented and renders
+    the GitHub-style grid accurately'
+  - Greens sequential colormap is thematically appropriate and CVD-safe for single-polarity
+    contribution data
+  - Both renders have correct background colors (warm off-white / near-black) and
+    all text is legible in both themes
+  - Realistic data simulation with weekday/weekend activity differential and np.random.seed(42)
+    for reproducibility
+  - Clean linear code with no unnecessary abstractions; sns.heatmap() with cbar_kws
+    is idiomatic seaborn usage
   weaknesses:
-  - Could use seaborn figure-level functions or additional styling features to better
-    showcase the library
-  image_description: The plot displays a calendar heatmap showing daily contributions
-    over the year 2024. The visualization uses a green sequential colormap ("Greens")
-    with white cell borders. Weekdays (Mon-Sun) are labeled on the y-axis, and months
-    (Jan-Dec) are labeled on the x-axis. Each cell represents a day, with color intensity
-    indicating the contribution count (0-15). The colorbar on the right shows "Daily
-    Contributions" ranging from 0 to approximately 15. The title "heatmap-calendar
-    · seaborn · pyplots.ai" is displayed at the top. The plot shows a clear pattern
-    with higher activity (darker green) on weekdays and lower activity (lighter green)
-    on weekends (Sat/Sun rows are noticeably lighter). The layout fills the canvas
-    well with good proportions.
+  - 'Output saved as plot.png instead of plot-{THEME}.png — violates mandatory output
+    naming convention; fix: plt.savefig(f''plot-{THEME}.png'', ...)'
+  - Code lacks ANYPLOT_THEME environment variable handling — no sns.set_theme(rc={...})
+    with adaptive tokens; theme adaptation relies entirely on the pipeline wrapper
+    rather than the code itself
+  - 'linecolor=''white'' is hardcoded — produces harsh white cell borders in dark
+    render; fix: use linecolor=PAGE_BG for adaptive theme-matching borders'
+  - Month labels appear at the bottom x-axis; the spec specifies 'along the top or
+    as section headers'
+  - 'Secondary annotation summary text at the bottom overlaps the month label row
+    in the light render — fix: use fig.text() with a lower y-position below the plot
+    area'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, approximately #FAF8F1 — correct theme surface
+      Chrome: Title "heatmap-calendar · seaborn · anyplot.ai" in dark text at 24pt — clearly readable. Weekday labels (Mon–Sun) in dark text at 16pt — readable. Month labels (Jan–Dec) along bottom x-axis at 16pt — readable. Colorbar "Daily Contributions" label and tick values in dark text — readable. Minor: secondary annotation text at bottom center partially overlaps month labels near Jul/Aug area.
+      Data: Green heatmap cells using "Greens" sequential colormap. Near-white cells for zero/low activity, deep green for high activity (max ~14–15). White cell borders (linewidths=1.5) cleanly separate cells.
+      Legibility verdict: PASS (all primary text readable; minor annotation overlap with month labels)
+
+    Dark render (plot-dark.png):
+      Background: Near-black, approximately #1A1A17 — correct dark theme surface
+      Chrome: Title "heatmap-calendar · seaborn · anyplot.ai" in light text — readable. Weekday labels (Mon–Sun) in light text — readable. Month labels (Jan–Dec) in light text — readable. Colorbar tick values in light text — readable. No dark-on-dark failures detected.
+      Data: Same "Greens" colormap colors as light render — data colors identical ✓. Low-value cells (near-white/pale green) contrast well against dark background. White cell borders (linecolor="white", hardcoded) are visually harsh and prominent against the dark background — aesthetic issue but not a readability failure.
+      Legibility verdict: PASS (all text readable against dark background; white cell borders harsh but not failing)
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 24pt, weekday/month labels at 16pt, colorbar labels at 14-16pt
-          - all perfectly readable
+        comment: Title, weekday, month labels readable in both themes. Minor overlap
+          of annotation text with month labels at bottom.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text, all labels clearly separated
+        score: 4
+        max: 6
+        passed: false
+        comment: Secondary annotation text at bottom overlaps month label row near
+          Jul/Aug in light render.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Cells are well-sized with good visibility, white borders clearly
-          delineate each day
+        comment: All heatmap cells, colorbar, and labels clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Green sequential colormap is colorblind-safe (single hue variation)
+        comment: Greens sequential colormap is CVD-safe; no red-green-only encoding.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins, colorbar properly positioned
+        comment: Good 16:9 landscape format. Heatmap fills canvas well. Minor crowding
+          at bottom due to annotation overlap.
       - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: No axis labels (x/y labels are intentionally empty, but spec doesn't
-          require units)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Colorbar is well-placed and labeled; white cell borders serve as
-          grid
+        comment: Weekday/month labels descriptive; title correctly formatted as spec-id
+          · library · anyplot.ai.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Greens sequential colormap allowed per style guide for single-polarity
+          brand-tied data. Light bg ~#FAF8F1, dark bg ~#1A1A17 both correct.
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: GitHub-style contribution graph aesthetic is intentional and recognizable.
+          Greens colormap thematically appropriate. Above default but no custom typography
+          hierarchy.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Tick marks removed, no grid (correct for heatmap), clean layout.
+          linewidths=1.5 white borders a bit heavy.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Calendar format naturally communicates temporal patterns. Weekday
+          vs weekend activity difference visible. Annotation provides narrative summary.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct calendar heatmap structure with days as cells, weeks as columns
+        comment: Calendar heatmap with days-as-cells, weeks-as-columns. Correct calendar
+          structure.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Weekdays on y-axis, weeks/months on x-axis, values as color intensity
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Has weekday labels (Mon-Sun), month labels, sequential colormap,
-          color scale legend
-      - id: SC-04
-        name: Data Range
+        comment: Weekday labels, colorbar, sequential colormap all present. Month
+          labels shown at bottom; spec specifies top or section headers.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full year 2024 displayed (365 days), all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Weeks on x-axis, days-of-week on y-axis, color encodes contribution
+          count correctly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled "Daily Contributions" with accurate scale
-          0-15
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "heatmap-calendar · seaborn · pyplots.ai"
+        comment: Rendered title is heatmap-calendar · seaborn · anyplot.ai. Colorbar
+          labeled Daily Contributions.
     data_quality:
-      score: 20
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows variation in activity, weekend vs weekday patterns, zero-activity
-          days, high-activity days
+        comment: Shows full year, weekday/weekend patterns, zero days, peak days.
+          Colorbar covers full range.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: GitHub-style contribution graph scenario, realistic daily coding
-          activity pattern
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values 0-15 are realistic for daily contributions, exponential distribution
-          with weekday boost is plausible
+        comment: GitHub-style contributions are plausible, neutral, recognizable domain
+          context. Weekday boost realistic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 365 days (1 year) matches spec recommendation. Values 0-15 are realistic
+          commit counts.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -169,40 +194,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: No functions or classes; clean linear script.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib, numpy, pandas, seaborn - all used
+        comment: All four imports (matplotlib, numpy, pandas, seaborn) are used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: No fake UI; logical pivot-based calendar construction.
       - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 0
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Output & API
         score: 0
-        max: 5
+        max: 1
         passed: false
-        comment: Uses sns.heatmap which is correct but basic; could leverage seaborn's
-          statistical capabilities or additional features
+        comment: Code saves as plot.png instead of required plot-{THEME}.png. Pipeline
+          works around this but code violates naming convention.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: sns.heatmap() is canonical seaborn API. cbar_kws for colorbar customization
+          is idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Uses seaborn linewidths/linecolor cell border parameters and cbar_kws
+          shrink/aspect control. Basic but seaborn-native.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - manual-ticks
+  patterns:
+  - data-generation
+  - long-to-wide
+  dataprep:
+  - time-series
+  styling:
+  - custom-colormap
+  - edge-highlighting
