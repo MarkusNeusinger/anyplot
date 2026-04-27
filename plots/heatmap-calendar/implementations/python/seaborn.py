@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 heatmap-calendar: Basic Calendar Heatmap
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: seaborn 0.13.2 | Python 3.14.4
+Quality: 80/100 | Updated: 2026-04-27
 """
 
 import matplotlib.pyplot as plt

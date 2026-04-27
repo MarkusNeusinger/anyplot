@@ -1,182 +1,188 @@
 library: highcharts
+language: python
 specification_id: heatmap-calendar
 created: '2025-12-23T15:14:27Z'
-updated: '2025-12-23T15:21:27Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20464353848
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-27T01:17:54Z'
+generated_by: claude-sonnet
+workflow_run: 24971377603
+issue: 1010
+python_version: 3.14.4
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/highcharts/plot.html
-quality_score: 92
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - colorbar
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/highcharts/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent GitHub-style contribution graph aesthetic with appropriate green gradient
-    colors
-  - Realistic data generation with weekday/weekend patterns and seasonal variation
-  - Proper calendar structure with weeks as columns and days as rows
-  - Clean title format following the required convention
-  - Good use of white borders and rounded corners for visual appeal
-  - Comprehensive tooltip implementation with proper pluralization
+  - 'Perfect spec compliance: all required features (weekday labels, month labels,
+    sequential colormap, empty cell handling, color legend) present and working'
+  - 'Brand-anchored color palette using #009E73 as the mid-point of the sequential
+    ramp is a thoughtful design choice'
+  - Theme-adaptive chrome correctly implemented in both renders with no dark-on-dark
+    failures
+  - Realistic GitHub-style commit history data with seasonal variation makes the visualization
+    immediately comprehensible
+  - Clean flat code structure with proper seeding and both PNG+HTML outputs
   weaknesses:
-  - Bottom portion of canvas has noticeable empty space; layout could be more balanced
-  - Legend title could include a subtitle explaining the scale
-  - PNG has slight aspect ratio issue (2661px instead of 2700px)
-  image_description: 'The plot displays a GitHub-style calendar heatmap showing daily
-    activity for the year 2024. The visualization uses a grid layout with:
+  - 'VQ-07: Custom green sequential palette not in VQ-07 recommended heatmap cmaps
+    (viridis/Reds/Blues); switch to viridis stops or Blues ramp'
+  - 'VQ-05: Selenium screenshot captures 2561px height instead of 2700px; fix window-size/screenshot
+    mismatch'
+  - 'DE-01: Add month separator plotLines on x-axis at month boundaries for visual
+    structure and publication-quality polish'
+  - 'LM-02: Leverage more distinctive Highcharts features such as plotLines/plotBands
+    for month separators or colorAxis.dataClasses for discrete buckets'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "Daily Activity 2024 · heatmap-calendar · highcharts · anyplot.ai" in bold dark #1A1A17 text (56px), clearly readable. Month names (Jan-Dec) as x-axis top labels in INK_SOFT (#4A4A44), readable. Weekday labels (Mon-Sun) on left y-axis in INK_SOFT, readable. Legend "Commits" label in INK (#1A1A17), readable.
+      Data: Sequential green ramp from warm neutral gray (CELL_EMPTY #E8E5DC for 0 commits) through light teal (#B8E6D8), medium teal (#56C7A5), brand green (#009E73), dark teal (#007055), to near-black green (#004A3A) for peak activity. Weekday/weekend pattern immediately visible (Sat/Sun rows mostly neutral gray). Seasonal activity peaks visible in spring/fall months.
+      Legibility verdict: PASS — all text readable against light background
 
-    - **Y-axis**: Weekday labels (Mon through Sun) on the left side
-
-    - **X-axis**: Month labels (Jan through Dec) along the top
-
-    - **Colors**: A sequential green gradient from light gray (#ebedf0) for no activity
-    to dark green (#216e39) for high activity, mimicking GitHub contribution graphs
-
-    - **Title**: "Daily Activity 2024 · heatmap-calendar · highcharts · pyplots.ai"
-    at the top center
-
-    - **Legend**: Vertical color scale on the right showing "Commits" with values
-    0-16
-
-    - **Layout**: Each cell represents one day, with weeks as columns and days of
-    the week as rows. White borders separate individual cells with rounded corners.
-
-    - **Data pattern**: Clear weekday vs weekend pattern visible (top rows for Sat/Sun
-    show more gray/light cells), with seasonal variation showing higher activity in
-    spring/fall months.'
+    Dark render (plot-dark.png):
+      Background: Near-black warm #1A1A17 — correct, not pure black
+      Chrome: Title in light #F0EFE8 text, clearly readable. Month labels in #B8B7B0 (INK_SOFT dark), readable against dark background. Weekday labels in #B8B7B0, readable. No dark-on-dark failures observed. Legend "Commits" label in light INK (#F0EFE8), readable.
+      Data: Green sequential data colors identical to light render (data colors correctly theme-invariant). Empty cells render as dark gray #3A3A36 against #1A1A17 background — distinguishable but lower contrast than light mode. Active green cells (medium to dark green) are clearly visible against the dark background. Canvas height captures 2561px instead of 2700px in both renders, but all content (including Sun row and legend) is fully visible.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title, axis labels, and legend text are all clearly readable at full
-          resolution
+        comment: 'All font sizes explicitly set: title 56px, weekday labels 36px,
+          month labels 32px, legend 28-34px; all readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements; month labels and weekday labels are
-          well-spaced
+        comment: Clean layout; month labels well-spaced at top, weekday labels clearly
+          separated on left
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Cell sizes are appropriate for the data density, each day is clearly
-          visible
+        comment: 'Green data cells clearly visible; empty cells in dark mode (#3A3A36
+          on #1A1A17) have lower contrast but intentional GitHub-style design'
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Uses a sequential green colormap that is colorblind-safe (single
-          hue gradient)
+        comment: Single-hue sequential green palette; luminance-only encoding is CVD-safe
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 3
-        max: 5
+        max: 4
         passed: true
-        comment: Good use of canvas but there is noticeable empty space at the bottom
-          and some imbalance
+        comment: Good balanced layout with generous margins; Selenium captures 2561px
+          height instead of 2700px (all content visible)
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Weekday labels are descriptive but no units (not applicable for this
-          plot type)
+        comment: Commits legend label, month names, and weekday names are all descriptive
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 1
         max: 2
+        passed: false
+        comment: Both theme backgrounds correct (#FAF8F1/#1A1A17); chrome tokens properly
+          theme-adapted. But custom Greens heatmap palette not in VQ-07 recommended
+          list (viridis/Reds/Blues). Style guide allows Blues/Greens for brand-tied
+          single-polarity data but VQ-07 scoring table requires viridis/Reds/Blues
+          for heatmaps.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: true
-        comment: Legend is well-placed; white cell borders serve as grid and work
-          well
+        comment: 'Clearly above defaults: brand-anchored color stops, rounded cells
+          (borderRadius: 4), theme-adaptive empty cell colors, GitHub-inspired layout.
+          Missing month separator lines and additional typographic hierarchy to reach
+          publication quality.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Grid lines disabled, x-axis lines hidden (lineWidth: 0), cell borders
+          as only structural chrome, generous margins configured'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Calendar layout guides viewer: weekday/weekend differential immediately
+          visible; seasonal peaks create rhythm; color ramp creates natural visual
+          hierarchy'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct calendar heatmap implementation
+        comment: Correct calendar heatmap with week columns and weekday rows
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Days correctly mapped to grid positions, weeks as columns, weekdays
-          as rows
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: weekday labels, month labels, sequential
-          colormap, color legend'
-      - id: SC-04
-        name: Data Range
+        comment: Weekday labels, month labels along top, sequential colormap, neutral
+          empty cells, color scale legend all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full year of data displayed (365 days)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: x=week index, y=weekday, color=activity value; correct calendar grid
+          structure
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labeled as "Commits" with proper scale
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "Daily Activity 2024 · heatmap-calendar · highcharts
-          · pyplots.ai"'
+        comment: Title matches {spec-id} · {library} · anyplot.ai format; legend labeled
+          Commits
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows weekday/weekend patterns and seasonal variation; missing days
-          handled as gray cells
+        comment: Full year showing zero-activity, moderate, and peak days; weekday/weekend
+          differential; seasonal variation; range 0-16+ commits
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: GitHub-style commit activity is a perfect real-world scenario
+        comment: GitHub-style daily commit history; neutral, plausible developer activity
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Commit values 0-15 are realistic; some edge values could be more
-          varied
+        comment: 365 days (within 365-730 spec); commit counts 0-16 realistic for
+          a developer
     code_quality:
       score: 10
       max: 10
@@ -186,40 +192,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: 'Flat script: imports -> tokens -> data -> chart config -> download
+          -> export'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no unused packages
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Highcharts API
+        comment: Clean, well-organized; URL fallback logic for CDN is appropriate
+          complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Outputs plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct Highcharts heatmap module usage; color_axis with stops; x_axis
+          opposite=True; y_axis reversed=True; JavaScript tooltip formatter; container=container
+          specified
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts heatmap module with custom color stops, tooltip formatter
-          with JavaScript, but could leverage more interactive features
-  verdict: APPROVED
+        comment: Uses Highcharts heatmap module, color_axis API, borderRadius on cells,
+          JS tooltip callback. Could go further with plotLines/plotBands for month
+          separators.
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  - colorbar
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - custom-colormap

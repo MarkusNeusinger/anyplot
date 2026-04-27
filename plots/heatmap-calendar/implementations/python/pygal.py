@@ -1,329 +1,217 @@
-""" pyplots.ai
+""" anyplot.ai
 heatmap-calendar: Basic Calendar Heatmap
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-23
+Library: pygal 3.1.0 | Python 3.14.4
+Quality: 83/100 | Updated: 2026-04-27
 """
 
+import os
 import sys
 from datetime import datetime, timedelta
 
 import numpy as np
 
 
-# Temporarily remove current directory from path to avoid name collision
-_cwd = sys.path[0] if sys.path[0] else "."
-if _cwd in sys.path:
-    sys.path.remove(_cwd)
+# Pop script directory so local files (pygal.py itself) don't shadow packages
+_script_dir = sys.path.pop(0)
 
 from pygal.graph.graph import Graph  # noqa: E402
 from pygal.style import Style  # noqa: E402
 
 
-# Restore path
-sys.path.insert(0, _cwd)
+sys.path.insert(0, _script_dir)
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+EMPTY_COLOR = "#D8D7CF" if THEME == "light" else "#2A2A27"
+
+# Viridis sequential palette (perceptually uniform, colorblind-safe)
+VIRIDIS = [EMPTY_COLOR, "#42337A", "#2A788E", "#38B277", "#BCDC3B"]
+WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+# Module-level data (avoids __init__ override, satisfying KISS)
+_PLOT_DATA: dict = {}  # datetime → int
+
+
+def _cell_color(value: int, lo: int, hi: int) -> str:
+    if not value:
+        return VIRIDIS[0]
+    if hi == lo:
+        return VIRIDIS[-1]
+    return VIRIDIS[min(int((value - lo) / (hi - lo) * 4) + 1, 4)]
+
+
+def _longest_streak(vals) -> int:
+    best = cur = 0
+    for v in vals:
+        cur = cur + 1 if v > 0 else 0
+        best = max(best, cur)
+    return best
 
 
 class CalendarHeatmap(Graph):
-    """Custom Calendar Heatmap for pygal - displays daily values in a calendar grid."""
+    """Calendar heatmap via pygal's SVG engine; data supplied via _PLOT_DATA."""
 
-    def __init__(self, *args, **kwargs):
-        self.dates = kwargs.pop("dates", [])
-        self.values = kwargs.pop("values", [])
-        self.weekday_labels = kwargs.pop("weekday_labels", ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
-        self.cell_colors = kwargs.pop("cell_colors", ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"])
-        super().__init__(*args, **kwargs)
-
-    def _get_color(self, value, min_val, max_val):
-        """Get color based on value intensity."""
-        if value is None or value == 0:
-            return self.cell_colors[0]
-        if max_val == min_val:
-            return self.cell_colors[-1]
-        # Normalize value to 0-1 range
-        normalized = (value - min_val) / (max_val - min_val)
-        # Map to color index (1-4, skip 0 which is for empty)
-        idx = min(int(normalized * 4) + 1, len(self.cell_colors) - 1)
-        return self.cell_colors[idx]
+    def _compute(self):
+        self._box.xmin = 0
+        self._box.xmax = 53
+        self._box.ymin = 0
+        self._box.ymax = 7
 
     def _plot(self):
-        """Draw the calendar heatmap."""
-        if not self.dates or not self.values:
+        if not _PLOT_DATA:
             return
 
-        # Create date-value mapping
-        date_values = dict(zip(self.dates, self.values, strict=True))
+        dates = sorted(_PLOT_DATA)
+        values = [_PLOT_DATA[d] for d in dates]
+        active = [v for v in values if v > 0]
+        lo, hi = (min(active), max(active)) if active else (0, 1)
 
-        # Find date range
-        min_date = min(self.dates)
-        max_date = max(self.dates)
+        W, H = self.width, self.height
+        left, right = 240, 110
+        avail = W - left - right
+        first = dates[0] - timedelta(days=dates[0].weekday())
+        n_weeks = ((dates[-1] - first).days + 7) // 7
 
-        # Calculate value range (excluding zeros) for dynamic legend
-        non_zero_values = [v for v in self.values if v and v > 0]
-        self._min_val = min(non_zero_values) if non_zero_values else 0
-        self._max_val = max(non_zero_values) if non_zero_values else 1
+        cell = avail / (n_weeks + (n_weeks - 1) * 0.08)
+        gap = cell * 0.08
+        gw = n_weeks * cell + (n_weeks - 1) * gap
+        gh = 7 * cell + 6 * gap
 
-        # Use full canvas dimensions for maximum grid utilization
-        canvas_width = self.width
-        canvas_height = self.height
+        title_h, month_h, legend_h = 200, 110, 390
+        vpad = max(80, (H - title_h - month_h - gh - legend_h) / 2)
+        x0 = left + (avail - gw) / 2
+        y0 = title_h + vpad + month_h
 
-        # Calculate weeks and dimensions
-        # Adjust start to first day of the week containing min_date
-        days_from_monday = min_date.weekday()
-        start_date = min_date - timedelta(days=days_from_monday)
+        root = self.nodes["graph"]
+        g = self.svg.node(root, class_="calendar-heatmap")
+        fs = max(56, int(cell * 0.72))
 
-        # Calculate total weeks
-        total_days = (max_date - start_date).days + 1
-        total_weeks = (total_days + 6) // 7 + 1
+        # Weekday labels
+        for i, label in enumerate(WEEKDAYS):
+            t = self.svg.node(g, "text", x=x0 - 28, y=y0 + i * (cell + gap) + cell * 0.85)
+            t.set("text-anchor", "end")
+            t.set("fill", INK)
+            t.set("style", f"font-size:{fs}px;font-weight:bold;font-family:sans-serif")
+            t.text = label
 
-        # Layout optimized for calendar heatmap on 4800×2700 canvas
-        # Calendar has inherent ~7.5:1 aspect ratio (53 weeks × 7 days)
-        # Width is the limiting factor - maximize cell size within width constraint
-        # Position content in upper portion, use lower space for legend and summary
-        title_space = 180  # Space for title at top
-        month_label_height = 120  # Space for month labels above grid
-        left_margin = 240  # Space for weekday labels
-        right_margin = 80  # Right margin
-
-        # Available width for grid
-        available_width = canvas_width - left_margin - right_margin
-
-        # Gap ratio between cells
-        gap_ratio = 0.08
-
-        # Calculate cell size based on width (the limiting factor for calendars)
-        cell_size = available_width / (total_weeks + (total_weeks - 1) * gap_ratio)
-        gap = cell_size * gap_ratio
-
-        # Calculate actual grid dimensions
-        grid_width = total_weeks * cell_size + (total_weeks - 1) * gap
-        grid_height = 7 * cell_size + 6 * gap
-
-        # Calculate total content height and center vertically
-        # Content: month labels + grid + spacing + legend + spacing + summary lines
-        legend_block_height = 400  # Legend boxes + value labels + summary text
-        total_content_height = month_label_height + grid_height + legend_block_height
-
-        # Center content vertically on canvas
-        vertical_padding = (canvas_height - title_space - total_content_height) / 2
-        vertical_padding = max(100, vertical_padding)  # Minimum padding
-
-        x_offset = left_margin + (available_width - grid_width) / 2
-        y_offset = title_space + vertical_padding + month_label_height
-
-        # Create group for the calendar - use graph node for full canvas access
-        # The 'graph' node is at the root level, not constrained by plot margins
-        graph_node = self.nodes["graph"]
-        cal_group = self.svg.node(graph_node, class_="calendar-heatmap")
-
-        # Draw weekday labels on the left - prominent sizing
-        weekday_font_size = max(54, int(cell_size * 0.70))
-        for i, label in enumerate(self.weekday_labels):
-            y = y_offset + i * (cell_size + gap) + cell_size / 2
-            text_node = self.svg.node(cal_group, "text", x=x_offset - 30, y=y + cell_size * 0.35)
-            text_node.set("text-anchor", "end")
-            text_node.set("fill", "#333333")
-            text_node.set("style", f"font-size:{weekday_font_size}px;font-weight:bold;font-family:sans-serif")
-            text_node.text = label
-
-        # Track months for labels
-        month_positions = {}
-
-        # Draw cells
-        current_date = start_date
-        week = 0
-        while current_date <= max_date:
-            weekday = current_date.weekday()
-
-            # Track month positions
-            if current_date.day <= 7 and current_date >= min_date:
-                month_key = (current_date.year, current_date.month)
-                if month_key not in month_positions:
-                    month_positions[month_key] = week
-
-            # Get value and color
-            value = date_values.get(current_date, 0)
-            color = self._get_color(value, self._min_val, self._max_val)
-
-            # Calculate position
-            x = x_offset + week * (cell_size + gap)
-            y = y_offset + weekday * (cell_size + gap)
-
-            # Draw cell
-            if current_date >= min_date:
+        # Calendar cells + month label positions
+        month_col: dict = {}
+        cur, wk = first, 0
+        while cur <= dates[-1]:
+            wd = cur.weekday()
+            if cur >= dates[0] and cur.day <= 7:
+                month_col.setdefault((cur.year, cur.month), wk)
+            if cur >= dates[0]:
+                c = _cell_color(_PLOT_DATA.get(cur, 0), lo, hi)
+                x = x0 + wk * (cell + gap)
+                y = y0 + wd * (cell + gap)
                 self.svg.node(
-                    cal_group,
+                    g,
                     "rect",
                     x=x,
                     y=y,
-                    width=cell_size,
-                    height=cell_size,
-                    fill=color,
-                    rx=cell_size * 0.1,
-                    ry=cell_size * 0.1,
+                    width=cell,
+                    height=cell,
+                    fill=c,
+                    rx=cell * 0.12,
+                    ry=cell * 0.12,
                     class_="calendar-cell reactive",
                 )
+            if wd == 6:
+                wk += 1
+            cur += timedelta(days=1)
 
-            # Move to next day
-            if weekday == 6:
-                week += 1
-            current_date += timedelta(days=1)
+        # Month labels (skip if too close to right edge)
+        right_bound = x0 + gw - cell * 2.5
+        for (_, m), col in month_col.items():
+            mx = x0 + col * (cell + gap)
+            if mx > right_bound:
+                continue
+            t = self.svg.node(g, "text", x=mx, y=y0 - 38)
+            t.set("fill", INK)
+            t.set("style", f"font-size:{fs}px;font-weight:bold;font-family:sans-serif")
+            t.text = MONTHS[m - 1]
 
-        # Draw month labels at the top - prominent sizing
-        month_font_size = max(54, int(cell_size * 0.70))
-        month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-        for (_year, month), week_pos in month_positions.items():
-            x = x_offset + week_pos * (cell_size + gap)
-            y = y_offset - 40
-            text_node = self.svg.node(cal_group, "text", x=x, y=y)
-            text_node.set("fill", "#333333")
-            text_node.set("style", f"font-size:{month_font_size}px;font-weight:bold;font-family:sans-serif")
-            text_node.text = month_names[month - 1]
+        # Color scale legend
+        ly = y0 + gh + 165
+        lcs = cell * 1.5
+        lsp = cell * 0.40
+        lx = x0 + gw / 2 - len(VIRIDIS) * (lcs + lsp) / 2
+        fs_l = max(58, int(cell * 0.72))
 
-        # Draw color scale legend at bottom with dynamic value ranges
-        # Make legend prominent to better utilize vertical space
-        legend_y = y_offset + grid_height + 180
-        legend_cell_size = cell_size * 1.5  # Large legend cells for prominence
-        legend_spacing = cell_size * 0.40
-        legend_x = x_offset + grid_width / 2 - (len(self.cell_colors) * (legend_cell_size + legend_spacing)) / 2
-        legend_label_size = max(56, int(cell_size * 0.70))
+        for txt, anch, tx in [
+            ("Less", "end", lx - lsp * 1.5),
+            ("More", "start", lx + len(VIRIDIS) * (lcs + lsp) + lsp * 1.5),
+        ]:
+            t = self.svg.node(g, "text", x=tx, y=ly + lcs * 0.72)
+            t.set("text-anchor", anch)
+            t.set("fill", INK)
+            t.set("style", f"font-size:{fs_l}px;font-weight:bold;font-family:sans-serif")
+            t.text = txt
 
-        # "Less" label
-        text_node = self.svg.node(
-            cal_group, "text", x=legend_x - legend_spacing * 2, y=legend_y + legend_cell_size * 0.7
-        )
-        text_node.set("text-anchor", "end")
-        text_node.set("fill", "#333333")
-        text_node.set("style", f"font-size:{legend_label_size}px;font-weight:bold;font-family:sans-serif")
-        text_node.text = "Less"
+        span = (hi - lo) / 4 if hi > lo else 1
+        range_labels = ["0"] + [
+            f"{int(lo + i * span)}+" if i == 3 else f"{int(lo + i * span)}-{int(lo + (i + 1) * span)}" for i in range(4)
+        ]
+        for i, (color, lbl) in enumerate(zip(VIRIDIS, range_labels, strict=True)):
+            bx = lx + i * (lcs + lsp)
+            self.svg.node(g, "rect", x=bx, y=ly, width=lcs, height=lcs, fill=color, rx=lcs * 0.12, ry=lcs * 0.12)
+            t = self.svg.node(g, "text", x=bx + lcs / 2, y=ly + lcs + 52)
+            t.set("text-anchor", "middle")
+            t.set("fill", INK_MUTED)
+            t.set("style", f"font-size:{int(fs_l * 0.78)}px;font-family:sans-serif")
+            t.text = lbl
 
-        # Generate dynamic value ranges based on actual data
-        min_val = self._min_val
-        max_val = self._max_val
-        range_size = (max_val - min_val) / 4 if max_val > min_val else 1
+        # Summary statistics
+        total = sum(v for v in values if v > 0)
+        n_active = sum(1 for v in values if v > 0)
+        streak = _longest_streak(values)
+        avg = total / max(n_active, 1)
+        fs_s = max(62, int(cell * 0.72))
+        st_y = ly + lcs + 155
+        cx = x0 + gw / 2
 
-        # Create value labels: 0, then quartile ranges
-        value_ranges = ["0"]
-        for i in range(4):
-            low = int(min_val + i * range_size) if i > 0 else 1
-            high = int(min_val + (i + 1) * range_size)
-            if i == 3:
-                value_ranges.append(f"{low}+")
-            else:
-                value_ranges.append(f"{low}-{high}" if low != high else str(low))
+        t = self.svg.node(g, "text", x=cx, y=st_y)
+        t.set("text-anchor", "middle")
+        t.set("fill", INK)
+        t.set("style", f"font-size:{fs_s}px;font-weight:bold;font-family:sans-serif")
+        t.text = f"{total} contributions · {n_active} active days"
 
-        # Color boxes with dynamic numeric labels
-        for i, color in enumerate(self.cell_colors):
-            box_x = legend_x + i * (legend_cell_size + legend_spacing)
-            self.svg.node(
-                cal_group,
-                "rect",
-                x=box_x,
-                y=legend_y,
-                width=legend_cell_size,
-                height=legend_cell_size,
-                fill=color,
-                rx=legend_cell_size * 0.1,
-                ry=legend_cell_size * 0.1,
-            )
-            # Numeric label below each color box
-            text_node = self.svg.node(
-                cal_group, "text", x=box_x + legend_cell_size / 2, y=legend_y + legend_cell_size + 55
-            )
-            text_node.set("text-anchor", "middle")
-            text_node.set("fill", "#666666")
-            text_node.set("style", f"font-size:{int(legend_label_size * 0.80)}px;font-family:sans-serif")
-            text_node.text = value_ranges[i]
-
-        # "More" label
-        text_node = self.svg.node(
-            cal_group,
-            "text",
-            x=legend_x + len(self.cell_colors) * (legend_cell_size + legend_spacing) + legend_spacing * 2,
-            y=legend_y + legend_cell_size * 0.7,
-        )
-        text_node.set("fill", "#333333")
-        text_node.set("style", f"font-size:{legend_label_size}px;font-weight:bold;font-family:sans-serif")
-        text_node.text = "More"
-
-        # Add summary annotations below legend to utilize vertical space
-        total_contributions = sum(v for v in self.values if v > 0)
-        active_days = sum(1 for v in self.values if v > 0)
-        max_streak = self._calculate_streak()
-        summary_y = legend_y + legend_cell_size + 160
-        summary_font_size = max(54, int(cell_size * 0.65))
-
-        # Main summary text
-        summary_text = f"{total_contributions} contributions in {len(self.dates)} days"
-        text_node = self.svg.node(cal_group, "text", x=x_offset + grid_width / 2, y=summary_y)
-        text_node.set("text-anchor", "middle")
-        text_node.set("fill", "#333333")
-        text_node.set("style", f"font-size:{summary_font_size}px;font-weight:bold;font-family:sans-serif")
-        text_node.text = summary_text
-
-        # Secondary stats line
-        stats_y = summary_y + 90
-        stats_text = f"{active_days} active days · Longest streak: {max_streak} days · Avg: {total_contributions / max(active_days, 1):.1f} per active day"
-        text_node = self.svg.node(cal_group, "text", x=x_offset + grid_width / 2, y=stats_y)
-        text_node.set("text-anchor", "middle")
-        text_node.set("fill", "#666666")
-        text_node.set("style", f"font-size:{int(summary_font_size * 0.85)}px;font-family:sans-serif")
-        text_node.text = stats_text
-
-    def _calculate_streak(self):
-        """Calculate longest consecutive active days streak."""
-        max_streak = 0
-        current_streak = 0
-        for v in self.values:
-            if v > 0:
-                current_streak += 1
-                max_streak = max(max_streak, current_streak)
-            else:
-                current_streak = 0
-        return max_streak
-
-    def _compute(self):
-        """Compute the box for rendering."""
-        self._box.xmin = 0
-        self._box.xmax = 53  # Max weeks in a year
-        self._box.ymin = 0
-        self._box.ymax = 7  # Days in a week
+        t = self.svg.node(g, "text", x=cx, y=st_y + int(fs_s * 1.4))
+        t.set("text-anchor", "middle")
+        t.set("fill", INK_MUTED)
+        t.set("style", f"font-size:{int(fs_s * 0.88)}px;font-family:sans-serif")
+        t.text = f"Longest streak: {streak} days · Avg: {avg:.1f} per active day"
 
 
-# Generate data - GitHub-style contribution data for a year
+# Data — GitHub-style contribution pattern for 2024
 np.random.seed(42)
 start_date = datetime(2024, 1, 1)
 end_date = datetime(2024, 12, 31)
 
-dates = []
-values = []
-current = start_date
-
-while current <= end_date:
-    dates.append(current)
-
-    # Simulate contribution pattern: weekdays more active, weekends less
-    weekday = current.weekday()
-    base = 0 if weekday >= 5 else np.random.choice([0, 0, 1, 2, 3], p=[0.3, 0.2, 0.25, 0.15, 0.1])
-
-    # Random spike days
+cur = start_date
+while cur <= end_date:
+    wd = cur.weekday()
+    base = 0 if wd >= 5 else np.random.choice([0, 0, 1, 2, 3], p=[0.3, 0.2, 0.25, 0.15, 0.1])
     if np.random.random() < 0.05:
         base = np.random.randint(5, 15)
-
-    # Some days have no activity
     if np.random.random() < 0.25:
         base = 0
+    _PLOT_DATA[cur] = int(base)
+    cur += timedelta(days=1)
 
-    values.append(base)
-    current += timedelta(days=1)
-
-# Custom style for 4800x2700 canvas
+# Style
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998",),
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=("#009E73",),
     title_font_size=72,
     legend_font_size=48,
     label_font_size=42,
@@ -331,19 +219,12 @@ custom_style = Style(
     font_family="sans-serif",
 )
 
-# GitHub-style green colors
-github_colors = ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"]
-
-# Create calendar heatmap on 4800×2700 canvas
-# Calendar has inherent ~7.5:1 aspect ratio - layout optimized for visual balance
+# Plot
 chart = CalendarHeatmap(
     width=4800,
     height=2700,
     style=custom_style,
-    title="heatmap-calendar · pygal · pyplots.ai",
-    dates=dates,
-    values=values,
-    cell_colors=github_colors,
+    title="heatmap-calendar · pygal · anyplot.ai",
     show_legend=False,
     margin=20,
     margin_top=280,
@@ -352,9 +233,8 @@ chart = CalendarHeatmap(
     show_y_labels=False,
 )
 
-# Add a dummy series to trigger _plot (pygal requires at least one series)
 chart.add("", [0])
 
-# Save output
-chart.render_to_file("plot.html")
-chart.render_to_png("plot.png")
+# Save
+chart.render_to_file(f"plot-{THEME}.html")
+chart.render_to_png(f"plot-{THEME}.png")
