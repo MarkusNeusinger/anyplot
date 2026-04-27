@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: network-basic
 created: '2025-12-23T15:13:20Z'
-updated: '2026-04-27T01:26:06Z'
+updated: '2026-04-27T01:41:48Z'
 generated_by: claude-sonnet
 workflow_run: 24971431014
 issue: 989
@@ -31,18 +31,19 @@ review:
     — nodes end up in a diagonal band rather than 4 distinct spatial communities
   - Internal department edges are very faint (alpha=0.30) — barely visible in dark
     mode
+  - Legend placed in upper-left overlaps with Engineering cluster area
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
       Chrome: Title "Social Network · network-basic · matplotlib · anyplot.ai" at fontsize=24 in dark ink — clearly readable. Legend box with ELEVATED_BG frame labels 4 departments at fontsize=16/18 — readable. Node labels in bold dark INK at fontsize=14 — readable but slightly small for canvas size.
-      Data: 20 nodes color-coded by department: Engineering (#009E73 green), Research (#D55E00 orange), Marketing (#0072B2 blue), Design (#CC79A7 pink). Node sizes vary by degree. Cross-department edges in amber #E69F00 at alpha=0.80, internal edges in INK_SOFT gray at alpha=0.30.
-      Legibility verdict: PASS — all text readable; node labels slightly small (fontsize=14 vs 16pt guideline) but still legible.
+      Data: 20 nodes color-coded by department: Engineering (#009E73 green), Research (#D55E00 orange), Marketing (#0072B2 blue), Design (#CC79A7 pink). Node sizes vary by degree. Cross-department edges in amber #E69F00 at alpha=0.80, internal edges in INK_SOFT gray at alpha=0.30. Nodes arranged in a loosely diagonal band across the canvas with 4 implied quadrant clusters.
+      Legibility verdict: PASS — all text readable; node labels slightly small (fontsize=14 vs 16pt guideline) but still legible at full canvas size.
 
     Dark render (plot-dark.png):
       Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title in near-white #F0EFE8 — clearly readable against dark background. Legend text in #B8B7B0 — readable. Node labels in #F0EFE8 (near-white) inside colored nodes — good contrast. No dark-on-dark failures detected.
-      Data: Identical node colors to light render — Engineering green, Research orange, Marketing blue, Design pink unchanged. Amber cross-department edges still visible. Internal edges barely visible (alpha=0.30 on dark background is very faint).
-      Legibility verdict: PASS — all text readable; internal edges are slightly too faint but data colors and key elements are all distinguishable.
+      Chrome: Title in near-white #F0EFE8 — clearly readable against dark background. Legend text in #B8B7B0 — readable. Node labels in #F0EFE8 (near-white) inside colored nodes — acceptable contrast. No dark-on-dark failures detected.
+      Data: Identical node colors to light render — Engineering green, Research orange, Marketing blue, Design pink unchanged. Amber cross-department edges clearly visible. Internal edges barely visible (alpha=0.30 on dark background is very faint, nearly invisible).
+      Legibility verdict: PASS — all text readable; internal edges are slightly too faint in dark mode but data colors and all key elements are distinguishable.
   criteria_checklist:
     visual_quality:
       score: 23
@@ -60,15 +61,14 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: Some crowding in central diagonal band (Henry/Kate/Ivy/Leo area);
-          labels touch but remain readable
+        comment: Some crowding in dense cluster areas; labels touch but remain readable
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
         comment: Nodes well-sized (900-2500s); amber cross-dept edges vivid; internal
-          edges very faint at alpha=0.30
+          edges very faint at alpha=0.30 in dark mode
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -81,7 +81,7 @@ review:
         max: 4
         passed: true
         comment: Network in diagonal band; 4 community clusters not spatially distinct;
-          empty corners upper-left and lower-right
+          legend overlaps Engineering cluster area
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -114,7 +114,7 @@ review:
         max: 6
         passed: true
         comment: Axis fully off (no spines/ticks/grid); styled legend frame with ELEVATED_BG;
-          node outline color matches PAGE_BG
+          node outline color matches PAGE_BG; curved arc edges
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -234,7 +234,7 @@ review:
         comment: FancyArrowPatch with connectionstyle=arc3 for curved edges is distinctively
           matplotlib; custom spring layout via numpy without networkx also shows library
           mastery
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
