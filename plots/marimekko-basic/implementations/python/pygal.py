@@ -1,11 +1,22 @@
-""" pyplots.ai
+"""anyplot.ai
 marimekko-basic: Basic Marimekko Chart
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: pygal | Python 3.13
+Quality: pending | Updated: 2026-04-27
 """
 
+import os
 import sys
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID_COLOR = "#C8C6BC" if THEME == "light" else "#2E2E2A"
+
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
 
 # Temporarily remove current directory from path to avoid name collision with pygal module
 _cwd = sys.path[0] if sys.path[0] else "."
@@ -23,28 +34,25 @@ sys.path.insert(0, _cwd)
 # Custom class required: pygal has no native Marimekko/mekko chart type.
 # Variable-width stacked bars require extending the Graph base class.
 class Marimekko(Graph):
-    """Custom Marimekko chart - stacked bars with variable widths based on column totals."""
-
     _serie_margin = 0
 
     def __init__(self, *args, **kwargs):
         self.gap = kwargs.pop("gap", 0.02)
+        self.ink = kwargs.pop("ink", INK)
+        self.ink_muted = kwargs.pop("ink_muted", INK_MUTED)
+        self.grid_color = kwargs.pop("grid_color", GRID_COLOR)
         super().__init__(*args, **kwargs)
 
     def _compute_x_labels(self):
-        """Skip standard x-label computation - custom labels drawn in _plot."""
         pass
 
     def _compute_y_labels(self):
-        """Skip standard y-label computation."""
         pass
 
     def _plot(self):
-        """Draw the marimekko chart with variable-width bars and stacked segments."""
         if not self.series:
             return
 
-        # Calculate column totals (determines bar widths)
         num_cols = len(self.series[0].values) if self.series else 0
         col_totals = [0] * num_cols
 
@@ -57,24 +65,19 @@ class Marimekko(Graph):
         if grand_total == 0:
             return
 
-        # Get plot area dimensions
         plot_width = self.view.width
         plot_height = self.view.height
 
-        # Calculate gap and usable width
         total_gap = self.gap * plot_width * (num_cols - 1)
         usable_width = plot_width - total_gap
         gap_px = self.gap * plot_width
 
-        # Get coordinates
         x_start = self.view.x(0)
         y_bottom = self.view.y(0)
 
-        # Create group for the marimekko chart
         plot_node = self.nodes["plot"]
         mekko_group = self.svg.node(plot_node, class_="marimekko-chart")
 
-        # Draw bars column by column
         x_pos = x_start
 
         for col_idx in range(num_cols):
@@ -82,10 +85,7 @@ class Marimekko(Graph):
             if col_total == 0:
                 continue
 
-            # Bar width proportional to column total
             bar_width = (col_total / grand_total) * usable_width
-
-            # Stack segments within this column
             y_offset = 0
 
             for serie_idx, serie in enumerate(self.series):
@@ -93,14 +93,11 @@ class Marimekko(Graph):
                 if val is None or val == 0:
                     continue
 
-                # Segment height proportional to value within column
                 segment_height = (val / col_total) * plot_height
                 color = self.style.colors[serie_idx % len(self.style.colors)]
 
-                # Draw rectangle (y increases downward in SVG)
                 y_pos = y_bottom - y_offset - segment_height
 
-                # Create series group
                 serie_group = self.svg.node(mekko_group, class_="series serie-%d color-%d" % (serie_idx, serie_idx))
 
                 self.svg.node(
@@ -111,11 +108,10 @@ class Marimekko(Graph):
                     width=bar_width,
                     height=segment_height,
                     fill=color,
-                    stroke="white",
+                    stroke=PAGE_BG,
                     **{"stroke-width": "3", "class": "rect reactive tooltip-trigger"},
                 )
 
-                # Add value label if segment is large enough
                 if segment_height > 90 and bar_width > 120:
                     pct = (val / col_total) * 100
                     label_y = y_pos + segment_height / 2
@@ -139,7 +135,7 @@ class Marimekko(Graph):
 
             x_pos += bar_width + gap_px
 
-        # Draw x-axis labels (column labels centered under each bar)
+        # X-axis category labels
         if hasattr(self, "x_labels") and self.x_labels:
             x_pos = x_start
             for col_idx in range(num_cols):
@@ -153,40 +149,42 @@ class Marimekko(Graph):
 
                 label_group = self.svg.node(mekko_group, class_="x-labels")
 
-                # Category label
                 self.svg.node(
                     label_group,
                     "text",
                     x=label_x,
                     y=label_y,
-                    fill="#333",
+                    fill=self.ink,
                     **{"text-anchor": "middle", "font-size": "42", "font-weight": "normal"},
                 ).text = str(self.x_labels[col_idx]) if col_idx < len(self.x_labels) else ""
 
-                # Width percentage label (shows relative market size)
                 width_pct = (col_total / grand_total) * 100
                 self.svg.node(
                     label_group,
                     "text",
                     x=label_x,
                     y=label_y + 55,
-                    fill="#666",
+                    fill=self.ink_muted,
                     **{"text-anchor": "middle", "font-size": "34", "font-style": "italic"},
                 ).text = f"({width_pct:.0f}%)"
 
                 x_pos += bar_width + gap_px
 
-        # Draw Y-axis percentage scale (0%, 25%, 50%, 75%, 100%)
+        # Y-axis percentage scale
         y_axis_group = self.svg.node(mekko_group, class_="y-axis-labels")
         for pct in [0, 25, 50, 75, 100]:
             y_pos = y_bottom - (pct / 100) * plot_height
             label_x = x_start - 25
 
             self.svg.node(
-                y_axis_group, "text", x=label_x, y=y_pos + 5, fill="#666", **{"text-anchor": "end", "font-size": "34"}
+                y_axis_group,
+                "text",
+                x=label_x,
+                y=y_pos + 5,
+                fill=self.ink_muted,
+                **{"text-anchor": "end", "font-size": "34"},
             ).text = f"{pct}%"
 
-            # Draw subtle gridline
             if pct > 0:
                 self.svg.node(
                     y_axis_group,
@@ -195,11 +193,11 @@ class Marimekko(Graph):
                     y1=y_pos,
                     x2=x_start + plot_width,
                     y2=y_pos,
-                    stroke="#ddd",
+                    stroke=self.grid_color,
                     **{"stroke-width": "1", "stroke-dasharray": "5,5"},
                 )
 
-        # Draw Y-axis title (rotated label)
+        # Y-axis title
         y_title_x = x_start - 120
         y_title_y = y_bottom - plot_height / 2
         self.svg.node(
@@ -207,7 +205,7 @@ class Marimekko(Graph):
             "text",
             x=y_title_x,
             y=y_title_y,
-            fill="#333",
+            fill=self.ink,
             **{
                 "text-anchor": "middle",
                 "font-size": "42",
@@ -217,34 +215,30 @@ class Marimekko(Graph):
         ).text = "Share within Region (%)"
 
     def _compute(self):
-        """Compute the bounding box for rendering."""
         self._box.xmin = 0
         self._box.xmax = 1
         self._box.ymin = 0
         self._box.ymax = 1
 
 
-# Custom style for 4800x2700 canvas
+# Style
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998", "#FFD43B", "#4ECDC4", "#FF6B6B", "#9B59B6"),
-    title_font_size=72,
-    legend_font_size=50,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=60,
+    legend_font_size=48,
     label_font_size=42,
-    value_font_size=38,
+    value_font_size=36,
     font_family="sans-serif",
 )
 
-# Data - Market share by region and product line
-# Regions (x-categories) with different market sizes
+# Data - Market share by region and product line (revenue in millions USD)
 regions = ["North America", "Europe", "Asia Pacific", "Latin America", "MEA"]
 
-# Product lines (y-categories) and their share within each region
-# Values represent revenue in millions USD per region
 products = {
     "Enterprise": [180, 140, 200, 60, 40],
     "Consumer": [120, 130, 180, 70, 45],
@@ -252,41 +246,41 @@ products = {
     "Government": [60, 40, 50, 15, 10],
 }
 
-# Create marimekko chart
+# Chart
 chart = Marimekko(
     width=4800,
     height=2700,
     gap=0.015,
+    ink=INK,
+    ink_muted=INK_MUTED,
+    grid_color=GRID_COLOR,
     style=custom_style,
-    title="marimekko-basic · pygal · pyplots.ai",
+    title="marimekko-basic · pygal · anyplot.ai",
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=4,
     margin=80,
-    margin_left=160,
-    margin_bottom=320,
+    margin_left=200,
+    margin_bottom=340,
     show_x_labels=False,
     show_y_labels=False,
 )
 
 chart.x_labels = regions
 
-# Add data series for each product line
 for product_name, values in products.items():
     chart.add(product_name, values)
 
-# Save outputs
-chart.render_to_file("plot.svg")
-chart.render_to_png("plot.png")
+# Save
+chart.render_to_png(f"plot-{THEME}.png")
 
-# Save HTML for interactive viewing
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>marimekko-basic · pygal · pyplots.ai</title>
+    <title>marimekko-basic · pygal · anyplot.ai</title>
     <style>
-        body {{ margin: 0; padding: 20px; background: #f5f5f5; }}
+        body {{ margin: 0; padding: 20px; background: {PAGE_BG}; }}
         .container {{ max-width: 100%; margin: 0 auto; }}
         svg {{ max-width: 100%; height: auto; }}
     </style>
@@ -298,5 +292,5 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
