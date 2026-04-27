@@ -1,39 +1,257 @@
 library: bokeh
+language: python
 specification_id: network-basic
 created: '2025-12-23T15:14:18Z'
-updated: '2025-12-23T15:41:06Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20464355674
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/network-basic/bokeh/plot.html
+updated: '2026-04-27T01:32:03Z'
+generated_by: claude-sonnet
+workflow_run: 24971563098
+issue: 989
+python_version: 3.14.4
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-basic/python/bokeh/plot-dark.html
 quality_score: 88
+review:
+  strengths:
+  - Perfect spec compliance — all required network graph features present (spring
+    layout, degree-encoded node sizes, labels, appropriate node count)
+  - Full theme-adaptive chrome throughout; both light/dark renders pass readability
+    checks with no dark-on-dark failures
+  - Degree-encoded node sizes add a meaningful third encoding channel for centrality
+  - HoverTool wired to named node renderers only — correct Bokeh pattern
+  - All font sizes explicitly set above required minimums (title 32pt, labels 20pt,
+    legend 22pt/18pt)
+  - ColumnDataSource used per community group for efficient, idiomatic Bokeh rendering
+  - Seed set for reproducibility; linear KISS code structure with no functions or
+    classes
+  weaknesses:
+  - Community hull ellipse regions visible in rendered images but absent from current
+    code — either images are stale from attempt 1 or hull drawing code was accidentally
+    omitted; repair must add explicit per-group ellipse hulls using p.ellipse() with
+    fill_alpha~0.12
+  - DE-01 limited to 5/8 — design is above defaults but not publication-quality; add
+    edge-type differentiation (bridge edges vs intra-community) via different line_width
+    or line_dash to push design quality
+  - Minor label overlap risk in dense bridge-region center where nodes from multiple
+    groups meet; increase label_offset from 0.04 to 0.055 and add text background
+    halo (text_background_color=PAGE_BG, text_background_alpha=0.7)
+  - LM-02 limited to 3/5 — core network layout is manual Python rather than using
+    Bokeh GraphRenderer; using networkx for layout plus Bokeh GraphRenderer would
+    make the implementation more distinctively Bokeh
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "network-basic · bokeh · anyplot.ai" in dark ink at top center — clearly readable. No axis labels (axes hidden, appropriate for network graph). Legend "Communities" title and group labels in dark text on elevated-light background — readable.
+      Data: Group A green (#009E73) upper-left, Group B orange (#D55E00) upper-right, Group C blue (#0072B2) lower-left, Group D pink (#CC79A7) lower-right. Soft colored oval hull regions visible around each community group. Nodes vary in size (degree encoding). Edges as thin gray lines with alpha. Node name labels in dark ink above/below nodes.
+      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light ink (#F0EFE8) — clearly readable. Legend text in INK_SOFT token (#B8B7B0) on elevated dark (#242420) background — readable. Node labels in light ink against dark background — readable. No dark-on-dark failures detected.
+      Data: Colors identical to light render — Group A #009E73, Group B #D55E00, Group C #0072B2, Group D #CC79A7. Hull regions use darker-toned versions of group colors. Brand green #009E73 clearly visible on dark surface.
+      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title 32pt, node labels 20pt, legend title 22pt, legend labels 18pt
+          — all explicitly set above minimums; full theme-adaptive tokens
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Smart above/below label placement mitigates most crowding; minor
+          overlap risk in dense bridge-region center
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Node sizes 45-75px with degree encoding clearly visible; edges line_width=3
+          with alpha=0.4 appropriately subordinate
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; four distinct hues easily separable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Network fills ~70% of canvas; good spread but normalized coordinate
+          padding leaves some empty corners
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correctly formatted; axes intentionally hidden (appropriate
+          for network graph)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order followed; backgrounds #FAF8F1/#1A1A17;
+          data colors identical across both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured defaults: degree-encoded node sizes, community
+          grouping visuals, professional chrome adaptation; not yet publication-quality'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes and grid fully hidden, generous legend padding, theme-adaptive
+          borders; solid but not exceptional polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy through color (community), size (degree centrality),
+          and position (spring layout); community structure immediately readable
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct node-link network diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Force-directed spring layout, degree-encoded node sizes, node labels,
+          appropriate density all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All nodes positioned and all edges rendered correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: network-basic · bokeh · anyplot.ai exact format; legend shows Groups
+          A-D with correct colors
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 20 nodes, 4 communities, intra-group connections AND cross-group
+          bridges; shows clustering + centrality + community structure
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real first names, plausible social network with friendship-style
+          connections, neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 20 nodes within spec 10-50 range; 31 edges appropriate for visibility
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports -> tokens -> data -> layout -> plot -> save; no
+          functions/classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; no extras
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Manual spring layout is lengthy but correct; however code does not
+          contain hull drawing that appears in images — discrepancy suggests stale
+          images or omitted code
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png AND plot-{THEME}.html correctly
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ColumnDataSource used consistently per group; HoverTool, Legend/LegendItem
+          all used via proper Bokeh API; figure configured idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HoverTool with named renderers is Bokeh-distinctive; HTML export
+          is meaningful interactive artifact; but core network rendering is manual
+          Python rather than Bokeh GraphRenderer
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
   - html-export
-  - columndatasource
+  - custom-legend
   patterns:
   - data-generation
-  - matrix-construction
+  - columndatasource
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-review:
-  strengths:
-  - Excellent use of Bokeh interactive features (HoverTool showing name and connections,
-    pan/zoom/reset tools)
-  - Clean force-directed layout implementation that clearly shows community structure
-  - Node sizes properly scale with degree (connection count), making hub nodes visually
-    prominent
-  - Colorblind-safe palette with good contrast between groups
-  - Smart label positioning that avoids canvas edge issues
-  - Well-styled legend with appropriate sizing for the large canvas
-  weaknesses:
-  - 'Title format incorrect: includes Social Network prefix instead of strict {spec-id}
-    · {library} · pyplots.ai format'
-  - Network layout leaves some empty space in corners; could be better centered/distributed
+  - minimal-chrome

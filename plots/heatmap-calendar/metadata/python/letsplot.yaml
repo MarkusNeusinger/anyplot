@@ -1,162 +1,180 @@
 library: letsplot
+language: python
 specification_id: heatmap-calendar
 created: '2025-12-23T15:13:44Z'
-updated: '2025-12-23T15:17:53Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20464355528
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - html-export
-  - manual-ticks
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-04-27T01:16:19Z'
+generated_by: claude-sonnet
+workflow_run: 24971420582
+issue: 1010
+python_version: 3.14.4
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-calendar/python/letsplot/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent calendar layout with proper week numbering and month positioning
-  - Realistic GitHub-style contribution data with clear weekday patterns (reduced
-    weekend activity)
-  - Clean sequential colormap that is colorblind-accessible
-  - Proper use of scale_y_reverse to position Monday at top (GitHub convention)
-  - Well-sized tiles with white borders for clear cell separation
-  - Good text sizing throughout for high-resolution output
+  - Subtitle communicates two concrete data insights directly in the plot (big improvement
+    from attempt 1)
+  - Theme-adaptive chrome is complete and correct in both renders — no dark-on-dark
+    failures
+  - layer_tooltips() with formatted date and activity count is idiomatic and distinctive
+    to lets_plot
+  - 'Data generation is realistic: Poisson-based, weekend-dampened, with sporadic
+    spikes — genuinely GitHub-like'
+  - All chrome stripped (no grid, no ticks, no axis lines) — clean minimal look
+  - Full spec compliance including month labels at top of grid
   weaknesses:
-  - Axis labels are empty strings rather than descriptive (e.g., "Week of Year" for
-    x, "Day of Week" for y)
-  - Could use a more distinctive lets-plot feature like tooltips or flavor_high_contrast_dark
-  image_description: The plot displays a calendar heatmap for the year 2024 with weekday
-    labels (Mon-Sun) on the y-axis and month labels (Jan-Dec) on the x-axis. Each
-    day is represented as a rectangular tile with white borders. The color scale uses
-    a sequential gradient from light gray (#ebedf0) for zero/low values to blue (#306998)
-    for high values, with the legend labeled "Activity" showing a range of 0-30. The
-    data clearly demonstrates a GitHub-style contribution pattern with visibly reduced
-    activity on weekends (Saturday and Sunday rows are notably lighter). High-activity
-    days (darker blue tiles) are scattered throughout the year. The title correctly
-    uses the format "heatmap-calendar · letsplot · pyplots.ai".
+  - 'Canvas format still 16:9: ggsize(1600, 900) with 53 columns x 7 rows produces
+    tiles ~3x taller than wide — switch to ggsize(1200, 1200) for near-square calendar
+    cells (scale=3 gives 3600x3600px square format)'
+  - 'Axis title size still 18pt: axis_title=element_text(size=18) should be size=20
+    per style guide for DPI-based libraries'
+  - 'Aesthetic sophistication plateau at DE-01=4/8: viridis begin value causes zero-activity
+    cells to blend into #1A1A17 dark background — add begin=0.05 to scale_fill_viridis();
+    confirm panel_border=element_blank() is in theme'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "heatmap-calendar · letsplot · anyplot.ai" in dark ink at top — readable. Subtitle "Peak activity in Dec · Weekends show ~60% less activity" in smaller muted text below title — readable. Month labels (Jan-Dec) at top of calendar grid — readable. Weekday tick labels (Mon-Sun) in dark-gray on left — readable. "Month (2024)" X-axis title and "Day of Week" Y-axis title — readable. "Activity" legend title and colorbar labels — readable.
+      Data: Viridis colormap (dark purple for ~0, teal/green for ~10-15, yellow for 30+). Tiles are ~3x taller than wide due to 16:9 canvas. Saturday and Sunday rows visibly darker. Several yellow/green spike cells on weekdays.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and subtitle in light cream text — readable. Weekday tick labels (Mon-Sun) in light gray (INK_SOFT) — readable. Month labels in light gray at top — readable. Axis titles in light text — readable. Legend text in light gray — readable. No dark-on-dark failures detected.
+      Data: Viridis colors IDENTICAL to light render (same purple-to-yellow range, same spike cells in same positions). PAGE_BG tile borders near-invisible on dark surface but cells still distinguishable via color difference.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 28pt, axis text at 18pt, legend text at 16-20pt - all clearly
-          readable
+        comment: All sizes explicitly set; axis_title size=18 still below recommended
+          >=20pt for DPI-based libraries
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, month labels well-spaced
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Tiles are well-sized with appropriate gaps, data density is optimal
-          for 365 days
+        comment: Tiles clearly visible; near-zero cells hard to distinguish (inherent
+          to data density); tiles still ~3x taller than wide
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single-hue sequential colormap (gray to blue) is colorblind-safe
+        comment: Viridis is perceptually uniform and CVD-safe
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good canvas utilization, plot fills ~60% of space with balanced margins
+        comment: 16:9 canvas with 53 columns x 7 rows produces tiles ~3x taller than
+          wide; square canvas would give near-square calendar cells
       - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: Empty x/y labels (uses ""), though weekday/month labels serve as
-          axis text
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid removed (appropriate for heatmap), legend well-placed on right
+        comment: Month (2024) and Day of Week are descriptive with temporal context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis correct for continuous data; #FAF8F1/#1A1A17 backgrounds
+          correct; all chrome tokens properly themed'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Clean and professional; viridis default with PAGE_BG borders; elongated
+          tile proportions and generic layout reduce sophistication
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid, ticks, axis lines blanked — good minimalism; panel_border status
+          unclear
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle 'Peak activity in Dec · Weekends show ~60% less activity'
+          communicates two clear insights; weekend gap visually obvious; upgrade from
+          attempt 1
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct calendar heatmap with day tiles
+        comment: Correct calendar heatmap using geom_tile
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date components correctly mapped to x (week) and y (weekday)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Weekday labels, month labels, sequential colormap, color legend all
-          present
-      - id: SC-04
-        name: Data Range
+        comment: Weekday labels Mon-Sun, month labels at top of grid, sequential viridis
+          colormap, color scale legend all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full year (365 days) displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: week_of_year->X, weekday->Y, value->fill; all 365 data points visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labeled "Activity" with appropriate scale
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "heatmap-calendar · letsplot · pyplots.ai"'
+        comment: Title format correct; legend labeled Activity
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows weekday patterns, high/low days, zero days, but missing dates
-          not explicitly shown
+        comment: Full year, weekday/weekend contrast, Poisson spikes, zero-activity
+          days; missing-date handling not demonstrated
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: GitHub-style contribution data is a perfect real-world scenario
+        comment: GitHub-style daily contribution counts; neutral, real-world domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values 0-30 are realistic for daily contributions, though max ~30
-          is reasonable
+        comment: 0-30+ contributions/day is realistic for GitHub activity
     code_quality:
       score: 10
       max: 10
@@ -166,41 +184,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: 'Flat script: imports -> data -> plot -> save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used including shutil for cleanup
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Clean Pythonic code; layer_tooltips() is elegant
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper grammar of graphics; geom_tile, scale_fill_viridis, scale_y_reverse,
+          layered theme composition
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot grammar with geom_tile, scale_fill_gradient, scale_y_reverse,
-          theme customization. Good use of lets-plot but nothing exceptionally distinctive
-          beyond standard ggplot patterns.
-  verdict: APPROVED
+        comment: layer_tooltips() with formatted date and activity count is lets_plot
+          specific; HTML interactive output generated
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - hover-tooltips
+  - html-export
+  - manual-ticks
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep:
+  - time-series
+  styling:
+  - custom-colormap
