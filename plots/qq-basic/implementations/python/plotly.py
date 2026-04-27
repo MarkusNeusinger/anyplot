@@ -1,7 +1,7 @@
 """ anyplot.ai
 qq-basic: Basic Q-Q Plot
 Library: plotly 6.7.0 | Python 3.14.4
-Quality: 82/100 | Updated: 2026-04-27
+Quality: 81/100 | Updated: 2026-04-27
 """
 
 import os
