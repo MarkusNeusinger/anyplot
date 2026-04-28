@@ -57,6 +57,11 @@ jobs:
         continue-on-error: true
         timeout-minutes: 10
         uses: anthropics/claude-code-action@567fe954a4527e81f132d87d1bdbcc94f7737434  # v1
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_USER: ${{ github.event.issue.user.login }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: "--model opus"
@@ -66,12 +71,12 @@ jobs:
             You are validating a user-submitted issue report for anyplot.
 
             ### Issue Details
-            - **Title:** ${{ github.event.issue.title }}
-            - **Number:** #${{ github.event.issue.number }}
-            - **Author:** ${{ github.event.issue.user.login }}
+            - **Title:** $ISSUE_TITLE
+            - **Number:** #$ISSUE_NUMBER
+            - **Author:** $ISSUE_USER
             - **Body:**
             ```
-            ${{ github.event.issue.body }}
+            $ISSUE_BODY
             ```
 
             ---
@@ -123,26 +128,26 @@ jobs:
 
             7. **Update issue title:**
                ```bash
-               gh issue edit ${{ github.event.issue.number }} --title "[{spec_id}] {brief description}"
+               gh issue edit $ISSUE_NUMBER --title "[{spec_id}] {brief description}"
                ```
 
             8. **Update labels:**
                ```bash
                # Remove pending, add validated
-               gh issue edit ${{ github.event.issue.number }} --remove-label "report-pending" --add-label "report-validated"
+               gh issue edit $ISSUE_NUMBER --remove-label "report-pending" --add-label "report-validated"
 
                # Add target label based on issue type
                # For spec issues:
-               gh issue edit ${{ github.event.issue.number }} --add-label "report:spec"
+               gh issue edit $ISSUE_NUMBER --add-label "report:spec"
                # For impl issues:
-               gh issue edit ${{ github.event.issue.number }} --add-label "report:impl" --add-label "report:impl:{library}"
+               gh issue edit $ISSUE_NUMBER --add-label "report:impl" --add-label "report:impl:{library}"
 
                # Add category label (map from dropdown value)
                # Visual... → category:visual
                # Data... → category:data
                # Functional... → category:functional
                # Other → category:other
-               gh issue edit ${{ github.event.issue.number }} --add-label "category:{category}"
+               gh issue edit $ISSUE_NUMBER --add-label "category:{category}"
                ```
 
             ### Important
@@ -154,21 +159,26 @@ jobs:
         if: steps.check.outputs.should_run == 'true' && steps.validate.outcome == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          REPOSITORY: ${{ github.repository }}
         run: |
-          gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/reactions \
+          gh api repos/$REPOSITORY/issues/$ISSUE_NUMBER/reactions \
             -f content=rocket
 
       - name: Handle failure
         if: steps.check.outputs.should_run == 'true' && steps.validate.outcome == 'failure'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
         run: |
-          gh issue comment ${{ github.event.issue.number }} --body "## :x: Validation Failed
+          gh issue comment "$ISSUE_NUMBER" --body "## :x: Validation Failed
 
           The AI validation workflow encountered an error. A maintainer will review this manually.
 
           ---
-          :robot: *[report-validate](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+          :robot: *[report-validate](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*"
 
-          gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/reactions \
+          gh api repos/$REPOSITORY/issues/$ISSUE_NUMBER/reactions \
             -f content=confused

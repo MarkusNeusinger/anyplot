@@ -169,27 +169,30 @@ jobs:
         if: steps.check.outputs.should_run == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.check.outputs.pr_number }}
+          REPOSITORY: ${{ github.repository }}
         run: |
-          gh api repos/${{ github.repository }}/issues/${{ steps.check.outputs.pr_number }}/reactions \
+          gh api repos/$REPOSITORY/issues/$PR_NUMBER/reactions \
             -f content=rocket
 
       - name: Merge PR to main (with retry)
         if: steps.check.outputs.should_run == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ steps.check.outputs.pr_number }}
+          REPOSITORY: ${{ github.repository }}
         run: |
-          PR_NUM="${{ steps.check.outputs.pr_number }}"
           MAX_ATTEMPTS=5
 
           for attempt in $(seq 1 $MAX_ATTEMPTS); do
             echo "::notice::Merge attempt $attempt/$MAX_ATTEMPTS"
 
             # Update branch before merge attempt
-            gh pr update-branch "$PR_NUM" --repo ${{ github.repository }} 2>/dev/null || true
+            gh pr update-branch "$PR_NUM" --repo "$REPOSITORY" 2>/dev/null || true
             sleep 2
 
             if gh pr merge "$PR_NUM" \
-              --repo ${{ github.repository }} \
+              --repo "$REPOSITORY" \
               --squash \
               --delete-branch; then
               echo "::notice::Merge successful on attempt $attempt"

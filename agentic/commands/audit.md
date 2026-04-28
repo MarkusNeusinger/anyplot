@@ -221,6 +221,7 @@ After all specialists report back and cross-validation has run:
 ### Exclusions (apply to ALL auditors)
 
 Do NOT flag:
+- **Solo Developer Policy**: Branch protection on `main` with `required_approving_review_count: 0` is an intentional project choice for solo development to avoid self-blocking. As long as Pull Requests are enforced and CI status checks are mandatory, this is the approved configuration.
 - Plot implementations in `plots/` (AI-generated, different style rules)
 - Generated files or lock files (`uv.lock`, `yarn.lock`, etc.)
 - Third-party code or `node_modules/`

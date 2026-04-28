@@ -101,9 +101,9 @@ class TestGitHubLabels:
         assert len(QUALITY_LABELS) == 4
 
     def test_attempt_labels_count(self) -> None:
-        """Should have 3 attempt labels."""
-        assert len(ATTEMPT_LABELS) == 3
-        assert ATTEMPT_LABELS == {"ai-attempt-1", "ai-attempt-2", "ai-attempt-3"}
+        """Should have 4 attempt labels."""
+        assert len(ATTEMPT_LABELS) == 4
+        assert ATTEMPT_LABELS == {"ai-attempt-1", "ai-attempt-2", "ai-attempt-3", "ai-attempt-4"}
 
 
 class TestQualityThresholds:
