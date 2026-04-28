@@ -132,14 +132,20 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
+          REPOSITORY: ${{ github.repository }}
         run: |
-          gh api "repos/${{ github.repository }}/issues/$PR_NUMBER/reactions" -f content=eyes
+          gh api "repos/$REPOSITORY/issues/$PR_NUMBER/reactions" -f content=eyes
 
       - name: Run AI Quality Review
         id: review
         continue-on-error: true
         timeout-minutes: 30
         uses: anthropics/claude-code-action@567fe954a4527e81f132d87d1bdbcc94f7737434  # v1
+        env:
+          LIBRARY: ${{ steps.pr.outputs.library }}
+          SPEC_ID: ${{ steps.pr.outputs.specification_id }}
+          PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
+          ATTEMPT: ${{ steps.attempts.outputs.display }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: "--model sonnet"
@@ -148,10 +154,10 @@ jobs:
             Read `prompts/workflow-prompts/ai-quality-review.md` and follow those instructions.
 
             Variables for this run:
-            - LIBRARY: ${{ steps.pr.outputs.library }}
-            - SPEC_ID: ${{ steps.pr.outputs.specification_id }}
-            - PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
-            - ATTEMPT: ${{ steps.attempts.outputs.display }}
+            - LIBRARY: $LIBRARY
+            - SPEC_ID: $SPEC_ID
+            - PR_NUMBER: $PR_NUMBER
+            - ATTEMPT: $ATTEMPT
 
       - name: Extract quality score
         id: score
@@ -181,12 +187,14 @@ jobs:
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
           LIBRARY: ${{ steps.pr.outputs.library }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           echo "::error::AI Review did not produce valid output files (score=0)"
 
           MARKER="<!-- review-retry:${SPEC_ID}:${LIBRARY} -->"
           # Paginate so the marker is found even on PRs with >30 comments.
-          RETRY_COUNT=$(gh api --paginate "repos/${{ github.repository }}/issues/${PR_NUM}/comments?per_page=100" \
+          RETRY_COUNT=$(gh api --paginate "repos/$REPOSITORY/issues/${PR_NUM}/comments?per_page=100" \
             --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2>/dev/null || echo "0")
 
           if [ "$RETRY_COUNT" -ge 1 ]; then
@@ -207,7 +215,7 @@ jobs:
           \`\`\`
 
           ---
-          :robot: *[impl-review](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+          :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*"
             exit 1
           fi
 
@@ -218,9 +226,9 @@ jobs:
           The Claude Code Action ran but didn't write \`quality_score.txt\`. Auto-retrying review once...
 
           ---
-          :robot: *[impl-review](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+          :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*"
 
-          gh api repos/${{ github.repository }}/dispatches \
+          gh api repos/$REPOSITORY/dispatches \
             -f event_type=review-pr \
             -f "client_payload[pr_number]=$PR_NUM"
           echo "::notice::Auto-re-triggered impl-review.yml for PR #$PR_NUM"
@@ -449,6 +457,9 @@ jobs:
           score = os.environ["SCORE"]
           date_info = os.environ["DATE_INFO"]
 
+          # Sanitize title to prevent triple-quote injection
+          title = title.replace('"""', '\"\"\"')
+
           new_header = f'''""" anyplot.ai
           {spec_id}: {title}
           Library: {library} {lib_version} | Python {py_version}
@@ -486,10 +497,12 @@ jobs:
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
           LIBRARY: ${{ steps.pr.outputs.library }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           MARKER="<!-- review-retry:${SPEC_ID}:${LIBRARY} -->"
           # Paginate so the marker is found even on PRs with >30 comments.
-          RETRY_COUNT=$(gh api --paginate "repos/${{ github.repository }}/issues/${PR_NUM}/comments?per_page=100" \
+          RETRY_COUNT=$(gh api --paginate "repos/$REPOSITORY/issues/${PR_NUM}/comments?per_page=100" \
             --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2>/dev/null || echo "0")
 
           if [ "$RETRY_COUNT" -ge 1 ]; then
@@ -505,7 +518,7 @@ jobs:
           \`\`\`
 
           ---
-          :robot: *[impl-review](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+          :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*"
             exit 0
           fi
 
@@ -515,9 +528,9 @@ jobs:
           The Claude Code Action failed or timed out. Auto-retrying review once...
 
           ---
-          :robot: *[impl-review](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+          :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*"
 
-          gh api repos/${{ github.repository }}/dispatches \
+          gh api repos/$REPOSITORY/dispatches \
             -f event_type=review-pr \
             -f "client_payload[pr_number]=$PR_NUM"
           echo "::notice::Auto-re-triggered impl-review.yml for PR #$PR_NUM"
@@ -537,6 +550,8 @@ jobs:
           ATTEMPT: ${{ steps.attempts.outputs.display }}
           ATTEMPT_COUNT: ${{ steps.attempts.outputs.count }}
           ISSUE_NUMBER: ${{ steps.pr.outputs.issue_number }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           # Cascading thresholds:
           # Attempt 0 (Review 1): >= 90
@@ -571,20 +586,23 @@ jobs:
               echo "::notice::All 4 repair attempts exhausted (Score $SCORE < 50)"
               gh pr edit "$PR_NUM" --add-label "quality-poor"
 
-              gh pr comment "$PR_NUM" --body "## AI Review - Final Status
+              gh pr comment "$PR_NUM" --body "$(cat <<'EOF'
+          ## AI Review - Final Status
 
-          ### Score: ${SCORE}/100 (Below Threshold)
+          ### Score: $SCORE/100 (Below Threshold)
 
-          After **4 repair attempts**, the score (${SCORE}) is still below the minimum acceptable threshold of 50.
+          After **4 repair attempts**, the score ($SCORE) is still below the minimum acceptable threshold of 50.
 
           **This is treated like an auto-reject.** The PR will be closed and any old implementation will be removed from main.
 
           **Options:**
-          1. Regenerate from scratch with \`generate:${LIBRARY}\` label
+          1. Regenerate from scratch with `generate:$LIBRARY` label
           2. Manual complete rewrite
 
           ---
-          :robot: *[impl-review](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+          :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*
+          EOF
+          )"
 
               gh pr close "$PR_NUM"
 

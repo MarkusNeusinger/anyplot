@@ -26,7 +26,7 @@ LANGUAGES_METADATA = [
         "id": "python",
         "name": "Python",
         "file_extension": ".py",
-        "runtime_version": "3.14",
+        "runtime_version": "3.13",
         "documentation_url": "https://www.python.org",
         "description": "The default language for anyplot plot implementations.",
     }
