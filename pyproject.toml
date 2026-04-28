@@ -22,7 +22,7 @@ dependencies = [
     "mcp>=1.0.0",
     "fastmcp>=3.2.4",
     # Database
-    "sqlalchemy[asyncio]>=2.0.0",
+    "sqlalchemy[asyncio]>=2.0.49",
     "asyncpg>=0.30.0",
     "pg8000>=1.31.0",  # Sync driver for Cloud SQL Connector in GitHub Actions
     "alembic>=1.14.0",
