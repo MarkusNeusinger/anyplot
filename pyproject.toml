@@ -30,7 +30,7 @@ dependencies = [
     # Data & Plotting
     "pandas>=3.0.0",
     "numpy>=2.0.0",
-    "matplotlib>=3.10.0",
+    "matplotlib>=3.10.9",
     # Data Science & ML (for plot implementations)
     "scipy>=1.14.0",
     "scikit-learn>=1.6.0",
@@ -61,7 +61,7 @@ test = [
     "aiosqlite>=0.20.0",  # SQLite async driver for integration tests
 ]
 dev = [
-    "ruff>=0.15.11",
+    "ruff>=0.15.12",
     "pre-commit>=4.6.0",
 ]
 typecheck = [
@@ -89,8 +89,8 @@ plotting = [
     "statsmodels>=0.14.0",
 ]
 # Per-library dependencies for CI (minimal installs)
-lib-matplotlib = ["matplotlib>=3.10.0", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
-lib-seaborn = ["seaborn>=0.13.0", "matplotlib>=3.10.0", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
+lib-matplotlib = ["matplotlib>=3.10.9", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
+lib-seaborn = ["seaborn>=0.13.0", "matplotlib>=3.10.9", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
 lib-plotly = ["plotly>=6.7.0", "kaleido>=1.0.0", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
 lib-bokeh = ["bokeh>=3.6.0", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0", "selenium>=4.43.0", "webdriver-manager>=4.0.0"]
 lib-altair = ["altair>=6.1.0", "vl-convert-python>=1.7.0", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
