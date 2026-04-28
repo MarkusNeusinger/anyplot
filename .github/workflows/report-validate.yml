@@ -56,7 +56,7 @@ jobs:
         id: validate
         continue-on-error: true
         timeout-minutes: 10
-        uses: anthropics/claude-code-action@567fe954a4527e81f132d87d1bdbcc94f7737434  # v1
+        uses: anthropics/claude-code-action@11a9dadd198803a0cea6bd53da3e0e8a762fc6ea  # v1
         env:
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
