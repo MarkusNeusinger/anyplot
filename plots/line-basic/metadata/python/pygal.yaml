@@ -1,157 +1,178 @@
 library: pygal
+language: python
 specification_id: line-basic
 created: '2025-12-23T00:24:03Z'
-updated: '2025-12-23T00:28:11Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20447579672
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-29T15:37:07Z'
+generated_by: claude-sonnet
+workflow_run: 25117320301
+issue: 653
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-basic/pygal/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns: []
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/pygal/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Clean, minimal design that matches spec requirements perfectly
-  - Excellent use of custom Style for font sizing on large canvas
-  - Realistic temperature data that clearly demonstrates seasonal trends
-  - Proper title format following pyplots.ai conventions
-  - Good color choice with accessible contrast
+  - 'Perfect spec compliance and data quality: correct chart type, exact title format,
+    physically plausible seasonal temperature data'
+  - Correct Okabe-Ito palette with proper theme-adaptive chrome in both light and
+    dark renders — no dark-on-dark failures
+  - Includes HTML export alongside PNG, leveraging pygal's interactive output capability
+  - Clean, linear code structure with explicit font sizing for the large canvas
   weaknesses:
-  - Legend at bottom-left appears small and somewhat disconnected from the chart
-  - Font sizes in the library rules suggest smaller values (28/18/16) but implementation
-    uses larger (72/48/42) - while this works for the large canvas, it deviates from
-    the template
-  image_description: The plot displays a clean line chart showing monthly average
-    temperatures for a temperate climate. A single soft blue line (#306998) connects
-    12 data points across the months (Jan-Dec), forming the characteristic bell curve
-    of seasonal temperature variation. Small circular markers are visible at each
-    data point. The title "line-basic · pygal · pyplots.ai" is centered at the top
-    in gray text. The Y-axis is labeled "Temperature (°C)" with values ranging from
-    ~2 to 22, and the X-axis is labeled "Month" with all 12 month abbreviations clearly
-    displayed. Subtle horizontal dotted grid lines aid readability. A legend reading
-    "Average Temperature" appears at the bottom left. The overall design is clean
-    with a white background.
+  - 'Design Excellence is the main gap (10/20): the output looks like a well-configured
+    library default; adding visual hierarchy (peak annotation, area-fill accent, or
+    highlighted data point) would push DE-03 higher'
+  - Dots size (8px in SVG units) is slightly small relative to the 4800x2700 canvas
+    — increasing to 12-15 would improve VQ-03
+  - DE-02 could be improved by exploring legend-box styling or reducing whitespace
+    at the top of the plot area
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — confirmed, not pure white
+      Chrome: Title "line-basic · pygal · anyplot.ai" in dark ink (readable); Y-axis "Temperature (°C)" rotated vertically (readable); X-axis "Month" below tick labels (readable); month abbreviations and y-tick numerals clearly visible; small legend "Average Temperature" at bottom-left (readable)
+      Data: Single series in brand green #009E73; area below line filled with same green; small dots visible at each data point; horizontal y-guide lines subtle and visible
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — confirmed, not pure black
+      Chrome: Title, axis labels, tick labels all rendered in near-white (#F0EFE8 range) — clearly readable against dark surface; no dark-on-dark failures detected
+      Data: Line and fill remain in brand green #009E73 — identical to light render (only chrome flipped); area fill visible as dark green against near-black background
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and axis labels are clearly readable; tick labels slightly
-          smaller than ideal
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Dots visible but could be slightly larger; line width appropriate
+        comment: Font sizes explicitly set and well-scaled (title=72, labels=48, major=42,
+          legend=42); all text readable in both themes; legend text slightly small
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; 12 monthly labels well-spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Line (stroke=5) and filled area prominent; dots (size=8) slightly
+          small for 4800x2700 canvas
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color, excellent contrast on white background
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Well-proportioned with good use of space
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Temperature (°C)", "Month"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Single-series Okabe-Ito green; good contrast in both themes; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions, balanced margins, fills ~70% of canvas; minor whitespace
+          at top of plot area
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (good), but legend placement at bottom-left is awkward
-          and small
+        comment: 'Y: Temperature (°C) with units; X: Month — both descriptive'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; theme-adaptive
+          INK tokens in both renders'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured pygal output with correct palette and custom theming;
+          area-fill adds visual weight but overall look is a configured library default
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Good choice to show y-guides only; legend at bottom reduces overlap;
+          limited refinement headroom in pygal vs. matplotlib
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Seasonal bell-curve forms natural narrative; filled area amplifies
+          summer peak; no explicit emphasis devices (annotation, peak label)
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line chart implementation
+        comment: pygal.Line() — correct chart type
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=months (sequential), Y=temperature (continuous) correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Line connecting points, markers on data points, grid lines present
-      - id: SC-04
-        name: Data Range
+        comment: Single clean line, axis labels, y-axis grid lines, optional dots
+          present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 12 months visible, Y-axis range appropriate
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Month on X, Temperature (°C) on Y; all 12 points visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labeled "Average Temperature"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "line-basic · pygal · pyplots.ai"'
+        comment: Title 'line-basic · pygal · anyplot.ai' exact format; legend 'Average
+          Temperature' matches series
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear seasonal trend with peak in summer; could show more variation
+        comment: Shows clear trend over ordered sequence with realistic seasonal variability
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly temperature data is a classic, real-world use case
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature values (2.3°C to 22.1°C) realistic for temperate climate
+        comment: Monthly average temperatures for a temperate climate; neutral, real-world
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 2.3–22.1°C follow a physically plausible seasonal cycle for
+          a mid-latitude European city
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -159,41 +180,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Linear flow: imports → data → style → plot → save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random generation)
+        comment: All data hardcoded (deterministic); no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pygal and Style imported, both used
+        comment: os, sys, pygal, Style — all used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: sys.path manipulation is documented env necessity; otherwise clean
+          and idiomatic
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current pygal API used
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves both plot.png and plot.html (correct)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html — correct for pygal
+          interactive library
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Style object, chart.add(), x_labels, render_to_png(), render()
+          — all idiomatic pygal patterns
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses custom Style class and pygal-specific options (show_dots, dots_size,
-          stroke_style), but doesn't leverage tooltips or other interactive SVG features
-          that make pygal distinctive
+        comment: HTML export (interactive JS chart) is distinctively pygal; Style
+          object for full theming; area-fill is pygal's default Line behavior
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns: []
+  dataprep: []
+  styling: []
