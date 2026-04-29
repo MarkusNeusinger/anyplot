@@ -1,161 +1,185 @@
 library: pygal
+language: python
 specification_id: pyramid-basic
 created: '2025-12-23T18:11:38Z'
-updated: '2025-12-23T18:25:01Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468193795
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-29T15:20:23Z'
+generated_by: claude-sonnet
+workflow_run: 25116413018
+issue: 1000
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/pygal/plot.html
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/pygal/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent use of pygal native Pyramid chart type for authentic population pyramid
-    visualization
-  - Perfect colorblind-safe color scheme (blue/yellow) with high contrast
-  - Realistic US population data demonstrating pyramid shape and gender longevity
-    differences
-  - Clean KISS code structure with clear comments
-  - Correct title format and descriptive axis labels with units
+  - 'Correct pygal.Pyramid chart type with proper bidirectional layout — Female (green
+    #009E73) right, Male (orange #D55E00) left, symmetric scale'
+  - All font sizes explicitly set per style guide (title 28px, labels 22px, ticks
+    18px) and readable in both light and dark renders
+  - 'Perfect palette compliance: first series is brand green #009E73, Okabe-Ito order
+    followed, backgrounds #FAF8F1 / #1A1A17 correct in both themes'
+  - Realistic US 2023 demographic data with correct age-group proportions and informative
+    x-axis subtitle calling out the 30-49 peak cohorts
+  - 'Clean, idiomatic pygal code: Style object for theming, human_readable=True, legend_at_bottom,
+    HTML export alongside PNG'
   weaknesses:
-  - Legend placement appears in top-left despite legend_at_bottom=True setting
-  - Font sizes in custom_style deviate from library rules guide recommendations
-  image_description: The plot displays a population pyramid showing US 2023 age-gender
-    distribution. The chart uses a horizontal bar format with blue bars extending
-    left for Male population and yellow/gold bars extending right for Female population.
-    Age groups (0-9 through 80+) are labeled along the left vertical axis. The x-axis
-    shows "Population (millions)" ranging from -8 to 8. The title "pyramid-basic ·
-    pygal · pyplots.ai" appears at the top center. A legend in the top-left corner
-    identifies Female (yellow) and Male (blue). The pyramid shape clearly shows the
-    bulge in middle-age groups (40-49 being widest) tapering toward both younger and
-    older age groups.
+  - Legend at bottom has tiny 16px colored indicators barely visible at 4800px canvas
+    — legend markers are too small relative to the bar chart scale
+  - Dashed vertical guide lines visible in both renders despite show_x_guides=False
+    — suggest removing or suppressing all minor guide lines for cleaner look
+  - 'Design lacks visual hierarchy: no emphasis on the peak 30-49 cohorts that the
+    subtitle calls out — could use subtle annotation or a different color intensity
+    approach'
+  - DE-02 refinement is minimal beyond stroke_width=0 — more whitespace or separator
+    lines between bars would improve clarity in the dark render
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — clearly not pure white, correct theme surface.
+      Chrome: Title "pyramid-basic · pygal · anyplot.ai" at top center in dark ink, readable. X-axis title "Population (millions) — 30–49 cohorts at peak for both sexes" visible at bottom. Y-axis title "Age Group" rotated on left side. Tick labels (-20 to +20) along bottom in dark text. Age group labels (0-9 through 80+) along left side in dark text. Legend at bottom with "Female" and "Male" labels — colored dots are very small but technically readable.
+      Data: Female series (right side) in brand green #009E73; Male series (left side) in vermillion #D55E00. Pyramid shape clearly visible: 30-39 and 40-49 cohorts are the widest bars (peak), 80+ is shortest. Some faint dashed vertical guide lines visible in the background despite show_x_guides=False.
+      Legibility verdict: PASS — all text is readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correctly applied, not pure black.
+      Chrome: Title, axis labels, tick labels, and age group labels all rendered in light gray/near-white — clearly visible against the dark background. Legend items also in light color. No dark-on-dark failures detected.
+      Data: Female bars remain #009E73 (green) on right, Male bars remain #D55E00 (orange) on left — identical colors to light render, only chrome flips. Bar separators show the dark background between rows, clean appearance. Same dashed vertical guides visible.
+      Legibility verdict: PASS — all text is readable against the dark background, no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title, axis labels, and age group labels are clearly readable. Legend
-          text is somewhat small in proportion to canvas.
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px,
+          legend 16px); all text readable in both themes; legend markers at bottom
+          are at minimum size
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels clearly separated.
+        comment: No overlapping text or bar elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-sized and clearly visible, pyramid shape is distinct.
+        comment: All bars clearly visible with strong color contrast in both renders
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow are colorblind-safe, high contrast.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, but legend placement in top-left creates
-          slight imbalance.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: X-axis has "Population (millions)" with units. Y-axis age groups
-          are descriptive.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito green/orange CVD-safe pair
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization; pyramid fills chart well; slight concern
+          about minimal top/bottom whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend is positioned far from the plot in the top-left corner, separated
-          from the chart.
+        passed: true
+        comment: Population with units (millions), Age Group label, and informative
+          subtitle
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00, backgrounds #FAF8F1 / #1A1A17
+          both correct'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured library default with correct Okabe-Ito palette and
+          theme; clean look but not publication-ready sophisticated
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: stroke_width=0 and guides off add some refinement; dashed vertical
+          lines still visible; could use more whitespace or bar separation
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: X-title calls out 30-49 peak cohorts; real demographic data tells
+          a story; no visual emphasis highlighting the insight
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct pyramid chart type using pygal.Pyramid().
+        comment: pygal.Pyramid creates correct butterfly/population pyramid
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories (age groups) on central axis, values extending left/right
-          correctly.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Two opposing bar series, shared central axis, distinct colors, legend
-          present.
-      - id: SC-04
-        name: Data Range
+        comment: Bidirectional bars, shared central axis, symmetric scale, category
+          labels, legend — all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, symmetric scale (-8 to 8).
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X shows population (symmetric), Y shows age groups, all 9 groups
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Female and Male.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "pyramid-basic · pygal · pyplots.ai".'
+        comment: 'Title format correct: pyramid-basic · pygal · anyplot.ai; Female/Male
+          legend correct'
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows age distribution pattern with clear pyramid shape, asymmetry
-          between genders visible (females live longer - 80+ has larger female bar).
+        comment: 'Shows all pyramid features: bidirectional bars, varying lengths
+          demonstrating age distribution, peak cohorts'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: US 2023 population estimates is a perfect real-world scenario for
-          population pyramids.
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Population values in millions are realistic for US demographics.
+        comment: US 2023 census-style demographic data — real, neutral, comprehensible
+          scientific/demographic context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: US population in millions (18-22M for working-age), correct relative
+          proportions with 80+ cohort smallest
     code_quality:
       score: 10
       max: 10
@@ -165,42 +189,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → style → chart → save.'
+        comment: Simple sequential script, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (hardcoded values, no random).
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pygal and Style imported, both used.
+        comment: 'All imports used: os, sys, pygal, Style'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API.
+        comment: Clean Pythonic code, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses pygal.Pyramid which is the native chart type, but font sizes
-          don't follow the library rules guide (recommends smaller font sizes). The
-          implementation increases font sizes significantly beyond the documented
-          guidelines.
+        passed: true
+        comment: 'Idiomatic pygal: Style object, chart.add(), human_readable=True,
+          legend_at_bottom, render_to_png/render_to_file'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses pygal.Pyramid (distinctive type), human_readable formatting,
+          interactive HTML export alongside PNG
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns: []
+  dataprep: []
+  styling: []
