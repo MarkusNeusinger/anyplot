@@ -5,10 +5,10 @@ All environment variables are defined here with type validation,
 defaults, and documentation.
 """
 
-from typing import Any, Optional
+from typing import Annotated, Any, Optional
 
 from pydantic import field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -167,11 +167,13 @@ class Settings(BaseSettings):
     """Cloudflare Access Application AUD tag (UUID from the Zero Trust
     dashboard). Validated as the JWT `aud` claim."""
 
-    admin_allowed_emails: list[str] = []
+    admin_allowed_emails: Annotated[list[str], NoDecode] = []
     """Email addresses allowed to authenticate via Cloudflare Access for
     /debug/* endpoints. Defaults to an empty list — must be set explicitly
     in production. Accepts either a JSON array (`["a@b.com","c@d.com"]`)
-    or a comma-separated string (`a@b.com,c@d.com`) when set via env var."""
+    or a comma-separated string (`a@b.com,c@d.com`) when set via env var.
+    `NoDecode` keeps pydantic-settings from JSON-parsing the env value
+    before our field_validator runs (so a comma-separated string is OK)."""
 
     @field_validator("admin_allowed_emails", mode="before")
     @classmethod
