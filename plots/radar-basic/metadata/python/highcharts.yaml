@@ -1,161 +1,190 @@
 library: highcharts
+language: python
 specification_id: radar-basic
 created: '2025-12-23T18:12:39Z'
-updated: '2025-12-23T18:19:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468197691
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-29T17:16:49Z'
+generated_by: claude-sonnet
+workflow_run: 25121874769
+issue: 744
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/radar-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/radar-basic/highcharts/plot.html
-quality_score: 99
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - polar-projection
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/highcharts/plot-dark.html
+quality_score: 83
 review:
   strengths:
-  - Excellent radar chart with proper polar/spider chart implementation using Highcharts
-    AreaSeries
-  - Perfect colorblind-safe blue/yellow color scheme with 25% fill opacity for overlap
-    visibility
-  - Comprehensive employee performance comparison showing contrasting profiles (technical
-    vs soft skills)
-  - Well-implemented hexagonal polygon gridlines at 20-point intervals as specified
-  - Professional layout with good canvas utilization and well-placed legend
+  - 'Perfect spec compliance: all radar chart features correctly implemented (filled
+    polygons, transparency, polygon grid, 0-100 scale, correct axis placement)'
+  - 'Excellent palette adherence: Okabe-Ito in canonical order, correct theme-adaptive
+    chrome in both renders'
+  - Clean, professional code with proper CDN fallback and Highcharts-specific polar
+    idioms
+  - 'Data quality is strong: realistic employee performance scenario with genuinely
+    contrasting series profiles'
+  - Dark mode works correctly — no dark-on-dark failures, all chrome adapts properly
   weaknesses:
-  - Radial axis labels could include a unit context like Performance Score (0-100)
-    though current implementation is acceptable
-  image_description: 'The radar chart displays a hexagonal spider/web chart with 6
-    axes: Communication (top), Technical Skills (upper-right), Teamwork (lower-right),
-    Problem Solving (bottom), Leadership (lower-left), and Creativity (upper-left).
-    Two filled polygons represent Employee A (blue #306998) and Employee B (yellow
-    #FFD43B), each with ~25% transparency allowing overlap visibility. Employee A
-    shows higher values for Technical Skills (~95) and Problem Solving (~90), while
-    Employee B excels in Communication (~90) and Teamwork (~95). The chart has polygon-interpolated
-    gridlines at 0, 20, 40, 60, 80 intervals. The title "radar-basic · highcharts
-    · pyplots.ai" appears at the top in bold. The legend is centered at the bottom
-    with circle markers for both employees.'
+  - 'Layout has empty space: significant void between chart bottom and bottom legend
+    (~15-20% canvas unused); reduce pane size or add chart marginBottom tuning to
+    tighten the layout'
+  - 'Design excellence is moderate: gridLineWidth=2 is thicker than ideal for a subtle
+    radar grid (1px would be more refined); no visual emphasis distinguishes any particular
+    insight'
+  - 'Code-image mismatch: rendered images show 3 series with subtitle text not present
+    in current code — images appear to be from a prior generation run. Current code
+    has 2 series.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "radar-basic · highcharts · anyplot.ai" is bold and prominent (72px). Category axis labels (Communication, Technical Skills, Teamwork, etc.) at 40px are clear. Radial tick labels (0, 20, 40, 60, 80) at 32px are readable. Legend text at 36px is visible. Subtitle text is small (from prior run's code).
+      Data: Three Okabe-Ito colored area polygons — #009E73 (green, Employee A), #D55E00 (orange, Employee B), #0072B2 (blue, Employee C) — with 25% fill opacity. Distinct and clearly visible.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct, not pure black
+      Chrome: Title text is light (#F0EFE8) and clearly readable. Category labels are light-colored. Radial tick labels appear light. Legend text is light. No dark-on-dark failure observed — all chrome elements flip correctly.
+      Data: Same three Okabe-Ito colors as light render — green, orange, blue are identical. Polygon fills visible against the dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 39
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: All text clearly readable with appropriate font sizes
+        comment: All font sizes explicitly set (title 72px, category labels 40px,
+          radial ticks 32px, legend 36px). Slightly conservative given radial tick
+          labels appear small relative to chart size.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, axis labels well-positioned around the chart
+        comment: No overlapping labels; category labels well-spaced around hexagonal
+          pane.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Markers visible, line width appropriate, good polygon fill
+        comment: Area fills clearly visible with transparent overlaps. Vertex markers
+          (radius 12) present but appear somewhat small at 4800x2700.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow colorblind-safe palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Chart well-centered with 75% pane size, good canvas utilization
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive category names but radial axis lacks unit context
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle gray gridlines at alpha 0.15, legend well-placed at bottom
+        comment: Okabe-Ito palette is fully colorblind-safe. Three series have adequate
+          luminance contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: true
+        comment: Pane at 75% is well-proportioned but there is notable empty space
+          between chart bottom and legend (~15-20% of canvas unused).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Six descriptive axis labels. Title in correct format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00, third #0072B2 — correct Okabe-Ito
+          order. Backgrounds #FAF8F1/#1A1A17 correct. Theme-adaptive chrome works
+          in both renders.'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Clean professional polar chart with Okabe-Ito colors and transparent
+          fills. Looks like well-configured Highcharts default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Good refinements (lineWidth=0, polygon grid, GRID token, elevated
+          legend). gridLineWidth=2 is somewhat thick. Whitespace distribution has
+          gaps.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Three contrasting employee profiles create natural visual hierarchy.
+          Viewer can immediately see each employee's strengths and weaknesses from
+          polygon shapes.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct radar/spider chart using Highcharts polar mode
+        comment: Correct radar/spider chart using Highcharts polar mode with polygon
+          grid.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on axes, values on radial scale (0-100)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Filled polygons with transparency, gridlines at 20 intervals, labeled
-          axes, distinct colors, legend, closed polygon
-      - id: SC-04
-        name: Data Range
+        comment: Filled polygons with transparency, polygon gridlines at 20-interval
+          steps, axis labels, distinct colors, legend all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 0-100 scale visible, all data within range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Categories correctly mapped to 6 axes. Values on 0-100 scale. pointPlacement
+          and tickmarkPlacement set to 'on'.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Employee A and Employee B correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: radar-basic · highcharts · pyplots.ai'
+        comment: Title 'radar-basic · highcharts · anyplot.ai' correct. Legend shows
+          series names.
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows comparison of two employees with contrasting profiles (technical-focused
-          vs soft-skills-focused)
+        comment: Three series comparison (within spec's 1-3 range). Six axes (within
+          spec's 4-8). Each series has distinct value profile.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Employee performance metrics is a common real-world use case from
-          spec applications
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 0-100 performance scale with realistic values
+        comment: Employee performance review scenario — first application in spec.
+          Realistic professional categories.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values on 0-100 scale as specified. Scores range 65-95 reflecting
+          plausible performance variability.
     code_quality:
       score: 10
       max: 10
@@ -165,43 +194,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → chart config → selenium screenshot
-          → save'
+        comment: 'Clean linear: imports → tokens → data → config → CDN → HTML → screenshot
+          → cleanup.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data arrays, no random seed needed
+        comment: Hardcoded literal arrays, fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (highcharts_core, selenium, urllib, tempfile, time,
-          Path)
+        comment: All imports used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current highcharts-core API
+        comment: CDN fallback list appropriate. json.dumps() clean. Theme token pattern
+          correct.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
         passed: true
-        comment: Polar chart mode, AreaSeries for filled radar, gridLineInterpolation
-          polygon, pane settings, fillOpacity control, highcharts-more.js for radar
-          support
+        comment: Correct Highcharts JS idioms (polar, gridLineInterpolation, tickmarkPlacement,
+          pointPlacement). Bypasses highcharts-core Python library in favor of raw
+          JSON config.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses Highcharts-specific polar chart features: chart.polar, gridLineInterpolation
+          polygon, tickmarkPlacement/pointPlacement on for correct vertex alignment.'
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - polar-projection
+  - html-export
+  patterns: []
+  dataprep: []
+  styling:
+  - alpha-blending
