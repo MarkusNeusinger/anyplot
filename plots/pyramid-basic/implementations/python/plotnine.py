@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 pyramid-basic: Basic Pyramid Chart
 Library: plotnine 0.15.3 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-04-29
@@ -19,9 +19,11 @@ from plotnine import (
     element_rect,
     element_text,
     geom_col,
+    geom_text,
     ggplot,
     labs,
     scale_fill_manual,
+    scale_y_continuous,
     theme,
     theme_minimal,
 )
@@ -58,22 +60,34 @@ anyplot_theme = theme(
     panel_background=element_rect(fill=PAGE_BG),
     panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
     panel_grid_minor=element_blank(),
-    panel_border=element_rect(color=INK_SOFT, fill=None),
+    panel_border=element_blank(),
+    axis_line=element_line(color=INK_SOFT),
     axis_title=element_text(color=INK, size=20),
     axis_text=element_text(color=INK_SOFT, size=16),
     axis_text_x=element_text(color=INK_SOFT, size=16),
     axis_text_y=element_text(color=INK_SOFT, size=14),
-    plot_title=element_text(color=INK, size=22),
+    plot_title=element_text(color=INK, size=24),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     legend_text=element_text(color=INK_SOFT, size=16),
     legend_title=element_text(color=INK, size=18),
+    legend_position="bottom",
 )
+
+# Labels for the peak 40-49 row to emphasise the working-age bulge
+df_peak = df[df["age_group"] == "40-49"].copy()
+df_peak["label"] = df_peak["population"].apply(lambda v: f"{abs(v):,}")
+# Position labels just outside each bar end (negative side left, positive side right)
+df_peak["label_y"] = df_peak["population"].apply(lambda v: v * 1.08)
 
 # Plot
 plot = (
     ggplot(df, aes(x="age_group", y="population", fill="gender"))
     + geom_col(width=0.85)
+    + geom_text(
+        data=df_peak, mapping=aes(x="age_group", y="label_y", label="label"), color=INK_SOFT, size=13, inherit_aes=False
+    )
     + scale_fill_manual(values={"Male": OKABE_ITO[0], "Female": OKABE_ITO[1]})
+    + scale_y_continuous(labels=lambda breaks: [f"{abs(int(b)):,}" for b in breaks])
     + labs(
         x="Age Group",
         y="Population (thousands)",
