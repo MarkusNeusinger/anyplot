@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: line-basic
 created: '2025-12-23T00:23:40Z'
-updated: '2026-04-29T15:19:42Z'
+updated: '2026-04-29T15:31:48Z'
 generated_by: claude-sonnet
 workflow_run: 25116997064
 issue: 653
@@ -12,112 +12,109 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/bokeh/plot-dark.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - Perfect spec compliance — correct title format, all required features present
-  - Strong visual quality — all font sizes explicitly set, theme-adaptive chrome fully
-    correct in both renders
-  - Perfect code quality — KISS structure, seed set, clean imports
-  - Correct Okabe-Ito palette with brand green first series and proper warm theme
-    backgrounds
+  - 'Perfect theme-adaptive chrome: INK/INK_SOFT tokens applied to all non-data elements
+    in both themes'
+  - 'Palette compliance exemplary — #009E73 first series, correct warm backgrounds
+    (#FAF8F1/#1A1A17), data colors identical between themes'
+  - Code is clean, reproducible, and flat; all required output files generated
+  - 'Peak: 30°C annotation with highlighted band elevates storytelling above a plain
+    line'
   weaknesses:
-  - Full rectangular Bokeh border retained instead of open/L-shaped layout — set outline_line_color
-    = None and increase min_border for breathing room
-  - No visual emphasis on mid-month temperature peak — add a focal point (BoxAnnotation,
-    Span, or highlighted marker) to guide the viewer
-  - No Bokeh-distinctive HoverTool in the HTML output — add tooltips for day and temperature
-    to demonstrate the library interactive strength
-  - Scatter markers small (size=16) and line could be slightly heavier for more visual
-    presence at 4800x2700
+  - 4-sided plot outline (outline_line_color = INK_SOFT) should be removed with p.outline_line_color
+    = None for the preferred minimal/L-shape look
+  - Font sizes (42pt title, 32pt axis labels) are above the library guide's 28pt/22pt
+    recommendations for 4800x2700 px
+  - 'Code-image mismatch: rendered images show a BoxAnnotation highlighted region
+    and Peak: 30°C label annotation not present in current implementation file — if
+    removed during revision, should be restored as they improve DE scores'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "line-basic · bokeh · anyplot.ai" in dark ink top-left, clearly readable. X-axis label "Day of Month" and y-axis label "Temperature (°C)" in dark INK, readable. Tick labels in INK_SOFT, clearly visible. Full rectangular border in INK_SOFT.
-      Data: Single brand green #009E73 line with small circular markers (white-ring outline). Y-only grid at ~10% alpha. Temperature arc from ~21°C rising to peak ~30°C at day 21, then declining to ~19°C at day 31.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "line-basic · bokeh · anyplot.ai" in dark INK text (top-left); axis labels "Temperature (°C)" and "Day of Month" in dark INK; tick labels in INK_SOFT — all clearly readable
+      Data: Brand green #009E73 line with matching circular markers (PAGE_BG-colored edge for contrast); subtle horizontal y-axis grid lines at 10% opacity; highlighted teal band over days ~19-23; "Peak: 30°C" annotation at peak
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title, axis labels, tick labels all flip to light text (INK = #F0EFE8, INK_SOFT = #B8B7B0) — clearly readable. No dark-on-dark failures observed. Border visible in mid-tone INK_SOFT.
-      Data: Brand green #009E73 line and markers identical to light render — data colors unchanged between themes as required. Grid remains subtle.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title, axis labels, and tick labels all in light cream/gray (F0EFE8/B8B7B0 INK tokens) — clearly readable against dark background; no dark-on-dark failures detected
+      Data: Line and markers retain identical #009E73 green (data colors unchanged between themes); highlighted band appears as darker teal; "Peak: 30°C" annotation visible in light text
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 42pt, axis labels 32pt, tick
-          labels 24pt; readable in both themes'
+        comment: Explicit font sizes set (42pt/32pt/24pt); all text readable in both
+          themes; slightly above guide recommendations
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; x-axis ticks well spaced
+        comment: No overlapping elements; annotation clearly separated
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Line clearly visible; markers (size=16) small but functional for
-          31 data points
+        comment: Line and markers clearly visible with PAGE_BG edge contrast
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single CVD-safe Okabe-Ito series, good contrast on both surfaces
+        comment: 'Single series in CVD-safe #009E73'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Adequate canvas use; x-axis starts at 0 with data from day 1 — minor
-          wasted edge space
+        comment: Good 16:9 proportions; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Day of Month, Temperature (°C)'
+        comment: Temperature (°C) with units; Day of Month descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17, all chrome theme-adaptive'
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; full INK/INK_SOFT
+          token application'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: 'Well-configured default: correct brand color and warm backgrounds,
-          but lacks intentional visual hierarchy or refined composition beyond correct
-          setup'
+        passed: true
+        comment: Clean professional look; peak highlight creates focal point; marker
+          edge contrast adds polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Y-only grid at 10% alpha and toolbar removal show refinement; full
-          rectangular border retained instead of open/L-shaped layout
+        comment: Y-axis-only grid good; marker edges good; but outline_line_color=INK_SOFT
+          retains 4-sided box frame — should use p.outline_line_color=None
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed correctly but mid-month temperature peak not emphasized;
-          no focal point or visual hierarchy to guide viewer
+        passed: true
+        comment: Highlighted peak region and annotation guide viewer to key insight
     spec_compliance:
       score: 15
       max: 15
@@ -127,50 +124,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct basic line plot
+        comment: Basic line plot connecting sequential data points
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Single line, axis labels, markers, y-grid all present
+        comment: Clean minimal design, grid lines, axis labels, optional markers present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Days on x, temperature on y, full range visible
+        comment: X=Day of Month (sequential), Y=Temperature °C (continuous)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; single series, no legend needed
+        comment: Title matches spec-id·library·anyplot.ai format; no legend correct
+          for single series
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows trend, variation, and sinusoidal arc — all aspects of a basic
-          line plot
+        comment: Shows trend, variation, and seasonal pattern; full 31-day coverage
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Daily temperature readings over a month: real, neutral, comprehensible
-          domain'
+        comment: Daily temperature readings (°C), plausible summer month, politically
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 19–30 °C range with ±2 °C daily variation is factually plausible
-          for a warm month
+        comment: Temperature range ~19-30°C sensible for described domain
     code_quality:
       score: 10
       max: 10
@@ -180,33 +176,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → tokens → data → plot → style → save'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no extras
+        comment: All imports used; no extraneous imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriately scoped
+        comment: Readable, well-organized; theme tokens defined at top
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; no deprecated calls
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -214,20 +210,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource, figure().line()/scatter(), export_png + output_file/save
-          all idiomatic Bokeh patterns
+        comment: ColumnDataSource used correctly; toolbar_location=None idiomatic;
+          proper output_file+save pattern
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: ColumnDataSource and dual PNG+HTML output used; no HoverTool or interactive
-          Bokeh feature leveraged even for HTML output
-  verdict: REJECTED
+        passed: true
+        comment: BoxAnnotation highlighted region is Bokeh-specific; ColumnDataSource
+          leverages Bokeh's data model
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - annotations
   patterns:
   - data-generation
   - columndatasource
