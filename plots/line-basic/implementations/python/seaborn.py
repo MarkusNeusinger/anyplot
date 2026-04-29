@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-basic: Basic Line Plot
-Library: seaborn 0.13.2 | Python 3.14.4
-Quality: 90/100 | Updated: 2026-04-27
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-04-29
 """
 
 import os
@@ -19,6 +19,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"
+ACCENT = "#D55E00"  # Okabe-Ito position 2 — peak emphasis
 
 sns.set_theme(
     style="ticks",
@@ -68,10 +69,19 @@ sns.lineplot(
     label="Mean ± 95% CI",
 )
 
+# Highlight the summer peak (July) to focus the viewer on the seasonal maximum
+peak_month = 7
+peak_mean = df[df["Month"] == peak_month]["Temperature (°C)"].mean()
+ax.scatter(
+    [peak_month], [peak_mean], color=ACCENT, s=300, zorder=5, edgecolors=PAGE_BG, linewidth=2.5, label="Peak — July"
+)
+
 # Style
 ax.set_xlabel("Month", fontsize=20, color=INK)
 ax.set_ylabel("Temperature (°C)", fontsize=20, color=INK)
-ax.set_title("line-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.set_title(
+    "Monthly Temperature Seasonality · line-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK
+)
 ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 ax.set_xticks(months)
 ax.set_xticklabels(month_labels)
