@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 line-basic: Basic Line Plot
-Library: matplotlib 3.10.9 | Python 3.14.4
-Quality: 87/100 | Updated: 2026-04-27
+Library: matplotlib | Python 3.13
+Quality: pending | Updated: 2026-04-29
 """
 
 import os
@@ -16,6 +16,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 BRAND = "#009E73"
 
 # Data - Average monthly temperature across 5 simulated years
@@ -50,11 +51,13 @@ ax.plot(
 month_labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 ax.set_xticks(months)
 ax.set_xticklabels(month_labels)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT, labelcolor=INK_SOFT)
+ax.tick_params(axis="both", labelsize=16, labelcolor=INK_SOFT, length=0)
 
 ax.set_xlabel("Month", fontsize=20, color=INK)
 ax.set_ylabel("Temperature (°C)", fontsize=20, color=INK)
-ax.set_title("line-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.set_title(
+    "Monthly Temperature Trend · line-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK
+)
 
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
