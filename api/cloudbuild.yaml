@@ -66,6 +66,7 @@ steps:
       - "--add-cloudsql-instances=anyplot:europe-west4:anyplot-db"
       - "--set-secrets=DATABASE_URL=DATABASE_URL:latest,CACHE_INVALIDATE_TOKEN=CACHE_INVALIDATE_TOKEN:latest,ADMIN_TOKEN=ADMIN_TOKEN:latest"
       - "--execution-environment=gen2"
+      # ^|^ alt delimiter: values contain @ (emails) and may contain , (multi-email lists)
       - "--set-env-vars=^|^ENVIRONMENT=production|GOOGLE_CLOUD_PROJECT=$PROJECT_ID|GCS_BUCKET=anyplot-images|CF_ACCESS_TEAM_DOMAIN=${_CF_ACCESS_TEAM_DOMAIN}|CF_ACCESS_AUD=${_CF_ACCESS_AUD}|ADMIN_ALLOWED_EMAILS=${_ADMIN_ALLOWED_EMAILS}"
       - "--cpu-throttling"
       - "--concurrency=15"
