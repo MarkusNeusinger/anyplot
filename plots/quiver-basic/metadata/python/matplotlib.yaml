@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: quiver-basic
 created: '2025-12-23T18:11:53Z'
-updated: '2026-04-29T22:30:38Z'
+updated: '2026-04-29T22:41:42Z'
 generated_by: claude-sonnet
 workflow_run: 25136792677
 issue: 1014
@@ -12,52 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/quiver-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - Correct quiver/vector field using ax.quiver with full Axes API
-  - viridis colormap elegantly encodes magnitude — the right choice for continuous
-    data
-  - All text sizes explicitly set (title 24pt, labels 20pt, ticks 16pt, colorbar label
-    20pt)
-  - 'Fully theme-adaptive chrome: backgrounds, spines, grid, colorbar outline, tick/label
-    colors all respond to ANYPLOT_THEME'
-  - set_aspect(equal) applied correctly — essential for a proper vector field display
-  - Arrow geometry explicitly tuned (scale, width, headwidth, headlength, headaxislength)
-  - 15×15 grid (225 arrows) falls squarely within the spec’s recommended 100–400 range
-  - Perfect spec compliance — title format, data mapping, and all required features
-    present
+  - 'Perfect spec compliance: quiver plot with color-encoded magnitude matches all
+    required and optional features'
+  - Both themes render with correct background colors and theme-adaptive chrome —
+    no legibility failures in either render
+  - Vortex-core annotation and r = 1 reference circle provide genuine data storytelling
+  - Code is deterministic, clean, follows KISS structure without abstraction
   weaknesses:
-  - 'Dark render: innermost arrows (deep viridis purple near 0.0 magnitude) are barely
-    distinguishable against the #1A1A17 near-black background — consider a minimum
-    arrow visibility boost or using cividis which has lighter low-end colors'
-  - 'Design Excellence is limited: the plot is a well-configured default with no distinctive
-    design personality (DE-01=4/8). To push above 90, add intentional hierarchy —
-    e.g., a subtitle noting the rotational symmetry, or a reference circle overlay
-    at r=1'
-  - 'No data storytelling (DE-03): color encoding reveals magnitude but the viewer
-    is not guided to any insight. An annotation marking the center vortex or concentric
-    magnitude rings would raise DE-03'
-  - Landscape 16:9 canvas with set_aspect(equal) creates wasted horizontal space on
-    both sides of the square quiver field; a 3600×3600 square canvas would be more
-    appropriate for this symmetric plot
-  - plt.colorbar() is used instead of fig.colorbar() — minor stylistic issue (LM-01);
-    both work but fig.colorbar is more idiomatic
+  - Innermost arrows near vortex center are very small due to near-zero magnitude
+    — consider quiverkey() reference arrow or visual cue
+  - Equal aspect ratio in 16:9 canvas leaves moderate horizontal whitespace — consider
+    square canvas
+  - DQ-02 slightly abstract — real-world framing (e.g. wind patterns, ocean vortex)
+    would strengthen context
+  - LM-02 could be elevated by using ax.quiverkey() for a reference arrow, a distinctly
+    matplotlib technique
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "quiver-basic · matplotlib · anyplot.ai" in dark #1A1A17 ink at top, clearly readable. Axis labels "X Position" and "Y Position" in dark ink at fontsize=20, legible. Tick labels in secondary #4A4A44 at fontsize=16, clearly visible. Colorbar label "Vector Magnitude" in dark ink, tick labels in secondary ink — all readable.
-      Data: 15×15 grid of quiver arrows showing circular rotation pattern (u=−y, v=x). Viridis colormap encodes magnitude: deep purple/indigo at center (low magnitude near 0) transitioning through green to bright yellow at corners (magnitude ~4.2). Arrows clearly directional and well-spaced. Top and right spines removed; subtle gray grid (alpha=0.12) visible.
-      Legibility verdict: PASS — all text readable, no light-on-light failures.
+      Background: Warm off-white #FAF8F1 — confirmed, not pure white
+      Chrome: Title "quiver-basic · matplotlib · anyplot.ai" in dark ink, clearly readable. Italic subtitle below in smaller dark text, readable. Axis labels "X Position" / "Y Position" in dark ink at 20pt, ticks at 16pt with INK_SOFT color — all readable. Colorbar label "Vector Magnitude" readable in dark ink.
+      Data: Viridis colormap on 15x15 quiver arrows — dark navy at vortex center (magnitude≈0), grey-green at mid-range, bright yellow at corners (magnitude≈4.2). Dashed circle at r=1 visible. Annotation arrow + box "Vortex core (magnitude = 0)" clearly readable.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title, axis labels, and colorbar label render in light #F0EFE8 ink — clearly readable against dark background. Tick labels render in #B8B7B0 secondary ink — readable. Colorbar background styled dark, outline matches INK_SOFT. No dark-on-dark failures observed for chrome elements.
-      Data: Viridis colormap colors are identical to the light render — data colors unchanged, only chrome flips. HIGH CONCERN: the innermost arrows (very low magnitude, deep purple viridis near 0.0) are very difficult to distinguish from the #1A1A17 background. Direction of innermost vectors is unclear in the dark theme.
-      Legibility verdict: PASS for chrome text; PARTIAL FAIL for data elements — innermost low-magnitude arrows blend with dark background.
+      Background: Warm near-black #1A1A17 — confirmed, not pure black
+      Chrome: Title and subtitle appear in light cream/off-white text, clearly readable against dark background. Axis labels and tick labels in light INK_SOFT color, no dark-on-dark failures detected. Colorbar label and tick labels in light color, readable.
+      Data: Arrow colors identical to light render — same viridis palette (navy center, grey-green mid, yellow outer). Data colors are theme-independent as required. Annotation box and reference circle visible on dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -65,79 +52,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          colorbar label 20pt. Readable in both themes.'
+        comment: Title 24pt, axis labels 20pt, ticks 16pt — all explicitly set; readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or arrow overlap. 15x15 grid with scale=25 keeps arrows well-separated.
+        comment: No overlapping text; 15x15 arrow grid well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: 'Outer arrows clearly visible. Innermost arrows (deep purple viridis
-          near magnitude 0) are barely distinguishable from #1A1A17 dark background
-          — direction unclear in dark theme.'
+        passed: true
+        comment: Arrows well-sized overall; innermost arrows near vortex center are
+          very small (physically correct but reduces core clarity)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: viridis is perceptually uniform and CVD-safe.
+        comment: Viridis is perceptually uniform and CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Landscape 16:9 with set_aspect(equal) creates minor wasted horizontal
-          space around the square quiver area. Colorbar fills right side adequately.
-          Square canvas would be more appropriate.
+        comment: Equal aspect ratio in 16:9 canvas leaves moderate horizontal whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format correct: ''quiver-basic · matplotlib · anyplot.ai''.
-          Axis labels ''X Position'' / ''Y Position'' descriptive — dimensionless
-          field needs no units.'
+        comment: Descriptive labels; subtitle explains field formula
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous data uses viridis (sequential, perceptually uniform).
-          Light bg #FAF8F1, dark bg #1A1A17. All chrome adapts correctly per theme
-          tokens.'
+        comment: 'Viridis correct for continuous magnitude data; backgrounds #FAF8F1/#1A1A17;
+          chrome flips correctly between themes'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Well-configured library default. viridis colormap and proper spine
-          removal show intent, but no distinctive design personality or hierarchy
-          beyond standard quiver styling.
+        comment: 'Above library defaults: subtitle, annotation with reference circle,
+          intentional viridis encoding. Not FiveThirtyEight-level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle grid (alpha=0.12), colorbar fully
-          styled with theme-adaptive colors. Above default but not exceptional.
+        comment: Top/right spines removed, subtle grid, colorbar properly sized. Some
+          horizontal whitespace from equal aspect.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Color encoding reveals magnitude structure clearly. The rotational
-          pattern reads visually. No annotations or focal point to guide the viewer
-          toward an insight.
+        comment: Vortex-core annotation and r=1 reference circle create focal point
+          and guide viewer to key insight
     spec_compliance:
       score: 15
       max: 15
@@ -147,30 +126,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct quiver/vector field plot using ax.quiver.
+        comment: Correct quiver plot using ax.quiver()
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid of arrows, direction encoding, length proportional to magnitude,
-          optional color encoding of magnitude — all present.
+        comment: Uniform grid, scaled arrows, rotation pattern u=-y/v=x, optional
+          magnitude color encoding — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y grid correct. U=-Y, V=X circular rotation. Full range [-3,3]
-          displayed.
+        comment: X/Y from meshgrid; all 225 arrows correctly oriented
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'quiver-basic · matplotlib · anyplot.ai' correct. Colorbar
-          replaces categorical legend appropriately.
+        comment: Title exactly 'quiver-basic · matplotlib · anyplot.ai'; colorbar
+          serves as continuous legend
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -178,22 +156,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all quiver plot aspects: directional arrows, varying length
-          by magnitude, color encoding, uniform grid spacing.'
+        comment: Full range of directions and magnitudes illustrated; vortex structure
+          clearly shown
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Circular rotation field (u=-y, v=x) is a standard mathematical/physical
-          scenario (fluid vortex, magnetic field). Neutral and comprehensible.
+        comment: Well-known scientific field; educational and neutral. Slightly abstract
+          (mathematical formula) vs. real-world domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 225 arrows (15x15) within spec range. Magnitude 0–4.24. Range [-3,3]
-          provides adequate visual space.
+        comment: Grid -3 to 3, magnitude 0–4.2 (correct for formula), 15x15 within
+          spec 100-400 arrows
     code_quality:
       score: 10
       max: 10
@@ -203,62 +181,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat linear structure: imports → data → plot → save. No functions
-          or classes.'
+        comment: Linear flow, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data via np.meshgrid/linspace. No random seed needed.
+        comment: Deterministic data (pure numpy math, no randomness)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: matplotlib.pyplot, numpy, os, sys — all used. sys.path manipulation
-          necessary to prevent file self-shadowing.
+        comment: Only matplotlib, numpy, os, sys
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. Appropriate complexity. No fake UI.
+        comment: Clean, Pythonic; theme tokens properly threaded
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. ax.quiver used (Axes method). Current
-          API.
+        comment: Saves as plot-{THEME}.png with correct dpi/bbox
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: ax.quiver (Axes method) correct. set_aspect('equal') essential for
-          quiver. plt.colorbar used instead of fig.colorbar — minor non-idiomatic
-          choice.
+        comment: ax.quiver() with C-array magnitude coloring via cmap= is idiomatic;
+          plt.colorbar(quiver, ax=ax) correctly linked
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses quiver C parameter for per-arrow color mapping, explicit head
-          geometry (headwidth, headlength, headaxislength), colorbar with scale control
-          (shrink, pad). These are matplotlib-quiver-specific.
-  verdict: REJECTED
+        comment: Uses quiver C-parameter for continuous colormapping and arrow geometry
+          params. Could add ax.quiverkey() for reference arrow — distinctly matplotlib
+          feature.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - annotations
   patterns:
   - data-generation
-  - matrix-construction
   dataprep: []
   styling:
   - custom-colormap
