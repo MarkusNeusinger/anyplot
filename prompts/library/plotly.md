@@ -38,7 +38,7 @@ fig.update_traces(line=dict(width=3))
 
 ```python
 # Target: 4800 × 2700 px (see default-style-guide.md)
-fig.write_image('plot.png', width=1600, height=900, scale=3)
+fig.write_image(f'plot-{THEME}.png', width=1600, height=900, scale=3)
 ```
 
 **Note**: Requires `kaleido` for PNG export.

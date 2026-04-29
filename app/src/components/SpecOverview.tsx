@@ -4,6 +4,7 @@
  * Displays all implementations in a 3-column grid with hover actions.
  */
 
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -59,8 +60,13 @@ export function SpecOverview({
   getLibraryMeta,
   onTrackEvent,
 }: SpecOverviewProps) {
-  // Sort implementations alphabetically
-  const sortedImpls = [...implementations].sort((a, b) => a.library_id.localeCompare(b.library_id));
+  // Sort implementations alphabetically — memoised so the sort doesn't run
+  // on every parent re-render (this component re-renders on tooltip-toggle,
+  // copy-state changes, etc., but `implementations` rarely changes).
+  const sortedImpls = useMemo(
+    () => [...implementations].sort((a, b) => a.library_id.localeCompare(b.library_id)),
+    [implementations]
+  );
 
   return (
     <Box

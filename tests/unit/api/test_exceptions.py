@@ -169,7 +169,7 @@ class TestExceptionHandlers:
 
     @pytest.mark.asyncio
     async def test_generic_exception_handler(self) -> None:
-        """Should handle generic Exception and return 500 response."""
+        """Should handle generic Exception and return 500 response without leaking exc text."""
         request = MagicMock(spec=Request)
         request.url.path = "/test/path"
         exc = Exception("Unexpected error")
@@ -179,8 +179,11 @@ class TestExceptionHandlers:
         assert isinstance(response, JSONResponse)
         assert response.status_code == 500
         content = response.body.decode()
-        assert "Unexpected error" in content
+        # Static message only — raw exception text MUST NOT reach the client
+        # (would otherwise leak DSN fragments, table names, traceback paths).
+        assert "Internal server error" in content
         assert "/test/path" in content
+        assert "Unexpected error" not in content
 
 
 class TestHelperFunctions:

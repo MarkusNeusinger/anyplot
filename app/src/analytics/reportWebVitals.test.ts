@@ -8,6 +8,8 @@ vi.mock('web-vitals', () => ({
   onLCP: (cb: (m: { value: number; rating: string }) => void) => cb({ value: 2500, rating: 'good' }),
   onCLS: (cb: (m: { value: number; rating: string }) => void) => cb({ value: 0.15, rating: 'needs-improvement' }),
   onINP: (cb: (m: { value: number; rating: string }) => void) => cb({ value: 200, rating: 'good' }),
+  onFCP: (cb: (m: { value: number; rating: string }) => void) => cb({ value: 1200, rating: 'good' }),
+  onTTFB: (cb: (m: { value: number; rating: string }) => void) => cb({ value: 400, rating: 'good' }),
 }));
 
 describe('reportWebVitals', () => {
@@ -66,6 +68,12 @@ describe('reportWebVitals', () => {
     expect(window.plausible).toHaveBeenCalledWith('INP', {
       props: { value: '200', rating: 'good' },
     });
+    expect(window.plausible).toHaveBeenCalledWith('FCP', {
+      props: { value: '1200', rating: 'good' },
+    });
+    expect(window.plausible).toHaveBeenCalledWith('TTFB', {
+      props: { value: '400', rating: 'good' },
+    });
   });
 
   it('merges ambient analytics props (e.g. theme) into CWV events', async () => {
@@ -88,6 +96,12 @@ describe('reportWebVitals', () => {
     });
     expect(window.plausible).toHaveBeenCalledWith('INP', {
       props: { theme: 'dark', value: '200', rating: 'good' },
+    });
+    expect(window.plausible).toHaveBeenCalledWith('FCP', {
+      props: { theme: 'dark', value: '1200', rating: 'good' },
+    });
+    expect(window.plausible).toHaveBeenCalledWith('TTFB', {
+      props: { theme: 'dark', value: '400', rating: 'good' },
     });
   });
 });

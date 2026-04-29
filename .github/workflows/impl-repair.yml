@@ -20,20 +20,16 @@ on:
         required: true
         type: string
       attempt:
-        description: "Current attempt number (1, 2, or 3)"
+        description: "Current attempt number (1, 2, 3, or 4)"
         required: true
         type: string
 
-env:
-  DEPS_matplotlib: "matplotlib>=3.9.0 numpy>=1.26.0"
-  DEPS_seaborn: "seaborn>=0.13.0 matplotlib>=3.9.0 numpy>=1.26.0"
-  DEPS_plotly: "plotly>=5.18.0 kaleido>=0.2.1 numpy>=1.26.0"
-  DEPS_bokeh: "bokeh>=3.4.0 numpy>=1.26.0 selenium>=4.15.0 webdriver-manager>=4.0.0"
-  DEPS_altair: "altair>=5.2.0 vl-convert-python>=1.3.0 numpy>=1.26.0"
-  DEPS_plotnine: "plotnine>=0.13.0 numpy>=1.26.0"
-  DEPS_pygal: "pygal>=3.0.0 cairosvg>=2.7.0"
-  DEPS_highcharts: "highcharts-core>=1.10.0 numpy>=1.26.0 selenium>=4.15.0 webdriver-manager>=4.0.0"
-  DEPS_letsplot: "lets-plot>=4.5.0"
+# Per-library deps now come from `pyproject.toml` `lib-{library}` extras
+# (single source of truth — same change as impl-generate.yml).
+
+concurrency:
+  group: impl-repair-${{ inputs.pr_number || github.ref }}
+  cancel-in-progress: false
 
 jobs:
   repair:
@@ -47,7 +43,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
         with:
           fetch-depth: 0
 
@@ -61,29 +57,25 @@ jobs:
           git checkout "$BRANCH"
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6
         with:
-          python-version: '3.14'
+          python-version: '3.13'
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
-
-      - name: Get library dependencies
-        id: deps
-        run: |
-          DEPS_VAR="DEPS_${{ inputs.library }}"
-          DEPS="${!DEPS_VAR}"
-          echo "deps=$DEPS" >> $GITHUB_OUTPUT
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
 
       - name: Install dependencies
+        env:
+          LIBRARY: ${{ inputs.library }}
         run: |
           uv venv .venv
           source .venv/bin/activate
-          uv pip install ${{ steps.deps.outputs.deps }} pandas>=2.2.0 ruff Pillow>=10.0.0
+          # Source of truth: pyproject.toml lib-${LIBRARY} extras
+          uv pip install -e ".[lib-${LIBRARY}]" ruff pillow pyyaml
 
       - name: Setup Chrome for Highcharts
         if: inputs.library == 'highcharts'
-        uses: browser-actions/setup-chrome@v2
+        uses: browser-actions/setup-chrome@4f8e94349a351df0f048634f25fec36c3c91eded  # v2
         with:
           chrome-version: stable
 
@@ -112,7 +104,7 @@ jobs:
         id: claude
         continue-on-error: true
         timeout-minutes: 45
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-action@ef50f123a3a9be95b60040d042717517407c7256  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: "--model sonnet"
@@ -131,7 +123,7 @@ jobs:
         if: steps.claude.outcome == 'failure'
         id: claude_retry
         timeout-minutes: 45
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-action@ef50f123a3a9be95b60040d042717517407c7256  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: "--model sonnet"
@@ -178,14 +170,14 @@ jobs:
 
       - name: Authenticate to GCP
         if: success()
-        uses: google-github-actions/auth@v3
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093  # v3
         with:
           project_id: anyplot
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
 
       - name: Set up Cloud SDK
         if: success()
-        uses: google-github-actions/setup-gcloud@v3
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db  # v3
 
       - name: Upload repaired plot to GCS staging
         if: success()
@@ -220,7 +212,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr comment ${{ inputs.pr_number }} --body "## :wrench: Repair Attempt ${{ inputs.attempt }}/3
+          gh pr comment ${{ inputs.pr_number }} --body "## :wrench: Repair Attempt ${{ inputs.attempt }}/4
 
           Applied fixes based on AI review feedback.
 
@@ -266,7 +258,7 @@ jobs:
           if [ "$RETRY_COUNT" -ge 1 ]; then
             echo "::error::Repair attempt ${ATTEMPT} crashed twice — giving up"
             gh pr comment "$PR_NUM" --body "${MARKER}
-          ## :x: Repair Workflow Crashed (Attempt ${ATTEMPT}/3, retry exhausted)
+          ## :x: Repair Workflow Crashed (Attempt ${ATTEMPT}/4, retry exhausted)
 
           The repair workflow itself failed twice for this attempt — likely a persistent Claude Code Action issue.
 
@@ -280,7 +272,7 @@ jobs:
           else
             echo "::warning::Repair attempt ${ATTEMPT} crashed — auto-retrying once"
             gh pr comment "$PR_NUM" --body "${MARKER}
-          ## :wrench: Repair Workflow Crashed (Attempt ${ATTEMPT}/3) — Auto-Retrying
+          ## :wrench: Repair Workflow Crashed (Attempt ${ATTEMPT}/4) — Auto-Retrying
 
           The repair workflow failed (probably a transient Claude Code Action issue). Automatically re-triggering this attempt...
 

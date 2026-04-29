@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { fireEvent } from '@testing-library/react';
 import { render, screen, waitFor } from '../test-utils';
 
 import { DebugPage } from './DebugPage';
@@ -81,6 +82,84 @@ describe('DebugPage', () => {
     await waitFor(() => {
       expect(screen.getByText(/failed to load/i)).toBeInTheDocument();
     });
+  });
+
+  // /debug routes are gated by `require_admin` (api/routers/debug.py). The
+  // browser handles the gate via an X-Admin-Token sessionStorage UX; these
+  // tests cover the 401/503 branch + submit/clear flow that the existing
+  // tests miss (and the codecov/patch gate flagged at 65% diff coverage).
+  it('renders the admin-token form on 401', async () => {
+    sessionStorage.clear();
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ ok: false, status: 401 })));
+
+    render(<DebugPage />);
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('X-Admin-Token')).toBeInTheDocument();
+    });
+    expect(screen.getByRole('button', { name: /unlock/i })).toBeInTheDocument();
+    expect(screen.getByText(/admin token required/i)).toBeInTheDocument();
+  });
+
+  it('renders the admin-token form on 503 with the not-configured hint', async () => {
+    sessionStorage.clear();
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ ok: false, status: 503 })));
+
+    render(<DebugPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/admin auth not configured/i)).toBeInTheDocument();
+    });
+  });
+
+  it('submits the token, sends X-Admin-Token, and persists to sessionStorage', async () => {
+    sessionStorage.clear();
+    let callIndex = 0;
+    const fetchMock = vi.fn((url: string, init?: RequestInit) => {
+      callIndex += 1;
+      // First /debug/status → 401 (no token yet); subsequent calls → ok.
+      if (url.includes('/debug/ping')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ database_connected: true, response_time_ms: 10, timestamp: '2026-04-27T00:00:00Z' }),
+        });
+      }
+      if (callIndex === 1) {
+        return Promise.resolve({ ok: false, status: 401 });
+      }
+      // Verify the header is sent on the retry.
+      const hdr = (init?.headers as Record<string, string> | undefined)?.['X-Admin-Token'];
+      if (hdr !== 'secret-xyz') return Promise.resolve({ ok: false, status: 401 });
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(mockDebugData) });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<DebugPage />);
+
+    const input = await screen.findByPlaceholderText('X-Admin-Token');
+    fireEvent.change(input, { target: { value: 'secret-xyz' } });
+    fireEvent.click(screen.getByRole('button', { name: /unlock/i }));
+
+    await waitFor(() => {
+      expect(screen.getAllByText('scatter-basic').length).toBeGreaterThan(0);
+    });
+    expect(sessionStorage.getItem('anyplot.adminToken')).toBe('secret-xyz');
+  });
+
+  it('clears the stored token and re-prompts', async () => {
+    sessionStorage.setItem('anyplot.adminToken', 'stored-token');
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ ok: false, status: 401 })));
+
+    render(<DebugPage />);
+
+    const clearBtn = await screen.findByRole('button', { name: /clear stored token/i });
+    fireEvent.click(clearBtn);
+
+    await waitFor(() => {
+      expect(sessionStorage.getItem('anyplot.adminToken')).toBeNull();
+    });
+    // Form is still on screen because fetch still returns 401.
+    expect(screen.getByPlaceholderText('X-Admin-Token')).toBeInTheDocument();
   });
 
 });

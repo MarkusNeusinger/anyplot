@@ -20,11 +20,11 @@ Read-only `gh` commands typically use these verbs: `list`, `view`, `status`, `ch
 ## Scope ideas (not a checklist — use judgment)
 
 - **Branch hygiene**: `gh api repos/MarkusNeusinger/anyplot/branches` — branches with no commits in >30d (excluding `main`); branches matching `specification/*` or `implementation/*` whose corresponding PR already merged or closed
-- **Stuck PRs**: `gh pr list --state open --limit 200 --json number,title,createdAt,updatedAt,labels,isDraft` — PRs >14d with no activity, or stuck in `ai-rejected` after 3 attempts
+- **Stuck PRs**: `gh pr list --state open --limit 200 --json number,title,createdAt,updatedAt,labels,isDraft` — PRs >14d with no activity, or stuck in `ai-rejected` after 4 attempts
 - **Workflow health**: `gh run list --limit 100 --json name,conclusion,createdAt,updatedAt,event,workflowName` — failure rate per workflow last 30d, longest-running, runs stuck in `queued`/`in_progress` for hours
 - **Issue hygiene**: `gh issue list --state open --label spec-request --limit 100` — `spec-request` issues open >30d without a corresponding spec PR; `report-pending` issues never validated; obvious duplicates (similar titles)
 - **Labels**: `gh label list --limit 200` — orphan labels (no issue/PR uses them), inconsistent naming, near-duplicates
-- **Branch protection on `main`**: `gh api repos/MarkusNeusinger/anyplot/branches/main/protection` — required checks present, required reviews, force-push allowed, admins-included
+- **Branch protection on `main`**: `gh api repos/MarkusNeusinger/anyplot/branches/main/protection` — required checks present, required reviews, force-push allowed, admins-included. **Note**: `required_approving_review_count: 0` is the intentional "Solo Developer Policy" (as long as PRs are enforced and status checks are mandatory) and should be rated as a **Positive Pattern (1)** or ignored, NOT as a finding.
 - **Dependabot / security alerts**: `gh api repos/MarkusNeusinger/anyplot/dependabot/alerts --paginate` — open count by severity (read-only counts, do not dismiss)
 - **Secret/variable inventory**: `gh secret list` and `gh variable list` — names only; flag any not referenced by any workflow file
 - **Artifacts pile-up**: `gh api repos/MarkusNeusinger/anyplot/actions/artifacts --paginate --jq '.artifacts | length'` — old artifacts not garbage-collected

@@ -75,6 +75,40 @@
     }
     </script>
 
+    <!-- WebSite + SearchAction (sitelinks search box eligibility) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "anyplot.ai",
+      "url": "https://anyplot.ai",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://anyplot.ai/plots?spec={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- Organization (brand entity recognition) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "anyplot",
+      "url": "https://anyplot.ai",
+      "logo": "https://anyplot.ai/og-image.png",
+      "description": "Open plot catalogue with AI-generated implementations across 9 Python libraries.",
+      "sameAs": [
+        "https://github.com/MarkusNeusinger/anyplot",
+        "https://www.linkedin.com/in/markus-neusinger/"
+      ]
+    }
+    </script>
+
     <!-- Privacy-friendly analytics by Plausible (production only) -->
     <script>
       window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};

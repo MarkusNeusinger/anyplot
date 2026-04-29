@@ -1,15 +1,245 @@
 library: bokeh
+language: python
 specification_id: parallel-basic
 created: '2025-12-23T18:12:33Z'
-updated: '2025-12-23T18:19:22Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468188665
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/bokeh/plot.html
-quality_score: 91
+updated: '2026-04-27T06:37:32Z'
+generated_by: claude-sonnet
+workflow_run: 24978206561
+issue: 820
+python_version: 3.14.4
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/bokeh/plot-dark.html
+quality_score: 77
+review:
+  strengths:
+  - Font sizes explicitly set at all levels (title 28pt, labels 22pt, ticks 18pt,
+    legend 18/20pt) ensuring legibility at 4800x2700 px
+  - Excellent iris-like data with realistic botanical measurements and clear species
+    separation across petal dimensions — ideal for demonstrating parallel coordinates
+    utility
+  - Custom x-tick labels include original scale ranges in cm, providing reader context
+    without cluttering the y-axis
+  - Clean KISS code structure with reproducibility seed; normalization loop is clean
+    and correct
+  weaknesses:
+  - 'Wrong palette: uses #306998 (Python Blue, explicitly non-compliant per VQ-07),
+    #FFD43B, #4CAF50 — must use Okabe-Ito (setosa #009E73, versicolor #D55E00, virginica
+    #0072B2)'
+  - 'No theme handling: code has no os.getenv(''ANYPLOT_THEME''), no adaptive background/chrome
+    colors, saves as bare plot.png instead of plot-{THEME}.png'
+  - 'Wrong title domain: pyplots.ai should be anyplot.ai'
+  - 'Grid too prominent: alpha=0.3 with dashes adds visual noise; should be <=0.10
+    with no dashes'
+  - 'No HoverTool: Bokeh''s primary strength is interactivity — missing hover on HTML
+    output loses the most distinctive Bokeh feature'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, approximately #FAF8F1 — not pure white, warm tint visible
+      Chrome: Title "parallel-basic · bokeh · pyplots.ai" readable in dark text; y-axis label "Normalized Value" readable; x-tick labels with dimension names and cm ranges visible; legend top-right with "Species" title and species names readable
+      Data: Three species in Python Blue (#306998) for Setosa, amber-yellow (#FFD43B) for Versicolor, medium green (#4CAF50) for Virginica — NOT Okabe-Ito palette; first series is NOT #009E73; 150 semi-transparent lines (alpha=0.5) clearly show species clustering especially in petal dimensions
+      Legibility verdict: PASS (all text readable against light background, no light-on-light failures)
+
+    Dark render (plot-dark.png):
+      Background: Near-black dark background, approximately #1A1A17 — warm near-black (applied by pipeline externally; code has no ANYPLOT_THEME handling)
+      Chrome: Title readable in light-colored text; axis labels visible; tick labels legible; legend text appears readable against dark background — no dark-on-dark failures detected
+      Data: Colors identical to light render (same Python Blue, amber-yellow, medium green) — correct that only chrome flips; species separation patterns identical
+      Legibility verdict: PASS (text readable in dark mode — readability supplied by external pipeline since code has no ANYPLOT_THEME handling or explicit chrome color tokens)
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
+          18pt, legend 18/20pt; readable at 4800x2700 px in both renders'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Four well-spaced dimension labels with custom tick overrides; no
+          text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 150 lines at alpha=0.5 and line_width=2 appropriate for density;
+          slight crowding at petal axes but manageable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: false
+        comment: Three colors distinguishable for most CVD types but not Okabe-Ito
+          certified
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization; minor imbalance with legend floating in
+          top-right corner
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Custom x-tick labels include original scale ranges in cm; descriptive
+          y-axis label
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'Uses #306998 (Python Blue, explicitly non-compliant), #FFD43B, #4CAF50
+          — none are Okabe-Ito; first series must be #009E73; code has no ANYPLOT_THEME
+          handling'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured library defaults with multiline tick labels including
+          measurement ranges; non-standard Python logo color scheme detracts
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Grid alpha=0.3 with dashes more prominent than recommended <=0.10;
+          no spine removal; minimal refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Iris data is excellent choice demonstrating species clustering; normalization
+          with range labels aids readability; no deliberate visual emphasis
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct parallel coordinates plot with normalized multi-dimensional
+          lines
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Multiple dimensions, normalization, color coding by category, transparency
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Dimensions correctly on x-axis, normalized values on y-axis; all
+          150 observations visible
+      - id: SC-04
+        name: Title & Legend
+        score: 1
+        max: 3
+        passed: false
+        comment: Title uses pyplots.ai instead of anyplot.ai; legend species labels
+          are correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Four dimensions, three species, 150 observations; demonstrates clustering,
+          species separation, and variation across all axes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Iris-like botanical measurements; classic neutral scientific domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sepal/petal measurements in expected botanical ranges; normalization
+          handled correctly
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean flat script: imports -> data -> plot -> save; no functions
+          or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; no extras
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; legend creation verbose but correct; no fake
+          UI
+      - id: CQ-05
+        name: Output & API
+        score: 0
+        max: 1
+        passed: false
+        comment: Saves as bare plot.png / plot.html instead of plot-{THEME}.png /
+          plot-{THEME}.html; no ANYPLOT_THEME handling
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses figure/line API correctly; iterates over rows individually rather
+          than using multi_line with ColumnDataSource; no HoverTool on HTML output
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Custom Legend with LegendItem/add_layout and manual tick overrides
+          via major_label_overrides are Bokeh-specific; misses HoverTool which is
+          Bokeh's most distinctive feature
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
@@ -19,197 +249,7 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - alpha-blending
-  - grid-styling
-review:
-  strengths:
-  - Excellent normalization implementation with original value ranges preserved in
-    axis labels
-  - Clean, readable code structure following KISS principles
-  - Good use of transparency (alpha=0.5) to handle 150 overlapping lines
-  - Colorblind-friendly palette with good visual distinction between species
-  - Proper title format and comprehensive legend with species title
-  weaknesses:
-  - Does not use ColumnDataSource which is the recommended Bokeh pattern for data
-    handling
-  - Missing HoverTool for interactive exploration of individual data points
-  - Legend font size could be larger for the 4800x2700 canvas
-  - Could benefit from vertical axis lines to better delineate dimensions
-  image_description: 'The plot displays a parallel coordinates visualization with
-    4 vertical axes representing Iris flower measurements: Sepal Length (4.3-7.9 cm),
-    Sepal Width (2.0-4.3 cm), Petal Length (1.1-6.6 cm), and Petal Width (0.1-2.5
-    cm). Each observation is drawn as a line connecting normalized values (0-1) across
-    all axes. Three species are distinguished by color: Setosa (blue #306998), Versicolor
-    (yellow #FFD43B), and Virginica (green #4CAF50). The visualization clearly shows
-    clustering patterns - Setosa lines cluster at low values for petal dimensions
-    while remaining moderate for sepal dimensions. Virginica shows consistently high
-    values across petal measurements. The legend is positioned in the top right corner
-    with "Species" as the title. The title "parallel-basic · bokeh · pyplots.ai" appears
-    in the top left.'
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick labels are readable at the output resolution,
-          though axis labels with ranges are slightly small
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, all labels are clearly separated
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Lines are visible with appropriate alpha (0.5), though density makes
-          individual lines harder to follow in congested areas
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, and green palette is colorblind-friendly with good
-          distinction
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization, though the plot area could be slightly larger
-          relative to margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: Descriptive labels with units (cm) and value ranges included
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid is subtle (alpha 0.3), legend is well-placed but could use slightly
-          larger font
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct parallel coordinates plot implementation
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: All 4 dimensions correctly mapped to vertical axes
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Normalization applied, color coding by category, transparency for
-          overlapping lines
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible within axes, proper 0-1 normalization
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly identifies all three species with matching colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format `parallel-basic · bokeh · pyplots.ai`
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows clustering patterns and species separation well, though some
-          overlap between Versicolor and Virginica could be more pronounced
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Iris-like measurements are a classic, realistic dataset for parallel
-          coordinates
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Values are realistic for Iris flowers, though some generated values
-          slightly exceed typical ranges
-    code_quality:
-      score: 10
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Clean sequential flow: imports → data → plot → save'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses `np.random.seed(42)` for reproducibility
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as `plot.png` and `plot.html`
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 2
-        max: 5
-        passed: false
-        comment: Uses basic Bokeh plotting functions (figure, line) but doesn't leverage
-          Bokeh's interactive capabilities or HoverTool which would enhance a parallel
-          coordinates visualization
-  verdict: APPROVED

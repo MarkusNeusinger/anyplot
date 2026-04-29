@@ -4,7 +4,7 @@ name = "anyplot"
 version = "2.0.0"
 description = "AI-powered plotting examples"
 authors = [{ name = "Markus Neusinger", email = "admin@anyplot.ai" }]
-requires-python = ">=3.14"
+requires-python = ">=3.13"
 readme = "README.md"
 license = "MIT"
 keywords = [
@@ -17,20 +17,20 @@ keywords = [
 dependencies = [
     # Core Framework
     "fastapi>=0.136.1",
-    "uvicorn[standard]>=0.34.0",
+    "uvicorn[standard]>=0.46.0",
     # MCP Server
     "mcp>=1.0.0",
     "fastmcp>=3.2.4",
     # Database
-    "sqlalchemy[asyncio]>=2.0.0",
+    "sqlalchemy[asyncio]>=2.0.49",
     "asyncpg>=0.30.0",
     "pg8000>=1.31.0",  # Sync driver for Cloud SQL Connector in GitHub Actions
     "alembic>=1.14.0",
-    "cloud-sql-python-connector[asyncpg,pg8000]>=1.18.0",  # Cloud SQL Connector
+    "cloud-sql-python-connector[asyncpg,pg8000]>=1.20.2",  # Cloud SQL Connector
     # Data & Plotting
     "pandas>=3.0.0",
     "numpy>=2.0.0",
-    "matplotlib>=3.10.0",
+    "matplotlib>=3.10.9",
     # Data Science & ML (for plot implementations)
     "scipy>=1.14.0",
     "scikit-learn>=1.6.0",
@@ -61,7 +61,7 @@ test = [
     "aiosqlite>=0.20.0",  # SQLite async driver for integration tests
 ]
 dev = [
-    "ruff>=0.15.11",
+    "ruff>=0.15.12",
     "pre-commit>=4.6.0",
 ]
 typecheck = [
@@ -89,8 +89,8 @@ plotting = [
     "statsmodels>=0.14.0",
 ]
 # Per-library dependencies for CI (minimal installs)
-lib-matplotlib = ["matplotlib>=3.10.0", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
-lib-seaborn = ["seaborn>=0.13.0", "matplotlib>=3.10.0", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
+lib-matplotlib = ["matplotlib>=3.10.9", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
+lib-seaborn = ["seaborn>=0.13.0", "matplotlib>=3.10.9", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
 lib-plotly = ["plotly>=6.7.0", "kaleido>=1.0.0", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
 lib-bokeh = ["bokeh>=3.6.0", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0", "selenium>=4.43.0", "webdriver-manager>=4.0.0"]
 lib-altair = ["altair>=6.1.0", "vl-convert-python>=1.7.0", "numpy>=2.0.0", "pandas>=3.0.0", "scipy>=1.14.0", "scikit-learn>=1.6.0", "statsmodels>=0.14.0"]
@@ -150,7 +150,7 @@ split-on-trailing-comma = false
 # ===== Mypy Configuration =====
 
 [tool.mypy]
-python_version = "3.14"
+python_version = "3.13"
 warn_return_any = true
 warn_unused_configs = true
 no_implicit_optional = true
@@ -176,7 +176,6 @@ module = [
     "core.database.types",
     "core.database.connection",
     "core.database.repositories",
-    "core.generators.plot_generator",
 ]
 ignore_errors = true
 
@@ -226,7 +225,7 @@ exclude_lines = [
 # ===== Build System =====
 
 [build-system]
-requires = ["setuptools>=68.0"]
+requires = ["setuptools>=82.0.1"]
 build-backend = "setuptools.build_meta"
 
 # ===== Setuptools Configuration =====

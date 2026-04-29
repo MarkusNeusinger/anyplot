@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { API_URL } from '../constants';
 import type { PlotImage } from '../types';
+import { shuffleArray } from '../utils/shuffle';
 import { useAppData } from './useLayoutContext';
 
 
@@ -53,7 +54,9 @@ export function useFeaturedSpecs(count: number = 5): FeaturedImpl[] | null {
     }
 
     const candidates = specsData.filter((spec) => imagesBySpec[spec.id]?.length);
-    const shuffled = [...candidates].sort(() => Math.random() - 0.5).slice(0, count);
+    // Fisher-Yates (in shuffleArray) gives a uniform distribution; the prior
+    // `.sort(() => Math.random() - 0.5)` is biased per V8's sort implementation.
+    const shuffled = shuffleArray(candidates).slice(0, count);
 
     return shuffled.map((spec) => {
       const impls = imagesBySpec[spec.id];

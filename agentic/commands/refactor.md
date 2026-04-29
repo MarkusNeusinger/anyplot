@@ -25,12 +25,11 @@ prompt: $2
 - `api/` - FastAPI backend
   - `main.py` - App entry point
   - `routers/` - API route handlers
-  - `services/` - Business logic
 - `app/` - React frontend (Vite + TypeScript)
   - `src/` - Source code
 - `core/` - Shared Python modules
-  - `models/` - Pydantic models
-  - `database/` - Database utilities
+  - `config.py` - Configuration
+  - `database/` - Database utilities, models, and repositories
 - `plots/` - Plot specifications and implementations
 - `tests/` - Test suites
 - `agentic/` - Agentic Layer

@@ -1,5 +1,5 @@
 # Dockerfile for anyplot FastAPI backend on Cloud Run
-FROM python:3.14-slim
+FROM python:3.13-slim
 
 # Set working directory
 WORKDIR /app
@@ -12,12 +12,15 @@ RUN apt-get update && apt-get install -y \
 
 # Copy requirements first for better caching
 COPY pyproject.toml .
+COPY uv.lock .
 COPY README.md .
 
-# Install uv and create venv
+# Install uv and create venv. `--frozen` honors uv.lock instead of re-resolving
+# from pyproject.toml — without it, uv picked up greenlet 3.5.0, which only
+# ships macOS/Windows wheels and breaks the linux/amd64 Cloud Build image.
 RUN pip install --no-cache-dir uv && \
     uv venv && \
-    uv sync
+    uv sync --frozen
 
 # Copy application code
 COPY api/ ./api/

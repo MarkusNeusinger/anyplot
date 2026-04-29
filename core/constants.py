@@ -26,7 +26,7 @@ LANGUAGES_METADATA = [
         "id": "python",
         "name": "Python",
         "file_extension": ".py",
-        "runtime_version": "3.14",
+        "runtime_version": "3.13",
         "documentation_url": "https://www.python.org",
         "description": "The default language for anyplot plot implementations.",
     }
@@ -141,7 +141,7 @@ STATUS_LABELS = frozenset(
 QUALITY_LABELS = frozenset(["quality:excellent", "quality:good", "quality:needs-work", "quality:poor"])
 
 # Attempt labels
-ATTEMPT_LABELS = frozenset(["ai-attempt-1", "ai-attempt-2", "ai-attempt-3"])
+ATTEMPT_LABELS = frozenset(["ai-attempt-1", "ai-attempt-2", "ai-attempt-3", "ai-attempt-4"])
 
 # =============================================================================
 # QUALITY THRESHOLDS
@@ -150,8 +150,8 @@ ATTEMPT_LABELS = frozenset(["ai-attempt-1", "ai-attempt-2", "ai-attempt-3"])
 QUALITY_THRESHOLD_EXCELLENT = 90
 QUALITY_THRESHOLD_GOOD = 85
 QUALITY_THRESHOLD_NEEDS_WORK = 75
-QUALITY_THRESHOLD_APPROVAL = 90  # Minimum score for immediate approval
-QUALITY_THRESHOLD_FINAL_APPROVAL = 50  # Minimum score for approval after 3 attempts
+QUALITY_THRESHOLD_APPROVAL = 90  # Minimum score for immediate approval (Review 1)
+QUALITY_THRESHOLD_FINAL_APPROVAL = 50  # Minimum score for approval after 4 repair attempts (Review 5)
 
 # =============================================================================
 # HELPER FUNCTIONS

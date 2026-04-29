@@ -37,29 +37,31 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
 ## Input
 
 1. **Specification**: From `plots/{spec-id}/specification.md`
-2. **Code**: From `plots/{spec-id}/implementations/{library}.py`
+2. **Code**: From `plots/{spec-id}/implementations/{language}/{library}.py`
 3. **Previews**: BOTH theme renders of the plot image — `plot-light.png` and `plot-dark.png`. You must inspect both. For interactive libraries, also `plot-light.html` and `plot-dark.html`.
 4. **Library Rules**: From `prompts/library/{library}.md`
 5. **Style Guide** (canonical palette + theme tokens): `prompts/default-style-guide.md` — consult its "Categorical Palette", "Continuous Data", "Background", and "Theme-adaptive Chrome" sections for VQ-07 scoring.
 
-## Scoring Philosophy: STRICT
+## Scoring Philosophy: Cascading Thresholds
 
-| Score | Tier | Outcome |
-|-------|------|---------|
-| 90-100 | Excellent | **Approved immediately** - Publication quality |
-| 70-89 | Good | Repair loop → merge after 3 attempts |
-| 50-69 | Acceptable | Repair loop → merge after 3 attempts |
-| < 50 | Poor | Repair loop → **NOT in repo** after 3 attempts |
+| Review Stage | Requirement | Outcome |
+|--------------|-------------|---------|
+| Review 1 (Initial) | ≥ 90 | **Approved** - Publication quality |
+| Review 2 (Repair 1) | ≥ 80 | **Approved** - High quality |
+| Review 3 (Repair 2) | ≥ 70 | **Approved** - Good quality |
+| Review 4 (Repair 3) | ≥ 60 | **Approved** - Acceptable quality |
+| Review 5 (Repair 4) | ≥ 50 | **Approved** - Minimum quality |
+| Final Status | < 50 | **Rejected** - Not in repo |
 
 **Workflow:**
-- **≥ 90**: ai-approved, merged immediately
-- **< 90**: ai-rejected, repair loop (up to 3 attempts)
-- **After 3 attempts**: ≥ 50 → merge, < 50 → close PR and regenerate
+- **Meet Stage Threshold**: ai-approved, merged immediately
+- **Below Stage Threshold**: ai-rejected, repair loop (up to 4 repair attempts)
+- **After 4 repairs (Review 5)**: < 50 → close PR and regenerate
 
 **Principles:**
 - Full points only for **perfect** execution
 - Small flaws = immediate deduction
-- "Good enough" = maximum 70%
+- Cascading thresholds allow good plots to merge faster while preventing infinite loops
 - Be honest and critical
 
 ### Anti-Inflation Rules
@@ -93,20 +95,20 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
 
   "visual_quality": {
     "total": 23,
-    "vq01_text_legibility": {"score": 5, "max": 8, "note": "Readable but relying on defaults"},
+    "vq01_text_legibility": {"score": 5, "max": 8, "note": "Readable but relying on defaults (font sizes not explicitly set)"},
     "vq02_no_overlap": {"score": 6, "max": 6, "note": "No overlap"},
-    "vq03_element_visibility": {"score": 5, "max": 6, "note": "Markers visible but could be larger"},
-    "vq04_color_accessibility": {"score": 2, "max": 2, "note": "Good contrast, CVD-safe"},
-    "vq05_layout_canvas": {"score": 2, "max": 4, "note": "Some wasted space"},
-    "vq06_axis_labels_title": {"score": 2, "max": 2, "note": "Descriptive with units"},
-    "vq07_palette_compliance": {"score": 1, "max": 2, "note": "Okabe-Ito palette used but first series is #0072B2 instead of brand #009E73"}
+    "vq03_element_visibility": {"score": 5, "max": 6, "note": "Visible but markers could be better adapted"},
+    "vq04_color_accessibility": {"score": 2, "max": 2, "note": "CVD-safe contrast beyond palette choice"},
+    "vq05_layout_canvas": {"score": 2, "max": 4, "note": "Balanced but some wasted space"},
+    "vq06_axis_labels_title": {"score": 2, "max": 2, "note": "Descriptive labels with units"},
+    "vq07_palette_compliance": {"score": 1, "max": 2, "note": "Okabe-Ito palette used but first series used #0072B2 instead of brand #009E73"}
   },
 
   "design_excellence": {
     "total": 8,
     "de01_aesthetic_sophistication": {"score": 4, "max": 8, "note": "Well-configured default, not exceptional"},
     "de02_visual_refinement": {"score": 2, "max": 6, "note": "Library defaults, minimal refinement"},
-    "de03_data_storytelling": {"score": 2, "max": 6, "note": "Data displayed but no storytelling"}
+    "de03_data_storytelling": {"score": 2, "max": 6, "note": "Data displayed but no visual hierarchy or storytelling"}
   },
 
   "spec_compliance": {
@@ -114,14 +116,14 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
     "sc01_plot_type": {"score": 5, "max": 5, "note": "Correct chart type"},
     "sc02_required_features": {"score": 3, "max": 4, "note": "Minor feature missing"},
     "sc03_data_mapping": {"score": 3, "max": 3, "note": "X/Y correctly mapped"},
-    "sc04_title_legend": {"score": 2, "max": 3, "note": "Title ok, legend not perfect"}
+    "sc04_title_legend": {"score": 2, "max": 3, "note": "Title format correct but legend issues"}
   },
 
   "data_quality": {
     "total": 13,
     "dq01_feature_coverage": {"score": 5, "max": 6, "note": "Shows main patterns but no outliers"},
     "dq02_realistic_context": {"score": 4, "max": 5, "note": "Plausible scenario"},
-    "dq03_appropriate_scale": {"score": 4, "max": 4, "note": "Reasonable values"}
+    "dq03_appropriate_scale": {"score": 4, "max": 4, "note": "Values and relational proportions are factually correct"}
   },
 
   "code_quality": {
@@ -129,14 +131,14 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
     "cq01_kiss_structure": {"score": 3, "max": 3, "note": "Simple sequential structure"},
     "cq02_reproducibility": {"score": 2, "max": 2, "note": "Uses np.random.seed(42)"},
     "cq03_clean_imports": {"score": 2, "max": 2, "note": "Only used imports"},
-    "cq04_code_elegance": {"score": 1, "max": 2, "note": "Ok but slightly verbose"},
+    "cq04_code_elegance": {"score": 1, "max": 2, "note": "Appropriate complexity but slightly verbose"},
     "cq05_output_api": {"score": 1, "max": 1, "note": "Correct output, current API"}
   },
 
   "library_mastery": {
     "total": 9,
-    "lm01_idiomatic_usage": {"score": 5, "max": 5, "note": "Uses library's high-level API"},
-    "lm02_distinctive_features": {"score": 4, "max": 5, "note": "Uses some library-specific features"}
+    "lm01_idiomatic_usage": {"score": 5, "max": 5, "note": "Expertly uses library recommended patterns"},
+    "lm02_distinctive_features": {"score": 4, "max": 5, "note": "Leverages library-specific features creatively"}
   },
 
   "strengths": [
@@ -210,7 +212,7 @@ If found: `auto_reject: "AR-08"`, score = 0, stop evaluation.
 |----|-----------|-----|--------------|
 | DQ-01 | Feature Coverage | 6 | Shows ALL aspects of plot type? |
 | DQ-02 | Realistic Context | 5 | Real-world plausible **AND neutral** scenario? |
-| DQ-03 | Appropriate Scale | 4 | Sensible values for domain? |
+| DQ-03 | Factual Correctness | 4 | Do values and proportions align with real-world facts? |
 
 **CRITICAL - Content Policy for DQ-02:**
 Automatically give **0 points** if data uses controversial/sensitive topics:

@@ -56,7 +56,7 @@ plots/scatter-basic/
 
 **Issue-based workflow**: GitHub Issues as state machine for plot lifecycle. Status tracked via live-updating table (no sub-issues). Each library generates in parallel, creating PRs to a feature branch.
 
-**AI quality review**: Claude evaluates generated plots. Score ≥ 90 → immediate merge. Score < 90 → repair loop (max 3 attempts). After 3 attempts: ≥ 50 → merge, < 50 → failed.
+**AI quality review**: Claude evaluates generated plots using cascading thresholds (90/80/70/60/50) over 4 repair attempts. Final score ≥ 50 required for merge.
 
 See [docs/reference/](docs/reference/) for details.
 

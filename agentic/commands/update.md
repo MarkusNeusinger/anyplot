@@ -440,9 +440,10 @@ Extract status from labels: `ai-approved`, `ai-rejected`, `quality:{score}`, `qu
 Update the table and inform the user when any status changes.
 
 **How the CI repair pipeline works:**
-- `impl-review.yml` scores the PR. If score < 90, it adds `ai-rejected` label.
+- `impl-review.yml` scores the PR. If score is below current threshold, it adds `ai-rejected` label.
 - `impl-repair.yml` auto-triggers on `ai-rejected`: reads review feedback, runs Claude to fix, pushes, re-triggers review.
-- Up to 3 attempts. After attempt 3: score >= 50 → `ai-approved` and merge; score < 50 → PR closed + `not-feasible`.
+- Up to 4 attempts. Cascading thresholds: 90 -> 80 -> 70 -> 60 -> 50.
+- After attempt 4 (Review 5): score >= 50 → `ai-approved` and merge; score < 50 → PR closed + `not-feasible`.
 - `impl-merge.yml` auto-triggers on `ai-approved`: squash-merges, creates metadata, promotes GCS images.
 
 **Exit conditions**: all PRs are `merged`, `not-feasible`, or closed — OR user says `abort`.

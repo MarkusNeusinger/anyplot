@@ -1,12 +1,25 @@
-""" pyplots.ai
+""" anyplot.ai
 qq-basic: Basic Q-Q Plot
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: plotly 6.7.0 | Python 3.14.4
+Quality: 86/100 | Updated: 2026-04-27
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+BRAND = "#009E73"  # Okabe-Ito position 1 — Q-Q scatter points
+REF_COLOR = "#D55E00"  # Okabe-Ito position 2 — reference line
 
 # Data - sample with slight positive skew to demonstrate Q-Q plot interpretation
 np.random.seed(42)
@@ -18,111 +31,78 @@ sample = np.concatenate(
 )
 sample = np.sort(sample)
 
-# Calculate theoretical quantiles using Blom's plotting positions
-n = len(sample)
-probabilities = (np.arange(1, n + 1) - 0.375) / (n + 0.25)
-
-# Approximate inverse normal CDF (Abramowitz & Stegun rational approximation)
-a = np.array(
-    [
-        -3.969683028665376e01,
-        2.209460984245205e02,
-        -2.759285104469687e02,
-        1.383577518672690e02,
-        -3.066479806614716e01,
-        2.506628277459239e00,
-    ]
-)
-b = np.array(
-    [-5.447609879822406e01, 1.615858368580409e02, -1.556989798598866e02, 6.680131188771972e01, -1.328068155288572e01]
-)
-c = np.array(
-    [
-        -7.784894002430293e-03,
-        -3.223964580411365e-01,
-        -2.400758277161838e00,
-        -2.549732539343734e00,
-        4.374664141464968e00,
-        2.938163982698783e00,
-    ]
-)
-d = np.array([7.784695709041462e-03, 3.224671290700398e-01, 2.445134137142996e00, 3.754408661907416e00])
-
-theoretical_quantiles = np.zeros(n)
-for i, p in enumerate(probabilities):
-    if p < 0.02425:
-        q = np.sqrt(-2 * np.log(p))
-        theoretical_quantiles[i] = (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / (
-            (((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1
-        )
-    elif p <= 0.97575:
-        q = p - 0.5
-        r = q * q
-        theoretical_quantiles[i] = (
-            (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5])
-            * q
-            / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1)
-        )
-    else:
-        q = np.sqrt(-2 * np.log(1 - p))
-        theoretical_quantiles[i] = -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / (
-            (((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1
-        )
-
 # Standardize sample for comparison with standard normal
 sample_standardized = (sample - np.mean(sample)) / np.std(sample)
 
+# Theoretical quantiles via Blom's plotting positions + Winitzki erfinv approximation
+n = len(sample)
+probabilities = (np.arange(1, n + 1) - 0.375) / (n + 0.25)
+q = 2 * probabilities - 1  # map to [-1, 1] for erfinv
+a = 0.147
+ln1q2 = np.log(1 - q**2)
+b = 2 / (np.pi * a) + ln1q2 / 2
+theoretical_quantiles = np.sign(q) * np.sqrt(2) * np.sqrt(np.sqrt(b**2 - ln1q2 / a) - b)
+
 # Reference line (y=x for standardized data)
-line_min = min(theoretical_quantiles.min(), sample_standardized.min()) - 0.2
-line_max = max(theoretical_quantiles.max(), sample_standardized.max()) + 0.2
+margin = 0.3
+line_min = min(theoretical_quantiles.min(), sample_standardized.min()) - margin
+line_max = max(theoretical_quantiles.max(), sample_standardized.max()) + margin
 
 # Plot
 fig = go.Figure()
 
-# Q-Q points
 fig.add_trace(
     go.Scatter(
         x=theoretical_quantiles,
         y=sample_standardized,
         mode="markers",
-        marker={"size": 14, "color": "#306998", "opacity": 0.7},
+        marker={"size": 14, "color": BRAND, "opacity": 0.85},
         name="Sample Quantiles",
     )
 )
 
-# Reference line (y=x)
 fig.add_trace(
     go.Scatter(
         x=[line_min, line_max],
         y=[line_min, line_max],
         mode="lines",
-        line={"color": "#FFD43B", "width": 3, "dash": "dash"},
+        line={"color": REF_COLOR, "width": 3, "dash": "dash"},
         name="Reference (y=x)",
     )
 )
 
-# Layout
+# Style
 fig.update_layout(
-    title={"text": "qq-basic · plotly · pyplots.ai", "font": {"size": 28}},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    title={"text": "qq-basic · plotly · anyplot.ai", "font": {"size": 28, "color": INK}},
     xaxis={
-        "title": {"text": "Theoretical Quantiles", "font": {"size": 22}},
-        "tickfont": {"size": 18},
-        "gridcolor": "rgba(0,0,0,0.1)",
+        "title": {"text": "Theoretical Quantiles", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "gridcolor": GRID,
         "gridwidth": 1,
         "zeroline": False,
+        "linecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Sample Quantiles", "font": {"size": 22}},
-        "tickfont": {"size": 18},
-        "gridcolor": "rgba(0,0,0,0.1)",
+        "title": {"text": "Sample Quantiles", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "gridcolor": GRID,
         "gridwidth": 1,
         "zeroline": False,
+        "linecolor": INK_SOFT,
     },
-    template="plotly_white",
-    legend={"font": {"size": 18}, "x": 0.02, "y": 0.98, "bgcolor": "rgba(255,255,255,0.8)"},
+    legend={
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+        "font": {"size": 18, "color": INK_SOFT},
+        "x": 0.02,
+        "y": 0.98,
+    },
     margin={"l": 80, "r": 40, "t": 80, "b": 80},
 )
 
 # Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html")
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

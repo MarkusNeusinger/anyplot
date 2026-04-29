@@ -15,6 +15,10 @@ on:
   repository_dispatch:
     types: [review-pr]
 
+concurrency:
+  group: impl-review-${{ inputs.pr_number || github.event.client_payload.pr_number || github.ref }}
+  cancel-in-progress: false
+
 jobs:
   review:
     runs-on: ubuntu-latest
@@ -27,7 +31,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
         with:
           fetch-depth: 0
 
@@ -71,9 +75,12 @@ jobs:
         run: |
           LABELS=$(gh pr view "$PR_NUMBER" --json labels -q '.labels[].name' 2>/dev/null || echo "")
 
-          if echo "$LABELS" | grep -q "ai-attempt-3"; then
+          if echo "$LABELS" | grep -q "ai-attempt-4"; then
+            echo "count=4" >> $GITHUB_OUTPUT
+            echo "display=5" >> $GITHUB_OUTPUT
+          elif echo "$LABELS" | grep -q "ai-attempt-3"; then
             echo "count=3" >> $GITHUB_OUTPUT
-            echo "display=3" >> $GITHUB_OUTPUT
+            echo "display=4" >> $GITHUB_OUTPUT
           elif echo "$LABELS" | grep -q "ai-attempt-2"; then
             echo "count=2" >> $GITHUB_OUTPUT
             echo "display=3" >> $GITHUB_OUTPUT
@@ -88,14 +95,14 @@ jobs:
       - name: Authenticate to GCP
         id: gcs
         continue-on-error: true
-        uses: google-github-actions/auth@v3
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093  # v3
         with:
           project_id: anyplot
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
 
       - name: Setup gcloud CLI
         if: steps.gcs.outcome == 'success'
-        uses: google-github-actions/setup-gcloud@v3
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db  # v3
 
       - name: Download plot images from staging
         if: steps.gcs.outcome == 'success'
@@ -125,14 +132,20 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
+          REPOSITORY: ${{ github.repository }}
         run: |
-          gh api "repos/${{ github.repository }}/issues/$PR_NUMBER/reactions" -f content=eyes
+          gh api "repos/$REPOSITORY/issues/$PR_NUMBER/reactions" -f content=eyes
 
       - name: Run AI Quality Review
         id: review
         continue-on-error: true
         timeout-minutes: 30
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-action@ef50f123a3a9be95b60040d042717517407c7256  # v1
+        env:
+          LIBRARY: ${{ steps.pr.outputs.library }}
+          SPEC_ID: ${{ steps.pr.outputs.specification_id }}
+          PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
+          ATTEMPT: ${{ steps.attempts.outputs.display }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: "--model sonnet"
@@ -174,12 +187,14 @@ jobs:
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
           LIBRARY: ${{ steps.pr.outputs.library }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           echo "::error::AI Review did not produce valid output files (score=0)"
 
           MARKER="<!-- review-retry:${SPEC_ID}:${LIBRARY} -->"
           # Paginate so the marker is found even on PRs with >30 comments.
-          RETRY_COUNT=$(gh api --paginate "repos/${{ github.repository }}/issues/${PR_NUM}/comments?per_page=100" \
+          RETRY_COUNT=$(gh api --paginate "repos/$REPOSITORY/issues/${PR_NUM}/comments?per_page=100" \
             --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2>/dev/null || echo "0")
 
           if [ "$RETRY_COUNT" -ge 1 ]; then
@@ -200,7 +215,7 @@ jobs:
           \`\`\`
 
           ---
-          :robot: *[impl-review](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+          :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*"
             exit 1
           fi
 
@@ -211,9 +226,9 @@ jobs:
           The Claude Code Action ran but didn't write \`quality_score.txt\`. Auto-retrying review once...
 
           ---
-          :robot: *[impl-review](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+          :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*"
 
-          gh api repos/${{ github.repository }}/dispatches \
+          gh api repos/$REPOSITORY/dispatches \
             -f event_type=review-pr \
             -f "client_payload[pr_number]=$PR_NUM"
           echo "::notice::Auto-re-triggered impl-review.yml for PR #$PR_NUM"
@@ -243,22 +258,24 @@ jobs:
           # Add verdict label early to ensure it's set even if later steps fail
           # This is idempotent - re-running won't cause issues
 
-          if [ "$SCORE" -ge 85 ]; then
-            echo "::notice::Adding ai-approved label (score >= 85)"
-            gh pr edit "$PR_NUM" --add-label "ai-approved" 2>/dev/null || {
-              echo "::warning::Failed to add ai-approved label, retrying..."
-              sleep 2
-              gh pr edit "$PR_NUM" --add-label "ai-approved"
-            }
-          elif [ "$ATTEMPT_COUNT" -eq 3 ] && [ "$SCORE" -ge 50 ]; then
-            echo "::notice::Adding ai-approved label (attempt 4, score >= 50)"
+          # Dynamic threshold based on repair attempt count:
+          # Attempt 0 (Review 1): >= 90
+          # Attempt 1 (Review 2): >= 80
+          # Attempt 2 (Review 3): >= 70
+          # Attempt 3 (Review 4): >= 60
+          # Attempt 4 (Review 5): >= 50
+          THRESHOLD=$((90 - ATTEMPT_COUNT * 10))
+          if [ "$THRESHOLD" -lt 50 ]; then THRESHOLD=50; fi
+
+          if [ "$SCORE" -ge "$THRESHOLD" ]; then
+            echo "::notice::Adding ai-approved label (score $SCORE >= $THRESHOLD)"
             gh pr edit "$PR_NUM" --add-label "ai-approved" 2>/dev/null || {
               echo "::warning::Failed to add ai-approved label, retrying..."
               sleep 2
               gh pr edit "$PR_NUM" --add-label "ai-approved"
             }
           else
-            echo "::notice::Adding ai-rejected label (score < 85)"
+            echo "::notice::Adding ai-rejected label (score $SCORE < $THRESHOLD)"
             gh pr edit "$PR_NUM" --add-label "ai-rejected" 2>/dev/null || {
               echo "::warning::Failed to add ai-rejected label, retrying..."
               sleep 2
@@ -420,34 +437,44 @@ jobs:
             # Get title from specification.yaml
             TITLE=$(python3 -c "import yaml; print(yaml.safe_load(open('plots/${SPEC_ID}/specification.yaml'))['title'])" 2>/dev/null || echo "${SPEC_ID}")
 
-            # Replace old header using Python
-            python3 -c "
+            # Replace old header using Python.
+            # All inputs are passed via env (NOT shell-interpolated into the
+            # Python source), and the heredoc uses single-quoted 'EOF' so bash
+            # does not expand $TITLE. This blocks the prior triple-quoted
+            # literal injection (a TITLE containing ''' would have escaped
+            # the string and executed arbitrary Python in the runner).
+            export IMPL_FILE SPEC_ID TITLE LIBRARY LIBRARY_VERSION PYTHON_VERSION SCORE DATE_INFO
+            python3 - <<'EOF'
+          import os
           import re
 
-          impl_file = '$IMPL_FILE'
-          spec_id = '${SPEC_ID}'
-          title = '''${TITLE}'''
-          library = '${LIBRARY}'
-          lib_version = '${LIBRARY_VERSION}'
-          py_version = '${PYTHON_VERSION}'
-          score = '${SCORE}'
-          date_info = '${DATE_INFO}'
+          impl_file = os.environ["IMPL_FILE"]
+          spec_id = os.environ["SPEC_ID"]
+          title = os.environ["TITLE"]
+          library = os.environ["LIBRARY"]
+          lib_version = os.environ["LIBRARY_VERSION"]
+          py_version = os.environ["PYTHON_VERSION"]
+          score = os.environ["SCORE"]
+          date_info = os.environ["DATE_INFO"]
 
-          new_header = f'''\"\"\" anyplot.ai
+          # Sanitize title to prevent triple-quote injection
+          title = title.replace('"""', '\"\"\"')
+
+          new_header = f'''""" anyplot.ai
           {spec_id}: {title}
           Library: {library} {lib_version} | Python {py_version}
           Quality: {score}/100 | {date_info}
-          \"\"\"'''
+          """'''
 
-          with open(impl_file, 'r') as f:
+          with open(impl_file, "r") as f:
               content = f.read()
 
-          pattern = r'^\"\"\".*?\"\"\"'
+          pattern = r'^""".*?"""'
           new_content = re.sub(pattern, new_header, content, count=1, flags=re.DOTALL)
 
-          with open(impl_file, 'w') as f:
+          with open(impl_file, "w") as f:
               f.write(new_content)
-          "
+          EOF
 
             echo "::notice::Updated implementation header with quality score ${SCORE}"
           fi
@@ -464,16 +491,18 @@ jobs:
           fi
 
       - name: Handle review failure
-        if: steps.attempts.outputs.count != '3' && steps.review.conclusion == 'failure'
+        if: steps.attempts.outputs.count != '4' && steps.review.conclusion == 'failure'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
           LIBRARY: ${{ steps.pr.outputs.library }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           MARKER="<!-- review-retry:${SPEC_ID}:${LIBRARY} -->"
           # Paginate so the marker is found even on PRs with >30 comments.
-          RETRY_COUNT=$(gh api --paginate "repos/${{ github.repository }}/issues/${PR_NUM}/comments?per_page=100" \
+          RETRY_COUNT=$(gh api --paginate "repos/$REPOSITORY/issues/${PR_NUM}/comments?per_page=100" \
             --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" 2>/dev/null || echo "0")
 
           if [ "$RETRY_COUNT" -ge 1 ]; then
@@ -489,7 +518,7 @@ jobs:
           \`\`\`
 
           ---
-          :robot: *[impl-review](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+          :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*"
             exit 0
           fi
 
@@ -499,9 +528,9 @@ jobs:
           The Claude Code Action failed or timed out. Auto-retrying review once...
 
           ---
-          :robot: *[impl-review](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+          :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*"
 
-          gh api repos/${{ github.repository }}/dispatches \
+          gh api repos/$REPOSITORY/dispatches \
             -f event_type=review-pr \
             -f "client_payload[pr_number]=$PR_NUM"
           echo "::notice::Auto-re-triggered impl-review.yml for PR #$PR_NUM"
@@ -521,78 +550,59 @@ jobs:
           ATTEMPT: ${{ steps.attempts.outputs.display }}
           ATTEMPT_COUNT: ${{ steps.attempts.outputs.count }}
           ISSUE_NUMBER: ${{ steps.pr.outputs.issue_number }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
         run: |
-          # Score thresholds:
-          # >= 85: Approved (merge immediately)
-          # < 85: Rejected (repair loop, up to 3 attempts)
-          # After 3 attempts: >= 50 = merge, < 50 = close PR
+          # Cascading thresholds:
+          # Attempt 0 (Review 1): >= 90
+          # Attempt 1 (Review 2): >= 80
+          # Attempt 2 (Review 3): >= 70
+          # Attempt 3 (Review 4): >= 60
+          # Attempt 4 (Review 5): >= 50
+          THRESHOLD=$((90 - ATTEMPT_COUNT * 10))
+          if [ "$THRESHOLD" -lt 50 ]; then THRESHOLD=50; fi
 
           # Check if verdict label was already added by earlier step
           CURRENT_LABELS=$(gh pr view "$PR_NUM" --json labels -q '.labels[].name' 2>/dev/null || echo "")
 
           if echo "$CURRENT_LABELS" | grep -q "ai-approved"; then
-            echo "::notice::ai-approved label already set, triggering merge"
+            echo "::notice::ai-approved label already set (Score $SCORE >= $THRESHOLD), triggering merge"
             gh workflow run impl-merge.yml -f pr_number="$PR_NUM"
             exit 0
           fi
 
           if echo "$CURRENT_LABELS" | grep -q "ai-rejected"; then
-            echo "::notice::ai-rejected label already set, triggering repair"
-            gh pr edit "$PR_NUM" --add-label "ai-attempt-${ATTEMPT}" 2>/dev/null || true
-            gh workflow run impl-repair.yml \
-              -f pr_number="$PR_NUM" \
-              -f specification_id="$SPEC_ID" \
-              -f library="$LIBRARY" \
-              -f attempt="$ATTEMPT"
-            exit 0
-          fi
-
-          # Fallback: Add verdict labels if not already set (shouldn't happen but ensures robustness)
-          if [ "$SCORE" -ge 85 ]; then
-            # Approved - merge immediately
-            gh pr edit "$PR_NUM" --add-label "ai-approved" 2>/dev/null || true
-            echo "::notice::Added ai-approved label (score $SCORE >= 85)"
-            echo "Triggering impl-merge.yml for approved PR"
-            gh workflow run impl-merge.yml -f pr_number="$PR_NUM"
-
-          elif [ "$ATTEMPT_COUNT" -eq 3 ]; then
-            # This is the 4th review (after 3 repair attempts)
-            if [ "$SCORE" -ge 50 ]; then
-              # Score 50-89 after 3 attempts: acceptable, merge to repo
-              gh pr edit "$PR_NUM" --add-label "ai-approved" 2>/dev/null || true
-
-              gh pr comment "$PR_NUM" --body "## AI Review - Final Status
-
-          ### Score: ${SCORE}/100 (Acceptable)
-
-          After **3 repair attempts**, ${LIBRARY} reached ${SCORE}/100.
-
-          Score ≥ 50 is acceptable for the repository. Merging.
-
-          ---
-          :robot: *[impl-review](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
-
-              echo "Triggering impl-merge.yml for acceptable PR"
-              gh workflow run impl-merge.yml -f pr_number="$PR_NUM"
-
+            # Still have repair attempts left? (Max 4 repairs = 5 reviews total)
+            if [ "$ATTEMPT_COUNT" -lt 4 ]; then
+              echo "::notice::ai-rejected label set (Score $SCORE < $THRESHOLD), triggering repair attempt $((ATTEMPT_COUNT + 1))"
+              gh pr edit "$PR_NUM" --add-label "ai-attempt-${ATTEMPT}" 2>/dev/null || true
+              gh workflow run impl-repair.yml \
+                -f pr_number="$PR_NUM" \
+                -f specification_id="$SPEC_ID" \
+                -f library="$LIBRARY" \
+                -f attempt="$ATTEMPT"
             else
-              # Score < 50 after 3 attempts: not acceptable, close PR
+              # All 4 repair attempts exhausted
+              echo "::notice::All 4 repair attempts exhausted (Score $SCORE < 50)"
               gh pr edit "$PR_NUM" --add-label "quality-poor"
 
-              gh pr comment "$PR_NUM" --body "## AI Review - Final Status
+              gh pr comment "$PR_NUM" --body "$(cat <<'EOF'
+          ## AI Review - Final Status
 
-          ### Score: ${SCORE}/100 (Poor Quality)
+          ### Score: $SCORE/100 (Below Threshold)
 
-          After **3 repair attempts**, the score is still below 50. This is not acceptable for the repository.
+          After **4 repair attempts**, the score ($SCORE) is still below the minimum acceptable threshold of 50.
 
           **This is treated like an auto-reject.** The PR will be closed and any old implementation will be removed from main.
 
           **Options:**
-          1. Regenerate from scratch with \`generate:${LIBRARY}\` label
+          1. Regenerate from scratch with `generate:$LIBRARY` label
           2. Manual complete rewrite
 
           ---
-          :robot: *[impl-review](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+          :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*
+          EOF
+          )"
 
               gh pr close "$PR_NUM"
 
@@ -611,33 +621,15 @@ jobs:
 
                 # Commit and push
                 git add -A
-                git commit -m "chore(${LIBRARY}): remove ${SPEC_ID} impl (score ${SCORE} < 50 after 3 attempts)"
+                git commit -m "chore(${LIBRARY}): remove ${SPEC_ID} impl (score ${SCORE} < 50 after 4 attempts)"
                 git push origin main
                 echo "::notice::Old implementation removed from main"
-              else
-                echo "::notice::No old implementation found on main to remove"
               fi
 
               if [ -n "$ISSUE_NUMBER" ]; then
                 gh issue edit "$ISSUE_NUMBER" --add-label "impl:${LIBRARY}:failed" 2>/dev/null || true
-                gh issue comment "$ISSUE_NUMBER" --body "**${LIBRARY}** implementation: score ${SCORE}/100 after 3 attempts (< 50 = rejected). PR #${PR_NUM} closed. Old implementation removed from repository."
+                gh issue comment "$ISSUE_NUMBER" --body "**${LIBRARY}** implementation: score ${SCORE}/100 after 4 repair attempts (< 50 = rejected). PR #${PR_NUM} closed. Old implementation removed from repository."
               fi
             fi
-
-          else
-            # Score < 85, still have repair attempts left
-            gh pr edit "$PR_NUM" --add-label "ai-rejected"
-            if [ "$SCORE" -lt 50 ]; then
-              gh pr edit "$PR_NUM" --add-label "quality-poor"
-              echo "::notice::Added ai-rejected + quality-poor labels (score $SCORE < 50)"
-            else
-              echo "::notice::Added ai-rejected label (score $SCORE: 50-89)"
-            fi
-            echo "Triggering impl-repair.yml for rejected PR (attempt $ATTEMPT)"
-            gh pr edit "$PR_NUM" --add-label "ai-attempt-${ATTEMPT}" 2>/dev/null || true
-            gh workflow run impl-repair.yml \
-              -f pr_number="$PR_NUM" \
-              -f specification_id="$SPEC_ID" \
-              -f library="$LIBRARY" \
-              -f attempt="$ATTEMPT"
+            exit 0
           fi

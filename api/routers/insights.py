@@ -10,6 +10,7 @@ Public analytics and discovery features that leverage aggregated database data:
 from __future__ import annotations
 
 import hashlib
+import random
 from collections import Counter, defaultdict
 from datetime import date, datetime, timezone
 
@@ -516,8 +517,6 @@ async def _build_related(
     # Take top candidates (2x limit) and shuffle lightly to add variety
     top_pool = scored[: limit * 2]
     if len(top_pool) > limit:
-        import random
-
         # Group by rounded similarity, shuffle within groups
         seed = int(hashlib.md5(spec_id.encode()).hexdigest(), 16) % (2**32)  # noqa: S324
         rng = random.Random(seed)

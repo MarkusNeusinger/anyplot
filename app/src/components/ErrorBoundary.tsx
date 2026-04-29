@@ -1,5 +1,8 @@
 import { Component, ReactNode } from 'react';
-import { Box, Alert, Button, Typography } from '@mui/material';
+import Box from '@mui/material/Box';
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ReplayIcon from '@mui/icons-material/Replay';
 import HomeIcon from '@mui/icons-material/Home';
@@ -73,7 +76,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <Typography variant="h6" component="div" sx={{ fontWeight: 600, mb: 1 }}>
               Something went wrong
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{ color: 'var(--ink-muted)' }}>
               An unexpected error occurred. Please try reloading the page.
             </Typography>
             {import.meta.env.DEV && this.state.error && (
@@ -83,7 +86,8 @@ export class ErrorBoundary extends Component<Props, State> {
                 sx={{
                   mt: 2,
                   p: 1,
-                  bgcolor: 'grey.100',
+                  bgcolor: 'var(--bg-surface)',
+                  color: 'var(--ink-soft)',
                   borderRadius: 1,
                   overflow: 'auto',
                   maxHeight: 100,

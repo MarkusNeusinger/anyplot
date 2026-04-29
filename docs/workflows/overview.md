@@ -58,7 +58,7 @@ Issue + [generate:{library}] label  OR  workflow_dispatch
 impl-generate.yml
   |-- Creates branch: implementation/{spec-id}/{library}
   |-- AI generates code
-  |-- Creates metadata/{library}.yaml (initial)
+  |-- Creates metadata/python/{library}.yaml (initial)
   |-- Tests execution
   |-- Uploads preview to GCS staging
   |-- Creates PR --> main
@@ -67,15 +67,15 @@ impl-generate.yml
 impl-review.yml
   |-- AI evaluates code + image
   |-- Posts review comment with score
-  |-- Updates metadata/{library}.yaml (quality_score, review feedback)
+  |-- Updates metadata/python/{library}.yaml (quality_score, review feedback)
   |-- Adds [quality:XX] label
        |
-       |-- Score >= 90 --> [ai-approved] --> impl-merge.yml
+       |-- Meet Threshold --> [ai-approved] --> impl-merge.yml
        |                                        |-- Squash merge
        |                                        |-- Promotes GCS: staging --> production
        |                                        |-- Triggers sync-postgres.yml
        |
-       |-- Score < 90 --> [ai-rejected] --> impl-repair.yml (max 3 attempts)
+       |-- Below Threshold --> [ai-rejected] --> impl-repair.yml (max 4 attempts)
                                                |-- Reads AI feedback
                                                |-- Fixes implementation
                                                |-- Re-triggers impl-review.yml
@@ -105,9 +105,9 @@ impl-review.yml
 
 | Label | Meaning | Set By |
 |-------|---------|--------|
-| `ai-approved` | Quality check passed (score >= 90, or >= 50 after 3 attempts) | Workflow |
+| `ai-approved` | Quality check passed (based on cascading thresholds) | Workflow |
 | `ai-rejected` | Quality check failed, triggers repair | Workflow |
-| `ai-attempt-1/2/3` | Retry counter | Workflow |
+| `ai-attempt-1/2/3/4` | Retry counter | Workflow |
 | `quality:XX` | Quality score (e.g., quality:92) | Workflow |
 | `quality-poor` | Score < 50, needs fundamental fixes | Workflow |
 
@@ -134,13 +134,14 @@ impl-review.yml
 
 ---
 
-## Quality Workflow
+## Quality Workflow (Cascading Thresholds)
 
-- **Score >= 90**: Immediately approved and merged
-- **Score < 90**: Repair loop (up to 3 attempts)
-- **After 3 attempts**:
-  - Score >= 50: Merge anyway
-  - Score < 50: Close PR, mark as failed
+- **Review 1 (Initial)**: Score >= 90
+- **Review 2 (Repair 1)**: Score >= 80
+- **Review 3 (Repair 2)**: Score >= 70
+- **Review 4 (Repair 3)**: Score >= 60
+- **Review 5 (Repair 4)**: Score >= 50
+- **Failure**: < 50 after 4 repairs -> close PR, mark as failed
 
 ---
 

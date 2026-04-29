@@ -497,7 +497,7 @@ def evaluate_with_claude(prompt: str, image_path: Path | None = None) -> dict:
     try:
         response = client.messages.create(
             model=settings.claude_model,
-            max_tokens=4096,
+            max_tokens=settings.claude_review_max_tokens,
             messages=[{"role": "user", "content": content}],
         )
     except anthropic.APIError as e:

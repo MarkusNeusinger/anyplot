@@ -22,16 +22,16 @@ COPY . .
 # Build the application
 RUN yarn build
 
-# Stage 2: Serve with nginx
-FROM nginx:alpine
+# Stage 2: Serve with nginx (unprivileged — runs as the `nginx` user, not root)
+FROM nginxinc/nginx-unprivileged:alpine
 
 # Copy nginx configuration for SPA
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --chown=nginx:nginx nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy built assets from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder --chown=nginx:nginx /app/dist /usr/share/nginx/html
 
-# Cloud Run expects port 8080
+# Cloud Run expects port 8080 — nginx-unprivileged already binds 8080 by default
 EXPOSE 8080
 
 # Use exec form to ensure nginx receives signals properly

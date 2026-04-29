@@ -1,15 +1,246 @@
 library: altair
+language: python
 specification_id: qq-basic
 created: '2025-12-23T18:13:19Z'
-updated: '2025-12-23T18:19:49Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468196340
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/qq-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/qq-basic/altair/plot.html
-quality_score: 91
+updated: '2026-04-27T06:26:25Z'
+generated_by: claude-sonnet
+workflow_run: 24977801843
+issue: 977
+python_version: 3.14.4
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/altair/plot-dark.html
+quality_score: 81
+review:
+  strengths:
+  - 'Perfect spec compliance: correct axis labels (Theoretical Quantiles / Sample
+    Quantiles), title format, diagonal reference line, appropriate data size (100
+    observations)'
+  - Theme-adaptive chrome correctly implemented throughout — background, text, grid
+    all flip properly between light (#FAF8F1) and dark (#1A1A17) themes
+  - Both renders fully readable with no legibility failures in either theme
+  - Layer composition using reference_line + points is idiomatic Altair
+  - Bimodal mixture data creates an authentic S-curve departure demonstrating Q-Q
+    plot interpretation effectively
+  weaknesses:
+  - Custom norm_ppf function (Abramowitz & Stegun rational approximation, ~40 lines)
+    over-engineers what scipy.stats.norm.ppf solves in one line — add scipy dependency
+    and simplify
+  - 'Data has no real-world context: the bimodal mixture (mu=50 and mu=75) doesn''t
+    map to a named domain, reducing DQ-02 to plausible-but-generic; fix by naming
+    a scenario (e.g., patient temperature from two cohorts, or product quality from
+    two production lines)'
+  - 'Code-image mismatch: images show viridis+size encoding with subtitle while current
+    altair.py has single #009E73 points and no subtitle — ensure committed code matches
+    rendered images'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — correct, not pure white
+      Chrome: Title "qq-basic · altair · anyplot.ai" in dark ink — readable; subtitle "Bimodal mixture reveals S-curve departure from normality; color and size encode deviation" in smaller dark text — readable; axis labels "Theoretical Quantiles" and "Sample Quantiles" in dark ink — readable; tick labels along both axes in muted dark color — readable
+      Data: Points colored with viridis-like colormap (purple/blue near reference line, teal/green mid-range, yellow at extremes); point size scales with deviation magnitude; dashed gray reference line (strokeDash) clearly visible; S-curve departure pattern visible with points deviating at both extremes
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black consistent with #1A1A17 — correct, not pure black
+      Chrome: Title and subtitle in cream/light-colored text — readable against dark background; axis labels in light text — readable; tick labels in muted light color — readable; reference line flips to white/light dashed line (chrome adaptation correct); no dark-on-dark failures observed
+      Data: Point colors are identical to light render (same viridis spectrum from purple to yellow) — data colors unchanged as required; only chrome flips between themes
+      Legibility verdict: PASS — all text clearly readable against warm near-black background; no dark-on-dark failures
+
+    Note: Images appear to be from a prior version of the code (with viridis+size encoding and subtitle) rather than the current altair.py (which implements single #009E73 points with fixed size and no subtitle). Review scored based on rendered images as presented per workflow instructions.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (labelFontSize=18, titleFontSize=22,
+          title fontSize=28); readable in both themes; subtitle slightly small but
+          legible
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Moderate point density in central Q-Q region; no text overlaps; inherent
+          to data distribution
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Points well-sized and clearly visible; dashed reference line (strokeWidth=3)
+          stands out against data cloud
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis colormap is perceptually uniform and CVD-safe; reference
+          line uses theme-adaptive gray
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions; data fills canvas reasonably; slight empty
+          space at tails acceptable for Q-Q data range
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Theoretical Quantiles and Sample Quantiles match spec exactly; title
+          format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Background correctly #FAF8F1 (light) / #1A1A17 (dark); chrome fully
+          theme-adaptive; viridis for continuous deviation encoding within style guidelines'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): dual encoding of deviation via color (viridis)
+          and size is deliberate and sophisticated; not yet at publication-ready level'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: strokeWidth=0 removes view border; gridOpacity=0.10 with gridDash=[4,4]
+          is tastefully subtle; warm theme-adaptive backgrounds applied
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle names the pattern; S-curve departure visually apparent;
+          color+size encoding guides eye to deviation from normality; viewer needs
+          statistical context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Q-Q plot: sample quantiles vs theoretical quantiles'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal reference line present; axis labels match spec; 100 observations
+          within 30-500 range
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Theoretical Quantiles, Y=Sample Quantiles; both axes show full
+          data range with zero=False
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is qq-basic · altair · anyplot.ai (exact format); single series
+          — no legend required
+    data_quality:
+      score: 12
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows normality departure (S-curve), bimodal structure, tail deviations;
+          full Q-Q plot behavior demonstrated
+      - id: DQ-02
+        name: Realistic Context
+        score: 3
+        max: 5
+        passed: false
+        comment: Bimodal mixture (N(50,10) and N(75,5)) is statistically interesting
+          but uses abstract numeric values without named real-world domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values in ~15-90 range appropriate for mixture distributions; 100
+          observations within recommended 30-500
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: norm_ppf function breaks flat script structure; scipy.stats.norm.ppf
+          would be cleaner
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All four imports (os, altair, numpy, pandas) actively used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Custom norm_ppf with coefficient arrays a/b/c/d is over-engineered;
+          scipy.stats.norm.ppf achieves same in one line
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png (scale_factor=3.0) and plot-{THEME}.html correctly
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Layer composition with + operator, alt.X/alt.Y with :Q type annotations,
+          alt.Scale(zero=False), full configure_* API used correctly
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses layer composition and tooltips plus HTML export; does not leverage
+          interactive selections, parameter bindings, or faceting
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
@@ -21,192 +252,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-review:
-  strengths:
-  - Excellent implementation of inverse normal CDF without scipy dependency (self-contained)
-  - Clear visual demonstration of right skewness with data deviating above reference
-    line
-  - Proper scaling of theoretical quantiles to match sample mean and standard deviation
-  - Good use of Altair layering to combine reference line and scatter points
-  - Interactive tooltips enhance exploration of individual data points
-  - Appropriate styling with Python blue color scheme and dashed yellow reference
-    line
-  weaknesses:
-  - Point size (200) slightly large for 100 points; 150-180 would reduce overlap in
-    dense regions
-  - Axis labels could include context hint (e.g., Sample Quantiles (sorted values))
-  - The manual inverse CDF implementation, while impressive, adds code complexity
-  image_description: The plot displays a Q-Q (Quantile-Quantile) plot with blue filled
-    circular points (#306998, Python blue) against a light gray background. A yellow
-    dashed diagonal reference line (y=x) runs from the lower left to upper right.
-    The X-axis is labeled "Theoretical Quantiles" and Y-axis "Sample Quantiles", both
-    ranging approximately from 10-90. The title "qq-basic · altair · pyplots.ai" appears
-    at the top in a clear, readable font. Points generally follow the reference line
-    through the center but deviate above it in the upper right region, clearly demonstrating
-    the intended slight right skew in the data. The grid uses subtle dashed lines
-    with low opacity. Point sizes are appropriate for the 100 data points.
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Points size=200 with alpha=0.7 is good for 100 points, though slightly
-          large
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue points on white with yellow reference line - excellent contrast,
-          colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good proportions, plot fills canvas well, slight extra whitespace
-          on left edge
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels "Theoretical Quantiles" and "Sample Quantiles"
-          but no units (not applicable for quantiles, so acceptable)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid subtle at alpha=0.3 with dashed style, no legend needed
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Q-Q plot type
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Theoretical quantiles on X, sample quantiles on Y - correct
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 45-degree reference line present, proper axis labels, demonstrates
-          skewness
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Axes show all data points
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: No legend required for this plot type
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "qq-basic · altair · pyplots.ai"'
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows main Q-Q interpretation (deviation from line = skewness), but
-          could show more extreme tails
-      - id: DQ-02
-        name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Plausible statistical scenario with 80 normal + 20 right-skewed observations
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
-        max: 5
-        passed: true
-        comment: Values centered around 50 with std ~15, sensible range
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Linear flow: imports → data → calculation → plot → save'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: np.random.seed(42) set
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Only necessary imports: altair, numpy, pandas'
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves plot.png and plot.html correctly, but the manual inverse CDF
-          implementation is overly complex when scipy.stats.norm.ppf would suffice
-          (though this avoids scipy dependency)
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses Altair's layering (reference_line + points), tooltips for interactivity,
-          configure_axis/configure_view for styling. Could use more Altair-specific
-          features like selections or conditional encoding.
-  verdict: APPROVED
