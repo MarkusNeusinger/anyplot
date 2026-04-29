@@ -1,31 +1,31 @@
 name: "Scheduled: Regen oldest specs"
-run-name: "Scheduled regen (${{ github.event.inputs.count || '2' }} specs)"
+run-name: "Scheduled regen (${{ github.event.inputs.count || '1' }} specs)"
 
 # Picks the N oldest specs (by most-recent implementation `updated` timestamp)
-# and re-dispatches `bulk-generate.yml` for each. Default N=2 per cron tick.
+# and re-dispatches `bulk-generate.yml` for each. Default N=1 per cron tick.
 #
-# Schedule: every 2h between 00:00 and 12:00 UTC (02:00–14:00 Berlin CEST).
-# The 14:00–22:00 UTC slots (16:00–24:00 Berlin) are intentionally skipped so
-# runs never start during the user's 18:00–24:00 Berlin interactive window.
+# Schedule: every 2h, skipping the 20:00–24:00 Berlin (CEST) evening window.
+# Berlin CEST run hours: 00, 02, 04, 06, 08, 10, 12, 14, 16, 18 → UTC 22, 00,
+# 02, 04, 06, 08, 10, 12, 14, 16. The 20:00 and 22:00 Berlin slots (UTC 18, 20)
+# are intentionally skipped so runs never start during the user's evening.
 #
-# bulk-generate is serialised via its own concurrency group, so the 2 dispatched
-# specs run sequentially. With Sonnet + reduced bulk-generate pace, a spec
-# completes well within the 2h slot, leaving the user window clean.
+# bulk-generate is serialised via its own concurrency group. With Sonnet +
+# reduced bulk-generate pace, a single spec completes well within the 2h slot,
+# leaving the user window clean.
 #
 # Triggers:
-#   - schedule: 7× daily (UTC, every 2h up to 12:00)
+#   - schedule: 10× daily (UTC, every 2h except 18:00 and 20:00 UTC)
 #   - workflow_dispatch: manual, with inputs for count + dry-run
 
 on:
-  # Temporarily paused — re-enable in a few days.
-  # schedule:
-  #   - cron: '0 0,2,4,6,8,10,12 * * *'
+  schedule:
+    - cron: '0 0,2,4,6,8,10,12,14,16,22 * * *'
   workflow_dispatch:
     inputs:
       count:
-        description: "How many of the oldest specs to regen (default 2)"
+        description: "How many of the oldest specs to regen (default 1)"
         required: false
-        default: '2'
+        default: '1'
       min_age_hours:
         description: "Skip specs regen'd within this many hours (default 20)"
         required: false
@@ -63,7 +63,7 @@ jobs:
       - name: Pick oldest spec(s)
         id: pick
         env:
-          COUNT: ${{ inputs.count || '2' }}
+          COUNT: ${{ inputs.count || '1' }}
           MIN_AGE_HOURS: ${{ inputs.min_age_hours || '20' }}
         run: |
           python3 <<'PY'
