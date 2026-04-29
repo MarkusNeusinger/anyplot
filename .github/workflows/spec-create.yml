@@ -84,12 +84,12 @@ jobs:
             You are creating a new plot specification.
 
             ### Issue Details
-            - **Title:** $ISSUE_TITLE
-            - **Number:** #$ISSUE_NUMBER
-            - **Author:** $ISSUE_USER
+            - **Title:** ${{ github.event.issue.title }}
+            - **Number:** #${{ github.event.issue.number }}
+            - **Author:** ${{ github.event.issue.user.login }}
             - **Body:**
             ```
-            $ISSUE_BODY
+            ${{ github.event.issue.body }}
             ```
 
             ---
@@ -193,12 +193,12 @@ jobs:
             You are creating a new plot specification.
 
             ### Issue Details
-            - **Title:** $ISSUE_TITLE
-            - **Number:** #$ISSUE_NUMBER
-            - **Author:** $ISSUE_USER
+            - **Title:** ${{ github.event.issue.title }}
+            - **Number:** #${{ github.event.issue.number }}
+            - **Author:** ${{ github.event.issue.user.login }}
             - **Body:**
             ```
-            $ISSUE_BODY
+            ${{ github.event.issue.body }}
             ```
 
             ---

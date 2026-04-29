@@ -154,10 +154,10 @@ jobs:
             Read `prompts/workflow-prompts/ai-quality-review.md` and follow those instructions.
 
             Variables for this run:
-            - LIBRARY: $LIBRARY
-            - SPEC_ID: $SPEC_ID
-            - PR_NUMBER: $PR_NUMBER
-            - ATTEMPT: $ATTEMPT
+            - LIBRARY: ${{ steps.pr.outputs.library }}
+            - SPEC_ID: ${{ steps.pr.outputs.specification_id }}
+            - PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
+            - ATTEMPT: ${{ steps.attempts.outputs.display }}
 
       - name: Extract quality score
         id: score
