@@ -187,4 +187,44 @@ describe('DebugPage', () => {
     expect(screen.getByPlaceholderText('Admin token (fallback)')).toBeInTheDocument();
   });
 
+  // The SPA-routed entry into /debug bypasses Cloudflare Access's page-level
+  // intercept (no server roundtrip = no 302 to login). The first API fetch
+  // then hits CF Access and 302s cross-origin to *.cloudflareaccess.com,
+  // which fetch can't follow without CORS, surfacing as TypeError. The page
+  // bootstraps the gate by triggering one top-level navigation.
+  it('forces a top-level navigation on TypeError and sets the reload guard', async () => {
+    sessionStorage.clear();
+    vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new TypeError('Failed to fetch'))));
+    const replaceSpy = vi.fn();
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...window.location, replace: replaceSpy, href: 'https://anyplot.ai/debug' },
+    });
+
+    render(<DebugPage />);
+
+    await waitFor(() => {
+      expect(replaceSpy).toHaveBeenCalledTimes(1);
+    });
+    expect(replaceSpy).toHaveBeenCalledWith('https://anyplot.ai/debug');
+    expect(sessionStorage.getItem('anyplot.debugAuthReloaded')).toBe('1');
+  });
+
+  it('does not loop: second TypeError after the guard is set surfaces the error', async () => {
+    sessionStorage.setItem('anyplot.debugAuthReloaded', '1');
+    vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new TypeError('Failed to fetch'))));
+    const replaceSpy = vi.fn();
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...window.location, replace: replaceSpy, href: 'https://anyplot.ai/debug' },
+    });
+
+    render(<DebugPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/failed to fetch/i)).toBeInTheDocument();
+    });
+    expect(replaceSpy).not.toHaveBeenCalled();
+  });
+
 });
