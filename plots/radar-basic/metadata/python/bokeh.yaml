@@ -1,172 +1,187 @@
 library: bokeh
+language: python
 specification_id: radar-basic
 created: '2025-12-23T18:12:30Z'
-updated: '2025-12-23T18:18:57Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468194430
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/radar-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/radar-basic/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - polar-projection
-  - manual-ticks
-  - custom-legend
-  - html-export
-  patterns:
-  - data-generation
-  - columndatasource
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-04-29T17:28:05Z'
+generated_by: claude-sonnet
+workflow_run: 25121484227
+issue: 744
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/bokeh/plot-dark.html
+quality_score: 79
 review:
   strengths:
-  - Excellent radar chart implementation with proper polar-to-cartesian coordinate
-    conversion
-  - Good use of transparency (alpha=0.25) for overlapping polygon visibility as spec
-    requires
-  - Smart text alignment logic for category labels based on position around the circle
-  - 'Clean color scheme with Python colors (blue #306998, yellow #FFD43B) that are
-    distinguishable'
-  - Proper square aspect ratio (3600x3600) for radar chart symmetry
-  - Grid circles at correct intervals (20, 40, 60, 80, 100) as spec requests
+  - Clean minimal radar chart design with good alpha-blended polygon overlap visibility
+  - Realistic employee performance comparison data with contrasting profiles that
+    demonstrate the chart's comparison use case
+  - 'All spec features implemented: filled polygons with alpha ~0.25, gridlines at
+    20/40/60/80/100, outer-edge category labels, closed polygon, legend'
+  - Font sizes explicitly set for large canvas (title 32pt, labels 22pt)
+  - Square 3600x3600 canvas format appropriate for symmetric radar chart
   weaknesses:
-  - Grid scale values (20, 40, 60, 80, 100) are not labeled on the chart, making it
-    harder to read exact values
-  - Legend is positioned in corner far from the chart - could be integrated better
-  - No hover interactivity despite Bokeh being an interactive library
-  image_description: 'The plot displays a radar/spider chart comparing two employees
-    across 6 competency dimensions: Communication, Technical Skills, Teamwork, Problem
-    Solving, Leadership, and Creativity. Employee A is represented by a blue polygon
-    with blue markers, Employee B by a yellow/gold polygon with darker gold markers.
-    The chart has 5 concentric grid circles (representing 20, 40, 60, 80, 100 scale)
-    in light gray. Six axis lines extend from the center to each category label. The
-    title "radar-basic · bokeh · pyplots.ai" appears at the top center. A legend in
-    the top-right corner identifies the two employees. Both polygons are filled with
-    ~25% alpha transparency, allowing overlap visibility. The chart uses a square
-    1:1 aspect ratio with clean white background.'
+  - 'CRITICAL PALETTE: Code uses #306998 (Python Blue) and #FFD43B (Python Yellow)
+    — not Okabe-Ito. Must use #009E73 (Employee A, first series) and #D55E00 (Employee
+    B, second series)'
+  - 'CRITICAL THEME: No os.getenv(ANYPLOT_THEME) — background hardcoded to pure ''white'',
+    category label text hardcoded to ''#333333'', legend not themed. Must add full
+    light/dark branching with PAGE_BG/INK/INK_SOFT tokens'
+  - 'CRITICAL OUTPUT FILENAME: Saves as plot.png instead of plot-{THEME}.png (and
+    plot-{THEME}.html). Pipeline cannot generate dual-theme renders'
+  - 'CRITICAL TITLE: Title string says ''pyplots.ai'' but must be ''anyplot.ai'''
+  - Scatter point size (size=20 at 3600px canvas) is too small; increase to 30-40
+    for better visibility at full resolution
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white approximately #FAF8F1 — correct theme surface
+      Chrome: Title "radar-basic · bokeh · anyplot.ai" in dark ink, readable. Category labels (Communication, Technical Skills, Teamwork, Problem Solving, Leadership, Creativity) in dark text around perimeter, readable. Scale numbers (20/40/60/80/100) near top axis, small but visible.
+      Data: Employee A polygon in teal (#009E73), Employee B in orange (#D55E00), both with ~25% alpha fill and solid borders. Concentric circle gridlines subtle and non-intrusive.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light failures.
+      NOTE: Images appear stale — current code uses #306998 (Python Blue) and #FFD43B (Python Yellow), contradicting what is shown.
+
+    Dark render (plot-dark.png):
+      Background: Near-black approximately #1A1A17 — correct dark theme surface
+      Chrome: Title and all text rendered in light-colored ink, clearly readable against dark background. No dark-on-dark failures observed.
+      Data: Polygon colors identical to light render — teal Employee A and orange Employee B confirming data colors (positions 1-2 in Okabe-Ito) are theme-independent.
+      Legibility verdict: PASS — all text readable in dark render per image.
+      NOTE: Current code has no ANYPLOT_THEME adaptation and would not produce a dark render if re-executed.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: All text readable at full size, title and category labels clear,
-          though title could be slightly larger
+        comment: Font sizes explicitly set (title 32pt, labels 22pt); all text readable
+          per images; scale labels slightly small
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all category labels well-positioned
+        comment: No overlapping text; category labels well distributed around perimeter
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Markers appropriately sized (20px), lines clearly visible (4px width),
-          good alpha for fill
+        comment: Filled polygons clearly visible; scatter points (size=20 at 3600px)
+          slightly small
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow palette is colorblind-friendly, but could have slightly
-          more contrast
+        comment: Teal and orange (per images) are CVD-safe Okabe-Ito pair with good
+          contrast
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good canvas utilization, radar chart fills space well, legend positioned
-          appropriately
+        comment: Square 3600x3600 appropriate for radar; chart uses ~50-55% of canvas;
+          balanced margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels (competency names) but no units/scale indicators
-          on the grid
+        comment: Category labels serve as descriptive axis labels; correct title format
+          per images
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 0
         max: 2
+        passed: false
+        comment: 'CODE FAIL: fill_color=''#306998'' (Python Blue, not #009E73); fill_color=''#FFD43B''
+          (Python Yellow, not #D55E00); background=''white'' (pure white, not #FAF8F1);
+          no ANYPLOT_THEME adaptation'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: true
-        comment: Grid is subtle (alpha 0.6), legend readable but positioned far in
-          corner
+        comment: Clean minimal radar with alpha blending; above generic default; professional
+          appearance
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Standard axes hidden, subtle circular gridlines only, clean whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Contrasting employee profiles (A: technical/communication, B: teamwork/leadership)
+          tell a clear comparison story'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 13
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct radar/spider chart type
+        comment: Correct radar/spider chart using polar-to-cartesian conversion with
+          filled polygons
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on axes, values determine polygon vertices correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Filled polygons with transparency (0.25), gridlines at intervals,
-          axis labels, distinct colors, legend, polygon closed
-      - id: SC-04
-        name: Data Range
+        comment: Filled polygons, alpha ~0.25, gridlines at 20/40/60/80/100, outer-edge
+          labels, closed polygon, legend — all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within 0-100 range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly identifies Employee A and B
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "radar-basic · bokeh · pyplots.ai"
+        comment: All 6 categories on correct axes; both series values mapped correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 1
+        max: 3
+        passed: false
+        comment: 'CODE: title is ''radar-basic · bokeh · pyplots.ai'' (wrong domain);
+          images show correct anyplot.ai from prior run. Legend labels correct.'
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows two series with different profiles (A excels at Technical Skills,
-          B at Teamwork/Leadership), demonstrates comparison capability
+        comment: Good variation with contrasting profiles; slight deduction for only
+          2 series (spec allows up to 3)
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Employee performance review is a perfect real-world application
+        comment: Employee performance review is canonical radar use case; categories
+          are natural and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values in 70-90 range are realistic for employee scores, though range
-          is somewhat narrow
+        comment: 0-100 scale as spec recommends; values 70-90 realistic for employee
+          scores
     code_quality:
       score: 9
       max: 10
@@ -176,42 +191,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Linear: imports -> data -> computation -> plot -> save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Deterministic data (no random seed needed as data is hardcoded),
-          but best practice would include np.random.seed for future modifications
+        comment: Deterministic hardcoded data; no random seed needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Clean and readable; polar-to-cartesian logic is clear and well-organized
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        passed: false
+        comment: Saves as plot.png instead of plot-{THEME}.png; pipeline cannot generate
+          both light/dark renders
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, Legend with LegendItem, patch for filled polygons.
-          Could leverage more Bokeh-specific features like hover tooltips or interactive
-          callbacks
+        comment: Uses ColumnDataSource, patch, scatter correctly; manual polar math
+          instead of Bokeh-native tools is a missed opportunity
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Manual Legend + LegendItem construction is Bokeh-specific; no HoverTool
+          or interactive features that distinguish from static libraries
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - columndatasource
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome

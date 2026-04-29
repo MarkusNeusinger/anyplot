@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 radar-basic: Basic Radar Chart
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 79/100 | Updated: 2026-04-29
 """
 
 import numpy as np

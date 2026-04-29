@@ -1,169 +1,184 @@
 library: plotly
+language: python
 specification_id: radar-basic
 created: '2025-12-23T18:12:18Z'
-updated: '2025-12-23T18:18:58Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468191822
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/radar-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/radar-basic/plotly/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - polar-projection
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-04-29T17:07:09Z'
+generated_by: claude-sonnet
+workflow_run: 25121386382
+issue: 744
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/plotly/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent use of Plotly Scatterpolar for radar charts with proper fill and line
-    styling
-  - Title follows the exact required format
-  - Clean readable code following KISS principles with no unnecessary complexity
-  - Realistic employee performance context that matches spec applications perfectly
-  - Proper polygon closure by repeating first value
-  - Good font sizing throughout (28pt title, 20pt labels, 16pt ticks)
-  - Generates both PNG and interactive HTML output
+  - 'Full spec compliance: all required features (filled polygon, transparency, gridlines,
+    closed polygon, legend, multi-series) implemented correctly.'
+  - 'Excellent theme adaptation: both light and dark renders pass readability checks
+    with correct background tokens, ink tokens on all text elements, and matching
+    GRID opacity.'
+  - 'Code quality is exemplary: flat, readable, deterministic, clean imports, correct
+    output file names.'
+  - Correct square 3600x3600 canvas for a symmetric polar chart.
   weaknesses:
-  - Single series only; adding a second comparison series would better showcase radar
-    chart utility
-  - Data values are clustered (72-92); wider spread would demonstrate the chart ability
-    to show strengths and weaknesses more dramatically
-  - Canvas utilization could be improved - radar chart has generous margins
-  image_description: 'The radar chart displays employee performance across 6 competencies:
-    Technical Skills (highest, ~92), Communication (~85), Creativity (~80), Leadership
-    (~72), Problem Solving (~88), and Teamwork (~78). The polygon is filled with a
-    translucent light blue (rgba 48,105,152 @ 0.25 alpha) and outlined with a darker
-    blue (#306998) line with markers at each vertex. The title "radar-basic · plotly
-    · pyplots.ai" is centered at the top. A legend labeled "Performance Score" appears
-    in the upper right. Radial gridlines are visible at 20, 40, 60, 80, 100 intervals.
-    All axis labels are clearly readable around the perimeter.'
+  - 'Minor radial tick / angular label crowding: 100 and Communication labels compete
+    spatially on the right edge; consider setting tickangle or adjusting tickprefix
+    on radial axis.'
+  - fillcolor uses hardcoded rgba strings rather than deriving from the OKABE_ITO
+    list (cosmetic code issue, no visual impact).
+  - 'Design storytelling is functional but flat: no annotation, emphasis marker, or
+    highlight draws the viewer to the most interesting contrast.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "radar-basic · plotly · anyplot.ai" in dark ink, clearly readable. Angular axis labels (Communication, Technical Skills, Teamwork, Problem Solving, Leadership, Creativity) in dark INK token. Radial tick labels (20, 40, 60, 80, 100) in INK_SOFT token, visible. Legend box uses ELEVATED_BG (#FFFDF6) with INK_SOFT border and text.
+      Data: First series (Senior Developer) = #009E73 teal fill with 25% alpha and solid teal border. Second series (Junior Developer) = #D55E00 orange fill with 25% alpha and solid orange border. Overlap region shows blended olive color due to transparency. Markers size 12 visible at each vertex.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in light F0EFE8 ink, clearly readable. Angular axis labels in light INK token. Radial tick labels visible in B8B7B0 INK_SOFT token. Legend box uses #242420 elevated background with subtle border. No dark-on-dark failures detected.
+      Data: Colors identical to light render — #009E73 teal and #D55E00 orange, confirming only chrome flips between themes. Filled polygons and markers look identical in color to light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 20pt, tick labels at 16pt - all clearly
-          readable
+        comment: Title 28px, angular labels 20px, radial ticks 16px; all readable
+          in both themes. Minor crowding between 80/100 tick values and Communication
+          label.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No text overlap, all labels well-spaced around the radar
+        comment: Minor crowding between radial tick value 100 and Communication axis
+          label on right edge.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers size 12 are clearly visible, line width 3 is appropriate,
-          fill alpha 0.25 works well
+        comment: Both polygons clearly visible with size-12 markers and width-3 lines.
+          Transparency correctly conveys overlap.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single series uses blue color, no colorblind issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Plot is well-centered but margins are generous; the radar could use
-          slightly more canvas space
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: Radar charts don't have traditional X/Y axis labels; category labels
-          are descriptive but no units (performance scores are unitless, acceptable
-          for this context)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Gridlines at alpha 0.2 are subtle, legend well-positioned in upper
-          right
+        comment: Okabe-Ito palette is CVD-safe. Teal and orange provide strong contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 3600x3600 px ideal for symmetric polar chart. Generous margins
+          (160px all sides).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: All six category axes labeled; title is correct format radar-basic
+          · plotly · anyplot.ai.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series = #009E73, second = #D55E00, backgrounds are #FAF8F1
+          (light) / #1A1A17 (dark), both themes correct.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean, professional appearance. Correct Okabe-Ito colors with appropriate
+          fill transparency. Good marker sizing and line width. Not exceptional —
+          no additional polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Polar chart inherently avoids spine issues. Grid uses GRID token
+          at 10% opacity. Generous whitespace. Could push further with ticklen=0 to
+          remove radial tick marks.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Senior vs Junior contrast legible. No emphasis technique elevates
+          the narrative.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct radar/spider chart type using Scatterpolar
+        comment: Correct radar/spider chart using go.Scatterpolar.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories mapped to theta, values to r correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Filled polygon with transparency (0.25), gridlines at intervals,
-          labeled axes, legend present, polygon closed
-      - id: SC-04
-        name: Data Range
+        comment: Filled polygons, alpha ~0.25, gridlines at 20/40/60/80/100, axis
+          labels, polygon closed, distinct colors, legend — all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Radial axis range 0-100 shows all data correctly
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 6 axes (within 4-8 range), 2 series (within 1-3 range), values on
+          0-100 scale.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend label "Performance Score" accurately describes the data
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Follows exact format: `radar-basic · plotly · pyplots.ai`'
+        comment: Title 'radar-basic · plotly · anyplot.ai'. Legend labels 'Senior
+          Developer' / 'Junior Developer'.
     data_quality:
-      score: 17
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows single series with variation across competencies; spec mentions
-          1-3 series for comparison, only 1 shown (basic implementation is acceptable
-          but doesn't showcase comparison feature)
+        comment: 'Demonstrates fill transparency, polygon closure, gridlines, multi-series
+          comparison, legend. Missing: third series would exercise full spec range.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Employee performance review is a perfect, real-world application
-          mentioned in the spec
+        comment: Employee performance competency comparison is a canonical radar chart
+          use case, neutral and plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values 72-92 are realistic performance scores; could show more range
-          variation (e.g., one lower score to demonstrate the full 0-100 scale better)
+        comment: Values 55-92 on 0-100 scale are realistic and differentiated.
     code_quality:
       score: 10
       max: 10
@@ -173,40 +188,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: No functions or classes, flat procedural structure.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses hardcoded deterministic data, no randomness
+        comment: Hardcoded deterministic data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only `plotly.graph_objects` imported and used
+        comment: Only os and plotly.graph_objects.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Clean and readable. Hardcoded rgba fill strings instead of deriving
+          from OKABE_ITO is slightly inelegant but correct.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as `plot.png` and `plot.html`
-    library_features:
-      score: 3
-      max: 5
+        comment: fig.write_image(f'plot-{THEME}.png') and fig.write_html(f'plot-{THEME}.html')
+          both present.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: go.Scatterpolar with fill='toself' is correct Plotly idiom for radar.
+          Polar layout configuration (radialaxis, angularaxis) properly used.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Plotly's Scatterpolar correctly, generates interactive HTML
-          output; could leverage more Plotly features like hover templates or animations
+        comment: Uses hovertemplate for interactive hover labels, HTML export for
+          interactive output, and Plotly's native polar coordinate system. Could leverage
+          more advanced polar config options.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - hover-tooltips
+  - html-export
+  patterns: []
+  dataprep: []
+  styling:
+  - alpha-blending
