@@ -1,7 +1,7 @@
 """ anyplot.ai
 line-basic: Basic Line Plot
 Library: highcharts unknown | Python 3.13.13
-Quality: 73/100 | Updated: 2026-04-29
+Quality: 79/100 | Updated: 2026-04-29
 """
 
 import json
