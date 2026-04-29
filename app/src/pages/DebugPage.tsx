@@ -208,6 +208,10 @@ export function DebugPage() {
     setError(null);
     adminFetch(`${DEBUG_API_URL}/debug/status`, adminToken)
       .then(async r => {
+        // Reaching the .then path means the fetch resolved cleanly — clear
+        // the one-shot reload guard so a future cross-origin redirect can
+        // re-trigger the bootstrap.
+        try { sessionStorage.removeItem('anyplot.debugAuthReloaded'); } catch {}
         // 403 is the Cloudflare Access JWT path's denial: a signed-in Google
         // account that isn't on the admin_allowed_emails allow-list. Surface
         // it on the auth-required screen with the server's message so the
@@ -225,7 +229,25 @@ export function DebugPage() {
         return r.json();
       })
       .then(setData)
-      .catch(e => setError(e.message || 'failed to load'))
+      .catch(e => {
+        // SPA-routed entry to /debug bypasses the Cloudflare Access page-
+        // level intercept. The first API fetch then 302s cross-origin to
+        // *.cloudflareaccess.com, which fetch can't follow without CORS,
+        // surfacing as TypeError("Failed to fetch"). Force one top-level
+        // navigation so CF Access can intercept the page request and bounce
+        // to Google login. sessionStorage guard keeps this from looping if
+        // the second load ALSO fails (e.g. wrong allow-list).
+        if (e instanceof TypeError) {
+          let alreadyTried = false;
+          try { alreadyTried = !!sessionStorage.getItem('anyplot.debugAuthReloaded'); } catch {}
+          if (!alreadyTried) {
+            try { sessionStorage.setItem('anyplot.debugAuthReloaded', '1'); } catch {}
+            window.location.assign(window.location.href);
+            return;
+          }
+        }
+        setError(e.message || 'failed to load');
+      })
       .finally(() => setLoading(false));
   }, [adminToken, reloadCounter]);
 
