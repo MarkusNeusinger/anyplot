@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 quiver-basic: Basic Quiver Plot
 Library: plotnine 0.15.3 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-04-29
@@ -11,6 +11,8 @@ import pandas as pd
 from plotnine import (
     aes,
     arrow,
+    coord_equal,
+    element_blank,
     element_line,
     element_rect,
     element_text,
@@ -60,13 +62,13 @@ anyplot_theme = theme(
     panel_background=element_rect(fill=PAGE_BG),
     panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
     panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
-    panel_border=element_rect(color=INK_SOFT, fill=None),
+    panel_border=element_blank(),
     axis_title=element_text(color=INK, size=20),
     axis_text=element_text(color=INK_SOFT, size=16),
     axis_line=element_line(color=INK_SOFT),
     plot_title=element_text(color=INK, size=24),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(color=INK_SOFT, size=14),
+    legend_text=element_text(color=INK_SOFT, size=16),
     legend_title=element_text(color=INK, size=16),
 )
 
@@ -74,9 +76,10 @@ plot = (
     ggplot(df, aes(x="x", y="y", xend="xend", yend="yend", color="magnitude"))
     + geom_segment(arrow=arrow(length=0.15, type="closed"), size=1.2)
     + scale_color_cmap(cmap_name="viridis", name="Magnitude")
-    + labs(x="X Position", y="Y Position", title="quiver-basic · plotnine · anyplot.ai")
+    + labs(x="East (km)", y="North (km)", title="quiver-basic · plotnine · anyplot.ai")
     + theme_minimal()
     + anyplot_theme
+    + coord_equal()
 )
 
 # Save
