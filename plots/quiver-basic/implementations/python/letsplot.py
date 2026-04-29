@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 quiver-basic: Basic Quiver Plot
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: letsplot | Python 3.13
+Quality: 92/100 | Updated: 2026-04-29
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,6 +12,9 @@ from lets_plot import (
     LetsPlot,
     aes,
     arrow,
+    element_blank,
+    element_line,
+    element_rect,
     element_text,
     geom_segment,
     ggplot,
@@ -24,10 +29,16 @@ from lets_plot.export import ggsave
 
 LetsPlot.setup_html()
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
 # Data - 2D rotation vector field: u = -y, v = x (circular flow pattern)
 np.random.seed(42)
 
-# Create grid (15x15 = 225 arrows for visual clarity)
 grid_size = 15
 x_range = np.linspace(-3, 3, grid_size)
 y_range = np.linspace(-3, 3, grid_size)
@@ -39,36 +50,40 @@ Y = Y.flatten()
 U = -Y
 V = X
 
-# Calculate magnitude for coloring
 magnitude = np.sqrt(U**2 + V**2)
 
-# Scale vectors for visibility (normalize and apply consistent scale)
 scale_factor = 0.25
 U_scaled = U / (magnitude + 0.01) * scale_factor * magnitude
 V_scaled = V / (magnitude + 0.01) * scale_factor * magnitude
 
-# Create DataFrame with segment endpoints
 df = pd.DataFrame({"x": X, "y": Y, "xend": X + U_scaled, "yend": Y + V_scaled, "magnitude": magnitude})
+
+# Theme-adaptive chrome
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major=element_line(color=INK_SOFT, size=0.15),
+    panel_grid_minor=element_blank(),
+    axis_title=element_text(color=INK, size=20),
+    axis_text=element_text(color=INK_SOFT, size=16),
+    axis_line=element_line(color=INK_SOFT),
+    plot_title=element_text(color=INK, size=24),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_text=element_text(color=INK_SOFT, size=14),
+    legend_title=element_text(color=INK, size=18),
+)
 
 # Plot
 plot = (
     ggplot(df, aes(x="x", y="y", xend="xend", yend="yend", color="magnitude"))
     + geom_segment(arrow=arrow(angle=20, length=8, type="closed"), size=1.2)
     + scale_color_gradient(low="#306998", high="#FFD43B", name="Magnitude")
-    + labs(x="X Position", y="Y Position", title="Rotation Vector Field · quiver-basic · letsplot · pyplots.ai")
+    + labs(x="X Position (m)", y="Y Position (m)", title="Rotation Vector Field · quiver-basic · letsplot · anyplot.ai")
     + ggsize(1600, 900)
     + theme_minimal()
-    + theme(
-        axis_text=element_text(size=16),
-        axis_title=element_text(size=20),
-        plot_title=element_text(size=24),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=14),
-    )
+    + anyplot_theme
 )
 
-# Save PNG (scale 3x to get 4800 x 2700 px)
-ggsave(plot, filename="plot.png", path=".", scale=3)
-
-# Save HTML for interactive version
-ggsave(plot, filename="plot.html", path=".")
+# Save PNG (scale 3x to get 4800 x 2700 px) and HTML
+ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, filename=f"plot-{THEME}.html", path=".")
