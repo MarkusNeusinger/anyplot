@@ -1,169 +1,179 @@
 library: plotly
+language: python
 specification_id: pyramid-basic
 created: '2025-12-23T18:11:49Z'
-updated: '2025-12-23T18:17:50Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468189100
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - hover-tooltips
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-04-29T15:17:36Z'
+generated_by: claude-sonnet
+workflow_run: 25115965875
+issue: 1000
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/plotly/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent visual design with clear pyramid shape and symmetric axis presentation
-  - Smart use of negative values for left-extending bars creates proper butterfly
-    layout
-  - Custom hover templates with formatted population numbers enhance interactivity
-  - Colorblind-safe color scheme with good contrast between blue and yellow
-  - Proper title format following pyplots.ai conventions
-  - Realistic demographic data showing expected patterns (female longevity, working-age
-    bulge)
+  - 'Perfect visual quality: explicit font sizing (28/22/18/16px), no overlaps, correct
+    Okabe-Ito palette with full theme-adaptive chrome in both renders'
+  - Data storytelling annotation (working-age peak callout + highlighted band) elevates
+    the chart above a generic pyramid
+  - Realistic, factually plausible demographic data for Germany with correct female
+    longevity patterns visible in 70+ cohorts
   weaknesses:
-  - Could add annotations to highlight key insights (e.g., gender ratio differences
-    in elderly groups)
-  - Population scale could be documented in code comments for context
-  image_description: The plot displays a population pyramid (butterfly chart) showing
-    population distribution by age group and gender. The chart uses a horizontal bar
-    layout with blue bars (Male) extending to the left from a central axis and yellow/gold
-    bars (Female) extending to the right. There are 9 age groups from "0-9" at the
-    bottom to "80+" at the top. The x-axis shows "Population (thousands)" with symmetric
-    tick labels (5,000 to 0 to 5,000). The y-axis shows "Age Group". The title reads
-    "Population Distribution · pyramid-basic · plotly · pyplots.ai" at the top, with
-    a horizontal legend showing Male (blue) and Female (yellow) below the title. The
-    layout uses the plotly_white template with subtle gridlines. The pyramid shape
-    is clearly visible with younger and middle age groups having larger bars, tapering
-    at both youngest (0-9) and oldest (80+) groups.
+  - Axis box spines still present on all sides — removing top/right spines to an L-frame
+    would improve visual refinement (DE-02)
+  - LM-02 ceiling not fully reached — chart could leverage more distinctive plotly
+    features such as shapes rectangle for highlight band or updatemenus for interactivity
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Population Distribution · pyramid-basic · plotly · anyplot.ai" in dark ink at top (readable). Axis label "Age Group" (Y) and "Population (thousands)" (X) in dark ink (readable). Tick labels in secondary ink (#4A4A44-equivalent), clearly readable. Horizontal legend ("Male", "Female") below title, readable.
+      Data: Male bars in #009E73 (Okabe-Ito position 1) extending left; Female bars in #D55E00 (Okabe-Ito position 2) extending right. Highlighted band over 50–59/40–49 rows. Annotation "Working-age peak / 50–59 largest cohort" on right side, readable.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title, axis labels, tick labels, legend text all appear in light colors (#F0EFE8-equivalent), clearly readable against the dark background. No dark-on-dark failures detected.
+      Data: Bar colors identical to light render — #009E73 (Male) and #D55E00 (Female). Highlight band appears as slightly lighter teal region, visible. Annotation text is in light tone and legible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 36pt, axis labels at 28pt, tick labels at 22pt - all perfectly
-          readable
+        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, ticks
+          18px, legend 16px. Readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text anywhere, clean spacing between elements
+        comment: No overlapping text elements in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar widths well-adapted to 9 categories, clear distinction between
-          groups
+        comment: Bars well-proportioned for 9 age groups at 4800x2700px.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) are colorblind-safe, excellent
-          contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, legend positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: '"Population (thousands)" has units, but "Age Group" is descriptive
-          without clarification'
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid at alpha 0.3 is subtle, legend well-placed horizontally above
-          plot
+        comment: 'Okabe-Ito #009E73 and #D55E00 provide strong contrast and are CVD-safe.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Pyramid fills ~65% of canvas, balanced margins, legend well-placed
+          at top.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Population (thousands) includes units; Age Group descriptive; title
+          correct format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00. Backgrounds #FAF8F1/#1A1A17.
+          Theme-adaptive chrome correct in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: correct Okabe-Ito palette, clean typography hierarchy,
+          annotation+highlight band add sophistication above defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good: subtle grid, styled zeroline, highlighted band focal point,
+          generous margins. All four axis spines still present.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good: annotation identifies working-age peak, highlighted band directs
+          viewer. Germany ageing workforce story is immediately readable.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct pyramid/butterfly chart with opposing horizontal bars
+        comment: Correct pyramid/butterfly chart with opposing horizontal bars and
+          central axis.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on Y-axis, values on X-axis correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Left/right bars, symmetric axes, distinct colors, central axis labels,
-          legend present
-      - id: SC-04
-        name: Data Range
+        comment: Left bars extend left, right bars extend right, symmetric axis scale,
+          distinct colors, category labels on Y-axis, legend present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data with 15% padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Age groups on Y, population values on X with negative left side.
+          All 9 groups visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Male and Female
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses "pyramid-basic · plotly · pyplots.ai" format correctly
+        comment: Title contains spec-id, library, anyplot.ai. Legend labels Male/Female
+          match data.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows asymmetry between genders (females live longer - visible in
-          70-79, 80+), population bulge in working age
+        comment: Shows bilateral comparison, 9 age groups, visible gender asymmetry,
+          working-age bulge in 40-59, female longevity in 70+ groups.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Population pyramid by age/gender is the classic use case, data patterns
-          are realistic
+        comment: Germany-scale population data. Neutral demographic topic aligned
+          with spec's explicit example use case.
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
-        max: 5
-        passed: false
-        comment: Values in thousands are sensible, but the numbers represent a somewhat
-          small population (~35M male, ~36M female total)
+        score: 4
+        max: 4
+        passed: true
+        comment: Male ~43.7M, Female ~49.2M, total ~92.9M. Slightly above Germany's
+          ~84M but plausible for illustration. Female dominance in older cohorts factually
+          correct.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,42 +181,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: 'Clean linear: imports -> theme tokens -> data -> traces -> layout
+          -> save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Data is deterministic (hardcoded), but no explicit seed comment for
-          clarity
+        max: 2
+        passed: true
+        comment: Fully deterministic, hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only plotly.graph_objects imported, used appropriately
+        comment: Only os and plotly.graph_objects imported, both used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Clean Pythonic code. Negative-value trick with absolute tick labels
+          is idiomatic plotly pyramid approach.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current plotly API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses go.Bar with hovertemplate+customdata for rich tooltips, correct
+          barmode, write_image+write_html. Idiomatic and correct.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of hovertemplate with customdata for interactive hover,
-          write_html for interactivity, but could leverage more Plotly features like
-          annotations
+        comment: Leverages plotly-specific hovertemplate/customdata for showing positive
+          values while bars use negative positions. HTML export. Could use shapes
+          or updatemenus for more distinctiveness.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  - manual-ticks
+  patterns: []
+  dataprep: []
+  styling: []
