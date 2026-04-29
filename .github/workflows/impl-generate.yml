@@ -39,13 +39,6 @@ concurrency:
   group: impl-generate-${{ inputs.specification_id || github.event.issue.number }}-${{ inputs.library || github.event.label.name }}
   cancel-in-progress: false
 
-env:
-  # Library dependencies mapping
-  # Per-library deps now come from `pyproject.toml` `lib-{library}` extras —
-  # see [project.optional-dependencies] there. Keeping this list in sync was
-  # painful and silently drifted (this env block lagged the pyproject floors
-  # by a full major version on plotly/altair). Single source of truth wins.
-
 jobs:
   generate:
     # Run on label trigger OR workflow_dispatch
