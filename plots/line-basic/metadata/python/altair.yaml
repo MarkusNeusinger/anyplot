@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: line-basic
 created: '2025-12-23T00:24:33Z'
-updated: '2026-04-29T15:32:08Z'
+updated: '2026-04-29T15:42:27Z'
 generated_by: claude-sonnet
 workflow_run: 25117106624
 issue: 653
@@ -12,43 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/altair/plot-dark.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - 'Correct Okabe-Ito brand color (#009E73) for data line and markers; proper theme
-    tokens with correct #FAF8F1/#1A1A17 backgrounds in both renders'
-  - All text sizes explicitly set to style-guide values (title 28px, axis 22px, ticks
-    18px); both light and dark renders fully readable with no legibility failures
-  - 'Clean idiomatic Altair code: layer composition (line + points via + operator),
-    alt.Tooltip with custom formatting, configure_* chain — all correct Altair patterns'
-  - 'Perfect spec compliance and data quality: realistic monthly temperature data
-    showing clear seasonal cycle; correct title format line-basic · altair · anyplot.ai'
-  - 'Perfect code quality: KISS structure, np.random.seed(42), clean imports, both
-    .png and .html saved correctly'
+  - Brand green (#009E73) used correctly as single series color throughout both themes
+  - All font sizes explicitly set (28/22/18px) — fully readable at 4800x2700px
+  - Idiomatic Altair layer composition (line + points) with proper encoding classes
+  - Perfect spec, data, and code quality scores — clean, reproducible, correct
+  - Tooltips with formatted month/temperature values and HTML export alongside PNG
   weaknesses:
-  - Full grid on both X and Y axes — style guide recommends Y-axis only for line charts;
-    fix with configure_axisX(grid=False)
-  - All four spines visible — remove top and right spines for cleaner look; use configure_view
-    or configure_axis settings
-  - X-axis temporal tick labels show specific dates (Jan 07, Feb 04) instead of clean
-    month names; add format argument to X axis encoding
-  - No visual storytelling — seasonal peak in June is the natural focal point but
-    nothing highlights it; consider area fill under the line or peak annotation to
-    create emphasis
-  - Last data point (December) partially clipped at right edge of temporal axis —
-    set explicit domain to pad the axis
+  - Full 2-axis grid (both X and Y gridlines) — style guide prefers Y-axis-only for
+    line charts
+  - 4-sided border frame from configure_view(stroke=INK_SOFT) — top/right borders
+    should be removed
+  - December data point squeezed at right edge with no December axis label visible;
+    Altair temporal auto-ticks show weekly dates (Jan 07, Feb 04…) rather than month
+    names, misaligning with the monthly dataset
+  - No design storytelling — seasonal peak in June (~30°C) is the obvious focal point
+    but receives no visual emphasis (no annotation, no highlighted marker, no gradient
+    progression)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - matches required light surface
-      Chrome: Title "line-basic · altair · anyplot.ai" in dark bold text - readable. Y-axis label "Temperature (°C)" and X-axis label "Month" both visible with correct dark text. Tick labels in secondary dark ink (#4A4A44), readable. X-axis ticks show specific date format ("Jan 07", "Feb 04") rather than clean month names - minor readability concern for monthly data.
-      Data: Single teal (#009E73) line with strokeWidth=4, filled circle markers at each of 12 monthly data points. Clear seasonal bell-curve arc from ~4C in January to ~30C in June/July, then back down. Both horizontal and vertical grid lines visible (full grid, not Y-only).
-      Legibility verdict: PASS - all text readable, no light-on-light issues. Minor concern: last December data point right at right edge of plot.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "line-basic · altair · anyplot.ai" in bold dark text, clearly readable. X-axis label "Month" and Y-axis label "Temperature (°C)" both visible in dark ink. Tick labels in muted dark (#4A4A44) at 18px — readable. Full grid (both X and Y) with 0.15 opacity — subtle but present on both axes. 4-sided border frame visible around plot area.
+      Data: Single line in brand green (#009E73), strokeWidth=4, with filled circular markers (size=200) at each monthly data point. Sinusoidal annual temperature curve peaking ~30°C in June–July and troughing ~3–4°C in Dec–Jan. Axis ticks show weekly dates (Jan 07, Feb 04…) rather than month names due to Altair temporal auto-tick behavior; December data point at right edge has no corresponding axis label visible.
+      Legibility verdict: PASS — all text readable; minor concern: December point near right edge with no axis label
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - matches required dark surface
-      Chrome: Title, axis labels, tick labels all rendered in light text (#F0EFE8 / #B8B7B0) - clearly readable against dark background. No dark-on-dark failures found. Grid lines subtle at 15% opacity of off-white ink token.
-      Data: Same teal (#009E73) line and markers - identical colors to light render as required. Only chrome (background, text, grid) flipped between themes.
-      Legibility verdict: PASS - all text readable, no dark-on-dark issues detected.
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title and axis labels rendered in light cream text — clearly visible against dark background. Tick labels in muted light (#B8B7B0). No dark-on-dark failures observed. Grid lines subtle with low opacity. 4-sided border frame adapts to light stroke color.
+      Data: Brand green (#009E73) line and markers — identical colors to light render. Same sinusoidal pattern visible. Identical layout and data positions.
+      Legibility verdict: PASS — all text readable in dark theme; theme adaptation is correct throughout
   criteria_checklist:
     visual_quality:
       score: 29
@@ -59,48 +53,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set: title 28px, axis 22px, ticks 18px; all
-          readable in both themes'
+        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
+          labels 18px — readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: No overlapping elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: strokeWidth=4, marker size=200; line and points clearly visible
+        comment: Line strokeWidth=4, markers size=200 — well adapted for 12 data points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series in CVD-safe brand green; high contrast on both surfaces
+        comment: Brand green good contrast on both backgrounds, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good proportions overall; last data point (December) partially clipped
-          at right edge
+        comment: December data point at right edge with no December axis label; Altair
+          temporal auto-ticks show weekly dates misaligned with monthly data
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (C) with units on Y; Month on X
+        comment: Month (X) and Temperature (°C) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Data uses #009E73, backgrounds are #FAF8F1/#1A1A17, theme-adaptive
-          chrome correct in both renders'
+        comment: '#009E73 first series, correct PAGE_BG in both themes, all chrome
+          theme-adaptive'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -108,22 +102,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: 'Well-configured above generic: brand color, explicit sizes. Polished
-          default but not publication-exceptional.'
+        comment: Well-configured default — warm background and explicit theming raise
+          it above basics, but no aesthetic ambition beyond functional
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Full grid both axes (Y-only recommended for line charts); all four
-          spines visible; x-axis shows specific dates not clean month names
+        comment: Grid opacity/colors explicitly set but full 2-axis grid (Y-only preferred
+          for line) and 4-sided border frame reduce refinement score
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed but not actively interpreted; no emphasis on seasonal
-          peak, no area fill, no focal-point annotation
+        comment: Seasonal pattern is clear but no visual emphasis on peak (no annotation,
+          no highlighted marker, no gradient)
     spec_compliance:
       score: 15
       max: 15
@@ -133,25 +127,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct single-series basic line chart
+        comment: Correct line chart with optional markers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Clean minimal design, axis labels, grid lines, optional markers shown
+        comment: Grid, axis labels, markers, clean minimal design
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Month on X, Temperature on Y, all 12 data points correctly mapped
+        comment: Month→X, Temperature→Y, all 12 data points visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; single series so no legend needed
+        comment: Exact format 'line-basic · altair · anyplot.ai'; single series so
+          legend N/A
     data_quality:
       score: 15
       max: 15
@@ -161,22 +156,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows trend, variation, and complete seasonal cycle with ascending
-          and descending phases
+        comment: Full annual cycle with rising/falling trends and both extremes visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly temperature readings for a year; realistic neutral scientific
-          scenario
+        comment: Monthly temperature readings — neutral, real-world scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature range ~4-30C is factually realistic for mid-latitude
-          location with distinct seasons
+        comment: ~3–30°C range, plausible northern hemisphere annual pattern
     code_quality:
       score: 10
       max: 10
@@ -186,32 +178,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> tokens -> data -> plot -> save; no functions
-          or classes'
+        comment: Clean imports→tokens→data→plot→save structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, altair, numpy, pandas; all are used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; appropriate complexity; no over-engineering
+        comment: Clean Altair layering idiom
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves both plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with scale_factor=3.0
     library_mastery:
       score: 8
       max: 10
@@ -221,25 +212,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expertly uses encoding types (T, Q), configure_* chain, properties();
-          correct layering pattern
+        comment: Layer composition, encoding classes (alt.X/Y/Tooltip), configure_*
+          theming, interactive() — all idiomatic Altair
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Altair-distinctive layer composition (line + points via + operator),
-          interactive tooltips with alt.Tooltip custom formatting, temporal encoding
-          (T type)
-  verdict: REJECTED
+        comment: Altair's grammar-of-graphics layer composition (line + points), interactive
+          tooltips, HTML export
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - time-series
-  styling: []
+  styling:
+  - grid-styling
