@@ -178,10 +178,20 @@ jobs:
       - name: Merge PR to main (with retry)
         if: steps.check.outputs.should_run == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # ADMIN_TOKEN: PAT with admin scope from a repo-admin user, used so
+          # that `gh pr merge --admin` can bypass the main-branch ruleset
+          # (required-status-checks). Falls back to GITHUB_TOKEN if not set so
+          # the workflow still runs and fails with a clear ruleset error
+          # instead of an opaque auth error.
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN || secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ steps.check.outputs.pr_number }}
           REPOSITORY: ${{ github.repository }}
+          HAS_ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN != '' }}
         run: |
+          if [ "$HAS_ADMIN_TOKEN" != "true" ]; then
+            echo "::warning::ADMIN_TOKEN secret is not set — merge will fail if main ruleset enforces required status checks. Add a fine-grained PAT with Contents:Write + Pull requests:Write + Administration:Read+Write as repo secret ADMIN_TOKEN."
+          fi
+
           MAX_ATTEMPTS=5
 
           for attempt in $(seq 1 $MAX_ATTEMPTS); do
@@ -197,6 +207,9 @@ jobs:
             # downstream CI workflows (Run Linting / Run Tests / Run Frontend
             # Tests), so impl PRs never get those checks. The pipeline already
             # gates merge behind the AI quality review threshold.
+            #
+            # Bypass only works if the token has admin role. GITHUB_TOKEN is
+            # only `write`, so a repo-admin PAT is required (ADMIN_TOKEN).
             if gh pr merge "$PR_NUM" \
               --repo "$REPOSITORY" \
               --squash \
