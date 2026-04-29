@@ -2,7 +2,10 @@
 substitutions:
   _REGION: "europe-west4"
   _SERVICE_NAME: "anyplot-app"
-  _VITE_API_URL: "https://api.anyplot.ai"
+  # Same-origin via the Cloudflare Worker bound to anyplot.ai/api/* (which
+  # proxies to api.anyplot.ai). Keeps SPA fetch credentials on a single
+  # cookie scope and avoids cross-origin redirects through CF Access.
+  _VITE_API_URL: "/api"
 
 steps:
   # Build the container image
