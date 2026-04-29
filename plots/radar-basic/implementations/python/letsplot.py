@@ -1,7 +1,7 @@
 """ anyplot.ai
 radar-basic: Basic Radar Chart
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 69/100 | Updated: 2026-04-29
+Quality: 70/100 | Updated: 2026-04-29
 """
 
 import math
