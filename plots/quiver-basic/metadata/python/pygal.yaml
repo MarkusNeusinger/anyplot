@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: quiver-basic
 created: '2025-12-23T18:34:19Z'
-updated: '2026-04-29T22:47:11Z'
+updated: '2026-04-29T22:59:58Z'
 generated_by: claude-sonnet
 workflow_run: 25137241599
 issue: 1014
@@ -12,41 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/quiver-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/pygal/plot-dark.html
-quality_score: 72
+quality_score: 77
 review:
   strengths:
-  - 'Correct Okabe-Ito palette (first series #009E73) with proper theme-adaptive style
-    tokens for both light and dark renders'
-  - Meaningful meteorological context (counterclockwise wind rotation around low-pressure
-    centre) with descriptive axis labels including units
-  - Font sizes explicitly set (title=28, labels=22, major_labels=18), producing readable
-    text in both themes
-  - Smart magnitude-binned coloring with descriptive wind speed labels (Calm, Light,
-    Moderate, Fresh, Strong)
-  - 'Perfect code quality: linear KISS structure, np.random.seed(42), clean imports,
-    and correct plot-{THEME}.png + HTML output'
+  - Correct quiver plot construction using pygal XY line segments with allow_interruptions,
+    faithfully simulating arrow shafts and barbs
+  - 'Excellent spec compliance: proper title format, descriptive axis labels with
+    units (degrees), and magnitude-binned color-coding as an additional data layer'
+  - 'Proper theme adaptation with correct #FAF8F1 / #1A1A17 backgrounds and Okabe-Ito
+    palette (#009E73 first series)'
+  - Wind field scenario (counterclockwise rotation u=-y, v=x) is realistic and the
+    three-bin legend (Calm/Light, Moderate, Fresh/Strong) adds meteorological context
   weaknesses:
-  - 'Core rendering problem: grouping arrows by magnitude bin and connecting them
-    in pygal.XY creates sweeping connected band paths rather than discrete individual
-    arrows at grid points — the plot does not look like a quiver plot'
-  - 'SC-01 failure: the result looks like sweeping flow-line bands rather than arrows
-    at discrete grid positions; the circular rotation pattern is not clearly communicated'
-  - 'DE-01/DE-03 low: the visual confusion from connected paths undermines both aesthetic
-    polish and data storytelling; a viewer cannot easily read the vector field'
-  - 'LM-02: the implementation uses pygal generically as an XY line chart and does
-    not exploit any pygal-distinctive feature beyond html-export'
+  - 'DE-01/DE-02: Aesthetic is a functional configured default — dot markers at every
+    segment endpoint (dot_size=4) create visual noise on each arrow shaft and barb;
+    these should be suppressed (show_dots=False or dot_size=0) so only the clean arrow
+    lines are visible'
+  - 'VQ-03: Center arrows near the origin (very low magnitude) are extremely tiny
+    and barely distinguishable; consider a minimum arrow scale or slightly increase
+    arrow_scale to keep the smallest arrows legible'
+  - 'DE-02: Both x and y grid guides are enabled creating a full grid; for a vector
+    field a subtler approach (y-only guides or no guides) would reduce visual clutter
+    and let the arrows stand out'
+  - 'VQ-01: Font sizes follow the 28/22/18/16 px guidelines but render small at 4800x2700
+    on the full canvas — consider bumping title to 36-40 and labels to 28 for better
+    legibility at full resolution'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct.
-      Chrome: Title "quiver-basic · pygal · anyplot.ai" visible at top; X-axis "Longitude (degrees)" and Y-axis "Latitude (degrees)" readable; tick labels small but legible; legend at bottom with 5 colour squares labelled Calm/Light/Moderate/Fresh/Strong.
-      Data: Five Okabe-Ito colours — green (#009E73), orange-red, blue, pink/purple, yellow. Lines are connected paths sweeping mostly horizontally across the chart in magnitude-bin groups, with small V-shaped arrowhead geometry visible at segment tips. The paths overlap and create a visually busy, band-like pattern rather than individual arrows at discrete grid points.
-      Legibility verdict: PASS — all text is readable against the light background; no light-on-light failure.
+      Background: Warm off-white (#FAF8F1) — correct, matches theme spec
+      Chrome: Title "quiver-basic · pygal · anyplot.ai" visible at top center (small but readable); X-axis "Longitude (degrees)" and Y-axis "Latitude (degrees)" labels present; tick labels visible at -3/-2/-1/0/1/2/3 on both axes
+      Data: Three series of arrows — green (#009E73 Calm/Light), orange (#D55E00 Moderate), blue (#0072B2 Fresh/Strong). Arrows form a counterclockwise rotation pattern. Outer arrows are large and clearly visible; center arrows (near origin) are very small, barely visible. Small dot markers appear at each segment endpoint, creating slight visual noise along shaft and barbs.
+      Legibility verdict: PASS — all text readable, no light-on-light failures. Minor concern: text appears small at full 4800x2700 resolution.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct.
-      Chrome: Title, axis labels, and tick labels all render in light text and are readable against the dark surface. Legend labels at bottom are readable.
-      Data: Identical Okabe-Ito colours as the light render — only the chrome (background, text) flips; data colours are unchanged. Same band-like sweeping paths visible.
-      Legibility verdict: PASS — no dark-on-dark failures; all text is light-coloured and readable on the dark background.
+      Background: Near-black (#1A1A17) — correct, matches theme spec
+      Chrome: Title and axis labels appear in light/off-white color (#F0EFE8) — clearly readable against dark background. Tick labels light-colored. Grid lines visible as subtle lighter lines on dark surface. No dark-on-dark failures detected.
+      Data: Colors are identical to light render (#009E73, #D55E00, #0072B2) — Okabe-Ito positions 1-3 unchanged between themes. Same arrow pattern and size distribution.
+      Legibility verdict: PASS — all text is light-on-dark, no dark-on-dark failures. Same center-arrow visibility concern as light render.
   criteria_checklist:
     visual_quality:
       score: 24
@@ -54,52 +56,54 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=28, labels=22, major_labels=18);
-          all text readable in both themes
+        comment: Font sizes explicitly set (28/22/18/16 px per guidelines) but render
+          small at full 4800x2700 canvas; text is readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Tick and legend labels do not overlap
+        comment: 8x8 grid well-spaced, no text or arrow overlap
       - id: VQ-03
         name: Element Visibility
         score: 3
         max: 6
-        passed: false
-        comment: Lines/arrows are visible but sweeping connected paths obscure individual
-          arrow identity at grid points
+        passed: true
+        comment: Outer arrows clearly visible; center arrows (low magnitude) very
+          small and barely distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; five distinguishable colours
+        comment: Green/orange/blue are CVD-safe Okabe-Ito colors with good luminance
+          contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Plot fills canvas well; legend at bottom is clean
+        comment: Data spans -3 to 3 degrees with reasonable canvas utilization; some
+          empty margin space
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Longitude (degrees), Y: Latitude (degrees), Title in correct
-          format'
+        comment: 'X: Longitude (degrees), Y: Latitude (degrees) — descriptive with
+          units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; background #FAF8F1/#1A1A17; chrome theme-adaptive
-          in both renders'
+        comment: 'First series #009E73, second #D55E00, third #0072B2; backgrounds
+          #FAF8F1 / #1A1A17 correct'
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -107,79 +111,79 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Proper palette and theme tokens, but the visual confusion from connected
-          paths undermines polish
+        comment: Well-configured default; dot markers at segment endpoints add noise;
+          functional but not polished
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Background and legend placement are clean; grid enabled; but chart
-          body is visually noisy
+        comment: Full x+y grid guides enabled create busyness; dot markers at every
+          segment point add noise; minimal refinement beyond colors
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Good meteorological context and wind-speed labels, but the circular
-          rotation pattern is not visually legible
+        comment: Magnitude binning into 3 wind speed categories adds useful storytelling
+          layer; rotation pattern visible; but no further emphasis
     spec_compliance:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 2
+        score: 5
         max: 5
-        passed: false
-        comment: Approximates arrows with connected line segments but result does
-          not resemble a quiver plot with discrete arrows at grid points
+        passed: true
+        comment: Vector field arrows at grid positions — correct quiver plot type
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Direction encoding, magnitude scaling, grid-based positions, and
-          colour-encoding of magnitude all present
+        comment: Grid positioning, direction encoding, length proportional to magnitude,
+          uniform spacing, optional color-by-magnitude
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Longitude, Y=Latitude; full range visible
+        comment: X=Longitude, Y=Latitude, u=-y v=x rotation pattern correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'quiver-basic · pygal · anyplot.ai'; legend labels Calm/Light/Moderate/Fresh/Strong
+        comment: 'Title: quiver-basic · pygal · anyplot.ai; Legend: Calm/Light, Moderate,
+          Fresh/Strong'
     data_quality:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Direction, magnitude variation, and colour encoding shown; circular
-          rotation pattern is correct in data but not visually clear
+        comment: Shows vector directions, magnitude variation, grid pattern; near-zero
+          arrows excluded from center
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Counterclockwise wind rotation around a low-pressure centre is a
-          real, neutral meteorological scenario
+        comment: Wind field / counterclockwise rotation around a low-pressure centre
+          — real meteorological scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Coordinates and magnitudes are plausible for a local-scale meteorological
-          domain
+        comment: Degrees of lat/lon (-3 to 3) plausible for a local synoptic wind
+          pattern
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -187,26 +191,27 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports → data → style → plot → save; no functions or classes
+        comment: No functions/classes; linear flow from imports to data to plot to
+          save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) and np.random.RandomState(42) for determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: importlib/sys/os for path workaround, numpy — all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Reasonably clean; arrowhead geometry is appropriate; importlib approach
-          is explained
+        comment: Arrow construction is complex but necessary for pygal; shuffle logic
+          slightly verbose
       - id: CQ-05
         name: Output & API
         score: 1
@@ -214,7 +219,7 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -222,15 +227,15 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal.XY with Style tokens correctly; theme-adaptive style is
-          properly implemented
+        comment: Uses pygal.XY with allow_interruptions and Style object correctly;
+          correct patterns used
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Generates interactive HTML (pygal key feature); but chart approach
-          is generic XY workaround, not exploiting pygal's distinctive capabilities
+        passed: true
+        comment: Uses allow_interruptions for segment breaks, legend_at_bottom_columns,
+          and HTML interactive output — pygal-specific capabilities
   verdict: REJECTED
 impl_tags:
   dependencies: []

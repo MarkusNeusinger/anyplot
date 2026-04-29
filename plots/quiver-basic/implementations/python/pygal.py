@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 quiver-basic: Basic Quiver Plot
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 72/100 | Updated: 2026-04-29
+Quality: 77/100 | Updated: 2026-04-29
 """
 
 import importlib
