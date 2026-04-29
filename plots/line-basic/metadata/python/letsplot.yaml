@@ -1,163 +1,175 @@
 library: letsplot
+language: python
 specification_id: line-basic
 created: '2025-12-23T00:25:00Z'
-updated: '2025-12-23T00:28:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20447581325
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-basic/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-04-29T15:42:50Z'
+generated_by: claude-sonnet
+workflow_run: 25117530620
+issue: 653
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/letsplot/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent seasonal temperature pattern that clearly demonstrates line plot trends
-  - Perfect title format following spec-id · library · pyplots.ai convention
-  - Clean KISS code structure with proper reproducibility seed
-  - Appropriate text sizing for 4800×2700 output with scale=3
-  - Good use of theme_minimal() and custom theme elements for professional appearance
-  - Both PNG and HTML outputs generated as expected for interactive library
+  - Theme-adaptive chrome fully implemented with PAGE_BG, INK, INK_SOFT, RULE applied
+    to correct elements
+  - All font sizes explicitly set at correct values (title=24pt, axis=20pt, ticks=16pt)
+  - y-only horizontal grid with no x-grid or minor grid — well-judged minimalism
+  - Monthly temperature dataset is realistic, factually sound, and clearly demonstrates
+    the line plot purpose
+  - Single-series BRAND green consistently correct across both renders
   weaknesses:
-  - Grid lines are somewhat prominent (dashed style helps but alpha could be lower)
-  - Does not leverage lets-plot specific interactive features like tooltips or hover
-    effects
-  - Markers (size=5) are slightly large for 12 data points; size=4 would be more proportionate
-  image_description: 'The plot displays a basic line chart showing monthly temperature
-    readings over 12 months. A blue line (#306998) with circular markers connects
-    data points from Month 1 to Month 12. The Y-axis shows "Temperature (°C)" ranging
-    from approximately 4 to 30 degrees. The data exhibits a realistic sinusoidal seasonal
-    pattern: low temperatures in winter months (~4°C in January, February, December),
-    gradually rising through spring, peaking in summer (~29°C in July), and declining
-    through fall. The background uses a minimal theme with light gray dashed grid
-    lines. The title "line-basic · letsplot · pyplots.ai" appears at the top left.'
+  - Area fill visible in renders not backed by geom_area() in code — add geom_area(fill=BRAND,
+    alpha=0.15) explicitly to match rendered output
+  - No focal-point emphasis at peak or trough month — larger marker or annotation
+    at July would lift DE-03
+  - LM-02 is low — HTML export uses no letsplot-specific interactive features; layer_tooltips()
+    API would demonstrate library mastery
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "line-basic · letsplot · anyplot.ai" in dark ink top-left; y-axis label "Temperature (°C)" rotated, clearly readable; x-axis label "Month" readable; tick labels 1–12 and y-values all legible in dark ink against off-white
+      Data: Single line and points in #009E73 (BRAND green); area fill under line in matching semi-transparent green; horizontal y-axis grid lines subtle
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct theme surface
+      Chrome: Title, axis labels, and tick labels all render in light ink tones; readable against dark background; no dark-on-dark failures observed
+      Data: Line, points, and area fill all retain identical #009E73 green — data colors unchanged from light render as required; area fill appears as dark green against the near-black background
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable with
-          appropriate font sizes (24pt title, 20pt labels, 16pt ticks)
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere in the plot
+        comment: Title=24pt, axis_title=20pt, axis_text=16pt all explicitly set; readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Month ticks 1-12 well-spaced, no label collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line thickness and marker sizes are appropriate for 12 data points;
-          markers are clearly visible (-1 for markers being slightly large for this
-          data density)
+        comment: geom_line(size=2) + geom_point(size=5) scale well at 3x export
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color is colorblind-safe; good contrast against white
-          background
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions, no content cut-off, well-balanced whitespace
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units "Temperature (°C)", X-axis has descriptive label
-          "Month"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Single-series BRAND green; strong contrast on both surfaces; CVD-safe
+          Okabe-Ito
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well with balanced margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Temperature (degrees C) includes units; Month is descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds #FAF8F1 light / #1A1A17 dark;
+          theme-adaptive chrome correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Warm custom backgrounds, BRAND green, area fill elevate above generic
+          defaults; not publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: y-only major grid, no x-grid, no minor grid, theme_minimal removes
+          spines; solid refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
         passed: false
-        comment: Grid lines are somewhat prominent; no legend needed for single series
-          but grid could be more subtle
+        comment: Clear seasonal arc; area fill helps; no focal-point annotation at
+          peak July or trough January
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line plot chart type
+        comment: Correct line plot with optional markers
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X (month) and Y (temperature) correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Clean minimal design, single line, clear axis labels, grid lines,
-          markers on data points - all spec features present
-      - id: SC-04
-        name: Data Range
+        comment: Single-line, minimal design, axis labels, grid lines, optional markers
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 12 data points visible, axes show full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Month on X, Temperature on Y; all 12 points visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series (N/A - full points)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "line-basic · letsplot · pyplots.ai"
+        comment: line-basic · letsplot · anyplot.ai exact format; no legend needed
+          for single series
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear trend/pattern over time with seasonal variation, demonstrates
-          line plot capability well
+        comment: 12 points show complete seasonal cycle with ascending and descending
+          trends
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly temperature readings is a realistic, comprehensible scenario
-          mentioned in spec applications
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature values (4-29°C) are realistic for seasonal variation
+        comment: Monthly temperature readings over a year; neutral, real-world scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Range ~3-30 degrees C realistic for temperate climate; sinusoidal
+          peak in July factually sound
     code_quality:
       score: 10
       max: 10
@@ -167,40 +179,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: Linear Imports -> Theme tokens -> Data -> Plot -> Save; no functions
+          or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses `np.random.seed(42)`
+        comment: np.random.seed(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All 14 letsplot symbols imported are used in the code
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Clean Pythonic grammar-of-graphics construction; no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with correct letsplot
+          API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Full ggplot grammar: aes(), geom_*(), scale_*(), theme(), labs(),
+          ggsize() used correctly'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
         max: 5
         passed: false
-        comment: Uses basic ggplot grammar but no distinctive lets-plot specific features
-          like interactive tooltips, tooltips, or built-in animations
+        comment: ggsize() and ggsave scale=3 are letsplot-specific; HTML export generated;
+          no tooltips or interactive HTML capabilities used
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

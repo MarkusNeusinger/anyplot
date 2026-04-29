@@ -1,112 +1,117 @@
-""" pyplots.ai
+""" anyplot.ai
 line-basic: Basic Line Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: highcharts unknown | Python 3.13.13
+Quality: 79/100 | Updated: 2026-04-29
 """
 
+import json
+import os
 import tempfile
 import time
 import urllib.request
 from pathlib import Path
 
 import numpy as np
-from highcharts_core.chart import Chart
-from highcharts_core.options import HighchartsOptions
-from highcharts_core.options.series.area import LineSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Monthly temperature readings showing seasonal pattern
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"
+
+# Data - Monthly temperature readings with realistic irregular variation
 np.random.seed(42)
 month_labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-# Realistic temperature pattern: cold winter, warm summer
-temperatures = [5, 7, 12, 16, 21, 25, 28, 27, 22, 15, 9, 6]
-# Add slight natural variation
-temperatures = [t + np.random.randn() * 0.5 for t in temperatures]
+base_temps = [5, 7, 12, 16, 21, 25, 28, 27, 22, 15, 9, 6]
+temperatures = [round(t + np.random.randn() * 1.5, 1) for t in base_temps]
 
-# Create chart
-chart = Chart(container="container")
-chart.options = HighchartsOptions()
-
-# Chart settings for 4800x2700 canvas
-chart.options.chart = {
-    "type": "line",
-    "width": 4800,
-    "height": 2700,
-    "backgroundColor": "#ffffff",
-    "marginBottom": 300,
-    "marginLeft": 200,
-    "spacingTop": 80,
+# Chart configuration
+chart_config = {
+    "chart": {
+        "type": "line",
+        "width": 4800,
+        "height": 2700,
+        "backgroundColor": PAGE_BG,
+        "marginBottom": 300,
+        "marginLeft": 250,
+        "marginRight": 80,
+        "spacingTop": 80,
+    },
+    "title": {
+        "text": "line-basic · highcharts · anyplot.ai",
+        "style": {"fontSize": "72px", "fontWeight": "bold", "color": INK},
+    },
+    "xAxis": {
+        "categories": month_labels,
+        "title": {"text": "Month", "style": {"fontSize": "48px", "color": INK}, "margin": 30},
+        "labels": {"style": {"fontSize": "36px", "color": INK_SOFT}, "y": 40},
+        "gridLineWidth": 1,
+        "gridLineColor": GRID,
+        "lineColor": INK_SOFT,
+        "tickColor": INK_SOFT,
+        "lineWidth": 2,
+        "tickWidth": 2,
+    },
+    "yAxis": {
+        "title": {"text": "Temperature (°C)", "style": {"fontSize": "48px", "color": INK}, "margin": 30},
+        "labels": {"style": {"fontSize": "36px", "color": INK_SOFT}, "x": -10},
+        "gridLineWidth": 1,
+        "gridLineColor": GRID,
+        "gridLineDashStyle": "Dash",
+        "lineColor": INK_SOFT,
+        "tickColor": INK_SOFT,
+    },
+    "legend": {"enabled": False},
+    "plotOptions": {"line": {"lineWidth": 8, "marker": {"enabled": True, "radius": 12, "symbol": "circle"}}},
+    "series": [{"type": "line", "name": "Temperature", "data": temperatures, "color": BRAND}],
+    "credits": {"enabled": False},
 }
 
-# Title
-chart.options.title = {
-    "text": "line-basic · highcharts · pyplots.ai",
-    "style": {"fontSize": "72px", "fontWeight": "bold"},
-}
+# Download Highcharts JS for inline embedding (fallback CDN on 403)
+_hc_urls = [
+    "https://code.highcharts.com/highcharts.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.3.0/highcharts.js",
+    "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js",
+]
+highcharts_js = None
+for _url in _hc_urls:
+    try:
+        _req = urllib.request.Request(_url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(_req, timeout=30) as response:
+            highcharts_js = response.read().decode("utf-8")
+        break
+    except Exception:
+        continue
+if highcharts_js is None:
+    raise RuntimeError("Could not download highcharts.js from any CDN")
 
-# X-axis
-chart.options.x_axis = {
-    "categories": month_labels,
-    "title": {"text": "Month", "style": {"fontSize": "48px"}, "margin": 30},
-    "labels": {"style": {"fontSize": "36px"}, "y": 40},
-    "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
-    "lineWidth": 2,
-    "tickWidth": 2,
-}
-
-# Y-axis
-chart.options.y_axis = {
-    "title": {"text": "Temperature (°C)", "style": {"fontSize": "48px"}, "margin": 30},
-    "labels": {"style": {"fontSize": "36px"}, "x": -10},
-    "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
-    "gridLineDashStyle": "Dash",
-}
-
-# Legend
-chart.options.legend = {"enabled": True, "itemStyle": {"fontSize": "36px"}}
-
-# Plot options for line styling
-chart.options.plot_options = {"line": {"lineWidth": 8, "marker": {"enabled": True, "radius": 12, "symbol": "circle"}}}
-
-# Add series
-series = LineSeries()
-series.data = temperatures
-series.name = "Temperature"
-series.color = "#306998"
-
-chart.add_series(series)
-
-# Download Highcharts JS for inline embedding
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
-
-# Generate HTML with inline scripts
-html_str = chart.to_js_literal()
+# Build HTML with inline Highcharts JS
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
-    <script>{html_str}</script>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width:4800px; height:2700px;"></div>
+    <script>Highcharts.chart('container', {json.dumps(chart_config)});</script>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
+# Save HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Write temp HTML and take screenshot for PNG
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
-
-# Also save HTML for interactive viewing
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
 
 chrome_options = Options()
 chrome_options.add_argument("--headless")
@@ -118,7 +123,7 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()

@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 line-basic: Basic Line Plot
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-04-29
 """
+
+import os
 
 import numpy as np
 from bokeh.io import export_png, output_file, save
@@ -10,57 +12,66 @@ from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"
+
 # Data - Daily temperature readings for a month
 np.random.seed(42)
 days = np.arange(1, 32)
+base_temp = 20 + 8 * np.sin(np.linspace(0, np.pi, 31))
+temperature = base_temp + np.random.randn(31) * 2
 
-# Temperature with seasonal pattern and random variation
-base_temp = 20 + 8 * np.sin(np.linspace(0, np.pi, 31))  # Warm mid-month
-noise = np.random.randn(31) * 2
-temperature = base_temp + noise
-
-# Create ColumnDataSource
 source = ColumnDataSource(data={"day": days, "temperature": temperature})
 
-# Create figure (4800 × 2700 px)
+# Plot
 p = figure(
     width=4800,
     height=2700,
-    title="line-basic · bokeh · pyplots.ai",
+    title="line-basic · bokeh · anyplot.ai",
     x_axis_label="Day of Month",
     y_axis_label="Temperature (°C)",
 )
 
-# Plot line with markers for visibility
-p.line(x="day", y="temperature", source=source, line_width=5, line_color="#306998")
-p.scatter(x="day", y="temperature", source=source, size=16, fill_color="#306998", line_color="white", line_width=3)
+p.line(x="day", y="temperature", source=source, line_width=5, line_color=BRAND)
+p.scatter(x="day", y="temperature", source=source, size=16, fill_color=BRAND, line_color=PAGE_BG, line_width=3)
 
-# Style text sizes for 4800x2700 px
+# Style — text sizes for 4800×2700 px
 p.title.text_font_size = "42pt"
+p.title.text_color = INK
 p.xaxis.axis_label_text_font_size = "32pt"
+p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_font_size = "32pt"
+p.yaxis.axis_label_text_color = INK
 p.xaxis.major_label_text_font_size = "24pt"
+p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_font_size = "24pt"
+p.yaxis.major_label_text_color = INK_SOFT
 
-# Grid styling - subtle dashed lines
-p.grid.grid_line_alpha = 0.3
-p.grid.grid_line_dash = "dashed"
+# Background and borders
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
-# Background styling
-p.background_fill_color = "#fafafa"
-p.border_fill_color = "white"
+# Axis lines and ticks
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+p.xaxis.axis_line_width = 2
+p.yaxis.axis_line_width = 2
 
-# Axis styling
-p.axis.axis_line_width = 2
-p.axis.axis_line_color = "#333333"
-p.axis.major_tick_line_width = 2
-p.axis.minor_tick_line_width = 1
+# Grid — y-axis only, subtle
+p.xgrid.grid_line_color = None
+p.ygrid.grid_line_color = INK
+p.ygrid.grid_line_alpha = 0.10
 
-# Remove toolbar for cleaner static image
 p.toolbar_location = None
 
-# Save as PNG and HTML
-export_png(p, filename="plot.png")
-
-output_file("plot.html")
+# Save
+export_png(p, filename=f"plot-{THEME}.png")
+output_file(f"plot-{THEME}.html")
 save(p)

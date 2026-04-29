@@ -4,7 +4,6 @@ This file provides guidance to GitHub Copilot when working with code in this rep
 
 ## Important Rules
 
-- **No Co-authored-by in commit messages** - Never add `Co-authored-by:` lines to commit messages. Keep commit messages clean without AI attribution footers.
 - **Always write in English** - All output text (code comments, commit messages, PR descriptions, issue comments, documentation) must be in English, even if the user writes in another language.
 
 ## Task Suitability
@@ -85,16 +84,21 @@ Everything for one plot type lives in a single directory:
 
 ```
 plots/{spec-id}/
-├── specification.md     # Library-agnostic description
-├── specification.yaml   # Tags, created, issue, suggested
-├── metadata/            # Per-library metadata
-│   ├── matplotlib.yaml
-│   └── ...
-└── implementations/     # Library implementations
-    ├── matplotlib.py
-    ├── seaborn.py
-    └── ...
+├── specification.md             # Library-agnostic description
+├── specification.yaml           # Tags, created, issue, suggested
+├── metadata/
+│   └── python/                  # Per-library metadata (one file per library)
+│       ├── matplotlib.yaml
+│       ├── seaborn.yaml
+│       └── ...
+└── implementations/
+    └── python/                  # Library implementations (one file per library)
+        ├── matplotlib.py
+        ├── seaborn.py
+        └── ...
 ```
+
+The `python/` subdirectory is a deliberate forward-compatibility layer; non-Python implementation languages would live as siblings (e.g. `implementations/r/`) when introduced. All paths in code, prompts, and metadata refer to the language-prefixed form: `plots/{spec-id}/implementations/python/{library}.py` and `plots/{spec-id}/metadata/python/{library}.yaml`.
 
 Example: `plots/scatter-basic/` contains everything for the basic scatter plot.
 
@@ -137,9 +141,21 @@ Examples: `scatter-basic`, `scatter-color-mapped`, `bar-grouped-horizontal`, `he
 ### PR Labels (set by workflows)
 
 - **`approved`** - Human approved specification for merge
-- **`ai-approved`** - AI quality check passed (score >= 90, or >= 50 after 3 attempts)
-- **`ai-rejected`** - AI quality check failed (score < 90), triggers repair loop
+- **`ai-approved`** - AI quality check passed at the current cascading threshold (see below)
+- **`ai-rejected`** - AI quality check failed at the current threshold, triggers repair loop
 - **`quality:XX`** - Quality score (e.g., `quality:92`)
+
+**Quality threshold cascade** (`.github/workflows/impl-review.yml`): the threshold drops by 10 each repair attempt to give partial credit for incremental improvement.
+
+| Review # | Repair attempt | Threshold |
+|----------|----------------|-----------|
+| 1 (initial) | 0 | ≥ 90 |
+| 2 | 1 | ≥ 80 |
+| 3 | 2 | ≥ 70 |
+| 4 | 3 | ≥ 60 |
+| 5 | 4 | ≥ 50 |
+
+If the score is still below 50 after 4 repair attempts, the PR is closed (`gh pr close`) and the workflow posts a comment with next-step options. Regeneration is **manual**, not automatic — re-apply the `generate:{library}` label on the spec issue to start a fresh attempt.
 
 **Specification Lifecycle:**
 ```
@@ -148,8 +164,9 @@ Examples: `scatter-basic`, `scatter-color-mapped`, `bar-grouped-horizontal`, `he
 
 **Implementation PR Lifecycle:**
 ```
-[open] → impl-review → ai-approved (≥90) → impl-merge → impl:{library}:done
-                     → ai-rejected (<90) → impl-repair (×3) → ai-approved (≥50) or failed (<50)
+[open] → impl-review → ai-approved (≥ current threshold) → impl-merge → impl:{library}:done
+                     → ai-rejected (< threshold)        → impl-repair (×4) → cascade re-review
+                     → after 4 failed repairs           → close PR; manual regen via generate:{library} label
 ```
 
 ## Code Standards
@@ -212,7 +229,7 @@ plt.savefig('plot.png', dpi=300, bbox_inches='tight')
 
 ## Tech Stack
 
-- **Backend**: FastAPI, SQLAlchemy (async), PostgreSQL, Python 3.14+
+- **Backend**: FastAPI, SQLAlchemy (async), PostgreSQL, Python 3.13+
 - **Frontend**: React 19, TypeScript 6, Vite 8, MUI 9
 - **Package Manager**: uv (Python), yarn (Node.js)
 - **Linting**: Ruff (Python), ESLint (TypeScript)
@@ -223,8 +240,8 @@ The project runs on **Google Cloud Platform** (europe-west4 region):
 
 | Service | Component          | Purpose |
 |---------|--------------------|---------|
-| **Cloud Run** | `anyplot-backend`  | FastAPI API (auto-scaling, serverless) |
-| **Cloud Run** | `anyplot-frontend` | React SPA served via nginx |
+| **Cloud Run** | `anyplot-api` | FastAPI API (auto-scaling, serverless) |
+| **Cloud Run** | `anyplot-app` | React SPA served via nginx |
 | **Cloud SQL** | PostgreSQL 18      | Database (Unix socket in production) |
 | **Cloud Storage** | `anyplot-images`   | Preview images (GCS bucket) |
 | **Secret Manager** | `DATABASE_URL`     | Secure credential storage |

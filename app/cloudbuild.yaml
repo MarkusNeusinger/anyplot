@@ -3,6 +3,12 @@ substitutions:
   _REGION: "europe-west4"
   _SERVICE_NAME: "anyplot-app"
   _VITE_API_URL: "https://api.anyplot.ai"
+  # Only DebugPage uses this — same-origin via the Cloudflare Worker on
+  # anyplot.ai/api/*, so the CF Access cookie on anyplot.ai is sent with
+  # fetch (host-only cookies cannot cross subdomains). Other pages keep
+  # using VITE_API_URL directly because their endpoints are public and
+  # don't need the CF Access cookie.
+  _VITE_DEBUG_API_URL: "/api"
 
 steps:
   # Build the container image
@@ -16,6 +22,8 @@ steps:
         "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:latest",
         "--build-arg",
         "VITE_API_URL=${_VITE_API_URL}",
+        "--build-arg",
+        "VITE_DEBUG_API_URL=${_VITE_DEBUG_API_URL}",
         "-f",
         "app/Dockerfile",
         "app",

@@ -1,160 +1,239 @@
-""" pyplots.ai
+""" anyplot.ai
 radar-basic: Basic Radar Chart
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 83/100 | Updated: 2026-04-29
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import importlib
+import os
+import sys
 
 
-# Data - Employee performance review scores across competencies
+# Prevent this file (altair.py) from shadowing the installed altair package
+_here = os.path.realpath(os.path.dirname(__file__))
+sys.path = [p for p in sys.path if not (p and os.path.realpath(p) == _here)]
+del _here
+
+alt = importlib.import_module("altair")
+np = importlib.import_module("numpy")
+pd = importlib.import_module("pandas")
+
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
 categories = ["Communication", "Technical Skills", "Teamwork", "Problem Solving", "Leadership", "Creativity"]
-values = [85, 90, 75, 88, 70, 82]
-
-# Number of variables
 n = len(categories)
+MAX_VAL = 100
 
-# Create angles for each axis (evenly spaced around circle)
+alice_vals = [85, 90, 75, 88, 70, 82]
+bob_vals = [72, 78, 88, 75, 85, 68]
+
 angles = np.linspace(0, 2 * np.pi, n, endpoint=False).tolist()
 
-# Convert polar to cartesian coordinates
-max_val = 100
-values_scaled = [v / max_val for v in values]
 
-# Data points coordinates
-x_coords = [v * np.cos(a - np.pi / 2) for v, a in zip(values_scaled, angles, strict=True)]
-y_coords = [v * np.sin(a - np.pi / 2) for v, a in zip(values_scaled, angles, strict=True)]
+def to_xy(values):
+    scaled = [v / MAX_VAL for v in values]
+    return (
+        [s * np.cos(a - np.pi / 2) for s, a in zip(scaled, angles, strict=True)],
+        [s * np.sin(a - np.pi / 2) for s, a in zip(scaled, angles, strict=True)],
+    )
 
-# Close the polygon for the line
-angles_closed = angles + [angles[0]]
-values_scaled_closed = values_scaled + [values_scaled[0]]
-x_coords_closed = [v * np.cos(a - np.pi / 2) for v, a in zip(values_scaled_closed, angles_closed, strict=True)]
-y_coords_closed = [v * np.sin(a - np.pi / 2) for v, a in zip(values_scaled_closed, angles_closed, strict=True)]
 
-# DataFrame for data points (without closing point)
-df_points = pd.DataFrame(
-    {"x": x_coords, "y": y_coords, "category": categories, "value": values, "order": range(len(x_coords))}
-)
+def to_xy_closed(values):
+    x, y = to_xy(values)
+    return x + [x[0]], y + [y[0]]
 
-# Create gridlines at 20, 40, 60, 80, 100 as hexagons (matching the 6 axes)
-grid_levels = [20, 40, 60, 80, 100]
+
+# Grid rings (hexagonal at 5 levels)
 grid_data = []
-for level in grid_levels:
-    level_scaled = level / max_val
+for level in [20, 40, 60, 80, 100]:
+    ls = level / MAX_VAL
     for i, angle in enumerate(angles):
         grid_data.append(
-            {
-                "x": level_scaled * np.cos(angle - np.pi / 2),
-                "y": level_scaled * np.sin(angle - np.pi / 2),
-                "level": level,
-                "order": i,
-            }
+            {"x": ls * np.cos(angle - np.pi / 2), "y": ls * np.sin(angle - np.pi / 2), "level": level, "order": i}
         )
-    # Close the grid polygon
     grid_data.append(
-        {
-            "x": level_scaled * np.cos(angles[0] - np.pi / 2),
-            "y": level_scaled * np.sin(angles[0] - np.pi / 2),
-            "level": level,
-            "order": n,
-        }
+        {"x": ls * np.cos(angles[0] - np.pi / 2), "y": ls * np.sin(angles[0] - np.pi / 2), "level": level, "order": n}
     )
-
 df_grid = pd.DataFrame(grid_data)
 
-# Create axis lines (spokes from center to edge)
+# Spokes from center to outer edge
 spokes_data = []
 for cat, angle in zip(categories, angles, strict=True):
-    spokes_data.append({"x": 0, "y": 0, "category": cat, "order": 0})
-    spokes_data.append({"x": np.cos(angle - np.pi / 2), "y": np.sin(angle - np.pi / 2), "category": cat, "order": 1})
-
+    spokes_data.extend(
+        [
+            {"x": 0.0, "y": 0.0, "cat": cat, "ord": 0},
+            {"x": np.cos(angle - np.pi / 2), "y": np.sin(angle - np.pi / 2), "cat": cat, "ord": 1},
+        ]
+    )
 df_spokes = pd.DataFrame(spokes_data)
 
-# Create axis labels positioned outside the chart
-label_data = []
-label_offset = 1.18
-for cat, angle in zip(categories, angles, strict=True):
-    label_data.append(
-        {"x": label_offset * np.cos(angle - np.pi / 2), "y": label_offset * np.sin(angle - np.pi / 2), "label": cat}
-    )
+# Outer axis labels
+label_off = 1.24
+df_labels = pd.DataFrame(
+    [
+        {"x": label_off * np.cos(a - np.pi / 2), "y": label_off * np.sin(a - np.pi / 2), "label": c}
+        for c, a in zip(categories, angles, strict=True)
+    ]
+)
 
-df_labels = pd.DataFrame(label_data)
+# Grid ring value annotations along the top (vertical) spoke
+df_ring_labels = pd.DataFrame(
+    [{"x": 0.05, "y": level / MAX_VAL, "label": str(level)} for level in [20, 40, 60, 80, 100]]
+)
 
-# Create value labels at each point
-value_label_data = []
-for val, angle in zip(values, angles, strict=True):
-    val_scaled = val / max_val
-    # Position value labels slightly outside the data points
-    offset = 0.10
-    value_label_data.append(
-        {
-            "x": (val_scaled + offset) * np.cos(angle - np.pi / 2),
-            "y": (val_scaled + offset) * np.sin(angle - np.pi / 2),
-            "value": str(val),
-        }
-    )
+# Series line data (closed polygons for outlines)
+series_line_rows = []
+for name, vals in [("Alice", alice_vals), ("Bob", bob_vals)]:
+    x_c, y_c = to_xy_closed(vals)
+    for i, (x, y) in enumerate(zip(x_c, y_c, strict=True)):
+        series_line_rows.append({"Employee": name, "x": x, "y": y, "order": i})
+df_series_line = pd.DataFrame(series_line_rows)
 
-df_value_labels = pd.DataFrame(value_label_data)
+# Series point data (unclosed, for tooltips and click selection)
+pts_rows = []
+for name, vals in [("Alice", alice_vals), ("Bob", bob_vals)]:
+    x_p, y_p = to_xy(vals)
+    for x, y, v, cat in zip(x_p, y_p, vals, categories, strict=True):
+        pts_rows.append({"Employee": name, "x": x, "y": y, "value": v, "category": cat})
+df_pts = pd.DataFrame(pts_rows)
 
-# Grid polygons (hexagons)
+
+# GeoJSON polygon helper
+def make_geo(x_c, y_c):
+    return {
+        "type": "Feature",
+        "geometry": {"type": "Polygon", "coordinates": [list(zip(x_c, y_c, strict=True))]},
+        "properties": {},
+    }
+
+
+alice_x_c, alice_y_c = to_xy_closed(alice_vals)
+bob_x_c, bob_y_c = to_xy_closed(bob_vals)
+
+# Click-based interactive selection: click a vertex point to highlight its series
+selection = alt.selection_point(fields=["Employee"])
+
+color_scale = alt.Scale(domain=["Alice", "Bob"], range=[OKABE_ITO[0], OKABE_ITO[1]])
+
+# Static grid rings
 grid_lines = (
     alt.Chart(df_grid)
-    .mark_line(strokeWidth=1, opacity=0.3, color="#888888")
-    .encode(x=alt.X("x:Q", axis=None), y=alt.Y("y:Q", axis=None), detail="level:N", order="order:O")
+    .mark_line(strokeWidth=1.5, color=INK_SOFT, opacity=0.3)
+    .encode(
+        x=alt.X("x:Q", axis=None, scale=alt.Scale(domain=[-1.45, 1.45])),
+        y=alt.Y("y:Q", axis=None, scale=alt.Scale(domain=[-1.45, 1.45])),
+        detail="level:N",
+        order="order:O",
+    )
 )
 
-# Spokes (axis lines from center)
+# Static spokes
 spokes = (
     alt.Chart(df_spokes)
-    .mark_line(strokeWidth=1, opacity=0.4, color="#888888")
-    .encode(x=alt.X("x:Q", axis=None), y=alt.Y("y:Q", axis=None), detail="category:N", order="order:O")
+    .mark_line(strokeWidth=1, color=INK_SOFT, opacity=0.25)
+    .encode(x=alt.X("x:Q", axis=None), y=alt.Y("y:Q", axis=None), detail="cat:N", order="ord:O")
 )
 
-# Create GeoJSON polygon for fill
-polygon_coords = [[x, y] for x, y in zip(x_coords_closed, y_coords_closed, strict=True)]
-geojson_data = {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [polygon_coords]}, "properties": {}}
-
-# Filled polygon using geoshape
-polygon_fill = (
-    alt.Chart(alt.Data(values=[geojson_data]))
-    .mark_geoshape(fill="#306998", fillOpacity=0.25, stroke="#306998", strokeWidth=4)
+# Static filled polygons (semi-transparent, one geoshape per series)
+alice_fill = (
+    alt.Chart(alt.Data(values=[make_geo(alice_x_c, alice_y_c)]))
+    .mark_geoshape(fill=OKABE_ITO[0], fillOpacity=0.18, stroke="none")
     .project(type="identity", reflectY=True)
 )
 
-# Data points
-points = (
-    alt.Chart(df_points)
-    .mark_point(filled=True, size=500, color="#306998", opacity=1.0)
+bob_fill = (
+    alt.Chart(alt.Data(values=[make_geo(bob_x_c, bob_y_c)]))
+    .mark_geoshape(fill=OKABE_ITO[1], fillOpacity=0.18, stroke="none")
+    .project(type="identity", reflectY=True)
+)
+
+# Interactive polygon outlines — click a series to highlight it (dims the other)
+series_lines = (
+    alt.Chart(df_series_line)
+    .mark_line(strokeWidth=3.5)
     .encode(
-        x=alt.X("x:Q"),
-        y=alt.Y("y:Q"),
-        tooltip=[alt.Tooltip("category:N", title="Competency"), alt.Tooltip("value:Q", title="Score")],
+        x=alt.X("x:Q", axis=None),
+        y=alt.Y("y:Q", axis=None),
+        color=alt.Color(
+            "Employee:N",
+            scale=color_scale,
+            legend=alt.Legend(
+                title="Employee",
+                titleFontSize=22,
+                titleFontWeight="bold",
+                labelFontSize=20,
+                symbolSize=300,
+                symbolStrokeWidth=4,
+                orient="top-right",
+                offset=10,
+            ),
+        ),
+        detail="Employee:N",
+        order="order:O",
+        opacity=alt.condition(selection, alt.value(1.0), alt.value(0.15)),
     )
 )
 
-# Axis labels
-labels = (
+# Interactive vertex points with hover tooltips — click to select series
+points = (
+    alt.Chart(df_pts)
+    .mark_point(filled=True, size=350)
+    .encode(
+        x=alt.X("x:Q"),
+        y=alt.Y("y:Q"),
+        color=alt.Color("Employee:N", scale=color_scale, legend=None),
+        opacity=alt.condition(selection, alt.value(1.0), alt.value(0.10)),
+        tooltip=[
+            alt.Tooltip("Employee:N", title="Employee"),
+            alt.Tooltip("category:N", title="Competency"),
+            alt.Tooltip("value:Q", title="Score"),
+        ],
+    )
+    .add_params(selection)
+)
+
+# Outer axis category labels
+axis_labels = (
     alt.Chart(df_labels)
-    .mark_text(fontSize=22, fontWeight="bold", color="#333333")
-    .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), text="label:N")
+    .mark_text(fontSize=20, fontWeight="bold")
+    .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), text="label:N", color=alt.value(INK))
 )
 
-# Value labels
-value_labels = (
-    alt.Chart(df_value_labels)
-    .mark_text(fontSize=18, fontWeight="bold", color="#306998")
-    .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), text="value:N")
+# Grid ring value annotations (20, 40, 60, 80, 100) along the top spoke
+ring_labels = (
+    alt.Chart(df_ring_labels)
+    .mark_text(fontSize=15, align="left")
+    .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), text="label:N", color=alt.value(INK_MUTED))
 )
 
-# Combine all layers
 chart = (
-    alt.layer(grid_lines, spokes, polygon_fill, points, labels, value_labels)
-    .properties(width=1400, height=1200, title=alt.Title(text="radar-basic · altair · pyplots.ai", fontSize=28))
-    .configure_view(strokeWidth=0)
+    alt.layer(grid_lines, spokes, alice_fill, bob_fill, series_lines, points, axis_labels, ring_labels)
+    .properties(
+        width=1200,
+        height=1200,
+        background=PAGE_BG,
+        title=alt.Title(text="radar-basic · altair · anyplot.ai", fontSize=32, color=INK, fontWeight="bold", offset=24),
+    )
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=20,
+        titleFontSize=22,
+        padding=16,
+        cornerRadius=4,
+    )
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")

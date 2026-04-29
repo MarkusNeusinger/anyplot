@@ -14,6 +14,22 @@ For detailed project documentation (architecture, commands, workflows, etc.), se
 - **Always write in English** - All output text (code comments, commit messages, PR descriptions, issue comments, documentation) must be in English, even if the user writes in another language.
 - **Update documentation when making changes** - When adding new features, events, or modifying behavior, always check if related documentation needs updating (e.g., `docs/reference/plausible.md` for analytics events, `docs/workflows/` for workflow changes, `docs/contributing.md` for user-facing changes).
 
+## PR Follow-Through (mandatory after every `gh pr create`)
+
+After opening a PR, the work is **not** complete. Stay with the PR until both the pipeline is green AND review feedback has been addressed. "PR opened" is a checkpoint, not the finish line.
+
+1. **Watch the pipeline.** Poll `gh pr checks <num>` (and Cloud Build for triggered deploys) until every required check has finished. Use a background bash poll so other work can continue. Default: poll every 20 s, up to ~10 min per check.
+2. **Fix CI failures.** If any check fails, read the relevant log (`gh run view --log-failed`, `gcloud builds log <id>`), push a fix commit to the same branch, then keep watching. Repeat until green.
+3. **Wait for the Copilot PR Reviewer bot** (and any other auto-review bots active on this repo). Typically lands within ~2 min of PR open. Fetch with `gh pr view <num> --comments`, plus the three GitHub APIs that surface different comment types — `gh api` resolves `{owner}/{repo}` from the current git remote so these are copy/paste-portable:
+   - `gh api repos/{owner}/{repo}/pulls/<num>/reviews` — top-level review summaries (Copilot's overall comment lives here)
+   - `gh api repos/{owner}/{repo}/pulls/<num>/comments` — inline review comments tied to file/line
+   - `gh api repos/{owner}/{repo}/issues/<num>/comments` — generic PR conversation comments (codecov, deployment bots, humans)
+4. **Triage Copilot suggestions and apply only the sensible ones.** Apply when the comment flags a real bug, a deploy-order risk, a security/correctness issue, or a missed edge case. Skip pure style noise or anything that contradicts an explicit decision in the PR body. State briefly in chat which were applied vs skipped, so the user can override.
+5. **Push review-driven fixes to the SAME branch.** Don't open a follow-up PR for review feedback — it belongs on the original PR.
+6. **Only then announce the PR is ready / ask the user to merge.** Premature "done" leaves CI red or feedback unaddressed.
+
+This rule applies to every PR Claude opens, including small fixes and follow-ups.
+
 ## MCP Tools (Serena & Context7)
 
 **Serena** - Prefer for Python/TypeScript code navigation and editing:

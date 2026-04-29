@@ -1,15 +1,232 @@
 library: highcharts
+language: python
 specification_id: line-basic
 created: '2025-12-23T00:24:20Z'
-updated: '2025-12-23T00:28:13Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20447581042
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-29T16:05:42Z'
+generated_by: claude-sonnet
+workflow_run: 25117426786
+issue: 653
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-basic/highcharts/plot.html
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/highcharts/plot-dark.html
+quality_score: 79
+review:
+  strengths:
+  - Theme tokens (PAGE_BG, INK, INK_SOFT, GRID) correctly wired to all chrome elements
+    — no dark-on-dark text failure in either render
+  - Robust CDN fallback chain (3 sources with User-Agent header) prevents silent failures
+  - Title and X-axis month labels are now fully visible in both renders (previous
+    clipping issue resolved)
+  - 'Correct #009E73 brand color; single-series legend correctly disabled'
+  - KISS code structure with seed, clean imports, and correct dual-artifact output
+  weaknesses:
+  - 'Code-image sync still broken (attempt 3): images show summer plotBand, Summer
+    Peak annotation, and December end-point label that are absent from the code —
+    attempt 3 code is unchanged from attempt 2; fix by adding xAxis.plotBands + series[0].dataLabels
+    and re-rendering'
+  - 'Bypasses highcharts_core Python API: uses raw json.dumps(chart_config) instead
+    of Chart + HighchartsOptions + LineSeries typed interface per library guidelines'
+  - 'No distinctive Highcharts features in code: missing plotBands, tooltip formatting,
+    dataLabels, or responsive configuration'
+  - Marker radius 12px too small for 4800x2700 canvas — increase to 22-25px
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — correct light theme surface
+      Chrome: Title "line-basic · highcharts · anyplot.ai" fully visible in dark ink at top; Y-axis label "Temperature (°C)" readable (rotated); Y-axis tick labels 4–32 visible in INK_SOFT color; X-axis month labels Jan–Dec clearly legible at bottom; subtle dashed grid lines present
+      Data: Brand green #009E73 line ✓; seasonal bell-curve pattern from Jan to Dec; circular markers on each data point (visible but small); light teal plotBand for summer months (May–Aug); "Summer Peak 30.4°C" annotation at peak; small "3.3°C" end-point label at December — NOTE: plotBand and annotations are NOT in the code
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black consistent with #1A1A17 — correct dark theme surface
+      Chrome: Title in light text (#F0EFE8 range) ✓; Y-axis label in light text ✓; tick labels in softer light tone (#B8B7B0 range) — no dark-on-dark failure; X-axis month labels visible in light text ✓
+      Data: Data line is identical #009E73 brand green — colors match light render exactly ✓; summer plotBand adapts to darker green tint; annotation text visible in light color against dark background; markers visible
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (72/48/36px); all text readable in both
+          themes; title-to-canvas ratio adequate but tight
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions among visible elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Line clearly visible with lineWidth 8; markers at radius 12 visible
+          but slightly small for 4800px canvas
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe brand green, single series
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions; generous margins; minor whitespace improvement
+          possible above title
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis has units (°C), X-axis labelled, title correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series is #009E73; light bg #FAF8F1, dark bg #1A1A17; all
+          theme tokens correctly wired'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: 'Default: annotations/plotBand visible in image but absent from code;
+          actual code output is a plain line chart'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Dashed y-axis grid, explicit lineColor/tickColor; no spine removal
+          or deeper whitespace refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: 'Default: seasonal trend readable but code provides no annotation
+          or highlighted region'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Minimal design, grid lines, clear axis labels, single line; spec
+          satisfied
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: month labels; Y: temperature values (seasonal bell-curve)'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title correct format; legend disabled (single series, correct)
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 12-point monthly series shows trend well; no secondary dimension
+          explored
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly temperatures plausible (5-30°C range), neutral and real-world
+          grounded
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature range 4-32°C realistic for a temperate climate year
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; linear top-to-bottom flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Uses raw json.dumps(chart_config) dict instead of highcharts_core
+          Python API (Chart, HighchartsOptions)
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png for both themes
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: false
+        comment: Selenium/inline JS export correct; but bypasses highcharts_core Python
+          API entirely — raw dict config not idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses line type with markers and dashed grid; no distinctive Highcharts
+          features in code (plotBands, dataLabels, tooltip formatting)
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -20,185 +237,3 @@ impl_tags:
   dataprep: []
   styling:
   - grid-styling
-review:
-  strengths:
-  - Excellent visual clarity with properly sized text and markers for the canvas dimensions
-  - Realistic seasonal temperature data that demonstrates clear line trends
-  - Proper title format following the spec-id · library · pyplots.ai convention
-  - Clean KISS code structure with good reproducibility (seed=42)
-  - Appropriate use of dashed grid lines for subtle visual guidance
-  weaknesses:
-  - LineSeries is imported from area module instead of the dedicated line module
-  - Legend could be hidden for single-series plots to reduce visual clutter
-  - Data shows smooth seasonal curve but lacks irregular variations that would better
-    demonstrate line plot flexibility
-  image_description: The plot displays a line chart showing monthly temperature data
-    across a full year (January to December). The line is rendered in a dark blue
-    color (#306998) with circular markers at each data point. The chart clearly shows
-    a seasonal temperature pattern - cold winter months (Jan ~5°C, Dec ~6°C), rising
-    through spring, peaking in summer (Jul ~29°C), and declining through autumn. The
-    title "line-basic · highcharts · pyplots.ai" appears at the top. The Y-axis is
-    labeled "Temperature (°C)" and the X-axis is labeled "Month". Subtle dashed horizontal
-    grid lines help with value reading. The background is white with clean, professional
-    styling.
-  criteria_checklist:
-    visual_quality:
-      score: 38
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at the
-          output resolution
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements; month labels are well-spaced
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Line width and marker size are well-adapted for 12 data points
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color, no colorblind issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions with adequate margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: Y-axis has "Temperature (°C)" with units, X-axis has "Month"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: Grid is subtle and appropriate, but legend shows "Temperature" which
-          is somewhat redundant for a single-series plot
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct line chart type
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=months (sequential), Y=temperature (continuous)
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Clean minimal design, clear axis labels, grid lines, markers on data
-          points
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Y-axis shows full range from ~4 to 30
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend label correctly shows "Temperature"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "line-basic · highcharts · pyplots.ai"'
-    data_quality:
-      score: 17
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 6
-        max: 8
-        passed: true
-        comment: Shows clear seasonal trend with rise and fall; could show more variability
-          or edge cases
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly temperature readings represent a realistic Northern Hemisphere
-          seasonal pattern
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Values are realistic (5-29°C) for temperate climate annual temperatures
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
-        max: 2
-        passed: true
-        comment: Imports LineSeries from area module instead of line module (minor
-          issue)
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current highcharts-core API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses Highcharts features
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of chart options, series styling, and grid customization;
-          could leverage more interactive/advanced Highcharts features
-  verdict: APPROVED

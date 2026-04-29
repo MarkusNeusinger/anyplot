@@ -5,7 +5,7 @@ import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
 import Tooltip from '@mui/material/Tooltip';
 
-import { API_URL, LIBRARIES, LIB_ABBREV } from '../constants';
+import { DEBUG_API_URL, LIBRARIES, LIB_ABBREV } from '../constants';
 import { specPath } from '../utils/paths';
 import { SectionHeader } from '../components/SectionHeader';
 import { typography, colors, semanticColors, fontSize } from '../theme';
@@ -169,6 +169,8 @@ function pingColor(ms: number): string {
 //     in sessionStorage so it survives reloads of the same tab without
 //     persisting across browser sessions.
 const ADMIN_TOKEN_KEY = 'anyplot.adminToken';
+// One-shot guard for the SPA-routed → CF Access page-gate bootstrap.
+const RELOAD_GUARD_KEY = 'anyplot.debugAuthReloaded';
 const readAdminToken = (): string => {
   try { return sessionStorage.getItem(ADMIN_TOKEN_KEY) ?? ''; } catch { return ''; }
 };
@@ -206,8 +208,13 @@ export function DebugPage() {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    adminFetch(`${API_URL}/debug/status`, adminToken)
+    adminFetch(`${DEBUG_API_URL}/debug/status`, adminToken)
       .then(async r => {
+        // Reaching here means the fetch promise resolved (the response may
+        // still be 401/403/503 — those are handled below). Clear the one-shot
+        // reload guard so a future cross-origin CF Access redirect can
+        // re-trigger the bootstrap.
+        try { sessionStorage.removeItem(RELOAD_GUARD_KEY); } catch {}
         // 403 is the Cloudflare Access JWT path's denial: a signed-in Google
         // account that isn't on the admin_allowed_emails allow-list. Surface
         // it on the auth-required screen with the server's message so the
@@ -225,7 +232,28 @@ export function DebugPage() {
         return r.json();
       })
       .then(setData)
-      .catch(e => setError(e.message || 'failed to load'))
+      .catch(e => {
+        // SPA-routed entry to /debug bypasses the Cloudflare Access page-
+        // level intercept. The first API fetch then 302s cross-origin to
+        // *.cloudflareaccess.com, which fetch can't follow without CORS,
+        // surfacing as TypeError("Failed to fetch"). Force one top-level
+        // navigation so CF Access can intercept the page request and bounce
+        // to Google login. sessionStorage guard keeps this from looping if
+        // the second load ALSO fails (e.g. wrong allow-list).
+        if (e instanceof TypeError) {
+          let alreadyTried = false;
+          try { alreadyTried = !!sessionStorage.getItem(RELOAD_GUARD_KEY); } catch {}
+          if (!alreadyTried) {
+            try { sessionStorage.setItem(RELOAD_GUARD_KEY, '1'); } catch {}
+            // replace() not assign() — assign would push the broken pre-auth
+            // /debug onto the back-stack, so the user could navigate back
+            // into the same loop after logging in.
+            window.location.replace(window.location.href);
+            return;
+          }
+        }
+        setError(e.message || 'failed to load');
+      })
       .finally(() => setLoading(false));
   }, [adminToken, reloadCounter]);
 
@@ -235,7 +263,7 @@ export function DebugPage() {
     const tick = async () => {
       const started = performance.now();
       try {
-        const r = await adminFetch(`${API_URL}/debug/ping`, adminToken);
+        const r = await adminFetch(`${DEBUG_API_URL}/debug/ping`, adminToken);
         const totalMs = performance.now() - started;
         if (!r.ok) throw new Error(`${r.status}`);
         const json: { database_connected: boolean } = await r.json();

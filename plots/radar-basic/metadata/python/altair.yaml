@@ -1,222 +1,257 @@
 library: altair
+language: python
 specification_id: radar-basic
 created: '2025-12-23T18:12:32Z'
-updated: '2025-12-23T18:19:18Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468195082
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/radar-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/radar-basic/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - polar-projection
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-04-29T17:36:00Z'
+generated_by: claude-sonnet
+workflow_run: 25121583262
+issue: 744
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/altair/plot-dark.html
+quality_score: 83
 review:
   strengths:
-  - Excellent implementation of radar chart using Altair layered composition and geoshape
-    for the filled polygon
-  - Clean, well-organized code with clear separation of data preparation and visualization
-    layers
-  - Proper title format following the spec-id · library · pyplots.ai convention
-  - Good use of transparency (0.25) for the filled area as recommended in spec
-  - Well-positioned labels outside the chart boundary with appropriate offset
-  - Includes interactive tooltips showing category and score on hover
-  - Grid hexagons properly closed and matching the 6-axis layout
+  - 'Correct Okabe-Ito palette (#009E73 first, #D55E00 second) with full theme-adaptive
+    chrome across both renders'
+  - Interactive click-to-highlight selection using alt.selection_point — a distinctly
+    Altair feature that enriches the radar comparison
+  - 'Complete and well-labeled specification compliance: all six axes, closed polygons,
+    ring labels, outer category labels, legend'
+  - Both HTML and PNG output saved correctly per altair library rules
+  - Realistic, neutral employee performance data with clearly contrasting strength
+    profiles
   weaknesses:
-  - Only shows single series when spec allows 1-3 series for comparison
-  - Value range (70-90) is somewhat narrow; wider spread would better demonstrate
-    strengths and weaknesses
-  image_description: 'The plot displays a hexagonal radar chart showing employee performance
-    scores across 6 competencies. The chart uses a cohesive blue color scheme (#306998)
-    with the following elements:
+  - 'Fill/outline coordinate mismatch: mark_geoshape with project(type=''identity'',
+    reflectY=True) auto-fits the polygon bounding box to the viewport, while mark_line
+    uses a quantitative scale with domain=[-1.45, 1.45]. This causes the GeoJSON fills
+    to render significantly larger than the actual data outlines. Fix: replace mark_geoshape
+    fills with mark_line using filled=True on the same df_series_line data and same
+    quantitative scale.'
+  - 'Font sizes below minimum: category axis labels at fontSize=20 (spec min 22px)
+    and ring labels at fontSize=15 (spec min 18px). Increase to >=22px and >=18px
+    respectively.'
+  - Fill opacity at 18% (fillOpacity=0.18) below spec recommendation of ~25%. Raise
+    to 0.25.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "radar-basic · altair · anyplot.ai" in bold dark text — readable. Category axis labels (Communication, Technical Skills, Teamwork, Problem Solving, Leadership, Creativity) in dark text at fontSize=20 — readable. Ring labels (20, 40, 60, 80, 100) at fontSize=15 — small but visible. Legend with "Employee" title in dark text, Alice/Bob labels in secondary ink — readable.
+      Data: Alice polygon in #009E73 (Okabe-Ito 1), Bob polygon in #D55E00 (Okabe-Ito 2). Semi-transparent fills present but coordinate-mismatched (GeoJSON identity projection vs. quantitative scale) — fills appear ~30-40% oversized relative to outline polygons. Six hexagonal grid rings at correct intervals. Vertex points visible at size=350.
+      Legibility verdict: PASS
 
-    - **Data polygon**: Blue filled area with ~25% transparency, clearly showing the
-    performance profile
-
-    - **Axes**: 6 spokes radiating from center for Communication (85), Technical Skills
-    (90), Teamwork (75), Problem Solving (88), Leadership (70), and Creativity (82)
-
-    - **Grid lines**: Hexagonal grid lines at 5 levels (20, 40, 60, 80, 100) with
-    subtle gray color
-
-    - **Labels**: Category labels positioned outside the chart, value labels near
-    each data point
-
-    - **Data points**: Solid blue circles at each vertex of the polygon
-
-    - **Title**: "radar-basic · altair · pyplots.ai" at top in proper format'
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and category labels rendered in light text (#F0EFE8 / INK token) — clearly readable against dark surface. Ring labels use INK_MUTED (#A8A79F) — visible. Legend box uses ELEVATED_BG (#242420) with light text — readable. No dark-on-dark failures detected.
+      Data: Colors identical to light render — Alice #009E73, Bob #D55E00. #009E73 green remains clearly visible on dark background. Same fill misalignment present. Grid rings at INK_SOFT (#B8B7B0) 30% opacity — subtle but visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: All text readable; title, labels, and values are clear. Font sizes
-          are appropriate (22pt for labels, 18pt for values, 28pt title).
+        comment: Title (32px) and legend (20/22px) well-sized; category labels at
+          20px below 22px spec minimum; ring labels at 15px below 18px spec minimum.
+          All explicitly set.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; labels are well-positioned outside the chart
+        comment: Labels well-spaced at label_off=1.24; ring labels offset along top
+          spoke; no collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Data points and polygon clearly visible; markers sized well (size=500)
+        comment: Lines (strokeWidth=3.5) and points (size=350) well-sized. Fill/outline
+          misalignment distracting but elements remain readable.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single color scheme (blue) is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Chart is well-centered with balanced margins; fills canvas appropriately
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: Radar chart has no traditional X/Y axes; category labels are descriptive
-          but this criterion doesn't directly apply
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid subtle (opacity=0.3), no legend needed for single series
+        comment: Okabe-Ito positions 1 & 2; CVD-safe with clear luminance contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 3600x3600 square format appropriate for radar. Good canvas utilization;
+          minor edge whitespace imbalance.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct. Descriptive category labels. No units needed
+          for 0-100 competency scores.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Alice=#009E73 (OI-1), Bob=#D55E00 (OI-2). Light bg #FAF8F1, dark
+          bg #1A1A17. Theme tokens fully applied. Data colors identical between themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Correct palette, interactive highlight, no-axes layout, subtle grid.
+          Fill misalignment hurts polish. Above defaults but not publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: strokeWidth=0, subtle grid/spokes opacity, legend padding/corner-radius.
+          GeoJSON fill misalignment introduces visual noise.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear two-employee competency comparison. Interactive selection enhances
+          comparative reading. No static annotation or focal point.
     spec_compliance:
-      score: 24
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct radar/spider chart type
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Categories on axes, values as distances from center - correctly implemented
-      - id: SC-03
+        comment: Radar/spider/web chart correctly implemented.
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: 'Has filled polygon with transparency, gridlines, axis labels, closed
-          polygon. Missing: could use distinct colors for multiple series (spec says
-          1-3 series, only 1 shown)'
-      - id: SC-04
-        name: Data Range
+        comment: Grid rings, closed polygons, axis labels, legend all present. Fill
+          alignment issue (GeoJSON vs. quantitative scale mismatch). fillOpacity=0.18
+          vs spec ~0.25.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within 0-100 scale
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: All six axes correct; values normalized to [0,1]; both series fully
+          visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "radar-basic · altair · pyplots.ai"'
+        comment: 'Title format ''radar-basic · altair · anyplot.ai'' correct. Legend:
+          Employee with Alice/Bob.'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows radar chart features well with 6 axes, variation in values
-          (70-90 range). Single series only, but spec allows 1-3.
+        comment: Two-series comparison with contrasting strength profiles covers all
+          radar chart features.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Employee performance review scenario is realistic and matches spec's
-          first application example
+        comment: Employee performance review; workplace-standard competency labels;
+          neutral generic names.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values (70-90) are realistic performance scores but slightly narrow
-          range
+        comment: Scores 68-90 on 0-100 scale; realistic for high-performing employees;
+          no extreme values.
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Linear script structure: imports → data → coordinate calculations
-          → layers → save'
+        comment: Three helper functions (to_xy, to_xy_closed, make_geo) deviate from
+          pure flat pattern, though justified by radar complexity.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (hardcoded values, no random generation)
+        comment: Fully deterministic data; no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas used - all needed
+        comment: All imports used; importlib shadowing prevention is necessary.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Importlib pattern awkward; GeoJSON fill approach introduces coordinate
+          bug. Creative but wrong tool for the job.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair 6.1.0
+          API used.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Creative use of GeoJSON/geoshape for polygon fill, layered composition
-          typical of Altair. However, Altair doesn't have native radar chart support,
-          requiring manual polar-to-Cartesian conversion.
+        comment: alt.layer() composition, declarative encoding, alt.condition() for
+          interactive opacity. Radar requires manual Cartesian workarounds limiting
+          idiomatic score.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: alt.selection_point click-based series highlight, alt.Tooltip with
+          structured fields, HTML export, mark_geoshape creative (if imperfect) use.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - minimal-chrome
