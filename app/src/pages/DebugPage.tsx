@@ -5,7 +5,7 @@ import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
 import Tooltip from '@mui/material/Tooltip';
 
-import { API_URL, LIBRARIES, LIB_ABBREV } from '../constants';
+import { DEBUG_API_URL, LIBRARIES, LIB_ABBREV } from '../constants';
 import { specPath } from '../utils/paths';
 import { SectionHeader } from '../components/SectionHeader';
 import { typography, colors, semanticColors, fontSize } from '../theme';
@@ -206,7 +206,7 @@ export function DebugPage() {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    adminFetch(`${API_URL}/debug/status`, adminToken)
+    adminFetch(`${DEBUG_API_URL}/debug/status`, adminToken)
       .then(async r => {
         // 403 is the Cloudflare Access JWT path's denial: a signed-in Google
         // account that isn't on the admin_allowed_emails allow-list. Surface
@@ -235,7 +235,7 @@ export function DebugPage() {
     const tick = async () => {
       const started = performance.now();
       try {
-        const r = await adminFetch(`${API_URL}/debug/ping`, adminToken);
+        const r = await adminFetch(`${DEBUG_API_URL}/debug/ping`, adminToken);
         const totalMs = performance.now() - started;
         if (!r.ok) throw new Error(`${r.status}`);
         const json: { database_connected: boolean } = await r.json();
