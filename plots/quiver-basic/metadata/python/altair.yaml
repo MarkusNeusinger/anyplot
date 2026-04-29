@@ -1,165 +1,188 @@
 library: altair
+language: python
 specification_id: quiver-basic
 created: '2025-12-23T18:12:08Z'
-updated: '2025-12-23T18:18:07Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468198076
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling: []
+updated: '2026-04-29T23:19:24Z'
+generated_by: claude-sonnet
+workflow_run: 25137092714
+issue: 1014
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/altair/plot-dark.html
+quality_score: 83
 review:
   strengths:
-  - Excellent implementation of quiver plot in Altair which does not have native arrow
-    support
-  - Creative solution using rule marks for arrow shafts and arrowheads
-  - Good use of viridis colormap for magnitude encoding
-  - Clean, readable code following KISS principles
-  - Proper 16:9 aspect ratio with appropriate font sizes
-  - Clear circular rotation pattern demonstrating vector field concept
+  - 'Perfect spec compliance: all required quiver features (direction, magnitude-proportional
+    length, grid layout, magnitude color encoding) correctly implemented'
+  - Viridis colormap elegantly encodes magnitude as a second information dimension,
+    producing a visually informative and colorblind-safe result
+  - Vectorized arrowhead geometry (np.arctan2 + trig offsets) built cleanly using
+    pd.concat — sophisticated approach for Altair's primitive-based API
+  - 'Flawless code quality: flat script, seed set, all imports used, correct output
+    filenames with HTML export'
+  - 'Full theme-adaptive chrome: backgrounds, text, grid, legend frame all correctly
+    adapt between light and dark renders'
   weaknesses:
-  - Axis labels lack units (though for abstract mathematical coordinates, this is
-    acceptable)
-  - Grid is slightly too subtle at alpha 0.3
-  - Arrowheads at center (low magnitude vectors) are very small and harder to see
-  - No tooltips or interactivity despite Altair strength in this area
-  image_description: The plot displays a 15x15 grid of vector arrows showing a circular
-    rotation pattern (u = -y, v = x). The arrows form a clear counter-clockwise rotational
-    flow around the center. Colors use the viridis colormap, ranging from dark purple
-    at the center (low magnitude ~0) through teal/green in the middle to bright yellow
-    at the corners (high magnitude ~2.8). The title reads "quiver-basic · altair ·
-    pyplots.ai" at the top. X and Y axes are labeled "X Position" and "Y Position"
-    respectively, ranging from -2.5 to 2.5. A "Magnitude" legend appears on the right
-    side. Arrows have proper arrowheads and uniform spacing across the grid.
+  - Landscape canvas (1600x900) with equal-range axes distorts the circular rotation
+    field into an ellipse — use a square canvas (e.g. 900x900 or 1200x1200 with appropriate
+    scale_factor) to preserve circular geometry
+  - Near-origin arrows (low magnitude) are very short and produce only a faint mark
+    — consider a minimum arrow length or a slightly larger arrowhead for the low-magnitude
+    region
+  - Design refinement is functional but limited — no spine control, no visual focal
+    point beyond viridis coloring
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "quiver-basic · altair · anyplot.ai" in dark ink at top-center (28px), clearly readable. Axis labels "X Position" and "Y Position" in dark ink (22px), readable. Tick labels dense but legible in dark ink (18px). Legend "Magnitude" in top-right with elevated-bg fill (#FFFDF6) and stroke.
+      Data: 15x15 grid of 225 arrows colored with viridis — dark blue/purple at origin (low magnitude) through green to bright yellow at periphery (high magnitude). Arrowheads constructed via trig. Pattern shows circular rotation field, though distorted to ellipse by 16:9 canvas aspect ratio with equal-range square domain.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct, not pure black
+      Chrome: Title, axis labels, tick labels all rendered in light ink (#F0EFE8 / #B8B7B0) — clearly readable against dark surface. No dark-on-dark failures. Legend box uses #242420 elevated dark fill. Grid lines subtle and visible.
+      Data: Viridis colors are IDENTICAL to light render — dark blue at origin, green mid-range, yellow at periphery. Only chrome elements flipped between themes. No data color drift.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text or arrow elements
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Arrows are well-sized and visible; arrowheads could be slightly larger
-          for better visibility at smaller magnitudes
+        comment: All font sizes follow spec (title 28px, axis 22px, ticks 18px, legend
+          16px); tick labels are dense on both axes but readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Arrows well-spaced on 15x15 grid, legend in top-right does not collide
+          with data
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Near-origin arrows (low magnitude, dark blue) are very short and
+          marginally visible; outer arrows are clear
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is colorblind-safe with excellent contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas, balanced margins, plot fills ~60% of space
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels "X Position" and "Y Position" but no units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: true
-        comment: Grid is too faint (alpha 0.3) and legend is positioned okay but could
-          be closer to plot
-    spec_compliance:
-      score: 24
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct quiver/vector field plot
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y positions and U/V vectors correctly assigned
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'All spec features present: grid positioning, vector direction/length,
-          color encoding magnitude'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Axes show all data points with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
         score: 2
         max: 2
         passed: true
-        comment: Legend correctly shows "Magnitude" with proper color scale
-      - id: SC-06
-        name: Title Format
-        score: 1
+        comment: Viridis is perceptually uniform and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: 16:9 landscape canvas (1600x900) with equal [-2.5, 2.5] domains on
+          both axes distorts circular rotation pattern into an ellipse
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Correct format "quiver-basic · altair · pyplots.ai" but middle dot
-          separator could be more visible
-    data_quality:
-      score: 18
+        comment: Descriptive axis labels, correct title format quiver-basic · altair
+          · anyplot.ai
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis used correctly for continuous magnitude data; backgrounds
+          #FAF8F1 (light) and #1A1A17 (dark) both correct'
+    design_excellence:
+      score: 11
       max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Viridis color encoding of magnitude adds meaningful second information
+          dimension; theme-adaptive chrome fully implemented; no particular typographic
+          or compositional flair beyond this
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Grid opacity 0.10 is appropriately subtle; legend has proper fill/stroke
+          frame; rule stroke-width 2.5 appropriate
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Circular rotation flow pattern clearly visible; viridis magnitude
+          encoding guides eye to high-energy outer regions; no additional emphasis
+          or focal-point treatment
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Quiver plot implemented via mark_rule with x/y/x2/y2 plus manually
+          constructed arrowhead segments — correct approach for Altair
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Arrow direction, length proportional to magnitude, uniform grid spacing,
+          color encoding magnitude all implemented
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y positions, u/v components correctly mapped; circular rotation
+          field u=-y, v=x matches spec example
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title quiver-basic · altair · anyplot.ai correct; Magnitude colorbar
+          legend present
+    data_quality:
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows rotation pattern well, magnitude variation from center to edges;
-          could show different field patterns but circular rotation is appropriate
-          for basic example
+        comment: Demonstrates grid positioning, directional arrows, magnitude-proportional
+          length, color encoding; near-center arrows barely visible
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Circular rotation field (u=-y, v=x) is a classic physics example
-          representing vortex/rotational flow
+        comment: Circular rotation field is a canonical, neutral mathematical flow
+          field relevant to fluid dynamics and physics
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Grid range of -2 to 2 is sensible; 15x15 grid (225 arrows) provides
-          good coverage
+        comment: 15x15 = 225 arrows within specified 100-400 range; domain [-2,2]
+          with display scale [-2.5,2.5] provides appropriate padding
     code_quality:
       score: 10
       max: 10
@@ -169,43 +192,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save, no functions/classes'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) (though not strictly needed for deterministic
-          data)
+        comment: np.random.seed(42) set; data generation is deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas - all used
+        comment: os, altair, numpy, pandas — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Vectorized arrowhead construction using np.arctan2 and trig; pd.concat
+          for combining shaft/arrowhead DataFrames — clean and efficient
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png (scale_factor=3.0) and plot-{THEME}.html
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of mark_rule with x/y/x2/y2 for line segments; declarative
+          configure_* chain; alt.Color with continuous scheme; proper :Q encoding
+          types
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Altair's declarative syntax with mark_rule for arrow construction,
-          color encoding with viridis scheme. Creative solution for arrows using rule
-          marks with manual arrowhead construction. Could leverage more Altair-specific
-          features like interactivity or tooltips.
+        comment: Exploits Altair's rule mark for vector shaft + arrowhead segments
+          in a unified DataFrame; uses Altair's viridis scheme directly; demonstrates
+          non-native chart type built idiomatically from primitives
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - html-export
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
