@@ -1,171 +1,175 @@
 library: matplotlib
+language: python
 specification_id: radar-basic
 created: '2025-12-23T18:12:15Z'
-updated: '2025-12-23T18:18:12Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468192640
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/radar-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - polar-projection
-  - manual-ticks
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-04-29T16:59:13Z'
+generated_by: claude-sonnet
+workflow_run: 25121189020
+issue: 744
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Excellent application of radar chart for employee performance comparison - a textbook
-    use case
-  - 'Perfect implementation of all spec requirements: filled polygons with alpha 0.25,
-    gridlines at intervals of 20, axis labels at outer edge, distinct colors with
-    legend, polygon closure'
-  - Clean, readable code following KISS principle with deterministic data
-  - Well-balanced square layout appropriate for radar charts
-  - Colorblind-safe Python-themed color scheme (blue/yellow)
+  - Perfect spec compliance — all required radar features present (filled polygons,
+    gridlines, labeled axes, closed polygon, legend)
+  - Complete theme adaptation in both renders — no dark-on-dark or legibility failures
+  - Data tells a natural, immediately readable story (complementary employee profiles)
+  - Correct Okabe-Ito palette (green first, orange second) with proper alpha blending
+  - Clean linear code with deterministic data and no unnecessary abstractions
   weaknesses:
-  - Axis labels for radar charts do not have units, which is expected but costs 2
-    points in VQ-06
-  - Could show more variation in data (e.g., one very low or very high score) to better
-    demonstrate radar chart capabilities
-  - Basic matplotlib polar features used; advanced features like custom tick formatters
-    or spine styling not utilized
-  image_description: 'The plot displays a radar/spider chart comparing two employees
-    (Senior Developer in blue and Team Lead in yellow) across 6 competency dimensions:
-    Technical Skills, Communication, Creativity, Leadership, Problem Solving, and
-    Teamwork. The chart uses a polar coordinate system with concentric gridlines at
-    20, 40, 60, 80, and 100. Each employee''s values are connected to form filled
-    polygons with transparency (alpha ~0.25). The Senior Developer (blue) shows higher
-    scores in Technical Skills and Problem Solving, while the Team Lead (yellow) excels
-    in Teamwork and Creativity. The title follows the correct format at the top. Axis
-    labels are placed at the outer edges, and a legend is positioned in the upper
-    right outside the plot area.'
+  - Radial tick labels (ytick) set to 13pt — below the 16pt guideline; raise to 16pt
+  - Design excellence could be elevated with a more distinctive visual touch beyond
+    correct defaults
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), not pure white — PASS
+      Chrome: Title in large dark bold text, category axis labels in dark INK color clearly readable at outer ring, radial tick labels (20-100) in muted INK_MUTED color at smaller size but still readable, legend has ELEVATED_BG frame with INK_SOFT text
+      Data: First series #009E73 (Senior Developer) green polygon with filled area; second series #D55E00 (Team Lead) orange polygon with filled area; both at alpha=0.25 creating visible overlap region; vertex markers (markersize=10) clearly visible on each data point
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (~#1A1A17), not pure black — PASS
+      Chrome: Title flips to light/off-white text, clearly readable; category labels switch to light INK (#F0EFE8 equivalent); radial ticks switch to light muted color; legend frame switches to ELEVATED_BG dark elevated (#242420); grid lines remain subtle; no dark-on-dark failures detected
+      Data: Colors identical to light render — #009E73 green and #D55E00 orange unchanged; polygon fills same alpha=0.25; brand green clearly visible on dark surface
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 18pt, radial labels at 14pt - all clearly
-          readable
+        comment: Title 24pt, category xtick 18pt, legend 16pt explicit. Radial ytick
+          at 13pt below 16pt guideline.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all axis labels clearly positioned around the
-          perimeter
+        comment: No overlapping text; category labels well-spaced around outer ring.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers at 12pt with linewidth=3 are well-sized; minor deduction
-          for markers slightly large relative to data density
+        comment: Filled polygons clearly visible; markersize=10 prominent; linewidth=3
+          strong.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and Yellow (#FFD43B) provide excellent contrast, colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Square 12x12 figure, radar chart fills canvas well, legend positioned
-          outside without overlapping data
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: Radar charts don't have traditional axis labels with units; categories
-          are descriptive but no units applicable
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid at alpha=0.4 with dashed lines is subtle, legend well-placed
-          outside chart
+        comment: Okabe-Ito green/orange is colorblind-safe; not a red-green pair.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Radar fills good proportion of square canvas; minor unused space
+          at bottom near legend.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Category labels are descriptive domain names; radial gridlines provide
+          scale context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1/#1A1A17;
+          both renders fully theme-correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured defaults: two-tier title, proper palette,
+          theme-adaptive chrome, styled legend. Not FiveThirtyEight-level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid alpha=0.18 subtle; polar spine colored; legend frame uses ELEVATED_BG;
+          rlabel_position avoids collision.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Contrasting polygon shapes convey complementary profiles naturally;
+          viewer immediately sees the story.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct radar/spider chart type
+        comment: Correct polar/radar chart with polygon fill.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on axes, values as polygon vertices - correct mapping
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Filled polygons with alpha ~0.25, gridlines at 20/40/60/80/100, axis
-          labels at outer edge, distinct colors, legend, polygon closed
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: filled polygons alpha=0.25, gridlines 20-100,
+          labeled axes, distinct colors, legend, closed polygon.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 0-100 scale as recommended in spec, all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Six competency categories correctly mapped; values on 0-100 scale;
+          both series fully rendered.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels match data series names correctly
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: '"`Employee Performance · radar-basic · matplotlib · pyplots.ai`"
-          follows required format'
+        comment: Title includes radar-basic · matplotlib · anyplot.ai; legend labels
+          match data series.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows two series for comparison with different profiles; could show
-          more varied patterns (e.g., one very weak category)
+        comment: Multi-series comparison, overlapping polygons, full range utilized,
+          spread across all axes.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Employee performance review is a classic, realistic radar chart application
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values 65-92 are realistic performance scores on 0-100 scale
+        comment: Employee performance review is a canonical, neutral business use
+          case.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Performance scores 48-96 realistic on 0-100 scale; asymmetry between
+          profiles is plausible.
     code_quality:
       score: 10
       max: 10
@@ -175,40 +179,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save, no functions/classes'
+        comment: 'Linear: theme tokens -> data -> plot -> save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data, no randomness
+        comment: Fully deterministic hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy, both used
+        comment: os, matplotlib.pyplot, numpy — all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current matplotlib polar API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; explicit polygon closing is clear; no over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches=tight, facecolor=PAGE_BG.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses matplotlib's polar subplot correctly; could leverage additional
-          features like custom radial axis formatting or fill_between alternatives
+        comment: Correct polar subplot, set_theta_offset/direction, set_rlabel_position,
+          proper ax.fill()/ax.plot() on polar axes.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses set_theta_offset(pi/2) + set_theta_direction(-1) for clockwise-from-top
+          orientation (matplotlib-specific polar control), set_rlabel_position.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - manual-ticks
+  patterns:
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
