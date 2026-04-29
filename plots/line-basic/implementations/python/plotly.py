@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-basic: Basic Line Plot
-Library: plotly | Python 3.13
-Quality: pending | Updated: 2026-04-29
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-04-29
 """
 
 import os
