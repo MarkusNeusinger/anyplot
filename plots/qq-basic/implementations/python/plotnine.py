@@ -1,52 +1,58 @@
-""" pyplots.ai
+""" anyplot.ai
 qq-basic: Basic Q-Q Plot
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: plotnine 0.15.3 | Python 3.14.4
+Quality: 85/100 | Updated: 2026-04-27
 """
+
+import os
 
 import numpy as np
 import pandas as pd
-from plotnine import aes, element_text, geom_abline, geom_point, ggplot, labs, theme, theme_minimal
-from scipy import stats
-
-
-# Data - generate sample with slight right skew to show Q-Q diagnostic capability
-np.random.seed(42)
-n_points = 100
-sample = np.concatenate(
-    [
-        np.random.randn(80) * 15 + 50,  # Main normal component
-        np.random.randn(20) * 10 + 75,  # Slight right tail
-    ]
+from plotnine import (
+    aes,
+    element_line,
+    element_rect,
+    element_text,
+    ggplot,
+    labs,
+    stat_qq,
+    stat_qq_line,
+    theme,
+    theme_minimal,
 )
 
-# Calculate theoretical quantiles (normal distribution)
-sample_sorted = np.sort(sample)
-n = len(sample_sorted)
-theoretical_quantiles = stats.norm.ppf((np.arange(1, n + 1) - 0.5) / n)
 
-# Standardize sample for comparison
-sample_mean = np.mean(sample_sorted)
-sample_std = np.std(sample_sorted, ddof=1)
-sample_quantiles = (sample_sorted - sample_mean) / sample_std
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"
 
-df = pd.DataFrame({"theoretical": theoretical_quantiles, "sample": sample_quantiles})
+# Data - sample with slight right skew to demonstrate Q-Q diagnostic capability
+np.random.seed(42)
+sample = np.concatenate([np.random.randn(80) * 15 + 50, np.random.randn(20) * 10 + 75])
+df = pd.DataFrame({"sample": sample})
 
 # Plot
 plot = (
-    ggplot(df, aes(x="theoretical", y="sample"))
-    + geom_abline(intercept=0, slope=1, color="#FFD43B", size=1.5, linetype="dashed")
-    + geom_point(color="#306998", alpha=0.7, size=4)
-    + labs(x="Theoretical Quantiles", y="Sample Quantiles", title="qq-basic · plotnine · pyplots.ai")
+    ggplot(df, aes(sample="sample"))
+    + stat_qq_line(color=INK_SOFT, size=1.2, linetype="dashed")
+    + stat_qq(color=BRAND, alpha=0.7, size=4)
+    + labs(x="Theoretical Quantiles (Standard Normal)", y="Sample Quantiles", title="qq-basic · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+        panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
+        axis_title=element_text(color=INK, size=20),
+        axis_text=element_text(color=INK_SOFT, size=16),
+        plot_title=element_text(color=INK, size=24),
+        axis_line=element_line(color=INK_SOFT),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)

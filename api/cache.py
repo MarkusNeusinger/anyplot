@@ -21,14 +21,42 @@ T = TypeVar("T")
 
 logger = logging.getLogger(__name__)
 
-# Global cache instance (configured via settings)
-_cache: TTLCache = TTLCache(maxsize=settings.cache_maxsize, ttl=settings.cache_ttl)
 
-# Per-key locks to prevent cache stampede (~20-30 unique keys, memory negligible)
+class _LockPruningTTLCache(TTLCache):
+    """TTLCache that prunes the per-key asyncio.Lock when an entry is evicted.
+
+    Binding lock lifecycle to cache-entry lifecycle gives us two guarantees
+    a separate bounded `_locks` collection cannot:
+
+    1. **No unbounded growth** — every lock that gets created either ends up
+       in the cache (and is later pruned via TTL/LRU/explicit-delete) or is
+       cleaned up by clear_cache().
+    2. **No race between lock-eviction and lock-holder** — a lock can only
+       disappear once its cache entry has been written, which means any
+       in-flight `factory()` will have called `set_cache(key, ...)` before
+       the lock entry can be reaped. New callers either find the cached
+       value (no factory re-run) or take a fresh lock (which is fine,
+       because at that point nobody else is in the critical section).
+    """
+
+    def __delitem__(self, key, *args, **kwargs):
+        try:
+            super().__delitem__(key, *args, **kwargs)
+        finally:
+            _locks.pop(key, None)
+
+
+# Global cache instance. Stores `(value, monotonic_set_at)` tuples — folding
+# the timestamp into the entry keeps cache age + payload on a single lifecycle
+# (was a separate _timestamps dict that grew unbounded under high-cardinality
+# traffic such as /plots/filter or /og/* keys).
+_cache: _LockPruningTTLCache = _LockPruningTTLCache(maxsize=settings.cache_maxsize, ttl=settings.cache_ttl)
+
+# Per-key locks for stampede protection. Plain dict; lifecycle is bound to
+# `_cache` via `_LockPruningTTLCache.__delitem__`. Refresh-locks stored under
+# `_refresh:<key>` never have a corresponding cache entry and are pruned by
+# `_background_refresh` on completion.
 _locks: dict[str, asyncio.Lock] = {}
-
-# Timestamps for stale-while-revalidate (key -> monotonic time of last set)
-_timestamps: dict[str, float] = {}
 
 
 def _get_lock(key: str) -> asyncio.Lock:
@@ -68,7 +96,8 @@ def get_cache(key: str) -> Any | None:
     Returns:
         Cached value or None if not found.
     """
-    return _cache.get(key)
+    entry = _cache.get(key)
+    return entry[0] if entry is not None else None
 
 
 def set_cache(key: str, value: Any) -> None:
@@ -79,14 +108,13 @@ def set_cache(key: str, value: Any) -> None:
         key: Cache key.
         value: Value to cache.
     """
-    _cache[key] = value
-    _timestamps[key] = time.monotonic()
+    _cache[key] = (value, time.monotonic())
 
 
 def cache_age(key: str) -> float | None:
     """Seconds since key was last set, or None if not tracked."""
-    ts = _timestamps.get(key)
-    return time.monotonic() - ts if ts is not None else None
+    entry = _cache.get(key)
+    return time.monotonic() - entry[1] if entry is not None else None
 
 
 def clear_cache() -> None:
@@ -100,7 +128,10 @@ def clear_cache() -> None:
         >>> clear_cache()  # Invalidates all cached responses
     """
     _cache.clear()
-    _timestamps.clear()
+    # Per-entry locks are pruned by _LockPruningTTLCache.__delitem__, but
+    # also clear refresh-locks (`_refresh:*`) that have no cache entry and
+    # any locks for cold-miss attempts whose factory never called set_cache.
+    _locks.clear()
 
 
 def clear_cache_by_pattern(pattern: str) -> int:
@@ -120,9 +151,9 @@ def clear_cache_by_pattern(pattern: str) -> int:
         42
     """
     keys_to_delete = [key for key in _cache.keys() if pattern in key]
+    # _LockPruningTTLCache.__delitem__ also prunes _locks[key].
     for key in keys_to_delete:
         del _cache[key]
-        _timestamps.pop(key, None)
     return len(keys_to_delete)
 
 
@@ -246,14 +277,27 @@ def _schedule_refresh(key: str, factory: Callable[[], Awaitable[Any]]) -> None:
     lock = _get_lock(refresh_key)
     if lock.locked():
         return  # refresh already in progress
-    asyncio.create_task(_background_refresh(key, factory, lock))
+    asyncio.create_task(_background_refresh(key, refresh_key, factory, lock))
 
 
-async def _background_refresh(key: str, factory: Callable[[], Awaitable[Any]], lock: asyncio.Lock) -> None:
-    """Run factory in background and update cache. Errors are logged, not raised."""
-    async with lock:
-        try:
-            result = await factory()
-            set_cache(key, result)
-        except Exception:
-            logger.warning("Background cache refresh failed for key: %s", key, exc_info=True)
+async def _background_refresh(
+    key: str, refresh_key: str, factory: Callable[[], Awaitable[Any]], lock: asyncio.Lock
+) -> None:
+    """Run factory in background and update cache. Errors are logged, not raised.
+
+    Refresh-locks (`_refresh:<key>`) have no corresponding cache entry, so the
+    `_LockPruningTTLCache.__delitem__` hook never reaps them — they would
+    accumulate one-per-refreshed-key indefinitely. Pop in `finally` to bound
+    `_locks` growth. A duplicate-task race (a second caller taking the same
+    released lock before pop runs) only costs duplicated factory work, not
+    correctness, since `set_cache` is last-write-wins.
+    """
+    try:
+        async with lock:
+            try:
+                result = await factory()
+                set_cache(key, result)
+            except Exception:
+                logger.warning("Background cache refresh failed for key: %s", key, exc_info=True)
+    finally:
+        _locks.pop(refresh_key, None)

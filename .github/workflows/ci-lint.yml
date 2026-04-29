@@ -14,6 +14,10 @@ on:
       - 'specification/**'
       - 'implementation/**'
 
+concurrency:
+  group: ci-lint-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     name: Run Linting
@@ -22,7 +26,7 @@ jobs:
       contents: read
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       with:
         fetch-depth: 0
 
@@ -53,13 +57,13 @@ jobs:
 
     - name: Set up Python
       if: steps.check.outputs.should_lint == 'true'
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6
       with:
-        python-version: '3.14'
+        python-version: '3.13'
 
     - name: Install uv
       if: steps.check.outputs.should_lint == 'true'
-      uses: astral-sh/setup-uv@v7
+      uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
 
     - name: Install dependencies
       if: steps.check.outputs.should_lint == 'true'

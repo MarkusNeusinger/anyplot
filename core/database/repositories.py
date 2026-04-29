@@ -6,7 +6,7 @@ Provides abstraction layer between API and database models.
 
 from typing import Generic, Optional, TypeVar
 
-from sqlalchemy import func, select
+from sqlalchemy import String, cast, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, undefer
 
@@ -152,12 +152,27 @@ class SpecRepository(BaseRepository[Spec]):
         return result.scalar_one_or_none()
 
     async def get_all(self) -> list[Spec]:
-        """Get all specs with their implementations and library (deferred heavy fields excluded)."""
-        result = await self.session.execute(select(Spec).options(selectinload(Spec.impls).selectinload(Impl.library)))
+        """Get all specs with their implementations and library.
+
+        Lightweight: `Impl.code` stays deferred. Most callers (specs/plots/
+        seo/insights/stats/debug routers) only need the listing surface;
+        eager-loading every code blob would be a multi-MB regression.
+        Callers that iterate `spec.impls` and read `impl.code` on an async
+        session must use `get_all_with_code()` to avoid MissingGreenlet.
+        """
+        impls_loader = selectinload(Spec.impls)
+        result = await self.session.execute(select(Spec).options(impls_loader.selectinload(Impl.library)))
         return list(result.scalars().all())
 
     async def get_all_with_code(self) -> list[Spec]:
-        """Get all specs with implementations (code + library eager-loaded)."""
+        """Get all specs with implementations (code + library eager-loaded).
+
+        Use this for paths that read `impl.code` on every implementation —
+        currently only the MCP `list_specs` and `search_specs` tools.
+        Touching `impl.code` after `get_all()` raises MissingGreenlet on
+        AsyncSession because the column is deferred and the lazy-load would
+        emit a sync SELECT.
+        """
         impls_loader = selectinload(Spec.impls)
         result = await self.session.execute(
             select(Spec).options(impls_loader.selectinload(Impl.library), impls_loader.undefer(Impl.code))
@@ -170,14 +185,22 @@ class SpecRepository(BaseRepository[Spec]):
         return [row[0] for row in result.fetchall()]
 
     async def search_by_tags(self, tags: list[str]) -> list[Spec]:
-        """Search specs by tags."""
-        from sqlalchemy import String, cast, or_
+        """Search specs by tags. Eager-loads impls + library + code.
 
+        impl.library and impl.code are both required by MCP
+        search_specs_by_tags (server.py iterates impls and reads both); not
+        eager-loading them on an async session raises MissingGreenlet.
+        """
         filters = []
         for tag in tags:
             filters.append(cast(Spec.tags, String).contains(f'"{tag}"'))
 
-        result = await self.session.execute(select(Spec).where(or_(*filters)).options(selectinload(Spec.impls)))
+        impls_loader = selectinload(Spec.impls)
+        result = await self.session.execute(
+            select(Spec)
+            .where(or_(*filters))
+            .options(impls_loader.selectinload(Impl.library), impls_loader.undefer(Impl.code))
+        )
         return list(result.scalars().all())
 
     async def upsert(self, spec_data: dict) -> Spec:
@@ -274,11 +297,16 @@ class ImplRepository(BaseRepository[Impl]):
         Defaults to language_id="python" so existing callers keep working. Pass ``language_id``
         explicitly to disambiguate when multiple languages exist for the same (spec, library).
         """
+        # selectinload(Impl.library) — MCP get_implementation reads impl.library
+        # on an async session; without eager-load it raises MissingGreenlet.
         result = await self.session.execute(
             select(Impl)
             .where(Impl.spec_id == spec_id, Impl.library_id == library_id, Impl.language_id == language_id)
             .options(
-                undefer(Impl.code), undefer(Impl.review_image_description), undefer(Impl.review_criteria_checklist)
+                selectinload(Impl.library),
+                undefer(Impl.code),
+                undefer(Impl.review_image_description),
+                undefer(Impl.review_criteria_checklist),
             )
         )
         return result.scalar_one_or_none()

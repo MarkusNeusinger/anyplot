@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import secrets
 import time
 from collections import Counter
 from datetime import datetime, timedelta, timezone
@@ -19,6 +20,22 @@ from core.database import SpecRepository
 
 
 router = APIRouter(prefix="/debug", tags=["debug"])
+
+
+def require_admin(x_admin_token: str | None = Header(default=None)) -> None:
+    """Gate sensitive /debug/* endpoints behind a shared secret.
+
+    Without this gate, /debug/status and /debug/ping reflect quality scores,
+    weakness aggregates, and DB latency to the public internet. When
+    settings.admin_token is unset the endpoint is disabled (503), so a
+    misconfigured prod deploy fails closed instead of fails open.
+    """
+    expected = settings.admin_token
+    if not expected:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Debug endpoints not configured")
+    if not secrets.compare_digest(x_admin_token or "", expected):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid admin token")
+
 
 # Threshold for identifying specs that weren't auto-approved (matches workflow ai-approved threshold)
 LOW_SCORE_THRESHOLD = 90
@@ -137,7 +154,7 @@ class DebugStatusResponse(BaseModel):
 # ============================================================================
 
 
-@router.get("/status", response_model=DebugStatusResponse)
+@router.get("/status", response_model=DebugStatusResponse, dependencies=[Depends(require_admin)])
 async def get_debug_status(request: Request, db: AsyncSession = Depends(require_db)) -> DebugStatusResponse:
     """
     Get comprehensive debug dashboard data.
@@ -379,7 +396,7 @@ class PingResponse(BaseModel):
     timestamp: str
 
 
-@router.get("/ping", response_model=PingResponse)
+@router.get("/ping", response_model=PingResponse, dependencies=[Depends(require_admin)])
 async def ping(db: AsyncSession = Depends(require_db)) -> PingResponse:
     """Ping the database with SELECT 1 and report round-trip latency.
 
@@ -417,7 +434,8 @@ async def invalidate_cache(x_cache_token: str | None = Header(default=None)) -> 
     expected = settings.cache_invalidate_token
     if not expected:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Cache invalidation not configured")
-    if x_cache_token != expected:
+    # Constant-time compare to avoid byte-by-byte token recovery via timing.
+    if not secrets.compare_digest(x_cache_token or "", expected):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid cache token")
 
     stats_before = get_cache_stats()

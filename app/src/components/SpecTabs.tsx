@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -210,13 +211,17 @@ export function SpecTabs({
     return tagCounts[paramName]?.[value] ?? null;
   }, [tagCounts]);
 
-  // Handle tag click - navigate to filtered plots page (full page navigation)
+  const navigate = useNavigate();
+
+  // Handle tag click — in-app navigation (preserves AppDataContext, no full reload).
+  // The previous `window.location.href = …` forced /specs, /libraries, /stats
+  // to be re-fetched on every tag click on a SpecTabs page.
   const handleTagClick = useCallback(
     (paramName: string, value: string) => {
       onTrackEvent?.('tag_click', { param: paramName, value, source: 'spec_detail' });
-      window.location.href = `/?${paramName}=${encodeURIComponent(value)}`;
+      navigate(`/?${paramName}=${encodeURIComponent(value)}`);
     },
-    [onTrackEvent]
+    [navigate, onTrackEvent]
   );
 
   const toggleCategory = (category: string) => {

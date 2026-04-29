@@ -159,7 +159,7 @@ Generate the upgraded spec now:"""
     client = anthropic.Anthropic(api_key=api_key, timeout=300.0)
 
     response = client.messages.create(
-        model=settings.claude_model, max_tokens=4000, messages=[{"role": "user", "content": prompt}]
+        model=settings.claude_model, max_tokens=settings.claude_max_tokens, messages=[{"role": "user", "content": prompt}]
     )
 
     upgraded_content = response.content[0].text

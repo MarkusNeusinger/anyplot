@@ -344,6 +344,28 @@ export function SpecPage() {
     })),
   };
 
+  // SoftwareSourceCode schema for impl detail pages — eligibility for Google's
+  // code-sample rich result and SGE/AIO surfaces. anyplot's unique content IS
+  // the LLM-generated source code samples (2696 impl pages), so this is the
+  // single biggest unrealized SEO lever per the 2026-04-26 audit.
+  const softwareSourceJsonLd =
+    mode === 'detail' && urlLanguage && selectedLibrary
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'SoftwareSourceCode',
+          name: `${specData.title} (${selectedLibrary})`,
+          description: specData.description,
+          programmingLanguage: urlLanguage === 'python' ? 'Python' : urlLanguage,
+          codeSampleType: 'code snippet',
+          codeRepository: 'https://github.com/MarkusNeusinger/anyplot',
+          url: canonical,
+          isBasedOn: `https://anyplot.ai/${specId}`,
+          author: { '@type': 'Organization', name: 'anyplot', url: 'https://anyplot.ai' },
+          license: 'https://opensource.org/licenses/MIT',
+          ...(currentImpl?.preview_url ? { image: currentImpl.preview_url } : {}),
+        }
+      : null;
+
   return (
     <>
       <Helmet>
@@ -355,6 +377,11 @@ export function SpecPage() {
         <meta property="og:url" content={canonical} />
         <link rel="canonical" href={canonical} />
         <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd).replace(/</g, '\\u003c')}</script>
+        {softwareSourceJsonLd && (
+          <script type="application/ld+json">
+            {JSON.stringify(softwareSourceJsonLd).replace(/</g, '\\u003c')}
+          </script>
+        )}
       </Helmet>
 
       <Box sx={{ pt: 1.5, pb: 4 }}>

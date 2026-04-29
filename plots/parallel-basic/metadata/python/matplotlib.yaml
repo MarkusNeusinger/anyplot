@@ -1,174 +1,192 @@
 library: matplotlib
+language: python
 specification_id: parallel-basic
 created: '2025-12-23T18:11:57Z'
-updated: '2025-12-23T18:18:09Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468186633
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  - custom-legend
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-04-27T06:18:02Z'
+generated_by: claude-sonnet
+workflow_run: 24978040577
+issue: 820
+python_version: 3.14.4
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 72
 review:
   strengths:
-  - Excellent implementation of parallel coordinates from scratch using matplotlib
-    primitives
-  - Proper normalization to [0,1] range for fair comparison across dimensions
-  - Clear color coding with colorblind-safe palette (Python blue, yellow, green)
-  - Informative axis labels showing both dimension name and original value range
-  - Good use of alpha transparency (0.5) for overlapping lines
-  - Correct title format following pyplots.ai convention
-  - Reproducible with fixed random seed
+  - 'Excellent dataset choice: Iris data is the canonical parallel coordinates example,
+    clearly showing species separation across all four dimensions'
+  - Multi-line x-tick labels with embedded measurement ranges (e.g. Sepal Length\n(4.3-7.9
+    cm)) are informative and idiomatic for matplotlib
+  - Clean KISS code structure with np.random.seed(42) and realistic data bounds via
+    clip()
+  - Custom legend using plt.Line2D handles is correct matplotlib pattern
   weaknesses:
-  - Legend positioned in upper right overlaps some data lines; consider placing it
-    outside the plot area or in a less obstructed corner
-  - Line width of 2 could be increased to 2.5-3 for better visibility at full 4800x2700
-    resolution
-  image_description: 'The plot shows a parallel coordinates visualization with 4 vertical
-    axes representing Iris dataset features: Sepal Length (4.3-7.9 cm), Sepal Width
-    (2.0-4.4 cm), Petal Length (1.3-6.6 cm), and Petal Width (0.1-2.5 cm). Each observation
-    is represented as a line connecting normalized values (0-1) across all axes. Three
-    species are color-coded: Setosa (blue, #306998), Versicolor (yellow, #FFD43B),
-    and Virginica (green, #4CAF50). The title reads "parallel-basic · matplotlib ·
-    pyplots.ai". Lines use alpha=0.5 for transparency. A legend in the upper right
-    identifies the species. The plot clearly shows the clustering patterns - Setosa
-    (blue) has distinctly low petal length and width values, while Versicolor and
-    Virginica show more overlap but are still distinguishable.'
+  - 'Wrong palette (critical): Code uses #306998 (Python Blue), #FFD43B, #4CAF50 —
+    must be Okabe-Ito positions 1-3: setosa=#009E73, versicolor=#D55E00, virginica=#0072B2'
+  - 'Missing ANYPLOT_THEME handling (critical): No os.getenv(ANYPLOT_THEME), no PAGE_BG/ELEVATED_BG/INK/INK_SOFT
+    tokens; fig/ax background, tick colors, spine colors, legend frame, grid color
+    all unset'
+  - 'Wrong output filename (critical): plt.savefig(plot.png) must be plt.savefig(f"plot-{THEME}.png",
+    dpi=300, bbox_inches="tight", facecolor=PAGE_BG)'
+  - 'Title branding error: line 85 has pyplots.ai instead of anyplot.ai'
+  - 'Dashed grid too prominent: linestyle="--" at alpha=0.3 — must be solid at alpha=0.10'
+  - 'No spine removal: top and right spines should be removed'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — correct for light theme. Pipeline-injected theming applies despite code lacking ANYPLOT_THEME logic.
+      Chrome: Title "parallel-basic · matplotlib · anyplot.ai" in dark text — readable (images show anyplot.ai; code line 85 has pyplots.ai regression). Y-axis label "Normalized Value" readable. X-tick labels with variable names and cm ranges clearly readable. Legend in upper right with species labels readable.
+      Data: 150 polylines across 4 parallel axes colored by species with alpha=0.5. Colors in images appear as teal, orange, blue (Okabe-Ito-like from pipeline correction; code has #306998/#FFD43B/#4CAF50). Clear species separation visible especially at petal axes. Setosa cluster distinctly low on petal dimensions.
+      Legibility verdict: PASS — all text readable against light background. No light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17) — correct for dark theme. Pipeline-injected theming.
+      Chrome: Title, axis labels, tick labels, and legend all appear as light-colored text — readable against dark background. No dark-on-dark failures visible.
+      Data: Line colors appear identical to light render (teal, orange, blue) — correct behavior. Same species separation pattern visible. Setosa cluster still clearly identifiable in petal dimensions.
+      Legibility verdict: PASS — all text readable in dark render. No dark-on-dark failures detected.
+
+    Note: Images reflect pipeline-corrected output. Source code lacks ANYPLOT_THEME handling, uses non-Okabe-Ito colors (#306998, #FFD43B, #4CAF50), and saves to plot.png. These are persistent unfixed weaknesses from attempt 2.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 22
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 18pt, y-label at 20pt, tick labels
-          at 16pt - all clearly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, all labels are clear
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 8
         passed: true
-        comment: Lines are visible with alpha=0.5 and linewidth=2, appropriate for
-          150 observations, though could be slightly thicker for better clarity at
-          full resolution
+        comment: All font sizes explicitly set (title 24, ylabel 20, xticklabels 18,
+          ytick 16, legend 16). Missing fontweight='medium' on title; tick colors
+          rely on pipeline.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 150-line density causes inherent crossing but all labels readable;
+          multi-line x-tick labels prevent collision.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: alpha=0.5 appropriate for 150 observations; linewidth=2 is at minimum
+          threshold.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/Yellow/Green palette is colorblind-safe, good contrast between
-          categories
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Code palette includes #FFD43B (yellow) with poor luminance on light
+          backgrounds.'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good canvas utilization, plot fills the space well with balanced
-          margins
+        comment: Good canvas utilization; tight_layout applied; minor unused horizontal
+          space at edges.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units in parentheses (cm ranges shown)
+        comment: X-tick labels embed variable name and cm range; Normalized Value
+          appropriate for normalized data.
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: Grid is horizontal only (y-axis) which is appropriate, but legend
-          could be better positioned - currently in upper right which overlaps some
-          data lines
+        comment: 'Code uses #306998 (Python Blue), #FFD43B, #4CAF50 — not Okabe-Ito.
+          No ANYPLOT_THEME handling. Saves to plot.png. Pipeline masks defects in
+          renders.'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured library default. Parallel coordinates structure clean
+          with transparency. No custom typography, no spine removal, no intentional
+          hierarchy.
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Dashed grid (linestyle='--', alpha=0.3) too prominent; guide requires
+          solid at alpha<=0.10. Top/right spines not removed. Minimal refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Iris data is strong classical choice showing natural separation.
+          No visual emphasis (color weight, line width variation) guides viewer to
+          key insight (Setosa petal cluster).
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct parallel coordinates chart type
+        comment: 'Correct parallel coordinates: 4 vertical axes, polylines connecting
+          each observation across all dimensions.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Each dimension correctly mapped to a vertical axis, lines connect
-          values
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Normalization applied, color coding by category, transparency for
-          overlapping lines
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: multiple dimensions, color coding by
+          category, normalization to [0,1], 150 observations.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full normalized range (-0.05 to 1.05), x-axis labels
-          show original scale ranges
-      - id: SC-05
-        name: Legend Accuracy
+        comment: Correct mapping of all 4 Iris dimensions; species color coding applied;
+          full data range displayed.
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly identifies all three species with matching colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "parallel-basic · matplotlib · pyplots.ai"'
+        max: 3
+        passed: false
+        comment: Code line 85 has 'pyplots.ai' instead of 'anyplot.ai'. Legend species
+          labels correct.
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows clustering patterns well, distinct separation visible especially
-          for Setosa, some overlap between Versicolor/Virginica demonstrates real-world
-          ambiguity
+        comment: Shows clustering (Setosa separate in petals), crossing patterns,
+          and normalization enabling cross-variable comparison.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Uses Iris dataset pattern which is a classic, well-known real-world
-          scenario for multivariate analysis
+        comment: 'Iris botanical dataset: real-world, scientifically established,
+          neutral, canonical for parallel coordinates.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic for Iris measurements, though clipping bounds
-          are slightly narrower than actual Iris dataset ranges
+        comment: Measurements match real Iris ranges; np.random.seed(42) ensures reproducibility;
+          clip() prevents biological impossibilities.
     code_quality:
       score: 9
       max: 10
@@ -178,34 +196,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: 'Clean linear structure: imports → data → plot → save; no functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before all random data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib, numpy, pandas used - all necessary
+        comment: Only matplotlib.pyplot, numpy, and pandas imported; all used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: iterrows() pattern standard for parallel coordinates in matplotlib;
+          plt.Line2D legend handles idiomatic.
+      - id: CQ-05
+        name: Output & API
         score: 0
         max: 1
+        passed: false
+        comment: plt.savefig('plot.png') — must be plt.savefig(f'plot-{THEME}.png',
+          dpi=300, bbox_inches='tight', facecolor=PAGE_BG).
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
         passed: true
-        comment: Uses iterrows() which works but is not the most efficient pandas
-          pattern
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
+        comment: Correct use of ax.plot(), ax.set_xticks()/set_xticklabels(), manual
+          legend handles. PC built without dedicated API which is correct for matplotlib.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
         passed: true
-        comment: Saves as plot.png with correct dpi and bbox_inches
-    library_features:
-      score: 3
-      max: 5
-      items: []
-  verdict: APPROVED
+        comment: Manual parallel axes using sequential integer x-positions is distinctly
+          matplotlib. Multi-line tick labels with embedded data ranges are a nice
+          idiomatic touch.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - grid-styling

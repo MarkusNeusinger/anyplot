@@ -1,38 +1,274 @@
 library: pygal
+language: python
 specification_id: parallel-basic
 created: '2025-12-23T18:13:47Z'
-updated: '2025-12-23T18:40:36Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468190637
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-27T06:25:39Z'
+generated_by: claude-sonnet
+workflow_run: 24978377108
+issue: 820
+python_version: 3.14.4
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/pygal/plot.html
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/pygal/plot-dark.html
 quality_score: 83
+review:
+  strengths:
+  - Correct Okabe-Ito palette applied — Setosa=#009E73, Versicolor=#D55E00, Virginica=#0072B2
+    in canonical order
+  - 'Visual hierarchy via dual line widths: mean lines at stroke 7 (summary) vs. observation
+    lines at stroke 3 (detail) effectively layers data'
+  - 'Both renders theme-correct — warm #FAF8F1 light background, #1A1A17 dark background,
+    text adapts cleanly between themes'
+  - Data normalization to [0,1] correctly enables cross-dimension comparison; all
+    four Iris dimensions included with proper axis labels and units
+  - 'Perfect spec compliance: 45 observations, 3 categorized species, transparency
+    (opacity=0.5) for overlap handling, interactive HTML output alongside PNG'
+  - 'Code quality: KISS structure with deterministic hardcoded Iris data, clean imports,
+    no functions/classes'
+  - sys.path manipulation correctly prevents shadowing the installed pygal package
+  weaknesses:
+  - Design sophistication is at the 'configured library default' level — no emphasis
+    on the key insight (Setosa's clear petal-dimension separation from the other two
+    species), no callout annotations or focal-point color contrast to guide the viewer
+  - 'Visual refinement limited: parallel-coordinates context calls for faint vertical
+    axis lines at each dimension (to give the ''parallel axes'' visual identity),
+    which are absent here — the plot reads more as a multi-line chart than classic
+    parallel coordinates'
+  - Tick label font size (major_label_font_size=52) is explicitly set but looks visually
+    small in the rendered 4800x2700 canvas, especially for the x-axis dimension labels
+    which are compressed at the bottom
+  - Legend icon size (legend_box_size=52) is large but the legend text for the three
+    species is crowded at the bottom without sufficient separation from the plot area
+  - 'LM-02: HTML output is generated (a distinctive pygal feature) but not leveraged
+    further — e.g. pygal''s tooltip content could be enriched with actual measurement
+    values to distinguish the interactive experience from the static PNG'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "parallel-basic · pygal · anyplot.ai" is rendered in dark ink at the top — readable. Y-axis label "Normalized Value (0–1)" and x-axis label "Dimensions" are dark and legible. Dimension tick labels ("Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Petal Width (cm)") appear at the bottom — slightly small but readable. Y-axis tick values (0.000–1.000) are visible on the left margin.
+      Data: Three species rendered in Okabe-Ito order — Setosa in #009E73 (brand green), Versicolor in #D55E00 (vermillion/orange), Virginica in #0072B2 (blue). Each species has 15 semi-transparent thin observation lines (opacity ~0.5) plus one thicker mean line. The Setosa cluster clearly diverges downward at the petal dimensions (right half), illustrating the species separation.
+      Legend: Bottom row with colored squares for Setosa, Versicolor, Virginica — readable in the light theme.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title, y-axis label, x-axis label, and tick labels all render in light cream/off-white text — readable against the dark background. No dark-on-dark failure detected. Tick values and dimension labels are visible. Grid lines are subtle on the dark surface.
+      Data: Data colors are identical to the light render — Setosa green, Versicolor orange, Virginica blue. Semi-transparent lines remain distinguishable. The species separation pattern is identical.
+      Legend: Bottom row with colored squares — text is light-colored and readable in the dark theme.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=84, label=56, major_label=52, legend=52).
+          All text readable in both themes. Dimension tick labels at x-axis appear
+          somewhat small on the large canvas but remain legible.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap detected. Axis labels, tick labels, title, and legend
+          are all spatially separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lines are visible with appropriate opacity=0.50. Mean lines (stroke
+          7) clearly stand out. Some crowding in Setosa lines at petal dimensions
+          but expected for parallel coordinates with 15 samples.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is colorblind-safe. Three species use green, orange,
+          blue — no red-green sole-signal issue.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot fills ~65% of canvas. Margins are reasonable (margin=150, margin_right=200).
+          Legend at bottom is appropriately placed. Some vertical whitespace in margins
+          could be tighter.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Normalized Value (0–1)'' with units. X-axis: ''Dimensions''.
+          Dimension names include units ''(cm)'' as tick labels. Title correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Setosa=#009E73, Versicolor=#D55E00, Virginica=#0072B2
+          — canonical Okabe-Ito order. Background #FAF8F1 light / #1A1A17 dark. Text
+          chrome adapts correctly between themes.'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library default. Dual line weights and semi-transparency
+          show thought, but no publication-level polish. Key insight (Setosa separation
+          at petal dims) is visible but not emphasized.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Y-guides only (no x-guides) is appropriate. Semi-transparent lines
+          and margin settings show some refinement. Missing the vertical axis lines
+          that give parallel coordinates their distinctive 'parallel axes' identity.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Color coding and dual line widths create basic visual hierarchy.
+          Setosa's separation is visible in the data. No focal-point emphasis, no
+          callout highlighting the species cluster insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Parallel coordinates implemented via pygal Line with normalized y-axis
+          and dimension x-axis — correct approach for pygal which lacks a native parallel
+          coordinates type.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 4 dimensions, 3 categories, 45 observations, normalization, color
+          coding by category, transparency for overlap handling — all spec requirements
+          met.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Dimensions on x-axis with named labels, normalized values (0–1) on
+          y-axis. All data visible and correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'parallel-basic · pygal · anyplot.ai' matches required format.
+          Legend labels match species names.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all parallel coordinates features: multi-dimensional data,
+          category color coding, individual observations plus summary (mean) lines,
+          normalization revealing cross-dimension patterns.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic Fisher Iris dataset — real scientific measurements, neutral
+          domain, universally recognized benchmark.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Real Iris measurements (sepal/petal lengths and widths in cm) normalized
+          to [0,1]. Min/max derived from actual data range.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports → data → style → chart configuration → series addition →
+          save. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded Iris data — fully deterministic, no random seed needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, sys, pygal, Style — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Color list pre-computation for pygal's internal cycling is clever
+          and well-commented. sys.path manipulation is a necessary workaround, not
+          over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current pygal API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Style object correctly, stroke_style per series, show_dots=False,
+          legend_at_bottom, allow_interruptions — good pygal patterns. The color_list
+          precomputation exploits pygal's internal cycle mechanism intelligently.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Interactive HTML output alongside PNG is pygal's key differentiator.
+          opacity/opacity_hover parameters used. Could enrich HTML tooltips with actual
+          measurement values to further leverage pygal's interactivity.
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
-  dataprep: []
-  styling: []
-review:
-  strengths:
-  - Excellent colorblind-friendly color palette (blue, yellow, teal) for the three
-    species
-  - Good use of Iris dataset which clearly demonstrates species clustering in parallel
-    coordinates
-  - Normalization properly implemented to make dimensions comparable
-  - Mean lines for each species (thicker stroke) provide visual anchors among individual
-    observations
-  - Clean KISS code structure with well-organized custom style configuration
-  - Properly generates both PNG and HTML outputs for pygal interactive capabilities
-  weaknesses:
-  - 'Title format should start with spec-id: parallel-basic · pygal · pyplots.ai followed
-    by subtitle'
-  - Grid lines are barely visible despite configuration; could use higher contrast
-    colors
-  - High line density at axis intersection points reduces readability slightly
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending

@@ -26,7 +26,7 @@
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-helmet-async": "^3.0.0",
-    "react-router-dom": "^7.14.1",
+    "react-router-dom": "^7.14.2",
     "react-syntax-highlighter": "^16.1.1",
     "web-vitals": "^5.2.0"
   },
@@ -39,17 +39,17 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.1.7",
     "@types/react-syntax-highlighter": "^15.5.13",
-    "@typescript-eslint/eslint-plugin": "^8.59.0",
-    "@typescript-eslint/parser": "^8.59.0",
+    "@typescript-eslint/eslint-plugin": "^8.59.1",
+    "@typescript-eslint/parser": "^8.59.1",
     "@vitejs/plugin-react-swc": "^4.3.0",
-    "@vitest/coverage-v8": "^4.1.4",
+    "@vitest/coverage-v8": "^4.1.5",
     "eslint": "^10.2.1",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
-    "jsdom": "^29.0.2",
+    "jsdom": "^29.1.0",
     "typescript": "^6.0.3",
-    "vite": "^8.0.9",
+    "vite": "^8.0.10",
     "vite-plugin-compression2": "^2.5.3",
-    "vitest": "^4.1.4"
+    "vitest": "^4.1.5"
   }
 }

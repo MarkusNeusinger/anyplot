@@ -302,7 +302,7 @@ if len(pos_density) > 0:
                     contour_line.z_index = 2
                     chart.add_series(contour_line)
         extracted = True
-    except AttributeError, TypeError:
+    except (AttributeError, TypeError):
         pass
 
     if not extracted:
@@ -321,7 +321,7 @@ if len(pos_density) > 0:
                         contour_line.marker = {"enabled": False}
                         contour_line.z_index = 2
                         chart.add_series(contour_line)
-        except AttributeError, TypeError:
+        except (AttributeError, TypeError):
             pass
 
     plt.close(fig_temp)

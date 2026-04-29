@@ -85,7 +85,10 @@ export function FilterBar({
       setIsSticky(scrollY > 60);
     };
     calculatePercent();
-    window.addEventListener('scroll', calculatePercent);
+    // passive: true — scroll handler doesn't preventDefault, so let the
+    // browser scroll without waiting for our handler to ack. Matters on
+    // /plots, the busiest scroll path in the app.
+    window.addEventListener('scroll', calculatePercent, { passive: true });
     const resizeObserver = new ResizeObserver(calculatePercent);
     resizeObserver.observe(document.body);
     return () => {

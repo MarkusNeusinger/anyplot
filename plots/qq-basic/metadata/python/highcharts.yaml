@@ -1,162 +1,181 @@
 library: highcharts
+language: python
 specification_id: qq-basic
 created: '2025-12-23T18:15:01Z'
-updated: '2025-12-23T18:28:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468199929
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-27T06:17:19Z'
+generated_by: claude-sonnet
+workflow_run: 24977971695
+issue: 977
+python_version: 3.14.4
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/qq-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/qq-basic/highcharts/plot.html
-quality_score: 90
-impl_tags:
-  dependencies:
-  - scipy
-  - selenium
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qq-basic/python/highcharts/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Good Q-Q plot implementation with clear visualization of quantile comparison
-  - Correctly uses dashed yellow reference line (y=x) that is clearly visible
-  - Appropriate marker size (radius=18) and alpha (0.7) for 100 data points
-  - Uses colorblind-safe Python blue and yellow color scheme
-  - Correctly implements theoretical quantile scaling to sample scale
-  - Data demonstrates slight right skew as intended, showing Q-Q interpretation capability
-  - 'Title follows required format: qq-basic · highcharts · pyplots.ai'
-  - Legend is informative with sample size (N=100) and reference line explanation
+  - 'Excellent data storytelling: plot bands and subtitle guide the viewer toward
+    the right-skew insight'
+  - 'Perfect spec compliance: correct Q-Q implementation with all required elements
+    (scatter, reference line, axis labels)'
+  - 'Full theme-adaptive chrome: both renders are readable with correct backgrounds
+    and identical data colors'
+  - Good font hierarchy explicitly sized for 4800x2700 canvas (72px title, 48px axis
+    labels, 36px ticks)
+  - Clean linear code with proper reproducibility seed
   weaknesses:
-  - Grid lines could be slightly more subtle (currently alpha 0.15, could use 0.1)
-  - Axis labels could include units or more context (e.g., Theoretical Quantiles (Standard
-    Deviations))
-  image_description: 'The plot displays a Q-Q (Quantile-Quantile) plot with a white
-    background. Blue circular markers (Python blue color #306998 with 0.7 alpha) represent
-    sample quantiles plotted against theoretical quantiles. A dashed yellow reference
-    line (y=x) runs diagonally across the plot. The title "qq-basic · highcharts ·
-    pyplots.ai" appears at the top in bold. The x-axis is labeled "Theoretical Quantiles"
-    and the y-axis "Sample Quantiles". Both axes range approximately from 6 to 102.
-    A legend in the top-right corner identifies the reference line and sample quantiles
-    (N=100). The data points follow the reference line closely in the middle range
-    but show slight deviation at the upper end, indicating the intended right skew
-    in the data.'
+  - 'Design polish: add lineWidth:0 to x/y axes to remove border lines, and tickWidth:0
+    to remove tick marks for cleaner look'
+  - LineSeries imported from highcharts_core.options.series.area — should use highcharts_core.options.series.line
+  - Reference line could use more contrast differentiation from scatter markers (different
+    line style or thickness)
+  - X-axis bottom area appears slightly tight — verify Theoretical Quantiles title
+    has sufficient clearance from plot edge
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "qq-basic · highcharts · anyplot.ai" bold dark text (72px) — readable. Subtitle at 36px in #4A4A44 — readable. Y-axis label "Sample Quantiles" clearly visible. X-axis label "Theoretical Quantiles" at bottom. Tick labels in #4A4A44 at 36px — readable. Legend in top-right with elevated #FFFDF6 background.
+      Data: Brand green scatter points rgba(0,158,115,0.75)=#009E73 first (and only) data series. Dashed gray reference line. Warm peach plot bands in lower-left and upper-right tail regions.
+      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title and axis labels flip to light #F0EFE8 — clearly readable against dark surface. Tick labels in #B8B7B0 — readable. Legend uses #242420 elevated background. No dark-on-dark failures observed.
+      Data: Same brand green #009E73 scatter points — identical to light render (data colors unchanged). Reference line in muted light gray. Plot bands shift to amber/golden rgba(230,159,0,0.22) — visible and distinct on dark background.
+      Legibility verdict: PASS — all text is light-colored on near-black background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 72px, axis titles at 48px, tick labels at 36px - all perfectly
-          readable
+        comment: 'All font sizes explicitly set: title 72px, subtitle 36px, axis labels
+          48px, tick labels 36px. Readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text or data elements.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Marker radius 18 with alpha 0.7 is optimal for 100 data points
+        comment: Scatter markers at radius 18 well-sized for 100 points. Reference
+          line at lineWidth 6 clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Colorblind-safe Python blue (#306998) and yellow (#FFD43B)
+        comment: Brand green vs. muted gray reference line. Good contrast, CVD-safe.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: 'Good layout and balance. Minor: x-axis bottom area slightly tight
+          between tick labels and axis title.'
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Descriptive labels but missing units
+        passed: true
+        comment: Theoretical Quantiles and Sample Quantiles match spec verbatim. Title
+          format correct.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle with dashed style, but alpha 0.15 could be slightly
-          lower; legend well placed
+        passed: true
+        comment: 'First series rgba(0,158,115,0.75)=#009E73. Light bg #FAF8F1, dark
+          bg #1A1A17. Both renders theme-correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Plot bands, alpha on markers, font hierarchy, subtitle elevate above
+          plain default. Not yet strong design level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Dashed grid, 10% opacity grid color, styled legend with elevated
+          background. Above default but no axis spine removal.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Plot bands guide viewer to tail deviation regions. Subtitle explicitly
+          identifies right skew. Clear focal point in upper tail.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Q-Q scatter plot with reference line
+        comment: 'Correct Q-Q plot: scatter of sample vs theoretical quantiles with
+          diagonal reference line.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Theoretical quantiles on X, sample quantiles on Y
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Reference line (y=x), scatter points, proper axis labels
-      - id: SC-04
-        name: Data Range
+        comment: Scatter points, 45-degree reference line, Theoretical Quantiles and
+          Sample Quantiles axis labels all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data points with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=theoretical quantiles, Y=sample quantiles. Full data range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies reference line and sample quantiles with
-          N=100
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "qq-basic · highcharts · pyplots.ai"
+        comment: Title qq-basic · highcharts · anyplot.ai correct. Legend labels informative
+          and accurate.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows slight right skew demonstrating Q-Q interpretation, but could
-          show more extreme deviations
+        comment: Shows quantile matching, right-tail skew from mixed normal, deviation
+          bands. All key Q-Q characteristics demonstrated.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Statistical data comparison is a real use case
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values centered around 50 with reasonable spread
+        comment: Exam scores N=100 with slight right skew — plausible, neutral educational
+          context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Scores range ~10-95, consistent with realistic exam results.
     code_quality:
       score: 10
       max: 10
@@ -166,40 +185,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: 'Linear: imports → tokens → data → Q-Q computation → chart → series
+          → export. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: NormalDist, numpy, highcharts_core, selenium.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current highcharts_core API
+        comment: Clean Pythonic code. No fake functionality.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses Highcharts series configuration, legend options, interactive
-          HTML export
-  verdict: APPROVED
+        comment: Chart(container), HighchartsOptions, ScatterSeries/LineSeries, plotBands
+          via axis options. LineSeries imported from area module is slightly non-idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: plotBands with label annotations is distinctly Highcharts. dashStyle
+          Dash on reference line. Subtitle natively supported.
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - quantile-transform
+  styling:
+  - grid-styling
+  - alpha-blending

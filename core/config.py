@@ -88,7 +88,7 @@ class Settings(BaseSettings):
     # AI MODEL CONFIGURATION
     # =============================================================================
 
-    claude_model: str = "claude-sonnet-4-6"
+    claude_model: str = "claude-3-5-sonnet-20240620"
     """Claude model to use for code generation and review"""
 
     claude_max_tokens: int = 4000
@@ -149,6 +149,12 @@ class Settings(BaseSettings):
     When unset, the endpoint is disabled (503). Set via Secret Manager in Cloud Run
     and as a GitHub Actions secret so sync-postgres can invalidate the cache after
     writing new data to PostgreSQL."""
+
+    admin_token: Optional[str] = None
+    """Shared secret required by sensitive /debug/* endpoints (status, ping).
+    When unset, those endpoints return 503 instead of leaking quality scores,
+    weakness aggregates, and DB latency to the public internet. Set via Secret
+    Manager in Cloud Run; pass via the `X-Admin-Token` request header."""
 
     # =============================================================================
     # CORS

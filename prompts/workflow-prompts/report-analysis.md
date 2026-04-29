@@ -35,12 +35,12 @@ If validation fails → post comment explaining invalid input, close issue, STOP
    - If not found → post comment, close issue, STOP
 
 3. **If implementation issue, verify library exists:**
-   - Check if file `plots/{spec_id}/implementations/{library}.py` exists
+   - Check if file `plots/{spec_id}/implementations/{language}/{library}.py` exists
    - If not found → post comment, close issue, STOP
 
 4. **Read relevant files:**
    - `plots/{spec_id}/specification.md`
-   - `plots/{spec_id}/metadata/{library}.yaml` (if impl)
+   - `plots/{spec_id}/metadata/{language}/{library}.yaml` (if impl)
 
 5. **Analyze the issue:**
    - Is this a legitimate issue or misunderstanding?

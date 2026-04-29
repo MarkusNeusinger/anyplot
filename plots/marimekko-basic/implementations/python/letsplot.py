@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 marimekko-basic: Basic Marimekko Chart
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: letsplot 4.9.0 | Python 3.14.4
+Quality: 76/100 | Updated: 2026-04-29
 """
 
 import os

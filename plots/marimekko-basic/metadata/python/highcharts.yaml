@@ -1,160 +1,182 @@
 library: highcharts
+language: python
 specification_id: marimekko-basic
 created: '2025-12-23T15:14:03Z'
-updated: '2025-12-23T15:31:57Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20464359351
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-27T03:36:09Z'
+generated_by: claude-sonnet
+workflow_run: 24974995228
+issue: 1002
+python_version: 3.14.4
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - selenium
-  - pillow
-  techniques:
-  - annotations
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/marimekko-basic/python/highcharts/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent use of Highcharts variwide chart type for the Marimekko visualization
-  - Clean implementation with proper variable-width bars representing market sizes
-  - Good colorblind-safe color palette
-  - Data labels on segments improve readability
-  - Region names properly centered under each bar using custom renderer
-  - Realistic market share data with meaningful variation between regions
+  - Correct Marimekko implementation using Highcharts variwide series — the idiomatic
+    and only correct approach for this library
+  - 'Full Okabe-Ito palette compliance: first series #009E73, positions 1-4 in order'
+  - Comprehensive theme adaptation across all tokens (PAGE_BG, INK, INK_SOFT, ELEVATED_BG,
+    GRID) — both renders are fully theme-correct
+  - 'Complete spec compliance: all required features, correct title format, proportional
+    widths, percentage labels'
+  - Clean deterministic code with appropriate imports; both PNG and HTML artifacts
+    correctly saved
   weaknesses:
-  - Grid lines not visible on the plot area (gridLineWidth set but not appearing prominently)
-  - Y-axis tick labels could be slightly larger for optimal readability at 4800x2700
-  image_description: 'The plot displays a Marimekko chart showing market share distribution
-    across 5 regions (North America, Europe, Asia Pacific, Latin America, Middle East).
-    Each region has a variable-width bar proportional to its market size in millions
-    USD. The bars are stacked with 4 product categories: Enterprise (dark blue #306998),
-    SMB (yellow #FFD43B), Consumer (purple #9467BD), and Government (cyan #17BECF).
-    Percentage labels appear on each segment (e.g., 42%, 28%, 22%, 8% for North America).
-    The title "marimekko-basic · highcharts · pyplots.ai" appears at top with a subtitle.
-    The legend is positioned on the right side. Region names appear below each bar,
-    and the x-axis shows cumulative market size values.'
+  - Design Excellence is minimal — no visual hierarchy or emphasis beyond the Marimekko
+    structure itself; adding font weight variation or a subtle focal point could elevate
+    the chart
+  - Data labels on Government segments (8-10%) are 24px — slightly small relative
+    to the overall canvas; increasing to 32px to match tick labels would improve readability
+    in narrow columns
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white
+      Chrome: Title "marimekko-basic · highcharts · anyplot.ai" in bold dark ink — readable. Subtitle in INK_SOFT — readable. Y-axis "Market Share (%)" and x-axis "Market Size (Millions USD)" in dark ink — readable. Tick labels (0%–100% and 0–1650) in INK_SOFT dark gray — readable. Region labels (North America, Europe, Asia Pacific, Latin America, Middle East) at bottom in bold dark text — readable. Legend text in INK_SOFT — readable.
+      Data: First series Enterprise = #009E73 green (Okabe-Ito position 1) ✓. SMB = #D55E00 orange ✓. Consumer = #0072B2 blue ✓. Government = #CC79A7 pink-purple ✓. Bar widths vary correctly by market size. Percentage labels on each segment visible with PAGE_BG outline.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
+      Chrome: Title in #F0EFE8 light cream — readable against near-black. Subtitle in INK_SOFT (#B8B7B0) medium gray — readable. Axis labels and tick labels in INK_SOFT (#B8B7B0) — readable, no dark-on-dark failure. Region labels at bottom in INK (#F0EFE8) light text — readable. Legend in elevated dark box (#242420) with light INK_SOFT text — readable.
+      Data: Colors identical to light render — #009E73, #D55E00, #0072B2, #CC79A7 — Okabe-Ito positions 1–4 theme-invariant confirmed.
+      Legibility verdict: PASS — no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title, labels, and data labels are readable; y-axis tick labels are
-          slightly small
+        comment: 'All chrome text readable in both themes. Minor: 24px data labels
+          in narrow Government segments slightly small vs 32px tick labels'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text or elements in either render
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: All segments clearly visible with good sizing
+        comment: All four product segments and all five region widths clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-safe palette (blue, yellow, purple, cyan)
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas; slight extra whitespace at bottom
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has "Market Share (%)", X-axis has "Market Size (Millions
-          USD)"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe; no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas use; region labels visible at bottom; rightmost narrow
+          columns slightly tight
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: 'All labels present: title, subtitle, y-axis Market Share (%), x-axis
+          Market Size (Millions USD)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order 1-4, light bg #FAF8F1, dark
+          bg #1A1A17 — all correct'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: No visible grid lines on plot area; legend well placed
+        comment: Professional and correct palette use but no visual hierarchy, emphasis
+          techniques, or focal point beyond the Marimekko structure
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtle grid lines (15% opacity), borderColor using PAGE_BG for clean
+          segment separation; no excessive decoration
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtitle explains dual encoding; data labels aid direct reading;
+          variwide format communicates two dimensions but no additional guidance
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Marimekko chart using variwide with stacking
+        comment: Highcharts variwide series is the correct idiomatic Marimekko implementation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Bar widths = market size, heights = market share percentage
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Variable widths, stacked segments, color coding, value labels
-      - id: SC-04
-        name: Data Range
+        comment: Bar widths proportional to market size, segment heights proportional,
+          percentage labels, legend present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, y-axis 0-100%
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis cumulative market size, Y-axis 0-100% share; all 5 regions
+          and 4 products shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all 4 product lines
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "marimekko-basic · highcharts · pyplots.ai"'
+        comment: Title format 'marimekko-basic · highcharts · anyplot.ai' correct;
+          legend labels match product names
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varying bar widths, different distributions per region
+        comment: 'Demonstrates all Marimekko aspects: variable widths, stacked proportions,
+          data labels, legend, subtitle'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Market share by region and product line is a perfect real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Market sizes (120-520M USD) and percentages (8-45%) are realistic
+        comment: Software market share by region is plausible, neutral, realistic;
+          percentages sum to 100% per region
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Market sizes 120-520M USD and 0-100% share percentages are sensible
+          for this domain
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -162,41 +184,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure with no functions/classes
+        comment: No unnecessary classes or functions; flat procedural structure
       - id: CQ-02
         name: Reproducibility
-        score: 0
-        max: 3
-        passed: false
-        comment: No random seed needed (deterministic data), but hardcoded data is
-          fine
+        score: 2
+        max: 2
+        passed: true
+        comment: Data fully hardcoded; no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'Only used imports: json, os, tempfile, time, pathlib.Path, selenium'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Highcharts API
+        comment: Clean list comprehensions for series data; well-organized chart options
+          dict
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses variwide chart type with stacking, custom renderer for region
-          labels, but could leverage more interactive features
+        comment: Uses variwide series (correct Highcharts API for Marimekko); npm-local
+          JS loading is practical CI pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Variwide module is Highcharts-specific for this chart type; JavaScript
+          chart.renderer.text via load event for region labels
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting

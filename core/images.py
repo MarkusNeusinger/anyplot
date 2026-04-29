@@ -102,8 +102,10 @@ def _text_size(draw: ImageDraw.ImageDraw, text: str, font) -> tuple[int, int]:
 try:
     import subprocess
 
-    _HAS_PNGQUANT = subprocess.run(["pngquant", "--version"], capture_output=True).returncode == 0
-except (FileNotFoundError, subprocess.SubprocessError):  # fmt: skip
+    # `timeout=5` so a wedged binary can't block FastAPI startup forever
+    # (this runs at module import time → before app is serving).
+    _HAS_PNGQUANT = subprocess.run(["pngquant", "--version"], capture_output=True, timeout=5).returncode == 0
+except (FileNotFoundError, subprocess.SubprocessError, subprocess.TimeoutExpired):  # fmt: skip
     _HAS_PNGQUANT = False
 
 
@@ -150,6 +152,7 @@ def optimize_png(input_path: str | Path, output_path: str | Path | None = None, 
 
         subprocess.run(
             ["pngquant", "--force", "--quality", f"{quality}-100", "--output", str(output_path), str(input_path)],
+            timeout=60,
             check=True,
         )
     else:

@@ -1,14 +1,18 @@
-""" pyplots.ai
+""" anyplot.ai
 parallel-basic: Basic Parallel Coordinates Plot
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: letsplot 4.9.0 | Python 3.14.4
+Quality: 86/100 | Updated: 2026-04-27
 """
+
+import os
 
 import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
     element_blank,
+    element_line,
+    element_rect,
     element_text,
     geom_line,
     geom_segment,
@@ -25,6 +29,14 @@ from lets_plot import (
 
 
 LetsPlot.setup_html()
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data - Iris dataset with 4 dimensions
 # Using 30 samples (10 per species) for clarity
@@ -193,7 +205,7 @@ axis_df = pd.DataFrame(axis_data)
 # Create label data for dimension names at the bottom
 label_data = []
 for i, label in enumerate(dim_labels):
-    label_data.append({"x": i, "y": -0.12, "label": label})
+    label_data.append({"x": i, "y": -0.15, "label": label})
 
 label_df = pd.DataFrame(label_data)
 
@@ -202,44 +214,48 @@ tick_data = []
 for i, dim in enumerate(dimensions):
     min_val = df[dim].min()
     max_val = df[dim].max()
-    # Bottom tick (min value) - positioned to the left of axis
     tick_data.append({"x": i - 0.08, "y": 0, "label": f"{min_val:.1f}"})
-    # Top tick (max value)
     tick_data.append({"x": i - 0.08, "y": 1, "label": f"{max_val:.1f}"})
 
 tick_df = pd.DataFrame(tick_data)
 
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major=element_line(color=INK_SOFT, size=0.2),
+    panel_grid_minor=element_blank(),
+    axis_title=element_blank(),
+    axis_text=element_blank(),
+    axis_ticks=element_blank(),
+    axis_line=element_blank(),
+    panel_grid=element_blank(),
+    plot_title=element_text(color=INK, size=28),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_text=element_text(color=INK_SOFT, size=18),
+    legend_title=element_text(color=INK, size=20),
+)
+
 # Plot
 plot = (
     ggplot()
-    # Vertical axis lines
-    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=axis_df, color="#333333", size=2)
+    # Vertical axis lines (theme-adaptive color)
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=axis_df, color=INK_SOFT, size=2)
     # Data lines connecting observations across dimensions
     + geom_line(aes(x="x", y="y", group="observation", color="species"), data=line_df, size=1.5, alpha=0.7)
-    # Color scale using Python Blue, Python Yellow, and a complementary red
-    + scale_color_manual(values=["#306998", "#FFD43B", "#DC2626"])
-    # Dimension labels at the bottom
-    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=14, color="#222222")
-    # Tick value labels on the left side of axes
-    + geom_text(aes(x="x", y="y", label="label"), data=tick_df, size=11, color="#555555", hjust=1)
+    # Okabe-Ito palette — first series is brand green
+    + scale_color_manual(values=OKABE_ITO)
+    # Dimension labels at the bottom (theme-adaptive color, size >=20pt)
+    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=20, color=INK)
+    # Tick value labels on the left side of axes (theme-adaptive color, size >=16pt)
+    + geom_text(aes(x="x", y="y", label="label"), data=tick_df, size=16, color=INK_SOFT, hjust=1)
     # Styling
     + scale_x_continuous(limits=(-0.5, len(dimensions) - 0.5))
-    + scale_y_continuous(limits=(-0.28, 1.1))
-    + labs(title="parallel-basic · letsplot · pyplots.ai", color="Species")
+    + scale_y_continuous(limits=(-0.32, 1.1))
+    + labs(title="parallel-basic · letsplot · anyplot.ai", color="Species")
     + ggsize(1600, 900)
-    + theme(
-        plot_title=element_text(size=28),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
-        axis_title=element_blank(),
-        axis_text=element_blank(),
-        axis_ticks=element_blank(),
-        axis_line=element_blank(),
-        panel_grid=element_blank(),
-        panel_background=element_blank(),
-    )
+    + anyplot_theme
 )
 
-# Save (path='.' ensures files are saved in current directory)
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+# Save with theme-named output files
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.html", path=".")

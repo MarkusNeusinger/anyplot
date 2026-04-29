@@ -33,7 +33,10 @@ async def download_image(spec_id: str, library: str, db: AsyncSession = Depends(
         raise_not_found(f"Implementation for {spec_id}", library)
 
     # Fetch the image from GCS
-    async with httpx.AsyncClient() as client:
+    # Explicit timeout — without it a slow GCS response hangs the request
+    # indefinitely. Other handlers in this router tree use 10-30s; pick
+    # 15s for image downloads.
+    async with httpx.AsyncClient(timeout=15.0) as client:
         try:
             response = await client.get(impl.preview_url)
             response.raise_for_status()

@@ -15,14 +15,16 @@ Implementation
      │ PASS
      ▼
 ┌─────────────────────┐
-│  Stage 2: Quality      │  ──► ≥ 90 → ai-approved, merge
-│  (0-100 points)        │  ──► < 90 → ai-rejected, repair (max 3x)
+│  Stage 2: Quality      │  ──► Review 1: ≥ 90 → ai-approved, merge
+│  (0-100 points)        │  ──► Review 2: ≥ 80 → ai-approved, merge
+│                        │  ──► Review 3: ≥ 70 → ai-approved, merge
+│                        │  ──► Review 4: ≥ 60 → ai-approved, merge
+│                        │  ──► Review 5: ≥ 50 → ai-approved, merge
 └─────────────────────┘
-     │ After 3 attempts
+     │ After Review 5
      ▼
 ┌─────────────────────┐
-│  Final Decision        │  ──► ≥ 50 → merge to repo
-│                        │  ──► < 50 → not in repo, regenerate
+│  Final Decision        │  ──► < 50 → not in repo, regenerate
 └─────────────────────┘
 ```
 
@@ -101,24 +103,26 @@ A static library (matplotlib, seaborn, plotnine) simulates interactive features 
 
 **Only if Stage 1 passed.** Focus purely on quality.
 
-### Scoring Philosophy: STRICT
+### Scoring Philosophy: Cascading Thresholds
 
-| Score | Tier | Outcome |
-|-------|------|---------|
-| 90-100 | Excellent | **Approved immediately** - Publication quality |
-| 70-89 | Good | Repair loop → merge after 3 attempts |
-| 50-69 | Acceptable | Repair loop → merge after 3 attempts |
-| < 50 | Poor | Repair loop → **NOT in repo** after 3 attempts |
+| Review Stage | Requirement | Outcome |
+|--------------|-------------|---------|
+| Review 1 (Initial) | ≥ 90 | **Approved** - Publication quality |
+| Review 2 (Repair 1) | ≥ 80 | **Approved** - High quality |
+| Review 3 (Repair 2) | ≥ 70 | **Approved** - Good quality |
+| Review 4 (Repair 3) | ≥ 60 | **Approved** - Acceptable quality |
+| Review 5 (Repair 4) | ≥ 50 | **Approved** - Minimum quality |
+| Final Status | < 50 | **Rejected** - Not in repo |
 
 **Workflow:**
-- **≥ 90**: ai-approved, merged immediately
-- **< 90**: ai-rejected, repair loop (up to 3 attempts)
-- **After 3 attempts**: ≥ 50 → merge, < 50 → close PR and regenerate
+- **Meet Stage Threshold**: ai-approved, merged immediately
+- **Below Stage Threshold**: ai-rejected, repair loop (up to 4 repair attempts)
+- **After 4 repairs (Review 5)**: < 50 → close PR and regenerate
 
 **Principles:**
 - Full points only for **perfect** implementation
 - Small flaws = immediate deduction
-- "Good enough" = maximum 70%
+- Cascading thresholds allow good plots to merge faster while preventing infinite loops
 - 90%+ = could appear in Nature/Science
 
 ### Point Distribution
@@ -341,7 +345,7 @@ This category evaluates aesthetic sophistication beyond mere correctness. A plot
 |----|-----------|-----|---------|
 | DQ-01 | Feature Coverage | 6 | 6=shows ALL aspects, 3=most, 0=one-sided |
 | DQ-02 | Realistic Context | 5 | 5=real scenario, 3=plausible, 1=abstract labels, 0=nonsense |
-| DQ-03 | Appropriate Scale | 4 | 4=perfect values, 2=ok, 0=impossible |
+| DQ-03 | Appropriate Scale & Factual Correctness | 4 | 4=factually correct proportions, 2=plausible, 0=nonsense/impossible |
 
 ### DQ-01: Feature Coverage (6 Points)
 
@@ -374,13 +378,13 @@ Example data must show ALL features of the plot type.
 - ❌ Violence, war, weapons
 - ✅ Science, business, nature, technology, food, education (generic)
 
-### DQ-03: Appropriate Scale (4 Points)
+### DQ-03: Appropriate Scale & Factual Correctness (4 Points)
 
 | Points | Criterion |
 |--------|-----------|
-| 4 | Perfect, realistic values for the context |
-| 2 | Acceptable |
-| 0 | Impossible values (temperatures of 500°C for weather) |
+| 4 | All values, proportions, and relational scales align perfectly with established real-world facts and logical constraints for the chosen domain. |
+| 2 | Values are plausible but relationships or proportions may be slightly inaccurate. |
+| 0 | Violation of fundamental physical, geographical, or logical realities; data is factually impossible or nonsensical for the context. |
 
 ---
 

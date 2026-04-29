@@ -1,162 +1,177 @@
 library: plotnine
+language: python
 specification_id: parallel-basic
 created: '2025-12-23T18:11:45Z'
-updated: '2025-12-23T18:15:07Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468188642
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/plotnine/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  patterns:
-  - dataset-loading
-  - wide-to-long
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-04-27T05:48:33Z'
+generated_by: claude-sonnet
+workflow_run: 24978320300
+issue: 820
+python_version: 3.14.4
+library_version: 0.15.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Clean grammar-of-graphics implementation using geom_line and geom_point for parallel
-    coordinates
-  - Proper data normalization to 0-1 scale for fair comparison across dimensions
-  - Excellent colorblind-accessible palette with Python Blue, Yellow, and Red
-  - Well-sized text elements with appropriate font sizes for readability
-  - Uses Iris dataset - a classic and realistic multi-dimensional example
+  - 'Perfect spec compliance with all parallel coordinates features: normalization,
+    color coding, multi-dimensional axes, transparency for density'
+  - 'Excellent data quality: realistic iris dataset with appropriate scales and full
+    feature coverage'
+  - 'Complete code quality: clean KISS structure, reproducible, correct output naming'
+  - Correct Okabe-Ito palette with fully theme-adaptive chrome — both renders pass
+    legibility check
   weaknesses:
-  - Uneven species distribution (20/20/10) could be balanced as 50 samples equally
-    distributed
-  - Legend title could use a more specific label than generic Species
-  image_description: 'The plot displays a parallel coordinates visualization with
-    four vertical axes representing Iris flower measurements: Sepal Length (cm), Sepal
-    Width (cm), Petal Length (cm), and Petal Width (cm). The Y-axis shows normalized
-    values from 0 to 1. Three species are color-coded: Setosa in steel blue (#306998),
-    Versicolor in golden yellow (#FFD43B), and Virginica in coral red (#E74C3C). Each
-    observation is represented by a line connecting its values across the four dimensions,
-    with small circular markers at each axis intersection. The plot clearly shows
-    species clustering - Setosa (blue) clusters low on petal measurements while having
-    varied sepal measurements, Versicolor (yellow) occupies the middle range, and
-    Virginica (red) shows the highest values for petal dimensions. The title "parallel-basic
-    · plotnine · pyplots.ai" appears at the top, and a legend is positioned on the
-    right side.'
+  - X-axis tick labels set to 14pt via axis_text_x=element_text(size=14), below the
+    16pt minimum — remove this override or set to 16pt
+  - 'Design could be more refined: panel border not removed; no explicit spine removal
+    adds visual clutter'
+  - 'No active data storytelling: the Setosa cluster separation in petal dimensions
+    is not visually emphasized — consider increasing line alpha or width, or adding
+    a subtle annotation'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "parallel-basic · plotnine · anyplot.ai" in dark ink (#1A1A17) at 24pt — clearly readable. Y-axis label "Normalized Value (0–1)" in dark ink at 20pt — readable. X-axis label "Dimension" in dark ink — readable. Tick labels in secondary ink (#4A4A44) at 14pt (x-axis) and 16pt (y-axis) — readable. Legend "Iris Species" with labels in secondary ink — readable.
+      Data: Three Iris species with Okabe-Ito colors — Setosa #009E73 (teal), Versicolor #D55E00 (orange), Virginica #0072B2 (blue). Lines at alpha=0.35, size=0.8; points at alpha=0.55, size=2.5. First series correctly #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title in light ink (#F0EFE8) — clearly readable against dark background. Axis labels in light ink — readable. Tick labels in secondary light ink (#B8B7B0) — readable. Legend text in secondary light ink — readable. No dark-on-dark failures observed; no black text on black background.
+      Data: Colors identical to light render — Setosa #009E73, Versicolor #D55E00, Virginica #0072B2. Brand green #009E73 clearly visible against dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 24pt, axis titles at 20pt, tick labels at 16pt, all perfectly
-          readable
+        comment: 'Sizes explicitly set: title 24pt, axis titles 20pt, legend 16pt.
+          axis_text_x overridden to 14pt (below 16pt minimum)'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels clear
+        comment: Multi-line axis labels well-spaced, no label collisions
       - id: VQ-03
         name: Element Visibility
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Lines and points visible with good alpha (0.6/0.8), some overlap
-          at convergence points but expected for parallel coordinates
+        comment: Lines and points visible and density-appropriate for 150 observations
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent colorblind-safe palette (blue, yellow, red) with high contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of 16:9 canvas, plot fills appropriate space
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Sepal Length (cm)" etc.'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe, no red-green only distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization, minor wasted space at edges
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive with unit context, tick labels include (cm)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct Okabe-Ito order, correct theme backgrounds, chrome adapts
+          in both renders
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is subtle, but minor grid is disabled; legend well placed but
-          could be closer
+        comment: Well-configured library default, no exceptional aesthetic choices,
+          no explicit spine removal
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Minor grid removed, major grid at alpha=0.10, theme_minimal base.
+          Panel border still present
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Iris dataset is smart choice with natural group separation story,
+          but no active visual emphasis or annotation
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct parallel coordinates implementation
+        comment: Correct parallel coordinates using geom_line with group=id across
+          numeric axis positions
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Each dimension correctly mapped to vertical axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Normalization, color coding by category, transparency for overlapping
-          lines
-      - id: SC-04
-        name: Data Range
+        comment: Multiple dimensions, categorical color coding, normalization, alpha
+          transparency all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 0-1 normalized range visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'Correct mapping: dimension to x, normalized value to y, species
+          to color, id to group'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all three species
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "parallel-basic · plotnine · pyplots.ai"'
+        comment: Title format correct, legend Iris Species with correct species labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows clustering patterns, but unequal species distribution (20/20/10)
+        comment: 'All parallel coordinates aspects: multi-dimensional, inter-dimensional
+          correlations, crossing patterns, group clusters'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Iris dataset is a classic, real-world multivariate dataset
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Actual Iris measurements, realistic biological values
+        comment: Iris botanical dataset, real-world neutral scientific context, synthetic
+          data matches published iris statistics
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Raw measurements clipped to realistic ranges, normalized to 0-1 for
+          fair comparison
     code_quality:
       score: 10
       max: 10
@@ -166,40 +181,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Normalize → Transform → Plot → Save structure
+        comment: 'Linear: imports -> tokens -> data -> plot -> save, no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) present
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (plotnine elements, numpy, pandas)
+        comment: All plotnine imports used in the code
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Clean Pythonic code, melt + geom_line(group=id) is correct elegant
+          approach
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct naming pattern
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses grammar of graphics approach with ggplot + geom_line + geom_point
-          + aes mapping, but parallel coordinates is not a native plotnine feature
-  verdict: APPROVED
+        comment: 'Expert use of grammar of graphics: aes(group=id), scale_x_continuous
+          with breaks/labels, scale_color_manual, theme chaining'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses plotnine grammar effectively but approach replicable in any
+          ggplot2-family library, no plotnine-unique features
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  - wide-to-long
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending

@@ -90,8 +90,6 @@ anyplot/
 │   │   ├── models.py                  # SQLAlchemy ORM models
 │   │   ├── repositories.py            # Repository pattern
 │   │   └── types.py                   # Custom SQLAlchemy types
-│   └── generators/                    # Reusable code generators
-│       └── plot_generator.py          # Plot code generation utilities
 │
 ├── api/                               # FastAPI backend
 │   ├── __init__.py
@@ -186,7 +184,7 @@ plots/{specification-id}/
 - ✅ Easy to navigate (one folder = one plot type)
 - ✅ Synced to PostgreSQL via `sync-postgres.yml`
 - ✅ No merge conflicts (per-library metadata files)
-- ✅ Quality reports in `metadata/{library}.yaml` (review section)
+- ✅ Quality reports in `metadata/python/{library}.yaml` (review section)
 - ❌ NO preview images (stored in GCS)
 
 **Example**: `plots/scatter-basic/` contains everything for the basic scatter plot.
@@ -233,7 +231,7 @@ tags:
 
 ---
 
-### `plots/{specification-id}/metadata/{library}.yaml`
+### `plots/{specification-id}/metadata/python/{library}.yaml`
 
 **Purpose**: Per-library metadata (one file per library)
 
@@ -247,7 +245,7 @@ created: 2025-01-10T08:00:00Z
 updated: 2025-01-15T10:30:00Z
 
 # Generation
-generated_by: claude-opus-4-5-20251101
+generated_by: claude-opus-4-7
 workflow_run: 12345678
 issue: 42
 
@@ -422,7 +420,6 @@ plt.savefig('plot.png', dpi=300)
 - `database/connection.py` - Async database connection
 - `database/models.py` - SQLAlchemy ORM models
 - `database/repositories.py` - Repository pattern for data access
-- `generators/plot_generator.py` - Reusable plot code generation utilities
 
 ---
 
@@ -459,8 +456,13 @@ plt.savefig('plot.png', dpi=300)
 
 **Purpose**: FastAPI REST API
 
-**Key Files**:
-- `main.py` - FastAPI app with all endpoints
+**Structure**:
+- `main.py` - Application entry point and app factory
+- `routers/` - Modular route handlers (specs, plots, analytics, etc.)
+- `dependencies.py` - Shared FastAPI dependencies
+- `schemas.py` - Pydantic request/response schemas
+- `analytics.py` - Server-side Plausible tracking
+- `cache.py` - Server-side TTL caching layer
 
 ---
 
@@ -480,7 +482,7 @@ plt.savefig('plot.png', dpi=300)
 **Implementation Workflows**:
 - `impl-generate.yml` - Generates single library (`generate:{lib}` label OR dispatch)
 - `impl-review.yml` - AI quality evaluation
-- `impl-repair.yml` - Repairs rejected implementation (max 3 attempts)
+- `impl-repair.yml` - Repairs rejected implementation (max 4 attempts)
 - `impl-merge.yml` - Merges approved PR, creates per-library metadata
 - `bulk-generate.yml` - Batch operations (max 3 parallel)
 
@@ -524,7 +526,7 @@ Always named by library: `{library}.py`
 - **Why**: Security
 - **Note**: `.env.example` shows required variables without values
 
-**Note**: Quality reports ARE stored in the repository in `metadata/{library}.yaml` (the `review:` section with strengths, weaknesses, criteria_checklist, verdict).
+**Note**: Quality reports ARE stored in the repository in `metadata/python/{library}.yaml` (the `review:` section with strengths, weaknesses, criteria_checklist, verdict).
 
 ---
 

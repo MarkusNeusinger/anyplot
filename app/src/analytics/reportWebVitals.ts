@@ -13,7 +13,7 @@ export function reportWebVitals() {
     return;
   }
 
-  import('web-vitals').then(({ onLCP, onCLS, onINP }) => {
+  import('web-vitals').then(({ onLCP, onCLS, onINP, onFCP, onTTFB }) => {
     onLCP((metric) => {
       window.plausible?.('LCP', {
         props: {
@@ -39,6 +39,26 @@ export function reportWebVitals() {
         props: {
           ...getAnalyticsAmbientProps(),
           value: String(Math.round(metric.value / 50) * 50),
+          rating: metric.rating,
+        },
+      });
+    });
+
+    onFCP((metric) => {
+      window.plausible?.('FCP', {
+        props: {
+          ...getAnalyticsAmbientProps(),
+          value: String(Math.round(metric.value / 100) * 100),
+          rating: metric.rating,
+        },
+      });
+    });
+
+    onTTFB((metric) => {
+      window.plausible?.('TTFB', {
+        props: {
+          ...getAnalyticsAmbientProps(),
+          value: String(Math.round(metric.value / 100) * 100),
           rating: metric.rating,
         },
       });
