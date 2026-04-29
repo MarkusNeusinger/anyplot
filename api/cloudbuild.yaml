@@ -6,6 +6,12 @@ substitutions:
   _CPU: "1"
   _MIN_INSTANCES: "1"
   _MAX_INSTANCES: "3"
+  # Cloudflare Access (Zero Trust) for /debug/* — the team domain is stable;
+  # the AUD must be filled in once the Self-hosted Application is created in
+  # the Cloudflare Zero Trust dashboard. With AUD unset, the JWT path in
+  # require_admin is skipped and only the X-Admin-Token fallback is active.
+  _CF_ACCESS_TEAM_DOMAIN: "anyplot.cloudflareaccess.com"
+  _CF_ACCESS_AUD: ""
 
 steps:
   # Build the container image
@@ -53,11 +59,13 @@ steps:
       - "--port=8000"
       - "--allow-unauthenticated"
       - "--add-cloudsql-instances=anyplot:europe-west4:anyplot-db"
-      - "--set-secrets=DATABASE_URL=DATABASE_URL:latest,CACHE_INVALIDATE_TOKEN=CACHE_INVALIDATE_TOKEN:latest"
+      - "--set-secrets=DATABASE_URL=DATABASE_URL:latest,CACHE_INVALIDATE_TOKEN=CACHE_INVALIDATE_TOKEN:latest,ADMIN_TOKEN=ADMIN_TOKEN:latest"
       - "--set-env-vars=ENVIRONMENT=production"
       - "--execution-environment=gen2"
       - "--set-env-vars=GOOGLE_CLOUD_PROJECT=$PROJECT_ID"
       - "--set-env-vars=GCS_BUCKET=anyplot-images"
+      - "--set-env-vars=CF_ACCESS_TEAM_DOMAIN=${_CF_ACCESS_TEAM_DOMAIN}"
+      - "--set-env-vars=CF_ACCESS_AUD=${_CF_ACCESS_AUD}"
       - "--cpu-throttling"
       - "--concurrency=15"
       - "--timeout=600"

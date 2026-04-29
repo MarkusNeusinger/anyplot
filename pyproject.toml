@@ -50,6 +50,8 @@ dependencies = [
     "pandas-stubs>=2.3.0",
     # Caching
     "cachetools>=7.0.6",
+    # Auth — Cloudflare Access JWT verification on /debug/*
+    "pyjwt[crypto]>=2.10.0",
 ]
 
 [project.optional-dependencies]

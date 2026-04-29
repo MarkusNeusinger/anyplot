@@ -156,6 +156,20 @@ class Settings(BaseSettings):
     weakness aggregates, and DB latency to the public internet. Set via Secret
     Manager in Cloud Run; pass via the `X-Admin-Token` request header."""
 
+    cf_access_team_domain: Optional[str] = None
+    """Cloudflare Access team domain, e.g. `anyplot.cloudflareaccess.com`.
+    Used as the JWT issuer and for fetching JWKS keys at
+    `https://{team_domain}/cdn-cgi/access/certs`. When unset, the JWT path in
+    require_admin is skipped (token-only mode)."""
+
+    cf_access_aud: Optional[str] = None
+    """Cloudflare Access Application AUD tag (UUID from the Zero Trust
+    dashboard). Validated as the JWT `aud` claim."""
+
+    admin_allowed_emails: list[str] = ["meakeiok@gmail.com"]
+    """Email addresses allowed to authenticate via Cloudflare Access for
+    /debug/* endpoints. Comma-separated when set via env var."""
+
     # =============================================================================
     # CORS
     # =============================================================================

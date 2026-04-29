@@ -6,7 +6,9 @@ import secrets
 import time
 from collections import Counter
 from datetime import datetime, timedelta, timezone
+from functools import lru_cache
 
+import jwt as pyjwt
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlalchemy import text
@@ -22,14 +24,72 @@ from core.database import SpecRepository
 router = APIRouter(prefix="/debug", tags=["debug"])
 
 
-def require_admin(x_admin_token: str | None = Header(default=None)) -> None:
-    """Gate sensitive /debug/* endpoints behind a shared secret.
+@lru_cache(maxsize=1)
+def _jwks_client() -> pyjwt.PyJWKClient | None:
+    """Lazy, process-wide JWKS client for Cloudflare Access JWT verification.
 
-    Without this gate, /debug/status and /debug/ping reflect quality scores,
-    weakness aggregates, and DB latency to the public internet. When
-    settings.admin_token is unset the endpoint is disabled (503), so a
-    misconfigured prod deploy fails closed instead of fails open.
+    PyJWKClient caches keys per instance; we cache the instance itself so a
+    single Cloud Run worker only fetches the JWKS endpoint once at first
+    /debug request after cold start.
     """
+    if not settings.cf_access_team_domain:
+        return None
+    return pyjwt.PyJWKClient(f"https://{settings.cf_access_team_domain}/cdn-cgi/access/certs")
+
+
+def _verify_cf_access_jwt(token: str) -> str | None:
+    """Verify a Cloudflare Access JWT and return the authenticated email.
+
+    Returns None when the JWT path is unconfigured, the signature is invalid,
+    the token is expired, or the aud/iss claims don't match.
+    """
+    client = _jwks_client()
+    if client is None or not settings.cf_access_aud:
+        return None
+    try:
+        signing_key = client.get_signing_key_from_jwt(token)
+        claims = pyjwt.decode(
+            token,
+            signing_key.key,
+            algorithms=["RS256"],
+            audience=settings.cf_access_aud,
+            issuer=f"https://{settings.cf_access_team_domain}",
+        )
+    except pyjwt.PyJWTError:
+        return None
+    email = claims.get("email")
+    return email if isinstance(email, str) else None
+
+
+def require_admin(
+    x_admin_token: str | None = Header(default=None),
+    cf_access_jwt: str | None = Header(default=None, alias="Cf-Access-Jwt-Assertion"),
+) -> None:
+    """Gate sensitive /debug/* endpoints behind Cloudflare Access OR a shared secret.
+
+    Two paths:
+    1. Browser path — Cloudflare Access verifies a Google identity at the edge,
+       forwards the request with `Cf-Access-Jwt-Assertion`. We verify the JWT
+       against Cloudflare's JWKS and check the email is on the allow-list.
+    2. Token path — `X-Admin-Token` against `settings.admin_token`. Used by CI,
+       local dev, and break-glass access via the Cloud Run direct URL (which
+       bypasses Cloudflare).
+
+    Without `settings.admin_token` configured the token path is disabled (503),
+    so a misconfigured prod deploy without Cloudflare Access still fails closed.
+    """
+    if cf_access_jwt:
+        email = _verify_cf_access_jwt(cf_access_jwt)
+        if email and email in settings.admin_allowed_emails:
+            return
+        if email:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"User {email} not authorized",
+            )
+        # Invalid JWT (signature/aud/iss/expiry) — fall through to token path so
+        # a misconfigured edge never strands the operator without break-glass access.
+
     expected = settings.admin_token
     if not expected:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Debug endpoints not configured")

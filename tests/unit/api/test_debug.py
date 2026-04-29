@@ -424,3 +424,75 @@ class TestRequireAdmin:
             # Without X-Admin-Token, cache invalidate still works given correct X-Cache-Token.
             response = auth_client.post("/debug/cache/invalidate", headers={"X-Cache-Token": "cachesecret"})
         assert response.status_code == 200
+
+
+class TestRequireAdminCfAccess:
+    """Tests for the Cloudflare Access JWT path of `require_admin`.
+
+    The browser path forwards `Cf-Access-Jwt-Assertion` from the Cloudflare
+    edge. We mock `_verify_cf_access_jwt` so these tests don't need a real
+    RS256 signature or JWKS network round-trip.
+    """
+
+    _ALLOWED = "meakeiok@gmail.com"
+    _DENIED = "stranger@example.com"
+
+    def test_status_200_when_jwt_email_allowed(self, auth_client) -> None:
+        """Valid JWT + email on allow-list → 200, no admin token needed."""
+        mock_repo = MagicMock()
+        mock_repo.get_all = AsyncMock(return_value=[])
+        with (
+            patch.object(settings, "admin_token", None),
+            patch.object(settings, "admin_allowed_emails", [self._ALLOWED]),
+            patch("api.routers.debug._verify_cf_access_jwt", return_value=self._ALLOWED),
+            patch("api.routers.debug.SpecRepository", return_value=mock_repo),
+        ):
+            response = auth_client.get(
+                "/debug/status",
+                headers={"Cf-Access-Jwt-Assertion": "any.jwt.here"},
+            )
+        assert response.status_code == 200
+
+    def test_status_403_when_jwt_email_not_allowed(self, auth_client) -> None:
+        """Valid JWT but email not on allow-list → 403, no fall-through."""
+        with (
+            patch.object(settings, "admin_token", "supersecret"),
+            patch.object(settings, "admin_allowed_emails", [self._ALLOWED]),
+            patch("api.routers.debug._verify_cf_access_jwt", return_value=self._DENIED),
+        ):
+            response = auth_client.get(
+                "/debug/status",
+                headers={"Cf-Access-Jwt-Assertion": "any.jwt.here"},
+            )
+        assert response.status_code == 403
+        assert self._DENIED in response.json()["message"]
+
+    def test_status_503_when_jwt_invalid_and_token_unset(self, auth_client) -> None:
+        """Invalid JWT + admin_token unset → falls through to 503 (fail-closed)."""
+        with (
+            patch.object(settings, "admin_token", None),
+            patch("api.routers.debug._verify_cf_access_jwt", return_value=None),
+        ):
+            response = auth_client.get(
+                "/debug/status",
+                headers={"Cf-Access-Jwt-Assertion": "garbage"},
+            )
+        assert response.status_code == 503
+
+    def test_status_200_when_jwt_invalid_but_token_correct(self, auth_client) -> None:
+        """Invalid JWT + correct X-Admin-Token → 200 (break-glass fall-through)."""
+        mock_repo = MagicMock()
+        mock_repo.get_all = AsyncMock(return_value=[])
+        with (
+            patch.object(settings, "admin_token", "supersecret"),
+            patch("api.routers.debug._verify_cf_access_jwt", return_value=None),
+            patch("api.routers.debug.SpecRepository", return_value=mock_repo),
+        ):
+            response = auth_client.get(
+                "/debug/status",
+                headers={
+                    "Cf-Access-Jwt-Assertion": "garbage",
+                    "X-Admin-Token": "supersecret",
+                },
+            )
+        assert response.status_code == 200

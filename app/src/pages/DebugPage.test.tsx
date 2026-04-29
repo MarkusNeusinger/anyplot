@@ -95,7 +95,7 @@ describe('DebugPage', () => {
     render(<DebugPage />);
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('X-Admin-Token')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('Admin token (fallback)')).toBeInTheDocument();
     });
     expect(screen.getByRole('button', { name: /unlock/i })).toBeInTheDocument();
     expect(screen.getByText(/admin token required/i)).toBeInTheDocument();
@@ -136,7 +136,7 @@ describe('DebugPage', () => {
 
     render(<DebugPage />);
 
-    const input = await screen.findByPlaceholderText('X-Admin-Token');
+    const input = await screen.findByPlaceholderText('Admin token (fallback)');
     fireEvent.change(input, { target: { value: 'secret-xyz' } });
     fireEvent.click(screen.getByRole('button', { name: /unlock/i }));
 
@@ -159,7 +159,7 @@ describe('DebugPage', () => {
       expect(sessionStorage.getItem('anyplot.adminToken')).toBeNull();
     });
     // Form is still on screen because fetch still returns 401.
-    expect(screen.getByPlaceholderText('X-Admin-Token')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Admin token (fallback)')).toBeInTheDocument();
   });
 
 });
