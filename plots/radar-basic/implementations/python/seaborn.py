@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 radar-basic: Basic Radar Chart
-Library: seaborn | Python 3.13
-Quality: 91/100 | Updated: 2026-04-29
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-04-29
 """
 
 import os
