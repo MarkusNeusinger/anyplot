@@ -1,74 +1,112 @@
-""" pyplots.ai
+""" anyplot.ai
 pyramid-basic: Basic Pyramid Chart
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-04-29
 """
 
+import os
+
 from bokeh.io import export_png, output_file, save
-from bokeh.models import ColumnDataSource, Range1d
+from bokeh.models import ColumnDataSource, CustomJSTickFormatter, HoverTool, Range1d, Span
 from bokeh.plotting import figure
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+MALE_COLOR = "#009E73"  # Okabe-Ito position 1
+FEMALE_COLOR = "#D55E00"  # Okabe-Ito position 2
 
 # Data - Population by age group (in thousands)
 age_groups = ["0-9", "10-19", "20-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80+"]
 male_population = [45, 52, 68, 82, 75, 65, 48, 32, 15]
 female_population = [43, 50, 72, 85, 78, 70, 55, 40, 22]
-
-# Negate male values for left side of pyramid
 male_negative = [-v for v in male_population]
 
-# Create data sources
-source_male = ColumnDataSource(data={"age": age_groups, "population": male_negative})
-source_female = ColumnDataSource(data={"age": age_groups, "population": female_population})
+source_male = ColumnDataSource(data={"age": age_groups, "population": male_negative, "value": male_population})
+source_female = ColumnDataSource(data={"age": age_groups, "population": female_population, "value": female_population})
 
-# Create figure with categorical y-axis and symmetric x-range
+# Plot
 p = figure(
     width=4800,
     height=2700,
     y_range=age_groups,
     x_range=Range1d(-100, 100),
-    title="pyramid-basic · bokeh · pyplots.ai",
+    title="pyramid-basic · bokeh · anyplot.ai",
     x_axis_label="Population (thousands)",
     y_axis_label="Age Group",
 )
 
-# Draw horizontal bars - male (left, Python Blue) and female (right, coral pink)
 bar_height = 0.7
-p.hbar(
-    y="age", right="population", height=bar_height, source=source_male, color="#306998", alpha=0.85, legend_label="Male"
+male_bars = p.hbar(
+    y="age",
+    right="population",
+    height=bar_height,
+    source=source_male,
+    color=MALE_COLOR,
+    alpha=0.85,
+    legend_label="Male",
 )
-p.hbar(
+female_bars = p.hbar(
     y="age",
     right="population",
     height=bar_height,
     source=source_female,
-    color="#E8888C",
+    color=FEMALE_COLOR,
     alpha=0.85,
     legend_label="Female",
 )
 
-# Text styling for 4800x2700 px canvas
+# HoverTools for interactivity
+p.add_tools(HoverTool(renderers=[male_bars], tooltips=[("Age Group", "@age"), ("Male", "@value{0,0} thousand")]))
+p.add_tools(HoverTool(renderers=[female_bars], tooltips=[("Age Group", "@age"), ("Female", "@value{0,0} thousand")]))
+
+# Center line at x=0 via Span — adapts to full plot height automatically
+center_line = Span(location=0, dimension="height", line_color=INK_SOFT, line_width=2, line_alpha=0.5)
+p.add_layout(center_line)
+
+# Show absolute values on x-axis (both sides positive)
+p.xaxis.formatter = CustomJSTickFormatter(code="return Math.abs(tick).toString()")
+
+# Style
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
+
+p.title.text_color = INK
 p.title.text_font_size = "32pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
 p.xaxis.axis_label_text_font_size = "24pt"
 p.yaxis.axis_label_text_font_size = "24pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
 p.xaxis.major_label_text_font_size = "18pt"
 p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 
-# Grid styling - subtle dashed lines
-p.xgrid.grid_line_alpha = 0.3
-p.ygrid.grid_line_alpha = 0.3
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.10
 p.xgrid.grid_line_dash = [6, 4]
 p.ygrid.grid_line_dash = [6, 4]
 
-# Legend styling
+p.legend.location = "bottom_right"
+p.legend.background_fill_color = ELEVATED_BG
+p.legend.border_line_color = INK_SOFT
+p.legend.label_text_color = INK_SOFT
 p.legend.label_text_font_size = "18pt"
-p.legend.location = "top_right"
-p.legend.background_fill_alpha = 0.7
+p.legend.background_fill_alpha = 0.9
 
-# Add center line at x=0 for visual reference
-p.line([0, 0], [-0.5, len(age_groups) - 0.5], line_color="#333333", line_width=2, line_alpha=0.5)
-
-# Save outputs
-export_png(p, filename="plot.png")
-output_file("plot.html")
+# Save
+export_png(p, filename=f"plot-{THEME}.png")
+output_file(f"plot-{THEME}.html")
 save(p)
