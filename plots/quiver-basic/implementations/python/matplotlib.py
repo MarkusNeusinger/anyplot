@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 quiver-basic: Basic Quiver Plot
-Library: matplotlib | Python 3.13
-Quality: pending | Updated: 2026-04-29
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-04-29
 """
 
 import os
