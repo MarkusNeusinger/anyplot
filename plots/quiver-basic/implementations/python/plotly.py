@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 quiver-basic: Basic Quiver Plot
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 80/100 | Updated: 2026-04-29
 """
 
 import numpy as np

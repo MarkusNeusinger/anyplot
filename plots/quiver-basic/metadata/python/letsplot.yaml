@@ -1,159 +1,179 @@
 library: letsplot
+language: python
 specification_id: quiver-basic
 created: '2025-12-23T18:17:36Z'
-updated: '2025-12-23T18:24:53Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468242904
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling: []
+updated: '2026-04-29T22:55:22Z'
+generated_by: claude-sonnet
+workflow_run: 25137393212
+issue: 1014
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/letsplot/plot-dark.html
+quality_score: 82
 review:
   strengths:
-  - Excellent circular rotation pattern clearly demonstrates the vector field concept
-  - Color encoding of magnitude (blue=low, yellow=high) provides additional insight
-    as suggested in spec
-  - Well-scaled arrows that prevent overlap while remaining visible
-  - Proper use of geom_segment with arrow() to simulate quiver functionality
-  - Clean KISS code structure with proper seed for reproducibility
-  - Correct title format following pyplots.ai conventions
+  - 'Proper theme-adaptive chrome: all six colour tokens correctly applied, readable
+    in both themes'
+  - Font sizes explicitly set at all hierarchy levels (24/20/16 pt)
+  - Very subtle grid (size=0.15, minor grid removed) and clean theme_minimal base
+  - Rotation vector field choice clearly communicates the quiver concept; magnitude
+    colour encoding adds informative dimension
+  - Full dual-format output (PNG + HTML) correct for letsplot
   weaknesses:
-  - Axis labels lack units (e.g., "X Position (units)" or context like "meters")
-  - Grid lines could be slightly more subtle (alpha slightly lower)
-  - Could explore additional lets-plot interactive features for the HTML output
-  image_description: The plot displays a rotation vector field with arrows arranged
-    in a 15x15 grid spanning from -3 to 3 on both axes. The arrows form a clear counter-clockwise
-    circular rotation pattern around the origin. Arrow colors transition from dark
-    blue (near origin, low magnitude) to yellow/gold (at edges, high magnitude) using
-    a gradient color scale. The title reads "Rotation Vector Field · quiver-basic
-    · letsplot · pyplots.ai". Axis labels are "X Position" and "Y Position". A "Magnitude"
-    legend on the right shows the color scale from 0 to 4. The plot uses a minimal
-    theme with subtle grid lines and has good visual balance.
+  - 'VQ-07: scale_color_gradient(low="#306998") uses Python Blue which is explicitly
+    non-compliant — replace with scale_color_viridis(name="Magnitude")'
+  - 'SC-04: Title includes non-standard prefix "Rotation Vector Field · " — change
+    to "quiver-basic · letsplot · anyplot.ai"'
+  - 'VQ-01 minor: legend_text size=14pt is below the 16pt minimum — raise to size=16'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "quiver-basic · letsplot · anyplot.ai" (or full prefix version) in dark ink at top left; axis labels "X Position (m)" / "Y Position (m)" in dark text with units; tick labels in INK_SOFT (dark grey) — all clearly readable against light background
+      Data: 225 arrows on 15x15 grid, colour-coded from dark blue (#306998, low magnitude at centre) through cyan/green to bright yellow (#FFD43B, high magnitude at corners); circular rotation pattern clearly visible; arrow line width=1.2 adequate; first series uses #306998 (not #009E73 — VQ-07 violation for continuous data palette)
+      Grid: Extremely subtle (size=0.15), major only — appropriate
+      Legibility verdict: PASS (all text dark-on-light, no readability failures)
+
+    Dark render (plot-dark.png):
+      Background: Dark near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title and all labels flip to light cream/off-white tones (INK token = #F0EFE8 in dark theme); tick labels in B8B7B0 — all legible against the dark surface; no dark-on-dark failures detected
+      Data: Arrow colours are identical to light render — same blue (#306998) to yellow (#FFD43B) gradient unchanged, confirming only chrome flips between themes
+      Grid: Faintly visible on dark background, appropriately subtle
+      Legibility verdict: PASS (no dark-on-dark failures; both title and axis labels are light-on-dark and readable)
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick labels, and legend text are all clearly
-          readable at full size
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text or arrows; grid spacing is well-chosen
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Arrows are well-sized and visible; some near-center arrows are small
-          but this correctly reflects their low magnitude
+        comment: Title 24pt, axis labels 20pt, ticks 16pt all explicitly set; legend_text
+          14pt is 2pt below 16pt minimum
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No tick, label, or title collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Outer arrows well-sized; centre arrows are tiny by physical necessity
+          (near-zero magnitude) but still visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue-to-yellow gradient is colorblind-safe (avoids red-green)
+        comment: Gradient has adequate luminance variation; no red-green sole encoding
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: Plot fills ~65% of canvas with balanced margins; legend adjacent
+          to data
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels "X Position" and "Y Position" but no units
+        comment: X Position (m) and Y Position (m) with units
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 0
         max: 2
+        passed: false
+        comment: scale_color_gradient(low='#306998') uses Python Blue which is explicitly
+          listed as non-compliant in VQ-07; continuous data must use viridis/cividis/BrBG
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: true
-        comment: Grid is subtle, legend is well-placed; grid could be slightly more
-          subtle
+        comment: Professionally rendered; visually interesting colour gradient; theme
+          tokens correctly applied; calibrated as well-configured library default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal base + very thin major grid (0.15) + minor grid removed
+          + elevated legend background
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Circular rotation field immediately communicates pattern; colour
+          magnitude encoding adds second insight dimension
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct quiver/vector field visualization using arrows
+        comment: geom_segment + arrow() is correct quiver implementation in letsplot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y positions and U/V vector components correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: grid positioning, direction arrows, magnitude
-          encoding via color'
-      - id: SC-04
-        name: Data Range
+        comment: Grid positions, direction, magnitude-proportional length, colour
+          encoding, rotation field all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full data range visible with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
+        comment: x/y positions correct; u=-y, v=x field correct; xend/yend correctly
+          derived
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Magnitude legend is accurate and clear
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Title uses correct format: "quiver-basic · letsplot · pyplots.ai"'
+        max: 3
+        passed: false
+        comment: Title has non-standard prefix 'Rotation Vector Field · ' before spec-id;
+          required format is 'quiver-basic · letsplot · anyplot.ai'
     data_quality:
-      score: 17
-      max: 20
+      score: 13
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows rotation pattern well; could benefit from showing additional
-          field types
+        comment: Grid positions, direction variation, magnitude range near-zero to
+          maximum, 225-arrow density all shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Classic rotation field u=-y, v=x is a fundamental physics example
-      - id: DQ-03
-        name: Appropriate Scale
         score: 4
         max: 5
         passed: true
-        comment: Grid coordinates -3 to 3 are sensible; 15x15 grid (225 arrows) is
-          within spec range
+        comment: Circular rotation field with physical units (m) represents realistic
+          fluid vortex; plausible, domain-neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Coordinate range +-3m with scale_factor=0.25 produces appropriate
+          arrow spacing
     code_quality:
       score: 10
       max: 10
@@ -163,40 +183,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure without functions/classes
+        comment: Imports → tokens → data → theme → plot → save
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Clean, Pythonic, no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct grammar-of-graphics pattern; arrow() with geom_segment, scale_color_gradient,
+          labs, ggsize, theme layering all idiomatic
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses geom_segment with arrow(), scale_color_gradient, theme_minimal;
-          could leverage more lets-plot specific interactivity features
+        comment: arrow() endpoint geometry is letsplot/ggplot2-distinctive; dual PNG+HTML
+          export leverages letsplot interactive capability
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - grid-styling

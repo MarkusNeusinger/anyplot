@@ -1,159 +1,191 @@
 library: plotnine
+language: python
 specification_id: quiver-basic
 created: '2025-12-23T18:15:12Z'
-updated: '2025-12-23T18:23:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468198901
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/plotnine/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling: []
+updated: '2026-04-29T22:49:43Z'
+generated_by: claude-sonnet
+workflow_run: 25137165608
+issue: 1014
+python_version: 3.13.13
+library_version: 0.15.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Excellent implementation of vector field using geom_segment with arrow aesthetics
-  - Color-coded magnitude provides additional data dimension as suggested in spec
-    notes
-  - Clean, well-structured code following KISS principles
-  - Rotation field pattern is clearly visible and mathematically correct
-  - Good arrow scaling that preserves relative magnitudes while maintaining visibility
-  - Text sizing is well-calibrated for the output resolution
+  - Perfect spec compliance — quiver plot correctly implemented using geom_segment
+    with arrow(type='closed') producing clean arrowheads
+  - Viridis colormap for magnitude is perceptually uniform and CVD-safe, clearly showing
+    the radial gradient from center to periphery
+  - All font sizes explicitly set at correct sizes (title 24pt, axis labels 20pt,
+    tick labels 16pt, legend 16pt)
+  - 'Both light and dark renders pass theme-readability checks: correct backgrounds
+    (#FAF8F1 / #1A1A17), adaptive chrome tokens, no dark-on-dark failures'
+  - Deterministic mathematical data (rotation field u=-y, v=x) with realistic 'East/North
+    (km)' context — plausible ocean current or atmospheric vortex
+  - coord_equal() preserves the true circular shape of the rotation field, critical
+    for correct interpretation of a vector field
   weaknesses:
-  - Axis labels could include units or at least "(dimensionless)" notation for a mathematical
-    field
-  image_description: The plot displays a 15x15 grid of arrows representing a counter-clockwise
-    rotation vector field (u = -y, v = x). The arrows are positioned on a coordinate
-    system ranging from approximately -4 to 4 on both axes. Arrow colors encode magnitude
-    using a gradient from blue (low magnitude near center) to yellow (high magnitude
-    at edges). The title "quiver-basic · plotnine · pyplots.ai" appears at the top.
-    Axis labels show "X Position" and "Y Position". A color legend labeled "Magnitude"
-    shows values from 0 to 4. The arrows clearly demonstrate the circular flow pattern
-    with smaller arrows near the origin and larger arrows at the periphery.
+  - 16:9 canvas is suboptimal for a symmetric vector field — coord_equal forces a
+    square plot area, leaving wasted horizontal whitespace; a square canvas (12x12)
+    would better utilize space
+  - Center arrows (near origin, magnitude ≈ 0) are very short/stubby, making direction
+    hard to read at the center of the rotation field
+  - Typography hierarchy is weak — the title uses the same weight as axis labels;
+    making the title bold would improve visual prominence
+  - Design storytelling is minimal — the viridis gradient naturally guides the eye
+    but there is no deliberate emphasis or narrative element pointing to the rotation
+    axis
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "quiver-basic · plotnine · anyplot.ai" clearly readable in dark ink. X-axis "East (km)" and Y-axis "North (km)" both readable. Tick labels (-4 to 4) legible in INK_SOFT (#4A4A44). Legend "Magnitude" with colorbar (0–4) readable and well-placed to the right.
+      Data: 15x15 grid of arrows colored by viridis — dark purple at center (low magnitude) graduating to bright yellow-green at the outer corners (high magnitude). Counter-clockwise rotation pattern immediately apparent. Closed arrowheads clearly show direction. Grid lines barely visible (alpha=10%).
+      Legibility verdict: PASS — all text readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, axis labels, and tick labels all render in light ink (#F0EFE8 / #B8B7B0), clearly readable against the dark background. Legend box has elevated dark fill (#242420) with light text. No dark-on-dark failures observed.
+      Data: Data colors are identical to the light render — viridis gradient from purple (center) to yellow-green (corners) is unchanged, confirming only chrome flips between themes. Arrows clearly visible against dark surface.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable at appropriate
-          sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements; arrows well-spaced on 15x15 grid
+        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, tick
+          labels 16pt, legend 16pt. Readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Generally clean, minor crowding in outer corners where corner arrows
+          are longest.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Arrows are clearly visible with good sizing; arrowheads are well-formed
-          and distinguishable
+        comment: Arrows visible throughout; center arrows are correctly short (low
+          magnitude) but direction hard to read near origin.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue-to-yellow gradient (viridis-like) is colorblind-safe
+        comment: Viridis is CVD-safe and perceptually uniform. No red-green encoding.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: 16:9 canvas with coord_equal creates a square plot in a wide frame
+          — some horizontal whitespace. Legend well-placed.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive ("X Position", "Y Position") but lack units
+        comment: East (km), North (km) with units. Title format correct.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with appropriate alpha; legend is well-placed but
-          could be slightly better positioned
+        comment: 'Continuous data correctly uses viridis. Backgrounds #FAF8F1 (light)
+          / #1A1A17 (dark). Theme chrome adapts correctly.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: custom theme tokens, closed arrowheads, panel border
+          removed, elevated legend fill. Not publication-ready — no bold title, no
+          font family customization.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Panel border removed (element_blank), L-frame axis lines retained,
+          grid at 10%/5% opacity. Genuine refinement above defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Viridis gradient naturally guides eye from center to periphery. No
+          deliberate storytelling element (e.g., marking rotation axis at origin).
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct quiver/vector field visualization using arrows
+        comment: Correct quiver plot using geom_segment with arrow() — the idiomatic
+          plotnine approach.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y coordinates correctly mapped, u/v components correctly determine
-          arrow direction and length
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows vector field with direction and magnitude; color encodes magnitude
-          as optional feature
-      - id: SC-04
-        name: Data Range
+        comment: Uniform grid, arrows with direction and length proportional to magnitude,
+          color encoding of magnitude via viridis.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y grid correctly mapped; u=-y, v=x rotation field correctly computed;
+          coord_equal preserves aspect ratio.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Magnitude legend accurately represents arrow color encoding
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "quiver-basic · plotnine · pyplots.ai"'
+        comment: Title 'quiver-basic · plotnine · anyplot.ai' correct. Legend labeled
+          'Magnitude' with viridis colorbar.
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows rotation field pattern with varying magnitudes; arrows point
-          in correct rotational directions; magnitude increases from center to edges
+        comment: 'Shows all quiver plot aspects: uniform grid, direction, varying
+          magnitude (near-zero center to high-magnitude edges), closed arrowheads.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Rotation field (u=-y, v=x) is a classic mathematical example used
-          in physics/CFD
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Grid size (15x15=225 arrows) and coordinate range (-3 to 3) are appropriate
+        comment: '''East (km)'' / ''North (km)'' labels with counter-clockwise rotation
+          — plausible ocean gyre or atmospheric vortex. Neutral and scientifically
+          valid.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 15x15=225 arrows (within 100-400 spec range), -3 to 3 km coordinates,
+          magnitude 0–4.2 km. All values physically sensible.
     code_quality:
       score: 10
       max: 10
@@ -163,41 +195,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: 'Flat script: imports → data → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducibility
+        comment: Fully deterministic — mathematical formula (meshgrid + u=-y, v=x),
+          no random state.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imported names are used in the script.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Clean, Pythonic code. Arrow scaling logic is sensible.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=300. No bare plot.png.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses geom_segment with arrow() which is valid but plotnine doesn't
-          have a native quiver geom; this is a workaround approach rather than leveraging
-          distinctive plotnine/ggplot2 features
+        passed: true
+        comment: 'Correct grammar-of-graphics approach: geom_segment with arrow(),
+          aes() mappings, scale_color_cmap(), coord_equal(). Above default.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: arrow() parameter with type='closed' in geom_segment is distinctive
+          to plotnine/ggplot2 grammar. coord_equal() and scale_color_cmap() leverage
+          plotnine's layered design. Above default.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap

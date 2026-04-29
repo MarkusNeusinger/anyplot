@@ -1,218 +1,240 @@
 library: highcharts
+language: python
 specification_id: quiver-basic
 created: '2025-12-23T19:04:36Z'
-updated: '2025-12-23T19:25:28Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20469183492
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-29T22:57:41Z'
+generated_by: claude-sonnet
+workflow_run: 25137317123
+issue: 1014
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/highcharts/plot-dark.html
+quality_score: 83
 review:
   strengths:
-  - Creative implementation of quiver plot using line series with null separators
-    in a library without native vector field support
-  - Excellent colorblind-safe palette (cyan → green → yellow → orange) for magnitude
-    encoding
-  - Clear circular rotation pattern demonstrates the vector field concept effectively
-  - Properly sized text elements for high-resolution output
-  - Well-structured legend with magnitude categories
-  - Good use of arrowheads to show direction
+  - Manual arrow shaft + arrowhead geometry construction is technically correct and
+    idiomatic for Highcharts (line series with null separators)
+  - Color-encodes magnitude across 4 sequential bins, adding an informational layer
+    beyond direction/length
+  - 'Both themes fully adapted: all chrome elements (title, labels, ticks, grid, legend)
+    correctly use INK/INK_SOFT/GRID tokens'
+  - Clear circular rotation flow pattern — the vortex structure is instantly readable
+  - Complete axis labels with units, generous margins, appropriate 4800x2700 canvas
+    size
   weaknesses:
-  - 'Minor: The helper function magnitude_to_color violates the KISS structure guideline
-    (no functions)'
-  - Grid lines configured but not visible in the output - the dashed grid was specified
-    but does not appear
-  image_description: 'The plot displays a quiver (vector field) visualization showing
-    a circular wind flow pattern. The chart has a white background with arrows positioned
-    on a 12x12 grid spanning from -4 to 4 on both axes. Arrows are color-coded by
-    magnitude: cyan (Low), green (Medium), yellow (High), and orange (Very High).
-    The circular counterclockwise rotation pattern is clearly visible - arrows near
-    the center are small (cyan/low magnitude) while arrows at the periphery are larger
-    (orange/very high magnitude). The title "Circular Wind Flow · quiver-basic · highcharts
-    · pyplots.ai" appears at the top. X and Y axis labels show "Position (grid units)".
-    A legend at the bottom displays the four magnitude categories with their corresponding
-    colors.'
+  - 'Color palette is neither Okabe-Ito nor viridis/cividis: #17BECF, #2AA02A, #FFD43B,
+    #FF7F0E are custom hex values — use Okabe-Ito positions 1-4 (#009E73, #E69F00,
+    #56B4E9, #CC79A7) for magnitude bins or a viridis color axis'
+  - No top/right spine removal — chart retains full box frame; set lineWidth/tickLength
+    to 0 on axes and plotBorderWidth to 0 on chart
+  - Center Low-magnitude arrows are quite small and may be hard to distinguish at
+    web display sizes
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark
+      Chrome: Title "quiver-basic · highcharts · anyplot.ai" readable in dark ink; axis labels "X Position (grid units)" / "Y Position (grid units)" clearly visible; tick labels (-4 to 4) legible; legend "Vector Magnitude" with Low/Medium/High/Very High entries readable
+      Data: 4-bin magnitude coloring — green/teal (Low, center), orange (Medium, inner ring), blue (High, mid-ring), pink/magenta (Very High, outer periphery); circular rotation pattern clearly visible; arrow shafts and arrowheads render correctly
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light
+      Chrome: Title, axis labels, and tick labels all render in light colors (INK/INK_SOFT tokens applied); legend panel uses ELEVATED_BG for contrast; no dark-on-dark text failures observed
+      Data: Arrow colors are identical to light render — green (Low), orange (Medium), blue (High), pink (Very High) — confirming only chrome elements flip between themes
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 24
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick marks, and legend all clearly readable at
-          high resolution
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text or data elements, arrows well-spaced
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Arrows are well-sized and clearly visible; some inner arrows near
-          center are quite small but this is appropriate for the magnitude encoding
+        comment: Font sizes explicitly set (72px title, 48px axis, 36px ticks), readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Arrows well spaced; minor crowding of Low-magnitude vectors at center
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All four magnitude bins visible; center arrows small but legible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Cyan, green, yellow, orange palette is colorblind-safe, avoids red-green
-          confusion
+        score: 1
+        max: 2
+        passed: false
+        comment: Custom palette not validated against CVD standards; no Okabe-Ito
+          colors used
       - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good layout overall, plot fills canvas well, slight asymmetry in
-          arrow distribution due to filtering near-zero vectors
+        comment: 16:9 landscape 4800x2700, generous margins; slight deduction for
+          box-frame layout
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "X Position (grid units)", "Y Position
-          (grid units)"'
+        comment: Descriptive labels with units; title present
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 1
         max: 2
+        passed: false
+        comment: Backgrounds correct (#FAF8F1/#1A1A17); data colors not Okabe-Ito
+          or viridis
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: true
-        comment: Grid lines are visible but dashed style works; legend is well-placed.
-          However, the grid is not visible in the final output (missing gridlines
-          entirely)
+        comment: 'Above default: manual arrowhead geometry, color magnitude encoding;
+          non-standard palette limits score'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtle grid, generous margins, legend border; no spine removal
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Circular vortex instantly legible; magnitude-color gradient tells
+          radial story
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct quiver/vector field representation using arrows
+        comment: Correct quiver/vector-field plot with manually constructed arrows
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y positions and U/V components correctly mapped to arrow placement
-          and direction
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Uniform grid, directional arrows, magnitude encoding via color, circular
-          rotation pattern
-      - id: SC-04
-        name: Data Range
+        comment: Grid layout, direction, length-magnitude, color-magnitude all implemented
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show full data range from -4 to 4
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: u=-y, v=x circular field; axes span [-4,4]; 12x12 grid
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels magnitude categories (Low, Medium, High,
-          Very High)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "Circular Wind Flow · quiver-basic · highcharts
-          · pyplots.ai"'
+        comment: Title contains spec-id/library/anyplot.ai; legend labels match data
+          bins
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows circular rotation pattern well, magnitude variation visible;
-          could show more diverse vector patterns
+        comment: Shows position, direction, magnitude-via-length, magnitude-via-color
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Wind flow is a plausible scenario, though the perfect mathematical
-          circular pattern is somewhat idealized
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Grid units from -3 to 3 with appropriate vector magnitudes
+        comment: Circular rotation is standard physics/fluid example; neutral and
+          plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 12x12 grid on [-3,3] with arrow_scale=0.18 prevents overlap
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Has a helper function `magnitude_to_color` which violates strict
-          KISS principle, but overall structure is logical
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses `np.random.seed(42)` (though data is deterministic anyway)
+        comment: Flat script, no unnecessary functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity appropriate for manual arrow construction; no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png correctly, but also saves plot.html
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; container=container
+          set
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Good use of Highcharts line series with null separators for discrete
-          arrows, proper chart configuration, and legend customization. Creative approach
-          to implement quiver plot in a library that does not natively support it.
+        comment: Proper highcharts_core API; inline JS; element screenshot via container.screenshot()
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Line series with null separators for disconnected arrows — proper
+          Highcharts idiom; HTML artifact generated
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  - binning
+  styling:
+  - grid-styling

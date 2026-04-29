@@ -1,36 +1,245 @@
 library: pygal
+language: python
 specification_id: quiver-basic
 created: '2025-12-23T18:34:19Z'
-updated: '2025-12-23T18:53:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468589915
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-29T23:08:46Z'
+generated_by: claude-sonnet
+workflow_run: 25137241599
+issue: 1014
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/pygal/plot.html
-quality_score: 82
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/pygal/plot-dark.html
+quality_score: 77
 review:
   strengths:
-  - Creative approach to simulate quiver plot using pygal XY chart with line segments
-    for arrows
-  - Excellent color-coded magnitude representation using 5 distinct wind speed categories
-  - Proper title format following pyplots.ai convention
-  - Realistic wind flow scenario with counterclockwise rotation around low-pressure
-    center
-  - Good use of canvas space with legend positioned at bottom in 5 columns
+  - 'Correct Okabe-Ito palette with #009E73 as first series; theme-adaptive chrome
+    works in both renders'
+  - Beaufort-scale wind speed bins add real meteorological context and create natural
+    data storytelling
+  - allow_interruptions=True with None breaks is the idiomatic pygal pattern for disconnected
+    arrow segments
+  - All font sizes explicitly set to style-guide values; both renders fully legible
+  - Title format exactly matches required pattern
   weaknesses:
-  - Arrow stroke width is too thin making some vectors difficult to see, especially
-    lower magnitude ones
-  - Grid lines through center (0,0) are visually dominant and distract from the data
-  - The Calm category in legend shows no arrows since very weak vectors are filtered
-    out, making it misleading
+  - Arrow-segment construction loop is verbose — the segment grouping, shuffle, and
+    flatten steps could be condensed into a more elegant helper pattern
+  - Small calm/light arrows near the origin are very tiny and could benefit from a
+    minimum length floor to improve visibility
+  - Design refinement is moderate — pygal limited spine control constrains polish,
+    but whitespace and grid subtlety could be improved
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title 'quiver-basic · pygal · anyplot.ai' in dark ink — readable. Axis labels 'Longitude (degrees)' and 'Latitude (degrees)' clearly visible. Tick labels (-3 to 3) readable. Legend at bottom with three entries readable.
+      Data: 64 arrows in 8x8 grid; first series is #009E73 (green, Calm/Light), second #D55E00 (orange, Moderate), third #0072B2 (blue, Fresh/Strong). Circular rotation pattern clearly visible. Arrow sizes proportional to magnitude — small near centre, large at periphery.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and axis labels in light ink (#F0EFE8) — clearly readable against dark surface. Tick labels are light-coloured. No dark-on-dark failures observed. Grid lines visible but subtle.
+      Data: Identical data colours to light render — green, orange, blue in same Okabe-Ito order. Arrow shapes and positions identical. Only chrome elements (background, text, grid tone) have flipped to dark theme.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=28, label=22, major_label=18,
+          legend=16); all text readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Arrows well-spaced; no text collision. Minor deduction: peripheral
+          arrows denser'
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Arrows and barb segments clearly visible. Calm/light arrows near
+          origin are very small (inherent to data)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: First three Okabe-Ito colours; colourblind-safe combination
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilisation; legend placement works. Minor wasted whitespace
+          at edges
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes labelled with units (Longitude (degrees), Latitude (degrees))
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, followed by #D55E00 and #0072B2 in canonical
+          order. Correct backgrounds. Theme-adaptive chrome in both renders'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Correct palette and sizing; looks like well-configured default rather
+          than publication-ready design
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Custom background and INK_MUTED grid tone; above minimal defaults
+          but limited by pygal's spine control
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Beaufort-scale wind bins add context; circular rotation creates focal
+          point; above default data-dump level
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct quiver/vector-field concept; pygal has no native quiver type
+          so XY with segment breaks and arrowhead barbs is correct approach
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid of arrows, direction encoding, length proportional to magnitude,
+          uniform spacing, colour encoding by magnitude — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=longitude, Y=latitude; u=-y, v=x circular rotation correctly implemented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'quiver-basic · pygal · anyplot.ai'; legend labels
+          are descriptive Beaufort-scale names
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows varying magnitudes, circular rotation, colour coding by speed,
+          64 arrows with good field coverage
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Wind rotation around low-pressure centre is genuine meteorological
+          scenario; Beaufort bin names add grounding; mathematical model is slightly
+          abstract
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: ±3 degree geographic range sensible; wind speed classifications align
+          with Beaufort scale
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: No functions/classes; Imports→Data→Plot→Save pattern followed. Arrow
+          segment construction adds complexity; sys.path manipulation adds boilerplate
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) and np.random.RandomState(42) both set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: importlib, os, sys, numpy all used; pygal and Style imported dynamically
+          as required
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Functional but arrow-segment construction (grouping, shuffle, flatten)
+          is verbose; necessary given pygal's lack of native quiver support
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal API used
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: pygal.XY with allow_interruptions=True and None-terminated segments
+          is idiomatic for disconnected lines; Style object used correctly
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: allow_interruptions, stroke_style dict, legend_at_bottom_columns,
+          HTML interactive export — pygal-specific features used
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  - binning
+  styling: []
