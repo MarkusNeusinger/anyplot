@@ -1,168 +1,193 @@
 library: plotly
+language: python
 specification_id: quiver-basic
 created: '2025-12-23T18:12:55Z'
-updated: '2025-12-23T18:19:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468195342
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/plotly/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling: []
+updated: '2026-04-29T22:49:10Z'
+generated_by: claude-sonnet
+workflow_run: 25136941031
+issue: 1014
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/quiver-basic/python/plotly/plot-dark.html
+quality_score: 80
 review:
   strengths:
-  - Excellent use of plotly figure_factory.create_quiver for native quiver plot support
-  - Good combination of arrows with scatter markers for magnitude encoding
-  - Proper Viridis colorscale for colorblind accessibility
-  - Interactive hover templates provide detailed information
-  - HTML output enables full plotly interactivity
-  - Clean readable code structure following KISS principles
-  - Appropriate 15x15 grid density for visual clarity
+  - Uses plotly's ff.create_quiver — the purpose-built quiver utility — combined with
+    go.Scatter for magnitude color encoding, demonstrating solid library knowledge
+  - All font sizes explicitly set (title 32, axis 24, ticks 18, colorbar 22/18) —
+    fully readable in both renders
+  - Circular rotation field (u=-y, v=x) with viridis magnitude colorscale creates
+    an immediately readable vortex story
+  - Aspect-ratio lock (scaleanchor/scaleratio) preserves vector geometry — correct
+    for a quiver plot
+  - 'Arrow density (15×15 grid, scale_factor=0.2) is well-calibrated: no overlap,
+    each arrow distinguishable'
   weaknesses:
-  - Title includes extra descriptor before spec-id format
-  - Axis labels lack units
-  - Zero lines are slightly more prominent than grid lines
-  - X-axis range extends unnecessarily wide when data only spans -2 to 2
-  image_description: The plot displays a 15x15 grid of blue arrows (#306998) on a
-    white background, visualizing a circular rotation vector field. Each arrow represents
-    a vector with direction following the pattern u = -y, v = x, creating a counterclockwise
-    rotation around the origin. Colored circular markers at each arrow base encode
-    magnitude using the Viridis colorscale (purple at center for low magnitude, yellow
-    at corners for high magnitude). The title "Circular Flow Field · quiver-basic
-    · plotly · pyplots.ai" is centered at the top. Axis labels read "X Position" and
-    "Y Position". A vertical colorbar on the right shows magnitude values from ~0.3
-    to ~2.8. The grid is subtle with alpha transparency, and zero lines are visible
-    at x=0 and y=0.
+  - Arrow line color is hardcoded to '#306998' (legacy Python Blue) — explicitly non-compliant
+    per VQ-07; replace with BRAND = '#009E73' for the quiver lines or a neutral INK_SOFT
+    token
+  - Code does not read ANYPLOT_THEME env var and saves to 'plot.png'/'plot.html' instead
+    of 'plot-{THEME}.png'/'plot-{THEME}.html' — theme-adaptive chrome and correct
+    output filenames are missing from the source
+  - 'Axis labels lack units (''X Position'' / ''Y Position'' have no unit annotations);
+    title uses an extra description prefix instead of the canonical ''{spec-id} ·
+    {library} · anyplot.ai'' format (current: ''Circular Flow Field · quiver-basic
+    · plotly · anyplot.ai'')'
+  - 'Design defaults dominate: template=''plotly_white'' with no spine removal, no
+    margin tuning beyond basic values, minimal customisation beyond font sizes — design
+    excellence remains at library-configured-default level'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm cream/off-white consistent with ~#FAF8F1 — not pure white.
+      Chrome: Title "Circular Flow Field · quiver-basic · plotly · anyplot.ai" in dark text, clearly readable. Axis labels "X Position" / "Y Position" readable. Tick labels readable at appropriate size. Colorbar label "Magnitude" with numeric ticks also readable. All chrome legible.
+      Data: 15×15 grid of quiver arrows showing a circular rotation pattern. Arrow lines appear in a consistent blue/teal hue (code specifies #306998). Scatter markers at arrow bases are coloured by the viridis scale — deep purple at centre (low magnitude ≈ 0) transitioning through green to bright yellow at the corners (high magnitude ≈ 2.83). Colorbar on the right encodes magnitude 0.5–2.5+. The vortex structure is immediately apparent.
+      Legibility verdict: PASS — all text readable, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Near-black, consistent with ~#1A1A17 — not pure black.
+      Chrome: Title visible in white/light text against dark background. Axis labels and tick labels appear in light colour — readable. Colorbar "Magnitude" label and ticks visible. No dark-on-dark failures observed.
+      Data: Same viridis coloured markers and arrow pattern as light render — data colours are identical to the light render as required. The bright yellow outer arrows contrast well against the dark background. The deep purple centre arrows are slightly harder to see on dark but still distinguishable.
+      Legibility verdict: PASS — all text readable in light colours against dark background. Note: the dark theme chrome (light text, dark background) is present in the images but the committed source code does not include explicit ANYPLOT_THEME handling — the dark render may originate from a prior pipeline pass. The discrepancy is flagged as a code-level weakness.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, tick marks, and colorbar text are all clearly
-          readable at the target resolution
+        comment: 'All font sizes explicitly set: title 32, axis 24, ticks 18, colorbar
+          title 22, colorbar ticks 18. Readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; arrows are well-spaced
+        comment: No overlapping elements. 15x15 grid well-spaced.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Arrows are visible and distinguishable; marker sizes are appropriate
-          for data density; slight deduction as some arrows near corners could be
-          slightly larger
+        comment: Arrows clearly visible in both themes. scale_factor=0.2 well-calibrated.
+          Scatter markers size 10 provides good base visibility.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colorscale is colorblind-safe; blue arrows have good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization; slight empty space on left and right sides
-          of grid
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels ("X Position", "Y Position") but no units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid is subtle (good), colorbar well-placed; zero lines are slightly
-          more prominent than necessary
-    spec_compliance:
-      score: 24
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct quiver/vector field visualization with arrows
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y coordinates correctly assigned; u/v components properly mapped
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'All spec features present: grid positions, arrow directions, magnitude
-          encoding via color'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible; axes appropriately scaled
-      - id: SC-05
-        name: Legend Accuracy
         score: 2
         max: 2
         passed: true
-        comment: Colorbar correctly labeled "Magnitude"
-      - id: SC-06
-        name: Title Format
+        comment: Viridis is CVD-safe perceptually uniform colorscale.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions with aspect ratio lock. x-axis extends to ±4 for
+          a ±2 data range, leaving some wasted lateral space.
+      - id: VQ-06
+        name: Axis Labels & Title
         score: 1
         max: 2
-        passed: true
-        comment: Format follows convention but includes extra descriptor "Circular
-          Flow Field" before spec-id
-    data_quality:
-      score: 18
+        passed: false
+        comment: Axis labels 'X Position' / 'Y Position' are descriptive but lack
+          units. Title has extra description prefix.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: Arrow lines hardcoded to '#306998' (legacy Python Blue) — explicitly
+          non-compliant. Viridis is correct for continuous magnitude data. Chrome
+          appears correct in images but ANYPLOT_THEME handling absent from code.
+    design_excellence:
+      score: 11
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
         max: 8
+        passed: false
+        comment: Well-configured plotly_white template with intentional viridis colorscale.
+          Above pure defaults but not exceptional — no custom chrome colours, no spine
+          adjustments.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Aspect ratio lock is a nice touch. Explicit font sizes add polish.
+          But template defaults dominate; no spine removal, no grid-opacity tuning.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
         passed: true
-        comment: Shows circular rotation pattern well; demonstrates varying magnitudes;
-          minor deduction for not showing multiple flow patterns
-      - id: DQ-02
-        name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Circular rotation is a plausible physics scenario (fluid dynamics,
-          electromagnetic fields); good choice but generic
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: Circular vortex pattern tells an immediate story. Magnitude gradient
+          (dark centre → bright edges) creates natural visual hierarchy and guides
+          the viewer's eye outward.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Values are appropriate for the mathematical function; -2 to 2 range
-          is sensible
+        comment: Correct quiver plot using ff.create_quiver — the intended plotly
+          utility.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Uniform grid, arrows with direction encoding, magnitude encoded by
+          colour, mathematical rotation pattern u=-y v=x. All spec features present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct x/y grid mapping. All data visible within axes.
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: false
+        comment: Title contains spec-id, library, and anyplot.ai but adds a human-readable
+          description prefix 'Circular Flow Field ·', making it 4-part instead of
+          canonical 3-part format. No legend needed (colorbar serves as legend).
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows circular rotation with magnitude variation. Could show a second
+          field type (e.g. gradient vs rotation) for broader feature coverage.
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Circular vortex is a plausible real-world scenario (cyclone, fluid
+          vortex). Title could name the context more explicitly.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid range ±2, magnitude 0–2.83 — appropriate and factually consistent
+          for the rotation formula.
     code_quality:
       score: 9
       max: 10
@@ -172,42 +197,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save; no functions/classes'
+        comment: Clean imports → data → plot → save structure. No functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) even though data is deterministic
+        comment: np.random.seed(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, figure_factory, graph_objects)
+        comment: Only numpy, plotly.figure_factory, and plotly.graph_objects — all
+          used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotly APIs
+        comment: Clean, readable, appropriate complexity.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 0
         max: 1
-        passed: true
-        comment: Saves as "plot.png" but also "plot.html" (acceptable for interactive
-          library)
-    library_features:
-      score: 4
-      max: 5
+        passed: false
+        comment: Saves as 'plot.png' and 'plot.html' instead of 'plot-{THEME}.png'
+          and 'plot-{THEME}.html'. No ANYPLOT_THEME env var read. Pipeline-level workaround
+          may exist but code does not comply with spec.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Uses figure_factory.create_quiver for specialized quiver plot; adds
-          interactive hover templates; generates HTML for interactivity; could leverage
-          more plotly-specific features like animation
+        comment: ff.create_quiver is the idiomatic plotly approach. go.Scatter overlay
+          for colorbar is a correct pattern. Layout updates use plotly's dict API
+          correctly.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: ff.create_quiver is plotly figure_factory specific — not available
+          in most other libraries. Colorbar integration via marker colorscale is a
+          plotly strength.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
