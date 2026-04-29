@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pyramid-basic: Basic Pyramid Chart
-Library: pygal | Python 3.13
-Quality: pending | Updated: 2026-04-29
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 81/100 | Updated: 2026-04-29
 """
 
 import os
