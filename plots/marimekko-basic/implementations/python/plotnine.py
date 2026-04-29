@@ -1,7 +1,7 @@
 """ anyplot.ai
 marimekko-basic: Basic Marimekko Chart
 Library: plotnine 0.15.3 | Python 3.14.4
-Quality: 77/100 | Updated: 2026-04-29
+Quality: 78/100 | Updated: 2026-04-29
 """
 
 import pandas as pd
