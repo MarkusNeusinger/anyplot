@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: radar-basic
 created: '2025-12-23T18:14:23Z'
-updated: '2026-04-29T17:17:22Z'
+updated: '2026-04-29T17:32:53Z'
 generated_by: claude-sonnet
 workflow_run: 25121974992
 issue: 744
@@ -12,102 +12,105 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-basic/python/letsplot/plot-dark.html
-quality_score: 71
+quality_score: 69
 review:
   strengths:
-  - Correct radar chart structure with manual polar-to-Cartesian conversion in letsplot
-  - 'All spec features implemented: filled polygons with alpha=0.25, concentric circle
-    gridlines, spoke lines, outer category labels, scale value labels, legend, polygon
-    closure'
-  - Realistic and neutral employee performance context with good data variation between
-    Alice and Bob
-  - Clean KISS code structure with appropriate use of explicit zip() and strict=True
-  - All imports verified as used
+  - Correct radar chart structure with manual polar-to-Cartesian conversion covering
+    all spec requirements (filled polygons, alpha, concentric gridlines, spokes, labels,
+    legend, polygon closure)
+  - Realistic employee performance context with meaningful variation between Alice
+    and Bob profiles
+  - Clean KISS code structure, deterministic data, all imports used, Pythonic patterns
+    with zip(strict=True)
   weaknesses:
-  - 'Non-Okabe-Ito palette: code uses [#306998, #FFD43B] (Python Blue and Yellow)
-    instead of required [#009E73, #D55E00] (Okabe-Ito positions 1-2) — VQ-07 = 0'
-  - 'No ANYPLOT_THEME environment variable detection; hardcoded text colors (#333333
-    for labels, #666666 for values) will fail in dark theme since these dark grays
-    are near-invisible on #1A1A17 background'
-  - Output saves to plot.png/plot.html instead of f"plot-{THEME}.png"/f"plot-{THEME}.html"
-    — CQ-05 = 0
-  - Title in code says pyplots.ai not anyplot.ai — SC-04 deduction
-  - Rectangular panel grid bleeds through in light render (panel_grid=element_blank()
-    partially ineffective) — add panel_background and plot_background to theme()
-  - No distinctive letsplot-specific features used; implementation could be replicated
-    in plotnine with near-identical syntax
+  - 'CRITICAL: Non-Okabe-Ito palette (VQ-07=0) — code uses ["#306998", "#FFD43B"]
+    (Python Blue and Yellow) instead of ["#009E73", "#D55E00"] (Okabe-Ito positions
+    1-2). First series must always be #009E73.'
+  - 'CRITICAL: No ANYPLOT_THEME detection — no os.getenv("ANYPLOT_THEME") logic. geom_text(color="#333333")
+    and geom_text(color="#666666") will be near-invisible on #1A1A17 dark background
+    (dark-on-dark failure).'
+  - 'CRITICAL: Wrong output filename (CQ-05=0) — saves as plot.png/plot.html instead
+    of f"plot-{THEME}.png"/f"plot-{THEME}.html".'
+  - 'Wrong title in labs(): "radar-basic · letsplot · pyplots.ai" — must be "radar-basic
+    · letsplot · anyplot.ai" (only docstring comment was fixed, not the actual chart
+    title).'
+  - 'Panel grid bleed-through: panel_grid=element_blank() insufficient — rectangular
+    panel grid still shows behind the circular radar. Needs explicit panel_background=element_rect(fill=PAGE_BG,
+    color=PAGE_BG) in theme().'
+  - 'No letsplot-distinctive features: implementation could be replicated in plotnine
+    with near-identical syntax. letsplot HTML output supports native hover tooltips
+    that could show exact values.'
+  - Images in plot_images/ appear to be from a previous implementation run, not from
+    the current PR code — current code title says "pyplots.ai" and uses Python Blue/Yellow,
+    but images show "anyplot.ai" and Okabe-Ito colors.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface consistent with ~#FAF8F1. However, letsplot's default rectangular panel grid bleeds through visibly behind the circular radar chart — panel_grid=element_blank() is partially ineffective, creating a cluttered background crosshatch pattern.
-      Chrome: Title "radar-basic · letsplot · anyplot.ai" appears in the top-left at size 24, readable. Category labels (Creativity, Leadership, Communication, Technical, Problem Solving, Teamwork) positioned at outer edge, readable dark text. Scale value labels (20, 40, 60, 80, 100) visible in the center area. Legend ("Employee" / Alice / Bob) visible on the right.
-      Data: Two filled polygons with alpha=0.25 transparency. The line/point colors appear as teal-green and orange in the rendered image, but the CODE specifies ["#306998", "#FFD43B"] (Python Blue and Yellow, not Okabe-Ito). There is a discrepancy between the code color specification and what the rendered thumbnail appears to show — the code is definitively non-Okabe-Ito.
-      Legibility verdict: PASS for the light render (text readable), but the panel grid bleed-through degrades visual cleanliness.
+      Background: Warm off-white surface consistent with ~#FAF8F1.
+      Chrome: Title "radar-basic · letsplot · anyplot.ai" top-left, readable. Category labels (Creativity, Leadership, Communication, Technical, Problem Solving, Teamwork) at outer edges in dark text, readable. Value labels (20, 40, 60, 80, 100) near center visible. Legend "Employee" with Alice/Bob entries on right, readable.
+      Data: Two filled polygons with alpha=0.25. Colors appear as teal-green and orange-brown (Okabe-Ito-like). Dashed concentric gridlines and spoke lines visible. Rectangular panel grid bleeds faintly behind the circular radar.
+      Legibility verdict: PASS for the rendered images. HOWEVER: images appear to be from a PREVIOUS implementation run. Current code uses ["#306998","#FFD43B"] (Python Blue/Yellow) and title "pyplots.ai" — neither matches the images shown. The plot_images/ folder contains stale renders from a prior attempt.
 
     Dark render (plot-dark.png):
-      Background: Dark warm near-black surface consistent with ~#1A1A17. The rectangular panel grid is less visible on the dark background but still present.
-      Chrome: Title and category labels appear in light text against the dark background — readable. The rectangular grid blends into the dark surface. Legend visible on the right with readable text.
-      Data: Same two polygons as light render — colors appear identical to light render (only chrome flips), which is correct behavior. Data visibility is good on the dark surface.
-      Legibility verdict: PASS — no dark-on-dark failures observed in the rendered image. However, the code hardcodes color="#333333" for category labels and color="#666666" for value labels, which would be near-invisible on #1A1A17 if letsplot does not auto-adapt them. This code-level issue may cause failures in production.
+      Background: Dark near-black surface consistent with ~#1A1A17.
+      Chrome: Category labels appear in light/white text against dark background — readable. Legend text light and readable. Title visible.
+      Data: Same two polygons — data colors appear identical to light render (only chrome flips), correct behavior.
+      Legibility verdict: PASS for the rendered images. HOWEVER: current code hardcodes color="#333333" for category labels and color="#666666" for value labels via geom_text() — these dark grays would be near-invisible on #1A1A17 background (dark-on-dark failure). The images showing readable labels confirm they are NOT from the current code.
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 20
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 3
         max: 8
-        passed: true
+        passed: false
         comment: 'Font sizes explicitly set (title=24, legend=18/16, labels=16, value
-          labels=12). Readable in both renders. However, geom_text colors are hardcoded
-          (#333333, #666666) which may fail in dark theme without letsplot auto-adaptation.'
+          labels=12). Images show readable text. However, code hardcodes color=#333333
+          and #666666 for geom_text labels — dark grays that cause dark-on-dark failure
+          on #1A1A17 background.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Category labels at outer edge do not overlap. Value labels (20-100)
-          in center are close but readable. Minor crowding near center scale labels.
+        comment: Category labels at outer edge do not overlap. Value labels near center
+          slightly crowded but readable.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Polygons, lines, and points are all visible. Point size=6 and line
-          size=2 are adequate. Polygon fill alpha=0.25 allows good overlap visibility.
+        comment: Polygons, lines, and points all visible. Point size=6, line size=2,
+          polygon alpha=0.25 appropriate.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'The two series (#306998 blue and #FFD43B yellow per code) are highly
-          distinguishable for CVD viewers. Blue-yellow is safe for deuteranopia and
-          protanopia.'
+        comment: 'Code uses #306998 (blue) and #FFD43B (yellow) — highly distinguishable
+          for CVD viewers. Blue-yellow is safe for deuteranopia and protanopia.'
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square 3600x3600 canvas with radar chart centered. Chart fills ~65-70%
-          of visible area. Legend is appropriately positioned to the right. Minor
-          wasted space at edges.
+        comment: Square format appropriate for symmetric radar. Chart fills ~65-70%
+          of canvas. Legend appropriately positioned to the right.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Category labels serve as descriptive axis labels. Title present in
-          correct format (though code has pyplots.ai vs anyplot.ai discrepancy). Scale
-          values provide axis reference.
+        comment: Category labels serve as descriptive axis labels. Title present.
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'FAIL: Code uses scale_fill_manual(values=[''#306998'', ''#FFD43B''])
-          and scale_color_manual(values=[''#306998'', ''#FFD43B'']) — Python Blue
-          and Yellow, NOT Okabe-Ito. First series must be #009E73. Also no plot_background
-          set to #FAF8F1/#1A1A17, no theme-adaptive chrome tokens.'
+        comment: 'FAIL: scale_fill_manual(values=[''#306998'',''#FFD43B'']) and scale_color_manual(values=[''#306998'',''#FFD43B''])
+          — Python Blue and Yellow, NOT Okabe-Ito. First series must be #009E73. No
+          ANYPLOT_THEME detection. No plot_background/panel_background set.'
     design_excellence:
       score: 8
       max: 20
@@ -117,25 +120,24 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: Well-structured radar chart with appropriate visual elements (dashed
-          concentric circles, spokes, polygon fills). But non-Okabe-Ito palette undermines
-          the aesthetic, and the panel grid bleed-through in light mode creates clutter.
+        comment: Well-structured radar with dashed gridlines, spoke lines, polygon
+          fills, vertex points. But non-Okabe-Ito palette undermines aesthetic. Rectangular
+          panel grid bleeds behind circular chart in light mode.
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: panel_grid=element_blank() is set but letsplot's default rectangular
-          panel grid still shows in the light render. No plot_background or panel_background
-          override. Minimal customization beyond the radar elements.
+        comment: panel_grid=element_blank() insufficient — letsplot rectangular panel
+          grid still shows. No plot_background or panel_background override. Minimal
+          customization.
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: The two-employee comparison displays data adequately but provides
-          no visual hierarchy or emphasis. No focal point, no callout for key insights.
-          Data is shown but not interpreted.
+        comment: Two-employee comparison displays data adequately but no visual hierarchy,
+          emphasis, or focal point. Data shown but not interpreted.
     spec_compliance:
       score: 14
       max: 15
@@ -145,31 +147,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct radar/spider chart type. Manual polar-to-Cartesian conversion.
-          Filled polygons with alpha. Multiple series comparison. All subtypes present.
+        comment: Correct radar/spider chart. Manual polar-to-Cartesian conversion.
+          Multiple series with filled polygons. All subtypes present.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: filled polygons (alpha=0.25), concentric
-          gridlines at 20/40/60/80/100, outer category labels, distinct colors, legend,
-          polygon closure by repeating first point.'
+        comment: 'All spec features: filled polygons (alpha=0.25), gridlines at 20/40/60/80/100,
+          outer category labels, distinct colors, legend, polygon closure.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories correctly mapped to 6 evenly-spaced axes. Values correctly
-          converted to radial distances. 0-100 scale as recommended.
+        comment: 6 axes evenly spaced. Values as radial distances. 0-100 scale as
+          recommended.
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
         passed: false
-        comment: Code has labs(title='radar-basic · letsplot · pyplots.ai') — wrong
-          domain (should be anyplot.ai). Legend labels 'Alice' and 'Bob' under 'Employee'
-          are correct. Deduction for wrong title in code.
+        comment: labs(title='radar-basic · letsplot · pyplots.ai') — wrong domain
+          (must be anyplot.ai). Only docstring comment was updated, not the actual
+          chart title. Legend labels Alice/Bob are correct.
     data_quality:
       score: 14
       max: 15
@@ -179,24 +180,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 'Two employees with clearly different profiles (Alice: Creativity/Technical;
-          Bob: Communication/Teamwork). 6 axes within spec range. Demonstrates overlay
-          comparison capability.'
+        comment: 'Alice and Bob have different strength profiles (Alice: Creativity/Technical;
+          Bob: Communication/Teamwork). 6 axes within spec range. Shows overlay comparison.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
         comment: Employee performance review with competency categories is a classic
-          radar chart use case. Neutral names, professional context, no controversial
-          content.
+          radar use case listed in the spec. Neutral names, professional context,
+          no controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values range 60-90, realistic for high-performing employees. 0-100
-          scale as recommended in spec.
+        comment: Values 60-90, realistic for high-performing employees. 0-100 scale
+          as recommended.
     code_quality:
       score: 9
       max: 10
@@ -207,36 +207,35 @@ review:
         max: 3
         passed: true
         comment: 'Flat structure: imports → data → coordinate computation → dataframes
-          → plot construction → save. No functions or classes.'
+          → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hardcoded. No randomness. Fully deterministic.
+        comment: All data hardcoded. No randomness. Fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names are used. No os import (missing, as ANYPLOT_THEME
-          not implemented). No unused imports.
+        comment: All imported names are used. No spurious imports. os is missing but
+          that is a CQ-05 issue, not a spurious import.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Reasonably clean. zip(..., strict=True) is idiomatic Python. Loop-based
-          construction of grid/spoke/label dataframes is appropriate for the task.
-          No fake UI elements.
+        comment: Clean and Pythonic. zip(..., strict=True) idiomatic. Loop-based dataframe
+          construction appropriate. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'FAIL: Code saves to ggsave(plot, ''plot.png'') and ggsave(plot,
-          ''plot.html'') — not f''plot-{THEME}.png''. No ANYPLOT_THEME variable at
-          all. Pipeline cannot distinguish light vs dark output from this code.'
+        comment: 'FAIL: ggsave(plot, ''plot.png'') and ggsave(plot, ''plot.html'')
+          — not f''plot-{THEME}.png''. No ANYPLOT_THEME variable at all. Pipeline
+          cannot distinguish light vs dark output.'
     library_mastery:
       score: 4
       max: 10
@@ -246,19 +245,17 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: 'Correct ggplot2-style API usage: ggplot() + geom_*() + scale_*()
-          + theme() + labs() + ggsize(). ggsave() with scale=3 for high-resolution
-          output. But manual coordinate computation doesn''t showcase letsplot''s
-          layer compositing strengths.'
+        comment: 'Correct ggplot2-style API: ggplot() + geom_*() + scale_*() + theme()
+          + labs() + ggsize(). ggsave() with scale=3 for high-res. But manual coordinate
+          computation doesn''t showcase letsplot distinctively.'
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: No features specific to letsplot are used. The entire implementation
-          (manual Cartesian coords, geom_polygon + geom_line + geom_text layers) could
-          be replicated in plotnine with near-identical syntax. No letsplot-distinctive
-          capabilities leveraged.
+        comment: 'Implementation could be replicated in plotnine with near-identical
+          syntax. No letsplot-distinctive capabilities: no hover tooltips, no layer_tooltips(),
+          no interactive HTML features.'
   verdict: REJECTED
 impl_tags:
   dependencies: []
