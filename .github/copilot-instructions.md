@@ -84,16 +84,21 @@ Everything for one plot type lives in a single directory:
 
 ```
 plots/{spec-id}/
-├── specification.md     # Library-agnostic description
-├── specification.yaml   # Tags, created, issue, suggested
-├── metadata/            # Per-library metadata
-│   ├── matplotlib.yaml
-│   └── ...
-└── implementations/     # Library implementations
-    ├── matplotlib.py
-    ├── seaborn.py
-    └── ...
+├── specification.md             # Library-agnostic description
+├── specification.yaml           # Tags, created, issue, suggested
+├── metadata/
+│   └── python/                  # Per-library metadata (one file per library)
+│       ├── matplotlib.yaml
+│       ├── seaborn.yaml
+│       └── ...
+└── implementations/
+    └── python/                  # Library implementations (one file per library)
+        ├── matplotlib.py
+        ├── seaborn.py
+        └── ...
 ```
+
+The `python/` subdirectory is a deliberate forward-compatibility layer; non-Python implementation languages would live as siblings (e.g. `implementations/r/`) when introduced. All paths in code, prompts, and metadata refer to the language-prefixed form: `plots/{spec-id}/implementations/python/{library}.py` and `plots/{spec-id}/metadata/python/{library}.yaml`.
 
 Example: `plots/scatter-basic/` contains everything for the basic scatter plot.
 
