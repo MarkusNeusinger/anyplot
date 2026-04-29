@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pyramid-basic: Basic Pyramid Chart
-Library: plotly | Python 3.13
-Quality: pending | Created: 2026-04-29
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-04-29
 """
 
 import os
