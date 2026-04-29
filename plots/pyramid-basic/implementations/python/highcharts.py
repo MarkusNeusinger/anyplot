@@ -1,7 +1,7 @@
 """ anyplot.ai
 pyramid-basic: Basic Pyramid Chart
 Library: highcharts unknown | Python 3.13.13
-Quality: 85/100 | Updated: 2026-04-29
+Quality: 87/100 | Updated: 2026-04-29
 """
 
 import json

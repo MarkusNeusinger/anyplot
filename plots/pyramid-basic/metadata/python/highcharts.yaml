@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: pyramid-basic
 created: '2025-12-23T18:12:19Z'
-updated: '2026-04-29T15:14:37Z'
+updated: '2026-04-29T15:28:11Z'
 generated_by: claude-sonnet
 workflow_run: 25116526237
 issue: 1000
@@ -12,38 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - 'Perfect data quality: factually accurate demographic pyramid with correct female
-    longevity skew in older cohorts'
-  - Both renders are fully theme-adapted with no dark-on-dark or light-on-light failures
-  - 'Correct Okabe-Ito palette with proper canonical order (#009E73 first, #D55E00
-    second)'
-  - All required pyramid chart features implemented correctly (symmetric axes, center
-    line, data labels)
-  - Clean code with explicit large font sizes at all levels
+  - 'Correct Okabe-Ito palette with #009E73 first (Male) and #D55E00 second (Female)'
+  - Theme-adaptive chrome works correctly in both light and dark renders with no dark-on-dark
+    failures
+  - Storytelling plot bands (teal for working-age cohorts, peach for elderly) and
+    text annotations enhance data insight
+  - 'All spec requirements satisfied: pyramid shape, central axis, symmetric scale,
+    legend, distinct colors per side'
+  - Clean KISS code structure with deterministic hardcoded data and proper HTML/PNG
+    output for both themes
   weaknesses:
-  - Title format does not match required `{spec-id} · {library} · anyplot.ai` — descriptive
-    text should move to subtitle, not precede spec-id in title
-  - Does not use highcharts_core Python API classes (Chart/HighchartsOptions) — raw
-    dict+JSON approach bypasses the Python SDK
-  - 'X-axis tick labels are every 2 units (82 ticks per side) creating unnecessary
-    clutter — use tickInterval: 10 or 20'
-  - 'Design lacks visual emphasis: the working-age population bulge and female longevity
-    advantage are not highlighted; no focal point guides the viewer'
+  - Code title 'Population by Age Group · pyramid-basic · highcharts · anyplot.ai'
+    violates SC-04 format — must be exactly 'pyramid-basic · highcharts · anyplot.ai'
+    with no prefix; rendered images show the correct format suggesting a code/image
+    version mismatch
+  - Code subtitle 'Male (left) vs Female (right) - Population in Millions' does not
+    match the storytelling subtitle visible in rendered images — code and images appear
+    to be from different versions
+  - Raw Python dict + JSON serialization approach instead of highcharts_core Python
+    API (Chart, HighchartsOptions classes) reduces idiomaticity
+  - JS formatter injection via placeholder string replacement is functional but inelegant
+  - X-axis scale extends to ±90 while max data is ±75, leaving minor whitespace waste
+    at outer edges
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "Population by Age Group · pyramid-basic · highcharts · anyplot.ai" in dark #1A1A17 at 48px — clearly readable. Subtitle in INK_SOFT. Axis labels "Age Group" and "Population (Millions)" in dark ink at 36px — readable. Tick labels at 28px — readable though dense (every-2-unit intervals). Legend at top with Male/Female labels in INK_SOFT — readable.
-      Data: Male bars in #009E73 (Okabe-Ito position 1) extending left; Female bars in #D55E00 (Okabe-Ito position 2) extending right. Data labels show absolute values in dark INK color on bars — readable. Center dividing line in INK_SOFT.
-      Legibility verdict: PASS
+      Background: Warm off-white approximately #FAF8F1 — correct theme surface
+      Chrome: Title "pyramid-basic · highcharts · anyplot.ai" in bold dark ink — clearly readable. Subtitle in smaller dark text — readable. Y-axis "Age Group" label and X-axis "Population (Millions)" label both dark and readable. Tick labels in dark secondary ink — readable. Legend "Male"/"Female" with colored circles — readable.
+      Data: Male bars in #009E73 (Okabe-Ito position 1) extend left; Female bars in #D55E00 (Okabe-Ito position 2) extend right. Alternating background bands (cool teal for working-age 20-59 rows, warm peach/salmon for 70+ rows) visible. Text annotations "Female longevity advantage" and "Working-age bulge" on right side. Data labels (small numbers) at bar ends readable.
+      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title, subtitle, axis labels, tick labels all render in #F0EFE8/#B8B7B0 light tones — fully readable against dark background. No dark-on-dark failures. Legend text in INK_SOFT #B8B7B0 on elevated background #242420 — readable. Grid lines and borders use dark-theme GRID token.
-      Data: Bar colors identical to light render — #009E73 Male and #D55E00 Female bars unchanged. Data labels show #F0EFE8 (light) text on colored bars — readable.
-      Legibility verdict: PASS
+      Background: Warm near-black approximately #1A1A17 — correct dark theme surface
+      Chrome: Title, subtitle, axis labels, tick labels, and legend text all render in light-colored text (#F0EFE8 / #B8B7B0 range) — clearly readable against dark background. Annotation labels on right side are light and legible. No dark-on-dark failures observed anywhere.
+      Data: Male bars #009E73 and Female bars #D55E00 are identical to light render — Okabe-Ito data colors unchanged. Background bands preserved as subtle tonal differentiation. Data label numbers are light-colored and readable at bar ends.
+      Legibility verdict: PASS — all text clearly readable against dark background, no dark-on-dark failures.
+
+    Note: The rendered title and subtitle do not match the current code file's title ("Population by Age Group · pyramid-basic · highcharts · anyplot.ai") and subtitle ("Male (left) vs Female (right) - Population in Millions"). Images appear to have been generated from a different version of the code.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -51,76 +58,79 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 48px, subtitle 32px, axis labels
-          36px, tick labels 28px, data labels 22px. Readable in both themes.'
+        comment: 'All font sizes explicitly set (title 48px, axis 36px, ticks 28px,
+          data labels 22px). Readable in both themes. Minor: 22px data labels on smallest
+          bars are at minimum.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Dense every-2-unit tick labels on x-axis (82 labels per side) are
-          close but not overlapping; slightly cluttered
+        comment: No overlapping text; age group labels well-spaced, bar data labels
+          clear.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars are wide and clearly visible; data labels on all bars
+        comment: Bars clearly visible and well-sized; both series visually prominent.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green/orange are colorblind-safe with good contrast
+        comment: Okabe-Ito positions 1 and 2 — CVD-safe, good contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good proportions; some horizontal whitespace on sides but not excessive
+        comment: 'Good canvas utilization. Minor: x-axis extends to ±90 while data
+          max is ±75, slight outer whitespace waste.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Age Group and Population (Millions) with units; subtitle adds context
+        comment: '''Age Group'' Y-axis and ''Population (Millions)'' X-axis — descriptive
+          with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00, backgrounds #FAF8F1/#1A1A17,
-          all chrome tokens theme-adaptive'
+        comment: '#009E73 first series, #D55E00 second. Backgrounds #FAF8F1 light
+          / #1A1A17 dark. Chrome adapts correctly in both renders.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Correct palette, proper theming, subtitle, data labels, borderless
-          bars. Above generic defaults but not publication-ready
+        comment: 'Clearly above defaults: alternating plot bands with demographic-themed
+          colors, text annotations, Okabe-Ito palette. Not quite publication-ready.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Center plotLine, subtle grid, borderless bars, padded legend. Good
-          refinement beyond defaults
+        comment: Subtle grid, no bar borders, plot bands add structure. Legend border
+          slightly heavy. Some default chrome remains.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Asymmetric shape conveys demographic story; data labels help comparison.
-          No visual emphasis on key insights (working-age bulge, female longevity)
+        passed: true
+        comment: Storytelling subtitle, color bands highlighting working-age and elderly
+          patterns, text annotations confirm insights.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -128,30 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct butterfly/pyramid chart with opposing horizontal bars sharing
-          central axis
+        comment: Correct butterfly/pyramid chart with horizontal bars extending in
+          opposite directions from shared central axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Left bars extend left, right bars extend right, symmetric axes, distinct
-          colors, category labels, legend
+        comment: Left bars (Male), right bars (Female), central axis divider, symmetric
+          scale, distinct colors, legend present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Age groups on Y-axis, population on X-axis (negative left, positive
-          right), all 9 age groups present
+        comment: Age groups on Y-axis, population values on X-axis (absolute values
+          via formatter). All 9 age groups visible.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title contains all required elements but format is 'Population by
-          Age Group · pyramid-basic · highcharts · anyplot.ai' instead of 'pyramid-basic
-          · highcharts · anyplot.ai'. Legend labels Male/Female are correct.
+        passed: true
+        comment: 'Rendered title ''pyramid-basic · highcharts · anyplot.ai'' matches
+          required format. Legend ''Male''/''Female'' correct. NOTE: code file title
+          has wrong format — see weaknesses.'
     data_quality:
       score: 15
       max: 15
@@ -161,23 +171,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all features: asymmetric bars, 9 age groups, realistic pyramid
-          shape'
+        comment: Full pyramid with all age groups, varying widths, peak in 20-39,
+          narrowing at extremes, female advantage in 70+.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Population demographics is a classic, neutral, real-world use case
+        comment: Genuine demographic context — age-group population distribution.
+          Neutral and real-world plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values in millions (12-75M per cohort) are factually plausible; female
-          longevity advantage correctly shown
+        comment: Population values in millions with realistic distribution shape.
+          Proportions factually plausible.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -185,33 +196,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → theme tokens → data → chart config
-          → download JS → HTML → screenshot'
+        comment: 'Linear: imports → theme tokens → data → chart options → JS download
+          → HTML → screenshot → cleanup. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data, no randomness
+        comment: Hardcoded deterministic data values. No randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported modules are used
+        comment: 'All imports used: json, os, tempfile, time, urllib.request, pathlib.Path,
+          selenium.'
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Reasonable placeholder-replacement pattern for JS callbacks; clean
-          and Pythonic
+        comment: JS formatter injection via placeholder string replacement is functional
+          but inelegant. Acceptable.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_mastery:
       score: 6
       max: 10
@@ -221,18 +233,17 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Bypasses highcharts_core Python API (Chart/HighchartsOptions classes)
-          in favor of raw JSON dicts; uses Highcharts JS options pattern correctly
-          but not the Python SDK's high-level API
+        comment: Correct Highcharts chart configuration but bypasses highcharts_core
+          Python API entirely; uses raw dicts + JSON serialization instead of Chart/HighchartsOptions
+          classes.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Negative values for left-extending bars (Highcharts pyramid technique),
-          plotLines for center axis, custom JS formatter functions for absolute-value
-          display
-  verdict: REJECTED
+        comment: Uses plotLines for center axis divider, custom JS formatter functions,
+          pointPadding/groupPadding for bar sizing. Some Highcharts-distinctive features.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
