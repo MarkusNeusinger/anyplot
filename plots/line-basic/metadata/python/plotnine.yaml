@@ -1,167 +1,179 @@
 library: plotnine
+language: python
 specification_id: line-basic
 created: '2025-12-23T18:11:12Z'
-updated: '2025-12-23T18:13:17Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20468179567
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-basic/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-04-29T15:37:53Z'
+generated_by: claude-sonnet
+workflow_run: 25117213621
+issue: 653
+python_version: 3.13.13
+library_version: 0.15.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent use of plotnine grammar of graphics with clean layered syntax (ggplot
-    + geoms + theme)
-  - Realistic seasonal temperature data that perfectly demonstrates line plot trend
-    visualization capability
-  - Well-sized visual elements (line width 2.5, point size 6) appropriate for the
-    data density
-  - Proper font sizing following library guidelines (24pt title, 20pt axis, 16pt ticks)
-  - Clean, minimal aesthetic with subtle grid that does not distract from the data
+  - Complete and correct spec compliance — all required features present, correct
+    title format, proper data mapping
+  - Effective data storytelling — peak annotation and area fill create a compelling
+    seasonal narrative without clutter
+  - Thorough theme adaptation — both light and dark renders pass legibility checks;
+    brand green identical across renders; no dark-on-dark failures
+  - Excellent code quality — flat script, seeded RNG, all imports used, correct dual-theme
+    output naming
   weaknesses:
-  - X-axis shows decimal tick values (2.5, 5.0, 7.5, 10.0, 12.5) instead of integer
-    months (1-12); should use scale_x_continuous with breaks=range(1,13) for cleaner
-    month representation
-  image_description: The plot displays a basic line chart showing monthly temperature
-    data over a 12-month period. The line is rendered in a blue color (#306998) connecting
-    12 data points, each marked with circular markers of the same blue color. The
-    X-axis shows "Month" with decimal tick labels (2.5, 5.0, 7.5, 10.0, 12.5), and
-    the Y-axis shows "Temperature (°C)" ranging from approximately 5 to 27 degrees.
-    The title "line-basic · plotnine · pyplots.ai" is displayed at the top. The plot
-    uses a minimal theme with subtle gray grid lines and a clean white background.
-    The data follows a realistic seasonal temperature pattern - low in winter months
-    (1-2, 11-12), rising through spring, peaking in summer (month 7), and declining
-    through autumn.
+  - Grid applied to both axes (X and Y); style guide recommends Y-axis grid only for
+    line charts — add panel_grid_major_x=element_blank(), panel_grid_minor_x=element_blank()
+    to theme
+  - 'Tick label contrast in dark render is adequate but slightly muted (INK_SOFT #B8B7B0
+    on #1A1A17); could boost to #C8C7C0 for crisper dark-mode readability'
+  - 'LM-02: No use of stat_, position_, or facet_ plotnine-specific transforms that
+    would showcase the grammar of graphics more distinctively'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correctly NOT pure white
+      Chrome: Title "line-basic · plotnine · anyplot.ai" in dark ink (#1A1A17, INK token) — readable; axis labels "Month" and "Temperature (°C)" large and clear in dark ink; month-name and numeric tick labels in softer dark tone (#4A4A44, INK_SOFT) — all readable; peak annotation "Peak 28.4°C" visible in dark text near July maximum
+      Data: Single brand green (#009E73) line with circular markers at all 12 monthly data points; semi-transparent mint-green area fill beneath the line reinforces seasonal arc; clear seasonal rise from winter (~5°C) to July peak (~28°C) and back
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correctly NOT pure black
+      Chrome: Title, axis labels in light cream (#F0EFE8, INK token) — clearly readable; tick labels in lighter gray (#B8B7B0, INK_SOFT token) — adequate readability, slightly muted but not a failure; peak annotation adapts to light color — readable; no dark-on-dark issues detected
+      Data: Brand green (#009E73) line and markers IDENTICAL to light render — only chrome flipped; area fill resolves to dark forest-green on near-black background
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable with
-          appropriate font sizes (24pt title, 20pt axis labels, 16pt tick labels)
+        comment: All font sizes correct (24/20/16pt), readable in both themes; INK_SOFT
+          tick labels in dark mode are adequate though slightly low-contrast
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere in the plot
+        comment: Month labels well-spaced, annotation clear of data points
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width (2.5) and point size (6) are well-suited for 12 data points,
-          providing excellent visibility
+        comment: Line (size=2.5), points (size=6), and area fill all clearly visible
+          in both renders
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single blue color (#306998) has good contrast against white background,
-          no colorblind issues with single-series data
+        comment: Single series in CVD-safe brand green; no red-green conflict
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins, good use of 16:9 aspect
-          ratio
+        comment: 16:9 canvas, generous margins, nothing cut off
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Y-axis has units "Temperature (°C)" but X-axis "Month" could benefit
-          from showing month names or clearer integer ticks instead of decimals (2.5,
-          5.0, etc.)
+        passed: true
+        comment: Descriptive labels with units; correct title format
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle (alpha 0.3), but the X-axis decimal ticks (2.5, 5.0,
-          7.5) are awkward for monthly data - should show integers 1-12
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1 (light) / #1A1A17 (dark);
+          both renders theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Area fill with alpha and peak annotation add intentional design hierarchy;
+          warm backgrounds professionally executed; penalised for standard ggplot
+          font and no further typography refinement
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid alpha reduced to 0.15/0.05 (very subtle); theme_minimal handles
+          spine removal; however, grid is applied to both axes rather than Y-only
+          as style guide recommends for line charts
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Peak annotation creates a clear focal point; area fill guides the
+          eye along the seasonal arc; effective narrative without clutter
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct basic line plot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X (month) and Y (temperature) correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has line connecting points, markers on data points, grid lines, clear
-          axis labels
-      - id: SC-04
-        name: Data Range
+        comment: Single line, markers on all data points, axis labels, grid lines
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 12 data points visible within axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X = months (Jan-Dec), Y = temperature (C), all 12 points shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "line-basic · plotnine · pyplots.ai" format
+        comment: Title exactly 'line-basic · plotnine · anyplot.ai'; no legend needed
+          for single series
     data_quality:
-      score: 20
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows complete seasonal cycle with rising trend, peak, and decline
-          - demonstrates line plot's ability to show trends over time
+        comment: Complete 12-month seasonal cycle shows rising trend, peak, and decline;
+          minor deduct for limiting to 12 points
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly temperature data is a classic, relatable use case for line
-          plots
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature values (5-27°C) are realistic for a temperate climate
-          annual cycle
+        comment: Monthly temperatures for a temperate climate — plausible, neutral,
+          relatable
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values ~5-28°C; realistic range for mid-latitude annual cycle
     code_quality:
       score: 10
       max: 10
@@ -171,41 +183,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions or classes
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imported symbols used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Clean, readable, no fake UI or workarounds
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png; current plotnine API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: 'Good use of plotnine''s grammar of graphics: ggplot + aes + geom_line
-          + geom_point + labs + theme_minimal + theme customization with element_text
-          and element_line'
+        comment: Proper ggplot grammar; scale_x_continuous for custom month-name ticks;
+          layered geom_line + geom_point; theme tokens via element_rect/text/line
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Area fill (geom_ribbon/geom_area) and annotation leverage plotnine's
+          layered grammar; further use of stat_, position_, or facet_ transforms would
+          score higher
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
