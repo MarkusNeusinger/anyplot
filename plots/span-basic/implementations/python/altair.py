@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 span-basic: Basic Span Plot (Highlighted Region)
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 83/100 | Updated: 2026-04-30
+Quality: 90/100 | Updated: 2026-04-30
 """
 
 import os
