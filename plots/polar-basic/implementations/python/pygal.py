@@ -1,7 +1,7 @@
 """ anyplot.ai
 polar-basic: Basic Polar Chart
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-04-30
+Quality: 84/100 | Updated: 2026-04-30
 """
 
 import importlib
