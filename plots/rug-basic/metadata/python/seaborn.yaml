@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: rug-basic
 created: '2025-12-23T19:42:50Z'
-updated: '2026-04-30T05:17:13Z'
+updated: '2026-04-30T05:23:58Z'
 generated_by: claude-sonnet
 workflow_run: 25148477817
 issue: 978
@@ -15,39 +15,35 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - Perfect spec compliance — sns.rugplot with alpha, consistent tick height, x-axis
-    position, and KDE complement all per spec
-  - Intentional bimodal data (fast/slow server responses with outliers) that tells
-    a real-world story and reveals clustering and gaps
-  - 'Clean theme adaptation: correct #FAF8F1 / #1A1A17 backgrounds, all chrome tokens
-    applied consistently across both renders'
-  - 'Idiomatic seaborn layer composition: axes-level kdeplot + rugplot with fill —
-    the canonical seaborn approach'
-  - 'Code quality is flawless: seed for reproducibility, no unused imports, flat linear
-    structure, correct plot-{THEME}.png output'
+  - Perfect theme implementation with all chrome tokens (INK, INK_SOFT, PAGE_BG) correctly
+    applied for both light and dark renders
+  - Idiomatic seaborn usage with axes-level API and sns.set_theme rc dict
+  - Bimodal response-time dataset elegantly demonstrates the primary rug plot use
+    case — revealing gaps and clustering
+  - Full spec compliance including semi-transparency, consistent rug height, and KDE
+    complement
   weaknesses:
-  - 'KDE fill alpha (0.18) is slightly too dim in the dark render — the shaded area
-    nearly blends with the #1A1A17 background, reducing visual depth'
-  - X-axis extends to -100ms (negative response times) due to KDE boundary extrapolation
-    — consider clipping the x-axis to 0 or using a cut parameter to avoid physically
-    impossible values
-  - Library Mastery could be stronger — could leverage seaborn's displot() or JointGrid
-    for a more distinctive seaborn-native approach rather than falling back to plt.subplots()
+  - 'Design excellence is baseline: no annotations or visual emphasis on the two clusters
+    or outlier tail'
+  - KDE fill alpha (0.18) is thin — slightly more opacity would improve light-theme
+    aesthetics
+  - No explicit visual guidance directing attention to the bimodal story (e.g., annotations
+    at KDE peaks)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "rug-basic · seaborn · anyplot.ai" in dark ink, clearly readable. X-axis label "Response Time (ms)" and Y-axis label "Density" in dark ink at appropriate sizes. Tick labels in INK_SOFT dark grey, all clearly readable. Top and right spines removed; bottom and left spines present. Subtle horizontal grid lines barely visible (alpha ~10%).
-      Data: KDE curve in #009E73 (brand green) with a light green fill (alpha=0.18) showing a clear bimodal distribution — primary peak near 150ms, secondary near 350ms. Rug marks appear as small vertical ticks along the x-axis baseline in the same brand green with alpha=0.6, clearly distinguishable from the off-white background. Outlier rug marks visible near 50ms and 520–550ms.
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background, no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Chrome: Title "rug-basic · seaborn · anyplot.ai" in dark (#1A1A17) medium-weight text at 24pt — readable. X-axis label "Response Time (ms)" and y-axis label "Density" in dark ink at 20pt — readable. Tick labels in muted dark (#4A4A44) at 16pt — readable. Top/right spines removed, subtle horizontal y-grid.
+      Data: KDE curve and filled area in brand green (#009E73) with alpha=0.18 fill. Bimodal distribution with peaks ~150ms and ~350ms. Rug marks in same brand green (alpha=0.6) along x-axis baseline, showing clustering near peaks and outliers at 500-620ms.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title, axis labels, and tick labels all appear in light cream/warm-white text (INK token flipped correctly). All text is clearly readable against the dark background. No dark-on-dark issues detected.
-      Data: KDE line in #009E73 (identical to light render — correct). The filled area (alpha=0.18 dark green) is noticeably dim on the near-black surface — visible but with reduced contrast compared to the light render. Rug marks in brand green are visible against the dark background with acceptable contrast.
-      Legibility verdict: PASS — all text readable. Minor concern: KDE fill area is somewhat dim in dark render, though the line curve itself remains clearly visible.
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title, axis labels, and tick labels all appear in light off-white tones (#F0EFE8 / #B8B7B0) — readable against dark background. No dark-on-dark failures observed.
+      Data: KDE curve and rug marks in identical brand green (#009E73) — same colors as light render, only chrome flipped. Fill slightly more subtle on dark surface but still visually distinguishable.
+      Legibility verdict: PASS — all text readable, no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -55,72 +51,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title fontsize=24, axis labels fontsize=20, ticks fontsize=16 — all
-          readable in both themes
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
+          both renders fully readable
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements; rug marks use alpha for overlap
+        comment: KDE and rug marks cleanly separated; no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: KDE curve and rug marks visible; KDE fill slightly dim in dark render
-          (alpha=0.18 on near-black)
+        comment: KDE curve, filled area, and rug marks all visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single Okabe-Ito color #009E73, CVD-safe, no red-green signal conflict'
+        comment: Single CVD-safe Okabe-Ito color; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Good 16:9 layout; minor issue: x-axis shows negative response times
-          (-100ms) from KDE boundary extrapolation'
+        comment: 16:9 proportions; nothing cut off; generous whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct format, axis labels include units (ms)
+        comment: Response Time (ms) with units, Density descriptive; title in correct
+          format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 used for single series, correct backgrounds
-          both themes'
+        comment: 'First series is #009E73; backgrounds are #FAF8F1 / #1A1A17; both
+          renders theme-correct'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Above default: intentional bimodal data choice, layered KDE+fill+rug
-          composition with calibrated alphas'
+        passed: false
+        comment: Clean brand green with intentional bimodal data, but minimal single-color
+          layout with no typographic hierarchy or emphasis
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Top/right spines removed, subtle y-grid (alpha=0.10), no redundant
-          single-series legend
+        passed: false
+        comment: Top/right spines removed, subtle y-grid (alpha=0.10), tight_layout
+          whitespace; solid but expected baseline
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Bimodal fast/slow response story is clear; KDE shows shape, rug shows
-          individual clustering and outliers
+        passed: false
+        comment: Bimodal distribution presents clear story, but no explicit visual
+          emphasis guiding the viewer to the two clusters
     spec_compliance:
       score: 15
       max: 15
@@ -130,27 +125,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct rug plot via sns.rugplot
+        comment: sns.rugplot correctly implements rug plot as primary element
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: Semi-transparency (alpha=0.6), consistent tick height (height=0.06),
-          x-axis position, complement to density plot
+          x-axis position, KDE complement
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=response times, Y=density, all observations shown in rug
+        comment: X-axis shows all data; rug marks at exact observation locations
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'rug-basic · seaborn · anyplot.ai' correct; no legend appropriate
-          for single series
+        comment: rug-basic · seaborn · anyplot.ai exact format; no legend needed for
+          single series
     data_quality:
       score: 15
       max: 15
@@ -160,20 +155,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows clustering (dense fast cluster), gaps (gap between modes),
-          outliers (50, 520, 550ms), exact point positions
+        comment: Demonstrates clustering, gaps, outliers, and exact observation positions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Server response time with bimodal pattern is realistic and neutral
+        comment: Response time data in ms is real-world plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 50–550ms range is realistic for web/API performance monitoring
+        comment: Values 50-620ms realistic for web/application performance measurement
     code_quality:
       score: 10
       max: 10
@@ -183,49 +177,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat linear script, no functions or classes
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, seaborn — all used
+        comment: Only os, matplotlib.pyplot, numpy, seaborn — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI or unnecessary complexity
+        comment: Appropriate complexity; no fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png correctly
+        comment: Saves as plot-{THEME}.png; current seaborn 0.13+ API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Axes-level API with ax=ax; sns.set_theme with rc dict; fully idiomatic
+          seaborn pattern
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Axes-level API, sns.set_theme for config, kdeplot+rugplot combination
-          is canonical seaborn
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: sns.rugplot native function, KDE fill parameter, set_theme rc customization
-          — seaborn-distinctive but could use displot/JointGrid
+        comment: sns.rugplot is seaborn-native; KDE+rug layering is a classic seaborn
+          showcase; fill=True on kdeplot is seaborn-distinctive
   verdict: APPROVED
 impl_tags:
   dependencies: []
