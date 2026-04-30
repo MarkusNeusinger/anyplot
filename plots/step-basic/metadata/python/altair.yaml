@@ -1,160 +1,190 @@
 library: altair
+language: python
 specification_id: step-basic
 created: '2025-12-23T20:45:36Z'
-updated: '2025-12-23T21:04:08Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20471156936
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/step-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/step-basic/altair/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-    - layer-composition
-  patterns: []
-  dataprep: []
-  styling:
-    - grid-styling
+updated: '2026-04-30T12:58:48Z'
+generated_by: claude-sonnet
+workflow_run: 25165679709
+issue: 956
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/altair/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent implementation of step-after interpolation creating proper stair-step
-    pattern
-  - Clean, readable visualization with appropriate font sizes and good canvas utilization
-  - Markers at data points clearly highlight where changes occur (as recommended in
-    spec)
-  - Realistic cumulative sales scenario that demonstrates practical step chart usage
-  - Proper use of Altair declarative encoding with N (nominal) and Q (quantitative)
-    types
+  - 'Perfect spec compliance: step-after interpolation correctly implements step plot
+    with markers at every data point'
+  - 'Correct Okabe-Ito palette — BRAND green #009E73 used for single series, identical
+    across light and dark renders'
+  - 'Both themes fully readable: warm off-white (#FAF8F1) and near-black (#1A1A17)
+    backgrounds with properly adaptive chrome tokens'
+  - All font sizes explicitly set (title 28px, axis labels 22px, tick labels 18px)
+    per style guide
+  - 'Clean KISS code: linear flow with Altair layer composition (+), deterministic
+    hardcoded data, no over-engineering'
+  - 'Idiomatic Altair usage: encoding types (N/Q), configure_axis/configure_view/configure_legend
+    pattern, scale_factor=3.0 for 4K output'
+  - 'Realistic, neutral data context: monthly cumulative software subscription revenue
+    with plausible growth trajectory'
   weaknesses:
-  - Could add tooltips for enhanced interactivity since Altair excels at this
-  - Grid styling could be slightly more refined (gridDash appears somewhat prominent)
-  image_description: The plot displays a step chart showing monthly cumulative sales
-    data from January to December. The chart uses a blue color (#306998) for both
-    the stepped line and filled circular markers at each data point. The step pattern
-    uses "step-after" interpolation, creating the characteristic stair-step appearance
-    where values remain constant until the next data point. The X-axis shows abbreviated
-    month names (Jan-Dec) with horizontal labels, while the Y-axis displays "Cumulative
-    Sales (thousands $)" ranging from 0 to approximately 180. The title "step-basic
-    · altair · pyplots.ai" appears at the top in a clear, readable font. Subtle dashed
-    grid lines aid in reading values. The overall layout shows good canvas utilization
-    with balanced margins.
+  - 'Design Excellence is moderate: configure_view(stroke=INK_SOFT) creates a visible
+    border frame around the plot rather than an L-shaped spine layout; removing or
+    minimizing the top/right border would look cleaner'
+  - 'DE-03 storytelling is minimal in the code: the rendered images show a milestone
+    reference line at y=100 with ''First $100k'' annotation that is absent from the
+    current implementation file — if this was removed during repair, the storytelling
+    was lost'
+  - Small annotation text in the rendered images has no explicit font size set, making
+    it harder to read at full 4800x2700px resolution
+  - 'Design sophistication (DE-01) sits at default level: typography and layout are
+    correct but not distinctive — could benefit from stronger visual hierarchy or
+    focal point emphasis'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct per style guide, not pure white
+      Chrome: Title "step-basic · altair · anyplot.ai" in dark ink clearly visible at top center; X-axis label "Month" and Y-axis label "Cumulative Revenue (thousands $)" are dark and readable; tick labels (Jan-Dec, 0-180) are dark gray, all readable against the light background
+      Data: Single step line in #009E73 (brand green) with step-after interpolation, correctly creating horizontal-then-vertical stair pattern; filled circle markers at each of the 12 monthly data points, same green color; a dashed horizontal reference line at y=100 with small annotation "First $100k" visible near Sep label (this annotation appears in the rendered image but is not present in the current implementation code — possible stale image from prior attempt)
+      Legibility verdict: PASS — all major text elements are clearly readable; annotation text is present but small
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct per style guide, not pure black
+      Chrome: Title visible in light cream (#F0EFE8) against dark background; axis labels and tick labels rendered in INK_SOFT dark-theme value (#B8B7B0 — medium gray, good contrast against near-black); no dark-on-dark failures observed
+      Data: Step line and markers remain identical #009E73 (brand green) — same as light render, data colors did not flip; reference line and annotation visible in muted style
+      Legibility verdict: PASS — all text is readable against the dark background; brand green #009E73 is clearly visible on both surfaces
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at full
-          resolution
+        comment: All required font sizes explicitly set (title 28px, axis 22px, ticks
+          18px); annotation text visible in image has no explicit size set — minor
+          deduction
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; month labels are well-spaced
+        comment: Month labels evenly spaced, no overlap; no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line stroke width (4) and marker size (200) are well-adapted for
-          12 data points
+        comment: Step line strokeWidth=5 and markers size=220 clearly visible at 4800x2700px
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color scheme is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has descriptive label with units "(thousands $)", X-axis labeled
-          "Month"
+        comment: 'Single series #009E73, high contrast, CVD-safe'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions, plot fills canvas well, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis includes units '(thousands $)', X-axis 'Month' descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, #FAF8F1 light bg, #1A1A17 dark bg, all chrome
+          adaptive'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured default; correct color token system; not exceptional
+          in typography or hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtle grid at 0.10 opacity; configure_view stroke creates frame
+          border instead of L-shaped spines
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Reference line milestone visible in images adds context; step progression
+          shows growth story; above default
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct step/stair plot using step-after interpolation
+        comment: mark_line(interpolate='step-after') correctly implements step-after
+          style
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=Month (categorical), Y=Cumulative Sales (quantitative) correctly
-          assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Step pattern present, markers at data points as suggested in spec
-          notes
-      - id: SC-04
-        name: Data Range
+        comment: Step line, markers at data points, grid lines — all spec notes addressed
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, Y-axis starts at 0 and extends appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Month (N), Y=Cumulative Revenue (Q), all 12 months displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "step-basic · altair · pyplots.ai"
+        comment: Title 'step-basic · altair · anyplot.ai' matches required format
+          exactly; no legend needed for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear step pattern with cumulative increases; could benefit
-          from showing varied step sizes more dramatically
+        comment: 12 data points with varied step sizes demonstrate all aspects of
+          step-after behavior
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Monthly cumulative sales is a real, comprehensible scenario matching
-          spec applications
+        comment: Monthly cumulative software subscription revenue — realistic, neutral,
+          business context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values (12-168 thousands) are plausible for annual sales; growth
-          pattern is realistic
+        comment: Values 12k-168k over 12 months with realistic growth trajectory
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -162,27 +192,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: 'Linear flow: imports → tokens → data → chart → save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random values used)
+        comment: Hardcoded deterministic data, no random seed needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (altair, pandas, os, sys for workaround)
+        comment: os, sys, altair, pandas — all used; sys.path workaround for naming
+          conflict is documented
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Altair layer composition with + operator; no over-engineering
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-    library_features:
-      score: 3
-      max: 5
-      items: []
+        comment: Saves plot-{THEME}.png with scale_factor=3.0 and plot-{THEME}.html
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Encoding type system (N/Q), configure_* pattern, layer composition,
+          interpolate parameter — all idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Altair layer composition (+), HTML export, interpolate='step-after'
+          — uses library-specific features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
