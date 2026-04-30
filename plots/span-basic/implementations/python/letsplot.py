@@ -1,7 +1,7 @@
 """ anyplot.ai
 span-basic: Basic Span Plot (Highlighted Region)
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 76/100 | Updated: 2026-04-30
+Quality: 82/100 | Updated: 2026-04-30
 """
 
 import numpy as np

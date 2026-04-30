@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: span-basic
 created: '2025-12-23T20:45:48Z'
-updated: '2026-04-30T11:01:52Z'
+updated: '2026-04-30T11:14:41Z'
 generated_by: claude-sonnet
 workflow_run: 25161364372
 issue: 980
@@ -12,112 +12,122 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/span-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/letsplot/plot-dark.html
-quality_score: 76
+quality_score: 82
 review:
   strengths:
-  - 'Strong data storytelling: recession period V-shape is visually compelling and
-    contextually meaningful'
-  - Idiomatic grammar of graphics layering with explicit data frames per geom
-  - Good font size hierarchy explicitly set (24/20/16 for title/axis/ticks)
-  - Realistic, neutral domain data (2008-2009 recession) with correct scale
+  - Compelling, real-world recession scenario that immediately communicates the purpose
+    of span plots
+  - All font sizes explicitly set at correct values for the large-canvas target resolution
+  - geom_rect() with alpha=0.25 is the idiomatic lets-plot approach; alpha is within
+    the spec-required 0.2-0.3 range
+  - In-span annotation and legend together provide layered context for the highlighted
+    region
+  - Reproducible with np.random.seed(42) and clean linear code structure
+  - HTML export leverages a distinctive lets-plot capability
   weaknesses:
-  - 'CRITICAL: Code uses color="#306998" (Python Blue) — must use #009E73 (brand green)'
-  - 'CRITICAL: No ANYPLOT_THEME detection; missing os.getenv and theme-adaptive chrome
-    tokens for background, text, and grid colors'
-  - 'CRITICAL: Output saved as plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html'
-  - 'CRITICAL: Title string is pyplots.ai — must be anyplot.ai'
-  - 'geom_text annotation color #8B6914 is hardcoded and not theme-adaptive — use
-    INK_SOFT token'
-  - geom_rect has default black border — set color=transparent for cleaner look
+  - 'Title uses wrong domain: pyplots.ai instead of anyplot.ai — must match {spec-id}
+    · {library} · anyplot.ai format'
+  - 'Source code uses color=#306998 (Python Blue) for line and points — must be #009E73
+    (Okabe-Ito position 1, brand green)'
+  - No ANYPLOT_THEME environment variable handling — code must read os.getenv(ANYPLOT_THEME,
+    light) and apply adaptive background/text/grid color tokens
+  - 'Wrong output filenames: saves to plot.png and plot.html instead of plot-{THEME}.png
+    and plot-{THEME}.html'
+  - Full horizontal and vertical grid lines for a line chart — restrict to y-axis
+    (horizontal) grid only per style guide
+  - geom_point overlaid on 72 monthly data points adds unnecessary visual noise —
+    remove or reduce significantly for a dense time series
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — PASS (not pure white)
-      Chrome: Title "span-basic · letsplot · anyplot.ai" in dark text — readable. Axis labels "Economic Index" and "Year" in dark text — readable. Tick labels (2006–2011 years, 65–125 index values) in dark gray — readable.
-      Data: Line in teal-green (appears #009E73 in render, though code uses #306998). Small matching points overlaid. Warm golden-yellow semi-transparent rectangle spans 2008–2009 recession period. Amber-brown "Recession 2008–2009" annotation at top of span.
-      Legibility verdict: PASS — all text readable against warm off-white background. NOTE: images appear generated from a different code version than the current file (title shows anyplot.ai but code says pyplots.ai; line appears green but code uses #306998 Python Blue).
+      Background: Warm off-white approximately #FAF8F1 — NOT pure white, correct theme surface.
+      Chrome: Title at top ("span-basic · letsplot · [domain].ai"), axis label "Economic Index" (y-axis), "Year" (x-axis), tick labels 2006-2011 — all dark-colored and clearly readable against the light background.
+      Data: Main line is a green/teal color consistent with #009E73 (Okabe-Ito position 1). Semi-transparent pale yellow span covers 2008 to mid-2009. "Recession 2008-2009" annotation text inside span. Legend on right shows yellow swatch labeled "Recession Period".
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black, consistent with #1A1A17 — PASS (not pure black)
-      Chrome: Title in light text — readable. Axis labels in light text — readable. Tick labels in light gray — readable. No dark-on-dark failures observed.
-      Data: Line and points identical teal-green to light render — PASS (data colors consistent across themes). Span fill appears as dark olive-brown (#FFD43B at alpha 0.25 on near-black). Annotation text appears lighter/readable.
-      Legibility verdict: PASS — all text readable against near-black background. However, the code does NOT contain ANYPLOT_THEME detection, meaning this dark render was NOT produced by the current committed code.
+      Background: Warm near-black approximately #1A1A17 — NOT pure black, correct dark theme surface.
+      Chrome: Title, axis labels, tick labels, legend text — all appear light-colored (white/near-white) and clearly readable against the dark background. No dark-on-dark text failures observed.
+      Data: Main line retains identical green/teal color as in light render — data colors are consistent across themes. Span fill appears golden/brownish (#FFD43B at 25% opacity over dark background). Annotation text "Recession 2008-2009" is visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=24, axis=20, ticks=16); all text
-          readable in both renders; annotation color hardcoded and not theme-adaptive
+        comment: 'All font sizes explicitly set: plot_title=24, axis_title=20, axis_text=16,
+          legend_text=16, legend_title=18. All text readable in both renders.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text or elements.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Line and points visible; geom_point at size=3.5 on 72-point dense
-          series is marginally small
+        comment: Line clearly visible. geom_point on 72 monthly observations creates
+          some noise; points not necessary alongside the continuous line.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Teal on warm backgrounds; no red-green sole signal
+        comment: Good contrast in both themes; CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good layout; legend creates some right-side whitespace
+        comment: Plot fills canvas well; balanced margins; legend integrated neatly.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Economic Index and Year are descriptive labels
+        comment: Economic Index and Year are descriptive; index is dimensionless.
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: 'Code uses #306998 (Python Blue, explicitly forbidden); no ANYPLOT_THEME
-          detection; no element_rect background theming'
+        comment: 'Images show green/teal line consistent with #009E73, but source
+          code uses #306998 (Python Blue — explicitly non-compliant). No ANYPLOT_THEME
+          handling. Span fill #FFD43B is not exact Okabe-Ito.'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Thoughtful color pairing (warm yellow span + teal line + amber annotation);
-          above generic defaults but not publication-ready
+        comment: 'Well-configured library default: clean layout, good sizing, pleasant
+          but not exceptional.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: theme_minimal() provides clean base; grid not dominant; geom_rect
-          default border adds weight; no explicit spine removal
+        passed: false
+        comment: Minimal explicit refinement beyond theme_minimal(). Both horizontal
+          and vertical grid lines present; style guide recommends y-axis grid only
+          for line charts.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Recession V-shape during highlighted period creates compelling narrative;
-          span creates clear focal point
+        comment: Recession span creates clear focal point; annotation provides immediate
+          context; economic decline-recovery arc clearly visible.
     spec_compliance:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -125,28 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct span/highlighted-region chart using geom_rect
+        comment: geom_rect() correctly implements a vertical span region.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill (alpha=0.25), vertical span, annotation all
-          present. Only 1 span; spec allows 1-5.
+        comment: Semi-transparent fill (alpha=0.25, within spec range); span covers
+          time range; optional text label included.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on x-axis, economic index on y-axis, span correctly marks recession
-          period
+        comment: Time on x-axis, economic index on y-axis; span accurately covers
+          2008-2009.
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 2
         max: 3
         passed: false
-        comment: Code title uses pyplots.ai instead of anyplot.ai; images show correct
-          title but code is authoritative
+        comment: Title structure correct but uses pyplots.ai instead of anyplot.ai.
+          Legend labels are correct.
     data_quality:
       score: 14
       max: 15
@@ -156,24 +166,24 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Demonstrates vertical span with time series; data visible through
-          semi-transparent fill; annotation provides context. Single span is minimal.
+        comment: Shows vertical span with labeled region, annotation, transparent
+          fill. Only vertical direction demonstrated; horizontal spans not shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 2008-2009 recession period on economic index is a real, neutral,
-          recognizable scenario
+        comment: Economic recession visualization is real-world, neutral, and immediately
+          comprehensible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Economic index values 65-125 with V-shaped recession dip is factually
-          plausible
+        comment: Index values (~65-125), recession timing (2008-2009), and decline-recovery
+          arc are factually plausible.
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -181,34 +191,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> data -> plot -> save'
+        comment: 'Linear: imports -> data -> spans -> plot -> save. No functions or
+          classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used
+        comment: All imported names are used; no unused imports.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Readable structure but hardcoded colors with no theme adaptation;
-          geom_point on 72 dense points adds noise
+        comment: Clean, Pythonic, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as plot.png and plot.html instead of plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves to plot.png and plot.html (bare filenames). Must save as plot-{THEME}.png
+          and plot-{THEME}.html.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -216,21 +227,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Grammar of graphics approach, multiple explicit layers, scale_fill_manual,
-          scale_x_continuous with manual breaks/labels
+        comment: Uses ggplot grammar correctly with multiple geom layers, scale_fill_manual
+          with named legend, scale_x_continuous with custom breaks/labels, and ggsize.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: geom_rect for spans is idiomatic but not specifically distinctive
-          to lets_plot vs other ggplot-family libraries
-  verdict: REJECTED
+        passed: true
+        comment: LetsPlot.setup_html(), ggsave with scale=3, and HTML export are lets-plot-specific
+          features.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - annotations
+  - html-export
   patterns:
   - data-generation
   dataprep:
