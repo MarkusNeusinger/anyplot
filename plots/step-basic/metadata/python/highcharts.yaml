@@ -1,157 +1,174 @@
 library: highcharts
+language: python
 specification_id: step-basic
 created: '2025-12-23T20:49:56Z'
-updated: '2025-12-23T20:58:18Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20471163076
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-30T13:08:09Z'
+generated_by: claude-sonnet
+workflow_run: 25165953361
+issue: 956
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/step-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/step-basic/highcharts/plot.html
-quality_score: 92
-impl_tags:
-  dependencies:
-    - selenium
-  techniques:
-    - html-export
-  patterns: []
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/highcharts/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent step chart implementation with correct left step style creating proper
-    staircase pattern
-  - Clear readable text at all sizes (title 72px, axis labels 48px, tick labels 36px)
-  - Realistic cumulative sales scenario with appropriate data values
-  - Clean KISS code structure following library guidelines exactly
-  - Proper PNG export using Selenium with inline Highcharts JS
+  - All theme tokens (PAGE_BG, INK, INK_SOFT, GRID) correctly wired to ANYPLOT_THEME
+    — both renders are fully theme-correct
+  - Font sizes explicitly set at 72/48/36px guaranteeing legibility at 4800x2700
+  - Reference line at annual target ($500K) adds genuine storytelling; viewer immediately
+    sees the September milestone
+  - Data scenario (monthly cumulative sales) matches the spec primary example exactly
+  - Flat clean code structure with no functions or classes; deterministic hardcoded
+    data
   weaknesses:
-  - Legend appears enabled but not visible in rendered image - may need positioning
-    adjustment
-  - Only demonstrates one step style (left) when spec mentions pre/post/mid options
-  - Layout has slightly unbalanced margins
-  image_description: The plot displays a step chart showing cumulative sales data
-    over 12 months (January through December). The chart uses a deep blue color (#306998)
-    for the step line with circular markers at each data point. The title "step-basic
-    · highcharts · pyplots.ai" appears at the top in bold. The Y-axis is labeled "Cumulative
-    Sales ($K)" ranging from 0 to 825, and the X-axis is labeled "Month" with all
-    12 month abbreviations displayed. The step pattern shows values remaining constant
-    (horizontal lines) until the next month, then jumping vertically to the new value
-    - creating the characteristic staircase appearance. Grid lines are visible on
-    the Y-axis. The data shows a steady upward trend from $45K in January to $780K
-    in December.
+  - LineSeries imported from wrong module (highcharts_core.options.series.area) —
+    should be from highcharts_core.options.series.line
+  - Markers at radius=12 are slightly small for a 4800px canvas; increase to radius
+    18-20 for better visibility
+  - Highcharts default chart border not explicitly removed; add plotBorderWidth:0
+    and axis lineWidth:0 for top/right to improve visual refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "step-basic · highcharts · anyplot.ai" in bold dark text (INK=#1A1A17); Y-axis label "Cumulative Sales ($K)" and X-axis label "Month" in dark text; tick labels (Jan-Dec, 0-825) in dark gray (INK_SOFT=#4A4A44) — all readable
+      Data: Step line in #009E73 (brand green) with mint-green area fill below; circular markers at each of 12 monthly data points; dashed orange reference line at y=500 labeled "Annual Target: $500K"
+      Legibility verdict: PASS — no light-on-light issues, all text clearly legible
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct, not pure black
+      Chrome: Title, axis labels, tick labels all switch to light/off-white (INK=#F0EFE8 / INK_SOFT=#B8B7B0) — all readable against dark background. No dark-on-dark failures detected.
+      Data: Step line color identical to light render (#009E73); area fill darkens to deep teal matching dark surface; reference line and label remain visible in orange
+      Legibility verdict: PASS — all text readable, data colors unchanged from light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at full
-          size
+        comment: Title 72px, axis labels 48px, tick labels 36px — all explicitly set
+          and readable at 4800x2700
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Clean layout, no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Line width and marker size are well-suited for the data density (12
-          points)
+        comment: Step line clearly visible at lineWidth=6; markers at radius=12 slightly
+          small for 4800px canvas
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color, no colorblind concerns
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good proportions, though slight imbalance with larger left margin
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units "($K)", X-axis clearly labeled "Month"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Brand green on off-white/near-black, CVD-safe Okabe-Ito
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Data fills ~70% of canvas, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend is enabled but not visible in the image; grid is subtle
+        passed: true
+        comment: Cumulative Sales ($K) with units, Month descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17, all theme tokens
+          correct in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Area fill adds visual depth; reference line elevates above plain
+          step line; polished but not FiveThirtyEight level
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtle grid, clean layout; Highcharts default chart border present;
+          spines not explicitly removed
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Reference line creates clear narrative: annual target crossed in
+          September'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct step/stair chart type with "left" step style
+        comment: Correct step chart with stair-step pattern
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X (months) and Y (cumulative sales) correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Step style implemented, markers at data points, grid lines present
-      - id: SC-04
-        name: Data Range
+        comment: Step style left, markers, grid lines all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Month on X, cumulative sales on Y, all 12 data points visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Series named "Cumulative Sales"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "step-basic · highcharts · pyplots.ai"
+        comment: Title step-basic · highcharts · anyplot.ai correct; legend correctly
+          omitted for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows step pattern well, but only demonstrates one step style (left/post)
+        comment: Shows discrete jumps, area fill, markers, reference milestone
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly cumulative sales is a realistic and comprehensible scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Sales figures ($45K-$780K) are realistic for annual cumulative sales
+        comment: Monthly cumulative sales $45K-$780K is real and neutral business
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values plausible for mid-size business annual trajectory
     code_quality:
       score: 10
       max: 10
@@ -161,13 +178,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → chart config → export'
+        comment: 'Flat: imports -> tokens -> data -> chart -> export; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random values)
+        comment: Data is hardcoded as Python lists; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -175,26 +193,43 @@ review:
         passed: true
         comment: All imports are used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current highcharts-core API
+        comment: Clean, Pythonic; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts step line feature with marker customization, but
-          could leverage more interactive features
+        comment: Correct container=container, HighchartsOptions(), to_js_literal(),
+          add_series() patterns; LineSeries imported from area module instead of canonical
+          line module
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Step interpolation via plotOptions is Highcharts-native; area-step
+          combination is library-distinctive; usage otherwise generic
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns: []
+  dataprep: []
+  styling:
+  - grid-styling
