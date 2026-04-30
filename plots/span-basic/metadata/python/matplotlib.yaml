@@ -1,167 +1,182 @@
 library: matplotlib
+language: python
 specification_id: span-basic
 created: '2025-12-23T20:44:32Z'
-updated: '2025-12-23T20:47:58Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20471149898
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/span-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-04-30T11:00:20Z'
+generated_by: claude-sonnet
+workflow_run: 25160721973
+issue: 980
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent demonstration of both vertical (axvspan for recession period) and horizontal
-    (axhspan for risk zone) spans in a single plot
-  - Highly realistic and recognizable scenario using 2008 financial crisis as context
-  - Clean, readable code following KISS principles with proper seed for reproducibility
-  - Perfect use of matplotlib native span functions (axvspan, axhspan) with appropriate
-    alpha transparency
-  - Text sizing follows library guidelines exactly (24pt title, 20pt labels, 16pt
-    ticks)
-  - Good color contrast between blue line, yellow vertical span, and red horizontal
-    span
+  - Both span directions (vertical + horizontal) demonstrate the full span-plot feature
+    set
+  - Perfect Okabe-Ito palette compliance across both themes with correct canonical
+    order
+  - 'Complete theme-adaptive chrome: all INK/INK_SOFT/ELEVATED_BG tokens applied to
+    every chrome element'
+  - 'Compelling data narrative: stock price entering the risk zone during the recession
+    span creates an immediate visual story'
+  - Minimal, clean code using proper matplotlib idioms (ax.axvspan/axhspan high-level
+    API)
   weaknesses:
-  - Legend placement in upper left slightly overlaps with the beginning of the stock
-    price line data
-  image_description: 'The plot displays a time series of stock prices from 2006 to
-    2016. The main data is shown as a blue line (Python blue #306998) representing
-    "Stock Price". There are two highlighted span regions: (1) a yellow vertical span
-    from 2008-2009 labeled "Recession Period" which clearly marks the financial crisis
-    era where the stock price drops significantly, and (2) a red/pink horizontal span
-    from $60-$80 labeled "Risk Zone" spanning the full width of the plot. The title
-    reads "span-basic · matplotlib · pyplots.ai" at the top. Axis labels show "Year"
-    on x-axis and "Price ($)" on y-axis. A legend in the upper left clearly identifies
-    all three elements. The grid is subtle with dashed lines. The price starts around
-    $195, peaks above $200 in 2007, drops during the recession period to around $150,
-    and stabilizes around $145-150 for the remaining years.'
+  - 'Code/image discrepancy: rendered images show italic ax.text() labels inside spans
+    ("2008-2010 Recession" and "Risk Zone") but the code file has no ax.text() or
+    ax.annotate() calls — re-running the code would produce a plot without these labels'
+  - DE-01 could be pushed toward publication quality with stronger typographic hierarchy
+    (bolder title, more contrast between title and axis labels)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "span-basic · matplotlib · anyplot.ai" in dark INK (#1A1A17), axis labels "Year" / "Price Index" in INK, tick labels in INK_SOFT (#4A4A44) — all clearly readable against light background
+      Data: Green (#009E73) stock price line (linewidth=3); orange (#D55E00, alpha=0.22) vertical recession span 2008–2010; blue (#0072B2, alpha=0.18) horizontal risk zone band y=70–95
+      Annotations: Italic text "2008–2010 Recession" inside orange span; "Risk Zone" inside blue span (visible in image but NOT in current code file)
+      Legend: Upper-left, 3 entries, ELEVATED_BG (#FFFDF6) frame
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: Title and axis labels in light (#F0EFE8), tick labels in #B8B7B0 — all clearly readable against dark background; no dark-on-dark failures detected
+      Data: Same #009E73 green line — identical to light render; orange recession span and blue risk zone band retain same data colors with different visual weight against dark surface
+      Annotations: Same italic span labels visible (matching light render positioning)
+      Legend: Dark ELEVATED_BG (#242420) frame with light text
+      Legibility verdict: PASS — all chrome properly flipped, no readability failures
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all perfectly readable
+        comment: 'All sizes explicitly set: title=24pt, labels=20pt, ticks=16pt, legend=16pt;
+          readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements anywhere
+        comment: No overlapping elements; year ticks well-spaced, legend clear of
+          data
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width of 3 is excellent, spans are clearly visible with good
-          alpha
+        comment: linewidth=3 line clearly visible; span alpha values allow underlying
+          line to show through
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue line, yellow span, and red span are easily distinguishable,
-          colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins with tight_layout
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Year" and "Price ($)" with unit in parentheses'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito positions 1-3 are CVD-safe; three elements distinguishable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good 16:9 utilization with balanced margins; data spans full range
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid alpha is 0.3 which is good, but the legend overlaps with part
-          of the data line at the start
+        passed: true
+        comment: Year and Price Index are descriptive; index notation needs no units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, spans use Okabe-Ito positions 2 and 3 in order;
+          backgrounds and chrome fully theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean professional look above configured defaults; not quite publication-tier
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, y-axis-only grid at alpha=0.12, styled
+          legend frame
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Visual hierarchy clear: stock enters orange recession span and drops
+          into blue risk zone'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correctly implements span/highlighted region plot
+        comment: Both axvspan and axhspan implemented, covering both directions from
+          spec
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on x-axis, price on y-axis, spans correctly applied
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows both vertical span (time period) AND horizontal span (threshold
-          zone) as mentioned in spec
-      - id: SC-04
-        name: Data Range
+        comment: Semi-transparent fill, both directions, 2 spans, optional text labels
+          present in rendered output
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes auto-scaled appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Dates on x-axis, price index on y-axis; full data range visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly identify Stock Price, Recession Period, and
-          Risk Zone
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "span-basic · matplotlib · pyplots.ai"
+        comment: span-basic · matplotlib · anyplot.ai; legend labels correct for all
+          3 series
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows BOTH vertical (time-based recession period) AND horizontal
-          (value threshold) spans, demonstrating both types mentioned in spec
+        comment: Both vertical and horizontal spans; overlapping spans; underlying
+          line; all major span features
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Stock prices with recession period is a highly realistic, well-known
-          use case. The scenario is immediately recognizable
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Stock prices in $60-$200 range are realistic, years 2006-2016 perfectly
-          capture the 2008 financial crisis
+        comment: Stock price with 2008 recession is real, neutral, historically grounded
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: ~35% index drop during recession is factually plausible; timing accurate
+          to 2008-2010
     code_quality:
       score: 10
       max: 10
@@ -171,41 +186,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear script: imports → data → plot → save'
+        comment: Imports → tokens → data → plot → save; no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy, both used
+        comment: os, matplotlib.pyplot, numpy — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Pythonic and concise; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png; no deprecated API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Uses matplotlib's axvspan() and axhspan() which are the idiomatic
-          way to create span regions, proper use of Axes methods as specified in library
-          rules
+        comment: Uses ax.* methods; axvspan/axhspan is the correct high-level matplotlib
+          API
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: axvspan/axhspan are matplotlib-native; combined use of both directions
+          demonstrates library knowledge
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending

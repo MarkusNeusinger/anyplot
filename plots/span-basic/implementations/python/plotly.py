@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 span-basic: Basic Span Plot (Highlighted Region)
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 83/100 | Updated: 2026-04-30
 """
 
 import numpy as np
