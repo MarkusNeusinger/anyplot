@@ -1,171 +1,186 @@
 library: altair
+language: python
 specification_id: span-basic
 created: '2025-12-23T20:45:45Z'
-updated: '2025-12-23T20:54:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20471151904
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/span-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/span-basic/altair/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - html-export
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-04-30T11:14:03Z'
+generated_by: claude-sonnet
+workflow_run: 25161045933
+issue: 980
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/altair/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent demonstration of both vertical and horizontal span regions with appropriate
-    visual styling
-  - Clean layered composition using Altair declarative grammar (alt.layer())
-  - Realistic recession period scenario makes the visualization immediately meaningful
-  - Good use of semi-transparent fill (opacity 0.25, 0.2) as recommended by spec
-  - Edge lines with dashed styling provide clear span boundaries
-  - Text labels positioned within/near spans for context
-  - Proper font sizing for high-resolution output (4800x2700)
+  - Correct use of alt.X2/alt.Y2 for span rectangles and alt.layer() composition —
+    idiomatic and distinctive Altair patterns
+  - Both span directions (vertical + horizontal) implemented with semi-transparent
+    fills, dashed boundary rules, and in-span labels
+  - 'Full theme-adaptive chrome: correct backgrounds (#FAF8F1/#1A1A17), adaptive text
+    tokens, view border removed'
+  - 'Clear data storytelling: stock-price-during-recession narrative with labeled
+    spans guides the viewer immediately'
+  - Perfect spec compliance and data quality — realistic financial scenario with plausible
+    values
   weaknesses:
-  - No legend/key explaining span colors (relies solely on in-chart labels)
-  - Could leverage Altair interactive features (tooltips, zoom) for HTML output
-  - Warning Zone label positioned at right edge - could be better centered in the
-    span region
-  image_description: 'The plot displays a stock price time series from 2007 to late
-    2009 on a 16:9 canvas. A blue line with circular markers (#306998) traces the
-    price trajectory from ~$100 up to ~$123 during 2007, then declining through 2008-2009
-    to around $85-92. Two span regions are present: (1) a **vertical yellow span**
-    covering 2008-2009 labeled "Recession Period" at the top, with dashed gold edge
-    lines marking the boundaries, and (2) a **horizontal red/salmon span** between
-    $85-95 labeled "Warning Zone" on the right side, with dashed red edge lines. The
-    title "span-basic · altair · pyplots.ai" appears at the top. Axis labels show
-    "Date" (x-axis) and "Stock Price ($)" (y-axis) with clear tick marks. A subtle
-    dashed grid is visible in the background.'
+  - 'Okabe-Ito positions not used in canonical order: positions 1, 5, 2 used instead
+    of 1, 2, 3 — skipping positions 3 and 4 and using 5 before 2'
+  - Top/right spines not removed — Altair supports this via domainWidth=0 and would
+    improve visual refinement
+  - Dark-theme recession span (orange at 25% opacity on near-black) produces a quite
+    dark brownish overlay; slightly higher opacity (0.30) could improve span region
+    legibility in dark mode
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "span-basic · altair · anyplot.ai" in dark ink — readable. X-axis label "Date" and Y-axis label "Stock Price ($)" in dark text — readable. Tick labels (quarterly dates + price values) in soft dark gray — readable. All chrome passes legibility check.
+      Data: Green (#009E73) stock price line with circular markers from Jan 2007 to Dec 2009. Yellow-orange (#E69F00 at 25% opacity) vertical span marks recession period Jan 2008–Dec 2009 with dashed boundary rules and "Recession Period" label. Vermillion (#D55E00 at 20% opacity) horizontal band spans price 85–95 with dashed boundary rules and "Warning Zone" label. Grid is subtle at 10% opacity.
+      Legibility verdict: PASS — all text clearly readable against #FAF8F1 background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and axis labels render in light warm gray (#F0EFE8 / #B8B7B0 tokens) — readable against dark background. Tick labels are light-colored. No dark-on-dark failures observed. Grid lines are subtle.
+      Data: Green (#009E73) line identical to light render — colors match exactly as required. Recession span (orange at 25% opacity over #1A1A17) creates dark brownish-olive overlay — the green line remains clearly visible through it. "Recession Period" in orange and "Warning Zone" in vermillion are visible against the darker overlays.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 28pt, axis titles 22pt, tick labels 18pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; all labels clearly separated
+        comment: 'All font sizes explicitly set: labelFontSize=18, titleFontSize=22,
+          title fontSize=28, span labels 16-18px. All readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Labels at distinct positions, x-axis ticks at 3-month intervals,
+          no collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line strokeWidth=4 and point size=150 are well-sized for 36 data
-          points; slightly larger markers could improve visibility
+        comment: strokeWidth=4 line, size=150 markers, clearly visible spans and dashed
+          boundary rules.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue line, yellow vertical span, red horizontal span - distinct colors
-          with good contrast, colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space; slight issue with the yellow span extending
-          beyond the visible recession label area on the right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Stock Price ($)" and "Date"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette used throughout; green/orange/vermillion are CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas appropriately with balanced margins. Nothing cut
+          off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.3, dashed), but there is no legend explaining
-          what the colored spans represent (beyond in-chart labels)
+        comment: 'Y: ''Stock Price ($)'' with units; X: ''Date''; title in required
+          format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'First series is #009E73 (correct). Backgrounds correct. But Okabe-Ito
+          positions 1, 5, 2 used instead of 1, 2, 3 — cherry-picking, skips positions
+          3 and 4.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: warm Okabe-Ito palette, theme-adaptive chrome, semi-transparent
+          spans with dashed edge rules, in-span text labels. Not quite publication-ready
+          but professional.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Grid opacity 0.10 (subtle), view border removed. Top/right spines
+          not removed. Some refinement but not full polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear recession narrative with labeled spans; visual hierarchy (background
+          spans -> line -> labels) guides viewer to insight.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct span/highlighted region plot with both vertical and horizontal
-          spans
+        comment: Correct span plot with both vertical and horizontal directions.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis (temporal), Price on Y-axis (quantitative), spans
-          correctly positioned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Both vertical span (time period) and horizontal span (threshold zone)
-          with edge lines and labels as spec suggests
-      - id: SC-04
-        name: Data Range
+        comment: Semi-transparent fills, edge lines (dashed rules), text labels, both
+          directions.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis scale [60, 130] shows all data comfortably with room for annotations
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Temporal x-axis, quantitative y-axis. x/x2 for vertical span, y/y2
+          for horizontal span.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: In-chart text labels accurately describe span regions
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "span-basic · altair · pyplots.ai"
+        comment: Title 'span-basic · altair · anyplot.ai' correct. Inline text labels
+          serve as legend — elegant for this chart type.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows BOTH vertical span (recession period) AND horizontal span (threshold
-          zone); demonstrates edge lines and labels; could show additional span to
-          showcase multiple regions
+        comment: Both span directions, semi-transparent fills, dashed boundary rules,
+          in-span labels — full feature set.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price during 2008-2009 recession is a classic, immediately
-          comprehensible real-world scenario
+        comment: Stock price time series during 2007-2009 financial crisis. Historically
+          plausible, neutral business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Stock prices ($85-123) are realistic; recession timing accurate;
-          threshold zone values reasonable though somewhat arbitrary
+        comment: Prices ~84-125 with realistic random-walk dynamics; recession timing
+          historically accurate; threshold zone (85-95) plausible.
     code_quality:
       score: 10
       max: 10
@@ -175,43 +190,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data generation → chart layers → combine
-          → save'
+        comment: 'Linear: imports -> tokens -> data -> charts -> combine -> save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses `np.random.seed(42)`
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports altair, numpy, pandas - all used
+        comment: os, altair, numpy, pandas — all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Clean Pythonic code. Multiple Chart layers necessary in Altair's
+          layered composition model. No fake functionality.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale_factor=3.0 and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair 6.1.0
+          API.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of Altair's layering with `alt.layer()`, `mark_rect()` for
-          spans, `mark_rule()` for edges, `mark_text()` for labels. Uses declarative
-          encoding types (:T, :Q, :N). Could add interactivity (tooltips, selection)
-          to showcase Altair's strengths more fully.
+        comment: Expertly uses alt.layer(), mark_rect() with x/x2 and y/y2, mark_rule()
+          for boundary lines, proper encoding types, full configure_*() chain.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: alt.X2/alt.Y2 secondary endpoint encodings for rectangular spans
+          are distinctively Altair. 10-layer composition and HTML export via tooltips
+          add library-specific value.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
