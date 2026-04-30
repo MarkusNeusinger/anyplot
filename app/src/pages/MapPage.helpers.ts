@@ -168,7 +168,10 @@ export async function preloadImages(
         // document.createElement is preferred over `new Image()` here only because
         // some lint configs don't surface browser globals on plain .ts files.
         const img = document.createElement('img');
-        img.crossOrigin = 'anonymous';
+        // Intentionally NOT setting img.crossOrigin: the GCS bucket has no CORS
+        // headers, and adding crossOrigin='anonymous' triggers a preflight that
+        // fails. We only ever drawImage() these onto the canvas (the canvas
+        // becomes "tainted", which is fine — we never read it back).
         img.onload = () => {
           out.set(id, img);
           onLoad?.(id, img);
