@@ -1,7 +1,7 @@
 """ anyplot.ai
 stem-basic: Basic Stem Plot
 Library: highcharts unknown | Python 3.13.13
-Quality: 71/100 | Updated: 2026-04-30
+Quality: 76/100 | Updated: 2026-04-30
 """
 
 import tempfile
