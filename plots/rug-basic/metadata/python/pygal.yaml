@@ -1,15 +1,231 @@
 library: pygal
+language: python
 specification_id: rug-basic
 created: '2025-12-23T19:43:20Z'
-updated: '2025-12-23T20:12:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20469997287
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-30T05:50:58Z'
+generated_by: claude-sonnet
+workflow_run: 25148765512
+issue: 978
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/rug-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/rug-basic/pygal/plot.html
-quality_score: 85
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/pygal/plot-dark.html
+quality_score: 81
+review:
+  strengths:
+  - 'Perfect spec compliance: multi-modal API response time data demonstrates all
+    rug plot features (clustering, gaps, density variation)'
+  - Correct Okabe-Ito palette and theme tokens across both light and dark renders
+    with no chrome failures
+  - Leverages pygal interactive HTML output — each rug tick reveals its exact value
+    on hover
+  - Semi-transparency (opacity=0.7) with brand green creates natural density encoding
+  weaknesses:
+  - Title font size (28px) renders small at 4800x2700 — increase to 32-36px
+  - Significant empty vertical space above rug marks — reduce y-range from (0, 0.2)
+    to (0, 0.12) to improve canvas utilization
+  - Default pygal chart border/frame still visible reducing visual refinement
+  - DE-01 could be elevated with a subtle annotation or callout highlighting the three
+    performance clusters
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "rug-basic · pygal · anyplot.ai" dark ink, readable; x-axis label "Response Time (ms)" readable; tick labels 100/200/300/400/500 readable in dark ink; y-axis labels intentionally hidden
+      Data: Brand green (#009E73) vertical rug tick marks; three visible density clusters at ~150-200ms (dense), ~250-300ms (medium), ~400ms (sparse outlier cluster); cache hit marks at 50-100ms; semi-transparent (opacity=0.7)
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct, not pure black
+      Chrome: Title readable in light-colored ink; axis label readable; tick labels readable in light ink; no dark-on-dark failures observed
+      Data: Brand green marks identical to light render — only chrome flips between themes
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title 28px, labels 22px, major labels
+          18px); all text readable in both themes; title slightly small at full resolution
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap; mark density overlap handled by transparency
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Rug marks clearly visible with stroke_width=8 and opacity=0.7; marks
+          slightly tall (75% of y-range) but acceptable for standalone rug plot
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single brand green on appropriate backgrounds; high contrast; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: true
+        comment: Content fills ~45-50% of canvas; some empty vertical space above
+          marks (inherent to standalone rug plot)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Response Time (ms) includes unit; title correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 correct; warm backgrounds correct (#FAF8F1/#1A1A17);
+          both renders theme-correct'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Clean well-configured design with brand green; minimal and appropriate
+          for rug plot; does not rise above well-configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: No grid, no legend, no y-axis labels, custom margins, semi-transparency;
+          default pygal border still visible
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Multi-modal data intentionally reveals clustering; density patterns
+          (cache hits, typical, slow) visible via mark density
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct rug plot via pygal XY chart with vertical strokes
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparency, consistent tick height, x-axis positioning, clustering
+          revealed
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Values on x-axis; all 100 observations visible; y-axis appropriately
+          hidden
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title rug-basic · pygal · anyplot.ai correct; no legend appropriate
+          for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Multi-modal distribution showing clustering, gaps, sparse outliers,
+          dense regions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'API response times: natural, neutral, real-world scenario'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 30-500ms range realistic; multi-modal shape (cache hits + typical
+          + slow) plausible
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear structure: imports → data → style → chart → loop → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Per-point series loop is the only viable pygal approach but creates
+          100 series with potential HTML performance implications
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct use of pygal.XY with stroke=True; proper Style object; per-series
+          approach is required pygal idiom for individual marks
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HTML export is distinctive; each tick labeled with value enables
+          hover-over-tick interactivity showing exact ms values in HTML version
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -18,18 +234,5 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - Creative use of pygal XY chart to simulate rug plot functionality
-  - Interactive tooltips showing exact response time values for each tick
-  - Clean data generation showing realistic clustering patterns (fast, normal, slow,
-    outlier responses)
-  - Proper title format and descriptive axis label with units
-  - Good use of custom styling with appropriate font sizes for the canvas
-  weaknesses:
-  - Tick marks span 90% of vertical canvas height instead of being small tick marks
-    at the axis edge as specified
-  - Individual ticks in dense clusters are difficult to distinguish due to overlap
-  - Unconventional rug plot appearance - traditional rug plots have short ticks, not
-    full-height lines
+  styling:
+  - alpha-blending
