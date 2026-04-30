@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 span-basic: Basic Span Plot (Highlighted Region)
-Library: highcharts unknown | Python 3.13.11
-Quality: 93/100 | Created: 2025-12-23
+Library: highcharts unknown | Python 3.13.13
+Quality: 90/100 | Updated: 2026-04-30
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -16,114 +17,129 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Monthly stock price with recession period highlighted
-months = [
-    "Jan 2007",
-    "Apr 2007",
-    "Jul 2007",
-    "Oct 2007",
-    "Jan 2008",
-    "Apr 2008",
-    "Jul 2008",
-    "Oct 2008",
-    "Jan 2009",
-    "Apr 2009",
-    "Jul 2009",
-    "Oct 2009",
-    "Jan 2010",
-    "Apr 2010",
-    "Jul 2010",
-    "Oct 2010",
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"  # Okabe-Ito position 1 — always first series
+
+# Data - S&P 500 approximate quarterly closing values during the 2007-2010 financial crisis
+quarters = [
+    "Q1 2007",
+    "Q2 2007",
+    "Q3 2007",
+    "Q4 2007",
+    "Q1 2008",
+    "Q2 2008",
+    "Q3 2008",
+    "Q4 2008",
+    "Q1 2009",
+    "Q2 2009",
+    "Q3 2009",
+    "Q4 2009",
+    "Q1 2010",
+    "Q2 2010",
+    "Q3 2010",
+    "Q4 2010",
 ]
-prices = [145, 152, 158, 155, 148, 135, 125, 95, 85, 78, 88, 105, 115, 122, 128, 135]
+sp500_values = [1421, 1503, 1527, 1468, 1323, 1280, 1166, 903, 798, 919, 1057, 1115, 1169, 1031, 1141, 1258]
 
 # Create chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration
 chart.options.chart = {
     "type": "line",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
-    "marginBottom": 200,
-    "spacingBottom": 20,
+    "backgroundColor": PAGE_BG,
+    "marginBottom": 220,
+    "spacingTop": 40,
 }
 
-# Title
 chart.options.title = {
-    "text": "span-basic · highcharts · pyplots.ai",
-    "style": {"fontSize": "72px", "fontWeight": "bold"},
+    "text": "span-basic · highcharts · anyplot.ai",
+    "style": {"fontSize": "72px", "fontWeight": "bold", "color": INK},
 }
 
-# Subtitle
-chart.options.subtitle = {"text": "Stock Price with Recession Period Highlighted", "style": {"fontSize": "48px"}}
+chart.options.subtitle = {
+    "text": "S&P 500 Index with Financial Crisis Period Highlighted",
+    "style": {"fontSize": "48px", "color": INK_SOFT},
+}
 
-# X-axis with categories
 chart.options.x_axis = {
-    "categories": months,
-    "title": {"text": "Date", "style": {"fontSize": "48px"}},
-    "labels": {"style": {"fontSize": "36px"}},
-    # Vertical span - highlight recession period (indices 4-8, Jan 2008 - Jan 2009)
+    "categories": quarters,
+    "title": {"text": "Quarter", "style": {"fontSize": "44px", "color": INK}, "margin": 20},
+    "labels": {"style": {"fontSize": "32px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": GRID,
+    # Vertical span — highlight financial crisis (Q4 2007 through Q1 2009, indices 3–8)
     "plotBands": [
         {
-            "from": 4,
-            "to": 8,
-            "color": "rgba(48, 105, 152, 0.25)",
+            "from": 3.5,
+            "to": 8.5,
+            "color": "rgba(213,94,0,0.18)",
             "label": {
-                "text": "Recession Period",
-                "style": {"fontSize": "42px", "color": "#306998", "fontWeight": "bold"},
+                "text": "Financial Crisis",
+                "style": {"fontSize": "40px", "color": "#D55E00", "fontWeight": "bold"},
                 "verticalAlign": "top",
-                "y": 60,
+                "y": 80,
             },
         }
     ],
 }
 
-# Y-axis with horizontal span for threshold zone
 chart.options.y_axis = {
-    "title": {"text": "Stock Price ($)", "style": {"fontSize": "48px"}},
-    "labels": {"style": {"fontSize": "36px"}},
-    "min": 50,
-    "max": 180,
-    # Horizontal span - highlight danger zone below $100
+    "title": {"text": "Index Value (Points)", "style": {"fontSize": "44px", "color": INK}},
+    "labels": {"style": {"fontSize": "36px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": GRID,
+    "min": 600,
+    "max": 1700,
+    # Horizontal span — highlight bear market zone (below 1000 points)
     "plotBands": [
         {
-            "from": 50,
-            "to": 100,
-            "color": "rgba(255, 212, 59, 0.25)",
+            "from": 600,
+            "to": 1000,
+            "color": "rgba(230,159,0,0.18)",
             "label": {
-                "text": "Below Target Price",
-                "style": {"fontSize": "36px", "color": "#B8860B"},
+                "text": "Bear Market Zone",
+                "style": {"fontSize": "36px", "color": "#E69F00", "fontWeight": "500"},
                 "align": "left",
-                "x": 50,
+                "x": 40,
+                "y": -15,
             },
         }
     ],
 }
 
-# Legend
-chart.options.legend = {"enabled": True, "itemStyle": {"fontSize": "36px"}}
+chart.options.legend = {
+    "enabled": True,
+    "itemStyle": {"fontSize": "36px", "color": INK_SOFT, "fontWeight": "normal"},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
+}
 
-# Plot options
 chart.options.plot_options = {"line": {"lineWidth": 6, "marker": {"radius": 12, "enabled": True}}}
 
-# Add line series
 series = LineSeries()
-series.name = "Stock Price"
-series.data = prices
-series.color = "#306998"
-series.marker = {"fillColor": "#306998", "lineColor": "#306998", "lineWidth": 2}
-
+series.name = "S&P 500"
+series.data = sp500_values
+series.color = BRAND
+series.marker = {"fillColor": BRAND, "lineColor": PAGE_BG, "lineWidth": 2}
 chart.add_series(series)
 
 # Download Highcharts JS for inline embedding
-highcharts_url = "https://code.highcharts.com/highcharts.js"
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts.js"
 with urllib.request.urlopen(highcharts_url, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-# Generate HTML with inline scripts
 html_str = chart.to_js_literal()
 html_content = f"""<!DOCTYPE html>
 <html>
@@ -131,18 +147,19 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Write temp HTML file
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
-# Take screenshot with headless Chrome
 chrome_options = Options()
 chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
@@ -153,11 +170,7 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-# Save HTML file for interactive viewing
-Path("plot.html").write_text(html_content, encoding="utf-8")
-
-# Clean up temp file
 Path(temp_path).unlink()
