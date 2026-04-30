@@ -1,164 +1,188 @@
 library: letsplot
+language: python
 specification_id: rose-basic
 created: '2025-12-23T19:44:36Z'
-updated: '2025-12-23T19:50:56Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20469996773
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/rose-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/rose-basic/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-04-30T07:42:24Z'
+generated_by: claude-sonnet
+workflow_run: 25152190302
+issue: 1003
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/letsplot/plot-dark.html
+quality_score: 75
 review:
   strengths:
-  - Excellent rose chart implementation using lets-plot coord_polar with geom_bar
-  - Beautiful blue-to-yellow color gradient that follows Python brand colors and provides
-    clear value differentiation
-  - Proper month ordering using pd.Categorical to maintain natural calendar sequence
-  - Clean code structure following KISS principles
-  - Appropriate theme_minimal with well-tuned text sizes (24pt title, 18pt y-axis,
-    16pt month labels)
-  - Chart starts at January at top (12 o'clock) as recommended in spec for time data
+  - Correct rose chart implementation using idiomatic lets-plot ggplot2 grammar with
+    coord_polar()
+  - Natural, neutral dataset (monthly rainfall) with plausible seasonal pattern and
+    appropriate scale (65-168mm/month)
+  - Clean KISS code structure; all imports used; fully deterministic hardcoded data
+  - Removing angular grid spokes (panel_grid_major_x=element_blank()) is a good refinement
+    for polar charts
+  - Both theme renders show visually acceptable output with warm off-white / near-black
+    backgrounds and readable text
   weaknesses:
-  - Radial gridlines (panel_grid_major_y) could be more subtle with lower alpha for
-    cleaner appearance
-  - The y-axis title appears on the left side which is slightly awkward for polar
-    coordinates
-  image_description: The plot displays a rose chart (polar bar chart) showing monthly
-    rainfall distribution. The chart is centered on the canvas with months arranged
-    clockwise starting from January at the top (12 o'clock position). Each wedge represents
-    a month with the radius proportional to rainfall amount. Colors transition smoothly
-    from Python Blue (#306998) for winter months through greens and yellows to Python
-    Yellow (#FFD43B) for December. July has the longest bar (168mm), while February
-    has the shortest (65mm). The title reads "Monthly Rainfall Distribution · rose-basic
-    · letsplot · pyplots.ai" in bold at the top. Radial gridlines are visible at 20mm
-    intervals (0, 20, 40, 60, 80, 100, 120, 140, 160). The y-axis label "Rainfall
-    (mm)" appears on the left side. Month labels are positioned around the outer edge
-    of the chart.
+  - 'Non-Okabe-Ito palette: code uses Python Blue-to-Yellow gradient starting with
+    #306998 (explicitly prohibited); replace with single geom_bar(fill=''#009E73'')
+    since all bars represent the same metric'
+  - 'Missing theme adaptation: no os.getenv(''ANYPLOT_THEME'') logic, no PAGE_BG/INK/INK_SOFT
+    tokens applied to plot_background, panel_background, axis_text, axis_title, plot_title'
+  - 'Wrong output filenames: saves plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html
+    as required by the pipeline'
+  - Title contains 'pyplots.ai' instead of 'anyplot.ai' in the code (images show correct
+    value, suggesting code/image version mismatch)
+  - 'Font sizes below guidelines: axis_title_y=18pt (should be >=20pt) and axis_text_y=14pt
+    (should be >=16pt)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) - not pure white, consistent with anyplot light theme
+      Chrome: Title "Monthly Rainfall Distribution - rose-basic - letsplot - anyplot.ai" in bold dark text at top (readable); month labels Jan-Dec around perimeter in dark text (readable); radial axis ticks 0/20/40/60/80/100/120/140/160 in darker text (readable); y-axis label "Rainfall (mm)" on left (readable)
+      Data: All 12 monthly rose segments in single teal-green color (~#009E73); radial gridlines visible as concentric circles; segments clearly distinguishable from background
+      Legibility verdict: PASS - all text readable against warm off-white background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17) - not pure black, consistent with anyplot dark theme
+      Chrome: Title in lighter text (readable against dark background); month labels around perimeter in lighter text (readable); radial axis ticks in lighter text (readable); y-axis label in lighter text (readable); no dark-on-dark text failures detected
+      Data: Same teal-green segments as light render - colors identical between themes, only chrome flipped; segments remain clearly visible against dark background
+      Legibility verdict: PASS - all text readable against near-black background, no dark-on-dark failures observed
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title at 24pt, axis text at 16pt, all clearly readable. Slightly
-          crowded month labels but acceptable.
+        comment: Title=24pt bold explicitly set; axis_text_x=16pt; axis_title_y=18pt
+          (below 20pt guideline); axis_text_y=14pt (below 16pt guideline); images
+          show readable text in both themes but code lacks color adaptation
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: 12 month labels evenly spaced around perimeter, no collisions observed
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-sized with 0.85 alpha, good visibility. Slightly tight
-          spacing between adjacent bars.
+        comment: Rose segments clearly visible with good size and contrast in both
+          themes
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Gradient from blue to yellow is colorblind-safe, no red-green dependency
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Rose chart is well-centered, fills ~60% of canvas, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled "Rainfall (mm)" with units, x-axis appropriately blank
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Single teal-green series is CVD-safe with high contrast against both
+          backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Rose chart fills canvas well; some corner waste typical of polar/circular
+          charts in landscape format
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend disabled (appropriate), but radial gridlines could be more
-          subtle
+        comment: Rainfall (mm) with units; descriptive title present
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'Code contains #306998 (Python Blue) as first color - explicitly
+          prohibited; 12-color custom gradient is not Okabe-Ito; no os.getenv(ANYPLOT_THEME)
+          means no theme-adaptive chrome in code'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Single-color rose chart has clean appeal; well-configured library
+          default look; not publication-exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: panel_grid_major_x=element_blank() removes angular spokes; radial
+          gridlines appropriate; minimal further polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Seasonal pattern visible naturally but no visual emphasis; single-color
+          prevents hierarchical storytelling
     spec_compliance:
-      score: 25
-      max: 25
+      score: 13
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct rose/coxcomb chart using polar coordinates
+        comment: 'Correct rose chart: polar coordinates, equal-angle wedges, radius
+          proportional to value'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Months on angular axis, rainfall on radial axis correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: equal-angle wedges, radius proportional
-          to value, radial gridlines'
-      - id: SC-04
-        name: Data Range
+        comment: Circular layout, Jan at 12 o'clock, radial gridlines, consistent
+          color scheme all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within the chart bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly disabled (colors are per-month gradient, self-explanatory)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Follows "{description} · {spec-id} · {library} · pyplots.ai" format
+        comment: Months mapped to angular positions, rainfall (mm) mapped to radius
+      - id: SC-04
+        name: Title & Legend
+        score: 1
+        max: 3
+        passed: false
+        comment: Code title reads '...pyplots.ai' instead of '...anyplot.ai'; image
+          shows correct value suggesting version mismatch; scored on current code
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows seasonal rainfall pattern with summer peak (Jul=168mm) and
-          winter trough (Feb=65mm). Good variation across months.
+        comment: 12-month cycle shows full seasonal variation; winter-low/summer-high
+          pattern illustrated; slight deduction for moderate value range
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Monthly rainfall is a realistic application mentioned in spec
+        comment: Monthly rainfall is natural, neutral, comprehensible; no controversial
+          content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Rainfall values 65-168mm are plausible for temperate climate, though
-          slightly high for some months
+        comment: Values 65-168mm/month plausible for temperate climate; proportions
+          factually reasonable
     code_quality:
       score: 9
       max: 10
@@ -168,41 +192,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Imports -> Data -> Plot -> Save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: 'Data is deterministic (hardcoded), but np.random.seed not needed.
-          Minor: no explicit seed statement.'
+        comment: All data hardcoded; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imported symbols are used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Clean, Pythonic structure; no fake UI elements
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        passed: false
+        comment: Saves as plot.png/plot.html (bare filenames) instead of plot-{THEME}.png/plot-{THEME}.html;
+          no ANYPLOT_THEME env var read
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Uses lets-plot's ggplot grammar with coord_polar, scale_fill_manual,
-          and theme customization. Could leverage more interactive features.
+        comment: ggplot+geom_bar+coord_polar is correct ggplot2-grammar approach;
+          ggsize() and ggsave(scale=3) used idiomatically; misses required theme-adaptive
+          chrome pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: ggsize() and scaled ggsave() are lets-plot specific; core coord_polar+geom_bar
+          pattern shared with plotnine; no notably distinctive lets-plot features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  patterns: []
+  dataprep: []
+  styling:
+  - alpha-blending
