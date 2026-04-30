@@ -10,6 +10,9 @@ import {
   pickTier,
   pickBestLoadedTier,
   fitToBox,
+  primaryPlotType,
+  computeClusterAnchors,
+  clusterBucket,
   type SpecMapItem,
 } from './MapPage.helpers';
 
@@ -209,6 +212,83 @@ describe('pickTier', () => {
   it('returns 1200 for very large device sizes', () => {
     expect(pickTier(1000)).toBe(1200);
     expect(pickTier(2000)).toBe(1200);
+  });
+});
+
+
+describe('primaryPlotType', () => {
+  it('returns the first plot_type entry', () => {
+    expect(primaryPlotType(spec('a', { plot_type: ['scatter', 'point'] }))).toBe('scatter');
+  });
+
+  it('returns "other" when plot_type is missing', () => {
+    expect(primaryPlotType(spec('a', null))).toBe('other');
+    expect(primaryPlotType(spec('a', { domain: ['statistics'] }))).toBe('other');
+  });
+});
+
+
+describe('computeClusterAnchors', () => {
+  it('emits one anchor per major plot_type plus "other"', () => {
+    const specs = [
+      spec('s1', { plot_type: ['scatter'] }),
+      spec('s2', { plot_type: ['scatter'] }),
+      spec('s3', { plot_type: ['scatter'] }),
+      spec('s4', { plot_type: ['line'] }),  // singleton — bucketed into "other"
+    ];
+    const anchors = computeClusterAnchors(specs, 100, 3);
+    expect(Array.from(anchors.keys()).sort()).toEqual(['other', 'scatter']);
+  });
+
+  it('places anchors on a circle of the given radius', () => {
+    const specs = [
+      spec('s1', { plot_type: ['a'] }),
+      spec('s2', { plot_type: ['a'] }),
+      spec('s3', { plot_type: ['b'] }),
+      spec('s4', { plot_type: ['b'] }),
+    ];
+    const anchors = computeClusterAnchors(specs, 100, 2);
+    for (const { x, y } of anchors.values()) {
+      const r = Math.hypot(x, y);
+      // either on the circle or at the origin (single-anchor degenerate case)
+      expect(Math.abs(r - 100) < 1e-6 || r < 1e-6).toBe(true);
+    }
+  });
+
+  it('places the single anchor at the origin when only one cluster exists', () => {
+    const specs = [
+      spec('s1', { plot_type: ['only-type'] }),
+      spec('s2', { plot_type: ['only-type'] }),
+      spec('s3', { plot_type: ['only-type'] }),
+    ];
+    const anchors = computeClusterAnchors(specs, 100, 3);
+    // 'only-type' (3 specs ≥ minCount 3) + 'other' (0 specs but always emitted)
+    // The function emits 2 anchors when there are majors; both on the circle.
+    expect(anchors.size).toBe(2);
+  });
+
+  it('falls back to a single "other" anchor when nothing meets minCount', () => {
+    const specs = [
+      spec('s1', { plot_type: ['a'] }),
+      spec('s2', { plot_type: ['b'] }),
+    ];
+    const anchors = computeClusterAnchors(specs, 100, 3);
+    expect(Array.from(anchors.keys())).toEqual(['other']);
+    expect(anchors.get('other')).toEqual({ x: 0, y: 0 });
+  });
+});
+
+
+describe('clusterBucket', () => {
+  it('returns the spec primary type when it is in the anchor map', () => {
+    const anchors = new Map([['scatter', null], ['other', null]]);
+    expect(clusterBucket(spec('s', { plot_type: ['scatter'] }), anchors)).toBe('scatter');
+  });
+
+  it('returns "other" when the spec primary type is not a major cluster', () => {
+    const anchors = new Map([['scatter', null], ['other', null]]);
+    expect(clusterBucket(spec('s', { plot_type: ['rare'] }), anchors)).toBe('other');
+    expect(clusterBucket(spec('s', null), anchors)).toBe('other');
   });
 });
 

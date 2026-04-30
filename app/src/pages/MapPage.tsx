@@ -5,6 +5,7 @@ import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
 import ForceGraph2D from 'react-force-graph-2d';
+import { forceCollide, forceX, forceY } from 'd3-force-3d';
 
 import { API_URL } from '../constants';
 import { useAnalytics } from '../hooks';
@@ -13,6 +14,8 @@ import { specPath } from '../utils/paths';
 import { colors, fontSize, typography } from '../theme';
 import {
   buildKNNLinks,
+  clusterBucket,
+  computeClusterAnchors,
   computeIDF,
   ensureNodeTier,
   fitToBox,
@@ -30,10 +33,22 @@ import {
 
 
 const NODE_SIZE = 22;            // px in graph space — ImageCard thumbnails feel right around this size
-const HOVER_SCALE = 1.6;          // hovered + neighbor node bump
-const COOLDOWN_TICKS = 200;       // simulation stops after settling
+const HOVER_PREVIEW_SIZE = NODE_SIZE * 9;     // graph-space size of the hover preview overlay
+const COOLDOWN_TICKS = 400;       // longer settling for cleaner final positions
 const KNN_K = 5;                  // edges per node in the sparse KNN graph
 const KNN_MIN_SIM = 0.05;         // drop near-zero noise links
+// Forces: tuned for clean spread + visible clusters at typical viewport sizes.
+const REPULSION = -160;           // forceManyBody strength — more negative = more global repulsion
+const LINK_DISTANCE_MIN = NODE_SIZE * 1.5;   // shortest link (highest sim)
+const LINK_DISTANCE_MAX = NODE_SIZE * 6;     // longest link (lowest sim above threshold)
+const COLLIDE_PADDING = 4;        // px padding on top of the bounding-box radius
+// Cluster gravity: places each major plot_type on a ring of this radius and
+// pulls nodes toward their type's anchor. Strength is gentle so KNN edges
+// still shape the within-cluster topology — but neighborhoods stay visibly
+// separate. Singleton plot_types bucket into a shared "other" anchor so the
+// ring doesn't degenerate into 100+ closely-spaced points.
+const CLUSTER_RADIUS = NODE_SIZE * 30;
+const CLUSTER_STRENGTH = 0.18;
 
 // visually-hidden style — keeps the spec list readable for screen readers
 // even though the canvas is the primary interface.
@@ -109,14 +124,22 @@ export function MapPage() {
   const graphData = useMemo<{ nodes: MapNode[]; links: MapLink[] }>(() => {
     if (!specs) return { nodes: [], links: [] };
     const idf = computeIDF(specs);
-    const nodes: MapNode[] = specs.map(s => ({
-      id: s.id,
-      title: s.title,
-      tags: flattenTags(s),
-      thumbUrl: selectMapThumbUrl(s, isDark),
-      imgs: new Map(),
-      pendingTiers: new Set(),
-    }));
+    const anchors = computeClusterAnchors(specs, CLUSTER_RADIUS);
+    const nodes: MapNode[] = specs.map(s => {
+      const bucket = clusterBucket(s, anchors);
+      const a = anchors.get(bucket) ?? { x: 0, y: 0 };
+      return {
+        id: s.id,
+        title: s.title,
+        tags: flattenTags(s),
+        primaryType: bucket,
+        clusterX: a.x,
+        clusterY: a.y,
+        thumbUrl: selectMapThumbUrl(s, isDark),
+        imgs: new Map(),
+        pendingTiers: new Set(),
+      };
+    });
     const links = buildKNNLinks(specs, idf, KNN_K, KNN_MIN_SIM);
     return { nodes, links };
   }, [specs, isDark]);
@@ -187,11 +210,13 @@ export function MapPage() {
         role="region"
         aria-label="Force-directed map of anyplot specifications, clustered by tag similarity"
       >
-        {/* Header overlay with tiny meta */}
+        {/* Header overlay with tiny meta. left values mirror RootLayout's
+            container px in raw pixels (sx `left` is NOT spacing-aware, unlike
+            `px`/`mx`) so the text aligns with the anyplot logo / nav links. */}
         <Box sx={{
           position: 'absolute',
           top: { xs: 8, sm: 16 },
-          left: { xs: 16, sm: 32 },
+          left: { xs: 16, sm: 32, md: 64, lg: 96 },
           zIndex: 2,
           fontFamily: typography.mono,
           fontSize: fontSize.xs,
@@ -228,13 +253,20 @@ export function MapPage() {
             width={size.w}
             height={size.h}
             backgroundColor={'transparent'}
+            nodeLabel={(n: MapNode) => n.title}
+            // Boost global repulsion so nodes aren't crammed into a blob.
+            d3VelocityDecay={0.35}
+            d3AlphaDecay={0.0228}
             nodeCanvasObject={(node, ctx, globalScale) => {
               const n = node as WithCoords;
               if (n.x == null || n.y == null) return;
               const isHover = hoverId === n.id;
               const isNeighbor = !isHover && hoverId != null && neighbors.get(hoverId)?.has(n.id);
               const dim = hoverId != null && !isHover && !isNeighbor;
-              const baseSize = NODE_SIZE * (isHover ? HOVER_SCALE : isNeighbor ? 1.15 : 1);
+              // The hovered node itself doesn't grow here — the much larger
+              // preview is drawn on top by onRenderFramePost. We DO bump
+              // direct neighbors slightly so the relationship is legible.
+              const baseSize = NODE_SIZE * (isNeighbor ? 1.2 : 1);
 
               // Pick the smallest variant whose source resolution comfortably
               // covers the on-screen size, then lazy-load it if not yet present.
@@ -286,6 +318,78 @@ export function MapPage() {
             onNodeHover={(n: MapNode | null) => setHoverId(n?.id ?? null)}
             cooldownTicks={COOLDOWN_TICKS}
             onEngineStop={() => fgRef.current?.zoomToFit?.(400, 40)}
+            // Wire up the custom forces once the imperative ref is available.
+            // onRenderFramePre fires every frame; the __forcesWired guard makes
+            // it idempotent and the cost on subsequent frames is one property read.
+            onRenderFramePre={() => {
+              const fg = fgRef.current;
+              if (!fg || fg.__forcesWired) return;
+              // Stronger many-body repulsion than the default ~-30.
+              fg.d3Force('charge')?.strength(REPULSION);
+              // Link distance/strength scale with weighted-Jaccard similarity:
+              // tighter clusters for highly related specs, looser otherwise.
+              // The d3-force-3d ambient types are minimal; cast for the chained calls.
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const linkForce = fg.d3Force('link') as any;
+              if (linkForce) {
+                linkForce.distance((l: MapLink) => {
+                  const w = l.weight ?? 0.3;
+                  return LINK_DISTANCE_MIN + (1 - Math.min(1, w)) * (LINK_DISTANCE_MAX - LINK_DISTANCE_MIN);
+                });
+                linkForce.strength((l: MapLink) =>
+                  Math.max(0.05, Math.min(1, (l.weight ?? 0.3) * 1.5))
+                );
+              }
+              // Per-node collision: prevents thumbnail overlap. Radius = half
+              // the longer side of the bounding box plus a small padding.
+              fg.d3Force(
+                'collide',
+                forceCollide<MapNode>(() => NODE_SIZE / 2 + COLLIDE_PADDING).iterations(2)
+              );
+              // Cluster gravity: each plot_type has its own anchor on a ring,
+              // and nodes get pulled toward their type's anchor with a gentle
+              // strength so KNN edges still drive the within-cluster topology.
+              fg.d3Force('clusterX', forceX<MapNode>((d: MapNode) => d.clusterX).strength(CLUSTER_STRENGTH));
+              fg.d3Force('clusterY', forceY<MapNode>((d: MapNode) => d.clusterY).strength(CLUSTER_STRENGTH));
+              fg.__forcesWired = true;
+              fg.d3ReheatSimulation?.();
+            }}
+            // Hover preview: paint a much larger version of the hovered node
+            // AFTER all the regular nodes have been drawn, so it always sits
+            // on top regardless of the node-paint order. Uses the same canvas
+            // transform (graph coords) so positioning is just (n.x, n.y).
+            onRenderFramePost={(ctx) => {
+              if (!hoverId) return;
+              const n = graphData.nodes.find(x => x.id === hoverId) as
+                | (MapNode & { x?: number; y?: number })
+                | undefined;
+              if (!n || n.x == null || n.y == null) return;
+
+              // Upgrade to the highest tier we'd want for a preview this large.
+              const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+              const desiredTier = pickTier(HOVER_PREVIEW_SIZE * dpr);
+              if (n.imgs && !n.imgs.has(desiredTier) && !n.pendingTiers?.has(desiredTier)) {
+                ensureNodeTier(n, desiredTier, () => fgRef.current?.refresh?.());
+              }
+              const img = n.imgs ? pickBestLoadedTier(n.imgs, desiredTier) : null;
+
+              const { w, h } = fitToBox(HOVER_PREVIEW_SIZE, nodeAspectRatio(n));
+              const x = n.x - w / 2;
+              const y = n.y - h / 2;
+
+              ctx.save();
+              // Soft drop-shadow halo to lift the preview off the canvas.
+              ctx.shadowColor = colors.primary;
+              ctx.shadowBlur = 16;
+              ctx.fillStyle = isDark ? '#0a0a08' : '#FFFDF6';
+              ctx.fillRect(x, y, w, h);
+              ctx.shadowBlur = 0;
+              if (img) ctx.drawImage(img, x, y, w, h);
+              ctx.lineWidth = 1.5;
+              ctx.strokeStyle = colors.primary;
+              ctx.strokeRect(x, y, w, h);
+              ctx.restore();
+            }}
           />
         )}
 

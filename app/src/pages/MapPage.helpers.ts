@@ -37,6 +37,9 @@ export interface MapNode {
   thumbUrl: string | null;                       // base theme-aware .png URL
   imgs: Map<ResolutionTier, HTMLImageElement>;   // loaded variants
   pendingTiers: Set<ResolutionTier>;             // tiers with an in-flight fetch
+  primaryType: string;                           // primary plot_type, drives cluster gravity
+  clusterX: number;                              // cluster anchor X in graph space
+  clusterY: number;                              // cluster anchor Y in graph space
 }
 
 /** Link shape passed to ForceGraph2D. `weight` = weighted-Jaccard sim ∈ (0, 1]. */
@@ -202,6 +205,65 @@ export function pickBestLoadedTier(
     if (imgs.has(t)) return imgs.get(t)!;
   }
   return null;
+}
+
+/**
+ * Pick a spec's primary plot type. We use the first entry of the spec-level
+ * `plot_type` tag list — that's the canonical type the spec is filed under.
+ * Specs without any plot_type fall into a synthetic "other" cluster.
+ */
+export function primaryPlotType(spec: SpecMapItem): string {
+  return spec.tags?.plot_type?.[0] ?? 'other';
+}
+
+/**
+ * Place the major plot_types on a circle around the origin so nodes of the
+ * same type get pulled toward a shared anchor in graph space — producing
+ * visible "scatter neighborhood", "bar neighborhood", etc. clusters.
+ *
+ * The catalog has ~100 unique primary plot_types, most of them singletons;
+ * giving every singleton its own anchor crowds the ring and defeats the
+ * purpose. Types with fewer than `minCount` specs get bucketed into a
+ * synthetic `other` cluster instead.
+ *
+ * Type ordering is alphabetic for determinism (otherwise reload reshuffles
+ * everyone's spatial neighbors).
+ */
+export function computeClusterAnchors(
+  specs: SpecMapItem[],
+  radius: number,
+  minCount = 3
+): Map<string, { x: number; y: number }> {
+  const counts = new Map<string, number>();
+  for (const s of specs) {
+    const pt = primaryPlotType(s);
+    counts.set(pt, (counts.get(pt) ?? 0) + 1);
+  }
+  const majors = Array.from(counts.entries())
+    .filter(([, c]) => c >= minCount)
+    .map(([t]) => t)
+    .sort();
+  const types = majors.length > 0 ? [...majors, 'other'] : ['other'];
+  const map = new Map<string, { x: number; y: number }>();
+  if (types.length === 1) {
+    map.set(types[0], { x: 0, y: 0 });
+    return map;
+  }
+  types.forEach((t, i) => {
+    const angle = (i / types.length) * 2 * Math.PI;
+    map.set(t, { x: radius * Math.cos(angle), y: radius * Math.sin(angle) });
+  });
+  return map;
+}
+
+/**
+ * Resolve a spec's cluster bucket against the anchor map: returns the spec's
+ * primary plot_type if it's a major cluster, otherwise `other`. Used to pick
+ * the (clusterX, clusterY) anchor each node should be pulled toward.
+ */
+export function clusterBucket(spec: SpecMapItem, anchors: Map<string, unknown>): string {
+  const pt = primaryPlotType(spec);
+  return anchors.has(pt) ? pt : 'other';
 }
 
 /**
