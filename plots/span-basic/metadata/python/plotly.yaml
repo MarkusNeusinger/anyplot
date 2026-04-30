@@ -1,174 +1,195 @@
 library: plotly
+language: python
 specification_id: span-basic
 created: '2025-12-23T20:45:43Z'
-updated: '2025-12-23T20:54:28Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20471149503
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/span-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/span-basic/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-04-30T11:05:25Z'
+generated_by: claude-sonnet
+workflow_run: 25160884521
+issue: 980
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/plotly/plot-dark.html
+quality_score: 83
 review:
   strengths:
-  - Excellent demonstration of both vertical and horizontal spans with realistic economic
-    data
-  - Uses plotly native add_hrect() and add_vrect() methods which are the idiomatic
-    way to create spans
-  - Clean readable code structure following KISS principles
-  - Both span regions have clear text annotations explaining their purpose
-  - Semi-transparent fills (0.25 opacity) allow underlying data and overlapping regions
-    to remain visible
-  - Realistic recession period scenario that makes the visualization meaningful
+  - Excellent use of Plotly native add_vrect/add_hrect with built-in annotation support
+    — the idiomatic span implementation
+  - 'Strong data storytelling: recession period economic impact immediately visible
+    with the index dropping below target zone and recovering'
+  - Both span directions correctly implemented with appropriate semi-transparency
+    (0.25 opacity)
+  - Clean KISS code structure with proper random seed (42) and no unnecessary abstractions
   weaknesses:
-  - Axis labels lack units (e.g. Economic Index base=100 would be more informative)
-  - HTML output could leverage plotly interactive features (hover info on spans, range
-    slider) but these are optional enhancements
-  image_description: 'The plot displays a line chart with an Economic Index (y-axis,
-    range ~85-120) plotted against Year (x-axis, 2005-2014). The data is shown as
-    a blue line with circular markers (#306998 color). Two span regions are clearly
-    visible:
+  - 'Code uses banned #306998 (Python Blue) for data line instead of required #009E73
+    (Okabe-Ito brand green)'
+  - No ANYPLOT_THEME environment variable logic — uses fixed template=plotly_white
+    instead of adaptive background/text/grid colors per Plotly library guide
+  - 'Wrong output filenames: plot.png and plot.html must be plot-{THEME}.png and plot-{THEME}.html'
+  - Title string contains pyplots.ai instead of anyplot.ai
+  - 'Hardcoded chrome colors: legend bgcolor rgba(255,255,255,0.8) and gridcolor rgba(0,0,0,0.1)
+    must use theme-adaptive tokens'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "span-basic · plotly · anyplot.ai" centered, dark text, clearly readable. Y-axis "Economic Index (base = 100)" and X-axis "Year" labels in dark text, readable. Tick labels (2005-2014, 85-120) in dark gray, readable. Annotations "Recession" and "Target Zone (105-115)" visible on their respective spans.
+      Data: Teal green (#009E73 Okabe-Ito brand color) line with circular markers. Salmon-orange vertical span (recession 2008-2009, opacity 0.25). Yellow horizontal span (target zone 105-115, opacity 0.25). Both spans semi-transparent, underlying data visible.
+      Legibility verdict: PASS
 
-    1. A **vertical span** (light blue, semi-transparent) marking the "Recession"
-    period from approximately 2007.5 to 2009.5, with a text label in the top-left
-    corner
-
-    2. A **horizontal span** (light yellow, semi-transparent) marking the "Target
-    Zone" between values 105-115, also labeled in the top-left corner
-
-
-    The title "span-basic · plotly · pyplots.ai" is centered at the top. The legend
-    shows "Economic Index" in the bottom-left corner with a white background. The
-    plot uses the plotly_white template with subtle gray gridlines. The overlapping
-    region of both spans creates a greenish tint where they intersect.'
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title and all axis labels appear in light gray/white tones, readable against dark background. Tick labels readable. Annotation texts visible. Grid lines subtle but present. No dark-on-dark text failures observed.
+      Data: Same teal green (#009E73) data line as light render — Okabe-Ito data colors unchanged between themes. Recession span appears darker brown-orange; target zone span appears darker golden-brown (both retain their identity as different-colored spans). Legend has dark background appearance.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at size 32, axis titles at 24, tick fonts at 20 - all perfectly
-          readable
+        comment: 'Font sizes explicitly set: title 32px, axis labels 24px, ticks 20px,
+          annotations 20px. All readable in both renders. Annotation colors hardcoded
+          (not theme-adaptive) but appear readable in images.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, labels well positioned
+        comment: No overlapping elements in either render. Year tick labels properly
+          spaced. Annotations don't collide with data or axes.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers size 14 and line width 4 are well sized for 10 data points
+        comment: Line width 4 and marker size 14 well-proportioned for 4800x2700px.
+          Span fills at 0.25 opacity keep underlying data visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue line and yellow/blue spans are colorblind-safe, good contrast
+        comment: Green data line distinguishable from both orange and yellow span
+          regions. CVD-safe combination.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good margins (100px all sides, 120 top), plot fills canvas well
+        comment: Good canvas utilization, balanced margins (l:100, r:100, t:120, b:100),
+          nothing cut off.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis 'Economic Index (base = 100)' descriptive with reference unit.
+          X-axis 'Year' appropriate.
+      - id: VQ-07
+        name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: Descriptive labels "Year" and "Economic Index" but no units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
+        comment: 'Images show correct Okabe-Ito #009E73 data line and theme-correct
+          backgrounds. However, source code uses banned #306998 (Python Blue) for
+          data line and lacks ANYPLOT_THEME logic. Deducting 1 for code-level compliance
+          issue.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: true
-        comment: Subtle grid (alpha 0.1), legend well placed with semi-transparent
-          background
+        comment: Clean professional look with two semantically distinct span types
+          and annotations. Above generic defaults but reads as well-configured plotly_white
+          template rather than distinctly crafted piece.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, annotation positioning shows attention.
+          Falls between minimal customization and visible refinement — relies on plotly_white
+          defaults for spine/axis styling.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear story: economic index dipped below target zone during 2008-2009
+          recession and recovered to exceed it. Two span types create natural visual
+          hierarchy. Genuine narrative without annotation-heavy exposition.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct span plot with both vertical and horizontal spans
+        comment: 'Correct: both vertical span (x-axis range) and horizontal span (y-axis
+          range) implemented.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Years on x-axis, economic values on y-axis, spans correctly positioned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows both vertical span (time period) and horizontal span (value
-          threshold), semi-transparent fills (0.25 opacity), text labels
-      - id: SC-04
-        name: Data Range
+        comment: Semi-transparent fills (0.25 opacity, within spec's 0.2-0.3 range).
+          Both span directions. Optional text labels. Underlying data visible through
+          fills.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, spans clearly show highlighted regions
-      - id: SC-05
-        name: Legend Accuracy
+        comment: X-axis correctly maps years; Y-axis correctly maps economic index
+          values; all 10 data points visible.
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly shows "Economic Index"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "span-basic · plotly · pyplots.ai"
+        max: 3
+        passed: false
+        comment: Images show correct format 'span-basic · plotly · anyplot.ai'. But
+          source code has 'pyplots.ai' instead of 'anyplot.ai'. Deducting 1 for code-level
+          bug.
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows BOTH vertical span (recession period) and horizontal span (target
-          zone), demonstrates overlapping spans
+        comment: Demonstrates both vertical spans (time-based event marking) and horizontal
+          spans (threshold/range visualization). All primary use cases from spec shown.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Economic index with recession period (2008-2009) is a real, comprehensible
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Economic index values (85-120) are realistic, years 2005-2014 appropriate
-          for showing recession
+        comment: 2008-2009 recession is historically accurate, well-known, neutral
+          economic event. Target zone concept standard in economic dashboards. No
+          controversial content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Economic index at base=100 with dip to ~84 (~16% decline) during
+          recession and recovery to ~121 is factually plausible. Noise at ±3 is appropriate.
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -176,41 +197,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Linear Imports -> Data -> Plot -> Save structure. No functions or
+          classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects used
+        comment: Only numpy and plotly.graph_objects imported; both used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Uses current plotly API (add_hrect, add_vrect)
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 0
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
-        max: 5
+        max: 2
         passed: false
-        comment: Uses plotly's add_hrect and add_vrect which are convenient but basic.
-          Could have leveraged hover interactivity, animation, or range slider for
-          the HTML output.
+        comment: 'Generally clean but uses hardcoded palette color #306998 (wrong
+          Okabe-Ito) for data line. Legend bgcolor and gridcolor hardcoded instead
+          of theme-adaptive. Missing ANYPLOT_THEME pattern.'
+      - id: CQ-05
+        name: Output & API
+        score: 0
+        max: 1
+        passed: false
+        comment: Saves as 'plot.png' and 'plot.html' — must be 'plot-{THEME}.png'
+          and 'plot-{THEME}.html' per library requirements for interactive libraries.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses add_vrect() and add_hrect() — Plotly's recommended high-level
+          API for span overlays. Built-in annotation_text and annotation_position
+          parameters used correctly. Slight penalty for missing theme-adaptive chrome
+          pattern from Plotly library guide.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: add_vrect()/add_hrect() with native annotation support is distinctly
+          Plotly. Exports both PNG and interactive HTML. Not 5/5 because interactive
+          hover/tooltip capabilities not configured beyond defaults.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

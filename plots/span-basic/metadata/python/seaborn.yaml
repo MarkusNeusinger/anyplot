@@ -1,154 +1,177 @@
 library: seaborn
+language: python
 specification_id: span-basic
 created: '2025-12-23T20:45:18Z'
-updated: '2025-12-23T20:49:19Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20471150706
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-30T11:00:36Z'
+generated_by: claude-sonnet
+workflow_run: 25160803525
+issue: 980
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/span-basic/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent demonstration of both vertical and horizontal spans with meaningful
-    context (recession period + target zone)
-  - Data clearly shows the effect of the recession with visible dip during the highlighted
-    period
-  - Clean code structure following KISS principles
-  - Proper title format and axis labels with units
-  - Good color choices that are colorblind accessible
-  - Appropriate alpha values (0.25 and 0.2) keep underlying data visible
+  - Complete theme adaptation with all chrome tokens correctly flipping for both light
+    and dark renders; no dark-on-dark failures
+  - 'Strong data narrative: recession dip visually compelling; dual-span approach
+    demonstrates both vertical and horizontal span directions as required by spec'
+  - 'Perfect spec and data quality: all required features present, realistic business
+    context, reproducible with np.random.seed(42)'
+  - Clean code structure with explicit font sizes, correct Okabe-Ito ordering, and
+    proper seaborn theme setup via sns.set_theme rc params
   weaknesses:
-  - Relies heavily on matplotlib axvspan/axhspan rather than seaborn-specific features;
-    could explore seaborn fill_between or other native approaches to demonstrate library
-    strengths
-  image_description: 'The plot displays a line chart showing monthly sales data from
-    2006 to 2011. There is a blue semi-transparent vertical span (light blue, #306998
-    with alpha 0.25) highlighting the recession period from 2008 to 2009. A yellow
-    horizontal span (#FFD43B with alpha 0.2) marks the target sales zone between 120-140
-    thousand dollars. The blue line (matching #306998) shows sales values that clearly
-    dip during the recession period and recover afterward, demonstrating the relationship
-    between the highlighted region and the data trend. The title "span-basic · seaborn
-    · pyplots.ai" is prominently displayed at the top. Axis labels show "Month" and
-    "Sales (thousands $)" with clear, readable tick labels. A legend in the upper
-    left identifies both span regions. The grid uses subtle dashed lines with low
-    opacity.'
+  - 'Design excellence modest: standard seaborn output without distinctive typographic
+    choices or custom tick formatting (e.g., year-only x-axis labels)'
+  - 'Library mastery constrained by plot type: seaborn has no native span primitives
+    so axvspan/axhspan handled by matplotlib; seaborn contribution beyond theming
+    limited to lineplot'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct platform surface
+      Chrome: Title "span-basic · seaborn · anyplot.ai" in dark ink (24pt) clearly visible; axis labels "Month" and "Sales (thousands $)" in INK (20pt) readable; tick labels in INK_SOFT (16pt) readable; legend text clear
+      Data: Brand green (#009E73) line (linewidth=3) runs through full 2006–2011 range; orange vertical span (Okabe-Ito #D55E00, alpha 0.25) covers recession 2008–2009; blue horizontal span (Okabe-Ito #0072B2, alpha 0.20) covers target zone y=120–140; underlying sales data clearly visible through both semi-transparent spans
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct platform surface
+      Chrome: Title in light text (INK = #F0EFE8) clearly readable; axis labels in INK light color readable; tick labels in INK_SOFT (#B8B7B0) readable against dark background; legend has elevated-dark background (#242420) with light-colored text; no dark-on-dark failures observed
+      Data: Brand green line identical to light render (#009E73); orange recession span and blue target zone span retain identical Okabe-Ito data colors; green line clearly distinguishable against dark background
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt - all perfectly readable
+        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, tick
+          labels 16pt, legend 16pt; readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Legend in upper left clear of data; tick labels well-spaced; no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width 3 is appropriate, spans are clearly visible with good
-          alpha
+        comment: Spans, line, and legend clearly visible; alpha levels appropriate
+          (0.25, 0.20)
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow spans are colorblind-safe and distinguishable
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas appropriately, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units "Sales (thousands $)", X-axis has "Month"
+        comment: Okabe-Ito palette; CVD-safe; orange/blue/green distinguishable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas well-utilized; balanced margins; tight_layout prevents
+          clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Sales (thousands $) with units; Month for time axis
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (line) = #009E73; spans use Okabe-Ito positions 2 &
+          3; backgrounds #FAF8F1 / #1A1A17; both renders theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above default; Okabe-Ito colors applied thoughtfully; clear visual
+          intent but still recognizably standard seaborn styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Top/right spines removed; subtle grid alpha=0.10; clean legend with
+          elevated background; above default
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Strong narrative: recession dip visually obvious; dual-span demonstrates
+          both span types; guides viewer attention'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct span/highlighted region plot type
+        comment: Correct span plot with both vertical and horizontal span variants
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=time, Y=value correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Both vertical span (recession) and horizontal span (threshold) present
-      - id: SC-04
-        name: Data Range
+        comment: Vertical span (2008-2009), horizontal span (120-140), semi-transparent
+          alpha, underlying data visible
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Time on x-axis, sales values on y-axis; spans cover specified ranges
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly describes both spans
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses "span-basic · seaborn · pyplots.ai"
+        comment: Title 'span-basic · seaborn · anyplot.ai'; legend labels match span
+          definitions
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both vertical (time period) and horizontal (threshold) spans
+        comment: Demonstrates both vertical (time-period) and horizontal (value-threshold)
+          span types
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Recession period with sales dip is realistic; the recession effect
-          timing could be more natural
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Sales values 80-160 thousand are realistic for business data
+        comment: Monthly sales revenue with 2008-2009 recession; historically grounded,
+          neutral business context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sales 80-160 (thousands $) over 5 years; realistic recession dip
+          and recovery
     code_quality:
       score: 10
       max: 10
@@ -158,40 +181,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save'
+        comment: 'Linear flow: imports -> theme tokens -> data -> plot -> style ->
+          save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (plt, np, pd, sns)
+        comment: os, matplotlib.pyplot, numpy, pandas, seaborn — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current API
+        comment: Clean, Pythonic; appropriate complexity; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png; current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses sns.lineplot but the spans are matplotlib's axvspan/axhspan,
-          not seaborn-specific features
+        passed: true
+        comment: Axes-level API used; sns.set_theme with rc params; proper ax= parameter
+          usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Seaborn theme system and lineplot used well; span overlays require
+          matplotlib primitives since seaborn has no native axvspan
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending

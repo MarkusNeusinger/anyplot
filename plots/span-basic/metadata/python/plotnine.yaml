@@ -1,161 +1,182 @@
 library: plotnine
+language: python
 specification_id: span-basic
 created: '2025-12-23T20:45:43Z'
-updated: '2025-12-23T20:52:46Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20471152869
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/span-basic/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-04-30T11:11:38Z'
+generated_by: claude-sonnet
+workflow_run: 25161124823
+issue: 980
+python_version: 3.13.13
+library_version: 0.15.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Excellent use of plotnine grammar of graphics with geom_rect for span regions
-  - Clean layering with spans drawn first so line appears on top
-  - Realistic recession period scenario with stock price data
-  - Both vertical (time-based) and horizontal (threshold-based) spans demonstrated
-  - Proper figure sizing and text scaling for high-resolution output
-  - Good color choices with meaningful legend
+  - Inline span text labels ("Recession Period", "Risk Zone" in matching colors) provide
+    immediate context without requiring legend lookup
+  - Theme-adaptive chrome fully correct in both renders; no dark-on-dark failures
+    detected
+  - All font sizes explicitly set meeting large-canvas sizing requirements (title=24,
+    axis=20, ticks=16)
+  - Realistic neutral financial time-series scenario (recession period + risk zone)
+    that clearly demonstrates both vertical and horizontal span directions
+  - 'Perfect spec compliance: both span directions shown, alpha=0.25 within spec range,
+    data visible through spans, seed set for reproducibility'
   weaknesses:
-  - The horizontal Risk Zone span (60-80) does not intersect with the actual data
-    (price range ~150-210), making it visually disconnected and less educational
-  - Optional text labels within span regions (mentioned in spec notes) are not implemented
-  image_description: The plot displays a line chart showing stock price over time
-    (2006-2016) with two span regions highlighted. The title "span-basic · plotnine
-    · pyplots.ai" is at the top. The x-axis shows "Year" and the y-axis shows "Price
-    ($)". A blue line (#306998) traces stock price starting around $200 and declining
-    to around $155. A yellow/cream vertical span marks the "Recession Period" (2008-2009),
-    and a pink/salmon horizontal span at the bottom marks the "Risk Zone" (price range
-    60-80). The legend on the right side shows "Highlighted Region" with both span
-    types labeled. The background is clean with subtle gray gridlines.
+  - Risk Zone span color in rendered output appears blue but code specifies OKABE_ITO[4]=#E69F00
+    (orange) — scale_fill_manual may not be overriding correctly; also spans skip
+    Okabe-Ito positions [2] and [3] rather than using sequential order
+  - Panel border retained on all four sides (element_rect on panel_border) rather
+    than removing top/right spines per style guide; reduces visual refinement
+  - legend_title name="Highlighted Region" appears truncated/misrendered; verify legend
+    title is fully shown at this canvas size
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "span-basic · plotnine · anyplot.ai" in dark ink clearly visible; Y-axis label "Price ($)" and X-axis label "Year" in dark ink readable; tick labels (2006–2016, 160–200 range) in muted dark ink, fully legible
+      Data: Line in #009E73 (brand green, Okabe-Ito position 1) ✓; vertical span (Recession Period) in orange-tan (#D55E00 * alpha=0.25 on light bg); horizontal span (Risk Zone) in blue (appears as Okabe-Ito sky blue, though code specifies #E69F00); inline colored text labels "Recession Period" and "Risk Zone" visible
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light near-white text clearly visible against dark background; axis labels in light text readable; tick labels in muted light gray text, fully legible; no dark-on-dark failures
+      Data: Line retains #009E73 (identical to light render) ✓; vertical span renders as brownish-orange (D55E00 blended with dark background); horizontal span renders as dark teal-blue; inline colored labels still visible in span colors
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, tick labels 16pt - all perfectly readable
+        comment: 'All font sizes explicitly set: title=24, axis=20, ticks=16, legend=16/18.
+          Readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No text or element collisions in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width 1.5 is appropriate, spans are clearly visible with alpha
-          0.25
+        comment: Line at size=1.5 clearly visible; spans at alpha=0.25 keep underlying
+          data visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Yellow and pink/red spans are distinguishable, blue line has good
-          contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good proportions but the horizontal Risk Zone span appears at the
-          bottom where there's no data interaction, reducing visual effectiveness
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Year" and "Price ($)" with units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe; orange/blue/green provide adequate
+          contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas well-utilized; legend outside plot area; good margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend positioned well, but grid alpha specified as 0.3 yet appears
-          quite subtle/barely visible
+        comment: Y-axis includes units 'Price ($)'; X-axis 'Year' self-explanatory.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Brand green #009E73 correct for line; backgrounds correct. Risk
+          Zone renders blue in images but code specifies OKABE_ITO[4]=#E69F00 (orange);
+          spans skip Okabe-Ito positions [2] and [3].'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Warm custom background, brand-color line, alpha-blended spans, inline
+          span labels give professional polish above generic defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Grid correctly set subtle (alpha=0.10), but four-sided panel_border
+          retained rather than removing top/right spines per style guide.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Labeled colored spans create a clear recession + risk zone narrative;
+          visual hierarchy guides viewer through the story.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct span plot with highlighted regions
+        comment: Correct span plot with both vertical and horizontal spans on a line
+          chart.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=year, Y=price correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Both vertical span (time period) and horizontal span (value threshold)
-          present
-      - id: SC-04
-        name: Data Range
+        comment: Semi-transparent fill (alpha=0.25); both span directions; underlying
+          data visible; spans labeled.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Year, Y=Price ($) correctly assigned; all data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies both span regions
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "span-basic · plotnine · pyplots.ai"
+        comment: Title follows exact format; legend entries match span labels.
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows both vertical and horizontal spans, but the horizontal span
-          doesn't intersect with data (price never goes below ~150, while risk zone
-          is 60-80)
+        comment: Both vertical and horizontal spans demonstrated with labels; line
+          chart provides context.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price during recession is a real, comprehensible scenario
+        comment: 'Real-world financial scenario: 2006-2016 stock prices, 2008-2009
+          recession, price risk zone.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Stock prices are realistic; however the "Risk Zone" at 60-80 doesn't
-          align with the actual data range
+        comment: Price range ~150-215 plausible; recession timing matches actual 2008
+          financial crisis.
     code_quality:
       score: 10
       max: 10
@@ -165,41 +186,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure
+        comment: 'Clean linear flow: imports → tokens → data → spans → plot → save.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no unused imports.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Using current plotnine API
+        comment: Clean idiomatic plotnine code; geom_rect with separate DataFrame
+          is correct idiom.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=300; current API.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ggplot grammar with geom_rect for spans, proper layering, scale_fill_manual.
-          Could have used annotate() for text labels within spans as mentioned in
-          spec notes.
+        comment: Multi-DataFrame composition with geom_rect+geom_line, scale_fill_manual
+          with named values, proper theme() elements. Slightly short of expert.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Grammar of graphics layering with separate DataFrames is somewhat
+          distinctive vs. matplotlib axvspan/axhspan, but not uniquely plotnine.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  - time-series
+  styling:
+  - alpha-blending
