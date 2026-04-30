@@ -1,171 +1,182 @@
 library: plotly
+language: python
 specification_id: ridgeline-basic
 created: '2025-12-23T19:42:37Z'
-updated: '2025-12-23T19:44:49Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20469992846
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/plotly/plot.html
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - hover-tooltips
-  patterns:
-  - data-generation
-  dataprep:
-  - kde
-  styling:
-  - alpha-blending
+updated: '2026-04-30T03:31:11Z'
+generated_by: claude-sonnet
+workflow_run: 25145222586
+issue: 923
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/plotly/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent implementation of manual KDE calculation using Silverman's rule for
-    bandwidth selection
-  - Beautiful color gradient that semantically represents temperature (cold=blue,
-    warm=yellow/orange)
-  - Clean chronological ordering with January at bottom, December at top (reversed
-    for visual stacking)
-  - Proper use of Plotly's fill="toself" for creating solid density regions
-  - Custom hover templates provide good interactivity showing month and temperature
-  - Well-tuned overlap parameter (50%) matches spec recommendation
+  - Viridis sequential colormap is the correct and visually striking choice for 12
+    ordered monthly groups
+  - 'Excellent data quality: realistic seasonal temperature data with factually accurate
+    values and varying distribution widths'
+  - Perfect spec compliance across all dimensions (overlap, y-axis group labels, chronological
+    ordering)
+  - Clean code with full theme-adaptive chrome implementation
+  - Interactive hover tooltips leverage plotlys distinctive interactivity
   weaknesses:
-  - No legend explaining the color scale (cold→warm color mapping)
-  - HTML output is generated but not strictly required for review
-  image_description: 'The plot displays a ridgeline visualization of monthly temperature
-    distributions. There are 12 vertically stacked density curves, one for each month
-    from January (bottom) to December (top). The color scheme transitions from deep
-    blue (Python Blue #306998) for winter months (January, February, December) through
-    lighter blues for transitional months, to warm yellow (#FFD43B) for June and orange/coral
-    tones for May, July, and August. The x-axis shows "Temperature (°C)" ranging from
-    -10 to 40, with clear tick marks. Month names are displayed on the y-axis as labels.
-    The title "ridgeline-basic · plotly · pyplots.ai" is centered at the top. Each
-    density curve shows smooth Gaussian-like distributions with appropriate overlap
-    (~50%), creating the characteristic ridge mountain appearance.'
+  - Bottom annotation at y=-0.08 (paper coords) overlaps x-axis tick label numbers
+    (0, 10, 20, 30) in both renders — needs larger bottom margin or repositioned annotation
+  - DE-01 design is above defaults but not at publication-ready level — ridge edge
+    highlighting could be more refined
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "ridgeline-basic · plotly · anyplot.ai" in dark ink — clearly readable. Month labels on y-axis (December top, January bottom) in dark ink — clearly readable. X-axis tick labels (-10, 0, 10, 20, 30, 40) in INK_SOFT — readable but overlapped by bottom annotation text. X-axis label "Temperature (°C)" in dark ink — readable.
+      Data: 12 density ridges colored with viridis sequential colormap (yellow=January, green=spring, teal/cyan=summer, blue=autumn, purple=December). Ridge fills have subtle dark edge lines. ~50% overlap between ridges creates classic Joy Division aesthetic.
+      Legibility verdict: PASS (minor: bottom annotation overlaps x-axis tick numbers)
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light #F0EFE8 — clearly readable. Month labels in INK_SOFT (#B8B7B0) — clearly readable. Tick labels in light tone — readable. No dark-on-dark failures anywhere.
+      Data: Viridis colors identical to light render — yellow January stands out prominently against dark background, purple December blends slightly but remains distinguishable. Ridge edges use light-toned LINE_EDGE token.
+      Legibility verdict: PASS (same bottom annotation overlap issue as light render)
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 48pt, axis labels at 36pt, tick labels at 28pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No text overlaps; month labels well-spaced; density curves overlap
-          intentionally as per spec
+        comment: All font sizes explicitly set (title=48px, labels=36px, ticks=28px),
+          clearly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: Bottom annotation at y=-0.08 overlaps x-axis tick numbers (0, 10,
+          20, 30) in both renders
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Density curves are well-sized and visible; slight deduction as some
-          curves could have slightly more distinct edges
+        comment: All 12 density ridges clearly visible with appropriate overlap and
+          sizing
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue-to-yellow gradient is colorblind-friendly; no red-green reliance
-          for differentiation
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins; left margin accommodates
-          month labels
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: X-axis shows "Temperature (°C)" with proper units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Viridis is perceptually uniform and CVD-safe; ridges distinguishable
+          by position and color
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization; slight crowding at bottom margin due to
+          annotation placement
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle, but no legend present (not strictly needed for labeled
-          ridgelines, but could help with color interpretation)
+        comment: Temperature (deg C) includes units; title follows spec format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis sequential colormap correct for 12 ordered groups; backgrounds
+          #FAF8F1/#1A1A17; chrome theme-correct in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Viridis creates visually striking seasonal cascade; clear design
+          intent; above generic defaults; bottom annotation slightly clutters composition
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-axis grid at 10% opacity; y-axis grid hidden; generous margins;
+          subtle LINE_EDGE ridge outlines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Seasonal temperature cycle clearly communicated through ridge position
+          and viridis color progression; varying distribution widths add nuance
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct ridgeline/joy plot type with stacked density curves
+        comment: Correct ridgeline plot with stacked partially overlapping density
+          curves
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Temperature values mapped to X, months create vertical stacking
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: partial overlap (~50%), vertical stacking,
-          color differentiation, meaningful order (chronological)'
-      - id: SC-04
-        name: Data Range
+        comment: 50% overlap per spec; y-axis shows month labels; viridis color gradient;
+          chronological ordering; 200 obs per group
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis range (-15 to 40) covers all temperature data appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Temperature on x-axis, month groups on y-axis, density curves via
+          KDE
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Month labels serve as legend; accurate
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "ridgeline-basic · plotly · pyplots.ai"
+        comment: Title ridgeline-basic · plotly · anyplot.ai; no legend needed (group
+          labels on y-axis); showlegend=False correct
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows seasonal pattern with cold winters, warm summers, and transitional
-          months with more variation
+        comment: Varying means (cold winter vs warm summer), varying widths (transition
+          months std=4 vs std=3), all 12 months in seasonal cycle
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Northern hemisphere temperature pattern is realistic; slight deduction
-          as specific city context could be clearer
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature values are realistic (-2°C to 26°C base temps with appropriate
-          standard deviations)
+        comment: Monthly temperature distributions for Northern hemisphere temperate
+          city — neutral scientific scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Jan mean=-2C, Jul mean=26C, Dec mean=1C realistic for Berlin/Warsaw;
+          x-range -15 to 40C covers all distributions
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,40 +184,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: Imports -> tokens -> data -> KDE loop -> layout -> save; no functions
+          or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects used
+        comment: 'All imports used: os, numpy, plotly.colors, plotly.graph_objects,
+          scipy.stats.gaussian_kde'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; loop over months is necessary; no over-engineering
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current API usage
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png but also saves plot.html (not wrong, just extra)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current plotly API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses Plotly graph_objects
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: go.Scatter with fill=toself correct for filled density areas; plotly.colors.sample_colorscale
+          for colormap; proper hovertemplate usage
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Correctly uses go.Scatter with fill and custom hover templates; could
-          leverage more Plotly-specific features like animation or rangeslider
+        comment: Interactive hover tooltips (per-month temperature), HTML export alongside
+          PNG, plotly.colors.sample_colorscale for viridis generation
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - manual-ticks
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - custom-colormap
+  - edge-highlighting

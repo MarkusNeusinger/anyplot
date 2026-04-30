@@ -1,228 +1,254 @@
 library: highcharts
+language: python
 specification_id: ridgeline-basic
 created: '2025-12-23T19:43:43Z'
-updated: '2025-12-23T19:52:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20469996759
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-30T03:33:42Z'
+generated_by: claude-sonnet
+workflow_run: 25145503322
+issue: 923
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/highcharts/plot.html
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/highcharts/plot-dark.html
 quality_score: 92
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep:
-  - kde
-  styling:
-  - gradient-fill
 review:
   strengths:
-  - Excellent color scheme that smoothly transitions from cool winter blues to warm
-    summer yellows/oranges, enhancing data interpretation
-  - Proper implementation of ridgeline concept using Highcharts area series with threshold
-    baselines for clean ridge separation
-  - Realistic temperature distribution data that clearly demonstrates seasonal patterns
-  - Gradient fills with transparency create visually appealing overlap effect
-  - Clean y-axis labeling using JavaScript formatter to display month names at correct
-    vertical positions
-  - Produces both static PNG and interactive HTML output leveraging Highcharts web
-    capabilities
+  - Excellent semantic use of viridis gradient to encode temperature — cold=purple,
+    warm=yellow — the story is immediately readable
+  - Beautiful gradient fill per ridge series (opaque peak to transparent baseline)
+    creates a polished ridgeline aesthetic
+  - 'Full theme adaptation: PAGE_BG, INK, INK_SOFT, GRID all correctly wired to ANYPLOT_THEME
+    in both renders'
+  - 'Perfect spec compliance: KDE via scipy, 12 months chronologically ordered, correct
+    overlap scale'
+  - Clean reproducible code with seed, proper KISS structure, all Highcharts idioms
+    correct
+  - Realistic monthly temperature data with varied means AND spreads, ideal for demonstrating
+    ridgeline plots
   weaknesses:
-  - Contains a helper function (kde) which deviates slightly from KISS structure,
-    though justified by library limitations
-  - Grid lines extend fully across the plot area - could be more subtle or limited
-    to below the ridges
-  - Right margin appears slightly larger than necessary, creating minor layout asymmetry
-  image_description: 'The plot displays a ridgeline visualization of monthly temperature
-    distributions. The chart shows 12 partially overlapping density curves stacked
-    vertically, one for each month from January (bottom) to December (top). The y-axis
-    displays month names as labels. The x-axis shows "Temperature (°C)" ranging from
-    -10 to 35. Colors transition from cool blue (winter months: January, February,
-    December) through greens (spring/fall: March, October, November) to warm yellows
-    and orange (summer months: May-September). Each density curve has a gradient fill
-    that fades to transparent at the baseline. The title reads "Monthly Temperatures
-    · ridgeline-basic · highcharts · pyplots.ai". The layout uses a white background
-    with subtle vertical grid lines. The distributions clearly show seasonal patterns
-    - winter months peak around 2-8°C while summer months peak around 17-24°C.'
+  - 'DE-02: X-axis gridlines run through the density fills and create visual noise;
+    removing them (gridLineWidth: 0 on xAxis) would elevate visual refinement'
+  - 'DE-01: Could push toward publication-ready with more explicit typography hierarchy
+    (title weight/spacing, subtitle)'
+  - 'LM-02: Could leverage more Highcharts-specific features such as plotBands for
+    seasonal shading or custom tooltip configuration'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white approximately #FAF8F1 — not pure white, correct theme surface
+      Chrome: Title "ridgeline-basic · highcharts · anyplot.ai" bold dark ink, clearly readable; month abbreviations Jan–Dec on y-axis in dark secondary ink; x-axis tick labels (-10 to 35) in secondary ink; x-axis label "Temperature (°C)" clearly visible
+      Data: 12 ridgeline curves using viridis sequential palette — Jan/Feb in deep purple (#440154), spring months in blue/teal, summer months in green, warm months in bright yellow-green (#fde725 for Dec); each ridge has gradient fill (opaque at peak, near-transparent at baseline); ridges stacked from Jan (bottom) to Dec (top) with ~50-70% overlap
+      Legibility verdict: PASS — all text readable against the warm off-white background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black approximately #1A1A17 — not pure black, correct dark theme surface
+      Chrome: Title in light cream text (~#F0EFE8), clearly readable; month labels and tick labels in soft light text (~#B8B7B0); x-axis label "Temperature (°C)" visible in light text; no dark-on-dark failures detected
+      Data: Viridis gradient data colors are identical to the light render — same purple-to-yellow progression; ridges look particularly striking on the dark background; gradient fills maintain visual clarity
+      Legibility verdict: PASS — all text readable against the dark background; chrome elements correctly adapt to dark theme
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and month names are all clearly readable at full
-          size. Font sizes are appropriate for the 4800x2700 resolution.
+        comment: Title 64px, axis labels 48px, tick labels 36px all explicitly set;
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No text overlap. Ridge overlaps are intentional and well-controlled
-          (~50-70% as specified).
+        comment: Month labels and x-axis ticks well-spaced; no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Density curves are clearly visible with appropriate line widths (3px)
-          and fill opacity (0.7).
+        comment: Ridge fills with gradient well-sized and distinguishable; fillOpacity=0.7
+          provides good depth
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent colorblind-safe palette transitioning from blue to yellow/orange.
-          Avoids red-green conflicts.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Good overall layout with appropriate margins. Minor deduction: slight
-          asymmetry with more whitespace on the right side.'
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: X-axis has descriptive label with units "Temperature (°C)". Y-axis
-          displays month names as required by spec.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Viridis is perceptually uniform and CVD-safe; no red-green-only signals
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well with balanced margins; no content cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.1). Legend disabled as appropriate for this
-          plot type since month labels are on y-axis. However, some grid lines extend
-          through the entire plot area which slightly distracts.
+        comment: X-axis labeled Temperature (°C) with units; y-axis uses month names
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis sequential palette correct for 12 ordered months (style
+          guide recommends sequential for 6+ groups); backgrounds #FAF8F1 light /
+          #1A1A17 dark; data colors identical across themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: intentional viridis temperature gradient encodes
+          seasonality semantically (cold=purple, warm=yellow), custom gradient fills
+          per series, clearly above library defaults'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis grid removed, no legend, generous margins; x-axis gridlines
+          could be eliminated for cleaner ridgeline aesthetic
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Viridis gradient directly encodes the temperature story; seasonal
+          progression reinforced by both ridge position and color
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct ridgeline/joy plot implementation using stacked area charts
-          with density curves.
+        comment: Correct ridgeline plot with stacked KDE density curves and ~50-70%
+          overlap (ridge_scale=1.8)
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Temperature values on x-axis, groups (months) stacked vertically
-          on y-axis.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: partial overlap (~70%), vertical stacking,
-          group labels on y-axis, meaningful color gradient.'
-      - id: SC-04
-        name: Data Range
+        comment: Density curves via scipy KDE, vertical stacking with partial overlap,
+          y-axis group labels, distinct colors, chronological ordering — all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis range (-10 to 35) appropriately captures all temperature distributions.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis temperature values, y-axis month groups with density offsets,
+          all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend disabled appropriately; month labels serve as the legend via
-          y-axis positioning.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Follows required format: "Monthly Temperatures · ridgeline-basic
-          · highcharts · pyplots.ai"'
+        comment: 'Title format correct: ridgeline-basic · highcharts · anyplot.ai;
+          no legend needed as month names on y-axis serve as labels'
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows seasonal progression well with varying means and spreads.
-          Summer months have narrower distributions (lower std), winter months have
-          wider spreads. Minor deduction: distributions are fairly similar in shape.'
+        comment: 12 months with varied means AND standard deviations (tighter summer,
+          wider winter); demonstrates distribution location and spread comparison
+          — full ridgeline feature set
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Real scenario using monthly temperature data - matches the spec's
-          first application example perfectly.
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature values are realistic (January ~2°C, July ~24°C) representing
-          typical temperate climate.
+        comment: Monthly temperature distributions is canonical real-world ridgeline
+          use case; neutral scientific topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Jan mean≈2°C, Jul mean≈24°C, std 3-5°C; realistic for mid-latitude
+          European city
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: true
-        comment: Contains a KDE function definition which deviates from pure imports→data→plot→save
-          structure. However, it's justified since highcharts-core doesn't have built-in
-          KDE.
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data generation.
+        comment: 'Linear: imports → tokens → data → KDE → chart setup → series → export;
+          no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports are used: numpy, highcharts classes, selenium, tempfile,
-          time, urllib, pathlib.'
+        comment: 'All imports used: scipy.stats, selenium, highcharts_core all needed'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current highcharts-core API.
+        comment: Clean, appropriate complexity; JS caching of Highcharts bundle is
+          practical; no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly for both themes
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of AreaSeries with gradient fills, threshold baselines,
-          JavaScript formatter for y-axis labels. Uses Highcharts' strength in creating
-          interactive HTML output alongside PNG.
+        comment: 'Expert usage: AreaSeries with threshold for per-ridge baseline positioning,
+          fillColor with linearGradient stops, embedded JS formatter string for y-axis
+          labels — all idiomatic Highcharts patterns'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses Highcharts-specific: gradient fill with linearGradient stops,
+          embedded JS function string in y-axis formatter, threshold-based area baseline
+          — distinctive but could go further with plotBands or custom tooltip'
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
+  - gradient-fill
