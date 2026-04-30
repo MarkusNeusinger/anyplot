@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 rose-basic: Basic Rose Chart
 Library: highcharts unknown | Python 3.13.13
 Quality: 85/100 | Updated: 2026-04-30
