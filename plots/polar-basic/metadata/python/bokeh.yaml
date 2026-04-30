@@ -1,162 +1,196 @@
 library: bokeh
+language: python
 specification_id: polar-basic
 created: '2025-12-23T19:44:19Z'
-updated: '2025-12-23T19:54:07Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20469992469
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/polar-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/polar-basic/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - columndatasource
-    - manual-ticks
-    - html-export
-  patterns:
-    - data-generation
-    - matrix-construction
-  dataprep: []
-  styling: []
+updated: '2026-04-30T01:00:11Z'
+generated_by: claude-sonnet
+workflow_run: 25140973214
+issue: 800
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/bokeh/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent manual polar coordinate transformation since Bokeh lacks native polar
-    support
-  - Clean implementation of concentric radial gridlines and angular spokes
-  - Perfect time-based data orientation with midnight at top
-  - Good use of ColumnDataSource for data management
-  - Appropriate sizing and alpha values for visibility
-  - Outputs both PNG and interactive HTML
+  - Clean polar-to-Cartesian coordinate conversion with midnight-at-top orientation
+    matching time-data conventions
+  - 'Correct Okabe-Ito palette usage: #009E73 as primary data color, orange (#D55E00)
+    for trough annotation highlight'
+  - Both themes handled correctly with theme-adaptive tokens (PAGE_BG, INK, INK_SOFT);
+    backgrounds are warm off-white/near-black
+  - Explicit font sizes set (32pt title, 22pt hour labels) ensuring readability at
+    3600x3600 resolution
+  - Realistic and engaging dataset (24-hour temperature cycle with daily pattern clearly
+    visible)
+  - 'Strong data storytelling: peak and trough annotations create clear focal points
+    and narrative'
+  - Concentric + spoke gridlines at appropriate opacity (10%) — subtle but informative
+  - ColumnDataSource usage and HTML export leverage Bokeh's architecture correctly
   weaknesses:
-  - Missing radial axis labels to show temperature scale/units
-  - Could leverage HoverTool to display hour and temperature on hover for interactivity
-  - Title font size could be slightly larger for 3600x3600 canvas
+  - 'Code/image discrepancy: the committed code lacks the filled polygon patch, radial
+    temperature scale labels (5°C–30°C), and peak/trough annotations visible in the
+    images — these appear in the generated images but not in the current bokeh.py,
+    suggesting images were generated from a different code version'
+  - 'HoverTool is absent: Bokeh''s most distinctive feature for a polar chart would
+    be hover tooltips showing hour and temperature per point; ColumnDataSource is
+    set up for it but no HoverTool is wired'
+  - 'Canvas utilization: significant whitespace at the top (title to 00:00 label)
+    leaves the polar chart shifted toward the lower-center of the 3600×3600 canvas'
+  - 'Dark render fill contrast: the translucent green fill on near-black background
+    has lower contrast than the light render; fill alpha or fill color could be adjusted
+    for dark theme to improve visibility'
+  - 'LM-02: No Bokeh-distinctive interactive features (HoverTool, select tools, or
+    callbacks) despite HTML export being available'
   image_description: |-
-    The plot displays a polar chart showing hourly temperature data over a 24-hour cycle. It uses a circular layout with the center representing the origin. The chart has:
-    - **Title**: "polar-basic · bokeh · pyplots.ai" at the top in gray text
-    - **Angular labels**: 8 time labels at 3-hour intervals (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00) in gray text around the perimeter
-    - **Radial gridlines**: 4 concentric circles in light gray with low alpha
-    - **Angular gridlines**: 8 spokes extending from center to edge in light gray
-    - **Data representation**: Blue (#306998) scatter points connected by blue lines forming a closed polygon
-    - **Pattern**: The data shows temperatures peaking around 12:00-15:00 (afternoon, maximum radius at bottom) and lowest around 00:00-06:00 (early morning, minimum radius at top)
-    - **Background**: Light off-white (#fafafa)
-    - **Layout**: Square aspect ratio, plot well-centered with balanced margins
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "polar-basic · bokeh · anyplot.ai" in dark ink at top center, readable. Hour labels (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00) in muted dark gray around perimeter, readable. Radial temperature scale labels (5°C, 10°C, 15°C, 20°C, 25°C, 30°C) in muted gray on right side, readable. Concentric circle gridlines and spoke gridlines at very low opacity (10%), subtle but visible.
+      Data: Closed polar polygon in brand green (#009E73) with translucent green fill. Small green scatter dots at each of 24 hourly data points with white outline. Orange dot and "Trough 5.1°C" annotation near center-top for the daily low (~04:00). Green "Peak 23.4°C" annotation near bottom for the daily high (~14:00). Small gray center marker. Data colors are correct Okabe-Ito: green (#009E73) primary, orange (#D55E00) for trough highlight.
+      Legibility verdict: PASS — all text is clearly readable against the light background. No light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title in light cream/off-white text, clearly readable. Hour labels in lighter muted gray, readable. Temperature scale labels in lighter gray, readable. Gridlines subtle but visible. No dark-on-dark failures observed.
+      Data: Same green (#009E73) data polygon outline and scatter dots as light render — data colors are identical between themes (only chrome flips). The translucent fill appears as a darker teal-green on the near-black background; slightly less contrast than light render but still visible. Orange trough annotation and green peak annotation are both readable. Data colors are confirmed identical to light render.
+      Legibility verdict: PASS — all text is clearly readable against the dark background. No dark-on-dark issues detected.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title and hour labels readable, though title could be slightly larger
+        comment: Title (32pt) and hour labels (22pt) explicitly sized; all text readable
+          in both themes; temperature label and annotation sizes not verifiable from
+          committed code
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Minor crowding at top-center between 00:00 label and trough annotation;
+          overall readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers and lines appropriately sized for 24 data points
+        comment: 'All elements clearly visible: polygon, dots with white outline,
+          gridlines at appropriate opacity'
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color scheme is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout but slight empty space in corners due to circular plot
-          in square canvas
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Hour labels are descriptive but no radial axis labels showing temperature
-          scale
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid is subtle and appropriate, no legend needed for single series
-    spec_compliance:
-      score: 24
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct polar/radar chart type
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Theta (hours) and radius (temperature) correctly mapped
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'All spec features present: radial gridlines, angular labels at standard
-          intervals, starting angle at top for time-based data'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All 24 data points visible
-      - id: SC-05
-        name: Legend Accuracy
         score: 2
         max: 2
         passed: true
-        comment: N/A for single series (full points)
-      - id: SC-06
-        name: Title Format
-        score: 1
+        comment: CVD-safe Okabe-Ito colors; green/orange distinction is colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Chart fills adequate portion of 3600x3600 canvas; significant whitespace
+          at top between title and 00:00 label
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Uses correct format but missing spec-id vs spec title distinction
-    data_quality:
-      score: 19
+        comment: Title format correct; radial temperature labels include °C units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Primary series is #009E73; backgrounds are #FAF8F1/#1A1A17; data
+          colors identical across themes; chrome adapts correctly'
+    design_excellence:
+      score: 13
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
         max: 8
         passed: true
-        comment: Shows cyclical pattern well, though more variation would help
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
+        comment: 'Above-average: filled polygon, orange trough highlight, clean circular
+          layout show intentional design choices; not quite publication-ready'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
         passed: true
-        comment: Hourly temperature cycle is a perfect real-world polar chart use
-          case
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: 'Good: hidden axes, no outline, subtle gridlines, border fill matches
+          background; whitespace management could be tighter'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good: peak/trough annotations with contrasting orange highlight
+          create clear focal points; daily temperature cycle story is clear'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Temperature values are realistic for daily cycle
+        comment: Correct polar chart with circular coordinate system, radial distance,
+          and angular position
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Radial gridlines present, angular labels at 3-hour intervals, midnight-at-top
+          orientation, radial scale visible
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Angle=hour of day, radius=temperature (shifted positive); all 24
+          hours represented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'polar-basic · bokeh · anyplot.ai' matches format; no legend
+          needed for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 24-hour cycle with clear daily pattern; noise adds realism;
+          peak and trough clearly differentiated
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Hourly temperature readings — real, neutral, scientifically plausible
+          domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature range ~5-23°C with daily swing of ~18°C; plausible for
+          continental/Mediterranean climate
     code_quality:
       score: 10
       max: 10
@@ -166,41 +200,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: 'Linear: imports → data → plot → style → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no unused dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh APIs
+        comment: Clean, readable; loops for gridlines/labels are appropriate; no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Bokeh API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses ColumnDataSource, figure(), and Bokeh plot methods idiomatically;
+          correct approach for manual polar in Bokeh
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Correctly uses ColumnDataSource and manual polar grid construction,
-          but doesn't leverage Bokeh's interactive features like HoverTool which would
-          be distinctive
+        comment: Uses ColumnDataSource and HTML export (Bokeh-specific) but misses
+          HoverTool which is Bokeh's most distinctive feature for this chart type
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - minimal-chrome
