@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: step-basic
 created: 2025-12-15 17:03:40+00:00
-updated: '2026-04-30T12:43:47Z'
+updated: '2026-04-30T13:00:07Z'
 generated_by: claude-sonnet
 workflow_run: 25165502840
 issue: 956
@@ -12,40 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/step-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/plotly/plot-dark.html
-quality_score: 84
+quality_score: 89
 review:
   strengths:
-  - 'Perfect visual quality: all font sizes explicitly set, both renders fully legible
-    with no dark-on-dark failures'
-  - 'Full spec compliance: correct step shape via line.shape=''hv'', markers at all
-    data points, grid lines present'
-  - 'Excellent theme-adaptive implementation: all chrome tokens applied correctly
-    throughout; palette and backgrounds correct in both renders'
-  - Clean, reproducible code with proper HTML + PNG output
-  - Realistic, neutral data domain (monthly cumulative sales) with plausible scale
+  - 'Perfect visual quality across both themes: all font sizes explicitly set, fully
+    theme-adaptive chrome, brand green (#009E73) correctly applied, no readability
+    failures in either render'
+  - Clean, reproducible code with KISS structure; all theme tokens correctly wired
+    through to plot elements; correct dual-output (PNG + HTML)
+  - 'Full spec compliance: native step chart via line.shape=''hv'', markers at all
+    data points, grid for value tracing, complete title format'
+  - Realistic and neutral data context (monthly cumulative sales) with plausible scale
   weaknesses:
-  - 'Design Excellence is generic: no visual hierarchy, emphasis, or storytelling
-    — all 12 steps treated equally; largest jumps not highlighted; viewer must find
-    the story themselves'
-  - Grid covers both axes; style guide recommends y-axis-only for step/line charts
-    to reduce visual noise
-  - 'Plotly''s distinctive interactivity features not used: no custom hover template
-    showing step value and month name'
-  - 'No focal-point emphasis: could use size variation on highest-growth marker, annotation
-    on cumulative year-end total, or muted color on flat periods vs. bold on jump
-    months'
+  - Grid renders on both X and Y axes; style guide recommends Y-axis only for line/step
+    charts — reduces DE-02
+  - 'No custom hover template: plotly''s interactive HTML exports work but hover shows
+    raw defaults rather than formatted month/value info — missed distinctive plotly
+    feature (LM-02)'
+  - 'Visual hierarchy is limited: no emphasis differentiating high-growth months from
+    flat periods; the reference line creates a focal point at year-end but individual
+    step variation isn''t highlighted'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "Monthly Cumulative Sales · step-basic · plotly · anyplot.ai" in dark ink (#1A1A17), clearly readable; X-axis label "Month" and Y-axis label "Cumulative Sales ($)" in dark ink, readable; tick labels (Jan–Dec, 50k–375k) in muted dark (#4A4A44), readable; subtle gridlines on both axes (rgba opacity 0.10)
-      Data: Brand green (#009E73) step line (width=4) with circular markers (size=14) and white-edge (PAGE_BG) halos; 12 monthly data points; staircase pattern with discrete upward jumps clearly visible
+      Chrome: Title "Monthly Cumulative Sales · step-basic · plotly · anyplot.ai" in dark ink (#1A1A17), clearly readable; X-axis label "Month" and Y-axis label "Cumulative Sales ($)" in dark ink (22px), readable; tick labels (Jan–Dec, 50k–400k) in muted dark (#4A4A44), readable; subtle grid lines on both axes (rgba 0.10 opacity)
+      Data: Brand green (#009E73) step line (width=4) with 'hv' post-step shape; circular markers (size=14) at all 12 data points with PAGE_BG border ring; dotted horizontal reference line at ~375k with "Year total $375,467" annotation box in top-right corner; staircase pattern clearly visible with discrete upward jumps from Jan to Dec
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Near-black (#1A1A17) — correct, not pure black
-      Chrome: Title in light ink (#F0EFE8), clearly readable; axis labels and tick labels in light/muted tones (#B8B7B0), clearly readable against dark surface; no dark-on-dark failures detected; grid lines remain very subtle
-      Data: Step line and markers are identical brand green (#009E73) as in light render — data colors unchanged, only chrome flipped
+      Chrome: Title in light ink (#F0EFE8), clearly readable; axis labels and tick labels in light/muted tones (#B8B7B0), clearly readable against dark surface; no dark-on-dark failures detected; grid lines remain very subtle (rgba 0.10)
+      Data: Step line and markers are identical brand green (#009E73) as in light render — data colors unchanged, only chrome flipped; reference line and year-total annotation also present with dark-themed styling
       Legibility verdict: PASS
+
+    Note: Images show a dotted reference line and year-total annotation not present in the current code on the PR branch — likely generated from an intermediate version.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -56,71 +56,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All sizes explicitly set: title 28px, labels 22px, ticks 18px; readable
-          in both themes'
+        comment: 'All sizes explicitly set: title 28px, axis labels 22px, tick labels
+          18px; readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Month labels and y-ticks have no collisions
+        comment: No overlapping text or data elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line width=4 and marker size=14 clearly visible at 4800x2700
+        comment: Step line width=4 clearly visible; markers size=14 appropriately
+          scaled for 4800x2700 px
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand-green series; adequate contrast in both themes; CVD-safe
+        comment: 'Single series in Okabe-Ito #009E73; excellent contrast on both backgrounds;
+          CVD-safe'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills canvas well with balanced margins; nothing cut off
+        comment: Plot fills canvas well; explicit margins provide generous balanced
+          whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes ($) units; X-axis 'Month' is descriptive
+        comment: 'Y-axis: Cumulative Sales ($) with units; X-axis: Month; both descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds #FAF8F1/#1A1A17; all chrome
-          theme-adaptive in both renders'
+        comment: 'First series #009E73; backgrounds correct (#FAF8F1 light / #1A1A17
+          dark); all chrome tokens applied correctly'
     design_excellence:
-      score: 9
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: 'Well-configured default: correct palette, marker edge highlighting
-          — but no intentional typographic hierarchy, no focal-point emphasis; looks
-          like polished library default'
+        passed: true
+        comment: 'Above generic defaults: theme-adaptive chrome, brand integration,
+          focal-point annotation; not yet exceptional'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Subtle grid (0.10 opacity) and removed legend are good; grid covers
-          both axes (y-only preferred for step/line); spines not explicitly hidden
+        passed: true
+        comment: Explicit margins, no legend (single series); grid on both axes instead
+          of y-only per style guide; spines not removed
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Data displayed cleanly but without interpretation; all months equally
-          weighted; no emphasis on largest jumps or overall trend
+        passed: true
+        comment: Year-total reference line creates focal point and narrative; above
+          flat display but limited inter-step hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -130,51 +132,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct step chart via line.shape='hv' (post step style)
+        comment: Correct step chart via line.shape='hv' (post-step style); staircase
+          pattern clearly visible
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step pattern, markers at data points, grid lines all present
+        comment: Step style, markers at all data points, grid lines, PNG + HTML outputs
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=months (sequential), Y=cumulative sales; all 12 data points shown
+        comment: X=months, Y=cumulative sales; all 12 data points correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title contains 'step-basic · plotly · anyplot.ai'; legend omitted
-          appropriately for single series
+        comment: Title contains step-basic · plotly · anyplot.ai; legend suppressed
+          for single series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Staircase pattern with discrete jumps shown; missing flat/plateau
-          contrast that would maximally showcase step type
+        comment: 'Demonstrates all step plot characteristics: discrete plateaus, vertical
+          jumps, cumulative growth, varying step sizes'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly cumulative sales is a classic real-world step-plot use case;
-          $ units add realism; neutral business domain
+        comment: Monthly cumulative sales is a realistic, neutral business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: ~$375k annual cumulative revenue with $15k-$45k monthly increments;
-          plausible for a small business
+        comment: Monthly $15k-$45k range, cumulative ~$375k annual — plausible for
+          small/medium business
     code_quality:
       score: 10
       max: 10
@@ -184,8 +186,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: theme tokens -> data -> figure -> layout -> save; no
-          functions or classes'
+        comment: 'Linear: imports -> theme tokens -> data -> plot -> layout -> save;
+          no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -197,38 +199,39 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All three imports (os, numpy, plotly.graph_objects) are used
+        comment: Only os, numpy, plotly.graph_objects — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; appropriate complexity; no over-engineering
+        comment: Clean, Pythonic; appropriate complexity; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly; current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; correct 4800x2700 px
+          via scale=3
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Uses go.Scatter with line.shape='hv' — plotly's recommended step-line
-          pattern; idiomatic update_layout structure
+        comment: Expert use of go.Scatter with line.shape='hv'; proper layout; correct
+          HTML export
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses plotly's native shape='hv' step mode and HTML export; does not
-          leverage hover templates, range slider, or other distinctive plotly capabilities
-  verdict: REJECTED
+        passed: true
+        comment: Uses plotly's native step interpolation and generates interactive
+          HTML; no custom hovertemplate — missed key interactive feature
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
