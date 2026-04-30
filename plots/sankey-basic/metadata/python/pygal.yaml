@@ -1,0 +1,252 @@
+library: pygal
+language: python
+specification_id: sankey-basic
+created: '2026-04-30T09:01:18Z'
+updated: '2026-04-30T09:19:55Z'
+generated_by: claude-sonnet
+workflow_run: 25156618838
+issue: 810
+python_version: 3.13.13
+library_version: 3.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/pygal/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - 'Excellent spec and data compliance: all 14 flows correct, balanced node totals
+    (149 TWh), realistic energy domain.'
+  - Intentional opacity hierarchy (0.72 dominant / 0.38 minor) creates a clear visual
+    narrative highlighting Coal→Industrial and Gas→Residential as key pathways.
+  - 'Theme-adaptive chrome is fully correct in both light and dark renders — zero
+    dark-on-dark failures, correct backgrounds (#FAF8F1 / #1A1A17).'
+  - 'Editorial restraint: value annotations restricted to dominant flows only (22
+    TWh, 25 TWh), avoiding chart clutter.'
+  - All font sizes explicitly set above minimum recommendations for 4800×2700 canvas
+    (title 48px, labels 38px, values 28px).
+  weaknesses:
+  - 'Library mastery is minimal: pygal is used only as a style-token provider via
+    pygal.style.Style; its chart classes, JS interactivity, hover tooltips, and animations
+    are completely bypassed — raw SVG built manually via cairosvg.'
+  - 'Design Excellence could be pushed further: additional whitespace/node gap tuning
+    and stronger title weight (700) would lift visual refinement.'
+  - Very thin flows (3–4 TWh, Transportation column) are at the edge of readability
+    — slightly higher base alpha for minor flows or larger NODE_W would improve element
+    visibility.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "Energy Distribution · sankey-basic · pygal · anyplot.ai" in dark ink (#1A1A17) at 48px — clearly readable. Node name labels at 38px (dark ink, weight 500) and value subtexts at 28px (muted ink INK_MUTED) — all readable. Flow annotations "22 TWh" and "25 TWh" in dark ink at 28px weight 700 — readable.
+      Data: Four source nodes (Coal=green #009E73, Natural Gas=orange-red #D55E00, Nuclear=blue #0072B2, Renewables=pink #CC79A7) in Okabe-Ito order. Four target nodes in neutral grey (INK_SOFT). 14 Bezier ribbon flows connecting sources to targets with proportional widths. Dominant flows (≥20 TWh) at 0.72 alpha drawn on top; minor flows at 0.38 alpha as background layer.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title and node labels switch to light ink (#F0EFE8 / #B8B7B0) — fully readable against dark surface. No dark-on-dark failures observed. Flow annotations remain visible in light ink on colored ribbon backgrounds.
+      Data: Source node colors identical to light render (same green, orange-red, blue, pink for Coal/Gas/Nuclear/Renewables) — only chrome flips, data colors unchanged. Semi-transparent flows create a luminous/glowing effect on dark background. Target nodes in INK_SOFT (#B8B7B0) are distinguishable.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 48px, labels 38px, values 28px
+          — above minimum recommendations for pixel-based 4800x2700 canvas'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Node labels well-spaced; flow annotations at ribbon midpoints without
+          collision
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Flows clearly visible; minor flows (3-4 TWh) produce thin but distinguishable
+          ribbons at edge of readability
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; differential opacity aids distinguishability
+          beyond hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagram spans ~81% canvas width, ~75% height with balanced margins
+          (L:400, R:440, T:220, B:130)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes appropriate for Sankey; node labels include TWh
+          totals; title includes required spec/library/site format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First source (Coal) = #009E73; multi-source follows Okabe-Ito order;
+          backgrounds #FAF8F1/#1A1A17; both renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above library defaults: differential opacity for hierarchy, Okabe-Ito
+          sources + neutral targets, rounded nodes, annotations restricted to dominant
+          flows'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No grid/axes, explicit margins, layer ordering, font-weight differentiation;
+          whitespace could be more generous
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Opacity differentiation draws eye to dominant flows (Coal→Industrial
+          25 TWh, Gas→Residential 22 TWh); dominant pathway story is visually legible
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Sankey diagram with source/target nodes, proportional-width
+          Bezier ribbon flows
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Node labels with values, proportional flow widths, distinct source
+          colors, link opacity variation, no circular flows
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 14 flows correctly mapped; node totals balance at 149 TWh source
+          = 149 TWh target
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title contains required 'sankey-basic · pygal · anyplot.ai' format
+          with descriptive prefix; no legend needed (nodes are self-labeling)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 4 sources, 4 targets, 14 flows, varying magnitudes (3-25 TWh), full
+          cross-connectivity, proportional node sizing
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Real-world energy distribution: Coal/Gas/Nuclear/Renewables to Residential/Commercial/Industrial/Transportation
+          — neutral science domain'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Internally consistent (149 TWh balanced), plausible proportions:
+          Natural Gas largest source (58 TWh), Industrial largest sector (53 TWh)'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports → style tokens → data → layout → SVG generation
+          → save; no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded; completely deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, sys, cairosvg, pygal.style.Style — all explicitly used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: SVG generation appropriately complex for custom Sankey (pygal lacks
+          native type); sys.path manipulation necessary for filename collision
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 3
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 2
+        max: 5
+        passed: false
+        comment: Only pygal.style.Style used; entire chart built as raw SVG strings
+          via cairosvg — bypasses pygal's chart class API entirely
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: pygal's JS interactivity, hover tooltips, and animations not used;
+          HTML file is plain SVG wrapper, not pygal interactive chart
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - cairosvg
+  techniques:
+  - bezier-curves
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending

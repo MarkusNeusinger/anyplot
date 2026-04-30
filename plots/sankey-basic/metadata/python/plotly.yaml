@@ -1,171 +1,194 @@
 library: plotly
+language: python
 specification_id: sankey-basic
 created: '2025-12-23T19:43:26Z'
-updated: '2025-12-23T19:52:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20469993740
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/plotly/plot.html
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-  patterns: []
-  dataprep: []
-  styling: []
+updated: '2026-04-30T09:02:05Z'
+generated_by: claude-sonnet
+workflow_run: 25156267074
+issue: 810
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/plotly/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent use of Plotly go.Sankey with proper node/link configuration
-  - Well-chosen color scheme with source-based link coloring and appropriate transparency
-  - Realistic energy distribution scenario that effectively demonstrates Sankey diagram
-    purpose
-  - Clean code structure following KISS principles with clear data organization
-  - Proper output sizing (1600x900 scale=3) producing 4800x2700 target resolution
+  - 'Correct Okabe-Ito color assignment: Coal=#009E73 (first source = first palette
+    position), then Natural Gas=#D55E00, Nuclear=#0072B2, Renewables=#CC79A7 in canonical
+    order'
+  - 'Theme-adaptive chrome fully wired: INK for title/node labels flips correctly
+    between light (#1A1A17) and dark (#F0EFE8); target nodes use INK_SOFT which also
+    adapts; PAGE_BG backgrounds are correct (#FAF8F1 / #1A1A17)'
+  - RGBA link colors (0.4 opacity) keyed to source node — flows are traceable while
+    overlapping links remain distinguishable
+  - 'Expert go.Sankey API usage: pad=25, thickness=35, line border color = PAGE_BG
+    for clean separation, all parameters well-chosen'
+  - Both PNG and HTML outputs generated; deterministic hardcoded data; KISS code structure
+    throughout
+  - 'Energy flow data is realistic and neutral: varied flow magnitudes across 4 sources
+    and 4 targets, with selectively absent flows (Coal and Nuclear skip Transportation)
+    adding plausibility'
   weaknesses:
-  - Could include flow value labels on hover or annotations to show exact TWh values
-  - Transportation sector only receives flows from Gas and Renewables, missing Coal
-    and Nuclear contributions
-  image_description: "The plot displays a Sankey diagram showing energy distribution\
-    \ from four source nodes (Natural Gas, Nuclear, Renewables, Coal) on the left\
-    \ to four target nodes (Residential, Commercial, Transportation, Industrial) on\
-    \ the right. \n\n**Colors**: Source nodes use distinct colors - dark blue for\
-    \ Coal, light blue for Natural Gas, yellow for Nuclear, and green for Renewables.\
-    \ Target nodes use muted grayish-blue tones. Flow links are semi-transparent (alpha\
-    \ ~0.5) and colored to match their source.\n\n**Title**: \"Energy Distribution\
-    \ · sankey-basic · plotly · pyplots.ai\" centered at top in appropriate font size.\n\
-    \n**Layout**: The diagram fills the canvas well with adequate margins. Node labels\
-    \ are positioned clearly next to their respective nodes. Flow widths are proportional\
-    \ to values, making it easy to identify major pathways (Natural Gas → Residential\
-    \ being the largest flow)."
+  - 'Design Excellence is moderate (13/20): target nodes using INK_SOFT creates some
+    visual distinction but the overall aesthetic is above-defaults rather than publication-ready;
+    consider adding a subtle subtitle or unit annotation (TWh) to elevate storytelling'
+  - 'DQ-03 minor deduction: coal-to-residential (5 TWh) and coal-to-commercial (8
+    TWh) flows are somewhat high relative to modern energy realities where coal primarily
+    feeds industrial and power-generation sectors; values are plausible but not factually
+    tight'
+  - 'DQ-01 minor deduction: all four sources have broadly similar distribution patterns
+    (mostly Residential, Commercial, Industrial); introducing one source with a starkly
+    different profile would increase feature coverage contrast'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "Energy Distribution · sankey-basic · plotly · anyplot.ai" in dark #1A1A17 ink, 28px, clearly readable. Node labels (Natural Gas, Nuclear, Renewables, Coal on the left; Residential, Commercial, Transportation, Industrial on the right) rendered in #1A1A17 via global font=22px — all clearly legible against the warm background.
+      Data: Four source nodes stacked on the left — Natural Gas (largest, orange #D55E00), Nuclear (blue #0072B2), Renewables (pink #CC79A7), Coal (green #009E73, bottom). Four target nodes on the right in dark gray (#4A4A44 INK_SOFT). Semi-transparent RGBA links (0.4 opacity) flow left-to-right, each colored after its source node. Natural Gas dominates as the widest band. Node border lines use PAGE_BG creating clean separation between stacked nodes.
+      Legibility verdict: PASS — all text, including small node labels, clearly readable on the off-white surface.
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct, not pure black.
+      Chrome: Title in light cream #F0EFE8 — clearly readable against the dark background. Node labels also flip to #F0EFE8 via the global font color token (INK = #F0EFE8 in dark mode). No dark-on-dark text detected anywhere.
+      Data: Source node colors are identical to the light render — Natural Gas orange, Nuclear blue, Renewables pink, Coal green — Okabe-Ito positions 1–4 unchanged. Target nodes flip to light gray (#B8B7B0 INK_SOFT dark), visible against dark background. Semi-transparent link bands are slightly more muted on the dark surface but remain distinguishable by source color. No data color has changed between themes — only chrome elements adapted.
+      Legibility verdict: PASS — all text is light-on-dark with no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'All text clearly readable: title at appropriate size (~36pt), node
-          labels at ~22pt, all crisp and legible'
+        comment: Title explicitly 28px, global font explicitly 22px covering all node
+          labels; all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; node labels are well-positioned and do not interfere
-          with flows
+        comment: No overlapping text or visual elements; node labels positioned cleanly
+          inside/beside nodes
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Flow links appropriately sized with 0.5 opacity allowing visibility
-          where flows cross
+        comment: Nodes (thickness=35) and links clearly visible; semi-transparent
+          links readable without obscuring each other
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Color scheme uses blue, yellow, green which are colorblind-friendly;
-          distinct hues for different sources
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent canvas utilization; diagram fills ~70% of space with balanced
-          margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for Sankey diagrams (no axes) - applying 2 points for node labels
-          which are descriptive
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Clean white template, no distracting elements; node colors serve
-          as implicit legend
+        comment: Okabe-Ito palette is CVD-safe; 0.4 alpha on links provides adequate
+          distinguishability
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Sankey fills canvas well with balanced margins (l:80, r:80, t:120,
+          b:60); no wasted space
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title present; Sankey has no axes — node labels serve
+          as data identifiers
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Coal=#009E73 first, then #D55E00, #0072B2, #CC79A7 in canonical
+          order; backgrounds #FAF8F1/#1A1A17 correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Thoughtful: Okabe-Ito for sources, adaptive INK_SOFT for targets,
+          PAGE_BG node borders for clean separation. Above defaults but not publication-ready'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: pad=25 and thickness=35 are well-considered; clean layout with no
+          extraneous elements; good refinement for Sankey type
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Energy flow story readable through proportional node sizing — Natural
+          Gas dominance clear; color coding enables flow tracing
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Sankey diagram showing flows between nodes
+        comment: Correct Sankey diagram with nodes and proportional-width links
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Source-target-value correctly mapped; link widths proportional to
-          flow values
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: distinct colors for sources, link opacity
-          for crossing flows, clear node labels'
-      - id: SC-04
-        name: Data Range
+        comment: Source→target flows, distinct colors per source category, link opacity,
+          no circular flows, readable node labels
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All flows visible and readable
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Source and target indices correctly mapped; flow values drive link
+          widths proportionally
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Node labels accurately describe each category
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Follows exact format: "Energy Distribution · sankey-basic · plotly
-          · pyplots.ai"'
+        comment: Title 'Energy Distribution · sankey-basic · plotly · anyplot.ai'
+          includes spec-id, library, anyplot.ai in correct order
     data_quality:
-      score: 18
-      max: 20
+      score: 13
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: 'Shows flows from 4 sources to 4 targets with varying magnitudes;
-          demonstrates multiple flow paths and crossings; minor: could show more dramatic
-          variation in flow sizes'
+        comment: 4 sources × 4 targets with varied magnitudes (3–25 TWh); selective
+          absence of flows (Coal/Nuclear skip Transportation) adds variety; distributions
+          are somewhat similar across sources
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Energy distribution from sources (Coal, Gas, Nuclear, Renewables)
-          to sectors (Residential, Commercial, Industrial, Transportation) is a classic,
-          comprehensible real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Values in TWh are sensible for energy; Natural Gas having highest
-          residential flow is realistic; minor: Transportation sector could have more
-          diverse energy sources'
+        comment: 'Realistic neutral energy distribution domain: coal, natural gas,
+          nuclear, renewables → residential, commercial, industrial, transportation'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Values plausible but coal-to-residential (5 TWh) and coal-to-commercial
+          (8 TWh) are somewhat generous given coal's declining residential use
     code_quality:
       score: 10
       max: 10
@@ -175,41 +198,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → colors → figure creation
-          → layout → save'
+        comment: 'Clean linear structure: imports → theme tokens → data → figure →
+          save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random values used)
+        comment: Fully deterministic hardcoded data; no random generation needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only `plotly.graph_objects` imported and used
+        comment: Only os and plotly.graph_objects imported, both used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API (go.Sankey)
+        comment: List comprehensions for source/target/value extraction; RGBA link
+          colors derived from source index cleanly
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as `plot.png` and `plot.html`
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Plotly API
+          used
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Uses Plotly's interactive Sankey with go.Sankey, custom node padding/thickness,
-          link transparency, HTML output for interactivity
+        comment: 'Expert go.Sankey usage with all key parameters properly configured:
+          pad, thickness, line, label, color for both node and link'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: RGBA source-matched link coloring and interactive HTML export (with
+          built-in hover/zoom) are Plotly-distinctive; static PNG alone wouldn't demonstrate
+          interactivity
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns: []
+  dataprep: []
+  styling:
+  - alpha-blending
