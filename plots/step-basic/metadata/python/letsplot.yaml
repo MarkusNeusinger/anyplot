@@ -1,164 +1,181 @@
 library: letsplot
+language: python
 specification_id: step-basic
 created: '2025-12-23T20:51:24Z'
-updated: '2025-12-23T20:58:32Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20471222957
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/step-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/step-basic/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-    - layer-composition
-  patterns:
-    - data-generation
-  dataprep:
-    - cumulative-sum
-  styling:
-    - grid-styling
+updated: '2026-04-30T13:10:12Z'
+generated_by: claude-sonnet
+workflow_run: 25166044399
+issue: 956
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/letsplot/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent use of geom_step with hv direction parameter creating proper stair-step
-    visualization
-  - Clean ggplot2-style grammar implementation with proper layering (step + points)
-  - Perfect title format and descriptive axis labels with units
-  - Good color choices with Python blue and yellow for brand consistency
-  - Appropriate font sizing for 4800x2700 output with scaled export
-  - Realistic cumulative sales scenario that matches spec applications
+  - All text sizes explicitly set to spec-compliant values (title=24, labels=20, ticks=16)
+    — full VQ-01 score
+  - Layer composition (geom_area + geom_step + geom_point + geom_text) creates visual
+    depth and is idiomatic to lets-plot grammar-of-graphics style
+  - Year-end total annotation ($822K) provides meaningful narrative context
+  - 'Perfect theme-adaptive chrome: backgrounds, ink, grid, and annotation text all
+    flip correctly between light and dark'
+  - Clean, linear code structure with proper seed and output files
   weaknesses:
-  - Grid styling uses dashed lines which can appear busy; solid subtle lines may be
-    cleaner
-  - Markers could be slightly larger (size=6-7) for better visibility at the data
-    points
-  image_description: The plot displays a step chart showing cumulative monthly sales
-    data over 12 months. A dark blue (#306998) step line creates a clear stair-step
-    pattern ascending from approximately $45K in month 1 to $822K in month 12. Bright
-    yellow (#FFD43B) circular markers highlight each data point where changes occur.
-    The title "step-basic · letsplot · pyplots.ai" appears at the top left. The x-axis
-    is labeled "Month" with ticks from 1-12, and the y-axis is labeled "Cumulative
-    Sales ($K)" ranging from 50 to 850. A subtle gray dashed grid aids value reading.
-    The plot fills the canvas well with balanced proportions.
+  - geom_area without color="transparent" renders a diagonal border line (area polygon
+    top edge) visually mimicking an unintended linear trend reference line — fix with
+    color="transparent"
+  - 'LM-02 low: no use of distinctively lets-plot features beyond HTML export (e.g.
+    interactive tooltips via layer_tooltips(), geom_livemap)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "step-basic · letsplot · anyplot.ai" in dark text top-left; y-axis label "Cumulative Sales ($K)" and x-axis label "Month" in dark text; tick labels 1–12 on x-axis and 0–900 on y-axis in slightly softer dark; all clearly readable
+      Data: Brand green (#009E73) step line tracing 12 cumulative monthly sales values (45–822K); matching green filled circles at each data point; mint-green area fill (alpha=0.15) under step line; geom_area border creates a thin diagonal artifact line from (1,47) to (12,822)
+      Annotation: "Year-end total: $822K" in soft-ink text, upper-right area
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, axis labels, tick labels, and annotation all render in light-colored text (INK_SOFT token); all clearly readable against dark surface; no dark-on-dark failures observed
+      Data: Brand green (#009E73) step line and circles identical to light render — only chrome flips; mint-green area fill more subtle on dark background but present; same geom_area border artifact present (less visible)
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at appropriate
-          sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16;
+          all readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; annotation positioned cleanly in upper-right
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Step line is well-sized; markers are visible but could be slightly
-          larger for optimal visibility
+        comment: Step line size=2 (6 after 3x scale), points size=6 (18 after scale);
+          all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow contrast is colorblind-safe and high contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Cumulative Sales ($K)", "Month"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Single brand-green series, good contrast, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well; balanced margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is appropriate but no legend present (though not strictly needed
-          for single series)
+        passed: true
+        comment: 'Y-axis has units: Cumulative Sales ($K); X-axis Month is unambiguous'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First/only series is #009E73; backgrounds are #FAF8F1 (light) /
+          #1A1A17 (dark); chrome is theme-adaptive'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: theme-adaptive chrome, brand-green area fill, year-end
+          annotation, intentional layer composition. The diagonal geom_area outline
+          artifact reduces polish below strong design level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Explicit x-grid removal and subtle y-grid show intentional refinement.
+          Unintended diagonal geom_area border line is unpolished; fix with color=transparent.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Year-end total annotation provides a clear narrative anchor; area
+          fill visually emphasizes growth trajectory; step pattern highlights discrete
+          monthly contributions.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct step/stair plot type
+        comment: geom_step(direction=hv) correctly implements post-style step chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=Month (sequential), Y=Cumulative Sales correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Step pattern with markers at data points as suggested in spec
-      - id: SC-04
-        name: Data Range
+        comment: Step pattern, markers at data points (geom_point), grid lines all
+          present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=month (1-12), Y=cumulative_sales; all 12 points visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for single series, no legend needed
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "step-basic · letsplot · pyplots.ai"'
+        comment: Title step-basic · letsplot · anyplot.ai is correct; no legend needed
+          for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows cumulative/monotonic increasing pattern well; could show more
-          variation in step sizes
+        comment: Shows step pattern clearly with discrete jumps, area fill, and markers;
+          varying monthly increments demonstrate all step-plot features
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Monthly cumulative sales is a perfect real-world scenario matching
-          spec examples
+        comment: Monthly cumulative sales in a business year is a neutral, real-world
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic for sales data; units in thousands are appropriate
+        comment: Monthly sales 45-95K, cumulative 822K; plausible for a small-to-medium
+          business
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -166,41 +183,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: 'Linear flow: imports → tokens → data → plot → save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, pandas, lets_plot)
+        comment: All imported symbols are used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but export path uses "." which works
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ggplot grammar, geom_step with direction parameter, theme_minimal,
-          but no advanced lets-plot specific features like tooltips or interactivity
-          in the static output
+        comment: Correct use of ggplot grammar; geom layering (area+step+point+text)
+          is idiomatic; scale_x_continuous for custom ticks
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: HTML export is lets-plot distinctive; core visualization could be
+          replicated in plotnine with minimal syntax changes; no use of layer_tooltips()
+          or other lets-plot-specific features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling: []
