@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 slope-basic: Basic Slope Chart (Slopegraph)
 Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-04-30
 """
 
 import os
