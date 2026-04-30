@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sankey-basic: Basic Sankey Diagram
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-04-30
@@ -48,8 +48,8 @@ targets = df.groupby("target")["value"].sum().loc[target_names]
 NODE_W = 0.055
 X_LEFT, X_RIGHT = 0.13, 0.87
 GAP = 0.022
-TOTAL_H = 0.70
-Y_START = 0.93
+TOTAL_H = 0.72
+Y_START = 0.85
 
 source_pos = {}
 y = Y_START
@@ -97,7 +97,11 @@ for _, row in df_sorted.iterrows():
     cx0, cx1 = x0 + (x1 - x0) * 0.35, x0 + (x1 - x0) * 0.65
     xs = (1 - t) ** 3 * x0 + 3 * (1 - t) ** 2 * t * cx0 + 3 * (1 - t) * t**2 * cx1 + t**3 * x1
 
-    ax.fill_between(xs, y0b + (y1b - y0b) * s, y0t + (y1t - y0t) * s, color=source_colors[src], alpha=0.55, linewidth=0)
+    # Gas (dominant source) rendered with heavier alpha for visual emphasis
+    flow_alpha = 0.68 if src == "Gas" else 0.44
+    ax.fill_between(
+        xs, y0b + (y1b - y0b) * s, y0t + (y1t - y0t) * s, color=source_colors[src], alpha=flow_alpha, linewidth=0
+    )
 
 # Draw source nodes and labels
 for name in source_names:
@@ -119,7 +123,7 @@ for name in source_names:
         f"{name}\n{sources[name]:.0f} TWh",
         ha="right",
         va="center",
-        fontsize=18,
+        fontsize=20,
         fontweight="bold",
         color=INK,
     )
@@ -144,12 +148,23 @@ for name in target_names:
         f"{name}\n{targets[name]:.0f} TWh",
         ha="left",
         va="center",
-        fontsize=18,
+        fontsize=20,
         fontweight="bold",
         color=INK,
     )
 
 ax.set_title("sankey-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
+# Subtitle highlighting key insight: Gas is the dominant source (49% of total)
+ax.text(
+    0.5,
+    0.93,
+    "Gas supplies 49 % of total energy — the dominant source",
+    ha="center",
+    va="center",
+    fontsize=16,
+    color=source_colors["Gas"],
+    fontstyle="italic",
+)
 ax.set_xlim(0, 1)
 ax.set_ylim(0, 1)
 ax.axis("off")
