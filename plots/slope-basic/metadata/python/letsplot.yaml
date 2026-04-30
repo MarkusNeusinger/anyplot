@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: slope-basic
 created: '2025-12-23T20:47:50Z'
-updated: '2026-04-30T16:56:59Z'
+updated: '2026-04-30T17:14:44Z'
 generated_by: claude-sonnet
 workflow_run: 25177850228
 issue: 981
@@ -12,115 +12,108 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/slope-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/letsplot/plot-dark.html
-quality_score: 80
+quality_score: 85
 review:
   strengths:
-  - Perfect spec compliance with all required features (endpoint labels, directional
-    coloring, time-point axis labels)
-  - 'Excellent code quality: flat KISS structure, deterministic data, all explicit
-    font sizes set for 4800x2700px'
-  - Theme-adaptive chrome implemented correctly per letsplot guide; both renders pass
-    legibility checks
-  - 'Directional color coding with Okabe-Ito #009E73/#D55E00 creates instant visual
-    hierarchy'
+  - Excellent spec compliance — all slopegraph requirements satisfied with correct
+    title format
+  - Strong storytelling via top-3 mover emphasis (differential line weight + alpha)
+    creates a clear focal story
+  - Proper Okabe-Ito palette with full theme-adaptive chrome; both light and dark
+    renders pass the readability check
+  - 'Perfect code quality: deterministic, clean, idiomatic letsplot usage'
+  - Genuine use of layer_tooltips() showcases letsplot's interactive differentiation
   weaknesses:
-  - 'Label crowding on right side: six products (B, C, I, H, A, D) fall in a tight
-    55-unit band producing near-overlap — fix by adding value amounts to endpoint
-    labels and extending y-limits'
-  - Generic entity names Product A through J reduce data authenticity — replace with
-    real product category names from a recognizable industry
-  - 'No data storytelling emphasis: top mover (Product G +40) and biggest decline
-    (Product J -30) not visually distinguished — use size or alpha variation to highlight
-    top 2-3 movers'
+  - Label crowding on both sides (especially left, mid-range values) causes overlap
+    where 4-5 entities cluster near similar y-values
+  - geom_text label size=10 renders slightly small at 4800x2700 px; size 12-13 would
+    improve legibility
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "slope-basic · letsplot · anyplot.ai" in dark ink (#1A1A17) — clearly readable. Y-axis label "Sales ($K)" in dark ink. X-axis tick labels "Q1 Sales ($K)" / "Q4 Sales ($K)" in INK_SOFT (#4A4A44). Tick labels on y-axis in INK_SOFT. Legend box with elevated background.
-      Data: Green (#009E73) lines/points for increasing products; orange (#D55E00) for decreasing. 10 slope lines clearly visible. Entity labels at both endpoints.
-      Legibility verdict: PASS — all text readable; minor label crowding on right side (6 labels in 55-unit band) but not severe overlap
+      Background: Warm off-white #FAF8F1 — correct light theme surface.
+      Chrome: Title "slope-basic · letsplot · anyplot.ai" in dark ink (#1A1A17), clearly readable. Y-axis label "Sales ($K)" and x-axis tick labels "Q1 Sales ($K)"/"Q4 Sales ($K)" in dark soft ink — all readable. Legend on right with "Change" header and green/orange entries, styled with elevated background.
+      Data: Green (#009E73) segments for increases, orange (#D55E00) for decreases. Top-3 movers (Cameras, Smartphones, Laptops) emphasized with bold lines (size=3.5, alpha=1.0); background lines dimmed (alpha=0.40). Endpoint labels on both sides with entity name + value.
+      Legibility verdict: PASS — all chrome text readable. Minor label overlap in mid-range ($80K-$120K) band.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title and axis labels rendered in light ink (#F0EFE8 / #B8B7B0) — all clearly readable against dark background. No dark-on-dark failures observed. Legend box uses elevated dark background (#242420).
-      Data: Colors are identical to light render — green (#009E73) for increases, orange (#D55E00) for decreases. Theme-stable palette confirmed.
-      Legibility verdict: PASS — all text readable in dark theme; same label crowding as light render
+      Background: Near-black #1A1A17 — correct dark theme surface.
+      Chrome: Title, axis labels, tick labels, and legend text all shift to light ink (#F0EFE8/#B8B7B0). All text readable against dark background. No dark-on-dark failures observed. Legend background uses elevated dark surface #242420.
+      Data: Data colors identical to light render — green #009E73 for increases, orange #D55E00 for decreases. Same visual hierarchy (bold top movers vs. dimmed background lines).
+      Legibility verdict: PASS — theme-adaptive chrome successfully applied to all elements.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All sizes explicitly set: title 28pt, axis title 22pt, axis text
-          18-20pt, legend 18-20pt'
+        comment: All sizes explicitly set (title 28pt, y-label 22pt, ticks 18-20pt);
+          geom_text labels size=10 slightly small
       - id: VQ-02
         name: No Overlap
         score: 3
         max: 6
         passed: false
-        comment: Right-side labels B/C/I/H/A/D cluster in ~55-unit band producing
-          near-overlap; main content readable
+        comment: Moderate label crowding in mid-range $80K-$120K band on left side;
+          main content readable
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines (size=2.5, alpha=0.85) and points (size=7) clearly visible;
-          some density from 10 crossing lines
+        comment: Segments and points clearly visible; top-mover emphasis works well
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green/orange combination is colorblind-safe
+        comment: Green/orange Okabe-Ito pair is CVD-safe with clear luminance contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good layout for slope chart; limits extended to [-0.6, 1.6] appropriately
-          for endpoint labels
+        comment: Extended x-limits give good label clearance; slight vertical crowding
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis has units: Sales ($K); x-axis period names carry units'
+        comment: Y-axis Sales ($K), x-axis tick labels Q1/Q4 Sales ($K) — descriptive
+          with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1/#1A1A17;
-          all chrome theme-correct'
+        comment: 'Correct backgrounds #FAF8F1/#1A1A17; first series #009E73; full
+          theme-adaptive chrome in both renders'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured with directional colors and theme-adaptive chrome,
-          but overall appearance is polished library default
+        passed: true
+        comment: Visual hierarchy via differential line weight elevates design above
+          defaults; not publication-level
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-axis only grid with subtle color, x-axis grid removed, theme_minimal
-          — meaningfully above defaults
+        comment: X-grid removed, y-grid subtle, legend styled with elevated background
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Directional coloring communicates increases vs decreases but no emphasis
-          on largest movers
+        passed: true
+        comment: Top-3 movers emphasized; increase/decrease color coding guides interpretation
     spec_compliance:
       score: 15
       max: 15
@@ -130,29 +123,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct slopegraph with geom_segment connecting two time points
+        comment: Correct slopegraph using geom_segment + geom_point + geom_text
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Labels at both endpoints, directional color coding, time-point axis
-          labels, 10 entities
+        comment: Labels at both endpoints, color-coded by direction, time-point axis
+          labels, 10 entities within 5-15 spec
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X maps to time periods, Y maps to sales values; all data visible
+        comment: X encodes time points, Y encodes values; segments correctly span
+          Q1 to Q4
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'slope-basic · letsplot · anyplot.ai' correct; legend 'Change'
-          with Increase/Decrease
+        comment: Title slope-basic · letsplot · anyplot.ai exactly correct; legend
+          Change with Increase/Decrease correct
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -160,22 +154,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows 6 increases and 4 decreases with varied magnitudes; multiple
-          crossing lines show rank changes
+        comment: Shows both increases and decreases, crossing patterns, rank reversals,
+          varying magnitudes
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Q1/Q4 sales scenario is plausible but Product A-J are abstract labels;
-          real product names would add authenticity
+        passed: true
+        comment: Consumer electronics quarterly sales is a real, neutral, comprehensible
+          business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 55-215 ($K) are realistic quarterly sales figures with plausible
-          changes
+        comment: $55K-$215K range for electronics product line sales is factually
+          plausible
     code_quality:
       score: 10
       max: 10
@@ -185,61 +179,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat code: imports -> tokens -> data -> plot -> save; no functions
-          or classes'
+        comment: Linear Imports to Data to Plot to Save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded; fully deterministic
+        comment: Data is hardcoded and fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used
+        comment: All lets_plot imports actively used; only pandas and os as additional
+          deps
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; data transforms are clear and concise
+        comment: Clean, Pythonic; layer_tooltips() is genuine letsplot interactivity,
+          not fake
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=3) and plot-{THEME}.html; current API
+        comment: Saves plot-{THEME}.png (scale=3) and plot-{THEME}.html for both themes
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Excellent ggplot grammar: geom_segment+geom_point+geom_text layering,
-          scale_color_manual, correct theme-adaptive chrome'
+        comment: 'Exemplary ggplot grammar: layered geoms, aes(), scale_*_manual(),
+          theme(), labs(), ggsize()'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: HTML export is letsplot-specific; core chart logic could be replicated
-          in plotnine with minor syntax changes
-  verdict: REJECTED
+        passed: true
+        comment: Uses layer_tooltips() with title/line format-specifiers (letsplot-specific);
+          dual PNG+HTML export demonstrates interactive hybrid output
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
-  - data-generation
   - wide-to-long
   dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
+  - grid-styling
