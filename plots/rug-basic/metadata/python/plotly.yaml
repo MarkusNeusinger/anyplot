@@ -1,164 +1,178 @@
 library: plotly
+language: python
 specification_id: rug-basic
 created: '2025-12-23T19:43:17Z'
-updated: '2025-12-23T19:47:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20469994251
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/rug-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/rug-basic/plotly/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - hover-tooltips
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - alpha-blending
+updated: '2026-04-30T05:35:39Z'
+generated_by: claude-sonnet
+workflow_run: 25148534408
+issue: 978
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/plotly/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent bimodal data design clearly demonstrates clustering patterns and gaps
-  - Creative use of line-ns marker symbol to create vertical tick marks
-  - Proper title format and descriptive axis label with units
-  - Clean, readable code structure following KISS principles
-  - Good hover template for interactivity
-  - Appropriate semi-transparency for overlapping points
+  - Correctly implements rug plot spec with semi-transparent ticks below a KDE companion,
+    exactly matching spec intent
+  - Theme-adaptive chrome is fully wired through all elements (title, labels, ticks,
+    legend, backgrounds, grid, zero line)
+  - Bimodal data with deliberate gap_region at 38-42 ms demonstrates clustering and
+    gap-detection — the key pedagogical value of rug plots
+  - fill='tozeroy' and symbol='line-ns' are idiomatic Plotly features used appropriately
+  - Font sizes all explicitly set at correct pixel values for 4800x2700 px output
   weaknesses:
-  - Vertical grid lines on y-axis are unnecessary for a 1D rug plot and add visual
-    clutter
-  - The rug ticks could be slightly taller/more prominent given the large canvas size
-  - Could leverage Plotly distinctive features more (e.g., combine with histogram/kde,
-    use animations, or add more interactive features)
-  image_description: The plot displays a rug plot with vertical tick marks (small
-    blue lines) arranged along a horizontal axis at y=0. The ticks use a steel blue
-    color (#306998) with semi-transparency (opacity 0.6). The x-axis is labeled "Response
-    Time (ms)" with values ranging from approximately 10 to 75. The title "rug-basic
-    · plotly · pyplots.ai" is centered at the top in large black text. A subtle gray
-    grid is visible in the background. The data clearly shows a bimodal distribution
-    with dense clustering around 20-35ms and 45-70ms, with a visible gap around 35-45ms
-    containing only two isolated points. The layout is clean with a white background
-    (plotly_white template).
+  - Annotation 'gap ~38-42 ms' is visible in rendered images but absent from the current
+    code file — if images are regenerated the annotation will be missing; re-add fig.add_annotation()
+    or confirm images are current
+  - X-axis has showline=True but y-axis does not, creating an asymmetric spine treatment
+    (bottom line only, no left line); standard practice is L-shaped (left+bottom)
+    or no spines
+  - symbol='line-ns' with size=30 produces markers slightly wide for narrow rug ticks;
+    reducing size to 20-22 with line.width=1.5 would make each observation crisper
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "rug-basic · plotly · anyplot.ai" in dark INK (#1A1A17), clearly readable; axis labels "Response Time (ms)" and "Density" in dark INK; tick labels in muted INK_SOFT (#4A4A44); all readable against the light background
+      Data: KDE density curve in brand green #009E73 with filled translucent area (rgba(0,158,115,0.15)); rug marks as semi-transparent (opacity=0.5) vertical line-ns ticks below zero line in same brand green; bimodal distribution with peaks at ~25ms and ~55ms; visible gap region at 38-42ms; annotation "gap ~38-42 ms" visible in render (not in current code); first series correctly uses #009E73
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light off-white (#F0EFE8), clearly readable; axis labels in same light token; tick labels in muted light (#B8B7B0); legend box uses elevated dark background #242420 with lighter text; annotation text renders in light tone; all readable against dark background
+      Data: KDE curve and rug marks remain identical #009E73 brand green — data colors unchanged between themes; filled area same translucent green; bimodal distribution identical to light render
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures detected; brand green #009E73 remains visible on dark surface
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 48pt, axis labels at 36pt, tick labels at 28pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements
+        comment: Title 28px, axis labels 22px, tick labels 18px, legend 16px all explicitly
+          set; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Tick marks are visible with good size (20px), though could be slightly
-          taller for better visibility at this canvas size
+        comment: Rug marks well-sized but opacity=0.5 reduces individual mark distinctness
+          in dense regions
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single color scheme with good contrast, colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, though the rug plot itself occupies a narrow
-          horizontal band with significant empty space above and below (appropriate
-          for rug plots but creates visual imbalance)
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Response Time (ms)" includes units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Single-hue CVD-safe brand green; adequate contrast on both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization; rug marks below zero line; generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.1), but no legend needed; however y-axis
-          grid lines are unnecessary for a rug plot and add visual noise
+        comment: Response Time (ms) with units; Density; title in correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds #FAF8F1/#1A1A17; all chrome
+          tokens theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Filled KDE area, theme-adaptive palette, annotation in renders elevate
+          above default; not publication-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis grid disabled, subtle RGBA x-grid, zero line anchor; asymmetric
+          spines (bottom only) is minor issue
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bimodal data with gap_region fulfills spec storytelling intent; annotation
+          in renders highlights key feature
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct rug plot with tick marks along axis
+        comment: Correct rug plot with tick marks below KDE companion
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Values correctly mapped to x-axis positions
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows clustering, gaps, and individual data points as specified
-      - id: SC-04
-        name: Data Range
+        comment: Semi-transparency, consistent tick height, positioned below KDE,
+          reveals clustering/gaps
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible within axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis values, Y-axis density; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed, showlegend=False correctly set
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "rug-basic · plotly · pyplots.ai"'
+        comment: Title exactly 'rug-basic · plotly · anyplot.ai'; legend labels accurate
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Excellent bimodal distribution showing clustering and gap; could
-          show overlapping points more distinctly
+        comment: Bimodal distribution shows clustering; deliberate gap; overlapping
+          marks; full spec coverage
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Response times in milliseconds is a realistic, comprehensible scenario
+        comment: Response times in ms is a real-world neutral computing scenario;
+          plausible bimodal pattern
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values 10-75ms are plausible for response times, though the gap region
-          with only 2 points feels slightly artificial
+        comment: 10-80ms range realistic for network/API response times; plausible
+          distribution parameters
     code_quality:
       score: 10
       max: 10
@@ -168,11 +182,12 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Flat structure: Imports -> Tokens -> Data -> KDE -> Figure -> Layout
+          -> Save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: np.random.seed(42) set
       - id: CQ-03
@@ -180,30 +195,47 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported
+        comment: os, numpy, plotly.graph_objects, scipy.stats — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no over-engineering; no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Plotly API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses go.Scatter with line-ns marker symbol creatively for rug effect,
-          but doesn't leverage Plotly's interactive hover well (hovertemplate is good
-          but basic); could use px.strip or combine with histogram/kde for richer
-          visualization
+        passed: true
+        comment: go.Figure() + add_trace(); fill='tozeroy'; custom hovertemplate;
+          write_html for interactive output
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: fill='tozeroy' and symbol='line-ns' are Plotly-specific; interactive
+          hover templates; could use add_vrect for gap region
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending

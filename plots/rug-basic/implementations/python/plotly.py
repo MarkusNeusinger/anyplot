@@ -1,59 +1,99 @@
-""" pyplots.ai
+""" anyplot.ai
 rug-basic: Basic Rug Plot
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-04-30
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
+from scipy import stats
 
 
-# Data - bimodal distribution to show clustering patterns and gaps
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"
+
+# Data — bimodal distribution to show clustering patterns and gaps
 np.random.seed(42)
 group1 = np.random.normal(loc=25, scale=5, size=80)
 group2 = np.random.normal(loc=55, scale=8, size=60)
-gap_region = np.array([38, 42])  # Few points in gap to show data sparsity
+gap_region = np.array([38, 42])
 values = np.concatenate([group1, group2, gap_region])
 
-# Create figure
+# KDE density curve
+x_kde = np.linspace(values.min() - 5, values.max() + 5, 400)
+kde = stats.gaussian_kde(values, bw_method="scott")
+density = kde(x_kde)
+rug_y = np.full_like(values, -density.max() * 0.06)
+
+# Figure
 fig = go.Figure()
 
-# Rug plot as scatter trace with vertical line markers at y=0
+# Filled KDE density curve
+fig.add_trace(
+    go.Scatter(
+        x=x_kde,
+        y=density,
+        mode="lines",
+        line=dict(color=BRAND, width=3),
+        fill="tozeroy",
+        fillcolor="rgba(0,158,115,0.15)",
+        name="Density (KDE)",
+        hovertemplate="Response Time: %{x:.1f} ms<br>Density: %{y:.4f}<extra></extra>",
+    )
+)
+
+# Rug ticks — individual observations as vertical marks below x-axis
 fig.add_trace(
     go.Scatter(
         x=values,
-        y=np.zeros_like(values),
+        y=rug_y,
         mode="markers",
-        marker={"symbol": "line-ns", "size": 20, "line": {"width": 2, "color": "#306998"}, "color": "#306998"},
-        opacity=0.6,
-        hovertemplate="Value: %{x:.2f}<extra></extra>",
-        showlegend=False,
+        marker=dict(symbol="line-ns", size=30, line=dict(width=2, color=BRAND), color=BRAND),
+        opacity=0.5,
+        name="Observations",
+        hovertemplate="Response Time: %{x:.2f} ms<extra></extra>",
     )
 )
 
 # Layout
 fig.update_layout(
-    title={"text": "rug-basic · plotly · pyplots.ai", "font": {"size": 48}, "x": 0.5, "xanchor": "center"},
-    xaxis={
-        "title": {"text": "Response Time (ms)", "font": {"size": 36}},
-        "tickfont": {"size": 28},
-        "showgrid": True,
-        "gridwidth": 1,
-        "gridcolor": "rgba(0,0,0,0.1)",
-        "zeroline": False,
-    },
-    yaxis={
-        "title": {"text": "", "font": {"size": 36}},
-        "tickfont": {"size": 28},
-        "showgrid": False,
-        "zeroline": False,
-        "showticklabels": False,
-        "range": [-0.5, 0.5],
-    },
-    template="plotly_white",
-    margin={"l": 100, "r": 100, "t": 150, "b": 100},
+    title=dict(text="rug-basic · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
+    xaxis=dict(
+        title=dict(text="Response Time (ms)", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
+        showgrid=True,
+        gridcolor=GRID,
+        gridwidth=1,
+        zeroline=False,
+        linecolor=INK_SOFT,
+        showline=True,
+    ),
+    yaxis=dict(
+        title=dict(text="Density", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
+        showgrid=False,
+        zeroline=True,
+        zerolinecolor=INK_SOFT,
+        zerolinewidth=1,
+        range=[-density.max() * 0.15, density.max() * 1.15],
+    ),
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font=dict(color=INK),
+    legend=dict(
+        bgcolor=ELEVATED_BG, bordercolor=INK_SOFT, borderwidth=1, font=dict(size=16, color=INK_SOFT), x=0.78, y=0.95
+    ),
+    margin=dict(l=100, r=80, t=120, b=100),
 )
 
-# Save as PNG and HTML
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
