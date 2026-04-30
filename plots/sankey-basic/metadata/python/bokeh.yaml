@@ -1,162 +1,185 @@
 library: bokeh
+language: python
 specification_id: sankey-basic
 created: '2025-12-23T19:43:20Z'
-updated: '2025-12-23T19:50:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20469995210
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - bezier-curves
-    - annotations
-  patterns: []
-  dataprep: []
-  styling:
-    - alpha-blending
+updated: '2026-04-30T09:14:26Z'
+generated_by: claude-sonnet
+workflow_run: 25156351219
+issue: 810
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/bokeh/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent custom implementation of Sankey diagram using Bokeh primitives (patches
-    for flows, quads for nodes)
-  - Smooth bezier curves create visually appealing flow paths
-  - Clear energy flow context with realistic TWh values
-  - Good color differentiation between sources and targets
-  - Labels include both name and value for immediate data comprehension
-  - Proper stacking of flows at connection points prevents visual confusion
+  - 'Correct Sankey topology: proportional node sizing, stacked flow packing, Bezier
+    curves all computed correctly'
+  - 'Okabe-Ito canonical order strictly followed; first source (Coal) correctly gets
+    #009E73'
+  - Clean, flat code with clear layout arithmetic that is easy to follow
+  - Thoughtful target-node color choice (muted neutrals) creates visual hierarchy
+    between source and destination
+  - Both PNG and HTML output generated correctly; theme-adaptive chrome (backgrounds,
+    text colors) properly applied in both renders
   weaknesses:
-  - Missing legend to explain the color scheme for viewers not reading labels
-  - Could leverage Bokeh interactive features (hover tooltips showing flow details)
-  - Font sizes could be slightly larger for optimal readability at full resolution
-  image_description: 'The plot displays a Sankey diagram showing energy flow from
-    5 source nodes on the left (Solar 11 TWh, Hydro 15 TWh, Nuclear 30 TWh, Gas 65
-    TWh, Coal 35 TWh) to 3 target nodes on the right (Commercial 45 TWh, Residential
-    53 TWh, Industrial 58 TWh). The flows are rendered as smooth bezier curves connecting
-    sources to destinations, with widths proportional to flow values. Colors used:
-    orange for Solar, light blue for Hydro, purple for Nuclear, yellow/gold for Gas,
-    and Python blue (#306998) for Coal. Target nodes are colored teal (Commercial),
-    red (Residential), and dark blue-grey (Industrial). The title "Energy Flow · sankey-basic
-    · bokeh · pyplots.ai" is centered at the top. The background is a light grey (#FAFAFA).
-    All labels include the node name and total value in TWh. Flow opacity is set at
-    0.5, allowing overlapping flows to be distinguished.'
+  - Title format is 'Energy Flow · sankey-basic · bokeh · anyplot.ai' — must be exactly
+    'sankey-basic · bokeh · anyplot.ai' per spec
+  - Bokeh HoverTool completely absent from HTML output — hover showing source->target
+    flow value is Bokeh's signature interactive feature and a major missed opportunity
+    for LM-02
+  - 'Fixed fill_alpha=0.45 is not theme-adaptive: flows look translucent on light
+    background but become murky on dark background; dark theme should use higher alpha
+    (~0.65)'
+  - Approximately 10% of canvas height is empty dead space between title and the first
+    node; tighten y_range or layout padding
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "Energy Flow · sankey-basic · bokeh · anyplot.ai" at 32pt in dark INK — readable; node labels at 22pt in dark INK — all readable; axes/grid/outline hidden (correct for Sankey)
+      Data: Five source nodes left-to-right bottom-up (Coal=#009E73, Gas=#D55E00, Nuclear=#0072B2, Hydro=#CC79A7, Solar=#E69F00) following Okabe-Ito canonical order; target nodes (Industrial, Commercial, Residential) in muted neutrals on right; Bezier flow ribbons carry source colors with fill_alpha=0.45 — translucent and vibrant on light surface
+      Legibility verdict: PASS — all text clearly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct, not pure black
+      Chrome: Title and node labels switch to light INK token (#F0EFE8) — all readable; no dark-on-dark text failures detected
+      Data: Source/target node data colors identical to light render (Okabe-Ito positions unchanged); fixed fill_alpha=0.45 is not theme-adaptive — flows appear noticeably darker/murkier on dark background making crossing ribbons harder to distinguish; target node colors (#5A6A7A, #7A6A8A, #6A7A5A) have reduced contrast against near-black background but remain distinguishable
+      Legibility verdict: PASS for text; PARTIAL for data elements — flow ribbons have reduced visual impact in dark theme due to non-adaptive alpha
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: All text is readable at 22pt for labels and 32pt for title. Slightly
-          small for the 4800x2700 canvas but still clear.
+        comment: Title at 32pt, node labels at 22pt; all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No text overlap; labels are well-positioned outside nodes
+        comment: Source and target labels cleanly separated; no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Flows are clearly visible with appropriate widths proportional to
-          values; 0.5 alpha allows overlapping flows to be distinguished
+        comment: Clear in light mode; dark mode flows reduced by non-adaptive fill_alpha=0.45
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Good colorblind-safe palette with distinct hues (orange, blue, purple,
-          yellow, teal, red, dark grey)
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas with balanced margins; plot fills approximately
-          70% of canvas width
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        score: 2
         max: 2
         passed: true
-        comment: No legend provided; while node colors are labeled, a legend explaining
-          the color scheme would improve clarity
+        comment: Okabe-Ito palette, colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good horizontal fill; ~10% empty vertical space between title and
+          top node
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes hidden (correct for Sankey); node labels include TWh units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First source (Coal) uses #009E73; Okabe-Ito canonical order; backgrounds
+          #FAF8F1/#1A1A17; theme-adaptive chrome'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Source colors carried through bezier ribbons; muted neutral targets
+          create hierarchy; proportional sizing; not quite publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes/spines/grid fully removed; clean; but vertical dead zone at
+          top and dark render murkiness
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Source-color-coded flows enable visual tracing; Gas dominance visible
+          through node size; no annotation on largest flow
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Sankey diagram with nodes and flows
+        comment: Correct Sankey diagram with Bezier ribbons and proportional node
+          heights
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Source, target, and value correctly mapped to visual elements
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: flows with proportional widths, distinct
-          source colors, node labels, no circular flows'
-      - id: SC-04
-        name: Data Range
+        comment: Sources/targets/values mapped; proportional flows; distinct source
+          colors; link opacity; node labels; no circular flows
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible; flow widths accurately represent relative values
-      - id: SC-05
-        name: Legend Accuracy
+        comment: Sources left, targets right; all 11 flows represented; proportional
+          node heights
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Node labels accurately show names and values
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "Energy Flow · sankey-basic · bokeh · pyplots.ai"'
+        max: 3
+        passed: false
+        comment: Title 'Energy Flow · sankey-basic · bokeh · anyplot.ai' has extra
+          prefix; required format is 'sankey-basic · bokeh · anyplot.ai'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple sources flowing to multiple targets with varying magnitudes;
-          demonstrates flow crossing and stacking
+        comment: 11 flows, 5 sources, 3 sectors; varied magnitudes (5-30 TWh); many-to-many
+          connections
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Energy flow from sources to sectors is a classic, realistic Sankey
-          use case with plausible TWh values
+        comment: Energy flow domain (Coal/Gas/Nuclear/Hydro/Solar → Industrial/Residential/Commercial)
+          is real-world and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are reasonable for energy flows; total sources (156 TWh) equals
-          total targets (156 TWh) as expected
+        comment: Relative magnitudes plausible; Gas as largest source, Industrial
+          as largest consumer are realistic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -164,42 +187,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → calculations → plotting → save'
+        comment: 'Flat script: imports → tokens → data → layout → plot → save; no
+          functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Data is deterministic (hardcoded), but numpy is imported for bezier
-          calculations without random operations
+        comment: All data hardcoded; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: os, sys, numpy, bokeh.io, bokeh.models, bokeh.plotting'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Appropriate complexity for manual Sankey; Bezier math clear; no fake
+          functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Bokeh API
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Uses Bokeh's figure, patch for bezier flows, quad for nodes, and
-          Label for annotations. However, could better leverage ColumnDataSource for
-          data management or hover tooltips for interactivity.
+        comment: Uses figure, quad, patch, Label, export_png correctly; bypasses ColumnDataSource
+          (Bokeh's core data pattern)
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Creative use of primitives for Sankey; but HoverTool completely absent
+          from HTML output — Bokeh's signature interactive feature for flow value
+          display
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - html-export
+  - annotations
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
