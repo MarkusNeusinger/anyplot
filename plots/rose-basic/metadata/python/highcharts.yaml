@@ -1,167 +1,189 @@
 library: highcharts
+language: python
 specification_id: rose-basic
 created: '2025-12-23T19:43:49Z'
-updated: '2025-12-23T19:53:37Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20469996960
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-30T07:30:05Z'
+generated_by: claude-sonnet
+workflow_run: 25152115281
+issue: 1003
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/rose-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/rose-basic/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - html-export
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/highcharts/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent use of Highcharts polar column configuration for rose chart
-  - Perfect title format and subtitle providing context
-  - Clean polygon gridlines enhance readability
-  - Good canvas utilization with 85% pane size
-  - Realistic monthly rainfall scenario ideal for demonstrating cyclical data
-  - Data labels on each segment aid value reading
-  - Proper inline JS loading for headless Chrome compatibility
+  - Value-proportional gradient encoding (light mint to brand green) is a sophisticated
+    design choice encoding both identity and intensity
+  - Perfect spec compliance — correct polar column layout, radial gridlines, radius-proportional-to-value,
+    12-month circular ordering at 12 o'clock
+  - Exemplary data quality — UK climate monthly rainfall with correct seasonal pattern
+    and factually accurate values (18-92mm)
+  - Fully theme-adaptive chrome with correct token usage; both light and dark renders
+    pass readability checks
+  - Correct use of highcharts-more.js for polar chart support and clean screenshot
+    approach
   weaknesses:
-  - startAngle of -15 degrees shifts January slightly off the 12 o'clock position
-    (spec suggests top for time data)
-  - Y-axis tick labels could include units (mm) for better clarity
-  - Could benefit from Highcharts-specific interactive features in the HTML version
-    (tooltip formatting)
-  image_description: 'The plot displays a polar column (rose) chart with 12 wedge-shaped
-    segments representing monthly rainfall data. The segments are arranged clockwise
-    starting from January at the top (12 o''clock position). Each wedge is filled
-    with Python Blue (#306998) color, with radius proportional to the rainfall value.
-    Data labels are displayed on each segment showing values: Jan (78→shown as 95
-    in label area), Dec (92), Nov (85), Oct (68), Sep (42), Aug (22), Jul (18), Jun
-    (25), May (38), Apr (45), Mar (65), Feb (52→shown as 78). The chart has a white
-    background, polygon-style radial gridlines, and includes the correct title format
-    "rose-basic · highcharts · pyplots.ai" with subtitle "Monthly Rainfall (mm)".'
+  - 'Radial y-axis label stack (22px) is slightly crowded — consider fewer tick marks
+    (tickAmount: 5) or larger font (26px) to reduce clutter in center-right'
+  - 'VQ-07: Custom hex gradient (#C8E8DE to #009E73) instead of standard approved
+    continuous colormap; consider using Highcharts colorAxis with minColor/maxColor'
+  - Minor data label crowding in small summer segments (Jun/Jul/Aug values 18, 22,
+    25) in tight wedges
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "rose-basic · highcharts · anyplot.ai" in bold dark (#1A1A17) text clearly readable. Subtitle "Monthly Rainfall (mm)" in INK_SOFT (#4A4A44) readable. Month labels (Jan-Dec) around circumference in 28px INK_SOFT, all readable. Radial y-axis labels at 22px in INK_SOFT are small but readable. Data value labels within segments at 26px are readable for outer segments, tight for inner small ones.
+      Data: 12-segment rose chart using value-proportional color gradient from light mint (#C8E8DE) for dry months to brand green (#009E73) for wettest months. Segment radii correctly represent rainfall values (18-92mm). Polygon gridlines visible but subtle.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light (#F0EFE8) text clearly readable. Subtitle and month labels in INK_SOFT (#B8B7B0) visible against dark surface. Radial axis labels in INK_SOFT readable. Data labels use INK_SOFT color which reads well on dark background. No dark-on-dark failures observed.
+      Data: Gradient colors identical to light render — mint-to-brand-green ramp unchanged as required. Only chrome elements (background, text, grid) have flipped to dark theme. Segments clearly distinguishable against near-black background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 24
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title and subtitle are readable; month labels and data values are
-          legible but could be slightly larger
+        comment: All font sizes explicitly set (title 48px, subtitle 32px, month labels
+          28px, data labels 26px, radial labels 22px); radial y-axis label stack borderline
+          small
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 4
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Minor crowding in radial y-axis label vertical stack; data labels
+          tight in small summer segments (Jun/Jul/Aug)
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Wedges are clearly visible; some smaller values (Jul 18, Aug 22)
-          create very small segments but still distinguishable
+        comment: Rose segments well-sized and clearly visible in both themes; gradient
+          distinct across all 12 wedges
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color, colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Chart fills canvas well, good proportions with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: Y-axis has "Rainfall (mm)" but no proper axis label with units visible
-          on the radial axis ticks
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle polygon gridlines, legend present and unobtrusive
+        comment: Monochromatic green gradient is colorblind-safe; no red-green dependency
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Rose chart fills ~65% of square canvas with 88% pane; well-centered;
+          slight extra whitespace at bottom
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Subtitle 'Monthly Rainfall (mm)' and radial labels '{value} mm' provide
+          units; title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: true
+        comment: 'Custom hex gradient (#C8E8DE to #009E73) anchors to brand green
+          but deviates from viridis/Greens guideline; theme chrome fully correct in
+          both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Value-proportional gradient is sophisticated; wet months stand out
+          in deep brand green, dry months recede in light mint; clean circular composition
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle polygon gridlines, borderColor set to PAGE_BG for clean segment
+          edges, legend correctly suppressed, theme-adaptive chrome throughout
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Gradient clearly communicates seasonal rainfall pattern; wet UK autumn/winter
+          vs dry summer immediately visible; color doubles as category identifier
+          and intensity encoder
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct rose/coxcomb chart using polar column
+        comment: Correct rose/nightingale chart using Highcharts polar column; radius
+          proportional to value
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories (months) on angular axis, values determine radius correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has radial gridlines, categorical labels, single color scheme as
-          per spec
-      - id: SC-04
-        name: Data Range
+        comment: 'Radial polygon gridlines present, equal-angle wedges, circular ordering
+          from 12 o''clock (startAngle: 0), consistent color scheme'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 12 months displayed with full value range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Months on angular axis, rainfall values determine segment radius;
+          all 12 months shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend shows "Rainfall" correctly
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "rose-basic · highcharts · pyplots.ai"'
+        comment: Title is 'rose-basic · highcharts · anyplot.ai' — exact format. Legend
+          correctly disabled for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows seasonal variation with winter high/summer low pattern; good
-          range of values from 18-92mm
+        comment: Full annual cycle with varied values 18-92mm; wet winter and dry
+          summer extremes both demonstrated
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Monthly rainfall in mm is a perfect real-world scenario for rose
-          charts
+        comment: UK temperate oceanic climate monthly rainfall — real, neutral, comprehensible
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values (18-92mm) are realistic for monthly rainfall; could show more
-          dramatic variation
+        comment: Monthly rainfall 18-92mm factually accurate for UK; seasonal pattern
+          geographically correct
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,42 +191,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → chart config → export'
+        comment: 'Clean linear flow: imports → tokens → data → color calc → chart
+          config → series → HTML → screenshot'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random generation)
+        comment: Deterministic hardcoded data; no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used — os, tempfile, time, urllib.request, pathlib, highcharts_core,
+          selenium
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic; gradient list comprehension with strict=True
+          zip is appropriate; no over-engineering
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current highcharts-core API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: 'Saves as plot.png (correct) but note: startAngle=-15 shifts Jan
-          slightly off 12 o''clock'
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly; time.sleep(5)
+          for rendering; highcharts-more.js inlined for polar support
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Correct highcharts_core API with container=''container'', HighchartsOptions,
+          ColumnSeries, pane config, polar: True, inline JS embedding'
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts polar chart capability with gridLineInterpolation="polygon",
-          but could leverage more Highcharts-specific features like tooltips or animations
-          in the HTML output
+        comment: Uses polar column chart with pane startAngle, per-point color via
+          data objects {y, color}, rich tooltip with headerFormat/pointFormat and
+          color swatch; polar chart not uniquely Highcharts
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - polar-projection
+  - hover-tooltips
+  - html-export
+  patterns: []
+  dataprep:
+  - normalization
+  styling:
+  - gradient-fill
+  - edge-highlighting

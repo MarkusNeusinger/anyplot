@@ -1,171 +1,177 @@
 library: plotnine
+language: python
 specification_id: rose-basic
 created: '2025-12-23T19:59:11Z'
-updated: '2025-12-23T20:02:22Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20470198156
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/rose-basic/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  - matrix-construction
-  dataprep: []
-  styling: []
+updated: '2026-04-30T07:32:55Z'
+generated_by: claude-sonnet
+workflow_run: 25151963204
+issue: 1003
+python_version: 3.13.13
+library_version: 0.15.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
 review:
   strengths:
-  - Excellent implementation of rose chart using plotnine polygon geometry approach
-  - Clean visual design with subtle gridlines and well-positioned month labels
-  - Correct radius-proportional encoding as specified (not area)
-  - Proper clockwise arrangement starting from January at 12 o'clock
-  - Effective blue-to-yellow color gradient based on rainfall values
-  - Good use of gaps between wedges for visual separation
-  - Realistic monthly rainfall data with meaningful seasonal variation
+  - Viridis colormap double-encodes rainfall via both radius and color, making the
+    seasonal pattern immediately readable
+  - 'Full spec compliance: all required rose-chart features present (gridlines, spokes,
+    circular ordering, 12-o-clock start)'
+  - Theme-adaptive chrome works correctly in both renders with no dark-on-dark or
+    light-on-light failures
+  - 'Perfect data and code quality: realistic monthly rainfall scenario, deterministic,
+    clean linear structure'
   weaknesses:
-  - Value labels (20, 40, 60, 80, 100) are positioned only on one spoke, making them
-    less visible
-  - Figure size is 12x12 at 300 DPI (3600x3600) which is acceptable but the spec prefers
-    16x9 for landscape or explicit 3600x3600 for square
-  - Could use plotnine built-in theme functions more extensively
-  image_description: The plot displays a rose chart (coxcomb diagram) showing monthly
-    rainfall data in millimeters. The chart features 12 wedge-shaped segments arranged
-    in a clockwise direction starting from January at the top (12 o'clock position).
-    Each wedge extends from the center with a radius proportional to the rainfall
-    value. The color scheme transitions from blue (lower values like March/April/May
-    around 48-55mm) through olive/green tones to yellow (higher values like November
-    at 95mm). Radial gridlines are visible as dashed circles at 20, 40, 60, 80, and
-    100mm intervals. Spoke lines separate the months. Month labels (Jan, Feb, etc.)
-    are positioned outside the chart in bold black text. Value labels (20, 40, 60,
-    80, 100) appear along the top spoke. The title "Monthly Rainfall (mm) · rose-basic
-    · plotnine · pyplots.ai" is centered at the top. The plot uses a square 1:1 aspect
-    ratio with a clean white background.
+  - 'Font sizes below recommended minimums: title 22pt (need >=24pt), month labels
+    14pt (need >=16pt), value labels 10pt (quite small at 3600px)'
+  - matplotlib color utilities used to compute viridis hex values; native scale_fill_cmap(cmap_name=viridis)
+    with continuous fill aesthetic would be more idiomatic plotnine
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 -- correct
+      Chrome: Title "Monthly Rainfall (mm) * rose-basic * plotnine * anyplot.ai" in dark ink, readable; month labels in bold dark text clearly positioned outside perimeter; radial value labels (20-100) visible near top-right spoke; all readable
+      Data: 12 wedges colored via viridis gradient (deep purple for low values ~48mm, through teal/green, to bright yellow-green for high values ~95mm); white gaps between wedges; dashed radial grid circles at alpha=0.15; spoke lines at alpha=0.12; annotations "Peak 95 mm" on Nov and "Min 48 mm" on Apr visible
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 -- correct
+      Chrome: Title and all text labels render in light colors (#F0EFE8 / #B8B7B0); no dark-on-dark failures observed; grid and spokes remain subtle
+      Data: Viridis colors identical to light render -- same purple-to-yellow-green gradient; both annotations visible with light text
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 5
+        max: 8
         passed: true
-        comment: Title and month labels are clearly readable, value labels slightly
-          small
+        comment: All sizes explicitly set; title 22pt below 24pt guideline, month
+          labels 14pt below 16pt guideline, value labels 10pt small
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Month labels evenly distributed around perimeter, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Wedges are well-sized and clearly visible with appropriate alpha
+        comment: All 12 wedges clearly visible with viridis gradient providing strong
+          differentiation
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue-to-yellow gradient is colorblind-friendly, though not using
-          a standard accessible palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of square canvas, plot is well-centered with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Title includes units "(mm)" - appropriate for rose chart without
-          traditional axes
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Viridis is perceptually uniform and CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 3600x3600 format; chart fills canvas well with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle and helpful, but legend is hidden (acceptable for
-          this single-series chart)
+        comment: Title includes units (mm), descriptive and informative
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis correctly used for value-encoded colors; backgrounds #FAF8F1/#1A1A17
+          correct; chrome theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: viridis double-encodes rainfall, clean circular form,
+          white wedge gaps, no axes/spines'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Dashed radial grid at alpha=0.15, spokes at alpha=0.12, legend suppressed,
+          axis elements blanked
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color gradient creates visual hierarchy; rendered peak/min annotations
+          emphasize seasonal story
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct rose/coxcomb chart implementation
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Radius correctly proportional to value (not area)
-      - id: SC-03
+        comment: Correct rose/Nightingale chart; equal-angle wedges, radius proportional
+          to value
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has radial gridlines, starts at 12 o'clock, clockwise arrangement;
-          small gaps between wedges add polish
-      - id: SC-04
-        name: Data Range
+        comment: Radial gridlines, spoke lines, circular ordering, 12-o-clock start
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 12 months visible with appropriate scale
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Monthly rainfall correctly drives segment radius; all 12 categories
+          shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A (single series, legend appropriately hidden)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "Monthly Rainfall (mm) · rose-basic · plotnine ·
-          pyplots.ai"'
+        comment: Title contains all required components; months labeled directly,
+          no legend needed
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation across months with clear seasonal patterns; could
-          benefit from more extreme contrasts
+        comment: Seasonal variation well represented; values span 48-95mm showing
+          clear pattern
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly rainfall for temperate climate is an excellent, real-world
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values (48-95mm) are realistic for monthly rainfall
+        comment: Monthly rainfall for temperate climate is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 48-95mm monthly totals plausible for temperate oceanic climate
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,42 +179,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → plot construction → save'
+        comment: 'Linear: tokens -> data -> geometry DataFrames -> plot -> save; no
+          functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses deterministic hardcoded data (no randomness)
+        comment: Deterministic hardcoded data; no random generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; sys.path fix commented; matplotlib color utilities
+          justified
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Geometry loops necessary for this chart type in plotnine; appropriate
+          complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as 'plot.png' but figure_size is 12x12 (should be 16x9 or 12x12
-          at dpi to achieve target resolution)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; current plotnine 0.15.3 API
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Uses plotnine's grammar of graphics with geom_polygon and layered
-          construction, but doesn't leverage coord_polar() since plotnine lacks it
-          - manual polygon construction is a workaround
+        comment: Correct ggplot grammar with layered geoms and theme; manual Cartesian
+          polygon approach bypasses polar support
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: geom_polygon for wedges and scale_fill_manual with computed colors;
+          somewhat distinctive but not deeply plotnine-specific
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome

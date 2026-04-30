@@ -1,165 +1,185 @@
 library: matplotlib
+language: python
 specification_id: rose-basic
 created: '2025-12-23T19:42:44Z'
-updated: '2025-12-23T19:47:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20469992582
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/rose-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - polar-projection
-  - manual-ticks
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-04-30T07:19:45Z'
+generated_by: claude-sonnet
+workflow_run: 25151596448
+issue: 1003
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 80
 review:
   strengths:
-  - Clean polar bar implementation with proper theta direction (clockwise from north)
-  - Good use of white edge lines to separate segments visually
-  - Appropriate canvas size (16x9 at 300dpi = 4800x2700)
-  - Realistic monthly rainfall data with clear seasonal pattern
-  - Title correctly follows the required format with units
+  - 'Perfect spec compliance (15/15): correct rose chart type, all required features,
+    title format correct'
+  - Realistic and neutral dataset (monthly rainfall) naturally demonstrates cyclical
+    seasonal patterns
+  - Clean 12-month label spacing at 30° intervals with no overlap
+  - Subtle dashed radial grid at low alpha does not compete with data
+  - Both light and dark renders display correctly with appropriate backgrounds and
+    readable text in all elements
   weaknesses:
-  - Radial tick labels overlap slightly with the Feb month label at the top-right
-  - No legend or explicit radial axis label explaining that radius = rainfall (mm)
-  - Data variation is moderate; more dramatic peaks/valleys would better showcase
-    the rose chart format
-  image_description: The plot displays a rose chart (polar bar chart) showing monthly
-    rainfall data in millimeters. The chart uses a blue color (#306998) for all 12
-    segments representing months from January to December. Months are labeled in bold
-    around the perimeter, starting from January at the top (12 o'clock position) and
-    progressing clockwise. The radial axis shows values from 0 to ~200mm with gridlines
-    at 25, 50, 75, 100, 125, 150, 175, and 200. The segment radii correspond to rainfall
-    values, with July showing the highest rainfall (~180mm) and February the lowest
-    (~72mm). The title reads "Monthly Rainfall (mm) · rose-basic · matplotlib · pyplots.ai"
-    at the top. The outer ring has a blue border matching the bar color.
+  - 'Code saves as plot.png instead of plot-{THEME}.png — pipeline critical: fix to
+    plt.savefig(f"plot-{THEME}.png")'
+  - 'Code uses color="#306998" (Python blue) instead of #009E73 (Okabe-Ito position
+    1, brand green)'
+  - 'No theme adaptation: ANYPLOT_THEME env var not read, no PAGE_BG/INK/INK_SOFT
+    tokens — dark render would fail in a fresh execution'
+  - Code title contains "pyplots.ai" instead of "anyplot.ai"
+  - 16:9 canvas is suboptimal for a circular chart — use figsize=(12,12) square so
+    the rose fills the frame
+  - Radial tick labels at 14pt; should be 16pt per style guide
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-like surface), not pure white
+      Chrome: Title "Monthly Rainfall (mm) · rose-basic · matplotlib · anyplot.ai" in bold dark text — clearly readable. Month labels (Jan–Dec) in bold dark text around the circumference — all readable. Radial tick values (50, 100, 150, 200 mm) in smaller dark text — readable.
+      Data: Twelve equal-angle wedges in brand green (#009E73 teal-green). Summer months (Jun–Aug) extend furthest from center. White bar edges visible between segments. Polar outer spine visible. Dashed radial gridlines at low alpha.
+      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-like surface), not pure black
+      Chrome: Title in light off-white text — clearly readable. Month labels in light text around circumference — all readable. Radial tick values in light text — readable. No dark-on-dark failures observed anywhere.
+      Data: Bar colors are identical to light render (same #009E73 brand green) — only chrome elements flipped. Separation between bars appears as dark gaps (background showing through).
+      Legibility verdict: PASS — all text clearly readable against dark background; data colors identical to light render confirming only chrome adaptation
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, month labels at 18pt bold, radial ticks at 14pt -
-          all clearly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No text overlap; month labels well-spaced around the perimeter
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Bars clearly visible with good sizing; white edges provide separation;
-          minor deduction as some smaller segments could be more distinct
+        comment: All text readable in both themes; radial tick labels at 14pt below
+          recommended 16pt
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 12 month labels cleanly spaced at 30 degree intervals, no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All bars visible; winter months produce small central wedges that
+          are tight but distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color scheme is colorblind-safe; good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space; slight deduction for radial tick labels
-          overlapping with "Feb" label position
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Title includes units "(mm)" which serves as the value description
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Single-series green, no CVD issues
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: 16:9 landscape for circular chart leaves large dead space on sides;
+          square format would use canvas far more effectively
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3), but no legend present (not strictly needed
-          for single-color rose chart, however the chart could benefit from labeling
-          what the radius represents)
+        comment: Title includes Monthly Rainfall (mm) with units; months labeled around
+          circumference
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Images show brand green #009E73 but code uses #306998 (Python blue)
+          — Okabe-Ito position 1 violation in source; backgrounds correct in both
+          renders'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Clean single-color approach is intentional but stays at default sophistication;
+          no typography refinement
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Dashed radial grid at low alpha; white bar edges; alpha=0.85 for
+          depth; no spine removal needed in polar context
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Seasonal rainfall peak (July) naturally visible; no additional emphasis
+          on peak segment to guide viewer
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct rose/coxcomb chart using polar bar plot
+        comment: 'Correct rose chart: equal-angle wedges, radius proportional to value,
+          polar bar implementation'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Months correctly mapped to angles, rainfall values to radius
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Equal-angle wedges, radius proportional to value, radial gridlines
-          present
-      - id: SC-04
-        name: Data Range
+        comment: Radial gridlines, 12 o'clock start, clockwise ordering, equal-angle
+          wedges all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 12 months visible, radial axis extends appropriately to 1.15x
-          max value
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Angles = months, radius = rainfall mm; all 12 categories displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed; single category with clear title
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "Monthly Rainfall (mm) · rose-basic · matplotlib
-          · pyplots.ai"'
+        comment: Images show correct title format with anyplot.ai; no legend appropriate
+          for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows seasonal variation pattern (summer peak, winter low); could
-          show more dramatic variation between adjacent months
+        comment: Shows cyclical 12-month pattern and seasonal amplitude; could include
+          value annotations on largest bar
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Monthly rainfall is a realistic and commonly used application for
-          rose charts; values are plausible for a temperate climate
+        comment: Monthly rainfall is canonical rose-chart use case; values 72-180mm
+          plausible for temperate climate
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values range from 72-180mm which is realistic; could benefit from
-          more dramatic range to better showcase the visualization
+        comment: 12 categories (optimal range per spec); values spread across useful
+          range showing clear seasonal variation
     code_quality:
       score: 9
       max: 10
@@ -169,34 +189,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Uses hardcoded deterministic data (no random seed needed), but lacks
-          np.random.seed() even though numpy is imported
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: Only matplotlib.pyplot and numpy, both used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API correctly
+        comment: Clean polar implementation, no fake interactivity
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
+        passed: false
+        comment: Saves as plot.png not plot-light.png/plot-dark.png; pipeline expects
+          theme-named output files
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 3
-      max: 5
-      items: []
+        comment: Correct use of subplot_kw projection polar, axes-level methods, set_theta_zero_location,
+          set_theta_direction
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Polar projection with clockwise theta and North origin are matplotlib-specific;
+          polar spine customization is a distinctive touch
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - manual-ticks
+  patterns:
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

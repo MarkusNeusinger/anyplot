@@ -1,170 +1,186 @@
 library: bokeh
+language: python
 specification_id: rose-basic
 created: '2025-12-23T19:43:12Z'
-updated: '2025-12-23T19:50:26Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20469994187
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/rose-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/rose-basic/bokeh/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - patches
-  - manual-ticks
-  patterns:
-  - data-generation
-  - columndatasource
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-04-30T07:26:13Z'
+generated_by: claude-sonnet
+workflow_run: 25151817338
+issue: 1003
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/bokeh/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent implementation of rose chart using Bokeh wedge glyph with correct angle
-    calculations
-  - Clean seasonal pattern visualization with meaningful color coding (blue for wet
-    months, yellow for dry)
-  - Well-proportioned layout with chart filling canvas appropriately
-  - Subtle gridlines (dashed, alpha 0.3) aid value estimation without visual clutter
-  - Proper start position at top (12 o clock) as recommended in spec for time data
+  - Alpha-based data encoding elegantly communicates rainfall intensity while preserving
+    a single cohesive color story
+  - 'Excellent data quality: realistic monthly rainfall values with full seasonal
+    variation, 15/15'
+  - 'Perfect code quality: clean, deterministic, idiomatic structure with no functions
+    or classes'
+  - Radial gridlines with dashed style at low alpha are aesthetically refined and
+    functional
+  - Theme-adaptive chrome correctly flips between light and dark renders with no dark-on-dark
+    failures
   weaknesses:
-  - Scale labels show percentages rather than actual rainfall values in mm which would
-    be more informative
-  - Month label for Dec appears slightly inside the wedge rather than outside like
-    other labels
-  image_description: The plot displays a rose chart (coxcomb/Nightingale diagram)
-    showing monthly rainfall data. The chart is circular with 12 wedges representing
-    each month (Jan-Dec) arranged clockwise starting from January at the top. The
-    wedge radii are proportional to rainfall values, with December and January showing
-    the largest petals (highest rainfall), while July shows the smallest (lowest rainfall).
-    Colors transition from Python Blue (#306998 and variants) for higher values to
-    Python Yellow (#FFD43B) for lower values (June, July, August visible in yellow).
-    Month labels are positioned around the outside. Concentric dashed gray circles
-    serve as gridlines at 25%, 50%, 75%, and 100% levels. The title "Monthly Rainfall
-    · rose-basic · bokeh · pyplots.ai" appears at the top. Scale labels (25%, 50%,
-    75%, 100%) are positioned on the right side. The overall layout is clean with
-    a white background.
+  - Scale labels at 15pt are below the 18pt minimum for pixel-based libraries — increase
+    to 18pt
+  - Non-standard title format 'Monthly Rainfall · rose-basic · bokeh · anyplot.ai'
+    instead of the required 'rose-basic · bokeh · anyplot.ai'
+  - Summer months produce very small petals leaving bottom canvas underutilized —
+    3600x3600 square canvas would better suit this symmetric polar layout
+  - 'Limited LM-02: no Bokeh-distinctive interactive features (HoverTool would add
+    genuine value)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "Monthly Rainfall · rose-basic · bokeh · anyplot.ai" in dark INK (#1A1A17) at 28pt, clearly readable; month labels at 20pt in dark INK, readable; scale labels at 15pt in INK_SOFT (#4A4A44), readable but below 18pt minimum
+      Data: 12 rose chart wedges in brand green #009E73 with alpha varying from ~0.35 (Jul, lowest rainfall) to ~1.0 (Jan, highest rainfall); dashed concentric gridlines at 22% alpha; radial dividers at 18% alpha; winter months (Nov-Feb) dominate visually
+      Legibility verdict: PASS (all text readable, though scale labels could be larger)
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct dark theme surface
+      Chrome: Title, month labels, and scale labels all render in light tone (INK = #F0EFE8 / INK_SOFT = #B8B7B0); no dark-on-dark failures; gridlines subtle on dark surface
+      Data: Green wedges identical to light render — same #009E73 base color with same alpha gradation; data colors are theme-invariant as required
+      Legibility verdict: PASS (all chrome flips correctly; no elements lost in the dark background)
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title, month labels, and scale labels are readable; title at 28pt,
-          labels at 18pt, scale at 14pt
+        comment: Title 28pt and month labels 20pt explicitly set; scale labels only
+          15pt (below 18pt minimum for pixel-based libs)
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements; month labels well-spaced around the
-          chart
+        comment: Jan label tight against large Jan wedge at top; no full overlaps
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Wedges are clearly visible with good alpha (0.8); white borders provide
-          good separation
+        comment: Wedges clearly visible across full alpha range; gridlines appropriately
+          subtle
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue-yellow color scheme is colorblind-safe; good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Chart fills canvas well, centered with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: No axis labels (N/A for rose chart, but spec mentions radial gridlines
-          - they exist but the scale uses percentage rather than actual rainfall values)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Dashed gridlines are subtle (alpha 0.3), no legend needed for single-category
-          data
+        comment: Single-hue with luminance variation; CVD-safe; no red-green conflict
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Chart centered but summer petals leave bottom third of landscape
+          canvas underutilized; scale labels float far right
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Scale labels include mm units; title descriptive; no traditional
+          axes needed
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Primary series #009E73; backgrounds #FAF8F1/#1A1A17; chrome tokens
+          flip correctly in both themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Alpha-based data encoding is elegant and intentional; single-color
+          depth creates professional polish above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Dashed concentric gridlines at 22% alpha, radial dividers at 18%
+          alpha, axes hidden; PAGE_BG line_color for clean wedge separation
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Alpha gradient directly encodes magnitude creating clear visual hierarchy;
+          seasonal story immediately legible
     spec_compliance:
-      score: 24
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct rose/coxcomb chart implementation using wedges
+        comment: Correct rose/Nightingale chart; equal-angle wedges with radius proportional
+          to value; starting from north
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories (months) correctly mapped to angles, values to radii
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Equal-angle wedges, radius proportional to value, radial gridlines,
-          circular arrangement
-      - id: SC-04
-        name: Data Range
+        comment: Radial gridlines, 12 monthly categories, consistent color scheme,
+          top start position all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 12 months visible, full range of values displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: true
-        comment: No explicit legend, color meaning could be clearer
-      - id: SC-06
-        name: Title Format
+        comment: Angular positions = months, radius = rainfall values; all 12 months
+          visible
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
+        max: 3
         passed: true
-        comment: 'Correct format: "Monthly Rainfall · rose-basic · bokeh · pyplots.ai"'
+        comment: Title includes required components but uses non-standard format 'Monthly
+          Rainfall · rose-basic · bokeh · anyplot.ai' instead of 'rose-basic · bokeh
+          · anyplot.ai'; no legend appropriate for single series
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows seasonal rainfall pattern with clear variation; demonstrates
-          high winter, low summer rainfall
+        comment: Full range from 90mm winter peak to 15mm summer trough; cyclical
+          pattern fully demonstrated
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly rainfall in mm is a realistic, comprehensible scenario for
-          a rose chart
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Rainfall values (15-90 mm) are realistic for temperate climate
+        comment: Monthly rainfall in mm is genuine, neutral, comprehensible; Mediterranean-type
+          climate is plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 15-90mm monthly range realistic; seasonal gradient consistent with
+          temperate climates
     code_quality:
       score: 10
       max: 10
@@ -174,40 +190,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → angles → plot → styling → save'
+        comment: 'Linear flow: imports, data, plot, save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: '`np.random.seed(42)` set (though data is actually deterministic)'
+        comment: Fully deterministic hardcoded data; no seed needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, bokeh.io, bokeh.models, bokeh.plotting'
+        comment: All imports used; os, sys, numpy, bokeh.* all needed
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current Bokeh API used
+        comment: Clean Pythonic code; sys.path manipulation is legitimate fix for
+          bokeh.py shadowing; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Bokeh API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, wedge glyph, and proper Bokeh figure configuration;
-          could leverage more interactive features but PNG output limits this
+        comment: Correct use of figure(), ColumnDataSource, p.wedge() glyph, export_png
+          + output_file + save pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Vectorized fill_alpha via ColumnDataSource is Bokeh-characteristic,
+          but no HoverTool, callbacks, or other truly Bokeh-distinctive features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - columndatasource
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - minimal-chrome
