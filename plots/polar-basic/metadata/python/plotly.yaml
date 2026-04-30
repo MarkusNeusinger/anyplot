@@ -1,175 +1,177 @@
 library: plotly
+language: python
 specification_id: polar-basic
 created: '2025-12-23T19:43:18Z'
-updated: '2025-12-23T19:48:03Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20469990529
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/polar-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/polar-basic/plotly/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - polar-projection
-    - html-export
-    - layer-composition
-  patterns:
-    - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-04-30T00:52:09Z'
+generated_by: claude-sonnet
+workflow_run: 25140915972
+issue: 800
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/plotly/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent use of realistic hourly temperature data showing clear cyclical pattern
-    (warm midday, cool night)
-  - Proper polar chart implementation with clockwise direction and top-starting position
-    for time-based data
-  - Clean code structure following KISS principles with reproducible random seed
-  - Good canvas utilization with the polar chart filling the space well
-  - Correct title format and appropriate radial axis label with units
+  - Perfect spec compliance and data quality — hourly temperature cycle with realistic
+    values is an ideal polar-basic example
+  - All font sizes explicitly set for high-DPI canvas; theme-adaptive chrome correctly
+    applied throughout both renders
+  - fill=toself with subtle opacity elegantly shows the polar area shape; clockwise
+    time convention with 0h at top is natural
+  - Hover template with customdata hour labels leverages Plotly interactivity well
   weaknesses:
-  - The baseline reference circle at r=0 adds unnecessary visual noise and code complexity
-  - Grid opacity (0.35) is slightly high; could be more subtle at 0.25-0.3
-  - Could leverage more Plotly-specific interactive features like custom hover templates
-  image_description: The plot displays a polar chart showing 24-hour temperature data.
-    The chart has a circular layout with hour labels (0h through 22h) positioned around
-    the perimeter at 2-hour intervals, starting from the top (0h/midnight). The radial
-    axis shows temperature values from 0 to 25°C with the label "Temperature (°C)"
-    in the center. Data points are shown as medium-sized blue markers (#306998) connected
-    by lines, with a light blue semi-transparent fill (toself). The pattern shows
-    warmer temperatures during midday hours (10h-14h reaching ~20-25°C) and cooler
-    temperatures at night (~5-10°C around 22h-4h). The title "polar-basic · plotly
-    · pyplots.ai" appears at the top. The background is white with subtle gray grid
-    lines.
+  - Landscape canvas (1600x900) wastes significant corner space for a circular polar
+    plot — switch to square format
+  - Fill opacity (15%) nearly disappears in dark theme — use theme-adaptive fillcolor
+    opacity
+  - Peak annotation visible in rendered images is absent from current code — re-add
+    using fig.add_annotation if intentional
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "polar-basic · plotly · anyplot.ai" in dark ink, clearly readable. Radial axis title "Temperature (°C)" in dark ink. Angular tick labels (0h–22h) in muted gray INK_SOFT. Radial tick values (0°C–30°C) in muted gray — all readable.
+      Data: Single series in brand green #009E73. Filled polygon (fill="toself") with 15% opacity mint-green fill. Markers size 18 with PAGE_BG edge rings. Line width 3. Peak annotation "Peak 25.4°C / 12:00" at noon position with larger marker. Grid lines subtle rgba(26,26,23,0.12).
+      Legibility verdict: PASS — all text readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light #F0EFE8, clearly readable. Axis labels and ticks in muted light #B8B7B0 — all readable. No dark-on-dark failures detected.
+      Data: Brand green #009E73 identical to light render — data colors unchanged. Fill (15% opacity) nearly invisible against dark surface — line and markers still clearly define the shape. "Peak 25.4°C / 12:00" annotation visible.
+      Legibility verdict: PASS — all text readable; minor: fill barely visible in dark theme (fillcolor opacity too low for dark surface)
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: 'Title, axis labels, and tick labels are all readable. Font sizes
-          are appropriate for the canvas. Minor: tick font could be slightly larger.'
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements. Hour labels are well-spaced around
-          the perimeter.
+        comment: Title 28px, axis labels 22px, ticks 18px — all explicitly set; both
+          themes readable
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Angular labels well-spaced at 2h intervals, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Markers are visible and appropriately sized (16px). Lines connect
-          clearly. Fill provides good area visualization. Slightly larger markers
-          would improve visibility.
+        comment: Markers and line clear; fill at 15% opacity nearly invisible in dark
+          theme
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color (#306998) with good contrast against white background.
-          No colorblind issues.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Polar chart fills the canvas well. Balanced margins. Good use of
-          space.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Radial axis labeled "Temperature (°C)" with proper units.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Single brand-green series, colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Landscape 1600x900 for circular polar chart wastes significant corner
+          space — square canvas preferred
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is visible but slightly too prominent (alpha 0.35 is higher
-          than recommended 0.2-0.4 range ceiling). Legend is hidden which is appropriate
-          for single series, but the baseline trace at r=0 is unnecessary and adds
-          visual noise.
+        comment: Temperature (°C) with units on radial axis
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17, theme-adaptive
+          chrome throughout'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured with correct palette and marker edge highlights,
+          but single-color polar fill is not publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid opacity 0.12, legend hidden for single series, generous
+          margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Peak annotation in images creates focal point but is absent from
+          current code; fill shape and clockwise convention help
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct polar chart type using Scatterpolar.
+        comment: Correct go.Scatterpolar polar chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Theta (angular position) correctly mapped to hours, radius mapped
-          to temperature.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: radial gridlines visible, angular labels
-          at standard intervals, starting angle at top (90°) for time-based data,
-          appropriate radial scale.'
-      - id: SC-04
-        name: Data Range
+        comment: Theta in degrees, radius, visible radial gridlines, angular labels
+          at 2h intervals, clockwise time direction
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data. Range set to 0 to max(radius)*1.1.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Hours to angular, temperature to radius; correct clockwise with 0h
+          at top
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend appropriately hidden for single series; trace name is descriptive.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "polar-basic · plotly · pyplots.ai"'
+        comment: Title format correct; no legend appropriate for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows cyclical temperature pattern well with day/night variation.
-          Could benefit from showing both the cyclical nature AND some anomalies or
-          multiple data series to better demonstrate polar chart capabilities.
+        comment: Full 24-hour cycle with realistic daily temperature variation
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Hourly temperature readings is an excellent, realistic application.
-          The sinusoidal pattern with noise mimics real daily temperature cycles.
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature values (5-25°C) are realistic for a typical day's temperature
-          range.
+        comment: Hourly temperature readings — real-world, neutral, scientifically
+          plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0–30°C range is physically correct for a daily temperature cycle
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -177,43 +179,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save. No functions
-          or classes.'
+        comment: 'Clean linear flow: tokens → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducible noise.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used.
+        comment: Only os, numpy, plotly.graph_objects — all used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic dict-style layout config, appropriate complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Plotly API.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png AND plot.html (both correct), but the baseline
-          trace at r=0 is unnecessary code.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses Scatterpolar correctly with fill="toself" for area visualization.
-          Saves both PNG and HTML for interactivity. However, could leverage more
-          Plotly-specific features like hover customization or animation.
+        comment: Correct go.Scatterpolar with fill, customdata, tickmode=array — idiomatic
+          but straightforward
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: fill=toself on polar, customdata hover template, interactive HTML
+          export — clearly Plotly-specific
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - hover-tooltips
+  - html-export
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
