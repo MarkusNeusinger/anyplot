@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 stem-basic: Basic Stem Plot
-Library: matplotlib | Python 3.13
-Quality: 94/100 | Updated: 2026-04-30
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-04-30
 """
 
 import os
