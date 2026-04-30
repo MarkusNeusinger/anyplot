@@ -1,7 +1,7 @@
 """ anyplot.ai
 rug-basic: Basic Rug Plot
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 78/100 | Updated: 2026-04-30
+Quality: 81/100 | Updated: 2026-04-30
 """
 
 import os
