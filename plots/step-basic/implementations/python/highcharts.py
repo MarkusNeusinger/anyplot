@@ -1,7 +1,7 @@
 """ anyplot.ai
 step-basic: Basic Step Plot
 Library: highcharts unknown | Python 3.13.13
-Quality: 84/100 | Updated: 2026-04-30
+Quality: 86/100 | Updated: 2026-04-30
 """
 
 import os
