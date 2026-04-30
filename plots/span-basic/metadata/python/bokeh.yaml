@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: span-basic
 created: '2025-12-23T20:45:45Z'
-updated: '2026-04-30T10:52:06Z'
+updated: '2026-04-30T11:02:54Z'
 generated_by: claude-sonnet
 workflow_run: 25160965972
 issue: 980
@@ -12,38 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/span-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/bokeh/plot-dark.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - Correct use of Bokeh BoxAnnotation for vertical and horizontal span regions
-  - Perfect spec compliance — both span types with correct alpha, labels, and underlying
-    data
-  - Full theme-adaptive chrome with all tokens applied correctly in both renders
-  - 100% Data Quality — realistic revenue scenario, seed set, both directions shown
-  - Perfect code quality — KISS structure, clean imports, reproducible output
+  - 'Perfect spec compliance: both vertical (Q4 peak season) and horizontal (target
+    range) span types demonstrated with correct alpha levels and Okabe-Ito span colors'
+  - 'Idiomatic Bokeh usage: BoxAnnotation (the canonical Bokeh span model), HoverTool,
+    Label annotations, and HTML output alongside PNG — shows genuine library mastery'
+  - Realistic business scenario (monthly revenue over 2 years) with plausible values,
+    seed-set reproducibility, and flat KISS code structure
+  - 'Theme-adaptive chrome thoroughly applied: all six token variables used correctly,
+    backgrounds correct (#FAF8F1 / #1A1A17), y-only grid at alpha 0.10, outline removed'
   weaknesses:
-  - Plot outline border retained (outline_line_color=INK_SOFT) instead of being removed
-    — violates L-shaped spine convention and reduces visual refinement (DE-02)
-  - No x-grid removal — both x and y grids are shown; y-only grid preferred for line
-    charts (DE-02)
-  - Scatter markers size=16 are slightly small for the 4800x2700 canvas — increase
-    to 20-22 for better visibility (VQ-03)
-  - HoverTool not used — Bokeh generates HTML too, and interactive tooltips would
-    showcase a distinctive Bokeh capability (LM-02)
-  - No spine removal on individual axes — top/right axis lines could be hidden for
-    a more polished look (DE-01, DE-02)
+  - 'Span label contrast in dark mode: ''Q4 Peak Season'' uses solid #0072B2 text
+    against the dark-blue tinted span background (near-black + 25% #0072B2 blend),
+    resulting in reduced contrast; ''Target Range'' uses #E69F00 orange text on the
+    golden-brown horizontal span background — both readable but below ideal'
+  - Scatter markers (size=20) are slightly small for a 4800x2700 canvas; bumping to
+    28-32 would improve visibility at full resolution
+  - Horizontal span (y=120–140) covers ~65% of the vertical data range, creating a
+    large muddy golden area in dark mode that competes with the line chart; reducing
+    span alpha to 0.15 or narrowing the range would improve clarity
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — correct theme surface.
-      Chrome: Title "span-basic · bokeh · anyplot.ai" in dark ink, large and prominent. Axis labels "Month" and "Revenue (thousands $)" in dark ink. Tick labels in muted dark gray (INK_SOFT). Legend box with warm elevated background, "Monthly Revenue" label in INK_SOFT. All chrome readable against light background.
-      Data: Green line (#009E73, BRAND) with small scatter markers tracing 24 months of revenue (100–145 range). Blue vertical span (months 10–12) labeled "Q4 Peak Season" in matching blue. Orange/golden horizontal span (120–140) labeled "Target Range" in amber. Both spans semi-transparent, underlying data visible. Subtle gray grid lines at 10% alpha.
-      Legibility verdict: PASS — all text readable, no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white. PASS
+      Chrome: Title "span-basic · bokeh · anyplot.ai" in dark ink at top-left, fully readable. X-axis label "Month" and Y-axis label "Revenue (thousands $)" in dark ink, readable. Tick labels in INK_SOFT (#4A4A44), readable. Legend "Monthly Revenue" in top-left box with styled border. All chrome text clearly legible against light background.
+      Data: Line in #009E73 (brand green) with small scatter markers connecting 24 monthly data points. Vertical BoxAnnotation in #0072B2 (Okabe-Ito blue) at months 10-12 with "Q4 Peak Season" label in blue. Large horizontal BoxAnnotation in #E69F00 (Okabe-Ito orange) from y=120 to y=140 with "Target Range" label in darker orange (#B8720B). Semi-transparent fills (alpha 0.2-0.25) keep data visible through spans. Y-only grid at very low alpha.
+      Legibility verdict: PASS — all chrome and data labels readable; minor note that horizontal span covers large portion of upper chart.
 
     Dark render (plot-dark.png):
-      Background: Near-black, consistent with #1A1A17 — correct dark theme surface.
-      Chrome: Title in light/white ink, clearly readable against near-black background. Axis labels in light ink. Tick labels in muted light gray (INK_SOFT dark variant #B8B7B0). Legend has dark elevated box (#242420), label readable. No dark-on-dark failures detected.
-      Data: Same green line (#009E73) — data colors identical to light render. Blue vertical span appears as deep blue against dark background. Orange horizontal span appears dark amber/brown (E69F00 at alpha=0.2 on dark surface). "Target Range" label in orange still distinguishable. "Q4 Peak Season" label in blue text visible.
-      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark issues.
+      Background: Warm near-black (#1A1A17) — correct, not pure black. PASS
+      Chrome: Title in light ink (#F0EFE8), axis labels in light ink, tick labels in #B8B7B0 — all clearly readable against dark background. No dark-on-dark chrome failures.
+      Data: Line in identical #009E73 (same as light — PASS). Vertical span is dark teal (near-black + 25% #0072B2 blend). Horizontal span is dark golden-brown (near-black + 20% #E69F00 blend), creating a large muted-gold band across the upper half of the chart. "Q4 Peak Season" label in solid #0072B2 against dark teal span background — readable but contrast below ideal. "Target Range" label in #E69F00 against golden-brown span — reduced contrast (orange text on orange-tinted surface).
+      Legibility verdict: PASS overall, but span label contrast is suboptimal in dark mode (no critical dark-on-dark failure, but both span labels have reduced contrast against their colored span backgrounds).
   criteria_checklist:
     visual_quality:
       score: 27
@@ -51,81 +52,80 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 48pt, axis 36pt, ticks 28pt,
-          legend 28pt). Readable in both themes. Minor: title-to-label size ratio
-          slightly compressed.'
+        comment: 'All font sizes explicitly set (title 48pt, axes 36pt, ticks 28pt,
+          legend/labels 28pt). Minor contrast issue: ''Target Range'' orange label
+          on orange-tinted span background and ''Q4 Peak Season'' blue label on dark-blue
+          span background both readable but below ideal in dark mode.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Span labels positioned clearly within
-          their respective regions.
+        comment: No overlapping text elements; span labels, axis labels, and tick
+          labels all clear.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Line clearly visible. Scatter markers (size=16) are slightly small
-          for a 4800x2700 canvas — appear as small dots on thumbnails.
+        comment: Line (width=4) and spans are well-proportioned. Scatter markers (size=20)
+          slightly small for 4800px canvas.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors throughout — CVD-safe. No red-green only distinctions.
+        comment: Okabe-Ito palette used throughout, CVD-safe, adequate contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization. Plot area fills ~60-70% of canvas. Balanced
-          margins.
+        comment: Good canvas utilization, spans fill the chart area appropriately,
+          no cut-off content.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct. Y-axis has units (thousands $). X-axis 'Month'
-          is descriptive.
+        comment: Y-axis 'Revenue (thousands $)' with units, X-axis 'Month' descriptive.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series uses #009E73. Span colors from Okabe-Ito. Background
-          #FAF8F1 light / #1A1A17 dark. All chrome theme-correct in both renders.'
+        comment: 'Primary data series #009E73 (brand). Span fills use Okabe-Ito #0072B2
+          and #E69F00. Backgrounds #FAF8F1 (light) and #1A1A17 (dark). Both renders
+          theme-correct.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured default. Intentional Okabe-Ito span colors with matching
-          labels. But plot border retained, no spine removal, design doesn't transcend
-          library defaults.
+        passed: true
+        comment: Thoughtful Okabe-Ito colors for span fills, span labels add context,
+          clearly above library defaults. Not publication-ready but well above generic.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle grid (10% alpha) is good. But outline_line_color=INK_SOFT
-          retains the box border around plot. Both x and y grids active; y-only preferred
-          for line charts. No spine removal.
+        passed: true
+        comment: Y-only grid at 0.10 alpha, no outline box, L-shaped spines, styled
+          legend. Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear story: revenue trend with Q4 peak season and target range
-          highlighted. Span labels create focal points and visual hierarchy. Viewer
-          immediately sees the key regions.'
+        comment: 'Two span types create clear narrative: Q4 peak season (vertical)
+          + target revenue range (horizontal). Visual hierarchy guides viewer through
+          the story.'
     spec_compliance:
       score: 15
       max: 15
@@ -135,29 +135,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct span/highlighted region plot using Bokeh BoxAnnotation. Both
-          vertical and horizontal spans present.
+        comment: Correct span plot with both vertical and horizontal span types.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill (alpha 0.2-0.25), both span directions, underlying
-          data visible, span labels included, edge lines present.
+        comment: Semi-transparent fills (alpha 0.2-0.25), optional labels present,
+          optional edge lines present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Month, Y=Revenue correctly assigned. Vertical span on x-axis range,
-          horizontal span on y-axis range.
+        comment: X=Month, Y=Revenue correctly mapped; spans correctly placed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'span-basic · bokeh · anyplot.ai' exactly correct. Legend label
-          'Monthly Revenue' appropriate.
+        comment: Title 'span-basic · bokeh · anyplot.ai' correct format. Legend 'Monthly
+          Revenue' correct.
     data_quality:
       score: 15
       max: 15
@@ -167,23 +165,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both span directions (vertical for time periods, horizontal
-          for value thresholds), underlying time series data, span labels — all spec
-          features demonstrated.
+        comment: Both vertical span (time period) and horizontal span (value range)
+          demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly revenue business scenario, Q4 peak season, target revenue
-          range. Real-world, neutral, comprehensible.
+        comment: Monthly revenue scenario, Q4 peak season and target range — neutral
+          business context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue 100-145K over 24 months with upward trend and seasonality
-          is realistic. Target range 120-140K within actual data range.
+        comment: Revenue 99-145K over 24 months with seasonal trend and growth. Plausible.
     code_quality:
       score: 10
       max: 10
@@ -193,8 +189,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'No functions or classes. Linear: imports -> tokens -> data -> figure
-          -> spans -> labels -> chrome -> save.'
+        comment: 'Flat: imports → data → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -206,50 +201,45 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, numpy, bokeh.io (export_png, output_file,
-          save), bokeh.models (BoxAnnotation, ColumnDataSource, Label), bokeh.plotting
-          (figure).'
+        comment: 'All imports used: os, numpy, bokeh.io, bokeh.models, bokeh.plotting.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. No over-engineering, no fake interactivity. Section
-          comments aid readability.
+        comment: Clean, Pythonic, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current Bokeh
-          API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Bokeh API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ColumnDataSource, figure(), BoxAnnotation, HoverTool, Label, export_png
+          + output_file + save — expert idiomatic Bokeh usage.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, BoxAnnotation (canonical Bokeh span model),
-          Label for annotations, and proper export/save trio. Good idiomatic Bokeh
-          patterns.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: false
-        comment: BoxAnnotation is distinctly Bokeh and HTML export is used. However,
-          HoverTool (Bokeh's signature interactive feature for showing data values
-          on hover) is not leveraged on the line/scatter, missing an opportunity to
-          showcase what makes Bokeh unique.
-  verdict: REJECTED
+        comment: BoxAnnotation (Bokeh-specific span model), HoverTool with custom
+          tooltips, Label annotations, dual HTML+PNG output — distinctive Bokeh features
+          leveraged well.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - data-generation
   - columndatasource
