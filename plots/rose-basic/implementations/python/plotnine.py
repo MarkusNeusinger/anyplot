@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 rose-basic: Basic Rose Chart
-Library: plotnine | Python 3.13
-Quality: pending | Updated: 2026-04-30
+Library: plotnine 0.15.3 | Python 3.13.13
+Quality: 80/100 | Updated: 2026-04-30
 """
 
 import math
