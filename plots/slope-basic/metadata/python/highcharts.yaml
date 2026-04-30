@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: slope-basic
 created: '2025-12-23T20:45:59Z'
-updated: '2026-04-30T17:05:27Z'
+updated: '2026-04-30T17:21:45Z'
 generated_by: claude-sonnet
 workflow_run: 25177758525
 issue: 981
@@ -15,119 +15,116 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/slope-bas
 quality_score: 75
 review:
   strengths:
-  - Correct slopegraph with intentional green/orange color coding by direction creating
-    visual hierarchy
-  - Per-point data label positioning (left at Q1, right at Q4) is idiomatic Highcharts
-  - Realistic neutral product sales dataset with mix of increases, decreases, and
-    rank changes
-  - Fully deterministic data and clean KISS structure
+  - Correct slopegraph implementation with lines connecting Q1 to Q4 for all entities
+  - Labeled endpoints on both sides provide clear entity identification without a
+    legend
+  - Direction-coded coloring (increase vs decrease) aids data storytelling
+  - Realistic neutral product sales scenario with good feature coverage (both rising
+    and falling trajectories)
+  - Clean KISS code structure with idiomatic Highcharts-core API usage
   weaknesses:
-  - 'Critical: title uses pyplots.ai instead of anyplot.ai'
-  - 'Critical: colors #306998 (Python Blue) and #FFD43B (Python Yellow) are non-Okabe-Ito
-    and non-compliant'
-  - 'Critical: no ANYPLOT_THEME handling — backgroundColor hardcoded to #ffffff, no
-    INK/PAGE_BG tokens, dark mode would fail on regeneration'
-  - 'Critical: output saved to plot.png/plot.html not plot-{THEME}.png/plot-{THEME}.html'
-  - LineSeries imported from wrong module (series.area instead of series.line)
-  - Y-axis min=0 with data starting at 45 wastes bottom 25% of canvas
-  - Right-side endpoint labels cluster near Product G:145/D:140 and A:110/F:105 with
-    near-overlap risk
+  - 'Colors #306998 (Python Blue) and #FFD43B (Python Yellow) are not Okabe-Ito; must
+    use #009E73 for increase and #D55E00 for decrease'
+  - No ANYPLOT_THEME environment variable reading — no theme adaptation at all
+  - 'Background hardcoded to pure white #ffffff instead of theme-adaptive #FAF8F1/#1A1A17'
+  - Output saved as plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html
+  - Title string contains pyplots.ai instead of anyplot.ai
+  - Some data label crowding on the left side where values cluster in 60-120 range
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white approximately #FAF8F1 — correct theme surface
-      Chrome: Title "slope-basic · highcharts · anyplot.ai" bold dark text, readable; subtitle "Product Sales: Q1 vs Q4 (thousands)" readable; y-axis label "Sales (thousands)" readable; Q1/Q4 x-axis labels readable; y-axis tick numbers readable
-      Data: Eight slope lines connecting Q1 and Q4 values; green (#009E73-ish) for increasing products, orange-vermillion (#D55E00-ish) for decreasing products; circular markers at endpoints; data labels "Product X: value" aligned outward; clear crossing lines showing rank changes
-      Layout: Y-axis 0-160, data 45-150 — bottom 25% wasted space; right-side labels cluster (G:145/D:140 and A:110/F:105 nearly overlap)
-      Legibility verdict: PASS — all text readable against light background; NOTE: images appear to be from a different code version than what is in the repo (code has pyplots.ai brand and #306998/#FFD43B colors, not Okabe-Ito)
+      Background: Warm off-white (approximately #FAF8F1)
+      Chrome: Title "slope-basic · highcharts · anyplot.ai" bold and readable; subtitle readable; Y-axis "Sales (thousands)" visible; X-axis "Q1"/"Q4" labels large and bold
+      Data: Teal-green lines for increasing products, orange lines for decreasing products; large circle markers (radius 16); data labels at both endpoints show product name and value
+      Legibility verdict: PASS (minor crowding in left-side labels for products clustered in 60-120 range)
 
     Dark render (plot-dark.png):
-      Background: Dark near-black approximately #1A1A17 — correct dark theme surface
-      Chrome: Title, subtitle, axis labels, tick labels, and endpoint data labels all appear in light-colored text (cream/white) clearly readable against dark background; no dark-on-dark failures observed
-      Data: Colors are identical to light render — same green for increases, same orange-vermillion for decreases; data series colors do not change between themes as required
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures
-      NOTE: Both themes appear correct in images, but current code has no ANYPLOT_THEME handling — code would produce identical white-background output for both theme runs if regenerated
+      Background: Dark near-black (approximately #1A1A17)
+      Chrome: Title, subtitle, axis labels, data labels all appear in light-colored text (white/light gray); clearly readable against dark surface; no dark-on-dark failures observed
+      Data: Colors are identical to light render — teal-green for increasing, orange for decreasing; only chrome flipped
+      Legibility verdict: PASS
+
+    CRITICAL NOTE: The current code (Attempt 2) hardcodes backgroundColor "#ffffff", uses Python Blue (#306998) and Python Yellow (#FFD43B) instead of Okabe-Ito, has no ANYPLOT_THEME reading, and saves output as plot.png/plot.html. The images in plot_images/ appear to be from a prior code version — the rendered title shows "anyplot.ai" but current code has "pyplots.ai". All theme and palette issues are flagged as code-level failures.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 21
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set (64px title, 36px axis, 28px ticks/labels);
-          readable in both renders. -1: title has no color token, would be dark-on-dark
-          if regenerated from current code'
+        comment: Font sizes explicitly set (title 64px, subtitle 42px, axis labels
+          36px, data labels 28px); all readable but data labels slightly small at
+          4800px canvas
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: 'Right-side endpoint labels cluster: Product G:145 and D:140 (5-unit
-          gap), A:110 and F:105 (5-unit gap) — nearly overlapping'
+        comment: Multiple data labels crowded on left side where products cluster
+          in 60-120 range
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines (6px) and markers (radius 16) clearly visible and well-sized
-          for 4800x2700 canvas
+        comment: Lines thick (6px), markers large (radius 16), colors clearly distinguish
+          direction
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Images show CVD-safe green/orange Okabe-Ito pair; colorblind-safe
+        comment: Two-color direction coding avoids red-green issue; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Bottom ~25% wasted space (axis min=0, all data >=45); otherwise good
-          canvas utilization
+        comment: Generous margins set, chart uses canvas appropriately; some wasted
+          space on sides
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Sales (thousands) on y-axis; Q1/Q4 on x-axis; informative subtitle
+        comment: Y-axis has unit (thousands), X-axis uses descriptive Q1/Q4 time point
+          labels
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'Code uses #306998 (Python Blue, explicitly non-compliant) and #FFD43B
-          (Python Yellow). backgroundColor hardcoded to #ffffff. No ANYPLOT_THEME
-          handling. Any regeneration would be non-compliant.'
+        comment: 'Code uses #306998 (Python Blue) and #FFD43B (Python Yellow), not
+          Okabe-Ito; background hardcoded to pure #ffffff; no ANYPLOT_THEME reading'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Intentional color coding by direction (increase=green, decrease=orange)
-          is a deliberate design choice. No legend box. Otherwise somewhat generic
-          Highcharts defaults.
+        comment: Direction-coded color scheme is a good design choice; overall at
+          well-configured-default level
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Disabled legend, endpoint data labels instead of legend box, subtle
-          dashed grid, minimal spines. Good refinement.
+        comment: Generous margins and clean layout; dashed gridlines acceptable; no
+          spine removal
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Green=growth, orange=decline creates immediate visual hierarchy.
-          Rank changes visible through line crossings.
+        comment: Color coding by direction plus labeled endpoints create clear before/after
+          narrative
     spec_compliance:
-      score: 12
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -135,32 +132,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct slopegraph with two time points, entities as connecting lines,
-          emphasizing direction and magnitude
+        comment: Correct slopegraph connecting Q1 to Q4 values with lines
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Labels at both endpoints, color coding by direction, labeled axes
-          with time point names. Missing: no explanation of color meaning.'
+        comment: Labels at both endpoints, color coding by direction, vertical axes
+          labeled Q1/Q4, 8 products in 5-15 range
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Q1 and Q4 on x-axis, sales values on y-axis, entities as connecting
-          lines. Correct.
+        comment: Time points on X-axis, values on Y-axis, lines connect entity start/end
+          values
       - id: SC-04
         name: Title & Legend
         score: 1
         max: 3
         passed: false
-        comment: Code title is 'slope-basic · highcharts · pyplots.ai' — wrong brand
-          (should be anyplot.ai). Images show correct title from a different code
-          version.
+        comment: Code has 'pyplots.ai' instead of 'anyplot.ai' in title string; legend
+          disabled (appropriate for labeled endpoints)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -168,76 +163,76 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Eight products with mix of increases and decreases; rank changes
-          visible; demonstrates full slopegraph behavior
+        comment: Shows both increasing and decreasing trajectories; good coverage
+          of slope chart features
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Product sales Q1 vs Q4 is a real, neutral business scenario
+        comment: Product sales Q1 vs Q4 is credible business scenario; entity labels
+          Product A-H slightly generic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales in thousands, range 45-150, realistic business figures
+        comment: Sales values 45-150 thousand plausible for product portfolio
     code_quality:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: 'Mostly flat: imports -> data -> chart config -> series loop -> HTML
-          -> screenshot. Loop is appropriate.'
+        comment: 'Clean linear structure: imports -> data -> chart config -> series
+          -> export'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic (hardcoded data, no randomness)
+        comment: Data fully hardcoded; no randomness
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: LineSeries imported from highcharts_core.options.series.area (wrong
-          module; should be .series.line). Missing import os.
+        passed: true
+        comment: Only used imports present
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Logic is clean but has significant correctness issues: wrong branding,
-          wrong colors, no theme handling'
+        passed: true
+        comment: Iteration over products for series creation is clean; no fake UI
+          elements
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves to plot.png and plot.html instead of plot-{THEME}.png and plot-{THEME}.html.
-          Does not read ANYPLOT_THEME.
+        comment: Saves plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html;
+          no ANYPLOT_THEME reading
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct use of Chart, HighchartsOptions, LineSeries, data labels,
-          plot_options, selenium screenshot. Misses theme-adaptive config patterns.
+        comment: Correct use of Chart, HighchartsOptions, LineSeries; follows recommended
+          highcharts-core patterns
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Per-point data label customization (align left/right at start/end,
-          custom format) is Highcharts-specific and well-applied
+        comment: 'Per-endpoint data label alignment (align: right/left with x offsets)
+          is Highcharts-specific; inline JS export via Selenium is library-characteristic'
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -246,6 +241,7 @@ impl_tags:
   - html-export
   - annotations
   patterns:
+  - data-generation
   - iteration-over-groups
   dataprep: []
   styling: []
