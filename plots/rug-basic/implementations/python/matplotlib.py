@@ -1,49 +1,69 @@
-""" pyplots.ai
+"""anyplot.ai
 rug-basic: Basic Rug Plot
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: matplotlib | Python 3.13
+Quality: pending | Created: 2026-04-30
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.collections import EventCollection
 
 
-# Data - trimodal distribution to show clustering patterns and gaps
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+BRAND = "#009E73"  # Okabe-Ito position 1
+
+# Data - trimodal response times with outliers to show clustering, gaps, and extremes
 np.random.seed(42)
-values = np.concatenate(
+core_values = np.concatenate(
     [
-        np.random.normal(25, 4, 50),  # Tight cluster around 25
-        np.random.normal(55, 7, 35),  # Wider cluster around 55
+        np.random.normal(25, 4, 50),  # Tight cluster around 25 ms
+        np.random.normal(55, 7, 35),  # Wider cluster around 55 ms
         np.random.normal(75, 3, 15),  # Small cluster at high end
     ]
 )
+outliers = np.array([5.2, 7.8, 95.3, 98.6])  # Extreme outliers at both ends
+values = np.concatenate([core_values, outliers])
 
-# Create plot (4800x2700 px at 300 dpi = 16x9 inches)
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Rug plot - vertical tick marks along x-axis showing every data point
-# Each tick shows the exact position of one observation
-ax.vlines(values, ymin=0, ymax=0.7, color="#306998", alpha=0.7, linewidth=3)
+# Rug plot using EventCollection — idiomatic matplotlib for 1D event distributions
+events = EventCollection(
+    values, orientation="horizontal", lineoffset=0.35, linelength=0.7, linewidth=2.5, color=BRAND, alpha=0.7
+)
+ax.add_collection(events)
 
-# Set axis limits - keep plot in lower portion of canvas
-ax.set_xlim(5, 90)
+ax.set_xlim(-2, 107)
 ax.set_ylim(0, 1)
 
-# Hide y-axis since rug plots focus on x-distribution only
+# Hide y-axis — rug plots focus on the x-distribution only
 ax.set_yticks([])
 ax.spines["left"].set_visible(False)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
+ax.spines["bottom"].set_color(INK_SOFT)
 
-# Labels and styling
-ax.set_xlabel("Measurement Value", fontsize=20)
-ax.set_title("rug-basic · matplotlib · pyplots.ai", fontsize=24, pad=20)
-ax.tick_params(axis="x", labelsize=16)
+# Cluster annotations (keep strength from previous version, theme-adaptive)
+ax.text(25, 0.88, "Dense cluster\n(n=50)", ha="center", fontsize=16, color=INK_SOFT)
+ax.text(55, 0.88, "Wider spread\n(n=35)", ha="center", fontsize=16, color=INK_SOFT)
+ax.text(75, 0.88, "Small group\n(n=15)", ha="center", fontsize=16, color=INK_SOFT)
 
-# Add text annotations above clusters to explain the data
-ax.text(25, 0.85, "Dense cluster\n(n=50)", ha="center", fontsize=16, color="#306998")
-ax.text(55, 0.85, "Wider spread\n(n=35)", ha="center", fontsize=16, color="#306998")
-ax.text(75, 0.85, "Small group\n(n=15)", ha="center", fontsize=16, color="#306998")
+# Outlier callouts at both extremes
+ax.text(6.5, 0.60, "outliers", ha="center", fontsize=14, color=INK_MUTED, style="italic")
+ax.text(96.9, 0.60, "outliers", ha="center", fontsize=14, color=INK_MUTED, style="italic")
+
+# Labels and title
+ax.set_xlabel("Response Time (ms)", fontsize=20, color=INK)
+ax.set_title("rug-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
+ax.tick_params(axis="x", labelsize=16, colors=INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
