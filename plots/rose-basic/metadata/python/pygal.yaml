@@ -1,35 +1,245 @@
 library: pygal
+language: python
 specification_id: rose-basic
 created: '2025-12-23T19:43:33Z'
-updated: '2025-12-23T20:15:09Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20469995744
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-30T07:25:56Z'
+generated_by: claude-sonnet
+workflow_run: 25152039315
+issue: 1003
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/rose-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/rose-basic/pygal/plot.html
-quality_score: 58
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rose-basic/python/pygal/plot-dark.html
+quality_score: 80
+review:
+  strengths:
+  - Seasonal groupings (Winter, Spring, Summer, Fall) create effective data storytelling
+    and immediately convey the cyclical Pacific Northwest rainfall pattern
+  - Full theme adaptation in both renders — no dark-on-dark or light-on-light failures;
+    all chrome correctly flips while data colors remain constant
+  - Code is clean, deterministic, and correctly follows pygal idioms; sys.path workaround
+    is handled and documented
+  - Both PNG and HTML outputs generated as required for an interactive library
+  - Radial value labels include mm units, providing clear quantitative reference without
+    an additional axis label
+  weaknesses:
+  - pygal.Radar renders connected polygon outlines between spokes rather than discrete
+    equal-angle wedge segments — structurally different from a rose/Nightingale chart
+    which should look like individual petals
+  - Summer months (Jun-Aug, values 20-50 mm) collapse close to the center, making
+    those segments difficult to read visually
+  - Legend positioned at bottom with limited padding from chart boundary; for a radial
+    chart a side legend or embedded labels would read better
+  - Implementation file contains a single chart.add call but rendered images show
+    four seasonal series — verify images correspond to committed code
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "rose-basic · pygal · anyplot.ai" in dark ink at top — readable. Month labels (Jan–Dec) around perimeter in dark text — readable. Radial value labels ("0.0 mm", "40.0 mm", "80.0 mm", "120.0 mm", "160.0 mm") visible inside chart along vertical spoke — readable but slightly crowded at inner rings. Legend at bottom with 4 entries in dark text — readable.
+      Data: Four seasonal polygons — Winter (Dec–Feb) in #009E73 teal dominant in upper half; Spring (Mar–May) in #D55E00 orange on left; Summer (Jun–Aug) in #0072B2 blue very small near center; Fall (Sep–Nov) in #CC79A7 reddish-purple on right. First series is #009E73. All data colors are Okabe-Ito.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light text — readable. Month labels in light gray — readable. Radial value labels in lighter tone — visible. Legend text is light — readable. Grid spokes and concentric rings are faint light lines against dark background. No dark-on-dark failures observed.
+      Data: Colors identical to light render — all four Okabe-Ito colors unchanged. Polygon shapes and proportions unchanged between themes. Summer polygon barely visible but present.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (72/52/44/36); all labels readable in both
+          themes; inner radial ring value labels slightly crowded at smallest rings
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No collisions; May label slightly rotated but readable; legend organized
+          in two columns
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Four seasonal polygons visible; Summer (Jun-Aug, 20-50mm) collapses
+          near center but still distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette CVD-safe; four distinct hues with adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square 3600x3600 appropriate for polar chart; legend at bottom consumes
+          vertical space slightly reducing chart area
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; radial value labels include mm unit
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; Okabe-Ito order followed; backgrounds #FAF8F1/#1A1A17
+          correct; data colors identical between themes'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Seasonal groupings show design intent; 0.75 opacity adds depth; custom
+          Okabe-Ito palette applied; largely generic pygal radar defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean layout with adequate margins; outer radar frame and concentric
+          gridlines are standard defaults with minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Seasonal grouping creates clear Pacific Northwest rainfall narrative;
+          Winter dominance immediately apparent; cyclical pattern reads naturally
+    spec_compliance:
+      score: 12
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 3
+        max: 5
+        passed: false
+        comment: pygal.Radar is closest available approximation; not a true rose/coxcomb
+          chart — radar polygon differs fundamentally from discrete wedge segments
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: false
+        comment: Circular arrangement, radius proportional to value, radial gridlines
+          at 40mm intervals; missing discrete wedge segments
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Months on angular axis, rainfall determines radial extent, all 12
+          months shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: rose-basic · pygal · anyplot.ai format correct; legend labels match
+          seasonal groupings
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Cyclical annual pattern clear; seasonal groupings show all aspects;
+          individual month identity slightly obscured by connected polygon vs discrete
+          wedge
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Pacific Northwest monthly rainfall (20-155mm) realistic, plausible,
+          and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Range 0-170mm sensible for rainfall domain; values representative
+          of actual Pacific Northwest precipitation
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; clean top-level script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded static data; fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Only used imports: os, sys, pygal, pygal.style.Style'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; sys.path workaround necessary and documented
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper pygal.Radar with Style object; theme tokens applied through
+          foreground/foreground_strong/foreground_subtle; fill=True, show_dots=False,
+          range, legend_at_bottom are correct radar params
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Interactive HTML export (pygal key differentiator) generated alongside
+          PNG; limited use of additional pygal-specific capabilities
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - Excellent data choice with realistic Pacific Northwest rainfall pattern showing
-    clear seasonal cyclicality
-  - Code is clean, well-commented, and explains the radar-vs-rose limitation honestly
-  - Good font sizing for the 3600×3600 canvas
-  - Proper title format following pyplots conventions
-  - Effective use of pygal styling system with custom colors and font sizes
-  - Transparent fill (opacity=0.75) allows gridlines to remain visible
-  weaknesses:
-  - Radar chart is fundamentally different from rose chart (connected polygon vs discrete
-    wedges) - this is a library limitation
-  - Legend placement in bottom-left corner is disconnected from the chart with excessive
-    whitespace
-  - Month labels could be more prominently sized for 3600×3600 canvas
+  styling:
+  - alpha-blending
