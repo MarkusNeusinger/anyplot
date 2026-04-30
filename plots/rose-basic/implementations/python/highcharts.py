@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 rose-basic: Basic Rose Chart
 Library: highcharts unknown | Python 3.13.13
 Quality: 85/100 | Updated: 2026-04-30
@@ -26,20 +26,34 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 BRAND = "#009E73"  # Okabe-Ito position 1
 
-# Data - Monthly rainfall in mm (showing natural 12-month cycle)
+# Data - Monthly rainfall in mm (UK-like temperate oceanic climate)
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 rainfall = [78, 52, 65, 45, 38, 25, 18, 22, 42, 68, 85, 92]
+
+# Value-proportional color gradient: light mint (low) → brand green (peak)
+# Encodes rainfall intensity visually — wet months appear darker and more saturated
+_lo = (200, 232, 222)  # #C8E8DE light mint base
+_hi = (0, 158, 115)  # #009E73 brand green
+_mn, _mx = min(rainfall), max(rainfall)
+colors = [
+    "#{:02X}{:02X}{:02X}".format(
+        int(_lo[0] + (v - _mn) / (_mx - _mn) * (_hi[0] - _lo[0])),
+        int(_lo[1] + (v - _mn) / (_mx - _mn) * (_hi[1] - _lo[1])),
+        int(_lo[2] + (v - _mn) / (_mx - _mn) * (_hi[2] - _lo[2])),
+    )
+    for v in rainfall
+]
 
 # Create chart with polar/rose configuration
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration for polar column (rose chart)
+# Square canvas — optimal geometry for a circular rose chart
 chart.options.chart = {
     "polar": True,
     "type": "column",
-    "width": 4800,
-    "height": 2700,
+    "width": 3600,
+    "height": 3600,
     "backgroundColor": PAGE_BG,
     "style": {"color": INK},
 }
@@ -62,7 +76,7 @@ chart.options.x_axis = {
     "gridLineColor": GRID,
 }
 
-# Y-axis (radial - values extend from center)
+# Y-axis (radial — values extend from center)
 chart.options.y_axis = {
     "min": 0,
     "gridLineInterpolation": "polygon",
@@ -72,8 +86,8 @@ chart.options.y_axis = {
     "gridLineColor": GRID,
 }
 
-# Pane configuration - startAngle 0 places Jan at 12 o'clock
-chart.options.pane = {"size": "85%", "startAngle": 0}
+# Pane — startAngle 0 places Jan at 12 o'clock; larger pane fills square canvas
+chart.options.pane = {"size": "88%", "startAngle": 0}
 
 # Plot options for the rose/polar column
 chart.options.plot_options = {
@@ -82,37 +96,31 @@ chart.options.plot_options = {
         "dataLabels": {
             "enabled": True,
             "format": "{y}",
-            "style": {"fontSize": "20px", "fontWeight": "normal", "color": INK_SOFT},
+            "style": {"fontSize": "26px", "fontWeight": "normal", "color": INK_SOFT},
         }
     },
 }
 
-# Tooltip with mm units
+# Rich tooltip using Highcharts pointFormat — highlights the per-point color swatch
 chart.options.tooltip = {
-    "valueSuffix": " mm",
+    "headerFormat": "<span style='font-size:24px'><b>{point.key}</b></span><br/>",
+    "pointFormat": "<span style='color:{point.color}'>●</span> Rainfall: <b>{point.y} mm</b>",
     "backgroundColor": ELEVATED_BG,
     "style": {"color": INK, "fontSize": "22px"},
     "borderColor": INK_SOFT,
 }
 
-# Legend configuration
-chart.options.legend = {
-    "enabled": True,
-    "itemStyle": {"fontSize": "28px", "color": INK_SOFT},
-    "backgroundColor": ELEVATED_BG,
-    "borderColor": INK_SOFT,
-    "borderWidth": 1,
-}
+# Disable legend — redundant for a single-series chart
+chart.options.legend = {"enabled": False}
 
-# Create series using Okabe-Ito brand color
+# Series with per-point value-proportional colors (colorByPoint via data objects)
 series = ColumnSeries()
 series.name = "Rainfall"
-series.data = rainfall
-series.color = BRAND
+series.data = [{"y": v, "color": c} for v, c in zip(rainfall, colors, strict=True)]
 
 chart.add_series(series)
 
-# Download Highcharts JS and Highcharts More (for polar charts)
+# Download Highcharts JS and Highcharts More (required for polar charts)
 highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts.js"
 highcharts_more_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts-more.js"
 
@@ -132,7 +140,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_more_js}</script>
 </head>
 <body style="margin:0; background:{PAGE_BG};">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+    <div id="container" style="width: 3600px; height: 3600px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
@@ -151,7 +159,7 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--window-size=3600,3600")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
