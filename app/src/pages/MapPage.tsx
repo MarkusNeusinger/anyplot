@@ -15,6 +15,7 @@ import { specPath } from '../utils/paths';
 import { colors, fontSize, typography } from '../theme';
 import {
   buildKNNLinks,
+  categoryValueCounts,
   computeIDF,
   DEFAULT_CATEGORY_WEIGHT,
   ensureNodeTier,
@@ -23,12 +24,11 @@ import {
   nodeAspectRatio,
   pickBestLoadedTier,
   pickTier,
-  plotTypeCounts,
   preloadImages,
-  primaryPlotType,
+  primaryCategoryValue,
   selectMapThumbUrl,
   TAG_CATEGORIES,
-  topPlotTypes,
+  topCategoryValues,
   type MapLink,
   type MapNode,
   type ResolutionTier,
@@ -160,6 +160,22 @@ export function MapPage() {
     return () => obs.disconnect();
   }, []);
 
+  // The category that drives the legend + node border colors: whichever
+  // currently has the highest weight (plot_type wins on ties because it's
+  // the first entry of TAG_CATEGORIES and we use strictly-greater compare).
+  // Falls back to plot_type when all weights are 0.
+  const activeCategory: TagCategory = useMemo(() => {
+    let maxWeight = -Infinity;
+    let active: TagCategory = 'plot_type';
+    for (const c of TAG_CATEGORIES) {
+      if (weights[c] > maxWeight) {
+        maxWeight = weights[c];
+        active = c;
+      }
+    }
+    return maxWeight > 0 ? active : 'plot_type';
+  }, [weights]);
+
   // 3. derive graph data from specs/theme (pure — no setState in effect)
   const graphData = useMemo<{
     nodes: MapNode[];
@@ -169,15 +185,15 @@ export function MapPage() {
   }>(() => {
     if (!specs) return { nodes: [], links: [], topTypes: [], typeCounts: new Map() };
     const idf = computeIDF(specs);
-    const topTypes = topPlotTypes(specs, CLUSTER_COLORS.length);
-    const typeCounts = plotTypeCounts(specs);
+    const topTypes = topCategoryValues(specs, activeCategory, CLUSTER_COLORS.length);
+    const typeCounts = categoryValueCounts(specs, activeCategory);
     const nodes: MapNode[] = specs.map(s => {
-      const pt = primaryPlotType(s);
+      const v = primaryCategoryValue(s, activeCategory);
       return {
         id: s.id,
         title: s.title,
         tags: flattenTags(s),
-        colorBucket: topTypes.includes(pt) ? pt : null,
+        colorBucket: topTypes.includes(v) ? v : null,
         thumbUrl: selectMapThumbUrl(s, isDark),
         imgs: new Map(),
         pendingTiers: new Set(),
@@ -185,7 +201,7 @@ export function MapPage() {
     });
     const links = buildKNNLinks(specs, idf, KNN_K, KNN_MIN_SIM, weights);
     return { nodes, links, topTypes, typeCounts };
-  }, [specs, isDark, weights]);
+  }, [specs, isDark, weights, activeCategory]);
 
   // Eager-load the 400-tier thumbnails so something paints fast. Higher tiers
   // are fetched lazily from nodeCanvasObject when the user zooms in.
@@ -275,10 +291,12 @@ export function MapPage() {
           )}
         </Box>
 
-        {/* Legend: one row per top-N plot type with its cluster color and
-            spec count. Hovering a row highlights that cluster on the canvas
-            (matching nodes stay opaque, others dim) so the spatial shape of
-            the cluster pops out even when nodes are scattered. */}
+        {/* Legend: one row per top-N value of the highest-weighted tag
+            category. Caption shows which category is active so it's obvious
+            why the buckets just changed when a slider moves. Hovering a row
+            highlights that cluster on the canvas (matching nodes stay opaque,
+            others dim) so the spatial shape of the cluster pops out even
+            when nodes are scattered. */}
         {graphData.topTypes.length > 0 && (
           <Box
             sx={{
@@ -294,6 +312,7 @@ export function MapPage() {
               color: 'var(--ink-soft)',
             }}
           >
+            <Box sx={{ opacity: 0.6, mb: 0.25 }}>{activeCategory}</Box>
             {graphData.topTypes.map((t, i) => {
               const color = CLUSTER_COLORS[i % CLUSTER_COLORS.length];
               const count = graphData.typeCounts.get(t) ?? 0;

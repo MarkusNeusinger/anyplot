@@ -282,42 +282,77 @@ export function pickBestLoadedTier(
   return null;
 }
 
+/** Tag categories that come from specification.yaml (vs. impl-level metadata). */
+export const SPEC_LEVEL_CATEGORIES: readonly TagCategory[] = [
+  'plot_type',
+  'features',
+  'data_type',
+  'domain',
+] as const;
+
 /**
- * Pick a spec's primary plot type. We use the first entry of the spec-level
- * `plot_type` tag list — that's the canonical type the spec is filed under.
- * Specs without any plot_type fall into a synthetic "other" cluster.
+ * Pick a spec's primary value for a given tag category — the first entry of
+ * the relevant list (spec.tags[category] for spec-level categories,
+ * spec.impl_tags[category] for impl-level). Falls back to "other" when the
+ * spec has no tag in that category at all.
  */
+export function primaryCategoryValue(spec: SpecMapItem, category: TagCategory): string {
+  const dict = (SPEC_LEVEL_CATEGORIES as readonly string[]).includes(category)
+    ? spec.tags
+    : spec.impl_tags;
+  return dict?.[category]?.[0] ?? 'other';
+}
+
+/** Convenience wrapper: a spec's primary plot_type. */
 export function primaryPlotType(spec: SpecMapItem): string {
-  return spec.tags?.plot_type?.[0] ?? 'other';
+  return primaryCategoryValue(spec, 'plot_type');
 }
 
 /**
- * Count specs by their primary plot_type (excluding the synthetic `other`
- * bucket). Used by the legend to display per-cluster member counts.
+ * Count specs by their primary value for a given tag category (excluding
+ * the synthetic `other` bucket). Used by the legend to display per-cluster
+ * member counts.
  */
-export function plotTypeCounts(specs: SpecMapItem[]): Map<string, number> {
+export function categoryValueCounts(
+  specs: SpecMapItem[],
+  category: TagCategory
+): Map<string, number> {
   const counts = new Map<string, number>();
   for (const s of specs) {
-    const pt = primaryPlotType(s);
-    if (pt === 'other') continue;
-    counts.set(pt, (counts.get(pt) ?? 0) + 1);
+    const v = primaryCategoryValue(s, category);
+    if (v === 'other') continue;
+    counts.set(v, (counts.get(v) ?? 0) + 1);
   }
   return counts;
 }
 
+/** Convenience wrapper: per-plot_type spec counts. */
+export function plotTypeCounts(specs: SpecMapItem[]): Map<string, number> {
+  return categoryValueCounts(specs, 'plot_type');
+}
+
 /**
- * Return the top-N most frequent primary plot types in the corpus, sorted by
- * count descending (alphabetic name as tiebreaker for determinism). Used to
- * decide which buckets earn a distinct color border in the map.
+ * Return the top-N most frequent primary values in the given category, sorted
+ * by count descending (alphabetic name as tiebreaker for determinism). Used
+ * to decide which buckets earn a distinct color border in the map.
  *
- * Excludes the synthetic `other` bucket (which only appears when a spec has
- * no plot_type tag at all) so it never wastes a color slot.
+ * Excludes the synthetic `other` bucket (specs missing the category entirely)
+ * so it never wastes a color slot.
  */
-export function topPlotTypes(specs: SpecMapItem[], n: number): string[] {
-  return Array.from(plotTypeCounts(specs).entries())
+export function topCategoryValues(
+  specs: SpecMapItem[],
+  category: TagCategory,
+  n: number
+): string[] {
+  return Array.from(categoryValueCounts(specs, category).entries())
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, n)
-    .map(([t]) => t);
+    .map(([v]) => v);
+}
+
+/** Convenience wrapper: top-N plot_types by spec count. */
+export function topPlotTypes(specs: SpecMapItem[], n: number): string[] {
+  return topCategoryValues(specs, 'plot_type', n);
 }
 
 /**
