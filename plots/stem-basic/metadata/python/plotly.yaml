@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: stem-basic
 created: '2025-12-23T20:45:47Z'
-updated: '2026-04-30T14:57:56Z'
+updated: '2026-04-30T15:11:16Z'
 generated_by: claude-sonnet
 workflow_run: 25171946708
 issue: 972
@@ -12,51 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/plotly/plot-dark.html
-quality_score: 84
+quality_score: 90
 review:
   strengths:
-  - 'Perfect spec compliance: correct stem plot with baseline at y=0, thin vertical
-    stems, and clearly visible markers'
-  - 'Excellent data quality: damped oscillation signal is a realistic, neutral signal-processing
-    scenario with both positive and negative amplitudes'
-  - 'Full theme adaptation: PAGE_BG, INK, INK_SOFT, GRID all correctly set for both
-    light and dark renders with no dark-on-dark issues'
-  - 'Correct Okabe-Ito palette: single series uses #009E73 throughout, white marker
-    edges add clear definition against both backgrounds'
-  - 'Text legibility: font sizes explicitly set (title=42, axis=36, ticks=28) and
-    readable at 4800x2700 in both themes'
-  - 'Interactive features: hovertemplate with formatted amplitude readout and hoverinfo=''skip''
-    on non-data traces — idiomatic Plotly usage'
-  - 'Output: both plot-{THEME}.png and plot-{THEME}.html produced correctly'
+  - 'Perfect theme adaptation: all chrome tokens (INK, INK_SOFT, GRID, PAGE_BG) correctly
+    flip between light and dark with no readability failures in either render'
+  - 'Excellent spec compliance: stems, baseline, markers, and plot type exactly match
+    specification requirements'
+  - Strong data storytelling through envelope curves and peak annotation — the signal's
+    damped character is immediately apparent to the viewer
+  - Font sizes are explicitly and generously set for 4800x2700 rendering (title 42px,
+    axes 36px, ticks 28px); all text is clear at full resolution
   weaknesses:
-  - 'DE-01 (4/8): Design is clean and correctly configured but relies on well-configured
-    defaults rather than distinctive aesthetic choices — no typographic weight variation,
-    no color hierarchy, no design flourish beyond the basics'
-  - 'DE-02 (3/6): Grid opacity is 0.20 instead of the style-guide-mandated 0.10, making
-    the grid more prominent than ideal; grid on both axes where y-axis-only would
-    be more refined for a stem plot; top/right axis line removal not applied (plotly
-    equivalent: showline=False on top/right)'
-  - 'DE-03 (2/6): Plot displays data without visual hierarchy or storytelling — no
-    emphasis on the dominant first peak, no envelope curve hint, no annotation guiding
-    the viewer''s eye'
-  - 'CQ-04 (1/2): The loop adding 30 individual Go.Scatter traces for stems is verbose
-    and creates unnecessary figure complexity; a single trace using None separators
-    (extend([xi, xi, None], [0, yi, None])) would be more elegant'
-  - 'LM-01 (3/5): Loop-of-traces for stems is a known workaround but not the most
-    idiomatic Plotly approach — fig.add_shape() or a multi-segment scatter with None
-    breaks would be cleaner'
+  - 'GRID opacity is hardcoded at 0.20 for both themes; style guide recommends 0.10
+    — fix to: GRID = ''rgba(26,26,23,0.10)'' if THEME == ''light'' else ''rgba(240,239,232,0.10)'''
+  - 'Code-to-image discrepancy: the code on disk (95 lines) does not contain envelope
+    curves or peak annotation visible in rendered images — verify PR branch code matches
+    generated images'
+  - 'Design excellence has room to grow: the envelope opacity could be reduced for
+    more polish, and removing residual gridline excess would refine the dark render'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "stem-basic · plotly · anyplot.ai" in dark ink, large and clearly readable. Axis labels "Sample Index (n)" and "Amplitude (a.u.)" in dark ink. Tick labels in muted dark tone (INK_SOFT). Horizontal baseline drawn as a dark line at y=0.
-      Data: 30 stems and markers in Okabe-Ito green (#009E73). Markers have white edges for definition. Damped oscillation pattern clearly visible — large positive peak at sample 0 (~1.02), oscillating with decaying amplitude toward near-zero by sample 29. Both positive and negative values shown. Grid lines on both axes in subtle gray.
-      Legibility verdict: PASS — all text clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "stem-basic · plotly · anyplot.ai" centered in bold dark text; X-axis label "Sample Index (n)" and Y-axis label "Amplitude (a.u.)" clearly visible; tick labels in INK_SOFT gray — all readable against light background
+      Data: 30 brand green (#009E73) stems from y=0 baseline to data points, each capped with a large filled circle with white edge; two dotted exponential-decay envelope curves frame the signal; "Peak: 1.02" annotation with arrow at sample 0; baseline in INK_SOFT; subtle horizontal grid lines
+      Legibility verdict: PASS — no light-on-light text, all elements clearly distinguishable
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title in light cream text (INK=#F0EFE8), clearly readable. Axis labels in light text. Tick labels in muted light tone (INK_SOFT=#B8B7B0). Baseline as a lighter line at y=0. No dark-on-dark failures observed.
-      Data: Green (#009E73) stems and markers — identical to light render. Data colors are consistent across themes as required. White marker edges still provide definition against the dark background.
-      Legibility verdict: PASS — all text clearly readable against the dark background, no dark-on-dark issues detected.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and axis labels rendered in near-white (INK = #F0EFE8); tick labels in warm gray (INK_SOFT = #B8B7B0) — all clearly readable against dark background; no dark-on-dark failures observed; grid lines barely perceptible (appropriate subtlety)
+      Data: Data colors identical to light render — stems and markers remain #009E73; envelope curves and annotation unchanged; brand green clearly visible against dark surface
+      Legibility verdict: PASS — all text is light-on-dark; no readability failures
   criteria_checklist:
     visual_quality:
       score: 30
@@ -67,72 +53,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=42, axis=36, ticks=28), readable
-          in both themes
+        comment: Font sizes explicitly set (title 42px, axes 36px, ticks 28px); all
+          text crisp and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: No collisions between tick labels, annotation, or axis text in either
+          render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (size 16) with white edges clearly visible; stems thin but
-          readable
+        comment: Stems clearly visible, large markers (size 16) with PAGE_BG edge
+          highlight; envelope curves legible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single Okabe-Ito green series, CVD-safe, good contrast on both backgrounds
+        comment: Single-series CVD-safe brand green with adequate contrast against
+          both backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-proportioned layout with balanced explicit margins
+        comment: Plot fills canvas well with balanced margins (l:120, r:60, t:130,
+          b:110); no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes have descriptive labels with units: Sample Index (n),
-          Amplitude (a.u.)'
+        comment: Sample Index (n) and Amplitude (a.u.) are descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) series is #009E73; backgrounds #FAF8F1/#1A1A17; all
-          chrome tokens theme-adaptive'
+        comment: 'Primary series #009E73; backgrounds #FAF8F1/#1A1A17; INK/INK_SOFT
+          tokens correct; grid opacity 0.20 slightly above recommended 0.10 but still
+          subtle'
     design_excellence:
-      score: 9
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: 'Well-configured defaults: correct colors, clean layout, but no distinctive
-          design choices or typographic hierarchy'
+        passed: true
+        comment: 'Above default: brand-green stems, envelope curves as contextual
+          decoration, peak annotation creates focal point; professional but not at
+          publication tier'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grid opacity 2x higher than spec (0.20 vs 0.10); grid on both axes;
-          generous margins and zeroline=False are positives
+        passed: true
+        comment: Custom backgrounds, theme-adaptive chrome, subtle grid; grid opacity
+          at 0.20 rather than recommended 0.10
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed without visual hierarchy — no emphasis on peak sample,
-          no envelope indication, no focal point
+        passed: true
+        comment: Envelope curves communicate decay bounds; peak annotation identifies
+          maximum — viewer is guided to the most informative feature
     spec_compliance:
       score: 15
       max: 15
@@ -143,27 +133,26 @@ review:
         max: 5
         passed: true
         comment: 'Correct stem plot: vertical lines from baseline to data points,
-          markers at top'
+          markers at tips'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Baseline at y=0, thin stems, visible markers, consistent sizes —
-          all spec features present
+        comment: Thin stems, circular markers, y=0 baseline, consistent sizing throughout
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=sample index, y=amplitude; both axes show all data
+        comment: 'X: sequence index 0-29; Y: amplitude values; full data range visible'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'stem-basic · plotly · anyplot.ai' correct; showlegend=False
-          appropriate for single series
+        comment: Title 'stem-basic · plotly · anyplot.ai' matches required format;
+          no legend (single-series, correct)
     data_quality:
       score: 15
       max: 15
@@ -173,24 +162,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both positive and negative values, varying amplitudes, clear
-          decay pattern — all stem plot features covered
+        comment: Shows positive and negative amplitudes, baseline crossings, oscillatory
+          and damped behavior
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Damped oscillation signal: a real, neutral signal-processing scenario
-          with appropriate axis labels'
+        comment: Damped oscillation is canonical signal processing scenario; labels
+          scientifically appropriate and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Amplitude range ~[-0.7, 1.0] with small noise (sigma=0.05) is physically
-          plausible for a normalized damped signal
+        comment: 30 samples within spec range (10-100); amplitude ~[-0.7, 1.0] matches
+          normalized signal conventions; seed set
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -198,57 +187,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → tokens → data → plot → style →
-          save'
+        comment: 'Linear flow: tokens -> data -> traces -> layout -> save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, and plotly.graph_objects — all used
+        comment: Only os, numpy, plotly.graph_objects — all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Loop creates 30 individual scatter traces for stems; a single trace
-          with None separators would be more elegant
+        passed: true
+        comment: Loop for per-stem traces is correct Plotly idiom; hoverinfo=skip
+          on non-data traces is clean
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API used
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Plotly API
+          used throughout
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Correct go.Figure/go.Scatter usage with hovertemplate and hoverinfo='skip',
-          but loop-of-traces for stems is not the most idiomatic Plotly pattern
+        passed: true
+        comment: go.Figure() with explicit trace management; proper update_layout(),
+          write_image(), write_html(); hovertemplate for custom tooltips
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses Plotly-specific hover tooltip (hovertemplate with formatted
-          amplitude), HTML export, and trace-level legend control
-  verdict: REJECTED
+        passed: true
+        comment: Custom hovertemplate leverages interactive hover; write_html with
+          include_plotlyjs=cdn delivers standalone interactive artifact
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
