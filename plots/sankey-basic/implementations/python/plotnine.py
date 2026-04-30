@@ -1,22 +1,23 @@
-""" anyplot.ai
+"""anyplot.ai
 sankey-basic: Basic Sankey Diagram
 Library: plotnine 0.15.3 | Python 3.13.13
 Quality: 76/100 | Updated: 2026-04-30
 """
 
+import os
 import sys
 
 
-# Prevent current directory from shadowing the plotnine package
-sys.path = [p for p in sys.path if not p.endswith("implementations")]
+sys.path = [p for p in sys.path if os.path.abspath(p) != os.path.dirname(os.path.abspath(__file__))]
 
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
-from plotnine import (  # noqa: E402
+import numpy as np
+import pandas as pd
+from plotnine import (
     aes,
     annotate,
     coord_cartesian,
     element_blank,
+    element_rect,
     element_text,
     geom_polygon,
     geom_rect,
@@ -28,6 +29,13 @@ from plotnine import (  # noqa: E402
     theme_minimal,
 )
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Data - Energy flow from sources to sectors
 flows = pd.DataFrame(
@@ -91,11 +99,11 @@ for tgt in targets:
     }
     current_y = current_y - height - node_gap
 
-# Color map for nodes - sources get their own colors, targets get distinct colors
-source_colors = {"Coal": "#306998", "Gas": "#FFD43B", "Nuclear": "#4ECDC4", "Renewables": "#2ECC71"}
-target_colors = {"Industrial": "#E74C3C", "Commercial": "#9B59B6", "Residential": "#F39C12"}
+# Okabe-Ito colors for sources; theme-adaptive neutral for targets
+source_colors_map = {"Coal": OKABE_ITO[0], "Gas": OKABE_ITO[1], "Nuclear": OKABE_ITO[2], "Renewables": OKABE_ITO[3]}
+target_colors_map = {"Industrial": INK_SOFT, "Commercial": INK_SOFT, "Residential": INK_SOFT}
 
-# Build node rectangles dataframe - each node gets its own color
+# Build node rectangles dataframe
 node_data = []
 for src in sources:
     pos = source_positions[src]
@@ -131,57 +139,48 @@ for tgt in targets:
 
 nodes_df = pd.DataFrame(node_data)
 
-
 # Build flow polygons (curved paths between nodes)
 flow_polygons = []
-flow_labels = []  # Track center positions for flow value labels
+flow_labels = []
 for _, row in flows.iterrows():
     src = row["source"]
     tgt = row["target"]
     val = row["value"]
 
-    # Calculate flow thickness
     flow_height = val / total_flow * 0.8
 
-    # Source connection point
     src_pos = source_positions[src]
     src_y_top = src_pos["y_top"] - src_pos["flow_offset"]
     src_y_bottom = src_y_top - flow_height
     src_pos["flow_offset"] += flow_height
 
-    # Target connection point
     tgt_pos = target_positions[tgt]
     tgt_y_top = tgt_pos["y_top"] - tgt_pos["flow_offset"]
     tgt_y_bottom = tgt_y_top - flow_height
     tgt_pos["flow_offset"] += flow_height
 
-    # Create curved flow polygon using smooth interpolation
+    # Smooth cubic Hermite interpolation for flow curves
     flow_x_left = x_left + node_width
     flow_x_right = x_right - node_width
     n_points = 50
 
-    # Top edge (left to right)
     t = np.linspace(0, 1, n_points)
     x_top = flow_x_left + (flow_x_right - flow_x_left) * t
     y_top = src_y_top + (tgt_y_top - src_y_top) * (3 * t**2 - 2 * t**3)
 
-    # Bottom edge (right to left)
     x_bottom = flow_x_right + (flow_x_left - flow_x_right) * t
     y_bottom = tgt_y_bottom + (src_y_bottom - tgt_y_bottom) * (3 * t**2 - 2 * t**3)
 
-    # Combine into polygon
     x_polygon = np.concatenate([x_top, x_bottom])
     y_polygon = np.concatenate([y_top, y_bottom])
 
     for i in range(len(x_polygon)):
         flow_polygons.append({"x": x_polygon[i], "y": y_polygon[i], "flow_id": f"{src}_{tgt}", "source": src})
 
-    # Store center position for flow label (slightly offset from center based on source index)
-    # This helps avoid label overlap when flows cross
     mid_idx = n_points // 2
     flow_center_y = (y_top[mid_idx] + y_bottom[n_points - 1 - mid_idx]) / 2
     src_idx = sources.index(src)
-    label_x_offset = 0.35 + src_idx * 0.1  # Stagger labels across flow width
+    label_x_offset = 0.35 + src_idx * 0.1
     flow_labels.append({"x": label_x_offset, "y": flow_center_y, "value": str(val), "flow_height": flow_height})
 
 flows_df = pd.DataFrame(flow_polygons)
@@ -192,7 +191,7 @@ plot = (
     ggplot()
     # Flow polygons with transparency
     + geom_polygon(flows_df, aes(x="x", y="y", group="flow_id", fill="source"), alpha=0.5)
-    # Node rectangles with individual colors
+    # Node rectangles
     + geom_rect(
         nodes_df, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="node_color"), color="white", size=0.5
     )
@@ -203,56 +202,43 @@ plot = (
         ha="center",
         va="center",
         size=11,
-        color="#333333",
+        color=INK,
         fontweight="bold",
     )
-    # Source labels (right-aligned) - increased font size
+    # Source labels (right-aligned)
     + geom_text(
         nodes_df[nodes_df["side"] == "source"],
         aes(x="label_x", y="label_y", label="name"),
         ha="right",
         size=16,
-        color="#333333",
+        color=INK,
         fontweight="bold",
     )
-    # Target labels (left-aligned) - increased font size
+    # Target labels (left-aligned)
     + geom_text(
         nodes_df[nodes_df["side"] == "target"],
         aes(x="label_x", y="label_y", label="name"),
         ha="left",
         size=16,
-        color="#333333",
+        color=INK,
         fontweight="bold",
     )
-    # Color scales - sources for flows, all nodes for rectangles
-    + scale_fill_manual(
-        values={
-            # Source colors (for flows and source nodes)
-            "Coal": "#306998",
-            "Gas": "#FFD43B",
-            "Nuclear": "#4ECDC4",
-            "Renewables": "#2ECC71",
-            # Target colors (for target nodes)
-            "Industrial": "#E74C3C",
-            "Commercial": "#9B59B6",
-            "Residential": "#F39C12",
-        }
-    )
-    + labs(title="Energy Flow · sankey-basic · plotnine · pyplots.ai", x="", y="")
+    + scale_fill_manual(values={**source_colors_map, **target_colors_map})
+    + labs(title="Energy Flow · sankey-basic · plotnine · anyplot.ai", x="", y="")
     + coord_cartesian(xlim=(-0.05, 1.1))
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, ha="center", weight="bold"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        plot_title=element_text(size=24, ha="center", weight="bold", color=INK),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         panel_grid=element_blank(),
         legend_position="none",
     )
-    + annotate("text", x=x_left + node_width / 2, y=-0.05, label="Sources", size=16, color="#555555", fontweight="bold")
-    + annotate(
-        "text", x=x_right - node_width / 2, y=-0.05, label="Sectors", size=16, color="#555555", fontweight="bold"
-    )
+    + annotate("text", x=x_left + node_width / 2, y=-0.05, label="Sources", size=16, color=INK_SOFT, fontweight="bold")
+    + annotate("text", x=x_right - node_width / 2, y=-0.05, label="Sectors", size=16, color=INK_SOFT, fontweight="bold")
 )
 
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
