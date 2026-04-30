@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: sankey-basic
 created: '2025-12-23T19:44:36Z'
-updated: '2026-04-30T09:02:14Z'
+updated: '2026-04-30T09:13:36Z'
 generated_by: claude-sonnet
 workflow_run: 25156180870
 issue: 810
@@ -12,121 +12,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sankey-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 88
 review:
   strengths:
-  - Excellent spec compliance (15/15) with correct Sankey structure, proportional
-    flows, and all spec requirements met
-  - 'Perfect code quality (10/10): clean linear structure with deterministic data
-    and all imports used'
-  - Correct Okabe-Ito palette across both themes with proper chrome adaptation — no
-    theme-readability failures
-  - Smooth Bezier flow bands with smoothstep interpolation and sorted flow order to
-    minimize visual crossings
-  - Rounded FancyBboxPatch nodes with PAGE_BG edge separation add professional polish
+  - Perfect spec compliance and data quality — energy flow scenario is ideal for a
+    Sankey
+  - Custom bezier-curve Sankey from first principles with smoothstep interpolation
+    and rounded FancyBboxPatch nodes is visually polished
+  - Okabe-Ito palette applied correctly to both source and target node groups in canonical
+    order
+  - Theme-adaptive chrome works correctly in both renders — INK token controls all
+    text colors with no dark-on-dark failures
+  - Differential alpha (Gas=0.68 vs Coal/Nuclear=0.44) creates genuine visual hierarchy
+    highlighting the dominant source
+  - Code is clean, deterministic, and well-structured for a complex custom diagram
+    — no functions or classes
   weaknesses:
-  - 'DE-03 LOW: No focal point or visual storytelling emphasis — Gas is the dominant
-    source (120 TWh) but treated identically to Nuclear (45 TWh). Add a subtitle or
-    annotation highlighting the key insight, or increase Gas flow alpha to 0.65-0.70
-    to make dominant flows visually heavier'
-  - 'VQ-05 MINOR: Lower ~20-25% of canvas is empty — adjust Y_START=0.85 and TOTAL_H=0.72
-    to center the diagram vertically'
-  - 'VQ-01 MINOR: Node labels at fontsize=18, below the >=20pt axis-label guideline
-    — bump to 20pt in both node label blocks'
-  - 'LM-02 LOW: seaborn contribution limited to set_theme(); all chart logic is matplotlib
-    — inherent to Sankey in seaborn'
+  - Library Mastery is minimal — seaborn is used only for sns.set_theme(); the entire
+    visualization is matplotlib primitives with no seaborn statistical API leveraged
+    (LM-02=1)
+  - Subtitle text at y=0.93 in data coordinates sits in a very narrow strip above
+    the Sankey and is subtle at fontsize=16, reducing storytelling impact
+  - Low-alpha flows (0.44) for Coal and Nuclear become somewhat muted in the dark
+    render's crossing areas, slightly reducing flow distinguishability
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "sankey-basic · seaborn · anyplot.ai" in dark text (24pt), clearly readable. Node labels (18pt bold) in dark INK color on both sides — all readable against the light background
-      Data: Source nodes left (Gas=#009E73 green, Coal=#D55E00 orange, Nuclear=#0072B2 blue); target nodes right (Residential=#CC79A7 pink, Industrial=#E69F00 gold, Commercial=#56B4E9 sky-blue). First series Gas correctly uses #009E73. Smooth Bezier flow bands colored by source with alpha=0.55. All 9 flows visible and proportional.
-      Legibility verdict: PASS — all text readable, no light-on-light issues. Significant empty space in lower 20-25% of canvas.
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "sankey-basic · seaborn · anyplot.ai" at fontsize=24 in dark ink (#1A1A17) — clearly readable. Node labels in dark bold text (fontsize=20) on left and right. Italic green subtitle in narrow strip above Sankey — present but subtle at fontsize=16.
+      Data: Gas node (#009E73, brand green), Coal (#D55E00), Nuclear (#0072B2); target nodes Residential (#CC79A7), Industrial (#E69F00), Commercial (#56B4E9). Flows as smooth cubic Bezier fills with alpha=0.68 (Gas) and alpha=0.44 (Coal/Nuclear). Node values shown in TWh.
+      Legibility verdict: PASS — all text readable, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title in light (#F0EFE8) text — clearly readable. Node labels in light/white text — fully readable against dark background. No dark-on-dark failures detected.
-      Data: Data colors identical to light render — Gas green, Coal orange, Nuclear blue on source side; pink/gold/sky-blue on target side. Brand green #009E73 clearly visible. Flows appear darker due to dark background but remain distinguishable.
-      Legibility verdict: PASS — all text readable in dark theme, chrome correctly adapted
+      Background: Near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title in near-white/light color — clearly readable against dark background. Node labels use INK token (#F0EFE8) — white text on dark background, readable. No dark-on-dark text failures observed.
+      Data: Data colors identical to light render — Gas=#009E73, Coal=#D55E00, Nuclear=#0072B2, targets same Okabe-Ito colors. Low-alpha Coal/Nuclear flows are somewhat muted in crossing areas on the dark background but still distinguishable. Gas flows at alpha=0.68 remain prominent.
+      Legibility verdict: PASS — all text readable, theme chrome correctly adapted
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title 24pt explicitly set; node labels 18pt bold explicitly set but
-          below 20pt axis-label guideline
+        comment: Title 24pt, node labels 20pt bold, subtitle 16pt — all explicitly
+          set and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All labels and nodes spatially separated; no text collisions
+        comment: No text collisions; node labels cleanly positioned left/right of
+          Sankey
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Node sizes proportional to flow, alpha=0.55 flows clearly visible;
-          thin flows (10 TWh) still distinguishable
+        comment: Flows visible; Gas prominent at alpha=0.68; Coal/Nuclear at alpha=0.44
+          somewhat muted in dark crossing areas
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe; source and target colors differ sufficiently
+        comment: Okabe-Ito CVD-safe palette, sufficient luminance variation across
+          all 6 node colors
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Diagram fills ~65% of canvas; noticeable empty space in lower 20-25%
-          of image
+        comment: Sankey fills ~70% of canvas, margins balanced, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format; node labels embed TWh values as effective axis
-          context
+        comment: Node labels include units (TWh); axis off appropriate for Sankey
+          type
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First source #009E73 (brand green); Okabe-Ito order maintained;
-          backgrounds theme-correct; chrome adapts correctly'
+        comment: 'Gas=#009E73 (first source); full Okabe-Ito order; backgrounds #FAF8F1/#1A1A17;
+          INK token adapts text correctly'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom Sankey with smooth Bezier curves, rounded nodes, intentional
-          Okabe-Ito coloring. Above defaults but not FiveThirtyEight-level — no typographic
-          hierarchy beyond bold labels
+        comment: Hand-crafted Bezier curves, rounded FancyBboxPatch nodes with background-colored
+          borders, differential alpha for visual emphasis — clearly above library
+          defaults
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: axis('off') for minimal chrome, smoothstep Bezier for ultra-smooth
+          flows, no grid, rounded corners, node edge styling — very polished
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Axis removed, alpha blending well-chosen, PAGE_BG node edges provide
-          clean separation. Canvas imbalance (empty bottom) and whitespace not used
-          as design element
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: false
-        comment: Color-coded flows enable path-tracing, TWh in labels provide quantitative
-          context. No visual emphasis on dominant story (Gas=49% of total). All flows
-          treated equally, no focal point
+        comment: Higher alpha on Gas creates visual hierarchy; italic subtitle names
+          the key insight; Gas at top draws the eye first
     spec_compliance:
       score: 15
       max: 15
@@ -136,55 +135,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Custom Sankey with proportional link widths and source-to-target
-          node structure
+        comment: Correct Sankey with source-to-target flows, widths proportional to
+          values
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Proportional flow widths, distinct source colors, link opacity, node
-          labels, no circular flows
+        comment: 9 flows (within 5-50 spec), no circular flows, node labels visible,
+          distinct source colors, link opacity
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Energy sources to end-use sectors with TWh values correctly mapped
+        comment: Sources left, targets right, node heights and flow widths proportional
+          to values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'sankey-basic · seaborn · anyplot.ai' correct; nodes self-label
-          with name and value
+        comment: Title format 'sankey-basic · seaborn · anyplot.ai' correct; node
+          placement serves as implicit legend
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'All 9 source-target combinations; varied magnitudes (10-50 TWh);
-          full distribution shown. Minor: all sources connect to all targets limits
-          structural contrast'
+        comment: All sources connect to all targets (9 flows), varied magnitudes,
+          flow crossings demonstrate full Sankey capability
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Energy flow (Gas/Coal/Nuclear to Residential/Industrial/Commercial)
-          is canonical Sankey use case; neutral, real-world domain
+        comment: Energy flow scenario (Gas/Coal/Nuclear to Residential/Industrial/Commercial)
+          is classic, neutral, real-world
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Values plausible; Gas dominance realistic. Coal-to-Residential flow
-          slightly high for modern grids; nuclear share differentiation could be more
-          pronounced
+        comment: Gas 120 TWh (49%), Coal 80 TWh (33%), Nuclear 45 TWh (18%); plausible
+          proportions for mixed-grid energy system
     code_quality:
       score: 10
       max: 10
@@ -194,14 +192,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports -> tokens -> data -> layout calc -> figure
-          -> draw -> save; no functions or classes'
+        comment: 'Linear flow: imports, tokens, data, layout geometry, figure, draw
+          flows, draw nodes, save — no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data fully deterministic; no random elements
+        comment: Fully deterministic — hardcoded data, no random values
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -213,14 +211,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Smoothstep interpolation, Bezier curve computation, and layout normalization
-          are appropriate complexity; no over-engineering
+        comment: Pythonic, appropriate complexity for custom Sankey; smoothstep formula
+          is recognized technique; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no deprecated functions
+        comment: Saves as plot-{THEME}.png with current API
     library_mastery:
       score: 4
       max: 10
@@ -230,26 +228,27 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: sns.set_theme() used correctly for chrome styling; bulk of rendering
-          is matplotlib primitives (necessary — seaborn has no Sankey API)
+        comment: seaborn used correctly for sns.set_theme() theming; Sankey itself
+          is matplotlib primitives — seaborn statistical API unused
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: seaborn contribution limited to set_theme(); all chart logic is matplotlib.
-          Inherent limitation for Sankey diagrams in seaborn
-  verdict: REJECTED
+        comment: seaborn used only for sns.set_theme(); no seaborn-specific visualization
+          features; could be replicated with plain matplotlib
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
   - patches
+  - annotations
   patterns:
-  - explicit-figure
-  - iteration-over-groups
   - groupby-aggregation
+  - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending
