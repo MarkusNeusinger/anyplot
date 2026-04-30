@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 step-basic: Basic Step Plot
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-04-30
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 76/100 | Updated: 2026-04-30
 """
 
 import os
