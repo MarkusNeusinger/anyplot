@@ -1,216 +1,254 @@
 library: bokeh
+language: python
 specification_id: slope-basic
 created: '2025-12-23T20:45:11Z'
-updated: '2025-12-23T20:51:04Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20471151342
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/slope-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/slope-basic/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - html-export
-  - manual-ticks
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-04-30T17:02:00Z'
+generated_by: claude-sonnet
+workflow_run: 25177392699
+issue: 981
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/bokeh/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent implementation of the slope chart concept with clear visual distinction
-    between increasing and decreasing trends
-  - Labels at both endpoints follow the spec requirement perfectly with product names
-    and values
-  - Color coding (blue for increase, yellow for decrease) is intuitive and colorblind-accessible
-  - Good use of Bokeh Label model for precise text positioning
-  - Appropriate sizing for 4800x2700 canvas with readable fonts
-  - Generates both PNG and interactive HTML output
+  - Direction-coded slope lines (green=increase, orange=decrease) using Okabe-Ito
+    positions 1 and 2
+  - Custom spread_labels algorithm prevents endpoint label overlap on both sides
+  - Full theme support with properly threaded INK/INK_SOFT tokens in both light and
+    dark renders
+  - HoverTool with product/period/value tooltips leverages Bokeh interactive capability
+  - Clean slopegraph layout with hidden x-axis and Q1/Q4 as text labels at correct
+    positions
+  - 'Correct title format: slope-basic · bokeh · anyplot.ai'
   weaknesses:
-  - Could add HoverTool for interactive exploration of exact values when viewing HTML
-    version
-  - Label text could be slightly larger (20pt instead of 18pt) for optimal readability
-    at the target resolution
-  image_description: 'The plot displays a slope chart comparing 10 products'' sales
-    between Q1 and Q4. Blue lines (Python Blue #306998) indicate products with increased
-    sales, while yellow/gold lines (Python Yellow #FFD43B) indicate decreased sales.
-    Each product has labels at both endpoints showing the product name and value (e.g.,
-    "Product A: 85" on the left, "92: Product A" on the right). The time points "Q1"
-    and "Q4" appear at the bottom. The Y-axis is labeled "Sales (thousands)" with
-    values ranging from ~30 to 100. The title "slope-basic · bokeh · pyplots.ai" is
-    centered at the top. The chart effectively shows the direction and magnitude of
-    change for each product.'
+  - 'CQ-01 violation: spread_labels helper function defined — breaks KISS structure;
+    label spreading logic could be inlined or replaced with a simpler clamping pass'
+  - 'DQ-02 penalty: product labels are generic (Product A–J) rather than named real-world
+    products, reducing realism'
+  - 'VQ-05 minor: some top-canvas whitespace wasted by direction legend placement
+    between title and data area'
+  - 'DE-01 ceiling: design is functional and correct but lacks the refined typography
+    and polish for a 6+ score'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white matching #FAF8F1 — correct, not pure white.
+      Chrome: Title "slope-basic · bokeh · anyplot.ai" bold, dark ink, centered at top. Y-axis label "Sales (thousands)" visible in dark ink. Y-axis tick labels (40–100) in INK_SOFT (#4A4A44), clearly readable. "Q1" and "Q4" text labels at bottom in dark ink. Direction legend ("— Increase" in green, "— Decrease" in orange) positioned below title.
+      Data: Ten slope lines color-coded by direction — #009E73 (Okabe-Ito brand green) for increases, #D55E00 (Okabe-Ito vermillion) for decreases. Endpoint labels on left ("Product X: value") and right ("value: Product X") in matching line colors, spread to avoid overlap. Circular markers (size=18) at each endpoint.
+      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black matching #1A1A17 — correct, not pure black.
+      Chrome: Title and Q1/Q4 labels rendered in light INK (#F0EFE8), clearly visible against dark background. Y-axis tick labels in INK_SOFT (#B8B7B0), readable. Direction legend text in matching data colors (green/orange), clearly visible. No dark-on-dark failures observed.
+      Data: Slope line colors (#009E73 and #D55E00) are identical to light render — only background and chrome flip. Endpoint label text uses the same data colors and is clearly legible against the dark background. Markers visible with distinct dot endpoints.
+      Legibility verdict: PASS — all text readable against dark background; no near-black-on-near-black failures; data colors consistent with light render.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text is readable at full size. Title at 32pt, axis labels at
-          22pt, tick labels at 18pt, endpoint labels at 18pt. Slightly smaller than
-          ideal for some elements.
-      - id: VQ-02
-        name: No Overlap
         score: 7
         max: 8
         passed: true
-        comment: Minor potential for overlap when values are close (e.g., Products
-          B and G at Q1 are at 72 and 78), but generally well-spaced.
+        comment: 'Title 32pt, axis label 22pt, tick labels 18pt, endpoint labels 18pt,
+          Q1/Q4 labels 28pt — all explicitly set and readable. Minor deduction: endpoint
+          label color uses data color (not INK) so relies on sufficient contrast.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: spread_labels algorithm effectively separates endpoint labels on
+          both sides; all labels readable.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines are 4px wide with 0.8 alpha, markers are size 18 - excellent
-          visibility for 10 entities.
+        comment: Lines at line_width=4 and markers at size=18 are clearly visible
+          at 4800x2700 canvas.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue/yellow is colorblind-safe (not red-green), good contrast. Could
-          be slightly better with a third distinct color for no-change scenario.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas, plot is well-centered with appropriate margins
-          for labels.
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Y-axis has "Sales (thousands)" which is descriptive with units. X-axis
-          uses custom labels via Labels, which is appropriate for this chart type.
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle dashed grid with 0.3 alpha, no legend needed as colors are
-          self-explanatory via line direction.
+        comment: Okabe-Ito positions 1 and 2 (green/orange) are CVD-safe and have
+          good luminance contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas usage overall; top section (title + direction legend)
+          creates notable whitespace above the data.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Sales (thousands)'' with units. Title: correct format.
+          Q1/Q4 column labels clearly identify time points.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: INCREASE_COLOR=#009E73 (Okabe-Ito pos 1), DECREASE_COLOR=#D55E00
+          (pos 2). PAGE_BG light=#FAF8F1, dark=#1A1A17. All theme chrome tokens correct.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Purposeful design: direction color coding, hidden x-axis, custom
+          label placement algorithm. Above configured defaults but lacks FiveThirtyEight-level
+          typography refinement.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-grid hidden, Y-grid alpha=0.10, toolbar removed, outline_line_color=None.
+          Clean but axis frame still visible.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Direction color coding creates immediate visual narrative. Mixed
+          increases/decreases demonstrate the chart type well. Data choice shows clear
+          insight potential.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct slope chart/slopegraph implementation.
+        comment: Correct slopegraph with slope lines connecting two time points.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Entities on lines, values correctly mapped to Y positions at both
-          time points.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Labels at both endpoints ✓, color coding by direction ✓, time point
-          labels ✓, 10 entities (within 5-15 range) ✓.
-      - id: SC-04
-        name: Data Range
+        comment: Labels at both endpoints, color coding by direction, time point column
+          labels — all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-range 25-105 shows all data points clearly.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X = time points (Q1/Q4), Y = sales values; all 10 products visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No explicit legend needed; color meaning is intuitive (blue=up, yellow=down).
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "slope-basic · bokeh · pyplots.ai".
+        comment: Title 'slope-basic · bokeh · anyplot.ai' correct. Direction legend
+          with matching colors.
     data_quality:
-      score: 18
-      max: 20
+      score: 13
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both increases and decreases, varying magnitudes. Could show
-          more dramatic rank changes.
+        comment: Includes both increases and decreases, varied magnitudes, rank inversions/crossovers,
+          10 products within recommended range.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 3
+        max: 5
         passed: true
-        comment: Product sales Q1 vs Q4 is a realistic business scenario.
+        comment: Business scenario is plausible, but 'Product A' through 'Product
+          J' are generic abstract labels, not real product names.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Sales values 40-95 are plausible. Using "thousands" unit makes sense.
+        comment: Values 40-95 thousand for quarterly sales — plausible and internally
+          consistent.
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: 'Simple linear script: imports → data → figure → lines/labels → save.'
+        passed: false
+        comment: spread_labels helper function defined at module level — breaks KISS
+          (no functions/classes) structure. Logic could be inlined.
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Data is deterministic (hardcoded), but no random seed since no randomness
-          used. Acceptable but could note this.
+        max: 2
+        passed: true
+        comment: All data is hardcoded — fully deterministic, no seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports are used: figure, export_png, save, Label, CDN.'
+        comment: 'All imports used: os, export_png, save, ColumnDataSource, HoverTool,
+          Label, figure, CDN.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API.
+        comment: Clean Pythonic code; strict=True in zip calls is modern Python; no
+          fake UI or over-engineering.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 3
-      max: 5
+        comment: export_png to plot-{THEME}.png and save to plot-{THEME}.html with
+          CDN resources.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ColumnDataSource for scatter (enabling HoverTool), Label via add_layout,
+          toolbar_location=None — good Bokeh patterns. Lines drawn per-entity in loop
+          is slightly non-idiomatic vs. multi_line.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Bokeh's Label model for custom positioning, figure for plotting,
-          and both PNG export and HTML save for interactivity. Could leverage more
-          Bokeh-specific features like HoverTool for interactivity.
+        comment: HoverTool for product/period/value interactivity and HTML export
+          with CDN resources are distinctively Bokeh features.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - columndatasource
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
