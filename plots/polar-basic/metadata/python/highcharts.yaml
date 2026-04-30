@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: polar-basic
 created: '2025-12-23T19:42:58Z'
-updated: '2026-04-30T00:50:19Z'
+updated: '2026-04-30T01:01:59Z'
 generated_by: claude-sonnet
 workflow_run: 25141207935
 issue: 800
@@ -15,44 +15,36 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bas
 quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: native Highcharts polar mode with correct pane/axis/gridline
-    configuration and exactly the right title format'
-  - 'Complete theme adaptation: all six chrome tokens (PAGE_BG, ELEVATED_BG, INK,
-    INK_SOFT, GRID) applied uniformly across chart, axes, legend, and HTML body in
-    both renders'
-  - 'Excellent data quality: 24-hour sinusoidal temperature model with reproducible
-    noise creates a real-world, scientifically plausible scenario that makes the circular
-    representation immediately meaningful'
-  - Clean code structure with practical /tmp JS caching across theme runs
-  - 'LM-01 fully achieved: idiomatic Highcharts usage including highcharts-more.js,
-    container param, and to_js_literal()'
+  - 'Perfect spec compliance and data quality: full 24-hour cyclical coverage, realistic
+    temperature domain, correct polar area chart type'
+  - 'Excellent code quality: KISS structure, reproducibility, clean theme-adaptive
+    tokens throughout all chart options'
+  - Effective data storytelling via the highlighted daily peak focal point (orange
+    dot + data label 25.5 degrees C)
+  - Proper Okabe-Ito palette and fully theme-adaptive chrome in both light and dark
+    renders
   weaknesses:
-  - 'Design Excellence below threshold: chart is visually correct but reads as a configured
-    default rather than a crafted visualization. Needs area fill under the data trace
-    (AreaSeries in polar mode), or gradient pane background, or focal-point marker
-    on peak temperature to lift DE-01 to 6+'
-  - Grid opacity 0.20 slightly exceeds recommended 0.10-0.15 range; should be reduced
-    to ~0.12
-  - Square canvas (3600x3600) would utilise the canvas more efficiently for a circular
-    polar chart, avoiding the 16:9 side whitespace
-  - 'LM-02 only partial: more distinctive Highcharts features (arearange series for
-    uncertainty band, custom tooltip formatter, or series zone colouring by temperature
-    value) would demonstrate deeper library mastery'
+  - Area fill (fillOpacity=0.28) becomes nearly invisible in dark mode — raise fill
+    opacity to 0.4-0.5 so the filled area reads as a distinct element on dark surfaces
+  - Inner radial labels (0 degrees C, 5 degrees C) are partially covered by the filled
+    polygon in some angular sectors — push labels outside the data range or offset
+    the y-axis minimum
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, not pure white
-      Chrome: Bold title "polar-basic · highcharts · anyplot.ai" in dark ink (#1A1A17), subtitle "24-Hour Temperature Pattern" in INK_SOFT. Angular labels (0h-21h) and radial labels (0°C-30°C) clearly readable in INK_SOFT. Legend "Temperature" readable at bottom.
-      Data: Brand green (#009E73) scatter points connected by thin lines tracing a 24-hour sinusoidal temperature cycle. 24 circular markers at radius=18, clearly visible. Subtle circular/radial gridlines. Data trace forms a teardrop shape bulging into the afternoon quadrant.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "polar-basic · highcharts · anyplot.ai" in dark text (72px), subtitle "24-Hour Temperature Pattern" (48px), hour labels around perimeter (0h, 3h, 6h, 9h, 12h, 15h, 18h, 21h) in dark muted text, radial labels (0°C–30°C) along top axis — all readable
+      Data: Green (#009E73) filled area polygon tracing 24-hour temperature cycle with green dot markers; orange (#D55E00) peak marker with "25.5°C" data label at bottom; legend at bottom center
+      Overlap note: Inner radial labels (0°C, 5°C) partially covered by filled polygon in some angular sectors
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) - correct, warm dark tone
-      Chrome: Title and subtitle shift to light-colored ink (F0EFE8/B8B7B0 tokens). Angular and radial labels rendered in lighter INK_SOFT tone. No dark-on-dark failures detected. Legend text legible. Grid lines subtle and visible on dark surface.
-      Data: Brand green (#009E73) data series is identical in color to the light render - data colors unchanged, only chrome flips. Markers and connecting lines clearly distinguishable from the dark background.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and subtitle in light text (#F0EFE8 range), axis labels in muted light text (#B8B7B0 range) — all readable, no dark-on-dark failure
+      Data: Green markers (#009E73) identical to light render; area fill at fillOpacity=0.28 is very faint over dark background (nearly invisible as fill, but line and markers define the shape); orange peak dot clearly visible
+      Legibility verdict: PASS (area fill very faint in dark mode but overall data readable via line and markers)
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -60,77 +52,76 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 72px, subtitle 48px, angular
-          labels 36px, radial labels 28px, legend 36px. Perfectly readable in both
-          themes.'
+        comment: 'All font sizes explicitly set: title 72px, subtitle 48px, x-axis
+          labels 36px, y-axis labels 28px, legend 36px. Readable in both renders.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Angular labels well-spaced at 45deg intervals. Radial labels evenly
-          distributed; no collisions.
+        passed: false
+        comment: Inner radial labels (0°C, 5°C) partially covered by filled area polygon
+          in some angular sectors. Angular hour labels around perimeter are clear.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 24 markers at radius=18, clearly visible. Connecting line at lineWidth=3
-          enhances pattern readability.
+        comment: Markers and line trace clearly visible. Area fill (fillOpacity=0.28)
+          nearly invisible in dark mode over dark background.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand-green series is CVD-safe by design.
+        comment: Okabe-Ito green + orange are CVD-safe. Good contrast between data
+          and background.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Polar chart fills canvas well but a 3600x3600 square canvas would
-          be more optimal for a circular chart; side whitespace is noticeable in 16:9.
+        comment: Square 3600x3600 canvas appropriate for polar chart. Pane at 78%,
+          generous margins, well-centered.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Angular labels include 'h' unit; radial labels include degrees-C
-          unit.
+        comment: Angular labels '{value}h', radial labels '{value}°C' with units.
+          Subtitle provides context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 is sole series color. Backgrounds are #FAF8F1
-          (light) and #1A1A17 (dark). Chrome adapts correctly in both renders.'
+        comment: 'First series #009E73 (BRAND), second series #D55E00 (Okabe-Ito position
+          2). Backgrounds #FAF8F1 / #1A1A17. Theme chrome fully adaptive.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Correct and clean but reads as a well-configured Highcharts default.
-          No area fill, no gradient pane, no focal-point marker on peak temperature.
+        passed: true
+        comment: 'Above generic defaults: highlighted focal point (daily peak in orange),
+          semi-transparent filled area creates elegant layering. Not yet FiveThirtyEight-level
+          but thoughtfully composed.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Theme-adaptive chrome applied throughout. Grid opacity 0.20 slightly
-          above recommended 0.10-0.15. Some deliberate refinement visible but not
-          highly polished.
+        passed: true
+        comment: Subtle gridlines with low-opacity color, generous margins, legend
+          with light border. Some further refinement possible.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 24-hour cycle in polar coordinates creates a teardrop shape communicating
-          day/night temperature swing. Visual hierarchy emerges from shape. No focal
-          point marker or annotation at peak.
+        comment: Highlighted daily peak (orange dot + 25.5°C data label) creates clear
+          focal point. Visual hierarchy guides viewer to the hottest part of the day.
     spec_compliance:
       score: 15
       max: 15
@@ -140,28 +131,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Native Highcharts polar mode with ''polar'': True in chart options.'
+        comment: Correct polar chart using Highcharts polar mode with area series
+          on circular coordinate system.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Polar coordinates with angular and radial axes, visible radial gridlines,
-          angular labels at 3-hour intervals, start angle at top for time-based data.
+        comment: Radial gridlines visible, angular labels at 3h intervals, full 360°
+          coverage, appropriate start angle.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Hours map to angle (0-24), temperature maps to radius. All 24 data
-          points visible within 0-35 degrees C radial range.
+        comment: Theta = hours (angular), radius = temperature (radial). All 24 data
+          points visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'polar-basic · highcharts · anyplot.ai'. Legend
-          label 'Temperature' correctly describes the single series.
+        comment: Title 'polar-basic · highcharts · anyplot.ai' correct. Legend labels
+          'Temperature' and 'Daily Peak' match data.
     data_quality:
       score: 15
       max: 15
@@ -171,23 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 360deg range utilised; clear amplitude variation shows the cyclic
-          daily pattern; both cold nighttime cluster and warm afternoon extension
-          well-represented.
+        comment: Full 360° cyclical pattern, peak highlighted, natural variation across
+          hours via seeded noise.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 24-hour temperature cycle is a real, scientifically meaningful, and
-          neutral domain. Sinusoidal model with noise is realistic.
+        comment: 24-hour temperature cycle is a canonical real-world polar chart use
+          case. Neutral scientific domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Range 0-35 degrees C plausible for a temperate climate. Data spans
-          roughly 5-28 degrees C, reasonable for a summer day.
+        comment: Temperature range 0-35°C with peak ~25°C realistic for a summer day.
+          Seed set for reproducibility.
     code_quality:
       score: 10
       max: 10
@@ -197,8 +188,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat linear script: imports -> tokens -> data -> chart options ->
-          series -> JS export -> screenshot. No functions or classes.'
+        comment: 'Linear flow: imports → tokens → data → chart options → series →
+          HTML → screenshot. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -210,42 +201,40 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All 10 imports are actually used.
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic. The /tmp JS caching avoids redundant network
-          calls across theme runs without over-engineering.
+        comment: Clean, Pythonic. The /tmp JS cache is practical and non-intrusive.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API used throughout.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html (correct for interactive
+          library).
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Native polar mode, correct container='container' constructor argument,
-          highcharts-more.js correctly included, chart.to_js_literal() for HTML generation.
-          All Highcharts idioms correctly applied.
+        comment: Correct use of HighchartsOptions, AreaSeries, ScatterSeries, pane
+          config, connectEnds, and polar mode.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Pane configuration (startAngle/endAngle) is Highcharts-specific.
-          lineWidth on scatter series creating polar trace is Highcharts-specific
-          behaviour. Missing more sophisticated features like tooltip formatter, arearange
-          series, or series zones.
-  verdict: REJECTED
+        passed: true
+        comment: 'Polar mode (''polar'': True), connectEnds for closed area trace,
+          pane sizing, and custom tooltip HTML format are distinctively Highcharts-specific
+          features.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -255,4 +244,5 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
