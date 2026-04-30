@@ -1,7 +1,7 @@
 """ anyplot.ai
 slope-basic: Basic Slope Chart (Slopegraph)
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-04-30
+Quality: 83/100 | Updated: 2026-04-30
 """
 
 import os

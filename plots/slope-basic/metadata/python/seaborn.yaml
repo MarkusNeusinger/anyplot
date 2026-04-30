@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: slope-basic
 created: '2025-12-23T20:47:31Z'
-updated: '2026-04-30T16:46:15Z'
+updated: '2026-04-30T17:01:50Z'
 generated_by: claude-sonnet
 workflow_run: 25177206954
 issue: 981
@@ -12,48 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/slope-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 83
 review:
   strengths:
-  - Correct use of seaborn lineplot with units/estimator=None pattern for individual
-    entity trajectories
-  - Color-coded labels at both endpoints using Okabe-Ito positions 1-2 (increase=green,
-    decrease=orange) for immediate direction recognition
-  - 'Full spec compliance: 8 entities with 4 rank crossings, labels at both endpoints,
-    color by direction, appropriate entity count'
-  - 'Perfect data quality: realistic tech company revenue scenario with plausible
-    values and interesting rank changes'
-  - Theme-adaptive chrome correctly applied to both light and dark renders with proper
-    background colors and text tokens
-  - Clean KISS code structure with wide-to-long reshape and iterrows loop for endpoint
-    labels
+  - Correct slopegraph with lines connecting two time points
+  - Intentional color-coding by direction (Increase=#009E73, Decrease=#D55E00) tells
+    a clear story
+  - Full theme-adaptive chrome with correct light/dark backgrounds and ink tokens
+  - Endpoint labels with entity names and values on both sides
+  - Clean code structure with wide-to-long melt and proper seaborn lineplot usage
+  - 'Spec fully met: labels at both endpoints, direction color-coding, time-point
+    axis labels, 8 entities in range'
+  - Perfect data quality with realistic tech revenue scenario and multiple rank crossings
   weaknesses:
-  - Left-side entity labels clipped at figure boundary - at least 2-3 labels truncated
-    (CodeBase shows as deBase, NetPulse as etPulse) despite subplots_adjust(left=0.22);
-    increase margin further or shorten annotation text
-  - Annotation fontsize=14 is below the 16pt minimum recommended for 4800x2700 resolution;
-    raise to 16
-  - Bottom-right DataCore label at (60) partially overlaps with the legend box; add
-    more vertical padding or adjust legend position
-  - 'Design excellence could be enhanced: slope-basic benefits from stronger visual
-    separation (e.g., varying line opacity by magnitude, adding subtle directional
-    arrowheads, or a prominent divider between the two columns)'
-  - 'LM-02 limited: seaborn lineplot is used idiomatically but the implementation
-    could leverage more seaborn-specific capabilities (e.g., sns.despine, theme integration)'
+  - Left-side entity labels clipped at canvas edge — CodeBase and NetPulse show as
+    cdeBase/etPulse because the annotations extend past the left margin; increase
+    subplots_adjust left margin or reduce annotation offset
+  - Bottom-right DataCore label overlaps with/sits very close to the legend box
+  - Entity annotation font size (14pt) is below the 16pt minimum for seaborn at 4800x2700px
+  - 'LM-02: sns.lineplot is used but slope charts are not a native seaborn type —
+    heavy fallback to matplotlib annotations and manual legend construction limits
+    library-mastery ceiling'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface consistent with #FAF8F1 - correct.
-      Chrome: Title "slope-basic · seaborn · anyplot.ai" in bold dark ink — readable. Y-axis label "Revenue ($M)" in dark ink — readable. X-axis tick labels "Q1 Revenue ($M)" and "Q4 Revenue ($M)" in INK_SOFT — readable. Y-axis tick labels in INK_SOFT — readable.
-      Data: 8 slope lines with Okabe-Ito green (#009E73) for Increase entities and vermillion (#D55E00) for Decrease entities. Endpoint labels color-coded to match their lines. First categorical series is #009E73 — correct.
-      Issues: Left-side entity labels for at least 2-3 entities (CodeBase, NetPulse, possibly CloudSync) are clipped by the figure boundary — they appear truncated ("deBase", "etPulse"). Bottom-right "(60) DataCore" label is very close to / partially obscured by the legend box.
-      Legibility verdict: FAIL (truncated labels on left side reduce readability of 2-3 entities)
+      Background: Warm off-white (#FAF8F1) — correct, not pure white. PASS
+      Chrome: Title "slope-basic · seaborn · anyplot.ai" in dark bold text — clearly readable. Y-axis label "Revenue ($M)" visible. X-tick labels "Q1 Revenue ($M)" / "Q4 Revenue ($M)" in INK_SOFT. All chrome elements dark on light — readable.
+      Data: Eight slope lines in two colors — green (#009E73) for Increase, orange-vermillion (#D55E00) for Decrease. Lines at linewidth=3.5 with circular markers (size 12) are well-visible. Multiple rank crossings clearly depicted.
+      Labels: Right-side endpoint labels fully visible. Left-side labels partially clipped — "CodeBase (275)" appears as "cdeBase (275)" and "NetPulse (220)" appears as "etPulse (220)" because annotations extend past the left margin. Bottom-right "(60) DataCore" label closely borders the legend box.
+      Legibility verdict: PASS with caveats — text readable in both themes but two left-side entity labels are clipped at the canvas boundary.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface consistent with #1A1A17 - correct.
-      Chrome: Title in light (F0EFE8-range) text — readable. Axis labels in light ink — readable. Tick labels in INK_SOFT (B8B7B0-range) — readable. No dark-on-dark failures detected.
-      Data: Same green (#009E73) and vermillion (#D55E00) as light render — data colors are identical across themes, confirming only chrome flips. Legend box uses elevated dark background (#242420).
-      Issues: Same left-side label clipping as light render. DataCore/legend proximity issue persists.
-      Legibility verdict: FAIL (same label clipping issue; otherwise theme adaptation is correct)
+      Background: Warm near-black (#1A1A17) — correct, not pure black. PASS
+      Chrome: Title, axis labels, tick labels all in light cream/off-white text — clearly readable against dark background. No "dark-on-dark" failures observed. Grid lines subtle. Legend box uses elevated dark background (#242420).
+      Data: Data colors (green #009E73, orange #D55E00) are identical to light render — only chrome flips. PASS
+      Labels: Same clipping issue as light render — "cdeBase" and "etPulse" visible on left side.
+      Legibility verdict: PASS — both theme surfaces render correctly with no dark-on-dark failures. The same structural clipping issue applies in dark mode.
   criteria_checklist:
     visual_quality:
       score: 24
@@ -61,52 +54,57 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Sizes explicitly set (title 24pt, ylabel 20pt, ticks 16pt) but annotations
-          at 14pt below 16pt minimum; left-side labels clipped reducing legibility
+        comment: Title 24pt, axis labels 20pt, ticks 16pt all explicitly set. Entity
+          annotation labels at 14pt bold — slightly below 16pt minimum for this canvas
+          size but still readable.
       - id: VQ-02
         name: No Overlap
         score: 3
         max: 6
         passed: false
-        comment: 2-3 left-side entity labels clipped by figure boundary (CodeBase→deBase,
-          NetPulse→etPulse); DataCore/legend proximity at bottom-right
+        comment: 'Two left-side entity labels clipped at canvas boundary: CodeBase
+          appears as cdeBase, NetPulse as etPulse. Bottom-right DataCore label overlaps
+          with legend box.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines (linewidth=3.5) and markers (markersize=12) well-sized; all
-          8 entities visible
+        comment: Lines at linewidth=3.5 and markers at markersize=12 are clearly visible
+          in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1 and 2 are CVD-safe with adequate luminance
-          contrast
+        comment: Green (#009E73) and vermillion (#D55E00) are Okabe-Ito positions
+          1 and 2 — CVD-safe and distinguishable.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Good canvas utilization; subplots_adjust adds margins but insufficient
-          for all labels
+        passed: false
+        comment: Canvas utilization is otherwise good but left-side label clipping
+          indicates the left margin is insufficient. subplots_adjust(left=0.22) does
+          not fully accommodate the annotation text.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units (Revenue ($M)), x-axis period labels descriptive
+        comment: Y-axis 'Revenue ($M)' with units. X-axis tick labels serve as axis
+          labels 'Q1 Revenue ($M)' / 'Q4 Revenue ($M)'. Title format correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00 — Okabe-Ito order correct;
-          backgrounds #FAF8F1/#1A1A17; theme chrome correct in both renders'
+        comment: 'First categorical series (Increase) is #009E73. Second (Decrease)
+          is #D55E00. Data colors identical across themes. Backgrounds #FAF8F1/#1A1A17
+          correct.'
     design_excellence:
       score: 13
       max: 20
@@ -116,23 +114,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Color-coded endpoint labels matching line colors is elegant; direction-based
-          color coding is intentional; above library defaults but not publication-ready
+        comment: 'Above well-configured default: intentional direction color-coding,
+          bold endpoint labels, theme-adaptive tokens. Not quite publication-ready
+          due to clipped labels and limited typographic hierarchy beyond bold.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle y-axis grid (alpha=0.10), legend
-          with elevated background; clipping issue reduces polish
+        comment: Top/right spines removed, subtle grid (alpha=0.10), custom spine
+          color, elevated legend background. Good refinement with minor deductions
+          for label clipping.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Four rank crossings intentionally built into data; color hierarchy
-          (green=growth, orange=decline) guides viewer immediately; stronger than
-          default but lacks additional emphasis on key crossings
+        comment: Direction color-coding (green=rise, orange=fall) creates clear visual
+          hierarchy. Multiple rank crossings are visible and easy to trace. Viewer
+          immediately understands which companies grew vs declined.
     spec_compliance:
       score: 15
       max: 15
@@ -142,27 +142,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct slopegraph connecting two time points with labeled lines
+        comment: Correct slopegraph with lines connecting two time points.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Labels at both endpoints, color by direction, time points named,
-          8 entities within 5-15 range
+        comment: Labels at both endpoints, direction color-coding, vertical axes labeled
+          with time point names, 8 entities within spec range.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Periods on x-axis (0=Q1, 1=Q4), Revenue on y-axis, all data visible
+        comment: X-axis positions Q1 (0) and Q4 (1) correctly. Y-axis shows Revenue
+          ($M). All data points visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'slope-basic · seaborn · anyplot.ai' correct; legend shows
-          Increase/Decrease labels
+        comment: Title 'slope-basic · seaborn · anyplot.ai' matches required format.
+          Legend shows Increase/Decrease clearly.
     data_quality:
       score: 15
       max: 15
@@ -172,20 +173,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows increases, decreases, multiple rank crossings, varying magnitudes
-          of change — full feature coverage
+        comment: Mix of increasing and decreasing trends, 4 rank crossings, varying
+          magnitudes of change. Full feature coverage.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Tech company quarterly revenue — realistic neutral business scenario
+        comment: Tech company quarterly revenue comparison — neutral, realistic business
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: $50M-$430M range for tech companies Q1 vs Q4 — plausible and proportional
+        comment: Revenue values $50M–$430M are plausible for mid-to-large tech companies.
+          Q1→Q4 changes are realistic.
     code_quality:
       score: 10
       max: 10
@@ -195,34 +198,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save, no functions or classes
+        comment: 'Linear: tokens → data → plot → annotations → styling → legend →
+          save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic inline data, no random generation needed
+        comment: Fully deterministic — hardcoded data, no random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib.pyplot, pandas, seaborn, matplotlib.lines.Line2D'
+        comment: os, matplotlib.pyplot, pandas, seaborn, matplotlib.lines.Line2D —
+          all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; iterrows loop for endpoint labels is appropriate
+        comment: 'Pythonic: lambda for direction, df.melt for reshaping, iterrows
+          for annotation loop. Appropriate complexity.'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with dpi=300, bbox_inches=tight, facecolor
-          correct
+        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches='tight', facecolor=PAGE_BG.
+          Current API.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -230,17 +236,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.lineplot with units='entity' and estimator=None is the correct
-          seaborn idiom for individual trajectory plots; sns.set_theme with rc dict
-          is idiomatic
+        comment: sns.lineplot with units+estimator=None is the idiomatic seaborn pattern
+          for individual line trajectories. sns.set_theme for theming. Good seaborn-first
+          approach.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: units/estimator=None pattern is seaborn-specific for slopegraphs;
-          could leverage sns.despine() or more seaborn-native features
-  verdict: REJECTED
+        passed: false
+        comment: The units/estimator=None combination in sns.lineplot is somewhat
+          seaborn-distinctive, but slope charts lack a native seaborn geom — the visualization
+          falls back to matplotlib annotations and manual legend construction, limiting
+          seaborn distinctiveness.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -248,9 +256,9 @@ impl_tags:
   - custom-legend
   - manual-ticks
   patterns:
-  - data-generation
-  - iteration-over-groups
   - wide-to-long
+  - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
