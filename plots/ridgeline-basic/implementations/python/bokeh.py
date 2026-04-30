@@ -1,13 +1,22 @@
-""" pyplots.ai
+"""anyplot.ai
 ridgeline-basic: Basic Ridgeline Plot
-Library: bokeh 3.8.1 | Python 3.13.11
+Library: bokeh | Python 3.13
 Quality: 91/100 | Created: 2025-12-23
 """
+
+import os
 
 import numpy as np
 from bokeh.io import export_png, output_file, save
 from bokeh.plotting import figure
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Monthly temperature distributions
 np.random.seed(42)
@@ -20,17 +29,6 @@ temp_data = {}
 for i, month in enumerate(months):
     temps = np.random.normal(base_temps[i], 3, 200)
     temp_data[month] = temps
-
-# Create plot (4800 × 2700 px)
-p = figure(
-    width=4800,
-    height=2700,
-    title="ridgeline-basic · bokeh · pyplots.ai",
-    x_axis_label="Temperature (°C)",
-    y_axis_label="Month",
-    y_range=months[::-1],  # Reverse to have January at top
-    toolbar_location=None,
-)
 
 # Color gradient from blue (cold) to yellow/orange (warm) to blue again
 colors = [
@@ -48,8 +46,19 @@ colors = [
     "#306998",  # Dec - cold blue
 ]
 
+# Plot (4800 × 2700 px)
+p = figure(
+    width=4800,
+    height=2700,
+    title="ridgeline-basic · bokeh · anyplot.ai",
+    x_axis_label="Temperature (°C)",
+    y_axis_label="Month",
+    y_range=months[::-1],
+    toolbar_location=None,
+)
+
 # Spacing and overlap parameters
-ridge_height = 0.65  # Height multiplier for each ridge
+ridge_height = 0.65
 x_grid = np.linspace(-5, 40, 300)
 
 # Plot ridgelines (from bottom to top for proper overlapping)
@@ -68,54 +77,58 @@ for i, month in enumerate(reversed(months)):
         density += np.exp(-0.5 * ((x_grid - xi) / bandwidth) ** 2)
     density /= n * bandwidth * np.sqrt(2 * np.pi)
 
-    # Normalize density to fit within ridge height
     density_normalized = density / density.max() * ridge_height
 
-    # Y position (reversed order so Jan is at top)
-    color_idx = len(months) - 1 - i  # Original month index for color
+    color_idx = len(months) - 1 - i
 
-    # Create patch coordinates
     x_patch = np.concatenate([[x_grid[0]], x_grid, [x_grid[-1]]])
     y_patch_numeric = np.concatenate([[0], density_normalized, [0]])
-
-    # For categorical y-axis, use factor offsets
     y_patches = [(month, float(y)) for y in y_patch_numeric]
 
-    # Fill with color and add outline
     p.patch(
-        x=list(x_patch), y=y_patches, fill_color=colors[color_idx], fill_alpha=0.85, line_color="#333333", line_width=2
+        x=list(x_patch), y=y_patches, fill_color=colors[color_idx], fill_alpha=0.85, line_color=INK_SOFT, line_width=2
     )
 
-# Style the plot
+# Style
 p.title.text_font_size = "32pt"
+p.title.text_color = INK
 p.xaxis.axis_label_text_font_size = "24pt"
 p.yaxis.axis_label_text_font_size = "24pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
 p.xaxis.major_label_text_font_size = "18pt"
 p.yaxis.major_label_text_font_size = "18pt"
-
-# Grid styling
-p.xgrid.grid_line_alpha = 0.3
-p.xgrid.grid_line_dash = "dashed"
-p.ygrid.grid_line_alpha = 0
-
-# Axis styling
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
 p.xaxis.axis_line_width = 2
 p.yaxis.axis_line_width = 2
 p.xaxis.major_tick_line_width = 2
 p.yaxis.major_tick_line_width = 2
 
-# Set x-axis range to show all data
-p.x_range.start = -5
-p.x_range.end = 40
+# Grid
+p.xgrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.xgrid.grid_line_dash = "solid"
+p.ygrid.grid_line_color = INK
+p.ygrid.grid_line_alpha = 0.05
 
-# Remove y-axis ticks (we have categorical labels)
+# Remove y-axis tick marks
 p.yaxis.major_tick_line_color = None
 p.yaxis.minor_tick_line_color = None
 
-# Background
-p.background_fill_color = "#FAFAFA"
+# Set x-axis range
+p.x_range.start = -5
+p.x_range.end = 40
 
-# Save outputs
-output_file("plot.html")
+# Background
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
+
+# Save
+export_png(p, filename=f"plot-{THEME}.png")
+output_file(f"plot-{THEME}.html")
 save(p)
-export_png(p, filename="plot.png")
