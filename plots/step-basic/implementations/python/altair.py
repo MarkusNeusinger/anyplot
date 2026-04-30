@@ -1,14 +1,14 @@
-""" pyplots.ai
+""" anyplot.ai
 step-basic: Basic Step Plot
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-04-30
 """
 
-# Workaround for altair.py file shadowing the altair module
 import os
 import sys
 
 
+# Workaround: this file is named altair.py, which shadows the altair module
 _cwd = os.getcwd()
 if _cwd in sys.path:
     sys.path.remove(_cwd)
@@ -21,40 +21,60 @@ sys.path.insert(0, _cwd)
 
 import pandas as pd  # noqa: E402, I001
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"
 
-# Data - Monthly cumulative sales (shows clear step pattern)
+# Data — monthly cumulative software subscription revenue
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-cumulative_sales = [12, 25, 31, 48, 52, 67, 89, 95, 108, 124, 145, 168]
+cumulative_revenue = [12, 25, 31, 48, 52, 67, 89, 95, 108, 124, 145, 168]
 
-df = pd.DataFrame({"Month": months, "Cumulative Sales": cumulative_sales})
+df = pd.DataFrame({"Month": months, "Cumulative Revenue": cumulative_revenue})
 
-# Create step chart
-chart = (
+# Step line
+line = (
     alt.Chart(df)
-    .mark_line(interpolate="step-after", strokeWidth=4, color="#306998")
+    .mark_line(interpolate="step-after", strokeWidth=5, color=BRAND)
     .encode(
         x=alt.X("Month:N", title="Month", sort=months, axis=alt.Axis(labelAngle=0)),
-        y=alt.Y("Cumulative Sales:Q", title="Cumulative Sales (thousands $)"),
+        y=alt.Y("Cumulative Revenue:Q", title="Cumulative Revenue (thousands $)"),
     )
-    .properties(width=1600, height=900, title=alt.Title("step-basic · altair · pyplots.ai", fontSize=28))
 )
 
-# Add markers at data points to highlight where changes occur
+# Markers at each data point
 points = (
     alt.Chart(df)
-    .mark_point(size=200, color="#306998", filled=True)
-    .encode(x=alt.X("Month:N", sort=months), y="Cumulative Sales:Q")
+    .mark_point(size=220, color=BRAND, filled=True, opacity=1.0)
+    .encode(x=alt.X("Month:N", sort=months), y="Cumulative Revenue:Q")
 )
 
-# Combine line and points
-final_chart = (
-    (chart + points)
-    .configure_axis(labelFontSize=18, titleFontSize=22, grid=True, gridOpacity=0.3, gridDash=[4, 4])
-    .configure_view(strokeWidth=0)
+# Compose and style
+chart = (
+    (line + points)
+    .properties(
+        width=1600,
+        height=900,
+        background=PAGE_BG,
+        title=alt.Title("step-basic · altair · anyplot.ai", fontSize=28, color=INK),
+    )
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.10,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=18,
+        titleFontSize=22,
+    )
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save as PNG (1600 × 900 @ scale 3 = 4800 × 2700)
-final_chart.save("plot.png", scale_factor=3.0)
-
-# Save as HTML for interactivity
-final_chart.save("plot.html")
+# Save
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")

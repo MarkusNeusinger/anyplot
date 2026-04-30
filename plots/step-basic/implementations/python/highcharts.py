@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 step-basic: Basic Step Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: highcharts unknown | Python 3.13.13
+Quality: 86/100 | Updated: 2026-04-30
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -15,6 +16,15 @@ from highcharts_core.options.series.area import LineSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"
 
 # Data - Monthly cumulative sales (thousands of dollars)
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -29,58 +39,65 @@ chart.options.chart = {
     "type": "line",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginBottom": 250,
     "marginLeft": 200,
 }
 
 # Title
 chart.options.title = {
-    "text": "step-basic · highcharts · pyplots.ai",
-    "style": {"fontSize": "72px", "fontWeight": "bold"},
+    "text": "step-basic · highcharts · anyplot.ai",
+    "style": {"fontSize": "72px", "fontWeight": "bold", "color": INK},
 }
 
-# X-axis (categories)
+# X-axis
 chart.options.x_axis = {
     "categories": months,
-    "title": {"text": "Month", "style": {"fontSize": "48px"}},
-    "labels": {"style": {"fontSize": "36px"}},
+    "title": {"text": "Month", "style": {"fontSize": "48px", "color": INK}},
+    "labels": {"style": {"fontSize": "36px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": GRID,
 }
 
 # Y-axis
 chart.options.y_axis = {
-    "title": {"text": "Cumulative Sales ($K)", "style": {"fontSize": "48px"}},
-    "labels": {"style": {"fontSize": "36px"}},
+    "title": {"text": "Cumulative Sales ($K)", "style": {"fontSize": "48px", "color": INK}},
+    "labels": {"style": {"fontSize": "36px", "color": INK_SOFT}},
     "gridLineWidth": 1,
-    "gridLineColor": "#cccccc",
+    "gridLineColor": GRID,
 }
 
-# Plot options for step line
+# Plot options — step line with markers
 chart.options.plot_options = {
-    "line": {
-        "step": "left",  # Step style: value applies from this point until next
-        "lineWidth": 6,
-        "marker": {"enabled": True, "radius": 12, "symbol": "circle"},
-    }
+    "line": {"step": "left", "lineWidth": 6, "marker": {"enabled": True, "radius": 12, "symbol": "circle"}}
 }
 
-# Legend
-chart.options.legend = {"enabled": True, "itemStyle": {"fontSize": "36px"}}
+# Legend disabled — single series
+chart.options.legend = {"enabled": False}
 
-# Series data
+# Series
 series = LineSeries()
 series.name = "Cumulative Sales"
 series.data = cumulative_sales
-series.color = "#306998"  # Python Blue
+series.color = BRAND
 
 chart.add_series(series)
 
-# Download Highcharts JS for inline embedding
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Download Highcharts JS for inline embedding (headless Chrome cannot load CDN)
+cdn_urls = ["https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js", "https://code.highcharts.com/highcharts.js"]
+highcharts_js = None
+for url in cdn_urls:
+    try:
+        with urllib.request.urlopen(url, timeout=30) as response:
+            highcharts_js = response.read().decode("utf-8")
+        break
+    except Exception:
+        continue
+if not highcharts_js:
+    raise RuntimeError("Failed to download Highcharts JS from all CDN sources")
 
-# Generate HTML with inline script
+# Build HTML with inline script
 html_str = chart.to_js_literal()
 html_content = f"""<!DOCTYPE html>
 <html>
@@ -88,14 +105,14 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Save HTML file
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
 # Screenshot with Selenium
@@ -113,7 +130,7 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
