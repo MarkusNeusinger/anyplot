@@ -1,169 +1,196 @@
 library: seaborn
+language: python
 specification_id: slope-basic
 created: '2025-12-23T20:47:31Z'
-updated: '2025-12-23T20:55:34Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20471149560
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-30T17:01:50Z'
+generated_by: claude-sonnet
+workflow_run: 25177206954
+issue: 981
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/slope-basic/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - custom-legend
-  patterns:
-  - data-generation
-  - wide-to-long
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 83
 review:
   strengths:
-  - Excellent color coding distinguishing increases (blue) from decreases (yellow)
-    with colorblind-safe palette
-  - Clear entity labels at both endpoints with values in parentheses for easy reading
-  - Good use of seaborn styling (whitegrid) and lineplot function
-  - Well-proportioned layout with appropriate margins for labels
-  - Realistic tech company revenue scenario that demonstrates the visualization purpose
+  - Correct slopegraph with lines connecting two time points
+  - Intentional color-coding by direction (Increase=#009E73, Decrease=#D55E00) tells
+    a clear story
+  - Full theme-adaptive chrome with correct light/dark backgrounds and ink tokens
+  - Endpoint labels with entity names and values on both sides
+  - Clean code structure with wide-to-long melt and proper seaborn lineplot usage
+  - 'Spec fully met: labels at both endpoints, direction color-coding, time-point
+    axis labels, 8 entities in range'
+  - Perfect data quality with realistic tech revenue scenario and multiple rank crossings
   weaknesses:
-  - Minor label overlap around the 125-175 revenue range where multiple entities cluster
-  - Seaborn lineplot used in a loop rather than leveraging native grouping capabilities
-  - Could benefit from more dramatic rank changes in the data to better showcase slope
-    chart strength
-  image_description: The plot displays a slope chart comparing Q1 vs Q4 revenue for
-    8 tech companies. Lines connect data points between two vertical axes labeled
-    "Q1 Revenue ($M)" and "Q4 Revenue ($M)". Blue (#306998) lines indicate revenue
-    increases (TechCorp, DataFlow, NetWorks, CodeBase, LogicPro - 5 companies), while
-    yellow (#FFD43B) lines show decreases (CloudNine, ByteSize, SoftEdge - 3 companies).
-    Each endpoint is labeled with the company name and value in parentheses. The title
-    "slope-basic · seaborn · pyplots.ai" appears at the top. A legend in the lower
-    right distinguishes "Increase" and "Decrease" categories. The layout has appropriate
-    margins with labels positioned clearly outside the plot area.
+  - Left-side entity labels clipped at canvas edge — CodeBase and NetPulse show as
+    cdeBase/etPulse because the annotations extend past the left margin; increase
+    subplots_adjust left margin or reduce annotation offset
+  - Bottom-right DataCore label overlaps with/sits very close to the legend box
+  - Entity annotation font size (14pt) is below the 16pt minimum for seaborn at 4800x2700px
+  - 'LM-02: sns.lineplot is used but slope charts are not a native seaborn type —
+    heavy fallback to matplotlib annotations and manual legend construction limits
+    library-mastery ceiling'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white. PASS
+      Chrome: Title "slope-basic · seaborn · anyplot.ai" in dark bold text — clearly readable. Y-axis label "Revenue ($M)" visible. X-tick labels "Q1 Revenue ($M)" / "Q4 Revenue ($M)" in INK_SOFT. All chrome elements dark on light — readable.
+      Data: Eight slope lines in two colors — green (#009E73) for Increase, orange-vermillion (#D55E00) for Decrease. Lines at linewidth=3.5 with circular markers (size 12) are well-visible. Multiple rank crossings clearly depicted.
+      Labels: Right-side endpoint labels fully visible. Left-side labels partially clipped — "CodeBase (275)" appears as "cdeBase (275)" and "NetPulse (220)" appears as "etPulse (220)" because annotations extend past the left margin. Bottom-right "(60) DataCore" label closely borders the legend box.
+      Legibility verdict: PASS with caveats — text readable in both themes but two left-side entity labels are clipped at the canvas boundary.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black. PASS
+      Chrome: Title, axis labels, tick labels all in light cream/off-white text — clearly readable against dark background. No "dark-on-dark" failures observed. Grid lines subtle. Legend box uses elevated dark background (#242420).
+      Data: Data colors (green #009E73, orange #D55E00) are identical to light render — only chrome flips. PASS
+      Labels: Same clipping issue as light render — "cdeBase" and "etPulse" visible on left side.
+      Legibility verdict: PASS — both theme surfaces render correctly with no dark-on-dark failures. The same structural clipping issue applies in dark mode.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 24
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title is 24pt bold, axis labels 20pt, tick labels 16pt, entity labels
-          15pt bold - all perfectly readable
+        comment: Title 24pt, axis labels 20pt, ticks 16pt all explicitly set. Entity
+          annotation labels at 14pt bold — slightly below 16pt minimum for this canvas
+          size but still readable.
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 8
-        passed: true
-        comment: Minor overlap between "LogicPro (125)" and "125" y-axis tick label
-          on the left side; slight crowding around 160-178 range
+        score: 3
+        max: 6
+        passed: false
+        comment: 'Two left-side entity labels clipped at canvas boundary: CodeBase
+          appears as cdeBase, NetPulse as etPulse. Bottom-right DataCore label overlaps
+          with legend box.'
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width 3.5 and marker size 14 are well-suited for 8 entities,
-          alpha 0.85 provides good visibility
+        comment: Lines at linewidth=3.5 and markers at markersize=12 are clearly visible
+          in both themes.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow combination is colorblind-safe with excellent contrast
+        comment: Green (#009E73) and vermillion (#D55E00) are Okabe-Ito positions
+          1 and 2 — CVD-safe and distinguishable.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas with adjusted margins (left=0.22, right=0.78)
-          accommodating labels
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Canvas utilization is otherwise good but left-side label clipping
+          indicates the left margin is insufficient. subplots_adjust(left=0.22) does
+          not fully accommodate the annotation text.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Y-axis has "Revenue ($M)" with units, but x-axis labels are tick
-          labels showing period names rather than axis label
+        comment: Y-axis 'Revenue ($M)' with units. X-axis tick labels serve as axis
+          labels 'Q1 Revenue ($M)' / 'Q4 Revenue ($M)'. Title format correct.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid alpha 0.3 with dashed lines is subtle; legend placed well but
-          could be more integrated
+        comment: 'First categorical series (Increase) is #009E73. Second (Decrease)
+          is #D55E00. Data colors identical across themes. Backgrounds #FAF8F1/#1A1A17
+          correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: intentional direction color-coding,
+          bold endpoint labels, theme-adaptive tokens. Not quite publication-ready
+          due to clipped labels and limited typographic hierarchy beyond bold.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, subtle grid (alpha=0.10), custom spine
+          color, elevated legend background. Good refinement with minor deductions
+          for label clipping.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Direction color-coding (green=rise, orange=fall) creates clear visual
+          hierarchy. Multiple rank crossings are visible and easy to trace. Viewer
+          immediately understands which companies grew vs declined.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct slope chart/slopegraph connecting two time points
+        comment: Correct slopegraph with lines connecting two time points.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Entities correctly shown on both axes, values mapped to y-position
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Labels at both endpoints ✓, color coding by direction ✓, vertical
-          axes labeled with time points
-      - id: SC-04
-        name: Data Range
+        comment: Labels at both endpoints, direction color-coding, vertical axes labeled
+          with time point names, 8 entities within spec range.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows all data with appropriate padding (8%)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis positions Q1 (0) and Q4 (1) correctly. Y-axis shows Revenue
+          ($M). All data points visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly indicates Increase/Decrease
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "slope-basic · seaborn · pyplots.ai"
+        comment: Title 'slope-basic · seaborn · anyplot.ai' matches required format.
+          Legend shows Increase/Decrease clearly.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both increases (5) and decreases (3), good variation in magnitude;
-          could show more dramatic rank changes
+        comment: Mix of increasing and decreasing trends, 4 rank crossings, varying
+          magnitudes of change. Full feature coverage.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Tech company quarterly revenue is a plausible real-world scenario
+        comment: Tech company quarterly revenue comparison — neutral, realistic business
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Revenue values ($52M-$225M) are realistic for tech companies, though
-          range is somewhat narrow
+        comment: Revenue values $50M–$430M are plausible for mid-to-large tech companies.
+          Q1→Q4 changes are realistic.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,41 +198,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save, no functions/classes'
+        comment: 'Linear: tokens → data → plot → annotations → styling → legend →
+          save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: 'Data is deterministic but no random seed needed anyway; minor: sorting
-          changes display order'
+        max: 2
+        passed: true
+        comment: Fully deterministic — hardcoded data, no random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib.pyplot, pandas, seaborn, Line2D)
+        comment: os, matplotlib.pyplot, pandas, seaborn, matplotlib.lines.Line2D —
+          all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: 'Pythonic: lambda for direction, df.melt for reshaping, iterrows
+          for annotation loop. Appropriate complexity.'
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png' with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches='tight', facecolor=PAGE_BG.
+          Current API.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses sns.lineplot and sns.set_style but slope charts aren't a seaborn
-          specialty; matplotlib does heavy lifting for annotations
+        comment: sns.lineplot with units+estimator=None is the idiomatic seaborn pattern
+          for individual line trajectories. sns.set_theme for theming. Good seaborn-first
+          approach.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: The units/estimator=None combination in sns.lineplot is somewhat
+          seaborn-distinctive, but slope charts lack a native seaborn geom — the visualization
+          falls back to matplotlib annotations and manual legend construction, limiting
+          seaborn distinctiveness.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - wide-to-long
+  - iteration-over-groups
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending

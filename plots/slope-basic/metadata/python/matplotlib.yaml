@@ -1,171 +1,185 @@
 library: matplotlib
+language: python
 specification_id: slope-basic
 created: '2025-12-23T20:44:23Z'
-updated: '2025-12-23T20:58:23Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20471149810
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/slope-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - custom-legend
-  - manual-ticks
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - edge-highlighting
-  - grid-styling
+updated: '2026-04-30T16:54:05Z'
+generated_by: claude-sonnet
+workflow_run: 25177110514
+issue: 981
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent label collision avoidance algorithm prevents text overlap
-  - Clean color coding distinguishes increases from decreases effectively
-  - Professional styling with removed top/right/bottom spines for clean slopegraph
-    aesthetic
-  - Properly sized text elements for high-resolution output (4800x2700)
-  - Realistic business context with quarterly product sales comparison
+  - Semantic two-color scheme (green=increase, vermillion=decrease) immediately communicates
+    change direction without requiring the viewer to read numbers
+  - Label collision avoidance with sorted-pass algorithm and dotted connectors is
+    a sophisticated, robust solution that works visually in both themes
+  - 'Full chrome token adaptation: INK/INK_SOFT/ELEVATED_BG used on every non-data
+    element; both renders are theme-correct without any dark-on-dark or light-on-light
+    failures'
+  - All font sizes explicitly set (24/20/16 hierarchy); FuncFormatter provides inline
+    unit context via $XM tick labels
   weaknesses:
-  - Data labels on the left side show adjusted positions that do not align perfectly
-    with the actual data point markers
-  - Legend placed in upper right could be more elegantly positioned below the title
-    or integrated differently
-  - Right-side labels only show values without product names, requiring visual line-following
-    to identify products
-  image_description: 'The plot displays a slope chart (slopegraph) with 8 products
-    comparing Q1 2024 vs Q4 2024 sales figures in millions of dollars. Blue lines
-    represent products with increased sales, while yellow/gold lines show decreases.
-    Products are labeled on the left side with their name and Q1 value (e.g., "Product
-    C: $15.2M"), and the right side shows Q4 values (e.g., "$18.5M"). The title "slope-basic
-    · matplotlib · pyplots.ai" appears at the top. A legend in the upper right distinguishes
-    "Increase" (blue) from "Decrease" (yellow). The Y-axis shows "Sales (Millions
-    $)" ranging from ~6 to 18, with horizontal gridlines. Time periods "Q1 2024" and
-    "Q4 2024" are bold labels at the bottom.'
+  - Generic product names (Product A-H) reduce the realism of the business scenario;
+    real product category names would score DQ-02 fully
+  - 'LM-02: no distinctively matplotlib-native technique is used; the implementation
+    could be ported to another library with minor syntax changes'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "slope-basic · matplotlib · anyplot.ai" in dark INK, clearly readable. Y-axis label "Sales" in dark INK. X-tick labels "Q1 2024" / "Q4 2024" in bold dark INK. Y-tick labels in INK_SOFT muted tone, all readable. Product/value labels in data color (green or vermillion), all readable against the off-white background.
+      Data: 8 slope lines — green (#009E73, Okabe-Ito pos 1) for increases, vermillion (#D55E00, Okabe-Ito pos 2) for decreases. Circle markers (markersize=12) with white edge highlighting at both endpoints. Dotted connectors where labels were nudged for collision avoidance.
+      Legibility verdict: PASS — all text readable, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, axis labels, tick labels all rendered in light text (F0EFE8/B8B7B0 tokens). Legend frame uses dark elevated-bg (#242420) with themed border. All chrome elements correctly flipped for dark theme. No dark-on-dark text detected.
+      Data: Same green (#009E73) and vermillion (#D55E00) as light render — data colors are identical across themes, only chrome flips. Markers and lines clearly distinguishable against the dark background.
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, Y-axis label at 20pt, X-axis labels at 20pt bold,
-          tick labels at 16pt, data labels at 14pt bold - all clearly readable
+        comment: Title 24pt, axis labels 20pt, ticks 16pt, product labels 16pt all
+          explicitly set; readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Label collision avoidance algorithm works well, no overlapping text
+        comment: Collision avoidance algorithm with dotted connectors handles most
+          crowding; bottom-right pair sits very close but remains readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers are size 12 with linewidth 3, perfectly visible for 8 data
-          entities
+        comment: linewidth=3 slope lines and markersize=12 circles with white edge
+          are optimally visible at full resolution
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue (#306998) vs Yellow (#FFD43B) is colorblind-safe; yellow could
-          have slightly better contrast on white background
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space with margins allowing labels; slight excess
-          whitespace on right side
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has "Sales (Millions $)" with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: '#009E73 and #D55E00 are Okabe-Ito positions 1 and 2, CVD-safe by
+          design'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: xlim extended to (-0.75, 1.75) fills margins with labels; tight_layout
+          applied; canvas well-utilised
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle at alpha 0.3 with dashed style, but legend placement
-          in upper right overlaps potential data space and feels slightly disconnected
+        comment: Y-axis labelled Sales; units communicated inline via FuncFormatter
+          ($XM tick labels)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Increase series = #009E73 (Okabe-Ito pos 1); Decrease = #D55E00
+          (pos 2); backgrounds #FAF8F1 / #1A1A17; full chrome token set correct in
+          both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Semantic color coding is intentional and meaningful; dotted connectors
+          and white-edge markers add polish; stops short of FiveThirtyEight-level
+          quality
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top, right, and bottom spines removed; y-grid at alpha=0.10 exceptionally
+          subtle; x-tick length zeroed; legend frame themed
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color semantic encoding immediately communicates change direction;
+          crossing lines convey rank changes; could emphasise most dramatic movers
+          more explicitly
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct slope chart/slopegraph connecting two time points
+        comment: Correct slopegraph / slope chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Entities on left, values at start/end correctly positioned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Labels at both endpoints, color coding by direction (increase/decrease),
-          vertical axes labeled with time points
-      - id: SC-04
-        name: Data Range
+        comment: Labels at both endpoints, color-coded by direction, vertical axes
+          labelled with time-point names, 8 entities within spec range
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 8 products visible within axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Entities on slopes, Q1/Q4 as two time points, y-axis shows all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Increase (blue) and Decrease (yellow)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Follows exact format: "slope-basic · matplotlib · pyplots.ai"'
+        comment: Title is exactly slope-basic · matplotlib · anyplot.ai; legend labels
+          Increase/Decrease match color semantics
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows both increases and decreases (4 each), varying magnitudes of
-          change. Could show more dramatic contrasts or crossing lines
+        comment: Mix of increases and decreases; crossing lines showing rank reversals;
+          varied magnitude of change
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Product sales comparison between quarters is a classic, believable
-          business scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Sales figures from $6M to $18M are realistic for product quarterly
-          sales
+        comment: Plausible business scenario (quarterly product sales); Product A-H
+          naming is generic rather than domain-realistic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sales range $3M-$28M realistic for mid-market products; Q1-Q4 changes
+          proportionally credible
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,42 +187,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → processing → plot → save'
+        comment: 'Linear: imports -> data -> collision avoidance -> plot -> style
+          -> save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Deterministic data, no random seed needed
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Line2D import is used but could import from matplotlib.lines directly
-          at top level
+        comment: Data is hardcoded; fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, matplotlib.pyplot, matplotlib.ticker, matplotlib.lines.Line2D
+          all used; no dead imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Clean Pythonic style; collision-avoidance complexity justified by
+          visual need; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; current matplotlib API throughout
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses matplotlib properly with ax methods, Line2D for custom legend,
-          spines manipulation. Could leverage more advanced features like annotations
-          with arrows or ConnectionPatch
+        comment: Axes methods throughout; FuncFormatter for tick formatting; plt.setp
+          for batch text styling; bbox_to_anchor legend placement; all idiomatic matplotlib
+          patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: FuncFormatter and Line2D custom legend are standard matplotlib tools;
+          collision-avoidance logic is custom Python rather than a matplotlib-distinctive
+          feature
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  - manual-ticks
+  patterns:
+  - iteration-over-groups
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
