@@ -1,169 +1,181 @@
 library: altair
+language: python
 specification_id: ridgeline-basic
 created: '2025-12-23T19:42:49Z'
-updated: '2025-12-23T19:48:14Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20469995055
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/altair/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - faceting
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-04-30T03:40:35Z'
+generated_by: claude-sonnet
+workflow_run: 25145333048
+issue: 923
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/altair/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent use of Altair transform_density and row faceting with negative spacing
-    to achieve the ridgeline effect
-  - Realistic monthly temperature data with appropriate seasonal variation and realistic
-    variability patterns
-  - Clean color gradient using the blues scheme that naturally emphasizes the seasonal
-    progression
-  - Perfect title format following spec requirements
-  - Well-tuned overlap (-25px spacing) creates visually appealing ridge effect
-  - Good font sizing throughout for 4800x2700 output
+  - 'Fully idiomatic Altair: transform_density with groupby, configure_facet negative
+    spacing for ridgeline — uses native mechanisms rather than workarounds'
+  - Seasonal temperature dataset is realistic and well-scaled with appropriate std
+    deviations per month
+  - 'Both light and dark themes render cleanly with correct backgrounds (#FAF8F1 /
+    #1A1A17) and legible chrome'
+  - 'Strong data storytelling: blues gradient visually encodes seasonal progression,
+    reinforcing the narrative without a legend'
+  - 'Complete code quality: seed, clean imports, correct file output naming'
   weaknesses:
-  - Grid lines extend across the full width creating slight visual noise on the right
-    side where there is no data
-  - Grid could be disabled entirely as it does not add value to this visualization
-  image_description: The plot displays a ridgeline visualization showing monthly temperature
-    distributions for 12 months (January through December). Each month is represented
-    as a separate row with a blue area density curve. The ridges use a gradient blue
-    color scheme (darker blues for winter months at top, transitioning through the
-    year). The curves overlap slightly vertically, creating the characteristic "mountain
-    ridge" appearance. The x-axis shows "Temperature (°C)" ranging from -14 to 40,
-    and each ridge is labeled with its 3-letter month abbreviation on the left. The
-    title reads "Monthly Temperature Distribution · ridgeline-basic · altair · pyplots.ai"
-    at the top. The seasonal temperature pattern is clearly visible - winter months
-    (Jan, Feb, Dec) peak around 2-6°C, while summer months (Jun, Jul, Aug) peak around
-    22-25°C. Dark blue outlines define each ridge, and the fill has good transparency
-    (0.8 opacity).
+  - 'Canvas slightly undersized: width 4200px (1400x3) vs. 4800px target; increase
+    width to 1600'
+  - 'Custom stroke color #306998 is a non-Okabe-Ito hex; replace with #0072B2 (Okabe-Ito
+    blue) or remove explicit stroke'
+  - Blues sequential scheme is acceptable for 12-month ordinal data but viridis/cividis
+    would be more strictly compliant with the altair style guide and provide better
+    dark-end contrast for Jan visibility in dark mode
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "Monthly Temperature Distribution · ridgeline-basic · altair · anyplot.ai" in dark ink, clearly readable. Month labels (Jan-Dec) right-aligned in soft dark ink. X-axis "Temperature (°C)" label and tick labels (-15 to 40) all clearly visible.
+      Data: 12 ridges using blues colormap reversed — Jan/Feb/Mar in dark navy, mid-year in medium blue, Oct/Nov/Dec in light blue/gray. Semi-transparent fills (0.8 opacity) with #306998 stroke outline. Seasonal shift clearly visible: cold months left-peaked, warm months right-peaked.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and month labels in light cream/white text — clearly readable. X-axis tick labels in light text, all legible. No dark-on-dark failures detected.
+      Data: Identical blues color scheme as light render. Dark navy fills (Jan/Feb) are slightly close to near-black background but distinguishable via the #306998 stroke. Light blue-gray fills (Oct/Nov/Dec) clearly visible against dark background.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all clearly
-          readable
+        comment: Font sizes explicitly set (title 28px, axis 22px, ticks 18px); all
+          text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No text overlap, month labels well-positioned and readable
+        comment: No problematic overlap; ridgeline overlap is intentional by design
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Density curves are well-sized, opacity and stroke create clear visual
-          distinction
+        comment: All ridges visible; Jan/Feb dark fills slightly close to dark background
+          but stroke provides edge contrast
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blues color scheme is colorblind-safe sequential palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout with ridges filling canvas well, slight issue with excess
-          whitespace on right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis has descriptive label with units: "Temperature (°C)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Sequential blues is CVD-safe, no red-green signaling
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Width 4200px (1400x3) is below 4800px target; height appropriate
+          for 12-row ridgeline layout
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is visible but very subtle (0.3 opacity), no legend needed for
-          this plot type
+        comment: Temperature (C) with units; descriptive title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Blues sequential acceptable for 12-category ordinal data but custom
+          #306998 stroke is non-Okabe-Ito; viridis/cividis would be stricter compliance'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Reversed blues gradient encoding ordinal month order is deliberate;
+          negative spacing well-calibrated
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Right-aligned month labels, no unnecessary chrome, subtle facet dividers,
+          no extraneous spines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear seasonal narrative: dark winter months bracket warm summer
+          months; temporal flow is intuitive'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct ridgeline/joy plot with stacked density curves
+        comment: Correct ridgeline plot with row-faceted density areas and partial
+          overlap
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Temperature on X-axis, groups (months) on Y/rows correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: overlapping curves, vertical stacking,
-          color differentiation, meaningful ordering (chronological)'
-      - id: SC-04
-        name: Data Range
+        comment: Stacked density curves, 12 groups, overlap via spacing=-25, chronological
+          ordering, color differentiation
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis range [-15, 40] shows all data appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=temperature, Y=density, rows=months ordered Jan-Dec; full -15 to
+          40 extent shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed; month labels serve the purpose
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "Monthly Temperature Distribution · ridgeline-basic
-          · altair · pyplots.ai"'
+        comment: Title includes spec-id and library in required format; no legend
+          needed
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows all aspects: varying distribution widths (winter more variable),
-          seasonal progression, different peak locations'
+        comment: 'All ridgeline aspects covered: smooth KDE curves, partial overlap,
+          temporal ordering, group differentiation'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly temperature data for Northern Hemisphere - very realistic
-          and comprehensible
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 'Temperature values realistic: ~2°C in Jan, ~25°C in Jul, appropriate
-          standard deviations'
+        comment: Monthly temperature data for temperate climate is plausible, neutral,
+          clearly understandable
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Base temps 2-25C with std 3-5C yields realistic seasonal distributions
     code_quality:
       score: 10
       max: 10
@@ -173,40 +185,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: No functions, no classes; flat procedural script
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas used
+        comment: Only os, altair, numpy, pandas — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Method chaining, appropriate complexity, no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png (scale_factor=3.0) and plot-{THEME}.html correctly
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent use of Altair''s declarative grammar: transform_density,
-          faceting with negative spacing for overlap, monotone interpolation'
+        comment: transform_density with groupby, configure_facet, Header styling —
+          canonical Altair patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: transform_density with groupby and configure_facet(spacing=-25) are
+          distinctive Altair features for ridgeline
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
+  - custom-colormap
