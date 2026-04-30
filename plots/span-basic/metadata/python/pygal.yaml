@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: span-basic
 created: 2025-12-17 03:09:41+00:00
-updated: '2026-04-30T10:56:23Z'
+updated: '2026-04-30T11:05:00Z'
 generated_by: claude-sonnet
 workflow_run: 25161205000
 issue: 980
@@ -12,158 +12,146 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/span-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/pygal/plot-dark.html
-quality_score: 68
+quality_score: 79
 review:
   strengths:
-  - Correct title format span-basic · pygal · anyplot.ai
-  - Good use of vertical span coinciding with visible stock price drop during 2008-2009
-    recession
-  - Both PNG and HTML outputs generated correctly
-  - Reproducibility seed set (np.random.seed(42))
-  - Theme-adaptive backgrounds and text colors correctly implemented with PAGE_BG/INK
-    tokens
-  - 'First series uses #009E73 (brand green) as required by Okabe-Ito'
+  - 'Perfect spec compliance: both vertical and horizontal span types correctly implemented'
+  - 'Strong data storytelling: recession period + risk zone creates an immediately
+    clear financial narrative'
+  - 'Creative workaround: XY polygon technique correctly simulates native span support
+    pygal lacks'
+  - All theme tokens properly wired; chrome flips correctly in both renders
+  - 'Perfect code quality: KISS structure, seed set, clean imports, HTML export included'
   weaknesses:
-  - 'Dark render: Risk Zone span becomes extremely opaque dark brown — loses semi-transparent
-    highlight appearance entirely, making the horizontal span look like a solid bar
-    rather than a soft highlight'
-  - Legend labels truncated in both renders (Recession Peri... instead of Recession
-    Period) — insufficient width allocated or pygal clipping the legend text
-  - Risk Zone (60-80) is completely disconnected from the actual stock price range
-    (140-220) — the horizontal span tells no story because the data never enters it,
-    creating a large dead zone in the lower canvas
-  - Large empty canvas gap between data (140-220 range) and risk zone (60-80) wastes
-    most of the vertical space and creates poor canvas utilization
-  - Data storytelling undermined by the disconnected horizontal span — remove or reposition
-    the risk zone so it overlaps with actual data values
+  - 'Dark render span aesthetics: semi-transparent spans (#009E73 and #D55E00 at 25%
+    opacity) over #1A1A17 produce opaque dark rectangles that no longer communicate
+    as highlighted regions — consider increasing opacity slightly for dark theme or
+    adding a thin stroke outline to the span polygons'
+  - 'Grid is too busy: both x- and y-axis guides active; disable x-guides (show_x_guides=False)
+    and keep only y-guides for a cleaner look'
+  - 'DE-02 low: no visual refinement beyond basic style tokens; disable x guides,
+    adjust grid opacity, reduce visual noise'
+  - 'LM-02 low: pygal''s interactive JS features (tooltip formatting, value_formatter,
+    per-point custom tooltips) are not leveraged'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface.
-      Chrome: Title "span-basic · pygal · anyplot.ai" visible at top-center. Y-axis label "Price ($)" small but readable (rotated). X-axis label "Year" visible at bottom. Tick labels are small but legible. Legend at top-left is truncated ("Recession Peri...", "Risk Zone", "Stock Price") — text clipped by pygal's legend width.
-      Data: Three series — green (#009E73) filled rectangle for Recession Period (2008-2009, vertical span), orange-vermillion (#D55E00) filled rectangle for Risk Zone (horizontal span at y=60-80), blue (#0072B2) line for Stock Price. Both spans are semi-transparent in the light render. Recession span coincides with a visible stock price drop. Risk Zone sits far below the actual data range (stock price 140-220), leaving a large empty gap in the middle canvas.
-      Legibility verdict: PASS — all chrome elements readable, though legend is truncated.
+      Background: Warm off-white (#FAF8F1) - correct, not pure white
+      Chrome: Title "span-basic · pygal · anyplot.ai" readable at top; "Year" x-axis label and "Price ($)" y-axis label visible; tick labels (year numbers, price values) readable in dark ink against light background
+      Data: Recession Period span in #009E73 (brand green) as vertical fill 2008-2009; Risk Zone horizontal band in #D55E00 (orange) at y=60-80; Stock Price line in #0072B2 (blue)
+      Legibility verdict: PASS — all text readable, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface.
-      Chrome: Title and axis labels appear as light text on dark background — readable. Tick labels light-colored. Legend truncated same as light render.
-      Data: Data colors are identical to light render — Recession Period green, Risk Zone orange/vermillion, Stock Price blue. However in dark mode the 25% opacity applied to the spans blends heavily with the dark background: the Risk Zone becomes an almost-solid dark brown band with very little transparency effect, losing the "highlighted region" appearance entirely. The Recession Period span is dark green but retains some transparency. Stock price line still visible.
-      Legibility verdict: PASS for text (no dark-on-dark failures). FAIL for data element intent — the Risk Zone span is effectively opaque dark brown instead of a soft semi-transparent highlight.
+      Background: Dark near-black (#1A1A17) - correct, not pure black
+      Chrome: Title, axis labels, tick labels all rendered in light off-white text — readable against dark background; no dark-on-dark text failures observed
+      Data: Colors identical to light render (#009E73, #D55E00, #0072B2); semi-transparent spans at 25% opacity over dark background create very dark muddy rectangles (orange becomes dark brown, green becomes dark murky teal) — spans are technically visible but lose their communicative "highlight" function
+      Legibility verdict: PASS for text chrome; PARTIAL FAIL for span highlight function — spans look like dark blobs rather than highlighted regions in dark mode
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=28, label=22, major_label=18, legend=16)
-          but legend is truncated in rendering; text appears small relative to 4800x2700
-          canvas
+        comment: Sizes explicitly set (title=28, label=22, major_label=18, legend=16)
+          but text reads small on large canvas
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text overlap but legend labels are clipped/truncated which reduces
-          readability
+        comment: No overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: 'Light render: spans are semi-transparent and visible. Dark render:
-          Risk Zone span becomes nearly opaque dark brown — loses highlight appearance;
-          Recession Period span is dark green with low transparency'
+        passed: true
+        comment: Visible in light; dark render spans become opaque murky rectangles
+          that undermine highlight function
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe; green/orange/blue are well-separated
-          in luminance
+        comment: Okabe-Ito palette, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
         passed: true
-        comment: Data clustered in upper 40% of canvas; large empty gap between stock
-          price range (140-220) and risk zone (60-80); canvas utilization below ideal
+        comment: Good canvas utilization, minor excess whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; Y-axis has units 'Price ($)'; X-axis labeled
-          'Year'
+        comment: Year and Price ($) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (green), second #D55E00 (orange), third #0072B2
-          (blue) — correct Okabe-Ito order; backgrounds correct for both themes'
+        comment: 'First series #009E73, correct Okabe-Ito order, backgrounds correct,
+          chrome flips correctly'
     design_excellence:
-      score: 8
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
-        comment: Well-configured library default; correct palette and theme; no exceptional
-          design decisions
+        passed: false
+        comment: Creative polygon approach; looks like well-configured default; dark
+          render spans aesthetically poor
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Library defaults with minimal customization; dotted grid visible
-          but not refined; no spine control in pygal; legend placement not optimized
+        comment: Both x and y guides active creating busy grid; no spine removal;
+          minimal refinement
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Vertical span on recession period tells a compelling story (price
-          drop visible). Horizontal Risk Zone span at 60-80 adds no story value since
-          data never enters that range — undermines the narrative
+        passed: true
+        comment: 'Strong narrative: recession + risk zone + price decline; clear story
+          immediately visible'
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct span plot approach using filled XY polygons; no native span
-          API in pygal so closed polygon workaround is appropriate
+        comment: Both vertical and horizontal span types correctly implemented
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill present (light), vertical span and horizontal
-          span both implemented, underlying data visible in light render. Dark render
-          degrades transparency significantly
+        comment: Semi-transparent fill, start/end positions, both span directions,
+          1-5 spans
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Year, Y=Price ($), axes correctly show all data range
+        comment: Years on x-axis, price on y-axis, spans correctly positioned
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format 'span-basic · pygal · anyplot.ai' is correct. Legend
-          labels truncated ('Recession Peri...')
+        comment: 'Title format correct; legend: Recession Period, Risk Zone, Stock
+          Price'
     data_quality:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -171,24 +159,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows both vertical and horizontal spans with underlying line data;
-          demonstrates both directions. Horizontal span disconnected from data reduces
-          coverage effectiveness
+        comment: Both span types shown with underlying line; could show one more span
+          for fuller 1-5 range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price chart with recession period highlight is a classic, neutral,
-          real-world use case
+        comment: Stock price chart with recession and risk zone - real-world neutral
+          scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Stock price at 140-220 is plausible. But Risk Zone at 60-80 is far
-          below the trading range — if stocks are at 140-220, a threshold at 60-80
-          is unrealistically low for a risk zone warning
+        passed: true
+        comment: Stock prices 130-230, recession decline plausible, risk zone factually
+          coherent
     code_quality:
       score: 10
       max: 10
@@ -198,7 +184,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports, data, plot, save'
+        comment: 'Linear: imports -> data -> style -> plot -> save, no functions or
+          classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -210,19 +197,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, numpy, pygal, Style — all used
+        comment: All imports used; sys path manipulation required for library resolution
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and readable; polygon span approach is well-reasoned
+        comment: Clean, Pythonic, no fake functionality; polygon span workaround is
+          documented
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
       score: 5
       max: 10
@@ -232,16 +220,15 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal.XY with Style object correctly; fill/stroke options appropriate;
-          correct theme token wiring via Style
+        comment: Correct use of Style object, XY chart with fill, per-series fill
+          override
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses pygal's interactive HTML output alongside PNG — a library-distinctive
-          feature. Polygon fill for spans is a creative workaround but not a distinctive
-          pygal capability
+        comment: Uses interactive HTML output and fill=True per-series; could leverage
+          value_formatter, human_readable, tooltip customization
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -249,7 +236,6 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  dataprep:
-  - time-series
+  dataprep: []
   styling:
   - alpha-blending
