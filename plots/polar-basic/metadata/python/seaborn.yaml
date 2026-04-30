@@ -1,176 +1,187 @@
 library: seaborn
+language: python
 specification_id: polar-basic
 created: '2025-12-23T19:43:22Z'
-updated: '2025-12-23T19:51:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20469990518
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-30T00:45:07Z'
+generated_by: claude-sonnet
+workflow_run: 25140857403
+issue: 800
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/polar-basic/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - polar-projection
-    - colorbar
-    - layer-composition
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - custom-colormap
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
 review:
   strengths:
-  - Excellent data scenario using website traffic by hour which perfectly demonstrates
-    cyclical nature of polar charts
-  - Beautiful visual design with viridis colormap providing both aesthetic appeal
-    and colorblind accessibility
-  - Proper polar configuration with theta offset at top (12 o'clock) and clockwise
-    direction for time-based data
-  - Smart combination of scatter points, connecting line, and filled area to create
-    rich visualization
-  - Appropriate marker sizing (s=300) and alpha (0.8) for 24 data points
+  - Both light and dark themes fully pass readability checks; all chrome tokens correctly
+    propagated including colorbar tick labels and outline
+  - Perfect spec compliance — correct polar projection, clockwise time orientation,
+    12 angular labels, subtle radial grid, appropriate radial scale
+  - Layered visualization (viridis scatter + brand green line + translucent fill)
+    creates visual depth and encodes traffic magnitude twice (radius and color)
+  - Clean, reproducible code; all imports used; correct output file naming
   weaknesses:
-  - Seaborn is primarily used for styling (set_theme, set_context, color_palette)
-    rather than its distinctive plotting functions - this is acceptable since seaborn
-    lacks native polar plot support
-  - The Visitors y-axis label position on the right side is unconventional for polar
-    plots
-  - Grid style uses dashed lines which could be simplified to solid with lower alpha
-  image_description: The plot displays a polar chart showing website traffic by hour
-    of day. The chart uses a viridis colormap with colors ranging from purple/dark
-    blue (lower traffic ~100) to yellow (higher traffic ~200+). Data points are shown
-    as large circular markers with dark blue (#306998) borders, connected by a continuous
-    line with the same blue color. The area under the curve is filled with a light
-    blue transparent fill. Hour labels (00:00 through 23:00) are positioned around
-    the circumference in clockwise direction starting from 00:00 at the top. Radial
-    gridlines show values at 50, 100, 150, and 200. The title "Website Traffic by
-    Hour · polar-basic · seaborn · pyplots.ai" appears at the top. A colorbar on the
-    right shows "Traffic Volume" with the viridis scale. The y-axis label "Visitors"
-    appears on the right side. The traffic pattern clearly shows peaks around 19:00-21:00
-    (evening) with the highest yellow points, and moderate activity during morning
-    hours.
+  - Visitors/hr radial ylabel overlaps with the 06:00 angular tick label in both renders
+    — labelpad=35 is insufficient on polar axes; fix by using ax.text() at a custom
+    angle/radius position or significantly increasing labelpad
+  - 'LM-02 is moderate: seaborn continuous hue mapping on scatter is used but colorbar
+    requires a matplotlib ScalarMappable workaround, limiting the seaborn-distinctiveness
+    story'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "Website Traffic by Hour · polar-basic · seaborn · anyplot.ai" in dark ink, clearly readable. Angular tick labels (00:00–22:00 every 2 hours) in INK_SOFT, readable. Radial tick labels (50, 100, 150, 200) readable. "Visitors/hr" radial ylabel overlaps with 06:00 angular tick label — both positioned on the right side of the polar axes, labelpad=35 insufficient to clear the collision. Colorbar "Traffic Volume" label and tick labels readable in INK/INK_SOFT. Colorbar outline styled with INK_SOFT.
+      Data: Scatter points colored with viridis colormap (purple for ~100 visitors/hr, teal for ~150, yellow for ~220). Brand green #009E73 connecting line traces the closed polygon. Semi-transparent mint fill (alpha=0.12) inside polygon.
+      Legibility verdict: PASS (with noted overlap between Visitors/hr label and 06:00 tick)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title in light off-white text (#F0EFE8), clearly readable against dark background. Angular labels (00:00–22:00) in INK_SOFT light tone, readable. Radial ticks readable. "Visitors/hr" ylabel overlap with 06:00 label persists in dark render too. Colorbar labels readable in light ink. No dark-on-dark failures observed — all text elements use theme-adaptive light ink tokens.
+      Data: Viridis scatter colors are identical to light render (purple/teal/yellow progression unchanged — only chrome flips). Brand green #009E73 line and mint fill identical to light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title is 24pt bold, hour labels at 14pt are readable, radial tick
-          labels at 14pt are clear, colorbar label at 16pt is legible
+        comment: 'Font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
+          readable in both themes. Minor deduction: Visitors/hr ylabel and 06:00 angular
+          label crowd each other on right side.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: All hour labels are well-spaced around the circumference, no text
-          overlaps
+        score: 4
+        max: 6
+        passed: false
+        comment: Visitors/hr radial ylabel overlaps with 06:00 angular tick label
+          in both renders. labelpad=35 insufficient on polar axes.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers are large (s=300) with good alpha (0.8), appropriate for
-          24 data points
+        comment: All scatter markers, line, fill, and colorbar clearly visible against
+          both backgrounds.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Viridis colormap is colorblind-safe
+        comment: 'viridis is CVD-safe; brand green #009E73 well-contrasted on both
+          surfaces.'
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of square format for polar plot, but colorbar takes space
-          and "Visitors" label positioning could be better
+        comment: Square format appropriate for symmetric polar plot. Colorbar well-proportioned.
+          Nothing cut off.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: '"Visitors" label present but no units; hour labels are descriptive'
+        comment: Title descriptive with correct anyplot.ai format; Visitors/hr provides
+          radial axis unit context.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid alpha at 0.3 is appropriate, but dashed style is slightly distracting;
-          colorbar well-placed
+        comment: 'viridis used correctly for continuous data. Brand green #009E73
+          for line/fill. Backgrounds #FAF8F1/#1A1A17 correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Triple-layer approach (viridis scatter + brand green line + translucent
+          fill) is intentional and visually interesting. Colorbar adds information
+          density. Not exceptional but clearly deliberate.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid alpha=0.12 appropriately subtle. Colorbar styled with theme-adaptive
+          colors. Polar spine colored correctly. VQ-02 overlap slightly undermines
+          refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bimodal morning/evening traffic pattern clearly conveyed. Viridis
+          point colors reinforce traffic-intensity story.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct polar chart with theta (angle) and radius (distance from
-          center)
+        comment: Correct polar chart using matplotlib polar projection driven through
+          seaborn axes-level API.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Hours mapped to theta, traffic values mapped to radius correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Angular labels at standard intervals, radial gridlines visible, appropriate
-          radial scale
-      - id: SC-04
-        name: Data Range
+        comment: Radial gridlines present and subtle; angular labels at standard intervals;
+          start angle at top (pi/2); clockwise direction; appropriate radial scale
+          (max*1.15).
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, radial scale extends 15% beyond max for clarity
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: theta maps to angle, traffic to radius. All 24 data points shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar accurately represents traffic volume values
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format with spec-id, library, and pyplots.ai
+        comment: 'Title format correct: ...polar-basic · seaborn · anyplot.ai. Colorbar
+          serves as legend for continuous color dimension.'
     data_quality:
-      score: 20
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows cyclical pattern, peaks and troughs, variation across hours
+        comment: Demonstrates circular coordinates, angle labels, radial gridlines,
+          data polygon, fill, and colorbar. A peak-hour annotation would complete
+          the showcase.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Website traffic by hour is a real-world scenario mentioned in spec
-          applications
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Traffic values (100-220) are realistic for hourly visitor counts
+        comment: Hourly website traffic with bimodal morning/evening peak is realistic,
+          neutral, and immediately legible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values ~100-220 visitors/hr are sensible for a medium-traffic website.
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -178,34 +189,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: No functions or classes; straightforward procedural script.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: seaborn imported but sns plotting functions not directly used for
-          data visualization (only for styling and color palette)
+        passed: true
+        comment: All imports used including ScalarMappable and Normalize for the colorbar.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured, readable code. Closed-polygon trick for line is
+          sensible approach.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: All APIs are current
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
+        comment: Saves as plot-{THEME}.png correctly.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
         passed: true
-        comment: Saves correctly to plot.png
-    library_features:
-      score: 3
-      max: 5
-      items: []
+        comment: 'Uses seaborn axes-level scatterplot and lineplot on polar axes with
+          estimator=None, sort=False. sns.set_theme with theme-adaptive rc dict is
+          idiomatic. Slight deduction: polar projection is purely matplotlib territory.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Continuous hue mapping via seaborn scatter (viridis coloring) is
+          seaborn-specific. However colorbar requires matplotlib ScalarMappable workaround
+          rather than a native seaborn feature.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - colorbar
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
