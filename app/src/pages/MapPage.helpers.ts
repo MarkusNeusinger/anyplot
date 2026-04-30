@@ -116,20 +116,21 @@ export type TagCategory = (typeof TAG_CATEGORIES)[number];
  * weights panel; passing a custom `weights` map to {@link weightedJaccard}
  * or {@link buildKNNLinks} replaces the defaults entirely.
  *
- * Rationale: plot_type is the strongest discovery signal — sharing it pulls
- * two specs together hard. Styling is the weakest — two specs that both
- * use alpha-blending shouldn't cluster on that alone.
+ * The defaults strongly privilege plot_type (3.0) over everything else (0).
+ * That produces the cleanest "scatter-galaxy / bar-galaxy / line-galaxy"
+ * map. Users can slide secondary categories up via the weights panel to mix
+ * in features/techniques/etc. for richer cross-type clustering.
  */
 export const DEFAULT_CATEGORY_WEIGHT: Record<TagCategory, number> = {
   plot_type: 3.0,
-  features: 1.5,
-  techniques: 1.0,
-  patterns: 1.0,
-  dataprep: 1.0,
-  dependencies: 0.8,
-  domain: 0.7,
-  data_type: 0.6,
-  styling: 0.4,
+  features: 0,
+  techniques: 0,
+  patterns: 0,
+  dataprep: 0,
+  dependencies: 0,
+  domain: 0,
+  data_type: 0,
+  styling: 0,
 };
 
 function categoryOf(prefixedTag: string): string {

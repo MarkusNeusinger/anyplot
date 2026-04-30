@@ -365,7 +365,7 @@ export function MapPage() {
                     value={weights[cat]}
                     onChange={(_, v) => setWeights(w => ({ ...w, [cat]: v as number }))}
                     min={0}
-                    max={3}
+                    max={5}
                     step={0.1}
                     size="small"
                     sx={{
