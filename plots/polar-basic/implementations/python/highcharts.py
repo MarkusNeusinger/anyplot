@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 polar-basic: Basic Polar Chart
-Library: highcharts | Python 3.13
-Quality: 91/100 | Updated: 2026-04-30
+Library: highcharts unknown | Python 3.13.13
+Quality: 88/100 | Updated: 2026-04-30
 """
 
 import os
