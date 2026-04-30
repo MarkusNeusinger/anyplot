@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: stem-basic
 created: '2025-12-23T20:45:35Z'
-updated: '2026-04-30T14:55:01Z'
+updated: '2026-04-30T15:04:36Z'
 generated_by: claude-sonnet
 workflow_run: 25171839176
 issue: 972
@@ -12,44 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 80
+quality_score: 88
 review:
   strengths:
-  - 'Excellent data choice: damped sinusoidal impulse response is the canonical stem
-    plot use case and creates natural visual decay storytelling'
-  - Font sizes explicitly set at all three levels (24/20/16) — renders correctly at
-    4800x2700
-  - Clean KISS code structure with fixed seed for reproducibility
-  - Marker sizing (s=300) and stem linewidth well-calibrated for 30 data points
-  - Both rendered images pass theme-readability checks — all text readable in both
-    light and dark themes
+  - Perfect visual quality in both light and dark themes with correct font sizing
+    and readable text throughout
+  - 'Textbook data choice: damped sinusoidal impulse response is the canonical signal
+    processing example for stem plots'
+  - Background-edged scatter markers (edgecolor=PAGE_BG) create clean visual separation
+    from stems
+  - 'All spec requirements met: thin stems, visible circular markers, baseline at
+    y=0, consistent sizing'
   weaknesses:
-  - 'CRITICAL: Code uses #306998 (Python Blue) for stems and #FFD43B for markers —
-    replace both with #009E73 (Okabe-Ito position 1)'
-  - 'CRITICAL: No theme adaptation code — add ANYPLOT_THEME env var reading and sns.set_theme()
-    with PAGE_BG/INK/INK_SOFT adaptive tokens'
-  - 'CRITICAL: Output saved to plot.png — must be plot-{THEME}.png (pipeline runs
-    code twice)'
-  - 'MAJOR: Title contains pyplots.ai — must be anyplot.ai'
-  - 'MINOR: Grid uses linestyle=-- (dashed) — style guide requires solid thin lines;
-    switch to yaxis-only solid grid with alpha=0.15'
+  - No visual storytelling or annotations to guide the viewer through the decay narrative
+    — an envelope curve or peak annotation would earn DE-03 points
+  - Seaborn is used only for scatterplot markers and sns.set_theme() theming; no seaborn-distinctive
+    techniques are leveraged (LM-02 low)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white approximately #FAF8F1 — not pure white, correct for light theme
-      Chrome: Title "stem-basic · seaborn · anyplot.ai" in dark text clearly readable; axis labels "Sample Index (n)" and "Amplitude" clearly readable; tick labels dark and readable against light background
-      Data: All stems (vertical lines) and markers (circles) rendered in teal green #009E73; baseline at y=0 visible; 30 data points across full x-range [0,29]; y range approximately [-1.0, 1.85]
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "stem-basic · seaborn · anyplot.ai" in dark text — readable; axis labels "Sample Index (n)" and "Amplitude" clearly visible; tick labels at correct size and dark color
+      Data: 30 stems in brand green #009E73 from y=0 baseline to data values; large circular markers with PAGE_BG edge color; both positive and negative stems; subtle y-axis horizontal grid
+      Legibility verdict: PASS — all text elements clearly readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black approximately #1A1A17 — not pure black, correct for dark theme
-      Chrome: Title, axis labels, and tick labels all appear light-colored and clearly readable against dark background; no dark-on-dark failures observed; bottom and left spines visible in light color
-      Data: Stems and markers identical teal green #009E73 — indistinguishable from light render (only chrome changed); baseline at y=0 visible; brand green reads clearly on dark surface
-      Legibility verdict: PASS
-
-    NOTE: The images appear to have been generated from a different (corrected) version of the code than what is committed in seaborn.py. The committed code specifies #306998 (Python Blue) for stems and #FFD43B (yellow) for markers, but both renders show uniform #009E73 teal. The committed code also saves to plot.png with no theme adaptation, yet the images show correct theme adaptation with proper filenames. The code must be corrected to match what was rendered.
+      Background: Near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light/cream text — readable; axis labels in light text clearly visible; tick labels light-colored and legible; no dark-on-dark issues detected
+      Data: Colors identical to light render — brand green #009E73 stems and markers unchanged; only chrome elements flipped; grid still subtle and visible
+      Legibility verdict: PASS — all text elements clearly readable against near-black background; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -57,71 +50,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24pt, labels=20pt, ticks=16pt;
-          readable in both themes'
+        comment: Title 24pt, axis labels 20pt, ticks 16pt; both themes fully legible
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; 30 points well-spaced
+        comment: 30 stems evenly spaced, no element collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: s=300 markers appropriate for 30 data points; stems clearly visible
+        comment: Large markers (s=300) and 2.5px stems clearly visible; background-edged
+          markers pop off stems
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single teal series, CVD-safe Okabe-Ito, high contrast on both surfaces
+        comment: Single CVD-safe brand green, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16x9 canvas well-utilized; no cutoff; good margins
+        comment: 16:9 proportions appropriate; nothing cut off; tight_layout used
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Sample Index (n) and Amplitude are descriptive
+        comment: Sample Index (n) with units, Amplitude descriptive; title format
+          correct
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Code uses #306998 (Python Blue) — explicit 0 trigger; no ANYPLOT_THEME
-          handling; saves to plot.png not plot-{THEME}.png'
+        passed: true
+        comment: 'First (only) series is #009E73; backgrounds #FAF8F1 / #1A1A17; both
+          renders theme-correct'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Clean, professional; spines removed; well-configured but not exceptional
+        comment: Professional polish; background-edged markers are a nice design touch;
+          single-color simplicity is appropriate but limited
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: true
-        comment: Spines removed but grid uses dashed linestyle contrary to style guide
-          solid-thin requirement; alpha=0.3 slightly high
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Damped sinusoidal decay creates natural narrative; positive/negative
-          alternation adds visual rhythm
+        comment: Top/right spines removed; y-axis-only grid at low opacity; generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Damped sinusoidal has a natural decay narrative but no annotations
+          or emphasis guide the viewer
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -129,28 +124,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct stem plot: vertical lines from y=0 baseline to circular
-          markers'
+        comment: 'Correct stem plot: vertical lines from baseline to data values with
+          circular markers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Thin stems, visible markers, y=0 baseline, consistent sizing — all
-          present
+        comment: Thin stems, visible circular markers, baseline at y=0, consistent
+          sizing throughout
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=Sample Index, y=Amplitude; all 30 points visible
+        comment: X=sample index, Y=amplitude; all 30 data points visible
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Code title string has pyplots.ai instead of anyplot.ai; no legend
-          needed for single series
+        passed: true
+        comment: stem-basic · seaborn · anyplot.ai correct; no legend needed for single
+          series
     data_quality:
       score: 15
       max: 15
@@ -160,24 +155,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows positive and negative amplitudes, zero crossings, decaying
-          envelope — full feature space
+        comment: Both positive and negative stems; decaying oscillation demonstrates
+          plot type comprehensively
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Discrete impulse response in signal processing is a canonical real-world
-          neutral scenario
+        comment: Damped sinusoidal impulse response is canonical signal processing
+          example; neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Amplitude ±~1.85 with exponential decay is physically realistic for
-          normalized impulse response
+        comment: Amplitude -1.0 to 1.85, sample indices 0-29; realistic engineering
+          values
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -185,52 +180,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear Imports -> Data -> Plot -> Save; no functions or classes
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports (matplotlib, numpy, pandas, seaborn) actively used
+        comment: All five imports (os, matplotlib, numpy, pandas, seaborn) are used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Clean structure but hardcoded non-compliant colors and absent theme
-          adaptation
+        passed: true
+        comment: 'Clean hybrid: seaborn scatterplot for markers, matplotlib vlines
+          for stems — correct approach'
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves to plot.png — must be plot-{THEME}.png; no ANYPLOT_THEME logic
-          present
+        passed: true
+        comment: Saves as plot-{THEME}.png with correct facecolor and bbox_inches
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correctly uses sns.scatterplot for marker rendering with axes-level
-          API; hybrid vlines+scatter is practical for library lacking native stemplot
+        comment: sns.set_theme() with full rc dict is idiomatic; axes-level scatterplot
+          used correctly; hybrid with matplotlib vlines is right approach
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses seaborn scatter with edgecolor and zorder for markers but implementation
-          is primarily matplotlib
-  verdict: REJECTED
+        comment: Seaborn contribution limited to scatterplot markers and theming;
+          no seaborn-distinctive features used (FacetGrid, statistical transforms,
+          etc.)
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
@@ -241,4 +236,3 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling

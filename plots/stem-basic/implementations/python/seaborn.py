@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 stem-basic: Basic Stem Plot
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 80/100 | Updated: 2026-04-30
+Quality: 88/100 | Updated: 2026-04-30
 """
 
 import os
