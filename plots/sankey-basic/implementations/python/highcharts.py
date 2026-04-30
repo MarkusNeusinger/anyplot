@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sankey-basic: Basic Sankey Diagram
 Library: highcharts unknown | Python 3.13.13
 Quality: 85/100 | Updated: 2026-04-30
@@ -41,18 +41,20 @@ flows = [
     ["Electricity", "Industrial", 140],
 ]
 
-# Node colors - dark tones ensuring white text readability on all nodes
+# Node colors - Okabe-Ito palette (canonical order for source nodes)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
 node_colors = {
-    "Coal": "#1A3A5C",
-    "Natural Gas": "#6B4E12",
-    "Nuclear": "#5B2E8F",
-    "Petroleum": "#0A6B78",
-    "Renewable": "#155415",
-    "Electricity": "#4D2A22",
-    "Residential": "#8B3A6B",
-    "Commercial": "#3A3A3A",
-    "Industrial": "#5B5C0A",
-    "Transportation": "#994D00",
+    "Coal": OKABE_ITO[0],
+    "Natural Gas": OKABE_ITO[1],
+    "Nuclear": OKABE_ITO[2],
+    "Petroleum": OKABE_ITO[3],
+    "Renewable": OKABE_ITO[4],
+    "Electricity": OKABE_ITO[5],
+    "Transportation": OKABE_ITO[6],
+    "Industrial": OKABE_ITO[0],
+    "Residential": OKABE_ITO[1],
+    "Commercial": OKABE_ITO[2],
 }
 
 nodes_set = set()
@@ -60,7 +62,7 @@ for source, target, _ in flows:
     nodes_set.add(source)
     nodes_set.add(target)
 
-nodes_data = [{"id": node, "name": node, "color": node_colors.get(node, "#306998")} for node in nodes_set]
+nodes_data = [{"id": node, "name": node, "color": node_colors.get(node, OKABE_ITO[0])} for node in nodes_set]
 links_data = [{"from": source, "to": target, "weight": value} for source, target, value in flows]
 
 # Chart
@@ -75,7 +77,7 @@ chart.options.chart = {
     "marginLeft": 180,
     "marginRight": 180,
     "marginTop": 160,
-    "marginBottom": 80,
+    "marginBottom": 160,
 }
 
 chart.options.title = {
