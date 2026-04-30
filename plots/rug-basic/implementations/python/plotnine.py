@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 rug-basic: Basic Rug Plot
 Library: plotnine 0.15.3 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-04-30
@@ -14,6 +14,7 @@ from plotnine import (
     element_line,
     element_rect,
     element_text,
+    geom_density,
     geom_rug,
     ggplot,
     labs,
@@ -61,6 +62,7 @@ anyplot_theme = theme(
 
 plot = (
     ggplot(df, aes(x="response_time"))
+    + geom_density(fill=BRAND, color=BRAND, alpha=0.3, size=1.5)
     + geom_rug(alpha=0.6, sides="b", size=1.5, color=BRAND)
     + labs(x="Response Time (ms)", y="", title="rug-basic · plotnine · anyplot.ai")
     + theme_minimal()
