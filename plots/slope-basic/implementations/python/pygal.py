@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 slope-basic: Basic Slope Chart (Slopegraph)
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 81/100 | Updated: 2026-04-30
@@ -24,13 +24,24 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 COLOR_INCREASE = "#009E73"  # Okabe-Ito position 1 — upward change
 COLOR_DECREASE = "#D55E00"  # Okabe-Ito position 2 — downward change
 
-# Data — product sales comparing Q1 vs Q4
-products = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
+# Realistic product category data — Q1 vs Q4 sales comparison
+categories = [
+    "Electronics",
+    "Apparel",
+    "Furniture",
+    "Automotive",
+    "Food & Bev",
+    "Sporting Goods",
+    "Home Decor",
+    "Office Supplies",
+    "Beauty",
+    "Toys",
+]
 q1_sales = [85, 72, 95, 45, 68, 52, 78, 62, 88, 40]
 q4_sales = [92, 58, 102, 75, 65, 71, 82, 48, 95, 55]
 
-increasing = [(p, q1_sales[i], q4_sales[i]) for i, p in enumerate(products) if q4_sales[i] >= q1_sales[i]]
-decreasing = [(p, q1_sales[i], q4_sales[i]) for i, p in enumerate(products) if q4_sales[i] < q1_sales[i]]
+increasing = [(c, q1_sales[i], q4_sales[i]) for i, c in enumerate(categories) if q4_sales[i] >= q1_sales[i]]
+decreasing = [(c, q1_sales[i], q4_sales[i]) for i, c in enumerate(categories) if q4_sales[i] < q1_sales[i]]
 
 series_colors = tuple([COLOR_INCREASE] * len(increasing) + [COLOR_DECREASE] * len(decreasing))
 
@@ -44,10 +55,10 @@ custom_style = Style(
     title_font_size=64,
     label_font_size=44,
     major_label_font_size=44,
-    legend_font_size=44,
+    legend_font_size=38,
     value_font_size=32,
+    value_label_font_size=36,
     stroke_width=6,
-    value_label_font_size=32,
 )
 
 # Slope chart: Line chart with only 2 x-axis time points
@@ -63,29 +74,24 @@ chart = pygal.Line(
     stroke_style={"width": 6},
     show_y_guides=True,
     show_x_guides=False,
-    show_legend=False,
+    show_legend=True,
     interpolate=None,
     margin=140,
     print_values=False,
-    print_labels=False,
+    print_labels=True,
     range=(30, 115),
+    margin_right=340,
 )
 
 chart.x_labels = ["Q1 2024", "Q4 2024"]
 
-# Increasing products — Okabe-Ito green
-for p, start, end in increasing:
-    chart.add(
-        f"Product {p}",
-        [{"value": start, "label": f"Product {p} Q1: {start}"}, {"value": end, "label": f"Product {p} Q4: {end}"}],
-    )
+# Increasing categories — Okabe-Ito green
+for c, start, end in increasing:
+    chart.add(c, [{"value": start, "label": c}, {"value": end, "label": c}])
 
-# Decreasing products — Okabe-Ito vermillion
-for p, start, end in decreasing:
-    chart.add(
-        f"Product {p}",
-        [{"value": start, "label": f"Product {p} Q1: {start}"}, {"value": end, "label": f"Product {p} Q4: {end}"}],
-    )
+# Decreasing categories — Okabe-Ito vermillion
+for c, start, end in decreasing:
+    chart.add(c, [{"value": start, "label": c}, {"value": end, "label": c}])
 
 # Save PNG and interactive HTML
 chart.render_to_png(f"plot-{THEME}.png")
