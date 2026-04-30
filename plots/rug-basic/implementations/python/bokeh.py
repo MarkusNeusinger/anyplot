@@ -1,65 +1,100 @@
-""" pyplots.ai
+""" anyplot.ai
 rug-basic: Basic Rug Plot
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 78/100 | Created: 2025-12-23
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-04-30
 """
+
+import os
+import sys
+
+
+# Prevent this file from shadowing the installed bokeh package
+_this_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p or os.getcwd()) != _this_dir]
 
 import numpy as np
 from bokeh.io import export_png, output_file, save
 from bokeh.models import ColumnDataSource, Range1d
 from bokeh.plotting import figure
+from scipy import stats
 
 
-# Data - bimodal distribution of API response times (ms) to show clustering patterns
+# Theme
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"
+
+# Data - bimodal API response times (ms) showing clustering patterns
 np.random.seed(42)
-cluster1 = np.random.normal(85, 12, 60)  # Fast responses (~85ms)
-cluster2 = np.random.normal(180, 20, 40)  # Slower responses (~180ms)
+cluster1 = np.random.normal(85, 12, 60)  # Fast responses
+cluster2 = np.random.normal(180, 20, 40)  # Slower responses
 values = np.concatenate([cluster1, cluster2])
 
-# Rug tick configuration
-# Ticks positioned at the bottom, small relative to plot area (~5% of visible height)
-tick_base = 0.0
-tick_height = 0.05
+# KDE curve
+kde = stats.gaussian_kde(values, bw_method=0.3)
+x_smooth = np.linspace(values.min() - 20, values.max() + 20, 500)
+kde_y = kde(x_smooth)
 
-# Create ColumnDataSource for rug ticks
-source = ColumnDataSource(
-    data={"x": values, "y0": np.full(len(values), tick_base), "y1": np.full(len(values), tick_height)}
+# Rug ticks sit just below y=0
+rug_top = 0.0
+rug_bottom = -kde_y.max() * 0.05
+
+# Sources
+kde_source = ColumnDataSource(data={"x": x_smooth, "y": kde_y})
+rug_source = ColumnDataSource(
+    data={"x": values, "y0": np.full(len(values), rug_bottom), "y1": np.full(len(values), rug_top)}
 )
 
-# Create figure (4800 x 2700 px) - reduced height to emphasize horizontal distribution
+# Figure
 p = figure(
     width=4800,
-    height=1200,
-    title="rug-basic · bokeh · pyplots.ai",
+    height=2700,
+    title="rug-basic · bokeh · anyplot.ai",
     x_axis_label="Response Time (ms)",
-    y_axis_label="",
+    y_axis_label="Density",
     toolbar_location=None,
 )
 
-# Draw rug ticks as vertical segments at the bottom margin
-# Line width increased for visibility at 4800px width
-p.segment(x0="x", y0="y0", x1="x", y1="y1", source=source, line_color="#306998", line_width=6, line_alpha=0.6)
+# KDE density curve
+p.line("x", "y", source=kde_source, line_color=BRAND, line_width=5)
 
-# Configure axis ranges - y range tightly fits tick height to minimize whitespace
-p.x_range = Range1d(values.min() - 10, values.max() + 10)
-p.y_range = Range1d(-0.01, 0.08)
+# Rug ticks
+p.segment(x0="x", y0="y0", x1="x", y1="y1", source=rug_source, line_color=BRAND, line_width=4, line_alpha=0.5)
 
-# Hide y-axis (not meaningful for rug plot)
-p.yaxis.visible = False
+# Axis ranges
+p.x_range = Range1d(values.min() - 20, values.max() + 20)
+p.y_range = Range1d(rug_bottom * 2.0, kde_y.max() * 1.15)
 
-# Styling for 4800px width
+# Chrome — theme-adaptive
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
+
+p.title.text_color = INK
 p.title.text_font_size = "28pt"
+
+p.xaxis.axis_label_text_color = INK
 p.xaxis.axis_label_text_font_size = "22pt"
+p.yaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_font_size = "22pt"
+
+p.xaxis.major_label_text_color = INK_SOFT
 p.xaxis.major_label_text_font_size = "18pt"
+p.yaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_font_size = "18pt"
 
-# Remove all grid lines for clean rug appearance
-p.xgrid.visible = False
-p.ygrid.visible = False
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 
-# Background
-p.background_fill_color = "#fafafa"
+p.xgrid.grid_line_color = None
+p.ygrid.grid_line_color = INK
+p.ygrid.grid_line_alpha = 0.10
 
-# Save outputs
-export_png(p, filename="plot.png")
-output_file("plot.html")
+# Save
+export_png(p, filename=f"plot-{THEME}.png")
+output_file(f"plot-{THEME}.html")
 save(p)
