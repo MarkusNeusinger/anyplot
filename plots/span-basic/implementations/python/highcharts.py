@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 span-basic: Basic Span Plot (Highlighted Region)
-Library: highcharts | Python 3.13
-Quality: 93/100 | Created: 2025-12-23
+Library: highcharts unknown | Python 3.13.13
+Quality: 90/100 | Updated: 2026-04-30
 """
 
 import os
