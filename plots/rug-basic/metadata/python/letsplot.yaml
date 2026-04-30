@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: rug-basic
 created: '2025-12-23T19:49:08Z'
-updated: '2026-04-30T05:31:20Z'
+updated: '2026-04-30T05:42:56Z'
 generated_by: claude-sonnet
 workflow_run: 25148880653
 issue: 978
@@ -12,95 +12,88 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/letsplot/plot-dark.html
-quality_score: 83
+quality_score: 87
 review:
   strengths:
-  - Excellent spec compliance — density curve + rug segment combination correctly
-    shows both distribution shape and individual observation positions, with three
-    clear clusters and outliers clearly visible
-  - Perfect data quality — realistic response-time scenario with natural multimodal
-    clusters (fast/medium/slow) and edge outliers, neutral and domain-plausible
-  - Correct theme-adaptive chrome — all INK/INK_SOFT/PAGE_BG tokens wired through;
-    both light (#FAF8F1) and dark (#1A1A17) renders are fully readable with no dark-on-dark
-    or light-on-light failures
-  - Clean KISS code — deterministic seed (42), no functions or classes, proper letsplot
-    export pattern with scale=3 for 4800×2700px output
+  - Full theme-adaptive chrome — PAGE_BG/INK/INK_SOFT applied to all elements; both
+    renders pass legibility check
+  - 'All three rug plot features demonstrated: clustering, gaps, and outliers immediately
+    visible'
+  - Realistic neutral response-time scenario with plausible trimodal distribution
+  - All font sizes explicitly set to spec values (24/20/16pt)
+  - Correct output filenames with scale=3 for 4800×2700px
   weaknesses:
-  - Grid lines shown on both axes (horizontal and vertical); for a density plot, y-axis-only
-    grid (panel_grid_major_x=element_blank()) would be cleaner and match style-guide
-    guidance
-  - No visual emphasis on the three distribution peaks — the multimodal story is visible
-    but not highlighted; subtle annotations at cluster centers or vertical reference
-    lines would strengthen storytelling (DE-03)
-  - Minimal use of lets-plot's distinctive interactive features — the HTML export
-    is present but tooltips/hover on rug marks are not leveraged (LM-02)
+  - 'Repeated # noqa: F405 on every lets_plot function call — use named imports instead
+    of wildcard to eliminate lint noise'
+  - Both x and y axis gridlines visible — remove vertical gridlines for cleaner density+rug
+    composition
+  - geom_segment used for rug marks instead of native geom_rug() if available in the
+    lets-plot version
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "rug-basic · letsplot · anyplot.ai" in dark ink, clearly readable; "Density" y-axis label and "Response Time (ms)" x-axis label in dark ink; tick labels in INK_SOFT — all readable against light background
-      Data: Brand green (#009E73) density curve with alpha=0.25 fill showing multimodal distribution (peaks at ~120ms, ~250ms, ~400ms); rug marks as short vertical green segments (alpha=0.7) along the x-axis bottom showing three dense clusters and sparse outliers to ~780ms; grid lines visible on both axes (slightly busy but functional)
-      Legibility verdict: PASS — all text elements clearly readable
+      Background: Warm off-white (~#FAF8F1) — correct
+      Chrome: Title "rug-basic · letsplot · anyplot.ai" in dark ink (readable); X-axis "Response Time (ms)" and Y-axis "Density" in dark ink (readable); tick labels in soft dark (#4A4A44) — all readable
+      Data: Brand green #009E73 density curve with 25% opacity fill; rug marks (geom_segment) as short green vertical ticks at bottom; trimodal distribution visible (peaks ~120ms, ~250ms, ~400ms); outlier rug marks at 550–780ms
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title and axis labels in light near-white ink, clearly readable against dark background; tick labels in light INK_SOFT; no dark-on-dark failures detected
-      Data: Same brand green (#009E73) — density curve and rug segment colors are identical to light render; density fill is less visually prominent on dark background but still present; rug marks clearly visible; grid lines subtle but visible
-      Legibility verdict: PASS — all text readable, chrome correctly inverts, data colors unchanged
+      Background: Near-black (~#1A1A17) — correct
+      Chrome: Title and axis labels in light text (#F0EFE8 equivalent) — clearly readable; tick labels in soft light color — readable; no dark-on-dark failures detected
+      Data: Identical brand green #009E73 for density curve and rug marks — colors unchanged from light render; data remains clearly distinguishable against dark background
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=24, axis=20, tick=16); all text
-          readable in both renders
+        comment: Title=24, axis_title=20, axis_text=16 explicitly set; readable in
+          both renders
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Rug marks overlap in dense clusters but that is inherent to the plot
-          type; no text collisions
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Density curve and rug marks clearly visible; alpha=0.7 on rug marks
-          appropriate for density
+        comment: Density curve prominent; rug marks visible with appropriate height
+          and alpha=0.7
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single CVD-safe brand green; no red-green as sole signal
+        comment: 'Single series Okabe-Ito #009E73, CVD-safe'
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good 16:9 proportions, nothing cut off; grid on both axes slightly
-          busy for a density plot
+        comment: Good proportions; some empty space in upper-right due to right-skewed
+          distribution
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Response Time (ms) with units; Y: Density; title matches spec-id
-          format'
+        comment: Response Time (ms) with units, Density; correct title format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; light bg #FAF8F1; dark bg #1A1A17; both renders
-          theme-correct'
+        comment: '#009E73 for single series; #FAF8F1 light / #1A1A17 dark backgrounds;
+          chrome adapts correctly'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -108,22 +101,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Good use of alpha-blended density fill + rug layer; theme tokens
-          applied; above default but no standout design decisions
+        comment: Clean professional density+rug with semi-transparent fill; above
+          defaults but not publication-ready
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: theme_minimal() base, minor grid removed, axis_line set; grid on
-          both axes is suboptimal for this chart type
+        comment: Minor grid removed, major grid subtly styled (size=0.2); both x/y
+          gridlines still visible
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Multimodal distribution story is visible but not actively guided;
-          three clusters present without annotations or emphasis
+        comment: Trimodal distribution and gap between fast/medium/slow clusters immediately
+          legible from KDE and rug
     spec_compliance:
       score: 15
       max: 15
@@ -133,27 +126,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct rug plot with density complement as suggested in spec applications
+        comment: Rug marks along x-axis complemented by density curve per spec
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparency (alpha), consistent tick height, x-axis positioning,
-          density complement
+        comment: Semi-transparency, consistent tick height, x-axis position, paired
+          with density
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Response time on x-axis, density on y-axis, all 99 observations displayed
+        comment: Continuous variable on x-axis, density on y-axis, all 99 observations
+          represented
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''rug-basic · letsplot · anyplot.ai''; no legend (single
-          series, appropriate)'
+        comment: rug-basic · letsplot · anyplot.ai exact format; no legend (single-series,
+          correct)
     data_quality:
       score: 15
       max: 15
@@ -163,24 +157,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows clustering, gaps, outliers, and distribution shape — all key
-          rug plot aspects
+        comment: Shows clustering, gaps, exact observation positions, and outliers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Server response times with three latency classes is domain-realistic
-          and neutral
+        comment: API/server response time — real, neutral, comprehensible scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 80-780ms range with clusters at 120/250/400ms; realistic for web
-          application latency
+        comment: 100–800ms realistic for web service latency; cluster proportions
+          plausible
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -188,32 +180,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear procedural structure
+        comment: Linear imports→data→plot→save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random calls
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, numpy, pandas, lets_plot) are used
+        comment: All imports used; wildcard import is idiomatic for lets-plot
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean structure, appropriate complexity, no fake UI
+        comment: 'Repeated # noqa: F405 on every geom/theme call clutters code; named
+          imports would eliminate noise'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=3) and plot-{THEME}.html; uses ggsave
-          correctly
+        comment: Saves plot-{THEME}.png (scale=3) and plot-{THEME}.html correctly
     library_mastery:
       score: 6
       max: 10
@@ -223,15 +215,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct ggplot grammar; geom_segment for rug is the idiomatic lets-plot
-          approach (no native geom_rug); proper theme overrides
+        comment: Correct ggplot grammar, layered geoms, proper theme() override, ggsize()
+          for canvas
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: HTML export present; no use of lets-plot interactive features like
-          tooltips on rug marks or hover information
+        passed: true
+        comment: Uses ggsize+scale=3 for high-res export (lets-plot distinctive);
+          does not use native geom_rug() if available
   verdict: APPROVED
 impl_tags:
   dependencies: []
