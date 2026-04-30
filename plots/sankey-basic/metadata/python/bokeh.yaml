@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: sankey-basic
 created: '2025-12-23T19:43:20Z'
-updated: '2026-04-30T09:01:04Z'
+updated: '2026-04-30T09:14:26Z'
 generated_by: claude-sonnet
 workflow_run: 25156351219
 issue: 810
@@ -22,32 +22,30 @@ review:
   - Clean, flat code with clear layout arithmetic that is easy to follow
   - Thoughtful target-node color choice (muted neutrals) creates visual hierarchy
     between source and destination
-  - Both PNG and HTML output generated correctly
+  - Both PNG and HTML output generated correctly; theme-adaptive chrome (backgrounds,
+    text colors) properly applied in both renders
   weaknesses:
-  - Title format is "Energy Flow · sankey-basic · bokeh · anyplot.ai" — must be exactly
-    "sankey-basic · bokeh · anyplot.ai" per spec
-  - 'Bokeh HoverTool not used: the HTML output supports interactivity but no tooltips
-    are added; hover showing source->target flow value is the most impactful Bokeh-specific
-    feature for a Sankey'
-  - 'Fixed fill_alpha=0.45 is not theme-adaptive: flows look appropriately translucent
-    on light background but become murky/dark on dark background; use a higher alpha
-    for dark theme'
-  - 'Dark-mode target node colors (#5A6A7A, #7A6A8A, #6A7A5A) are near-black on a
-    near-black background — low contrast in dark render'
+  - Title format is 'Energy Flow · sankey-basic · bokeh · anyplot.ai' — must be exactly
+    'sankey-basic · bokeh · anyplot.ai' per spec
+  - Bokeh HoverTool completely absent from HTML output — hover showing source->target
+    flow value is Bokeh's signature interactive feature and a major missed opportunity
+    for LM-02
+  - 'Fixed fill_alpha=0.45 is not theme-adaptive: flows look translucent on light
+    background but become murky on dark background; dark theme should use higher alpha
+    (~0.65)'
   - Approximately 10% of canvas height is empty dead space between title and the first
-    node; compress y_range or adjust layout
-  - No ColumnDataSource used — bypasses Bokeh core data-binding pattern (less idiomatic)
+    node; tighten y_range or layout padding
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "Energy Flow · sankey-basic · bokeh · anyplot.ai" at 32pt in dark INK — readable; node labels at 22pt in dark INK — all readable; no axis labels (correct for Sankey)
-      Data: Five source nodes (Coal=#009E73, Gas=#D55E00, Nuclear=#0072B2, Hydro=#CC79A7, Solar=#E69F00) with Okabe-Ito canonical order; target nodes in muted neutrals (#5A6A7A, #7A6A8A, #6A7A5A); bezier flow ribbons carry source colors with fill_alpha=0.45; flows look vibrant and translucent on light surface
+      Chrome: Title "Energy Flow · sankey-basic · bokeh · anyplot.ai" at 32pt in dark INK — readable; node labels at 22pt in dark INK — all readable; axes/grid/outline hidden (correct for Sankey)
+      Data: Five source nodes left-to-right bottom-up (Coal=#009E73, Gas=#D55E00, Nuclear=#0072B2, Hydro=#CC79A7, Solar=#E69F00) following Okabe-Ito canonical order; target nodes (Industrial, Commercial, Residential) in muted neutrals on right; Bezier flow ribbons carry source colors with fill_alpha=0.45 — translucent and vibrant on light surface
       Legibility verdict: PASS — all text clearly readable against light background
 
     Dark render (plot-dark.png):
       Background: Near-black #1A1A17 — correct, not pure black
       Chrome: Title and node labels switch to light INK token (#F0EFE8) — all readable; no dark-on-dark text failures detected
-      Data: Source/target node data colors are identical to light render (Okabe-Ito positions unchanged); however fixed fill_alpha=0.45 is not theme-adaptive — flows appear noticeably darker/murkier on dark background making crossing ribbons harder to distinguish; dark-mode target node colors (#5A6A7A, #7A6A8A, #6A7A5A) blend into the dark background reducing target node contrast
+      Data: Source/target node data colors identical to light render (Okabe-Ito positions unchanged); fixed fill_alpha=0.45 is not theme-adaptive — flows appear noticeably darker/murkier on dark background making crossing ribbons harder to distinguish; target node colors (#5A6A7A, #7A6A8A, #6A7A5A) have reduced contrast against near-black background but remain distinguishable
       Legibility verdict: PASS for text; PARTIAL for data elements — flow ribbons have reduced visual impact in dark theme due to non-adaptive alpha
   criteria_checklist:
     visual_quality:
@@ -121,8 +119,8 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: Source-color-coded flows enable visual tracing; Gas dominance visible;
-          no annotation on largest flow
+        comment: Source-color-coded flows enable visual tracing; Gas dominance visible
+          through node size; no annotation on largest flow
     spec_compliance:
       score: 14
       max: 15
@@ -235,7 +233,7 @@ review:
         comment: Creative use of primitives for Sankey; but HoverTool completely absent
           from HTML output — Bokeh's signature interactive feature for flow value
           display
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
