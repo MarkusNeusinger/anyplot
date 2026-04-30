@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 slope-basic: Basic Slope Chart (Slopegraph)
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-04-30
@@ -7,6 +7,7 @@ Quality: 88/100 | Updated: 2026-04-30
 import os
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 from matplotlib.lines import Line2D
 
 
@@ -58,6 +59,11 @@ fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 x_positions = [0, 1]
+
+# Vertical column lines at axis positions — structural anchors for the slopegraph
+for x in x_positions:
+    ax.axvline(x, color=INK_SOFT, linewidth=1.2, alpha=0.35, zorder=0)
+
 for i, (product, q1, q4, change) in enumerate(zip(products, q1_sales, q4_sales, changes, strict=True)):
     color = COLOR_INC if change >= 0 else COLOR_DEC
     ax.plot(
@@ -75,23 +81,26 @@ for i, (product, q1, q4, change) in enumerate(zip(products, q1_sales, q4_sales, 
     lpos = q1_label_pos[i]
     if abs(lpos - q1) > 0.05:
         ax.plot([-0.03, -0.03], [q1, lpos], color=color, linewidth=0.8, alpha=0.35, linestyle=":")
-    ax.text(-0.06, lpos, f"{product}: ${q1:.1f}M", ha="right", va="center", fontsize=14, color=color, fontweight="bold")
+    ax.text(-0.06, lpos, f"{product}: ${q1:.1f}M", ha="right", va="center", fontsize=16, color=color, fontweight="bold")
 
     # Right label: product name + Q4 value; dotted connector if label was nudged
     rpos = q4_label_pos[i]
     if abs(rpos - q4) > 0.05:
         ax.plot([1.03, 1.03], [q4, rpos], color=color, linewidth=0.8, alpha=0.35, linestyle=":")
-    ax.text(1.06, rpos, f"{product}: ${q4:.1f}M", ha="left", va="center", fontsize=14, color=color, fontweight="bold")
+    ax.text(1.06, rpos, f"{product}: ${q4:.1f}M", ha="left", va="center", fontsize=16, color=color, fontweight="bold")
 
 # Style
 ax.set_xlim(-0.75, 1.75)
 ax.set_xticks(x_positions)
 ax.set_xticklabels(["Q1 2024", "Q4 2024"], fontsize=20, fontweight="bold", color=INK)
-ax.set_ylabel("Sales (Millions $)", fontsize=20, color=INK)
+ax.set_ylabel("Sales", fontsize=20, color=INK)
 ax.set_title("slope-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
 
 ax.tick_params(axis="x", length=0)
 ax.tick_params(axis="y", labelsize=16, labelcolor=INK_SOFT, colors=INK_SOFT)
+
+# FuncFormatter for y-axis: show units inline as "$XM" for self-documenting tick labels
+ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda val, _: f"${val:.0f}M"))
 
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
