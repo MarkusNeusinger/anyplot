@@ -1,29 +1,34 @@
-""" pyplots.ai
+"""anyplot.ai
 slope-basic: Basic Slope Chart (Slopegraph)
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: matplotlib | Python 3.13
+Quality: pending | Updated: 2026-04-30
 """
+
+import os
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 
-# Data: Sales figures (in millions $) for products comparing Q1 vs Q4
-# Deterministic data with well-spaced values to avoid label overlap
+# Theme
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+COLOR_INC = "#009E73"  # Okabe-Ito pos 1 — increase (brand green)
+COLOR_DEC = "#D55E00"  # Okabe-Ito pos 2 — decrease (vermillion)
+
+# Data
 products = ["Product A", "Product B", "Product C", "Product D", "Product E", "Product F", "Product G", "Product H"]
 q1_sales = [3.0, 6.5, 10.0, 13.5, 17.0, 20.5, 24.0, 27.5]
 q4_sales = [5.5, 4.0, 14.0, 11.0, 20.0, 17.5, 28.0, 25.0]
-
-# Calculate changes to determine colors
 changes = [q4 - q1 for q1, q4 in zip(q1_sales, q4_sales, strict=True)]
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Label collision avoidance: sort and adjust positions if too close
+# Label collision avoidance: sort by value and nudge positions if too close
 min_gap = 1.8
 
-# Adjust Q1 labels (left side)
 q1_indexed = sorted(enumerate(q1_sales), key=lambda x: x[1])
 q1_label_pos = [0.0] * len(q1_sales)
 for i, (orig_idx, val) in enumerate(q1_indexed):
@@ -36,7 +41,6 @@ for i, (orig_idx, val) in enumerate(q1_indexed):
         else:
             q1_label_pos[orig_idx] = val
 
-# Adjust Q4 labels (right side)
 q4_indexed = sorted(enumerate(q4_sales), key=lambda x: x[1])
 q4_label_pos = [0.0] * len(q4_sales)
 for i, (orig_idx, val) in enumerate(q4_indexed):
@@ -49,47 +53,68 @@ for i, (orig_idx, val) in enumerate(q4_indexed):
         else:
             q4_label_pos[orig_idx] = val
 
-# Plot each slope line
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+
 x_positions = [0, 1]
 for i, (product, q1, q4, change) in enumerate(zip(products, q1_sales, q4_sales, changes, strict=True)):
-    # Color by direction: blue for increase, yellow/orange for decrease
-    color = "#306998" if change >= 0 else "#FFD43B"
-    ax.plot(x_positions, [q1, q4], marker="o", markersize=12, linewidth=3, color=color)
-
-    # Labels at both endpoints with adjusted positions to avoid overlap
-    ax.text(
-        -0.05,
-        q1_label_pos[i],
-        f"{product}: ${q1:.1f}M",
-        ha="right",
-        va="center",
-        fontsize=14,
+    color = COLOR_INC if change >= 0 else COLOR_DEC
+    ax.plot(
+        x_positions,
+        [q1, q4],
+        marker="o",
+        markersize=12,
+        linewidth=3,
         color=color,
-        fontweight="bold",
+        markeredgecolor=PAGE_BG,
+        markeredgewidth=1.5,
     )
-    ax.text(1.05, q4_label_pos[i], f"${q4:.1f}M", ha="left", va="center", fontsize=14, color=color, fontweight="bold")
 
-# Style the axes
-ax.set_xlim(-0.6, 1.6)
+    # Left label: product name + Q1 value; dotted connector if label was nudged
+    lpos = q1_label_pos[i]
+    if abs(lpos - q1) > 0.05:
+        ax.plot([-0.03, -0.03], [q1, lpos], color=color, linewidth=0.8, alpha=0.35, linestyle=":")
+    ax.text(-0.06, lpos, f"{product}: ${q1:.1f}M", ha="right", va="center", fontsize=14, color=color, fontweight="bold")
+
+    # Right label: product name + Q4 value; dotted connector if label was nudged
+    rpos = q4_label_pos[i]
+    if abs(rpos - q4) > 0.05:
+        ax.plot([1.03, 1.03], [q4, rpos], color=color, linewidth=0.8, alpha=0.35, linestyle=":")
+    ax.text(1.06, rpos, f"{product}: ${q4:.1f}M", ha="left", va="center", fontsize=14, color=color, fontweight="bold")
+
+# Style
+ax.set_xlim(-0.75, 1.75)
 ax.set_xticks(x_positions)
-ax.set_xticklabels(["Q1 2024", "Q4 2024"], fontsize=20, fontweight="bold")
-ax.set_ylabel("Sales (Millions $)", fontsize=20)
-ax.set_title("slope-basic · matplotlib · pyplots.ai", fontsize=24)
+ax.set_xticklabels(["Q1 2024", "Q4 2024"], fontsize=20, fontweight="bold", color=INK)
+ax.set_ylabel("Sales (Millions $)", fontsize=20, color=INK)
+ax.set_title("slope-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
 
-# Remove spines and set grid
+ax.tick_params(axis="x", length=0)
+ax.tick_params(axis="y", labelsize=16, labelcolor=INK_SOFT, colors=INK_SOFT)
+
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 ax.spines["bottom"].set_visible(False)
-ax.tick_params(axis="y", labelsize=16)
-ax.tick_params(axis="x", length=0)
-ax.grid(True, axis="y", alpha=0.3, linestyle="--")
+ax.spines["left"].set_color(INK_SOFT)
 
-# Add legend for color coding
+ax.grid(True, axis="y", alpha=0.10, linewidth=0.8, color=INK)
+
+# Legend centered below title
 legend_elements = [
-    Line2D([0], [0], color="#306998", linewidth=3, label="Increase"),
-    Line2D([0], [0], color="#FFD43B", linewidth=3, label="Decrease"),
+    Line2D(
+        [0], [0], color=COLOR_INC, linewidth=3, marker="o", markersize=10, markeredgecolor=PAGE_BG, label="Increase"
+    ),
+    Line2D(
+        [0], [0], color=COLOR_DEC, linewidth=3, marker="o", markersize=10, markeredgecolor=PAGE_BG, label="Decrease"
+    ),
 ]
-ax.legend(handles=legend_elements, loc="upper right", fontsize=16)
+leg = ax.legend(
+    handles=legend_elements, loc="upper center", bbox_to_anchor=(0.5, 0.98), fontsize=16, frameon=True, ncol=2
+)
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
