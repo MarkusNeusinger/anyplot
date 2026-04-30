@@ -1,163 +1,180 @@
 library: matplotlib
+language: python
 specification_id: rug-basic
 created: '2025-12-23T19:45:08Z'
-updated: '2025-12-23T19:54:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20469994317
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/rug-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-04-30T05:37:35Z'
+generated_by: claude-sonnet
+workflow_run: 25148420137
+issue: 978
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/rug-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent demonstration of rug plot concept with trimodal data showing clustering
-    patterns and gaps
-  - Clean, minimal design with hidden y-axis appropriate for 1D distribution visualization
-  - Helpful annotations explaining each cluster characteristics (density, spread,
-    sample size)
-  - Good use of alpha transparency for overlapping tick marks
-  - Proper font sizing following matplotlib guidelines (24/20/16pt hierarchy)
+  - EventCollection is the canonical matplotlib approach for rug plots — idiomatic
+    and correct
+  - 'Theme-adaptive chrome thoroughly applied: PAGE_BG, INK, INK_SOFT, INK_MUTED all
+    used on every relevant element'
+  - Trimodal data with deliberate cluster sizes and outliers gives excellent feature
+    coverage
+  - Cluster labels with sample counts (n=50/35/15) add real storytelling value
+  - Single bottom spine with hidden y-axis is the right minimal treatment for a rug
+    plot
   weaknesses:
-  - Axis label Measurement Value lacks units (e.g., Measurement Value (ms) or similar
-    context)
-  - Could demonstrate outlier detection capability mentioned in the spec
-  - Basic vlines implementation rather than matplotlib more specialized options
-  image_description: 'The plot displays a basic rug plot with vertical blue tick marks
-    (#306998) along a horizontal axis ranging from 10 to 90. The title "rug-basic
-    · matplotlib · pyplots.ai" appears at the top in black text. Three clusters of
-    tick marks are visible: a dense cluster around value 25 (labeled "Dense cluster
-    (n=50)"), a wider spread cluster around value 55 (labeled "Wider spread (n=35)"),
-    and a small group around value 75 (labeled "Small group (n=15)"). The x-axis is
-    labeled "Measurement Value". The y-axis is hidden, with only the bottom spine
-    visible. Annotations in blue text above each cluster explain the data distribution.
-    The layout is clean with good use of whitespace.'
+  - Tall linelength=0.7 (filling 70% of the 0-1 y-range) makes the marks look more
+    like bars than small tick marks — spec says tick height should be small relative
+    to the plot; consider linelength=0.3-0.4 with matching lineoffset
+  - Empty vertical dead zone between annotation text (y~0.88) and rug marks tops (y~0.70)
+    — using ax.annotate() with arrowprops would visually bridge this gap cleanly
+  - ax.text() labels float without visual connection to data groups; ax.annotate()
+    with arrowprops would make the callouts more intentional
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "rug-basic · matplotlib · anyplot.ai" in dark ink (24pt), x-axis label "Response Time (ms)" in dark ink (20pt), tick labels 0–100 in INK_SOFT (16pt) — all clearly readable against light background
+      Data: Brand-green (#009E73) vertical rug tick marks with alpha=0.7, linewidth=2.5 — trimodal distribution visible with clusters at ~25ms, ~55ms, ~75ms plus isolated outlier marks at both extremes; annotation text labels with arrows pointing to clusters
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, axis label, and tick labels all appear in light-colored text (F0EFE8 / B8B7B0 tokens) — no dark-on-dark failures; annotation labels use INK_SOFT and INK_MUTED light variants; all text readable against dark background
+      Data: Brand-green (#009E73) tick marks are visually identical to the light render — only chrome flipped, data color unchanged
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, xlabel at 20pt, ticks at 16pt, annotations at 16pt
-          - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, annotations well-spaced above clusters
+        comment: Title 24pt, x-label 20pt, ticks 16pt, annotations 14-16pt all explicitly
+          set; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Cluster labels well-spaced, no collisions between annotations or
+          tick marks
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Tick marks visible with good linewidth=3, alpha=0.7 handles overlap
-          well; slightly tall ticks relative to typical rug plots
+        comment: Rug marks at linewidth=2.5 with alpha=0.7 are clearly visible; linelength=0.7
+          is taller than typical rug-plot convention
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single blue color (#306998), no color differentiation needed, good
-          contrast
+        comment: 'Single series in brand green #009E73, CVD-safe, good contrast on
+          both surfaces'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good canvas utilization, plot fills appropriate space, balanced margins
+        comment: Middle vertical band between annotations and rug mark tops is mostly
+          empty; acceptable for the format but slightly awkward
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: '"Measurement Value" is descriptive but lacks units'
+        comment: Response Time (ms) includes units; title follows correct spec format
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: No grid (appropriate for rug plot), no legend needed, but bottom
-          spine could be more prominent
+        comment: 'First series is #009E73; backgrounds are #FAF8F1 / #1A1A17; theme
+          tokens applied correctly; data color identical across renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above library defaults: explicit theme tokens, brand green, all
+          spines removed except bottom, annotations with context labels. Not publication-ready.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines and y-axis completely removed, no grid, tight_layout applied.
+          Slight deduction for empty middle zone creating dead space.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Cluster labels with sample sizes and outlier callouts guide the viewer.
+          Above default but not excellent.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct rug plot using vertical tick marks
+        comment: 'Correct rug plot: individual observations as tick marks along x-axis'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Values correctly mapped to x-axis positions
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows individual data points as tick marks, demonstrates clustering
-          and gaps
-      - id: SC-04
-        name: Data Range
+        comment: Semi-transparency (alpha=0.7), consistent tick height, x-axis orientation,
+          works as standalone
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (5-90) shows all data points with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Continuous values mapped to x-axis; all 104 data points visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for this plot type, annotations serve as descriptive labels
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "rug-basic · matplotlib · pyplots.ai"
+        comment: Title correct format; no legend appropriate for single-series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clustering, gaps, and different densities; could also show
-          potential outliers as mentioned in spec
+        comment: Shows clustering, gaps, varying densities, and outliers at both extremes
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Trimodal measurement data is plausible but somewhat abstract; a more
-          concrete scenario (e.g., response times, measurements) would be stronger
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values 15-80 are sensible for generic measurements
+        comment: 'Response times in ms for a software system: real-world plausible,
+          neutral'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 25/55/75ms cluster centers with small spreads realistic; 5-98ms outlier
+          range plausible
     code_quality:
       score: 10
       max: 10
@@ -167,40 +184,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Linear: imports -> theme tokens -> data -> plot -> save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy, both used
+        comment: os, matplotlib.pyplot, numpy, EventCollection — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current matplotlib API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; EventCollection used appropriately; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png; uses current matplotlib API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses ax.vlines() which is appropriate but basic; could leverage matplotlib's
-          EventCollection or rugplot-specific methods for a more idiomatic implementation
+        passed: true
+        comment: EventCollection from matplotlib.collections is the idiomatic matplotlib
+          primitive for rug plots
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: EventCollection is distinctively matplotlib; small deduction for
+          using ax.text() instead of ax.annotate() with arrowprops
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
