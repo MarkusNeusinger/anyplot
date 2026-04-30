@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: stem-basic
 created: '2025-12-23T20:45:07Z'
-updated: '2026-04-30T15:00:34Z'
+updated: '2026-04-30T15:13:28Z'
 generated_by: claude-sonnet
 workflow_run: 25172159200
 issue: 972
@@ -15,118 +15,113 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basi
 quality_score: 89
 review:
   strengths:
-  - 'Perfect visual quality: all font sizes explicitly set (title=28px, axis=22px,
-    ticks=18px), no overlap, markers clearly visible with stroke rings for contrast'
-  - Correct stem plot implementation using mark_rule with y2 encoding and mark_circle
-    markers — idiomatic Altair layer composition
-  - 'Full theme-adaptive chrome correctly applied: warm off-white (#FAF8F1) light
-    background, near-black (#1A1A17) dark background, all text readable in both themes'
-  - Realistic acoustic impulse response data showing exponential decay with oscillation
-    — demonstrates all stem plot features (positive/negative values, varying heights)
-  - 'Clean code structure: seed set (42), no functions/classes, clean imports, saves
-    both PNG and HTML'
+  - Decay envelope overlay (shaded area + dashed bounds) adds meaningful visual context
+    that tells the exponential decay story — a thoughtful addition beyond the spec
+    minimum
+  - 'Full theme-adaptive chrome: PAGE_BG, INK, INK_SOFT tokens correctly applied in
+    both light and dark renders with no dark-on-dark or light-on-light failures'
+  - 'Perfect spec compliance: mark_rule (y/y2) for stems, mark_circle for markers,
+    baseline rule, all 30 samples visible with correct title format'
+  - Clean Altair layer composition using + operator; Y2 encoding for vertical rules
+    is idiomatic; marker stroke set to PAGE_BG for crisp definition
+  - Font sizes explicitly set to spec values (title 28px, axis 22px, ticks 18px);
+    readable at full 4800×2700 resolution in both themes
   weaknesses:
-  - Full view border box (configure_view stroke=INK_SOFT creates 4-sided frame) —
-    style guide requires removing top/right spines; use configure_view(stroke=None)
-    and rely on axis domain lines instead
-  - Grid is on both axes (both horizontal and vertical lines visible) — for a stem
-    plot with discrete points, a Y-axis-only grid or no grid would be cleaner and
-    less noisy
-  - No visual hierarchy or emphasis — the decaying signal pattern is the natural story
-    but no design element highlights it (e.g., color gradient along decay, area shading,
-    or annotation marking the decay envelope)
+  - 'DE-01 moderate: design is above defaults but still essentially monochromatic
+    (single BRAND green); typography could be bolder with title fontWeight set to
+    ''bold'' to push into stronger design territory'
+  - 'DE-02 partial: horizontal y-axis gridlines run full-width across the chart (gridOpacity=0.10
+    is subtle but visible); could further refine by reducing gridDash or removing
+    gridlines entirely for this simple discrete plot'
+  - 'LM-01 good but not expert: configure_axisX(grid=False) is separate from configure_axis
+    rather than using the axis-level grid property; minor improvement possible with
+    cleaner Altair configuration patterns'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "stem-basic · altair · anyplot.ai" is dark, clearly readable; X-axis label "Sample Index (n)" and Y-axis label "Amplitude (a.u.)" are both dark and clearly readable; tick labels (0-29 on x, -0.6 to 1.2 on y) are dark and well-sized
-      Data: 30 stems in brand green #009E73 with circular markers at tips; baseline horizontal rule at y=0 in soft ink; stems show damped oscillation with exponential decay; both positive (up to ~1.0) and negative (down to ~-0.6) values visible
+      Background: Warm off-white #FAF8F1 — correctly rendered, not pure white
+      Chrome: Title "stem-basic · altair · anyplot.ai" in dark ink, clearly centered at top; Y-axis label "Amplitude (a.u.)" rotated on left in dark ink; X-axis label "Sample Index (n)" at bottom; tick labels (0–29 on X, -1.0 to 1.2 on Y) in INK_SOFT gray — all readable
+      Data: 30 stems in BRAND green (#009E73) with circular markers at tips, strokeWidth=2.5 for stems; light teal shaded decay envelope spanning ±exp(-n/8) bounds; dashed gray envelope boundary lines; horizontal baseline rule at y=0
       Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct, warm near-black not pure black
-      Chrome: Title and axis labels appear in light text, clearly readable against dark background; tick labels are light-colored and clearly readable; no dark-on-dark issues detected
-      Data: Stems and markers remain identical brand green #009E73 — data colors are unchanged from light render; baseline rule visible in appropriate soft-ink color
-      Legibility verdict: PASS — all text clearly readable against near-black background; no dark-on-dark failures; brand green #009E73 is visible on dark surface
+      Background: Warm near-black #1A1A17 — correctly rendered, not pure black
+      Chrome: Title and axis labels rendered in light INK (#F0EFE8) — clearly visible; tick labels in INK_SOFT (#B8B7B0 light gray) — readable against dark background; no dark-on-dark failures detected
+      Data: Stems and markers remain identical BRAND green (#009E73) — same as light render; shaded envelope now reads darker teal against the dark background; dashed bounds in lighter gray
+      Legibility verdict: PASS — all text legible on dark surface; data colors unchanged; chrome correctly flipped to light-on-dark
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
-          labels 18px — readable in both themes'
+        comment: All font sizes explicitly set (title 28px, axis 22px, ticks 18px);
+          readable in both themes; minor deduction as title weight not bolded
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 30 evenly spaced stems, no tick label or element overlap
+        comment: No overlapping text or elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers size=300 with stroke ring for contrast, stems strokeWidth=2.5
-          opacity=0.85 — all clearly visible
+        comment: Markers size=300 appropriate for 30 points; stems strokeWidth=2.5
+          clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand green series, CVD-safe Okabe-Ito position 1
+        comment: Single CVD-safe Okabe-Ito green; high contrast on both backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600x900 at scale_factor=3.0 = 4800x2700px, good canvas utilization
-          and balanced margins
+        comment: 1600x900 * scale_factor=3 = 4800x2700; good canvas utilization
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Sample Index (n)'', Y: ''Amplitude (a.u.)'' — descriptive with
-          units'
+        comment: Sample Index (n) and Amplitude (a.u.) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (and only) series #009E73; light bg #FAF8F1, dark bg #1A1A17;
-          full theme-adaptive chrome applied correctly'
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; chrome theme-adaptive'
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Above generic default: brand color, marker stroke rings for definition,
-          careful theme tokens — but not publication-level; no color variation or
-          typographic hierarchy beyond basics'
+        passed: true
+        comment: Decay envelope shows design intent above defaults; clean single-color
+          story; above default 4 but not full strong-design 6
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grid opacity explicitly set to 0.10 (subtle), but full 4-sided view
-          border box present (should remove top/right), grid on both axes (Y-only
-          would be cleaner)
+        passed: true
+        comment: X-grid off, y-grid opacity 0.10, view stroke=None; good refinement
+          but horizontal gridlines still present across full width
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Damped oscillation data inherently tells a story but no visual design
-          element emphasizes it — no decay envelope, gradient, or annotation drawing
-          attention to the decay pattern
+        passed: true
+        comment: Decay envelope shading with dashed bounds creates clear visual narrative
+          about exponential decay; strong focal story
     spec_compliance:
       score: 15
       max: 15
@@ -136,29 +131,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct stem plot: mark_rule (stems) + mark_circle (markers) + baseline
-          rule at y=0'
+        comment: 'Correct stem plot: mark_rule (y/y2) for stems + mark_circle for
+          markers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Thin stems (strokeWidth=2.5), visible circular markers at tips, baseline
-          at y=0, consistent sizing throughout
+        comment: Stems, markers, baseline at y=0, consistent sizing throughout
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=sample index, Y=amplitude; all 30 points visible with correct stem
-          heights
+        comment: X=sample index, Y=amplitude; all 30 data points visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'stem-basic · altair · anyplot.ai' exactly matches format;
-          single series, no legend needed (N/A)
+        comment: 'Title: stem-basic · altair · anyplot.ai; no legend needed (single
+          series)'
     data_quality:
       score: 15
       max: 15
@@ -168,22 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all stem plot aspects: both positive and negative values,
-          large variation in heights, exponential decay pattern'
+        comment: Shows positive and negative values, oscillation pattern, decaying
+          envelope — full feature range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Acoustic impulse response samples — real-world scientific signal
-          processing context, neutral and plausible
+        comment: Acoustic impulse response is a canonical, neutral, real-world stem
+          plot use case
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Amplitude ~±1 a.u., exponential decay constant 1/8, 30 samples —
-          all physically plausible for acoustic impulse response
+        comment: 30 samples (within 10-100 spec range); amplitude ±1 appropriate for
+          normalized signal
     code_quality:
       score: 10
       max: 10
@@ -193,14 +186,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → theme tokens → data → plot layers →
-          compose → save'
+        comment: 'No functions or classes; linear flow: imports → tokens → data →
+          charts → compose → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -212,34 +205,34 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code, idiomatic layer composition, no fake functionality
+        comment: Clean layer composition; appropriate complexity for envelope + stem
+          structure
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with scale_factor=3.0 and plot-{THEME}.html;
-          current Altair API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Excellent: mark_rule with y2 encoding for stems, layer composition
-          with + operator, configure_* for global styling — all idiomatic Altair patterns'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Layer composition (baseline + stems + markers) and y2 encoding for
-          vertical span rules are distinctly Altair grammar-of-graphics features;
-          tooltip configuration adds interactivity in HTML output
-  verdict: REJECTED
+        comment: Y2 encoding for vertical rules is idiomatic Altair; configure_axis/configure_view/configure_title
+          properly used; configure_axisX for fine-grained X control
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Layer composition (+) and Y2 encoding are Altair-distinctive but
+          HTML export and tooltip formatting are common; does not leverage selections,
+          transforms, or other uniquely powerful Altair capabilities
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -251,4 +244,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
