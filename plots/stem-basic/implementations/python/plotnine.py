@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 stem-basic: Basic Stem Plot
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-04-30
+Library: plotnine 0.15.3 | Python 3.13.13
+Quality: 87/100 | Created: 2026-04-30
 """
 
 import os
