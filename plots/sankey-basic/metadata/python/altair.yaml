@@ -1,206 +1,242 @@
 library: altair
+language: python
 specification_id: sankey-basic
 created: '2025-12-23T19:50:52Z'
-updated: '2025-12-23T19:57:56Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20470109773
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - bezier-curves
-    - layer-composition
-    - hover-tooltips
-    - html-export
-  patterns:
-    - iteration-over-groups
-  dataprep: []
-  styling:
-    - alpha-blending
+updated: '2026-04-30T09:24:49Z'
+generated_by: claude-sonnet
+workflow_run: 25156438466
+issue: 810
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/altair/plot-dark.html
+quality_score: 82
 review:
   strengths:
-  - Excellent manual implementation of Sankey diagram using Altair primitive marks
-    (rectangles + filled polygons)
-  - Smooth S-curve interpolation for flow bands using smoothstep function creates
-    natural-looking flows
-  - Well-organized color scheme with Python Blue (#306998) as primary source color
-  - Clean layer composition (links → nodes → source labels → target labels)
-  - Good use of tooltips for interactivity on node hover
-  - Proper title format with informative subtitle
+  - Correct Okabe-Ito palette (positions 1-4) for source node and flow colors
+  - Smooth smoothstep bezier S-curves create a professional Sankey appearance
+  - Theme-adaptive chrome (background, text, legend) works correctly in both light
+    and dark renders with no dark-on-dark failures
+  - Complete spec compliance including correct title format and interactive HTML export
+  - Clean, deterministic, readable code with no functions or classes
+  - Tooltips on nodes provide interactive value information
   weaknesses:
-  - The three blue shades for Coal, Gas, and Nuclear sources are visually similar;
-    wider color variation would improve distinguishability
-  - Code complexity is high due to manual polygon generation; this is necessary since
-    Altair lacks native Sankey support, but adds maintenance burden
-  image_description: 'The plot displays a Sankey diagram showing energy flow from
-    four source nodes (Renewable, Nuclear, Gas, Coal) positioned on the left side
-    to four target sector nodes (Transport, Industrial, Commercial, Residential) on
-    the right. The flows are rendered as smooth S-curved bands with semi-transparent
-    fill (opacity ~0.55), colored by source category. Source nodes use a blue palette
-    (Coal: #306998, Gas: #4A8BC6, Nuclear: #2D5986) with Renewable in yellow (#FFD43B).
-    Target nodes are colored distinctly (teal shades for Residential/Commercial, coral/red
-    for Industrial/Transport). Node labels are positioned adjacent to their respective
-    rectangles in bold black text. The title "sankey-basic · altair · pyplots.ai"
-    appears centered at top with subtitle "Energy Flow from Sources to Sectors". A
-    legend in the bottom-right corner shows the "Energy Source" color mapping.'
+  - Transport label clipped at bottom canvas edge — only 'T' visible; increase bottom_margin
+    from 60 to 100 or reduce height scale factor from 0.85 to 0.80
+  - 'Target node colors are custom hex values (#7EC8C8, #A8D8A8, #E8C07A, #C8A8E8)
+    not from the Okabe-Ito palette; replace with positions 5-7 (#E69F00, #56B4E9,
+    #F0E442) plus adaptive neutral'
+  - Legend shows line symbols (colored dashes) for what are actually filled area marks;
+    consider a custom legend solution
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "sankey-basic · altair · anyplot.ai" (28px, dark ink) and subtitle "Energy Flow from Sources to Sectors" (20px) are clearly readable. Node labels for Coal, Nuclear, Gas, Renewable (left), Industrial, Commercial, Residential (right) are readable in dark ink at 20px bold. Legend text readable at 16px. ISSUE: Transport target label is clipped - only "T" is visible at the bottom-right canvas edge.
+      Data: Four sources use Okabe-Ito positions 1-4: Coal=#009E73 (green), Gas=#D55E00 (vermillion), Nuclear=#0072B2 (blue), Renewable=#CC79A7 (pink-purple). Flow bands are semi-transparent (opacity=0.55) colored by source. Target node colors (#7EC8C8, #A8D8A8, #E8C07A, #C8A8E8) are custom non-Okabe-Ito values. Smooth S-curves connect sources to targets.
+      Legibility verdict: PASS (with caveat: Transport label clipped to "T")
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) - correct
+      Chrome: Title and subtitle rendered in light ink (#F0EFE8), clearly readable against dark background. Node labels rendered in INK token (light) - readable for all visible nodes. Legend box uses elevated dark fill (#242420) with subtle border. No dark-on-dark failures for any visible text elements.
+      Data: Flow band colors are identical to light render - Coal=#009E73, Gas=#D55E00, Nuclear=#0072B2, Renewable=#CC79A7. Data colors unchanged, only chrome flips between themes. Same Transport label clipping issue persists.
+      Legibility verdict: PASS (with caveat: Transport label clipped to "T", same as light render)
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 24
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, labels at 20pt bold, all clearly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text, all labels positioned outside nodes
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Flow bands well-sized, nodes visible with stroke, slight deduction
-          as some crossing flows can be hard to trace
+        comment: Font sizes excellent (title 28, labels 20, legend 16); Transport
+          label clipped to 'T'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Labels well-spaced; Transport truncation counts as partial failure
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All flows visible at opacity=0.55; Transport node very small but
+          present
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Good color distinction overall, though blue shades for Coal/Gas/Nuclear
-          are somewhat similar
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of canvas, nodes well-spaced, balanced margins
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed in bottom-right, no grid needed for Sankey
+        comment: Okabe-Ito for sources; labels provide text identification
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Transport node partially clipped at bottom canvas edge; label shows
+          only 'T'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct title format; descriptive subtitle; axes hidden appropriately
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Source colors use Okabe-Ito positions 1-4 correctly. Target node
+          colors (#7EC8C8, #A8D8A8, #E8C07A, #C8A8E8) are custom hex values not from
+          Okabe-Ito'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional manual Sankey via Altair primitives; smooth bezier S-curves;
+          styled legend
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No axes/spines appropriate; no grid; clean background; good node
+          padding
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Clear energy source->sector flow narrative; width encoding communicates
+          magnitudes; no explicit emphasis on dominant pathways
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Sankey diagram with nodes and flow links
+        comment: Correct Sankey diagram with nodes and proportional flow bands
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Source→Target flows with proportional widths correctly implemented
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: categorical nodes, flow values, distinct
-          colors'
-      - id: SC-04
-        name: Data Range
+        comment: Source nodes, target nodes, proportional widths, distinct source
+          colors, link opacity, no circular flows
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All flows visible, node heights proportional to totals
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Energy flow sources to sectors; values mapped to band widths
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows energy source colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Exact format "sankey-basic · altair · pyplots.ai" used
+        comment: Title matches spec-id·library·anyplot.ai format; legend labels match
+          source categories
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows multiple sources flowing to multiple targets with varying magnitudes;
-          slight deduction as no extremely dominant or extremely minor flows shown
+        comment: 12 flows across 4x4 source/target grid; Transport only receives one
+          flow limiting full coverage
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Energy flow from sources to sectors is a classic, realistic Sankey
-          use case
+        comment: Energy distribution domain realistic and neutral; Coal->Industrial
+          largest is plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values (10-45 units) are plausible; could benefit from showing more
-          extreme differences
+        comment: 12 flows within 5-50 recommended range; values 10-45 sensible
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Linear flow structure, but complex manual polygon calculation; no
-          functions/classes used though
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Deterministic data (hardcoded flows), no random elements
+        comment: No functions or classes; clean procedural flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: No random elements; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both used
+        comment: Only os, altair, pandas - all used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity justified by manual Sankey construction; no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as "plot.png" but also saves "plot.html" which is fine
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves plot-{THEME}.png (scale_factor=3.0) and plot-{THEME}.html;
+          current Altair 6.x API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Excellent use of Altair's declarative layering, mark_line with filled
-          polygons, detailed encoding with tooltips, and legend configuration
+        comment: Correct alt.layer() composition, proper encoding types (Q/N), alt.Title
+          with subtitle, configure_legend/configure_view
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Interactive HTML export, node tooltips, layer composition of primitive
+          marks to build custom chart type
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - bezier-curves
+  - hover-tooltips
+  - html-export
+  patterns:
+  - groupby-aggregation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending

@@ -1,12 +1,21 @@
-""" pyplots.ai
+""" anyplot.ai
 sankey-basic: Basic Sankey Diagram
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 82/100 | Updated: 2026-04-30
 """
+
+import os
 
 import altair as alt
 import pandas as pd
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Energy flow from sources to sectors
 flows = [
@@ -26,8 +35,7 @@ flows = [
 
 df = pd.DataFrame(flows)
 
-# Target output: 4800x2700 px (16:9 aspect ratio) with scale_factor=3.0
-# Internal canvas: 1600x900 pixels
+# Canvas dimensions: 1600x900 internal → 4800x2700 px at scale_factor=3.0
 width = 1600
 height = 900
 node_width = 80
@@ -37,12 +45,10 @@ node_padding = 25
 sources = df["source"].unique().tolist()
 targets = df["target"].unique().tolist()
 
-# Calculate totals for positioning
 source_totals = df.groupby("source")["value"].sum().to_dict()
 target_totals = df.groupby("target")["value"].sum().to_dict()
 total_flow = df["value"].sum()
 
-# Available height for nodes - reserve space for title (top) and margins
 top_margin = 100
 bottom_margin = 60
 available_height = height - top_margin - bottom_margin
@@ -71,14 +77,19 @@ for tgt in targets:
     target_positions[tgt] = {"y": current_y, "height": node_height}
     current_y += node_height + node_padding
 
-# Color palettes - Python Blue (#306998) as primary, Yellow (#FFD43B) for accent
-source_colors = {"Coal": "#306998", "Gas": "#4A8BC6", "Nuclear": "#2D5986", "Renewable": "#FFD43B"}
+# Okabe-Ito palette for source colors — distinct, colorblind-safe
+source_colors = {
+    "Coal": "#009E73",  # Okabe-Ito #1 (brand green)
+    "Gas": "#D55E00",  # Okabe-Ito #2 (vermillion)
+    "Nuclear": "#0072B2",  # Okabe-Ito #3 (blue)
+    "Renewable": "#CC79A7",  # Okabe-Ito #4 (reddish purple)
+}
 
-target_colors = {"Residential": "#4ECDC4", "Commercial": "#95E1D3", "Industrial": "#FF6B6B", "Transport": "#FFA07A"}
+# Target node colors — muted, distinct from source palette
+target_colors = {"Residential": "#7EC8C8", "Commercial": "#A8D8A8", "Industrial": "#E8C07A", "Transport": "#C8A8E8"}
 
-# Create node rectangles data
+# Build node rectangles data
 nodes_data = []
-
 for src in sources:
     pos = source_positions[src]
     nodes_data.append(
@@ -115,12 +126,10 @@ for tgt in targets:
 
 nodes_df = pd.DataFrame(nodes_data)
 
-# Create flow paths using polygons
-# Track current position within each node for stacking flows
+# Generate smoothstep S-curve polygon points for each flow band
 source_y_offsets = {src: source_positions[src]["y"] for src in sources}
 target_y_offsets = {tgt: target_positions[tgt]["y"] for tgt in targets}
 
-# Generate polygon points for each flow (closed path)
 all_flow_data = []
 num_curve_points = 40
 
@@ -129,34 +138,28 @@ for _, row in df.iterrows():
     tgt = row["target"]
     val = row["value"]
 
-    # Flow height proportional to value within each node
     src_height = (val / source_totals[src]) * source_positions[src]["height"]
     tgt_height = (val / target_totals[tgt]) * target_positions[tgt]["height"]
 
-    # Start and end Y positions for this flow band
     src_y_top = source_y_offsets[src]
     src_y_bottom = src_y_top + src_height
     tgt_y_top = target_y_offsets[tgt]
     tgt_y_bottom = tgt_y_top + tgt_height
 
-    # Update offsets for stacking next flow from same source/target
     source_y_offsets[src] += src_height
     target_y_offsets[tgt] += tgt_height
 
     x_start = node_width
     x_end = width - node_width
 
-    # Generate top curve points (left to right) using smoothstep interpolation
     top_points = []
     for i in range(num_curve_points):
         t = i / (num_curve_points - 1)
         x = x_start + t * (x_end - x_start)
-        # Smoothstep creates smooth S-curve for natural flow appearance
         bezier_t = t * t * (3 - 2 * t)
         y = src_y_top + bezier_t * (tgt_y_top - src_y_top)
         top_points.append((x, y))
 
-    # Generate bottom curve points (right to left to close the polygon)
     bottom_points = []
     for i in range(num_curve_points - 1, -1, -1):
         t = i / (num_curve_points - 1)
@@ -165,7 +168,6 @@ for _, row in df.iterrows():
         y = src_y_bottom + bezier_t * (tgt_y_bottom - src_y_bottom)
         bottom_points.append((x, y))
 
-    # Combine top + bottom into closed polygon for filled area rendering
     all_points = top_points + bottom_points
     for pt_idx, (x, y) in enumerate(all_points):
         all_flow_data.append(
@@ -174,7 +176,7 @@ for _, row in df.iterrows():
 
 flows_df = pd.DataFrame(all_flow_data)
 
-# Create flow polygons using mark_line with filled=True
+# Flow polygons colored by source
 links_chart = (
     alt.Chart(flows_df)
     .mark_line(filled=True, opacity=0.55, strokeWidth=0)
@@ -184,24 +186,17 @@ links_chart = (
         color=alt.Color(
             "source:N",
             scale=alt.Scale(domain=list(source_colors.keys()), range=list(source_colors.values())),
-            legend=alt.Legend(
-                title="Energy Source",
-                titleFontSize=18,
-                labelFontSize=16,
-                orient="bottom-right",
-                titleColor="#333333",
-                labelColor="#333333",
-            ),
+            legend=alt.Legend(title="Energy Source", titleFontSize=18, labelFontSize=16, orient="bottom-right"),
         ),
         detail="flow_id:N",
         order="order:Q",
     )
 )
 
-# Create node rectangles
+# Node rectangles
 nodes_chart = (
     alt.Chart(nodes_df)
-    .mark_rect(stroke="#333333", strokeWidth=2)
+    .mark_rect(stroke=INK_SOFT, strokeWidth=2)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[0, width])),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[0, height])),
@@ -212,51 +207,55 @@ nodes_chart = (
     )
 )
 
-# Create source labels (right-aligned to the left of nodes)
+# Source labels (right of left nodes)
 source_labels_df = nodes_df[nodes_df["side"] == "source"]
 source_labels = (
     alt.Chart(source_labels_df)
-    .mark_text(fontSize=20, fontWeight="bold", color="#333333", align="left", baseline="middle")
+    .mark_text(fontSize=20, fontWeight="bold", align="left", baseline="middle")
     .encode(
         x=alt.X("label_x:Q", scale=alt.Scale(domain=[0, width])),
         y=alt.Y("label_y:Q", scale=alt.Scale(domain=[0, height])),
         text="name:N",
+        color=alt.value(INK),
     )
 )
 
-# Create target labels (left-aligned to the right of nodes)
+# Target labels (left of right nodes)
 target_labels_df = nodes_df[nodes_df["side"] == "target"]
 target_labels = (
     alt.Chart(target_labels_df)
-    .mark_text(fontSize=20, fontWeight="bold", color="#333333", align="right", baseline="middle")
+    .mark_text(fontSize=20, fontWeight="bold", align="right", baseline="middle")
     .encode(
         x=alt.X("label_x:Q", scale=alt.Scale(domain=[0, width])),
         y=alt.Y("label_y:Q", scale=alt.Scale(domain=[0, height])),
         text="name:N",
+        color=alt.value(INK),
     )
 )
 
-# Combine all layers
+# Compose all layers with theme-adaptive chrome
 chart = (
     alt.layer(links_chart, nodes_chart, source_labels, target_labels)
     .properties(
         width=width,
         height=height,
+        background=PAGE_BG,
         title=alt.Title(
-            text="sankey-basic · altair · pyplots.ai",
+            text="sankey-basic · altair · anyplot.ai",
             subtitle="Energy Flow from Sources to Sectors",
             fontSize=28,
             subtitleFontSize=20,
             anchor="middle",
-            color="#333333",
-            subtitleColor="#666666",
+            color=INK,
+            subtitleColor=INK_SOFT,
         ),
-        autosize=alt.AutoSizeParams(type="fit", contains="padding"),
     )
-    .configure_view(strokeWidth=0)
-    .configure_legend(padding=15, cornerRadius=5, fillColor="#FFFFFF", strokeColor="#DDDDDD")
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure_legend(
+        padding=15, cornerRadius=5, fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK
+    )
 )
 
-# Save as PNG (4800x2700 px with scale_factor=3.0) and HTML
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save outputs (PNG at 4800×2700 px + HTML for interactivity)
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
