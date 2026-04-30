@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 span-basic: Basic Span Plot (Highlighted Region)
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-04-30
@@ -8,7 +8,7 @@ import os
 
 import numpy as np
 from bokeh.io import export_png, output_file, save
-from bokeh.models import BoxAnnotation, ColumnDataSource, Label
+from bokeh.models import BoxAnnotation, ColumnDataSource, HoverTool, Label
 from bokeh.plotting import figure
 
 
@@ -53,7 +53,11 @@ p.add_layout(horizontal_span)
 
 # Plot line with markers (Okabe-Ito position 1)
 p.line(x="x", y="y", source=source, line_width=4, line_color=BRAND, legend_label="Monthly Revenue")
-p.scatter(x="x", y="y", source=source, size=16, fill_color=BRAND, line_color=PAGE_BG, line_width=2)
+p.scatter(x="x", y="y", source=source, size=20, fill_color=BRAND, line_color=PAGE_BG, line_width=2)
+
+# HoverTool — showcases Bokeh's interactive HTML output
+hover = HoverTool(tooltips=[("Month", "@x"), ("Revenue", "@y{0.1} K$")])
+p.add_tools(hover)
 
 # Add labels for spans — positioned prominently at top of each span
 vertical_label = Label(
@@ -74,7 +78,7 @@ p.add_layout(horizontal_label)
 # Apply theme-adaptive chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None  # remove box border; L-shaped spines via xaxis/yaxis lines only
 
 p.title.text_color = INK
 p.title.text_font_size = "48pt"
@@ -91,9 +95,8 @@ p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
 
-p.xgrid.grid_line_color = INK
+p.xgrid.grid_line_color = None  # y-only grid preferred for line charts
 p.ygrid.grid_line_color = INK
-p.xgrid.grid_line_alpha = 0.10
 p.ygrid.grid_line_alpha = 0.10
 
 # Legend — top-left for better visual balance
