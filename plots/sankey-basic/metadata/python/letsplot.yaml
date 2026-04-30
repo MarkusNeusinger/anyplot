@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: sankey-basic
 created: '2025-12-23T19:47:34Z'
-updated: '2026-04-30T09:12:06Z'
+updated: '2026-04-30T09:26:16Z'
 generated_by: claude-sonnet
 workflow_run: 25156796686
 issue: 810
@@ -12,40 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sankey-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/letsplot/plot-dark.html
-quality_score: 84
+quality_score: 85
 review:
   strengths:
-  - 'Perfect Okabe-Ito compliance with Coal as #009E73 (brand green first)'
-  - Correct theme-adaptive chrome in both renders — no dark-on-dark failures
-  - Smooth bezier-like flow curves built with geom_polygon smoothstep interpolation
-  - 'Complete data quality: realistic energy domain, plausible TWh values, all Sankey
-    features demonstrated'
-  - 'Perfect code quality: flat KISS structure, deterministic, clean imports'
+  - Full Sankey diagram built from scratch using letsplot primitives (geom_polygon
+    for flow bands, geom_rect for nodes, geom_text for labels) — correct approach
+    given no native Sankey geom
+  - Smooth bezier-like flow curves using smoothstep interpolation (ease = t*t*(3-2*t))
+    produce polished, publication-quality ribbon shapes
+  - 'Okabe-Ito palette applied in correct canonical order: Coal=#009E73 (first), Natural
+    Gas=#D55E00, Nuclear=#0072B2, Renewable=#CC79A7'
+  - 'Theme-adaptive chrome correctly implemented: PAGE_BG, INK, INK_SOFT all flip
+    between light (#FAF8F1) and dark (#1A1A17) themes'
+  - Realistic energy flow domain with sensible TWh values; node labels include totals
+    (e.g., 'Natural Gas (75 TWh)') aiding interpretation
+  - 'All chrome tokens applied throughout: plot_background, panel_background, legend_background,
+    axis_text (blanked), plot_title, legend_text all reference theme variables'
+  - Code is deterministic (hardcoded data), clean imports, linear KISS structure
   weaknesses:
-  - 'Title format incorrect: has Energy Flow · sankey-basic · letsplot · anyplot.ai
-    — should be sankey-basic · letsplot · anyplot.ai (remove the Energy Flow prefix)'
-  - Node label size=14 is below the 16pt minimum guideline; should be at least 16
-  - 'DE-03 low: no emphasis on dominant flow path (Natural Gas → Industrial is the
-    largest single flow but is visually equal to all others)'
-  - 'DE-01 not exceptional: stark black/white node rectangles are visually blunt;
-    slightly rounded or colored nodes could improve sophistication'
-  - 'LM-02 low: no lets-plot-specific feature used (interactive tooltip customization,
-    HTML interactivity, or geom_livemap)'
+  - Title in code is 'Energy Flow · sankey-basic · letsplot · anyplot.ai' — required
+    format is '{spec-id} · {library} · anyplot.ai' (i.e., 'sankey-basic · letsplot
+    · anyplot.ai'), the 'Energy Flow ·' prefix deviates from spec
+  - Node label text size=14 is slightly below the recommended 16pt minimum for secondary
+    text at 4800×2700px — increase to 16 or 18 for better legibility at full resolution
+  - 'No visual hierarchy or data storytelling: the dominant flow (Natural Gas → Residential,
+    35 TWh) is not visually emphasized beyond its natural proportional width — a subtle
+    annotation or slightly different visual treatment would improve storytelling'
+  - 'LM-02 is low: the implementation uses only generic letsplot/ggplot primitives;
+    no distinctively letsplot-only features leveraged (e.g., interactive tooltips
+    via ggsave HTML could be improved with letsplot''s built-in interactivity)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "Energy Flow · sankey-basic · letsplot · anyplot.ai" in bold dark ink, clearly readable. No axis labels (correct for Sankey). Node labels in INK_SOFT (#4A4A44) — readable but size=14 slightly below 16pt guideline. Legend at bottom in INK_SOFT — readable.
-      Data: Four source nodes on left (Renewable, Nuclear, Natural Gas, Coal) with flow bands in Okabe-Ito order: Coal=#009E73 (green), Natural Gas=#D55E00 (orange), Nuclear=#0072B2 (blue), Renewable=#CC79A7 (reddish purple). Alpha=0.65 on all flows. Node rectangles in solid black (#1A1A17).
-      Legibility verdict: PASS — all text readable; node labels slightly small but not unreadable
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title visible in bold dark INK (#1A1A17) text at top-left; node labels on left (Renewable 30 TWh, Nuclear 28 TWh, Natural Gas 75 TWh, Coal 36 TWh) and right (Commercial 40 TWh, Residential 57 TWh, Industrial 72 TWh) rendered in INK_SOFT — all readable. Legend at bottom shows "Energy Source" with four colored swatches; legible. No axis text (correctly blanked for Sankey).
+      Data: Four source flow bands — Coal in #009E73 (green, first/correct), Natural Gas in #D55E00 (orange), Nuclear in #0072B2 (blue), Renewable in #CC79A7 (reddish purple) — correct Okabe-Ito canonical order. Flow bands rendered at alpha=0.65 with smooth bezier-like curves. Black node rectangles clearly visible.
+      Legibility verdict: PASS — all text readable against warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface
-      Chrome: Title in light text (#F0EFE8 INK) — readable against dark background. Node labels in #B8B7B0 (INK_SOFT dark) — clearly readable, no dark-on-dark failures. Legend text in INK_SOFT dark — visible. Node rectangles flip to white/light (#F0EFE8 INK) — correct theme adaptation.
-      Data: Flow colors are identical to light render (Okabe-Ito positions 1-4 unchanged): Coal=#009E73, Natural Gas=#D55E00, Nuclear=#0072B2, Renewable=#CC79A7. Only chrome elements (background, text, nodes) adapted.
-      Legibility verdict: PASS — no dark-on-dark failures; all text readable against dark background
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title rendered in light INK (#F0EFE8) text — clearly readable. Node labels in INK_SOFT (#B8B7B0) — readable against dark background, no dark-on-dark failure observed. Legend text is light-colored. No axis text.
+      Data: Flow band colors are IDENTICAL to light render — Coal #009E73, Natural Gas #D55E00, Nuclear #0072B2, Renewable #CC79A7 — correct (only chrome flips, not data colors). Node rectangles rendered in light INK color consistent with dark theme.
+      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -53,48 +63,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 30pt, legend title 20pt, legend text 18pt explicitly set. Node
-          labels at size=14 slightly below 16pt minimum guideline but readable.
+        comment: Title size=30 and legend 18/20 explicitly set; node labels size=14
+          is slightly below the 16pt recommended minimum for secondary text — all
+          readable but marginal
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions. Node labels positioned cleanly to the sides of
-          nodes with hjust alignment.
+        comment: No text or element overlap visible; source and target labels well-separated
+          from flow bands
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Flow bands proportional and clearly visible. Alpha 0.65 prevents
-          occlusion on crossing flows.
+        comment: Flow bands at alpha=0.65 clearly visible; node rectangles prominent;
+          all elements distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe. No red-green-only encoding.
+        comment: Okabe-Ito palette is CVD-safe; adequate luminance differences between
+          all four flow colors
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Diagram fills most canvas. Slight space inefficiency due to wide
-          margins around node labels on left side.
+        comment: Sankey fills canvas well; nodes at x=0.18/0.82 with y spanning ~0.05-0.95;
+          good proportions for 16:9
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title descriptive. Axes correctly suppressed (N/A for Sankey diagram).
+        comment: No traditional axis labels (correct for Sankey); node labels with
+          TWh values serve as data labels; title present
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Coal=#009E73. Okabe-Ito canonical order. Backgrounds
-          #FAF8F1/#1A1A17. Data colors identical in both renders.'
+        comment: 'First series (Coal) = #009E73 correct; Okabe-Ito canonical order
+          maintained; backgrounds #FAF8F1 / #1A1A17 correct; chrome adaptive in both
+          themes'
     design_excellence:
       score: 12
       max: 20
@@ -104,24 +118,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above well-configured default: smooth curves, alpha blending, Okabe-Ito,
-          minimal chrome. Not publication-ready — crossing flows hard to trace, no
-          hierarchy distinguishes dominant from minor flows.'
+        comment: Well above defaults — custom-built Sankey with smooth curves, professional
+          color palette, clean typography; not quite FiveThirtyEight-level polish
+          but clearly intentional design
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid removed, axes removed, clean legend placement. Node rectangles
-          are very stark black/white which is visually blunt.
+        comment: Grid removed, axes blanked, warm theme-appropriate background; legend
+          with border adds some chrome; good whitespace around nodes
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Sankey inherently shows flow direction and magnitude. Proportional
-          bands and TWh labels add context. No additional emphasis on dominant flow
-          (Natural Gas → Industrial 22 TWh).
+        comment: Data displayed with proportional flow widths telling a basic story;
+          dominant flow (Natural Gas 75 TWh) is visually prominent by size but not
+          explicitly emphasized; no annotations or visual hierarchy highlighting key
+          insight
     spec_compliance:
       score: 14
       max: 15
@@ -131,29 +146,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Sankey diagram with proportional flow widths.
+        comment: Correct Sankey diagram with proportional flow widths, source/target
+          nodes, and multi-node connections
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Proportional link widths, distinct source colors, no circular flows,
-          node labels, link opacity all present.
+        comment: Source/target/value all mapped; node labels visible; distinct colors
+          per source; link opacity (alpha=0.65); no circular flows
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Sources (Coal, Natural Gas, Nuclear, Renewable) to Targets (Industrial,
-          Residential, Commercial). 10 flows within 5-50 spec range.
+        comment: Flow widths correctly proportional to TWh values; all 10 flows correctly
+          rendered
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
         passed: false
-        comment: 'Title ''Energy Flow · sankey-basic · letsplot · anyplot.ai'' has
-          non-compliant ''Energy Flow · '' prefix. Required: ''sankey-basic · letsplot
-          · anyplot.ai''. Legend labels correct.'
+        comment: Code has title='Energy Flow · sankey-basic · letsplot · anyplot.ai'
+          — extra 'Energy Flow ·' prefix deviates from required format '{spec-id}
+          · {library} · anyplot.ai'; legend correctly shows Energy Source with four
+          labeled colors
     data_quality:
       score: 15
       max: 15
@@ -163,22 +180,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all Sankey aspects: proportional flow widths, multi-source
-          to multi-target routing, crossing flows, varying magnitudes.'
+        comment: Shows multiple sources (4), multiple targets (3), varying flow magnitudes
+          (6-35 TWh), all inter-connections represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Energy flow (coal/gas/nuclear/renewable → industrial/residential/commercial)
-          is the canonical real-world Sankey example. Neutral and comprehensible.
+        comment: Realistic energy sector flow (Coal/Gas/Nuclear/Renewable → Industrial/Residential/Commercial)
+          — neutral, real-world scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: TWh values are proportionally plausible (Gas 75 > Coal 36 > Renewable
-          30 > Nuclear 28), consistent with modern mixed-energy economies.
+        comment: TWh values are plausible for national-scale energy distribution;
+          relative proportions (Gas > Coal > Nuclear > Renewable) are realistic
     code_quality:
       score: 10
       max: 10
@@ -188,35 +205,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → data → layout computation → plot → save.
-          No functions or classes.'
+        comment: 'Linear structure: imports → tokens → data → layout → plot → save;
+          no functions or classes despite complexity'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data; no randomness.
+        comment: Fully deterministic — all data hardcoded, no random generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 16 lets_plot imports are used; os and pd are used; no unused
-          imports.
+        comment: All imported symbols are used; no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Manual Sankey construction is appropriately complex for library without
-          native support. Bezier-like smoothstep computation is clean inline code.
+        comment: Appropriate complexity for building a Sankey from primitives; smooth
+          curve computation is clear and correct
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=3 for 4800x2700px) and plot-{THEME}.html.
-          Correct API usage.
+        comment: Saves plot-{THEME}.png (scale=3) and plot-{THEME}.html correctly
     library_mastery:
       score: 5
       max: 10
@@ -226,23 +241,23 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot grammar correctly with layered geoms and theme composition.
-          Manual Sankey construction is appropriate but same pattern works identically
-          in plotnine.
+        comment: Correct ggplot grammar with layer composition (geom_polygon + geom_rect
+          + geom_text), scale_fill_manual, theme system, labs — idiomatic but at primitive
+          level
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Multi-layer composition to build custom diagram type is creative.
-          No feature unique to lets-plot leveraged (e.g., built-in interactivity hooks,
-          tooltip customization, geom_livemap). HTML export is lets-plot-specific
-          but underused.
-  verdict: REJECTED
+        comment: HTML export via ggsave is somewhat letsplot-distinctive; however,
+          the full Sankey implementation uses generic primitives that could be replicated
+          in plotnine with minor syntax changes
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - bezier-curves
   - html-export
   patterns:
   - iteration-over-groups
