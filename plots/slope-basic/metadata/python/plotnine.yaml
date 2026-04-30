@@ -1,167 +1,178 @@
 library: plotnine
+language: python
 specification_id: slope-basic
 created: '2025-12-23T20:46:08Z'
-updated: '2025-12-23T20:54:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20471151815
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/slope-basic/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - minimal-chrome
-  - grid-styling
+updated: '2026-04-30T17:15:54Z'
+generated_by: claude-sonnet
+workflow_run: 25177574844
+issue: 981
+python_version: 3.13.13
+library_version: 0.15.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 80
 review:
   strengths:
-  - Excellent implementation of slope chart using plotnine grammar of graphics
-  - Clear color distinction between increasing (blue) and decreasing (yellow) trends
-  - Labels at both endpoints with entity names on left and values on right
-  - Good figure sizing (16x9) and text scaling for readability
-  - Minimal theme with appropriate grid removal (no vertical gridlines)
-  - Realistic business scenario (quarterly product sales) matching spec applications
+  - Direction color coding using Okabe-Ito colors is excellent storytelling — viewer
+    immediately reads increases vs decreases
+  - 'Correct plotnine idiom: long-format data for line geoms, separate DataFrames
+    passed to geom_text layers'
+  - Scale and data context are realistic and neutral (product sales Q1 to Q4)
+  - Both renders pass theme legibility — light and dark chrome adapts correctly, data
+    colors identical
   weaknesses:
-  - Minor label overlap around similar values (Product J 180 / Product F 175)
-  - Right-side labels could include product names for very long charts
-  - Legend could be positioned differently to save horizontal space
-  image_description: The plot displays a slope chart (slopegraph) comparing 10 products'
-    sales between Q1 and Q4. Lines connect values at two time points, with blue (#306998)
-    indicating increases and yellow (#FFD43B) indicating decreases. The left side
-    shows product names with Q1 values in parentheses (e.g., "Product C (200)"), while
-    the right side shows only Q4 values. The y-axis is labeled "Sales (thousands $)"
-    ranging from approximately 65 to 230. X-axis shows "Q1" and "Q4" labels. A legend
-    titled "Change Direction" appears on the right side. The layout is clean with
-    minimal theme and removed vertical gridlines. There is some minor label overlapping
-    visible around the 170-180 range where Product J and Product F are close together.
+  - 'Label crowding in the mid-value band (left: Products J/F at 175-180; right: values
+    165/160/155 within 10 units) — consider nudge_y based on value ranking or reducing
+    entity count'
+  - 'Output filename: code saves plot.png instead of plot-{THEME}.png using ANYPLOT_THEME
+    environment variable'
+  - Panel border visible as full rectangle in both renders — removing panel_border
+    would improve visual refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white approximately #FAF8F1 — not pure white, consistent with anyplot light theme
+      Chrome: Title "Product Sales Q1 vs Q4 · slope-basic · plotnine · anyplot.ai" in dark text — readable. Y-axis label "Sales (thousands $)" readable. X-axis tick labels "Q1" and "Q4" readable. All chrome text dark on light background.
+      Data: 10 slope lines — teal-green (#009E73) for Increase series (first Okabe-Ito color), orange (#D55E00) for Decrease series (second Okabe-Ito color). Left entity labels combine name+value; right labels show Q4 values. Mild crowding in mid-range (Products J/F at 175-180 left; values 165/160/155 right). Lines and dots clearly visible.
+      Legibility verdict: PASS (minor label crowding but all text individually readable)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black approximately #1A1A17 — not pure black, consistent with anyplot dark theme
+      Chrome: Title visible in light text. Axis labels and tick labels rendered in light color — all readable against dark surface. Entity name labels and value labels appear in light text — no dark-on-dark failures detected. Legend text light-colored and readable. Panel border visible as light rectangle frame.
+      Data: Data colors identical to light render — teal-green for Increase, orange for Decrease. No color shift between themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 23
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt, axis labels 20pt, tick labels 18pt, legend text 16-18pt
-          - all clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 6
         max: 8
         passed: true
-        comment: Minor overlap between Product J (180) and Product F (175) labels
-          on the left side; values 165, 160, 155 are close on the right but still
-          readable
+        comment: Sizes explicitly set (title=24, axis=20, ticks=18, legend=16); geom_text
+          labels at size=10 are smaller but readable
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Moderate crowding: Products J/F (180/175) nearly touching on left;
+          right-side values 165/160/155 in tight cluster'
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Points sized at 5, lines at 1.5 with alpha 0.8 - excellent visibility
-          for 10 entities
+        comment: Lines (size=1.5) and points (size=5) clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue/yellow is colorblind-friendly (not red-green), though contrast
-          could be slightly higher
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization, balanced margins, legend well-positioned
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has "Sales (thousands $)" with units, x-axis appropriately
-          empty (time points shown as tick labels)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito green+orange pair is colorblind-safe with good luminance
+          contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 16:9 correct; x-axis limits extended to 0.3-2.7 for label space;
+          slight cramping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is minimal (only horizontal lines, alpha appears subtle), but
-          legend could be positioned better (takes up space on the right)
+        comment: Y-axis includes units (thousands $); X-axis shows Q1/Q4 time point
+          names
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Images confirm Okabe-Ito: #009E73 for Increase (first series), #D55E00
+          for Decrease. Warm backgrounds in both themes. Text colors theme-adaptive.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Direction color-coding is deliberate; no spine removal, full panel
+          border, no additional typographic refinement — well-configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: X-grid explicitly removed (correct for slope chart); Y-grid subtle;
+          panel border not removed; top/right spines remain
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Direction color-coding creates immediate visual narrative; slope
+          direction reinforces color signal; mid-range label crowding weakens story
+          slightly
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct slope chart with lines connecting two time points
+        comment: 'Correct slopegraph: geom_line connecting two time points per entity'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Entities on left, values correctly mapped to y-axis, time points
-          on x-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Labels at both endpoints, color coding by direction, vertical axes
-          labeled with time point names (Q1, Q4)
-      - id: SC-04
-        name: Data Range
+        comment: Labels at both endpoints, color coding by direction, Q1/Q4 axis labels,
+          10 entities within spec range
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data points without clipping
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X encodes time points, Y encodes sales values, all 10 entities visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows "Increase" and "Decrease" with matching colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses "slope-basic · plotnine · pyplots.ai" format correctly
+        comment: Title includes slope-basic, plotnine, anyplot.ai; legend shows Change
+          Direction with correct labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both increases and decreases, various magnitudes of change,
-          but could show rank crossings more clearly
+        comment: Shows increases, decreases, rank reversals (crossings), various magnitudes
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Quarterly sales comparison is a realistic business scenario mentioned
-          in spec applications
+        comment: Product sales Q1 vs Q4 is neutral, realistic business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values 65-230 thousand are realistic for product sales, though the
-          range could be tighter for better visual differentiation
+        comment: Values 65-230 thousands for quarterly product sales are plausible
     code_quality:
       score: 9
       max: 10
@@ -171,43 +182,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save pattern without functions/classes
+        comment: 'Clean linear flow: data arrays -> DataFrames -> plot -> save'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Uses deterministic data (hardcoded values), but no random seed since
-          not using random data - acceptable
+        comment: Hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used, no extras
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Three separate DataFrames for different geom layers is correct ggplot
+          pattern
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        passed: false
+        comment: Saves to plot.png instead of plot-{THEME}.png; should read ANYPLOT_THEME
+          env var
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Proper ggplot grammar: long-format data, group aesthetic, scale_color_manual,
+          scale_x_continuous with custom breaks/labels'
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of plotnine's grammar of graphics (ggplot, aes, geom_line,
-          geom_point, geom_text), scale_color_manual, theme customization. Could utilize
-          faceting or other advanced features, but appropriate for this simple plot
-          type.
+        comment: Separate DataFrames per geom layer via data= argument, nudge_x for
+          label offset, numeric-to-semantic x-axis via scale_x_continuous
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - wide-to-long
+  dataprep: []
+  styling:
+  - alpha-blending
