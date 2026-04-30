@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: sankey-basic
 created: '2025-12-23T19:45:06Z'
-updated: '2026-04-30T09:09:17Z'
+updated: '2026-04-30T09:22:26Z'
 generated_by: claude-sonnet
 workflow_run: 25156707790
 issue: 810
@@ -12,133 +12,117 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sankey-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - Correct Sankey diagram with multi-level flow (sources → intermediate → destinations)
-    matching the spec exactly
-  - Realistic and neutral energy flow dataset (U.S. Energy Flow in TWh) with plausible
-    proportions
-  - Font sizes explicitly set for 4800×2700px canvas (title 64px, subtitle 40px, labels
-    36px) — all text readable in both themes
-  - 'Theme-adaptive chrome correctly implemented: background switches between #FAF8F1
-    and #1A1A17, title/label colors use INK/INK_SOFT tokens'
-  - 'Correct Highcharts sankey module usage: sankey.js loaded inline, nodes/links
-    structured with keys=[''from'',''to'',''weight''], linkColorMode, curveFactor,
-    linkOpacity all set'
-  - White node labels with dark text outline ensure legibility on all node colors
-    in both themes — no dark-on-dark failure
-  - Clean KISS code structure with deterministic data, no unnecessary abstractions,
-    proper HTML/PNG output for both themes
+  - 'Correct Okabe-Ito palette applied at node level with Coal as #009E73 brand green
+    first'
+  - linkColorMode:"from" creates a visually coherent source-tracing effect unique
+    to Highcharts Sankey
+  - Both renders pass theme checks — backgrounds, title/subtitle colors all correctly
+    adaptive
+  - Realistic U.S. energy flow data with multi-level transformation (sources -> electricity
+    -> end use)
+  - Node padding and link opacity thoughtfully tuned for readability of crossing flows
+  - All chrome stripped (credits, legend) appropriate for Sankey
   weaknesses:
-  - 'VQ-07 FAIL: Node colors are arbitrary custom hex values (#1A3A5C, #6B4E12, #5B2E8F,
-    #0A6B78, #155415…) — NOT the Okabe-Ito palette. Source nodes must use Okabe-Ito
-    in canonical order: Coal=#009E73, Natural Gas=#D55E00, Nuclear=#0072B2, Petroleum=#CC79A7,
-    Renewable=#E69F00. The fallback color #306998 (Python Blue) in the nodes_data
-    dict comprehension is also non-compliant.'
-  - 'VQ-05 PARTIAL: The ''Renewable'' source node is partially cropped at the bottom
-    canvas edge. Increase marginBottom from 80 to at least 150 to ensure all nodes
-    are fully visible.'
-  - 'DE-01 GENERIC: The dark-tone node color scheme is an attempt at contrast management
-    but bypasses the standard Okabe-Ito palette entirely. Applying Okabe-Ito with
-    semi-transparent link fills (#009E73 at 50% alpha etc.) would simultaneously fix
-    palette compliance and improve aesthetic coherence.'
+  - 'Node label color hardcoded to #FFFFFF rather than adapting to INK token (textOutline
+    compensates, but not fully theme-adaptive)'
+  - No storytelling emphasis on the dominant flow (Petroleum -> Transportation at
+    280 TWh) — a size annotation or highlighted node would elevate DE-03
+  - 'LM-01 slightly below full idiom: series defined as raw dict rather than typed
+    Highcharts series objects'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white matching #FAF8F1 — correct for light theme.
-      Chrome: Title "sankey-basic · highcharts · anyplot.ai" in dark bold text is clearly readable. Subtitle "U.S. Energy Flow (values in TWh)" is readable in lighter dark text. No axis labels (appropriate for Sankey).
-      Data: Five source nodes on the left (Coal, Natural Gas, Nuclear, Petroleum, Renewable) using custom dark hex colors — steel blue, gold-olive, purple, teal, dark green. Two intermediate nodes (Electricity, Transportation) in dark brown and amber. Four destination nodes on the right (Industrial, Residential, Commercial, with a small yellow-green one). Flow links are semi-transparent (opacity 0.5) and inherit source-node color. Node labels are white bold text with dark outline — all readable.
-      Layout: The Renewable source node at the bottom-left is partially cropped at the canvas bottom edge. All other nodes are fully visible.
-      Legibility verdict: PASS — all text readable. Minor issue: Renewable node clipped.
+      Background: Warm off-white (~#FAF8F1) — correct, not pure white
+      Chrome: Title "sankey-basic · highcharts · anyplot.ai" bold dark (#1A1A17), subtitle in INK_SOFT — all readable
+      Data: Coal node #009E73 (brand green), Natural Gas #D55E00, Nuclear #0072B2, Petroleum #CC79A7, Renewable #E69F00, Electricity #56B4E9, Transportation #F0E442; links at 0.5 opacity with source node color
+      Node labels: White (#FFFFFF) with dark textOutline (#333333) — readable on all colored nodes
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black matching #1A1A17 — correct for dark theme.
-      Chrome: Title and subtitle use light text (#F0EFE8 / #B8B7B0 from INK/INK_SOFT tokens) — clearly readable against the dark background. No dark-on-dark failures.
-      Data: Node colors are identical to the light render (same custom dark hex values). The contrast between nodes and dark background is lower than in the light render — the dark node colors (#1A3A5C, #6B4E12, #5B2E8F etc.) are harder to distinguish against the near-black background, but remain readable. Link flows also show more subtle contrast against the dark background.
-      Layout: Same bottom-clipping issue with Renewable node as in the light render.
-      Legibility verdict: PASS — title, subtitle, and node labels all readable. Node-to-background contrast is reduced (dark nodes on dark background) but not a failure. Colors are theme-constant as required.
+      Background: Near-black (~#1A1A17) — correct, not pure black
+      Chrome: Title and subtitle rendered in light cream text (~#F0EFE8/#B8B7B0) — clearly readable against dark surface; no dark-on-dark failures
+      Data: Colors identical to light render — Coal #009E73, Natural Gas #D55E00, Nuclear #0072B2, Petroleum #CC79A7, Renewable #E69F00, Electricity #56B4E9, Transportation #F0E442; only background and text chrome flips
+      Node labels: White text with dark outline — readable on colored nodes against dark background
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set: title 64px, subtitle 40px, data labels
-          36px — all readable at 4800x2700px in both themes'
+        comment: 'Title 64px, subtitle 40px, node labels 36px bold — all explicitly
+          set; minor: label color hardcoded #FFFFFF not INK-adaptive, textOutline
+          compensates'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap — all node labels inside nodes with white text and
-          dark outline
+        comment: No text collisions; node labels well-positioned within colored nodes
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Nodes and links clearly visible; nodeWidth=50 and nodePadding=35
-          appropriate for the data
+        comment: nodeWidth:50, nodePadding:35, linkOpacity:0.5 well-calibrated for
+          flow density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: White text on colored nodes provides sufficient contrast; linkOpacity=0.5
-          helps overlapping flows
+        comment: Okabe-Ito is CVD-safe; 0.5 link opacity maintains cross-flow readability
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Renewable source node at bottom-left is partially cropped at canvas
-          edge — marginBottom=80 too small
+        passed: true
+        comment: 4800x2700 landscape; Sankey fills ~75% with symmetric 180/160px margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title uses correct format; subtitle 'U.S. Energy Flow (values in
-          TWh)' provides units and context
+        comment: Title format correct; subtitle includes units (TWh); no axes in Sankey
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Custom dark hex colors (#1A3A5C, #6B4E12, #5B2E8F, #0A6B78, #155415…)
-          are NOT Okabe-Ito. Fallback #306998 (Python Blue) in code. First source
-          node Coal should be #009E73.'
+        passed: true
+        comment: 'Coal=#009E73 first; Okabe-Ito order throughout; backgrounds #FAF8F1/#1A1A17;
+          title/subtitle theme-adaptive'
     design_excellence:
       score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Configured appearance — dark node colors show intent for contrast
-          management, but bypassing Okabe-Ito palette makes this non-standard. Visually
-          functional but not publication-ready.
+        passed: true
+        comment: 'Professional: linkColorMode:from, curveFactor:0.5, clean Okabe-Ito
+          nodes — above defaults but not exceptional'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: 'Clean layout with no unnecessary chrome, legend disabled, no grid.
-          Good whitespace. Minor: bottom crop detracts.'
+        passed: true
+        comment: Credits/legend removed; node padding creates breathing room; available
+          chrome well-handled for Sankey
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Energy flow story is clear — Petroleum dominance in Transportation,
-          Nuclear wholly to Electricity, multi-path Natural Gas. Proportional widths
-          guide the viewer effectively.
+        comment: Multi-level flow naturally conveys story; linkColorMode traces origins;
+          but no deliberate emphasis on dominant flow (Petroleum->Transportation 280
+          TWh)
     spec_compliance:
       score: 15
       max: 15
@@ -148,28 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Sankey diagram with proportional-width links
+        comment: Correct Highcharts Sankey with native sankey.js module
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Source→intermediate→destination flows, proportional widths, distinct
-          node colors, visible labels, linkOpacity for crossing flows, no circular
-          flows
+        comment: Source/target/value; proportional link widths; distinct node colors;
+          link opacity; no circular flows; visible node labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: source/target/value correctly mapped; 15 flows within 5-50 spec range
+        comment: 15 flows correctly mapped; multi-level structure implemented
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'sankey-basic · highcharts · anyplot.ai' correct; no legend
-          needed for node-labeled Sankey
+        comment: Title sankey-basic · highcharts · anyplot.ai correct; legend correctly
+          omitted
     data_quality:
       score: 15
       max: 15
@@ -179,22 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows multi-level flows, varied magnitudes (20–280 TWh), crossing
-          flows, intermediate nodes — full Sankey feature set
+        comment: Multiple sources, intermediate node (Electricity), direct flows,
+          three end-use destinations; 15 distinct flows
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: U.S. Energy Flow is a well-known, neutral, real-world domain — science/infrastructure
-          context
+        comment: U.S. energy flow in TWh — neutral scientific/infrastructure domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: TWh values and relative proportions (Petroleum→Transportation dominant,
-          Renewable small) are factually plausible for U.S. energy data
+        comment: Petroleum dominates transportation (280 TWh); proportions align with
+          real U.S. energy patterns
     code_quality:
       score: 10
       max: 10
@@ -204,34 +186,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports → data → chart config → export. No functions
-          or classes.'
+        comment: 'Linear: imports -> tokens -> data -> nodes/links -> chart config
+          -> HTML -> screenshot'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — hardcoded data, no random elements
+        comment: Hardcoded data, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (os, tempfile, time, urllib.request, Path, Chart,
-          HighchartsOptions, webdriver, Options)
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex for Highcharts sankey. Dict comprehension
-          for nodes is idiomatic.
+        comment: Dict comprehension for nodes_data, set for deduplication; appropriate
+          complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
     library_mastery:
       score: 7
       max: 10
@@ -241,17 +222,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct highcharts_core usage with sankey series type, inline JS
-          module loading, proper node/link data structure with keys parameter
+        comment: Correct Chart->HighchartsOptions pattern; sankey.js inline download;
+          nodeFormat/pointFormat tooltips; slightly below idiom (raw dicts vs typed
+          series objects)
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Sankey is a Highcharts module (not available in all libraries); uses
-          linkColorMode='from', curveFactor, nodePadding, nodeWidth, nodeFormat in
-          tooltips — Highcharts-specific configuration
-  verdict: REJECTED
+        comment: linkColorMode:from, curveFactor:0.5, nodeWidth/nodePadding tuning,
+          rich tooltip templates
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -259,7 +240,7 @@ impl_tags:
   - html-export
   - hover-tooltips
   patterns:
-  - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
