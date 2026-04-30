@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sankey-basic: Basic Sankey Diagram
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-04-30
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 80/100 | Created: 2026-04-30
 """
 
 import os
