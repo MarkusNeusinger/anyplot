@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: ridgeline-basic
 created: '2025-12-23T19:43:46Z'
-updated: '2026-04-30T03:17:23Z'
+updated: '2026-04-30T03:42:57Z'
 generated_by: claude-sonnet
 workflow_run: 25145277876
 issue: 923
@@ -12,41 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/bokeh/plot-dark.html
-quality_score: 78
+quality_score: 77
 review:
   strengths:
-  - Both light and dark themes render correctly with proper background colors and
-    fully adaptive chrome
-  - Manual Silverman KDE correctly implemented, producing smooth realistic density
-    curves
-  - Seasonal color gradient concept is semantically meaningful (cold blues for winter,
-    warm yellows for summer)
-  - Clean flat reproducible code that saves all required output files
-  - Temperature data context is realistic and neutral with plausible distributions
+  - 'Both light and dark themes render with correct backgrounds (#FAF8F1 / #1A1A17)
+    and fully adaptive chrome — no dark-on-dark failures'
+  - Manual Silverman bandwidth KDE is cleanly and correctly implemented producing
+    smooth, realistic density curves
+  - Seasonal temperature gradient concept (blues to yellows to back to blue) is semantically
+    meaningful and creates effective data storytelling
+  - 'Perfect code quality: flat reproducible script, all required output files, clean
+    imports, deterministic seed'
+  - Categorical offset coordinate system (month, float) is genuinely idiomatic Bokeh
+    usage
   weaknesses:
-  - No ridge overlap - ridge_height=0.65 keeps each curve within its own band; spec
-    requires 50-70% overlap which is the defining visual feature of ridgeline/Joy
-    plots
-  - Wrong color palette - custom hex values violate both Okabe-Ito rules and continuous
-    colormap rules; use Viridis12 or Cividis sampled to 12 for CVD-safe sequential
-    colormap
-  - Full four-sided border outline retained via outline_line_color - prefer removing
-    top/right spines for cleaner look
+  - 'Palette violation: Custom hex gradient (#306998 as first series) violates both
+    Okabe-Ito and approved continuous colormap rules — use Bokeh''s Viridis256 or
+    Cividis256 sampled to 12 colors for a CVD-safe sequential gradient'
+  - 'Insufficient ridge overlap: ridge_height=0.65 creates ~15% overlap; spec requires
+    50-70% — increase ridge_height to 1.0-1.5 to achieve proper Joy Division-style
+    stacking'
+  - 'Outline border retained: p.outline_line_color = INK_SOFT keeps a four-sided box;
+    set to None to remove the top and right sides for cleaner visual refinement'
+  - Jan ridge peak clips at the top of the plot boundary — add top padding by extending
+    y_range or adjusting margins
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "ridgeline-basic · bokeh · anyplot.ai" top-left in dark ink, readable. X-axis label "Temperature (°C)" and y-axis label "Month" visible. Month tick labels small but legible. X-axis tick values readable.
-      Data: 12 monthly density curves with seasonal color gradient — cold blues (#306998) for Jan/Feb/Dec, transitioning through teals/greens for spring, warm yellows (#FFD43B) for July, oranges (#FFAA33) for August, pinkish-rose (#DB8C7D) for October. Fill alpha 0.85. NO overlap between ridges — each curve contained within its own categorical row band.
+      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white
+      Chrome: Title "ridgeline-basic · bokeh · anyplot.ai" top-left in dark ink, readable. X-axis label "Temperature (°C)" and y-axis label "Month" visible with correct sizing (32pt title, 24pt labels, 18pt ticks). Month tick labels small but legible. X-axis tick values readable.
+      Data: 12 monthly density ridgelines with custom seasonal color gradient — cold blues (#306998) for Jan/Dec, transitioning through teals/greens for spring/fall months, warm yellow (#FFD43B) for July, orange (#FFAA33) for August. Fill alpha 0.85. Visible but modest overlap between ridges (~15% of band-width, less than spec's 50-70%). Jan ridge peak slightly clips at top boundary. Four-sided outline border visible.
       Legibility verdict: PASS — all text readable against light background
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
-      Chrome: Title and axis labels render in light-colored text (#F0EFE8 equivalent), all clearly readable against dark background. Month tick labels and x-axis values visible in INK_SOFT light token. No dark-on-dark failures observed.
-      Data: Data colors are identical to light render — same seasonal gradient preserved. Ridges visible against dark background with good contrast.
-      Legibility verdict: PASS — all text readable against dark background, chrome correctly adapted
+      Chrome: Title and axis labels render in light-colored text (#F0EFE8 equivalent), clearly readable against dark background. Month tick labels and x-axis values visible in INK_SOFT light token. No dark-on-dark failures observed. Grid lines remain subtle (alpha 0.10/0.05). Four-sided border also visible in dark mode.
+      Data: Data colors are identical to light render — same seasonal gradient preserved. All 12 ridges visible against dark background with good contrast. Ridge overlap same as light render (~15%).
+      Legibility verdict: PASS — all text readable against dark background, chrome correctly adapted, no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 23
       max: 30
       items:
       - id: VQ-01
@@ -54,46 +58,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; month labels slightly small
+        comment: All font sizes explicitly set (32pt title, 24pt axis labels, 18pt
+          ticks); both themes fully readable
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text or element collisions
+        comment: No text collisions; ridge overlap is intentional and visually managed
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Ridges clearly visible; separation reduces density distinction
+        comment: All 12 ridgelines clearly visible with appropriate alpha=0.85
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: false
-        comment: Custom palette includes red-adjacent hues not CVD-safe
+        comment: Custom gradient uses adjacent hues that may challenge CVD viewers;
+          no explicit colorblind-safe guarantee
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 4800x2700, well-proportioned, nothing cut off
+        comment: Good canvas usage; Jan ridge peak slightly clips at top boundary
+          of plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (°C) with units; correct title format
+        comment: Temperature (°C) with units; correct title format ridgeline-basic
+          · bokeh · anyplot.ai
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'Custom hex colors not Okabe-Ito nor viridis/cividis/BrBG; first
-          series not #009E73'
+        comment: Custom hex gradient (#306998 as first series) violates Okabe-Ito
+          rule; neither Okabe-Ito nor an approved continuous colormap (viridis/cividis/BrBG)
+          is used
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -101,50 +110,53 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Seasonal gradient is semantically thoughtful; good polish but palette
-          violates rules
+        comment: Seasonal temperature gradient shows design intent and semantic meaning;
+          polished rendering with controlled alpha and custom axis styling
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Grid subtle; full four-sided border retained instead of L-frame or
-          spine-free
+        comment: Y-axis tick marks removed (good); grid is subtle; but four-sided
+          outline_line_color border persists, preventing clean L-frame or spine-free
+          look
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Cold-to-warm seasonal cycle legible from color progression
+        comment: Cold-to-warm-to-cold seasonal cycle creates readable seasonal narrative
+          from color progression
     spec_compliance:
-      score: 11
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Density curves on categorical axis but missing defining overlap
+        comment: Correct ridgeline/Joy plot type with density curves on categorical
+          axis
       - id: SC-02
         name: Required Features
-        score: 1
+        score: 2
         max: 4
         passed: false
-        comment: Missing partial overlap (50-70%) — ridge_height=0.65 keeps each ridge
-          within its own row
+        comment: Partial overlap present (~15% of band-width) but spec requires 50-70%;
+          ridge_height=0.65 keeps ridges mostly within their own bands
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on x-axis, months on y-axis, distributions correct
+        comment: Temperature on x-axis, months on y-axis; all 12 months shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; no legend appropriate
+        comment: Correct title format; no legend appropriate for labeled-axis ridgeline
     data_quality:
       score: 14
       max: 15
@@ -154,19 +166,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: All 12 months shown, seasonal shift visible
+        comment: Seasonal shift across all 12 months clearly shown; distributions
+          vary realistically
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly temperature distributions realistic and neutral
+        comment: Monthly temperature distributions for a temperate city; realistic,
+          neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: -5 to 40 Celsius plausible for temperate climate
+        comment: Temperature range -5 to 40°C is factually plausible for a temperate
+          climate
     code_quality:
       score: 10
       max: 10
@@ -176,7 +191,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: 'Flat script: imports → data → plot → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -194,13 +209,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Manual Silverman KDE well-implemented; clean loop structure
+        comment: Manual Silverman KDE well-implemented; clean loop structure; appropriate
+          complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
       score: 6
       max: 10
@@ -210,20 +226,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Categorical axis with y_range, figure API, export_png — appropriate
-          patterns
+        comment: Categorical y_range, categorical offset coordinates (month, float)
+          tuples for patch positioning — idiomatic Bokeh patterns
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: No HoverTool, ColumnDataSource, or other Bokeh-differentiating features
-          used
+        comment: Uses Bokeh categorical offset coordinate system (Bokeh-specific);
+          however no ColumnDataSource, HoverTool, or other strongly differentiating
+          Bokeh capabilities are leveraged
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups

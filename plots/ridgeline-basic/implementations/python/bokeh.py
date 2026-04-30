@@ -1,7 +1,7 @@
 """ anyplot.ai
 ridgeline-basic: Basic Ridgeline Plot
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 78/100 | Updated: 2026-04-30
+Quality: 77/100 | Updated: 2026-04-30
 """
 
 import os
