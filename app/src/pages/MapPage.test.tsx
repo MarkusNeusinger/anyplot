@@ -8,10 +8,18 @@ vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+const mockNavigate = vi.fn();
+const mockTrackEvent = vi.fn();
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  return { ...actual, useNavigate: () => mockNavigate };
+});
+
 vi.mock('../hooks', () => ({
   useAnalytics: () => ({
     trackPageview: vi.fn(),
-    trackEvent: vi.fn(),
+    trackEvent: mockTrackEvent,
   }),
 }));
 
@@ -19,16 +27,41 @@ vi.mock('../hooks/useLayoutContext', () => ({
   useTheme: () => ({ isDark: false }),
 }));
 
-// Stub ForceGraph2D to a marker div so we can assert wiring without rendering canvas.
+// Capture the props passed to ForceGraph2D so individual callbacks can be exercised
+// from outside React. A live canvas can't run in jsdom, but the callbacks (drawNode,
+// onNodeClick, linkColor, …) are pure-ish JS and worth testing in isolation.
+type FgProps = Record<string, unknown>;
+const lastFgProps: { current: FgProps | null } = { current: null };
+
 vi.mock('react-force-graph-2d', () => ({
-  default: (props: { graphData: { nodes: { id: string }[]; links: unknown[] } }) => (
-    <div
-      data-testid="force-graph-2d"
-      data-node-count={props.graphData.nodes.length}
-      data-link-count={props.graphData.links.length}
-    />
-  ),
+  default: (props: FgProps) => {
+    lastFgProps.current = props;
+    const data = props.graphData as { nodes: unknown[]; links: unknown[] };
+    return (
+      <div
+        data-testid="force-graph-2d"
+        data-node-count={data.nodes.length}
+        data-link-count={data.links.length}
+      />
+    );
+  },
 }));
+
+
+function makeCtxStub() {
+  // Minimal mock of CanvasRenderingContext2D — just enough surface for drawNode/paintHitbox.
+  return {
+    save: vi.fn(),
+    restore: vi.fn(),
+    drawImage: vi.fn(),
+    fillRect: vi.fn(),
+    strokeRect: vi.fn(),
+    fillStyle: '',
+    strokeStyle: '',
+    lineWidth: 0,
+    globalAlpha: 1,
+  };
+}
 
 
 const mockSpecs = [
@@ -73,11 +106,21 @@ function mockFetchSuccess() {
 }
 
 
-// jsdom doesn't ship ResizeObserver; stub it so the page's useEffect doesn't crash.
+// jsdom doesn't ship ResizeObserver; stub it so the page's useEffect doesn't crash
+// AND fire the callback once with non-zero dimensions so the `size.w > 0` gate that
+// guards <ForceGraph2D> mounting is satisfied.
 class MockResizeObserver {
+  cb: ResizeObserverCallback;
+  constructor(cb: ResizeObserverCallback) {
+    this.cb = cb;
+  }
   observe(target: Element) {
-    // Trigger a single layout callback so size > 0 and the canvas mounts.
-    Object.defineProperty(target, 'contentRect', { value: { width: 800, height: 600 }, configurable: true });
+    setTimeout(() => {
+      this.cb(
+        [{ contentRect: { width: 800, height: 600 } } as unknown as ResizeObserverEntry],
+        this as unknown as ResizeObserver,
+      );
+    }, 0);
   }
   unobserve() {}
   disconnect() {}
@@ -87,6 +130,9 @@ class MockResizeObserver {
 describe('MapPage', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    mockNavigate.mockReset();
+    mockTrackEvent.mockReset();
+    lastFgProps.current = null;
     vi.stubGlobal('ResizeObserver', MockResizeObserver);
   });
 
@@ -114,5 +160,97 @@ describe('MapPage', () => {
     await waitFor(() => {
       expect(screen.getByText(/Failed to load map/)).toBeInTheDocument();
     });
+  });
+
+  it('passes graph data with the expected node count to ForceGraph2D', async () => {
+    mockFetchSuccess();
+    render(<MapPage />);
+    await waitFor(() => {
+      expect(screen.getByTestId('force-graph-2d')).toBeInTheDocument();
+    });
+    expect(screen.getByTestId('force-graph-2d').getAttribute('data-node-count')).toBe('3');
+  });
+
+  it('navigates to the spec page and emits an analytics event on node click', async () => {
+    mockFetchSuccess();
+    render(<MapPage />);
+    await waitFor(() => expect(lastFgProps.current).not.toBeNull());
+
+    const onNodeClick = lastFgProps.current!.onNodeClick as (n: { id: string }) => void;
+    onNodeClick({ id: 'scatter-basic' });
+
+    expect(mockNavigate).toHaveBeenCalledWith('/scatter-basic');
+    expect(mockTrackEvent).toHaveBeenCalledWith('map_node_click', { spec_id: 'scatter-basic' });
+  });
+
+  it('drawNode paints a fallback rect when a node has no preloaded image', async () => {
+    mockFetchSuccess();
+    render(<MapPage />);
+    await waitFor(() => expect(lastFgProps.current).not.toBeNull());
+
+    const drawNode = lastFgProps.current!.nodeCanvasObject as (n: unknown, c: unknown) => void;
+    const ctx = makeCtxStub();
+    drawNode({ id: 'scatter-basic', x: 100, y: 100 }, ctx);
+
+    // Without an attached image, the fallback rect path runs.
+    expect(ctx.fillRect).toHaveBeenCalled();
+    expect(ctx.strokeRect).toHaveBeenCalled();
+    expect(ctx.drawImage).not.toHaveBeenCalled();
+  });
+
+  it('drawNode paints the thumbnail when a node has a preloaded image', async () => {
+    mockFetchSuccess();
+    render(<MapPage />);
+    await waitFor(() => expect(lastFgProps.current).not.toBeNull());
+
+    const drawNode = lastFgProps.current!.nodeCanvasObject as (n: unknown, c: unknown) => void;
+    const ctx = makeCtxStub();
+    const fakeImg = { src: 'x' } as unknown as HTMLImageElement;
+    drawNode({ id: 'scatter-basic', x: 50, y: 50, img: fakeImg }, ctx);
+
+    expect(ctx.drawImage).toHaveBeenCalledWith(fakeImg, expect.any(Number), expect.any(Number), expect.any(Number), expect.any(Number));
+    expect(ctx.strokeRect).toHaveBeenCalled();
+  });
+
+  it('paintHitbox draws a sprite-sized hit rectangle', async () => {
+    mockFetchSuccess();
+    render(<MapPage />);
+    await waitFor(() => expect(lastFgProps.current).not.toBeNull());
+
+    const paintHitbox = lastFgProps.current!.nodePointerAreaPaint as (n: unknown, c: string, ctx: unknown) => void;
+    const ctx = makeCtxStub();
+    paintHitbox({ id: 'scatter-basic', x: 80, y: 60 }, '#ff00ff', ctx);
+
+    expect(ctx.fillStyle).toBe('#ff00ff');
+    expect(ctx.fillRect).toHaveBeenCalled();
+  });
+
+  it('linkColor returns the brand green for links touching the hovered node', async () => {
+    mockFetchSuccess();
+    render(<MapPage />);
+    await waitFor(() => expect(lastFgProps.current).not.toBeNull());
+
+    // Hover a node, then ask the link-color callback for its incident link.
+    const onNodeHover = lastFgProps.current!.onNodeHover as (n: { id: string } | null) => void;
+    onNodeHover({ id: 'scatter-basic' });
+    await waitFor(() => {
+      const linkColor = lastFgProps.current!.linkColor as (l: unknown) => string;
+      const colorInvolved = linkColor({ source: 'scatter-basic', target: 'line-basic', weight: 0.5 });
+      const colorOther = linkColor({ source: 'line-basic', target: 'scatter-color-mapped', weight: 0.5 });
+      expect(colorInvolved).toMatch(/^#/); // brand color (hex)
+      expect(colorInvolved).not.toBe(colorOther);
+    });
+  });
+
+  it('linkWidth scales with link weight', async () => {
+    mockFetchSuccess();
+    render(<MapPage />);
+    await waitFor(() => expect(lastFgProps.current).not.toBeNull());
+
+    const linkWidth = lastFgProps.current!.linkWidth as (l: unknown) => number;
+    const small = linkWidth({ weight: 0.1 });
+    const large = linkWidth({ weight: 0.9 });
+    expect(large).toBeGreaterThan(small);
+    expect(small).toBeGreaterThan(0);
   });
 });
