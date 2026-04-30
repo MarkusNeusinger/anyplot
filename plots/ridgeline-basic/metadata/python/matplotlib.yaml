@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: ridgeline-basic
 created: '2025-12-23T19:42:50Z'
-updated: '2026-04-30T03:13:24Z'
+updated: '2026-04-30T03:22:44Z'
 generated_by: claude-sonnet
 workflow_run: 25145109387
 issue: 923
@@ -15,36 +15,29 @@ preview_html_dark: null
 quality_score: 89
 review:
   strengths:
-  - 'Beautiful seasonal color narrative: viridis progression from purple (winter)
-    to yellow-green (summer) adds semantic meaning beyond aesthetics'
-  - Both light and dark themes render correctly with full theme-adaptive chrome (backgrounds,
-    text, spines all flip appropriately)
-  - Clean spine management — left/top/right removed, bottom retained — creates an
-    elegant L-frame that suits ridgeline charts
-  - edgecolor=PAGE_BG on fills produces crisp ridge separation without explicit outline
-    drawing
-  - Text hierarchy and font sizes perfectly calibrated for 4800x2700px output
-  - Realistic, neutral Northern Hemisphere temperature dataset with correct seasonal
-    values
+  - Full seasonal dataset (12 months) with realistic temperature values showcases
+    the ridgeline form
+  - Viridis gradient is a deliberate and effective design choice for ordered temporal
+    categories
+  - Complete theme-adaptive chrome — both renders pass readability check
+  - 'Perfect spec compliance: overlap percentage, group ordering, and label placement
+    all correct'
+  - Clean code with seed, explicit font sizing, and linear KISS flow
   weaknesses:
-  - 'First series does not use #009E73 — viridis skips the Okabe-Ito brand green;
-    anchor the gradient starting color to #009E73'
-  - 'Design ceiling: no additional typographic refinement (bolder title, baseline
-    tick styling) to push toward top-tier aesthetic sophistication'
-  - Baseline guide lines (ax.plot horizontal at y_offset) are nearly invisible (alpha=0.3,
-    linewidth=0.5) — consider removing or making more visible as ground lines
+  - 'First ridge color is not brand green #009E73 (viridis teal is close but not palette-compliant)'
+  - DE-01 could be pushed higher with a subtle typography refinement or baseline highlight
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, no pure white
-      Chrome: Title "ridgeline-basic · matplotlib · anyplot.ai" in dark ink — readable. Month Y-axis labels in muted dark INK_SOFT — readable. X-axis ticks and "Temperature (°C)" label in dark colors — readable. Bottom spine in INK_SOFT visible.
-      Data: Viridis colormap applied sequentially across 12 months (January=deep purple at top, summer months=teal/green, December=yellow-green at bottom). All 12 ridges clearly visible. First series (January) is NOT #009E73 — starts at viridis dark purple.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "ridgeline-basic · matplotlib · anyplot.ai" in dark ink (fontsize 24), X-axis label "Temperature (°C)" (fontsize 20), month names on Y-axis (fontsize 16) — all clearly readable in dark text against warm off-white surface
+      Data: 12 ridgeline KDE fills using viridis colormap (teal-green for January at top, golden-yellow for December at bottom); alpha=0.8; edge colors match PAGE_BG for clean ridge separation; first series is viridis teal, not #009E73
+      Legibility verdict: PASS — all text readable, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct warm near-black, not pure black
-      Chrome: Title in near-white F0EFE8 — clearly readable. Month labels in light muted B8B7B0 tone — readable. X-axis label and ticks in light tones — readable. No dark-on-dark text failure detected.
-      Data: Colors are identical to light render — same viridis purple-to-yellow-green progression. Only chrome (background, text) flipped between themes.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and axis label in light #F0EFE8, month labels in #B8B7B0 — all clearly readable against dark surface; no dark-on-dark failures detected
+      Data: Identical viridis gradient colors to light render (same teal-to-gold progression); only chrome elements flip between themes
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
       score: 29
@@ -55,45 +48,45 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, tick labels 16pt; all readable in both
-          themes
+        comment: Title 24pt, labels 20pt, ticks 16pt — all explicitly set; readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Month labels well-separated; density curves overlap cleanly at 60%
+        comment: No text collisions; ridge overlaps are intentional design
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 12 ridges distinctly visible; KDE density fills are clear
+        comment: KDE fills with alpha=0.8 are well-visible at full resolution
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe
+        comment: Viridis is perceptually uniform and CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions; nothing clipped; generous whitespace
+        comment: 16:9, good canvas utilization, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format; x-label includes units
+        comment: Temperature (°C) with units; no y-label needed
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Backgrounds correct; data colors identical across themes. Deduction:
-          first series not #009E73 (viridis used instead of Okabe-Ito)'
+        comment: 'Viridis correct for 12-group ordered data; backgrounds correct;
+          chrome theme-adaptive. Partial: first ridge not #009E73'
     design_excellence:
       score: 13
       max: 20
@@ -103,22 +96,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional seasonal color narrative via viridis; clean spine removal;
-          above-default execution
+        comment: Intentional viridis gradient maps temperature to color; fills use
+          PAGE_BG as edge; above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Left/top/right spines removed; PAGE_BG edge color creates clean ridge
-          separation; subtle grid
+        comment: Three spines removed, bottom in INK_SOFT, x-only grid at alpha=0.15,
+          tight layout
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Seasonal progression visually legible; color gradient reinforces
-          cool-winter/warm-summer narrative
+        comment: Viridis gradient creates legible seasonal narrative; cool=winter,
+          warm=summer immediately readable
     spec_compliance:
       score: 15
       max: 15
@@ -128,26 +121,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ridgeline/Joy Plot with KDE density curves stacked vertically
+        comment: Correct ridgeline/joy plot with KDE density curves
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 60% overlap (within 50-70% range); Y-axis shows group labels; color
-          gradient; chronological order
+        comment: 60% overlap, group labels on Y-axis, color differentiation, chronological
+          ordering
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis encodes temperature, Y-axis encodes month; all 12 groups shown
+        comment: X=temperature, Y=months; full range displayed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is ridgeline-basic · matplotlib · anyplot.ai; no legend needed
+        comment: Title matches spec-id · library · anyplot.ai; no legend needed
     data_quality:
       score: 15
       max: 15
@@ -157,22 +150,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all ridgeline aspects: KDE smoothing, overlap, vertical
-          stacking, color differentiation'
+        comment: 12 months with varied means and spreads; full seasonal cycle
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly Northern Hemisphere temperatures; plausible values (Jan ~2C,
-          Jul ~25C)
+        comment: Northern Hemisphere monthly temperatures; neutral science domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 150 samples per group; std 3-4C climatologically realistic; x-range
-          -10 to 40C covers data
+        comment: January ~2°C, July ~25°C; spreads match temperate climate expectations
     code_quality:
       score: 10
       max: 10
@@ -182,31 +172,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clean sequential script
+        comment: Linear Imports→Tokens→Data→Plot→Save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy, scipy.stats — all used
+        comment: os, matplotlib, numpy, scipy.stats all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Loop with y-offset arithmetic is clear; no fake UI
+        comment: Clean Pythonic fill_between loop; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dpi and facecolor
+        comment: plt.savefig(f'plot-{THEME}.png', ...) correct
     library_mastery:
       score: 7
       max: 10
@@ -216,15 +206,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct ax.fill_between for KDE fills; axes-method pattern; plt.cm.viridis
-          applied correctly
+        comment: Correct Axes methods (fill_between, set_yticks, tick_params); follows
+          matplotlib best practices
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: scipy.stats.gaussian_kde for density; fill_between with edgecolor=PAGE_BG
-          for clean separation; colormap sampled with np.linspace
+        comment: Manual ridgeline layout via fill_between baseline technique is idiomatic
+          matplotlib; no native ridgeline API
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -238,5 +228,4 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
-  - edge-highlighting
   - custom-colormap
