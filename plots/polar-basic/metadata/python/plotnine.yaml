@@ -1,168 +1,183 @@
 library: plotnine
+language: python
 specification_id: polar-basic
 created: '2025-12-23T19:56:42Z'
-updated: '2025-12-23T19:59:05Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20470197521
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/polar-basic/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - layer-composition
-    - manual-ticks
-  patterns:
-    - data-generation
-    - matrix-construction
-    - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-04-30T00:53:36Z'
+generated_by: claude-sonnet
+workflow_run: 25141092186
+issue: 800
+python_version: 3.13.13
+library_version: 0.15.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Excellent creative solution for polar coordinates in plotnine by manually converting
-    to Cartesian space
-  - Well-constructed circular gridlines and radial spokes using geom_path and geom_segment
-  - Clean data flow with meaningful hourly activity pattern that demonstrates cyclical
-    behavior
-  - Proper use of coord_fixed(ratio=1) to ensure circular appearance
-  - Good visual hierarchy with subtle grid and prominent data points
-  - Title format follows pyplots.ai conventions correctly
+  - Clean polar chart built from Cartesian coordinates — correct approach for plotnine
+    which lacks native polar support
+  - 'Full spec compliance: circular gridlines, radial spokes, hour labels at 3-hour
+    intervals, correct clock orientation (12:00 at top)'
+  - Perfect theme adaptation — both light (#FAF8F1) and dark (#1A1A17) backgrounds
+    with adaptive text tokens throughout
+  - Correct BRAND green (#009E73) for single data series
+  - Square format (12x12 @ 300 DPI = 3600x3600px) appropriate for symmetric polar
+    chart
+  - 'Excellent code quality: KISS structure, np.random.seed(42), all imports used'
   weaknesses:
-  - Radius labels (25, 50, 75, 100) could include units or context (e.g., Activity
-    Level)
-  - The implementation relies heavily on manual Cartesian conversion rather than leveraging
-    plotnine distinctive features
-  image_description: The plot displays a polar/radar chart showing hourly activity
-    levels throughout a 24-hour day. The chart uses a circular coordinate system with
-    time labels at 8 positions (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00)
-    around the perimeter. Four concentric dashed circular gridlines mark radius values
-    of 25, 50, 75, and 100. Eight radial spokes extend from the center. Data points
-    (24 total, one per hour) are shown as yellow-filled circles with blue outlines,
-    connected by a blue line forming a closed loop. The pattern shows lower activity
-    at night (around midnight, closer to center) and higher activity during morning/afternoon
-    hours (extended toward outer rings). The title "Hourly Activity Levels · polar-basic
-    · plotnine · pyplots.ai" appears at the top. The background is white/clean with
-    no axis labels visible.
+  - Hour labels at size=14 and radius labels at size=10 are below the recommended
+    minimum of 16pt for secondary text — bump hour labels to 16pt and radius labels
+    to 14pt for better legibility at full resolution
+  - DE-03 storytelling could be improved with a focal point or annotation marking
+    peak activity hours
+  - LM-02 is limited — the implementation uses manual Cartesian math to simulate polar
+    rather than any plotnine-specific grammar feature that distinguishes it from a
+    matplotlib implementation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "Hourly Activity Levels · polar-basic · plotnine · anyplot.ai" in dark ink, clearly readable. Hour labels (00:00–21:00 at 3-hour intervals) in INK_SOFT gray, readable around the perimeter. Radius scale labels (25, 50, 75, 100) in INK_MUTED, legible if slightly small. No default axes visible — all removed cleanly.
+      Data: Single-series line and filled polygon in #009E73 (BRAND green). Green-filled circular data points with PAGE_BG border give a polished bubble effect. Dashed circular gridlines and radial spokes in subtle gray at low opacity.
+      Legibility verdict: PASS — all text readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct, not pure black.
+      Chrome: Title in light off-white (#F0EFE8), readable. Hour labels in #B8B7B0 (INK_SOFT dark), visible. Radius labels in muted gray, readable. No dark-on-dark failures detected.
+      Data: Same #009E73 green line and data points — identical data colors to light render as required. Interior polygon fill appears as a darker teal tint (visual artifact from closed geom_path), which looks good on the dark surface.
+      Legibility verdict: PASS — no dark-on-dark failures, all chrome adapts correctly to dark theme.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: title is clear at 24pt, hour labels readable at size 14, radius labels
-          slightly small but acceptable
+        comment: Title 24pt correct; hour labels 14pt and radius labels 10pt are below
+          recommended 16pt minimum — readable but not optimal
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: no overlapping text anywhere
+        comment: No overlap — 8 hour labels evenly spaced, radius labels positioned
+          clear of data
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: points are well-sized (size=4 with stroke), line visible (size=1.5),
-          appropriate for 24 data points
+        comment: Line (size=1.5), points (size=4) and gridlines all clearly visible
+          on both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: blue (#306998) and yellow (#FFD43B) provide excellent contrast, colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: good use of canvas space, plot centered, margins balanced, slight
-          excess whitespace at bottom
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: polar chart has no traditional axis labels (this is acceptable for
-          polar plots, but no units shown for radius)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: gridlines are subtle (alpha=0.6, dashed), no legend needed
+        comment: 'Single BRAND green #009E73 — CVD-safe, good contrast on both backgrounds'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good square layout; slight corner whitespace but chart fills majority
+          of canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Hour labels provide clear angular context; radius labels show activity
+          scale
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'BRAND green #009E73 for single series; correct PAGE_BG for both
+          themes; all chrome uses adaptive tokens'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional design well above defaults — manual polar construction,
+          clean background, polished bubble markers, but not FiveThirtyEight-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All default chrome removed, custom dashed gridlines at low opacity,
+          radial spokes, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Polar chart type naturally emphasizes cyclical pattern; day/night
+          variation visible; no focal point or peak annotation to guide viewer
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: correct polar chart with circular coordinates
+        comment: Correct polar/circular chart using Cartesian coordinate simulation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: theta (angle) and radius correctly mapped to hour and activity level
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: radial gridlines visible, angular labels at standard intervals, starts
-          at top (90°) for time-based data per spec
-      - id: SC-04
-        name: Data Range
+        comment: Circular gridlines, radial spokes, angular labels at 3-hour intervals,
+          12:00 at top as spec suggests
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: all data visible within range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: Hours map correctly to angular position, activity to radial distance
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: no legend present (acceptable for single series, but could label
-          what "activity" means)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: correctly uses "polar-basic · plotnine · pyplots.ai" format
+        comment: Title includes spec-id, library, anyplot.ai; no legend needed for
+          single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: shows cyclical pattern well with variation, demonstrates both high
-          and low activity periods
+        comment: Full 24-hour cycle, closed loop, realistic day/night variation in
+          activity
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: hourly activity levels is a very realistic and relatable scenario
+        comment: Hourly activity levels — neutral, comprehensible, real-world scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: activity values 5-100 are sensible, though units unclear
+        comment: Activity 5-100, realistic cyclical pattern, sensible amplitude for
+          daily activity
     code_quality:
       score: 10
       max: 10
@@ -172,11 +187,12 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: follows imports → data → plot → save pattern without functions/classes
+        comment: 'Linear flow: tokens → data → grid → spokes → labels → plot → save.
+          No functions/classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: np.random.seed(42) set
       - id: CQ-03
@@ -184,30 +200,51 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: all imports are used
+        comment: 'All imports used: math, os, numpy, pandas, plotnine geoms and theme
+          elements'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: uses current plotnine API
+        comment: Clean Pythonic code, complexity justified by manual polar construction,
+          no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: plot.save(f'plot-{THEME}.png', dpi=300) — correct
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ggplot + geom_* pattern, coord_fixed, theme() — idiomatic, though
+          the polar construction is mostly numpy math
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: uses plotnine's grammar of graphics (ggplot, aes, geom_*) but since
-          plotnine lacks native polar coordinates, the implementation manually converts
-          to Cartesian - this is a creative workaround but not a distinctive plotnine
-          feature
+        comment: Layer composition of geom_path + geom_segment + geom_point + geom_text
+          is a plotnine strength, but the approach could translate to matplotlib with
+          minor changes
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting

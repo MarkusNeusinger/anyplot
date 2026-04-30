@@ -1,169 +1,175 @@
 library: matplotlib
+language: python
 specification_id: polar-basic
 created: '2025-12-23T19:42:39Z'
-updated: '2025-12-23T19:46:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20469990481
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/polar-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - polar-projection
-  - manual-ticks
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-04-30T00:54:00Z'
+generated_by: claude-sonnet
+workflow_run: 25140796834
+issue: 800
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent use of hourly temperature as a realistic application perfectly suited
-    for polar visualization
-  - Smart use of set_theta_zero_location("N") and clockwise direction for intuitive
-    time reading (midnight at top)
-  - Beautiful color scheme with blue points and contrasting yellow connecting line
-  - Proper square format (12x12) for polar chart maintains circular proportions
-  - Clean radial labels with temperature units (°C)
-  - Well-implemented closed loop connecting first and last data points
+  - Perfect visual quality in both themes (all text legible, no overlap, proper canvas
+    and palette)
+  - Elegant multi-layer polar design (filled area + connecting line + scatter markers)
+  - Realistic and contextually appropriate data (diurnal temperature cycle)
+  - 'Full spec compliance: required polar features, proper title format, idiomatic
+    matplotlib API'
   weaknesses:
-  - Missing explanatory context - no subtitle or annotation explaining this is simulated
-    daily temperature data
-  - Could leverage more matplotlib polar features like fill_between for area emphasis
-  image_description: The plot displays a polar chart showing hourly temperature patterns
-    over a 24-hour cycle. The chart uses a circular coordinate system with time labels
-    around the perimeter (12 AM at top, proceeding clockwise through 3 AM, 6 AM, 9
-    AM, 12 PM, 3 PM, 6 PM, 9 PM). Temperature is represented radially with concentric
-    circles marked at 5°C, 10°C, 15°C, 20°C, and 25°C. Data points are shown as blue
-    (#306998) scatter points with white edges, connected by a yellow/gold (#FFD43B)
-    line forming a closed loop. The pattern shows cooler temperatures (around 7-15°C)
-    near midnight/early morning and warmer temperatures (around 18-23°C) in the afternoon,
-    clearly demonstrating the expected diurnal temperature cycle. The title "Hourly
-    Temperature Pattern · polar-basic · matplotlib · pyplots.ai" is displayed at the
-    top.
+  - 'Design excellence is moderate: annotation present in images but not in base code
+    (PR branch discrepancy); limited styling beyond basic polar chrome'
+  - Library mastery above baseline but no advanced polar matplotlib techniques beyond
+    core API (e.g., custom radial tick formatting, multi-ring annotation)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "polar-basic · matplotlib · anyplot.ai" in dark ink at top — readable. Angular tick labels (12 AM, 3 AM, 6 AM, 9 AM, 12 PM, 3 PM, 6 PM, 9 PM) at outer ring — readable. Radial labels (5°C–25°C) at ~67.5° in secondary-ink color — readable. "Peak 23.4°C" annotation callout box visible and legible.
+      Data: Brand green #009E73 filled area (alpha≈0.18), solid connecting line, and scatter markers — first (only) series is correctly #009E73
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and all tick labels in light ink — clearly readable against dark surface. No dark-on-dark text issues. Grid lines remain subtle (faint concentric rings). Annotation callout box visible.
+      Data: Data colors identical to light render — same brand green #009E73 filled area, line, and scatter points. No color shift between themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at fontsize 26, angular labels at 18, radial labels at 16 -
-          all clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, well-spaced labels
+        comment: Title 24pt, angular ticks 18pt, radial ticks 16pt; all readable in
+          both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 8 angular labels at 45 degree intervals no crowding; radial labels
+          at 67.5 clear; annotation well-positioned
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers at s=300 with white edges are clearly visible, line connects
-          well; slight deduction as 24 points could use slightly smaller markers
+        comment: Scatter s=280 clearly visible; line linewidth=3; fill alpha=0.18
+          appropriate
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue markers and yellow line provide excellent contrast; no colorblind
-          issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Square format (12x12) is perfect for polar chart, plot fills canvas
-          well
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Radial labels include units (°C), angular labels are time-based
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Single brand green series; excellent contrast in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 12x12 square 3600x3600 px ideal for polar; generous margins; nothing
+          clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with alpha=0.3, but no legend explaining what the
-          data represents (no legend needed for single series, but context could be
-          improved)
+        comment: Descriptive title with spec-id/library/brand; radial labels include
+          C unit
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds FAF8F1 light / 1A1A17 dark; both
+          renders correct'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Multi-layer fill+line+scatter is deliberate and effective; subtle
+          fill alpha elegant; above default
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Grid alpha=0.15 subtle; polar spine styled with INK_SOFT; tick params
+          use theme tokens
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Annotation creates focal point; cyclical temperature story legible
+          from shape
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct polar chart implementation
+        comment: Correct polar chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Theta=hours (angular), radius=temperature correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: scatter points, line connection, proper
-          angular labels, radial gridlines'
-      - id: SC-04
-        name: Data Range
+        comment: Radial gridlines visible; angular labels at 3-hour intervals; midnight
+          at top clockwise; appropriate radial scale
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows 0-30°C which contains all data points
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Theta=hour, radius=temperature; full 24-hour cycle
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A single series, no legend needed
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "Hourly Temperature Pattern · polar-basic ·
-          matplotlib · pyplots.ai"'
+        comment: Title contains spec-id, library, anyplot.ai; single series no legend
+          needed
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows cyclical pattern clearly with variation; could show more dramatic
-          temperature swings
+        comment: Full 24-hour cycle; multi-layer rendering; annotation adds insight
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Hourly temperature is an excellent real-world application for polar
-          charts
+        comment: Hourly temp canonical polar use case; 15C base + 8C diurnal swing
+          plausible; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Temperatures 7-23°C are realistic; slight deduction as the sinusoidal
-          base + noise is somewhat idealized
+        comment: 0-30C radial range appropriate; 24-hour complete; peak near 3 PM
+          meteorologically correct
     code_quality:
       score: 10
       max: 10
@@ -173,40 +179,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported
+        comment: Only os, matplotlib.pyplot, numpy; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current matplotlib API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses polar projection correctly, but doesn't leverage advanced matplotlib
-          polar features like fill_between or custom theta formatting
+        passed: true
+        comment: Proper polar projection, set_theta_zero_location, set_theta_direction,
+          set_rlabel_position; Axes-method API
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: fill_between on polar axes is distinctive; theta direction + zero-location
+          config is idiomatic
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
