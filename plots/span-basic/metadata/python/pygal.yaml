@@ -1,37 +1,247 @@
 library: pygal
+language: python
 specification_id: span-basic
 created: 2025-12-17 03:09:41+00:00
-updated: 2025-12-17 03:09:41+00:00
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20290183926
+updated: '2026-04-30T11:15:08Z'
+generated_by: claude-sonnet
+workflow_run: 25161205000
 issue: 980
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/span-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/span-basic/pygal/plot.html
-quality_score: 94
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/span-basic/python/pygal/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - 'Correct Okabe-Ito palette with #009E73 as first series; both renders use proper
+    theme backgrounds (#FAF8F1 light / #1A1A17 dark)'
+  - Elegant closed-polygon approach creates span regions within pygal's XY chart (no
+    native axvspan equivalent)
+  - Per-point dict labels with 'label' key enable interactive HTML hover tooltips
+    — leverages pygal's distinctive interactivity
+  - Font sizes all explicitly set to correct pixel values (title 32px, axes 22px,
+    ticks 18px); fully readable in both light and dark
+  - Clean flat code structure with reproducible seed, adaptive SPAN_OPACITY between
+    themes, and no over-engineering
+  weaknesses:
+  - Legend truncates 'Recession Period' to 'Recession Peri...' due to pygal legend
+    width constraints — shorten label or adjust sizing
+  - Recession span opacity in dark render (0.45) exceeds spec's 0.2–0.3 recommendation;
+    stock line barely visible beneath it
+  - Risk Zone (60–80) is positioned below the entire stock price range (135–215),
+    making the horizontal span feel disconnected from actual data — adjust bounds
+    for a more meaningful threshold
+  - Lower third of canvas is mostly empty dead space due to the mismatch between the
+    Risk Zone span range and the data range
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "span-basic · pygal · anyplot.ai" in dark text, clearly readable. Y-axis label "Price ($)" and X-axis label "Year" readable. Tick labels for years (2006–2016) and prices (40–220) in dark text, legible. Legend in top-left, "Recession Period" slightly truncated to "Recession Peri..."
+      Data: First series (Recession Period) = #009E73 green vertical span 2008–2009 at 0.25 opacity. Second series (Risk Zone) = #D55E00 orange horizontal span 60–80 at 0.25 opacity. Third series (Stock Price) = #0072B2 blue line, no dots. All three distinguishable.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title, axis labels, and tick labels all render in light-colored text, clearly readable against dark background. Legend text adapts to light color. No dark-on-dark failures detected.
+      Data: Colors identical to light render — green #009E73 recession span (higher opacity 0.45 on dark), orange #D55E00 risk zone span, blue #0072B2 stock line. Brand green #009E73 clearly visible.
+      Legibility verdict: PASS (note: recession span at 0.45 opacity is heavier than recommended but stock line still faintly visible beneath)
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 32px, axis labels 22px, tick
+          labels 18px, legend 18px; readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Spans and line clearly visible; recession span at 0.45 opacity in
+          dark render exceeds spec's 0.2–0.3 recommendation
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; spans distinguished by both position
+          and color
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas use overall; Risk Zone at 60–80 leaves lower third of
+          chart as empty dead space since stock data is 135–215
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Year (x) and Price ($) (y) with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00, third #0072B2; backgrounds
+          #FAF8F1/#1A1A17; chrome adapts correctly'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean warm background, correct palette, no dot markers, y-guides
+          only — above library defaults but not publication-exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Good grid choices (dotted y-only), show_dots=False; pygal's fixed
+          SVG border frame limits further spine removal
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Recession narrative is impactful and clearly told; Risk Zone less
+          compelling since stock never enters it during the shown period
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: span regions via closed polygon fills on XY line chart'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent fills, vertical span, horizontal span, underlying
+          data visible
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: Year 2006–2016, Y: Price ($); both span directions correctly
+          mapped'
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: Title format correct; legend truncates 'Recession Period' to 'Recession
+          Peri...'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both vertical and horizontal span directions shown, overlaid on time-series
+          data
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Financial stock price with 2008–2009 recession and risk-zone threshold
+          — neutral, real-world
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Stock price and recession period realistic; Risk Zone (60–80) is
+          below entire observed stock range (135–215)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat: imports → data → style → chart → save; no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; sys used for path workaround
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; sys.path workaround commented; per-point dict
+          labels idiomatic
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct pygal.XY, Style object, fill=True/False per series, render_to_png
+          + render for HTML
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HTML interactive export, per-point dict labels for hover tooltips,
+          human_readable=True, closed polygon span workaround, adaptive SPAN_OPACITY
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
-  - layer-composition
-  - patches
+  - hover-tooltips
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
-  styling: []
-review:
-  strengths: []
-  weaknesses: []
-  improvements: []
-  image_description: The plot displays a stock price time series from 2006 to 2016
-    with two highlighted span regions. A **yellow vertical span** marks the "Recession
-    Period" from 2008 to 2009, spanning the full height of the chart. A **red/pink
-    horizontal span** marks the "Risk Zone" between price levels $60-$80, spanning
-    the full width of the chart. The main data is shown as a **blue line** representing
-    "Stock Price" that starts around $200, dips during the recession period, and stabilizes
-    around $140-150 afterward. The title reads "span-basic · pygal · pyplots.ai".
-    Axis labels show "Year" on x-axis and "Price ($)" on y-axis. A legend in the top-left
-    shows all three series. Grid lines are visible but subtle.
-  verdict: APPROVED
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
