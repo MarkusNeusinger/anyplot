@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sankey-basic: Basic Sankey Diagram
 Library: plotnine 0.15.3 | Python 3.13.13
-Quality: 76/100 | Updated: 2026-04-30
+Quality: 84/100 | Updated: 2026-04-30
 """
 
 import os

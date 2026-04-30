@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: sankey-basic
 created: '2025-12-23T19:44:19Z'
-updated: '2026-04-30T09:12:38Z'
+updated: '2026-04-30T09:26:57Z'
 generated_by: claude-sonnet
 workflow_run: 25156526692
 issue: 810
@@ -12,106 +12,88 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sankey-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sankey-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 76
+quality_score: 84
 review:
   strengths:
-  - Creative implementation of Sankey diagram using plotnine grammar of graphics primitives
-    (geom_polygon + geom_rect + geom_text) — no external Sankey library needed
-  - Smooth cubic Hermite interpolation (3t²-2t³) for curved flow bands looks polished
-    and professional
-  - Realistic energy flow domain (Coal/Gas/Nuclear/Renewables → Industrial/Commercial/Residential)
-    with plausible proportions
-  - 'Good data storytelling: source nodes colored distinctly, flow thickness encodes
-    value, numerical labels on larger flows reduce ambiguity'
-  - KISS code structure — linear data → plot → save with no unnecessary functions
-    or classes
+  - Correct theming in both light and dark renders — source colors identical, only
+    chrome flips (backgrounds, text, neutral node colors)
+  - 'Smart source/target color distinction: Okabe-Ito for sources, neutral INK_SOFT
+    for targets — clean visual hierarchy'
+  - All spec requirements met with realistic energy flow data (15/15 on both SC and
+    DQ)
+  - 'Perfect code quality: flat, deterministic, clean imports, correct output path'
   weaknesses:
-  - 'CRITICAL: Code/image mismatch — code saves to ''plot.png'' and does not read
-    ANYPLOT_THEME, but two themed images exist; images appear generated from a different
-    version of the code'
-  - 'CRITICAL: Wrong branding — labs(title) says ''pyplots.ai'' not ''anyplot.ai'''
-  - 'CRITICAL: Output file is ''plot.png'' not ''plot-{THEME}.png''; must read ANYPLOT_THEME
-    env var and produce plot-light.png and plot-dark.png'
-  - 'Palette non-compliance — code uses #306998 (Python Blue, explicitly flagged as
-    non-compliant) for Coal, #FFD43B for Gas, #4ECDC4 for Nuclear, #2ECC71 for Renewables
-    — none are Okabe-Ito; Coal must be #009E73'
-  - Hardcoded text colors color='#333333' for node labels and 'annotate' colors do
-    not use theme-adaptive tokens (INK, INK_SOFT) — would render near-black text on
-    near-black background in dark mode
-  - 'noqa: E402 disable comments present — prohibited by project rules; restructure
-    imports to avoid needing them'
+  - Flow value labels at size=11 are slightly small for the 4800x2700 canvas — should
+    be at least 14pt
+  - Value label x-positions are offset by source index (0.35 + src_idx * 0.1) making
+    some labels appear disconnected from their flows
+  - Crossing area in the dark render appears muddy due to alpha=0.5 over dark background
+    — consider increasing opacity slightly
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — correct for light theme.
-      Chrome: Title "Energy Flow · sankey-basic · plotnine · anyplot.ai" in bold dark text, clearly readable. "Sources" and "Sectors" annotations at bottom in muted dark color, readable. Node labels (Coal, Gas, Nuclear, Renewables on left; Industrial, Commercial, Residential on right) in bold dark text — all readable.
-      Data: Source nodes colored teal-green, orange, blue, pink/mauve (consistent with Okabe-Ito positions 1-4). Target nodes in dark charcoal grey. Flow bands use semi-transparent source colors. Numerical labels (35, 25, 20, 18, 15, 15, 12, 12) visible inside larger flows.
-      Legibility verdict: PASS — all text readable against light background.
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "Energy Flow · sankey-basic · plotnine · anyplot.ai" bold dark ink; source node labels (Coal, Gas, Nuclear, Renewables) bold dark ink size=16; target labels (Industrial, Commercial, Residential) bold dark ink size=16; "Sources"/"Sectors" footer in INK_SOFT; flow value labels in dark INK
+      Data: Coal=#009E73 (green), Gas=#D55E00 (orange), Nuclear=#0072B2 (blue), Renewables=#CC79A7 (pink); target nodes in neutral dark gray (INK_SOFT=#4A4A44); semi-transparent (alpha=0.5) curved flow polygons; proportional widths
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Near-black consistent with #1A1A17 — correct for dark theme.
-      Chrome: Title in bold white text, clearly readable. Node labels appear WHITE against dark background — readable. "Sources"/"Sectors" annotations in lighter muted color, readable. NOTE: Code hardcodes color="#333333" for node labels and annotate colors — this is near-black and would be INVISIBLE on dark background. The images appear WHITE for these elements, proving images were generated from a DIFFERENT version of the code than what is currently in the file.
-      Data: Source node colors appear identical to light render (Okabe-Ito teal-green, orange, blue, pink). Target nodes appear light grey on dark background (appropriate chrome adaptation). Flow bands use same semi-transparent source colors.
-      Legibility verdict: PASS in images — but code as written would FAIL (dark-on-dark labels due to hardcoded #333333).
-      DISCREPANCY FLAGGED: Code says title "pyplots.ai", images show "anyplot.ai". Code saves "plot.png", but two themed files exist. Code has #306998 Python Blue for Coal, images show teal-green. These are definitively different versions.
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title and all node labels switch to light near-white (#F0EFE8); section labels in #B8B7B0; no dark-on-dark failures detected
+      Data: Source colors identical to light render — Coal green, Gas orange, Nuclear blue, Renewables pink; target nodes become light gray (#B8B7B0) providing good contrast against dark background; flows slightly more subdued but clearly visible
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: 'Sizes explicitly set (title=24, labels=16, flow values=11). Flow
-          value labels at size=11 slightly small. Images show readable text in both
-          themes; code has hardcoded #333333 labels that would fail dark mode.'
+        comment: Title 24pt, node labels 16pt correct; flow value labels at size=11
+          slightly below 16pt guideline
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minimal overlap at flow crossing points; labels staggered well; node
-          labels clearly separated.
+        comment: Minor crowding of two '15' labels in crossing zone, no severe collision
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All Sankey bands visible with alpha=0.5. Nodes clearly defined with
-          white borders. Good density.
+        comment: All flows visible; crossing area slightly muddy in dark render with
+          alpha=0.5
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors (in images) are CVD-safe. Semi-transparency aids
-          distinguishing crossing flows.
+        comment: Okabe-Ito is CVD-safe; no red-green sole-signal issues
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization. Diagram centered with labels on both sides.
-          Some bottom whitespace.
+        comment: Good margins; right-side target labels slightly tight against xlim
+          boundary
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title 'Energy Flow'. Sources/Sectors annotations clearly
-          mark column roles.
+        comment: Descriptive title; Sources/Sectors footer labels serve as orientation
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Code contains #306998 (Python Blue, explicitly non-compliant) for
-          Coal. Coal MUST be #009E73. Other source colors are also non-Okabe-Ito (#FFD43B,
-          #4ECDC4, #2ECC71). Images appear compliant but code is not — flagged as
-          code bug.'
+        passed: true
+        comment: 'Coal=#009E73 first, Okabe-Ito order, backgrounds #FAF8F1/#1A1A17
+          correct'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -119,25 +101,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom Sankey built from plotnine primitives is impressive. Smooth
-          Hermite curves, semi-transparent flows, white node borders. Above default
-          sophistication.
+        comment: Thoughtful source/target color distinction, flow transparency, white
+          node borders; above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: No grid (element_blank), no axis text/ticks. Clean white node borders.
-          Good whitespace. Missing subtle refinements.
+        comment: Clean minimal theme, no grid/spines/axes; crossing area could be
+          tighter
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Energy flow narrative clear: sources left, sectors right. Flow widths
-          encode values. Numerical labels on larger flows guide the reader. Good hierarchy.'
+        comment: Proportional widths, value labels, section labels guide viewer; tracing
+          through crossings is challenging
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -145,30 +126,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Sankey diagram with nodes, curved flow bands, and proportional
-          widths.
+        comment: Correct Sankey diagram with proportional flow links
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Source-target flows, proportional widths, distinct source colors,
-          node labels, no circular flows, link opacity.
+        comment: Proportional link widths, distinct source colors, no circular flows,
+          node labels clear
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Sources on left, sectors on right, flow values correctly mapped to
-          band widths.
+        comment: Source-target structure correct; node heights proportional to total
+          flow
       - id: SC-04
         name: Title & Legend
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: Code title says 'pyplots.ai' not 'anyplot.ai' — wrong branding. Images
-          show correct 'anyplot.ai' but code is mismatched. Must fix code to match
-          images.
+        passed: true
+        comment: Energy Flow · sankey-basic · plotnine · anyplot.ai includes all required
+          components
     data_quality:
       score: 15
       max: 15
@@ -178,24 +157,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 4 sources × 3 targets = 9 flows. Mix of large and small flows. Multiple
-          crossing bands demonstrate diagram complexity.
+        comment: 9 flows, 4 sources, 3 targets, crossing topology, value labels, proportional
+          sizing
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Energy sector example (Coal/Gas/Nuclear/Renewables → Industrial/Commercial/Residential)
-          is realistic, neutral, commonly used.
+        comment: Energy flow scenario (Coal/Gas/Nuclear/Renewables -> Industrial/Commercial/Residential)
+          is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Flow values 35/25/20/18/15/15/12/8/12 are plausible relative proportions
-          for energy distribution.
+        comment: Values 8-35, total 160, realistic distribution for energy mix
     code_quality:
-      score: 6
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -203,34 +181,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → data → plot geometry → save. No functions or classes.'
+        comment: No functions or classes; flat procedural script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded — fully deterministic.
+        comment: Fully deterministic hardcoded data; no random numbers
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'All imports used, but noqa: E402 disable comments are present and
-          prohibited by project rules. Restructure to avoid them.'
+        passed: true
+        comment: All imported symbols used; no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured custom Sankey builder, no fake UI elements, logic
-          is clear.
+        comment: Appropriate complexity for hand-rolled Sankey; no fake UI elements
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves to 'plot.png' not 'plot-{THEME}.png'. Does not read ANYPLOT_THEME
-          env var. Must produce plot-light.png and plot-dark.png.
+        passed: true
+        comment: Saves as plot-{THEME}.png; uses current plotnine API
     library_mastery:
       score: 7
       max: 10
@@ -240,24 +215,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ggplot() grammar with aes(), geom_* layers, theme(), scale_fill_manual()
-          idiomatically. Low-level primitives used cleverly.
+        comment: 'Grammar of graphics composition: geom_polygon+geom_rect+geom_text+annotate;
+          scale_fill_manual; coord_cartesian'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Building a full Sankey diagram from geom_polygon + geom_rect + geom_text
-          with custom Hermite-curve math is distinctive plotnine usage.
-  verdict: REJECTED
+        comment: Multiple geom layer composition for unsupported chart type; Hermite
+          curve interpolation for flow polygons; theme() chrome control
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - annotations
-  - patches
+  - bezier-curves
   patterns:
+  - groupby-aggregation
   - iteration-over-groups
   dataprep:
   - normalization
   styling:
   - alpha-blending
+  - edge-highlighting
+  - minimal-chrome
