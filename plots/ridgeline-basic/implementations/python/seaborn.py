@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 ridgeline-basic: Basic Ridgeline Plot
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 93/100 | Created: 2025-12-23
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-04-30
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,7 +12,13 @@ import pandas as pd
 import seaborn as sns
 
 
-# Data - Monthly temperature distributions (realistic seasonal pattern)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Data - Monthly temperature distributions (Northern Hemisphere seasonal pattern)
 np.random.seed(42)
 
 months = [
@@ -28,10 +36,8 @@ months = [
     "December",
 ]
 
-# Base temperatures (Celsius) with realistic seasonal variation
 base_temps = [2, 4, 8, 13, 17, 21, 24, 23, 19, 13, 7, 3]
 
-# Generate temperature data with variation for each month
 data = []
 for month, base_temp in zip(months, base_temps, strict=True):
     temps = np.random.normal(base_temp, 3.5, 150)
@@ -40,32 +46,37 @@ for month, base_temp in zip(months, base_temps, strict=True):
 
 df = pd.DataFrame(data)
 
-# Create figure with seaborn FacetGrid for ridgeline effect
-sns.set_theme(style="white", rc={"axes.facecolor": (0, 0, 0, 0)})
+# viridis gradient for 12 months (approved sequential colormap for 6+ groups)
+palette = sns.color_palette("viridis", n_colors=12)
 
-# Initialize the FacetGrid with reversed month order (January at top)
-g = sns.FacetGrid(
-    df,
-    row="month",
-    hue="month",
-    aspect=15,
-    height=0.6,
-    palette=sns.color_palette("coolwarm", n_colors=12),
-    row_order=months[::-1],
-    hue_order=months[::-1],
+# Configure seaborn: transparent axes so figure background shows through
+sns.set_theme(
+    style="white",
+    rc={
+        "axes.facecolor": (0, 0, 0, 0),
+        "figure.facecolor": PAGE_BG,
+        "text.color": INK,
+        "axes.labelcolor": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+    },
 )
 
-# Draw the densities
-g.map(sns.kdeplot, "temperature", bw_adjust=0.8, clip_on=False, fill=True, alpha=0.8, linewidth=2.5)
+# FacetGrid ridgeline layout (January at top → December at bottom)
+g = sns.FacetGrid(
+    df, row="month", hue="month", aspect=15, height=0.6, palette=palette, row_order=months, hue_order=months
+)
 
-# Add outline for each ridge
-g.map(sns.kdeplot, "temperature", bw_adjust=0.8, clip_on=False, color="w", linewidth=3)
+# Filled density curves
+g.map(sns.kdeplot, "temperature", bw_adjust=0.8, clip_on=False, fill=True, alpha=0.85, linewidth=2.5)
 
-# Add horizontal line at y=0
-g.map(plt.axhline, y=0, linewidth=2.5, linestyle="-", color="w", clip_on=False)
+# Outline in PAGE_BG color creates visual separation between overlapping ridges
+g.map(sns.kdeplot, "temperature", bw_adjust=0.8, clip_on=False, color=PAGE_BG, linewidth=3)
+
+# Baseline
+g.map(plt.axhline, y=0, linewidth=2, linestyle="-", color=INK_SOFT, clip_on=False)
 
 
-# Define label function for row names
 def label(x, color, label):
     ax = plt.gca()
     ax.text(
@@ -75,22 +86,17 @@ def label(x, color, label):
 
 g.map(label, "temperature")
 
-# Adjust overlap between ridges
+# Overlap and cleanup
 g.figure.subplots_adjust(hspace=-0.5)
-
-# Remove axes details
 g.set_titles("")
 g.set(yticks=[], ylabel="")
 g.despine(bottom=True, left=True)
 
-# Add x-axis label and title
-g.axes[-1, 0].set_xlabel("Temperature (°C)", fontsize=22)
-g.axes[-1, 0].tick_params(axis="x", labelsize=18)
+g.axes[-1, 0].set_xlabel("Temperature (°C)", fontsize=22, color=INK)
+g.axes[-1, 0].tick_params(axis="x", labelsize=18, colors=INK_SOFT)
 
-# Add title at the top
-g.figure.suptitle("ridgeline-basic · seaborn · pyplots.ai", fontsize=26, y=0.98, fontweight="bold")
-
-# Set figure size for 4800x2700 output
 g.figure.set_size_inches(16, 9)
+g.figure.patch.set_facecolor(PAGE_BG)
+g.figure.suptitle("ridgeline-basic · seaborn · anyplot.ai", fontsize=26, y=0.98, fontweight="bold", color=INK)
 
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)

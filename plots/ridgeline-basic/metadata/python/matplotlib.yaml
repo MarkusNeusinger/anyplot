@@ -1,166 +1,170 @@
 library: matplotlib
+language: python
 specification_id: ridgeline-basic
 created: '2025-12-23T19:42:50Z'
-updated: '2025-12-23T19:48:10Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20469992150
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep:
-  - kde
-  styling:
-  - alpha-blending
+updated: '2026-04-30T03:22:44Z'
+generated_by: claude-sonnet
+workflow_run: 25145109387
+issue: 923
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent visual design with viridis colormap providing both aesthetic appeal
-    and colorblind accessibility
-  - Perfect implementation of the ridgeline concept with appropriate 60% overlap as
-    specified
-  - Realistic Northern Hemisphere temperature data showing clear seasonal patterns
-    with appropriate variation
-  - Clean code structure following KISS principles with good comments
-  - Proper title format and axis labeling with units
+  - Full seasonal dataset (12 months) with realistic temperature values showcases
+    the ridgeline form
+  - Viridis gradient is a deliberate and effective design choice for ordered temporal
+    categories
+  - Complete theme-adaptive chrome — both renders pass readability check
+  - 'Perfect spec compliance: overlap percentage, group ordering, and label placement
+    all correct'
+  - Clean code with seed, explicit font sizing, and linear KISS flow
   weaknesses:
-  - Manual KDE implementation using list comprehension is less efficient than using
-    scipy.stats.gaussian_kde
-  - Grid could be slightly more subtle (alpha=0.2 instead of 0.3)
-  image_description: 'The plot displays a beautiful ridgeline visualization with 12
-    overlapping density curves representing monthly temperature distributions. The
-    months are arranged vertically from January at the top to December at the bottom.
-    A viridis color gradient is used: purple/dark blue for cold winter months (January,
-    February) transitioning through blue and teal to bright yellow-green for warmer
-    months (July, August). Each ridge shows a smooth bell-shaped density distribution.
-    Winter months peak around 0-5°C while summer months peak around 25°C, showing
-    a realistic Northern Hemisphere seasonal pattern. The x-axis shows ''Temperature
-    (°C)'' ranging from -10 to 40. Month names are clearly displayed as y-axis labels.
-    The title ''ridgeline-basic · matplotlib · pyplots.ai'' is prominently displayed.
-    The ridges have ~60% overlap creating the characteristic Joy Plot appearance.
-    A subtle dashed grid appears on the x-axis only.'
+  - 'First ridge color is not brand green #009E73 (viridis teal is close but not palette-compliant)'
+  - DE-01 could be pushed higher with a subtle typography refinement or baseline highlight
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "ridgeline-basic · matplotlib · anyplot.ai" in dark ink (fontsize 24), X-axis label "Temperature (°C)" (fontsize 20), month names on Y-axis (fontsize 16) — all clearly readable in dark text against warm off-white surface
+      Data: 12 ridgeline KDE fills using viridis colormap (teal-green for January at top, golden-yellow for December at bottom); alpha=0.8; edge colors match PAGE_BG for clean ridge separation; first series is viridis teal, not #009E73
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and axis label in light #F0EFE8, month labels in #B8B7B0 — all clearly readable against dark surface; no dark-on-dark failures detected
+      Data: Identical viridis gradient colors to light render (same teal-to-gold progression); only chrome elements flip between themes
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at fontsize=24, xlabel at fontsize=20, y-tick labels at fontsize=14,
-          x-ticks at fontsize=16 - all perfectly readable
+        comment: Title 24pt, labels 20pt, ticks 16pt — all explicitly set; readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; month labels are well-spaced and density curves
-          overlap intentionally as per ridgeline design
+        comment: No text collisions; ridge overlaps are intentional design
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Density curves are well-sized with scale=2.5, alpha=0.8 provides
-          excellent visibility while maintaining overlap aesthetics
+        comment: KDE fills with alpha=0.8 are well-visible at full resolution
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses viridis colormap which is colorblind-safe and has excellent
-          perceptual uniformity
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins, tight_layout applied
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis has descriptive label with units: ''Temperature (°C)'''
+        comment: Viridis is perceptually uniform and CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9, good canvas utilization, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Temperature (°C) with units; no y-label needed
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Viridis correct for 12-group ordered data; backgrounds correct;
+          chrome theme-adaptive. Partial: first ridge not #009E73'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional viridis gradient maps temperature to color; fills use
+          PAGE_BG as edge; above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Three spines removed, bottom in INK_SOFT, x-only grid at alpha=0.15,
+          tight layout
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Viridis gradient creates legible seasonal narrative; cool=winter,
+          warm=summer immediately readable
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct ridgeline/Joy Plot type with vertically stacked density curves
+        comment: Correct ridgeline/joy plot with KDE density curves
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Values correctly mapped to x-axis density, groups (months) to y-axis
-          positions
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: partial overlap (~60%), vertical stacking,
-          group labels on y-axis, color differentiation'
-      - id: SC-04
-        name: Data Range
+        comment: 60% overlap, group labels on Y-axis, color differentiation, chronological
+          ordering
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis range (-10 to 40°C) shows all data properly
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=temperature, Y=months; full range displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed; month labels serve as group identifiers
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: ''ridgeline-basic · matplotlib · pyplots.ai'''
+        comment: Title matches spec-id · library · anyplot.ai; no legend needed
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows seasonal variation with clear difference between winter/summer,
-          spring/fall transition months have realistic intermediate values and higher
-          variation
+        comment: 12 months with varied means and spreads; full seasonal cycle
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly temperature distributions for Northern Hemisphere is an excellent,
-          comprehensible real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 'Temperature values are realistic: ~2-4°C in winter, ~22-25°C in
-          summer, with appropriate standard deviations'
+        comment: Northern Hemisphere monthly temperatures; neutral science domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: January ~2°C, July ~25°C; spreads match temperate climate expectations
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -168,28 +172,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save, no functions or
-          classes'
+        comment: Linear Imports→Tokens→Data→Plot→Save; no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducibility
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: os, matplotlib, numpy, scipy.stats all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic fill_between loop; no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 3
-      max: 5
-      items: []
+        comment: plt.savefig(f'plot-{THEME}.png', ...) correct
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct Axes methods (fill_between, set_yticks, tick_params); follows
+          matplotlib best practices
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Manual ridgeline layout via fill_between baseline technique is idiomatic
+          matplotlib; no native ridgeline API
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
+  - custom-colormap
