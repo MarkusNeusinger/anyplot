@@ -1,53 +1,67 @@
-""" pyplots.ai
+"""anyplot.ai
 span-basic: Basic Span Plot (Highlighted Region)
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 94/100 | Created: 2025-12-17
+Library: pygal | Python 3.13
+Quality: pending | Created: 2026-04-30
 """
 
+import os
+import sys
+
 import numpy as np
-import pygal
-from pygal.style import Style
 
 
-# Data - Stock prices with highlighted recession period
+# Pop script dir so this file (pygal.py) doesn't shadow the installed pygal package
+_script_dir = sys.path.pop(0)
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
+
+
+sys.path.insert(0, _script_dir)
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+
+# Data - Stock prices with highlighted events
 np.random.seed(42)
-dates = np.arange(2006, 2016, 0.1)  # 10 years of data
-# Simulate stock price with trend and volatility
+dates = np.arange(2006, 2016, 0.1)
 price = 100 + np.cumsum(np.random.randn(len(dates)) * 2)
-# Add a dip during recession period (2008-2009)
 recession_mask = (dates >= 2008) & (dates < 2010)
 price[recession_mask] -= np.linspace(0, 30, recession_mask.sum())
 price[dates >= 2010] -= 30
-price = price + np.abs(price.min()) + 50  # Keep positive
+price = price + np.abs(price.min()) + 50
 
-# Calculate range for spans
-y_min = 40
-y_max = price.max() + 20
+y_min = 40.0
+y_max = float(price.max()) + 20
 
-# Custom style with scaled sizes for 4800x2700 output
+# Style
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#FFD43B", "#D62728", "#306998"),  # Yellow span, Red span, Blue line
-    opacity=".25",  # Semi-transparent for span regions
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    opacity=".25",
     opacity_hover=".4",
-    title_font_size=60,
-    label_font_size=36,
-    major_label_font_size=36,
-    legend_font_size=36,
-    value_font_size=32,
-    stroke_width="4",
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=3,
 )
 
-# Create XY chart with fill enabled for span regions
+# Plot
 chart = pygal.XY(
     style=custom_style,
     width=4800,
     height=2700,
-    title="span-basic · pygal · pyplots.ai",
+    title="span-basic · pygal · anyplot.ai",
     x_title="Year",
     y_title="Price ($)",
     show_dots=False,
@@ -55,36 +69,24 @@ chart = pygal.XY(
     show_y_guides=True,
     range=(y_min, y_max),
     xrange=(2005.5, 2016.5),
-    fill=True,  # Enable fill for closed polygons
+    fill=True,
     stroke=True,
     dots_size=0,
 )
 
-# Vertical span: Recession Period (2008-2009) - full height rectangle
-# Create closed polygon: bottom-left -> top-left -> top-right -> bottom-right -> close
-recession_span = [
-    (2008, y_min),
-    (2008, y_max),
-    (2009, y_max),
-    (2009, y_min),
-    (2008, y_min),  # Close the polygon
-]
+# Vertical span: Recession Period (2008-2009) — closed polygon
+recession_span = [(2008, y_min), (2008, y_max), (2009, y_max), (2009, y_min), (2008, y_min)]
 chart.add("Recession Period", recession_span)
 
-# Horizontal span: Risk Zone (60-80) - full width rectangle
-risk_span = [
-    (2005.5, 60),
-    (2005.5, 80),
-    (2016.5, 80),
-    (2016.5, 60),
-    (2005.5, 60),  # Close the polygon
-]
+# Horizontal span: Risk Zone (price 60–80) — closed polygon
+risk_span = [(2005.5, 60), (2005.5, 80), (2016.5, 80), (2016.5, 60), (2005.5, 60)]
 chart.add("Risk Zone", risk_span)
 
-# Main line data (no fill, just stroke)
+# Main line (no fill, stroke only)
 main_data = [(float(x), float(y)) for x, y in zip(dates, price, strict=True)]
 chart.add("Stock Price", main_data, fill=False, stroke=True)
 
-# Save outputs
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Save
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
