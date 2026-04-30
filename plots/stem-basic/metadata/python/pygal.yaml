@@ -1,15 +1,229 @@
 library: pygal
+language: python
 specification_id: stem-basic
 created: '2025-12-23T20:46:36Z'
-updated: '2025-12-23T21:11:10Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20471156994
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-30T15:15:43Z'
+generated_by: claude-sonnet
+workflow_run: 25172370989
+issue: 972
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/stem-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/stem-basic/pygal/plot.html
-quality_score: 86
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/pygal/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - Perfect spec compliance via XY-triplet stem trick
+  - Perfect data quality with realistic impulse-response scenario
+  - 'Perfect code quality: KISS structure, seed set, dual-format output'
+  - Correct Okabe-Ito palette with full theme adaptation in both renders
+  weaknesses:
+  - 'Design excellence moderate (9/20): no visual emphasis on high-amplitude early
+    peaks; consider amplitude-based color or opacity fade on stems'
+  - 'DE-02 refinement limited: outer chart border retained; suppress frame for cleaner
+    look'
+  - 'VQ-01 marginal: text may appear slightly undersized at full 4800x2700 resolution;
+    recalibrate font sizes'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "stem-basic · pygal · anyplot.ai" in dark ink at top center — clearly readable. Axis labels "Sample Index (n)" and "Amplitude (a.u.)" in dark text — fully legible. Tick labels (0,2,4,...,28 on x; -0.8 to 1.6 on y) in dark muted tone — all readable.
+      Data: 30 stems in brand green (#009E73); thin vertical lines extend from y=0 baseline to circular markers. Decaying oscillation pattern clearly visible. Y-axis guide lines subtle.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: Title, axis labels, and tick labels all rendered in light text (#F0EFE8 / muted light) — fully readable. No dark-on-dark failures observed anywhere.
+      Data: Stem colors identical to light render — same brand green (#009E73) stems and circular markers. Decaying oscillation pattern equally clear.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title=72, label=48, major_label=44); all
+          text readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; stems well-spaced; tick labels clear
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Stems and markers visible; low-amplitude stems near baseline slightly
+          thin but distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single CVD-safe brand green on both warm-off-white and near-black
+          surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Fills ~60-70% of canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Sample Index (n) and Amplitude (a.u.) — both descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; theme-adaptive
+          chrome'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured default with Okabe-Ito and theme tokens; no distinctive
+          design beyond standard
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: X-guides off, Y-guides subtle, margin=120; some deliberate refinement
+          but default frame retained
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: true
+        comment: Impulse-response context meaningful but no visual hierarchy or emphasis
+          on high-amplitude peaks
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: pygal.XY with triplet encoding produces correct stem geometry (baseline
+          anchor r=0, data dot r=14, None break)
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Thin stems from y=0, visible circular markers, consistent sizing,
+          baseline at y=0
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=sample index 0-29, Y=amplitude; all 30 points visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'stem-basic · pygal · anyplot.ai'; legend suppressed (appropriate
+          for single series)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 30 stems with positive and negative amplitudes, clear decaying envelope,
+          full baseline crossing
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Decaying sinusoidal impulse response — canonical signal-processing
+          scenario; neutral science domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Amplitude ~-0.8 to +1.6, decay constant ~8 samples; physically realistic
+          for damped oscillation
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports->tokens->data->chart->save; no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) before data generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; sys required for path shadow workaround
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: sys.path workaround well-handled; loop-based stem construction clean
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; correct for interactive
+          library
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Style object used correctly; per-node radius via node dict shows
+          solid library knowledge
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Per-node dot radius suppression (r=0), individual point labels, HTML
+          interactive export
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -19,17 +233,3 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling: []
-review:
-  strengths:
-  - Correct stem plot visualization with vertical lines from baseline to data markers
-  - 'Excellent data choice: decaying oscillation pattern demonstrates realistic signal
-    processing use case'
-  - Clean code structure following KISS principles with proper reproducibility (seed=42)
-  - Proper title format and good overall layout balance
-  - Uses pygal Style system for customization
-  weaknesses:
-  - Axis label units not rendering in output (parentheses in labels may cause issues
-    with pygal)
-  - Markers could be slightly larger for better visibility at this data density
-  - Does not leverage pygal interactive tooltip features that could enhance the stem
-    plot
