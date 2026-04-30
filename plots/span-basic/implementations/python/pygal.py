@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 span-basic: Basic Span Plot (Highlighted Region)
 Library: pygal 3.1.0 | Python 3.13.13
+Quality: 86/100 | Created: 2026-04-30
 """
 
 import os
