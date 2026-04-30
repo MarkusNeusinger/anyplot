@@ -1,160 +1,176 @@
 library: seaborn
+language: python
 specification_id: stem-basic
 created: '2025-12-23T20:45:35Z'
-updated: '2025-12-23T20:52:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20471152205
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-30T15:04:36Z'
+generated_by: claude-sonnet
+workflow_run: 25171839176
+issue: 972
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/stem-basic/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent visual clarity with properly sized text elements and good color contrast
-  - Correct title format following the specification requirements
-  - Well-chosen data example (damped sinusoidal impulse response) that demonstrates
-    stem plot characteristics
-  - Clean code structure following KISS principles with fixed random seed
-  - Good use of spine removal for cleaner aesthetics
-  - Markers have clear edge colors making them visually distinct from stems
+  - Perfect visual quality in both light and dark themes with correct font sizing
+    and readable text throughout
+  - 'Textbook data choice: damped sinusoidal impulse response is the canonical signal
+    processing example for stem plots'
+  - Background-edged scatter markers (edgecolor=PAGE_BG) create clean visual separation
+    from stems
+  - 'All spec requirements met: thin stems, visible circular markers, baseline at
+    y=0, consistent sizing'
   weaknesses:
-  - Limited use of seaborn distinctive features beyond scatterplot; the implementation
-    primarily uses matplotlib for the stem visualization
-  image_description: The plot displays a stem plot showing a damped sinusoidal impulse
-    response. It has 30 data points with yellow circular markers (with blue outlines)
-    connected by blue vertical stems to a horizontal baseline at y=0. The x-axis is
-    labeled "Sample Index (n)" ranging from 0 to 30, and the y-axis is labeled "Amplitude"
-    ranging from approximately -1.0 to 1.8. The title reads "stem-basic · seaborn
-    · pyplots.ai" in the correct format. The plot shows a characteristic damped oscillation
-    pattern with high amplitude early samples that decay exponentially while oscillating.
-    A subtle gray dashed grid is visible in the background. The top and right spines
-    have been removed for a cleaner appearance.
+  - No visual storytelling or annotations to guide the viewer through the decay narrative
+    — an envelope curve or peak annotation would earn DE-03 points
+  - Seaborn is used only for scatterplot markers and sns.set_theme() theming; no seaborn-distinctive
+    techniques are leveraged (LM-02 low)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "stem-basic · seaborn · anyplot.ai" in dark text — readable; axis labels "Sample Index (n)" and "Amplitude" clearly visible; tick labels at correct size and dark color
+      Data: 30 stems in brand green #009E73 from y=0 baseline to data values; large circular markers with PAGE_BG edge color; both positive and negative stems; subtle y-axis horizontal grid
+      Legibility verdict: PASS — all text elements clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light/cream text — readable; axis labels in light text clearly visible; tick labels light-colored and legible; no dark-on-dark issues detected
+      Data: Colors identical to light render — brand green #009E73 stems and markers unchanged; only chrome elements flipped; grid still subtle and visible
+      Legibility verdict: PASS — all text elements clearly readable against near-black background; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: Title 24pt, axis labels 20pt, ticks 16pt; both themes fully legible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 30 stems evenly spaced, no element collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers are well-sized (s=300) with good contrast; stems are visible
-          at linewidth 2.5
+        comment: Large markers (s=300) and 2.5px stems clearly visible; background-edged
+          markers pop off stems
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) provide excellent contrast, colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout with tight_layout, slight excess whitespace on right
-          side
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Sample Index (n)" and "Amplitude"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Single CVD-safe brand green, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 proportions appropriate; nothing cut off; tight_layout used
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3), but no legend needed for this single-series
-          plot
+        comment: Sample Index (n) with units, Amplitude descriptive; title format
+          correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) series is #009E73; backgrounds #FAF8F1 / #1A1A17; both
+          renders theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional polish; background-edged markers are a nice design touch;
+          single-color simplicity is appropriate but limited
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed; y-axis-only grid at low opacity; generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Damped sinusoidal has a natural decay narrative but no annotations
+          or emphasis guide the viewer
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct stem plot with markers connected to baseline by vertical
-          lines
+        comment: 'Correct stem plot: vertical lines from baseline to data values with
+          circular markers'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X is sample index, Y is amplitude - correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Stems, markers, baseline at y=0 all present as specified
-      - id: SC-04
-        name: Data Range
+        comment: Thin stems, visible circular markers, baseline at y=0, consistent
+          sizing throughout
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=sample index, Y=amplitude; all 30 data points visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series, N/A
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "stem-basic · seaborn · pyplots.ai"'
+        comment: stem-basic · seaborn · anyplot.ai correct; no legend needed for single
+          series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows damped oscillation with both positive and negative values;
-          demonstrates stem plot capabilities well
+        comment: Both positive and negative stems; decaying oscillation demonstrates
+          plot type comprehensively
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Damped sinusoidal impulse response is a realistic signal processing
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Amplitude values are reasonable for a normalized signal response
+        comment: Damped sinusoidal impulse response is canonical signal processing
+          example; neutral and plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Amplitude -1.0 to 1.85, sample indices 0-29; realistic engineering
+          values
     code_quality:
       score: 10
       max: 10
@@ -164,42 +180,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib, numpy, pandas, seaborn)
+        comment: All five imports (os, matplotlib, numpy, pandas, seaborn) are used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: 'Clean hybrid: seaborn scatterplot for markers, matplotlib vlines
+          for stems — correct approach'
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct dpi and bbox_inches
-    library_features:
-      score: 2
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct facecolor and bbox_inches
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: sns.set_theme() with full rc dict is idiomatic; axes-level scatterplot
+          used correctly; hybrid with matplotlib vlines is right approach
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses sns.scatterplot for markers which is appropriate, but the main
-          visualization relies heavily on matplotlib's vlines and axhline. Seaborn
-          doesn't have a native stem plot function, so this hybrid approach is acceptable
-          but not showcasing seaborn's distinctive features.
+        comment: Seaborn contribution limited to scatterplot markers and theming;
+          no seaborn-distinctive features used (FacetGrid, statistical transforms,
+          etc.)
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
