@@ -1,162 +1,176 @@
 library: seaborn
+language: python
 specification_id: step-basic
 created: '2025-12-23T21:04:58Z'
-updated: '2025-12-23T21:07:03Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20471495790
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-30T13:00:40Z'
+generated_by: claude-sonnet
+workflow_run: 25165564875
+issue: 956
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/step-basic/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-    - data-generation
-    - explicit-figure
-  dataprep:
-    - cumulative-sum
-  styling:
-    - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent visual clarity with properly sized text elements and markers
-  - Perfect use of post step style appropriate for cumulative data
-  - Realistic data scenario (monthly cumulative sales) directly from spec applications
-  - Clean code structure following KISS principles
-  - Good color combination that is accessible and visually appealing
-  - Proper title format following pyplots.ai standards
+  - 'Perfect visual quality across both themes: correct backgrounds, readable text,
+    no overlaps, and data colours that survive the light→dark flip unchanged'
+  - Two-series design with alpha fill and annotation meaningfully elevates the spec
+    beyond a single-line step chart, adding business context and a clear narrative
+    focal point
+  - Theme-adaptive chrome is implemented exactly per the style guide — all tokens
+    correctly applied to title, labels, ticks, grid, spines, legend, and facecolor
   weaknesses:
-  - Uses seaborn only for styling (sns.set_context) rather than seaborn plotting functions
-    - this is essentially a matplotlib plot with seaborn theming
-  - Legend label defined but not displayed (acceptable for single series)
-  image_description: The plot displays a step chart showing cumulative sales data
-    over 12 months (January through December). The chart uses a deep blue (#306998)
-    stepped line with horizontal segments connected by vertical risers, creating a
-    stair-step pattern. Yellow/gold circular markers (#FFD43B) with blue outlines
-    are placed at each data point where values change. The x-axis shows month abbreviations
-    (Jan-Dec), and the y-axis shows "Cumulative Sales ($K)" ranging from 0 to approximately
-    1200. The title "step-basic · seaborn · pyplots.ai" appears at the top. A subtle
-    dashed grid is visible in the background. The cumulative sales start at ~45 in
-    January and increase progressively to ~1100 in December.
+  - 'DE-01 still below publication threshold: the fill could use a lower alpha, and
+    a subtitle or caption below the title would add a second level of typographic
+    hierarchy'
+  - 'Library mastery is constrained: seaborn''s high-level hue-mapping (hue= parameter
+    on lineplot) could replace the two separate lineplot calls and unify the legend
+    creation idiomatically'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "step-basic · seaborn · anyplot.ai" in dark ink, clearly readable; axis labels "Month" and "Cumulative Sales ($K)" dark and legible; tick labels (Jan–Dec, 0–2000) in INK_SOFT — all readable
+      Data: Two step series — Electronics in #009E73 (brand green, first series) and Apparel in #D55E00 (Okabe-Ito position 2); circular markers at each data point with page-colour edges; light teal alpha fill between the two lines; "Holiday Q4 surge" annotation with arrow to Q4 jump
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title, axis labels, tick labels rendered in light-coloured text — clearly visible against dark surface; no dark-on-dark text failures detected; legend box uses elevated dark background
+      Data: Electronics (#009E73) and Apparel (#D55E00) colours are IDENTICAL to light render — only chrome flips; fill area still visible against dark surface
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
+        comment: All font sizes explicitly set; title, labels, ticks readable in both
+          themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; month labels are well-spaced
+        comment: 12 month labels space cleanly; annotation, legend, and data do not
+          collide
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers (s=150) are appropriately sized for 12 data points; line
-          width (3) is clearly visible
+        comment: Step lines and markers clearly sized and distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow combination is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins, tight_layout applied
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
-        passed: false
-        comment: Y-axis has units "($K)", X-axis is descriptive "Month"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        passed: true
+        comment: Okabe-Ito positions 1+2 are CVD-safe; teal/orange provides strong
+          luminance contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas well-utilised; balanced margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3, dashed) but there is no legend despite
-          having a label in the code
+        comment: Y-axis includes units ($K); X-axis labelled Month
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1/#1A1A17;
+          theme-correct chrome in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: alpha fill and annotation add depth and narrative.
+          Not yet publication-quality — no subtitle, fill could be more nuanced'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, Y-only grid at low alpha, marker edge colours
+          match page background
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Holiday Q4 surge annotation with arrow creates focal point; fill
+          between series emphasises the gap
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct step/stair plot with 'post' style
+        comment: Correct stair-step pattern using steps-post drawstyle
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=months (sequential), Y=cumulative sales (values)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Step lines with markers at data points, grid lines for tracing values
-      - id: SC-04
-        name: Data Range
+        comment: Markers at data points, grid lines, step style applied
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis starts at 0, all data visible with 5% headroom
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X = sequential months Jan-Dec, Y = cumulative values; all 12 data
+          points visible per series
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series (label in code but not shown,
-          which is fine)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "step-basic · seaborn · pyplots.ai"
+        comment: Title format step-basic · seaborn · anyplot.ai correct; legend labels
+          Electronics and Apparel match data
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear stair-step pattern with varying step heights (seasonal
-          growth pattern)
+        comment: Two-series comparison demonstrates all key step plot characteristics
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Cumulative monthly sales is a real-world application mentioned in
-          spec
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Sales values are realistic ($45K-$155K monthly, ~$1.1M cumulative
-          annually)
+        comment: Monthly cumulative sales for two retail product lines is a real,
+          neutral, comprehensible business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Electronics ~$1550K and Apparel ~$1100K by year-end with Q4 holiday
+          surge is factually plausible
     code_quality:
       score: 10
       max: 10
@@ -166,40 +180,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script structure: imports → data → plot → save'
+        comment: Imports → tokens → data → plot → save; no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Deterministic hardcoded data; no random state needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (matplotlib, numpy, pandas, seaborn) are used
+        comment: os, matplotlib, numpy, pandas, seaborn all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Appropriate complexity for the visualisation; no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct facecolor passthrough
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: sns.lineplot with drawstyle=steps-post is the seaborn way; sns.set_theme
+          with full rc dict used correctly
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
         max: 5
         passed: false
-        comment: Uses matplotlib's ax.step() and ax.scatter() with seaborn only for
-          styling (sns.set_context). Does not use seaborn's actual plotting functions.
+        comment: Seaborn theming system distinctively used, but fill-between and annotation
+          are pure matplotlib; seaborn hue-mapping not leveraged
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  - layer-composition
+  patterns:
+  - explicit-figure
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - edge-highlighting

@@ -1,159 +1,179 @@
 library: bokeh
+language: python
 specification_id: step-basic
 created: '2025-12-23T20:46:08Z'
-updated: '2025-12-23T20:54:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20471156684
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/step-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/step-basic/bokeh/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-  patterns:
-    - columndatasource
-  dataprep: []
-  styling:
-    - grid-styling
+updated: '2026-04-30T13:01:00Z'
+generated_by: claude-sonnet
+workflow_run: 25165590984
+issue: 956
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/bokeh/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent use of Bokeh native step() glyph with after mode for proper step visualization
-  - Well-chosen color scheme with Python blue (#306998) and yellow (#FFD43B) markers
-    providing clear visual contrast
-  - Appropriate font sizes scaled for 4800x2700 canvas (48pt title, 36pt labels, 28pt
-    ticks)
-  - Clean realistic data scenario (monthly cumulative sales) that perfectly demonstrates
-    step plot utility
-  - Proper use of ColumnDataSource for Bokeh best practices
-  - Both PNG and HTML outputs generated for static and interactive viewing
+  - 'Perfect spec compliance: correct step type with after mode, markers at data points,
+    grid lines, proper title format'
+  - 'Perfect Visual Quality: all font sizes explicitly set to correct values, both
+    themes fully adapted with no legibility failures'
+  - 'Excellent data quality: realistic cumulative sales scenario with plausible step
+    variation'
+  - Clean, minimal code structure — textbook KISS organization
+  - Bokeh-specific fill behavior below the step line adds visual depth appropriate
+    for cumulative data
   weaknesses:
-  - Grid styling could be more subtle (dashed lines are slightly prominent)
-  image_description: The plot displays a step chart showing cumulative sales over
-    12 months. The visualization uses a blue step line (#306998) with yellow circular
-    markers (#FFD43B) at each data point. The chart has a light gray background (#fafafa)
-    with dashed grid lines at 0.3 alpha. The title "step-basic · bokeh · pyplots.ai"
-    appears at the top left. The x-axis is labeled "Month" (1-12) and the y-axis is
-    labeled "Cumulative Sales (units)" (0-200). The step pattern clearly shows the
-    stair-step progression from 15 units in January to 195 units in December, with
-    horizontal lines extending to the right of each data point ("after" mode).
+  - outline_line_color = INK_SOFT creates visible rectangular frame border — set p.outline_line_color
+    = None for cleaner look
+  - 'No data storytelling: no reference line or annotation to create a focal point
+    on the step pattern'
+  - HoverTool absent — Bokeh signature interactive feature is unused; would raise
+    LM-02 score
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "step-basic · bokeh · anyplot.ai" in dark text top-left; y-axis label "Cumulative Sales (units)" readable; x-axis label "Month" visible; tick labels in medium-dark gray — all legible
+      Data: Step line in #009E73 (brand green), semi-transparent teal fill below step (Bokeh default), markers at data points with white/PAGE_BG edges
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light cream text; tick labels in light gray; axis labels in light color — all clearly readable. No dark-on-dark failures detected.
+      Data: Step line remains identical #009E73 (unchanged from light render); fill below step is darker teal variant; markers retain edge definition
+      Legibility verdict: PASS — all text clearly readable against dark background; data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 48pt, axis labels at 36pt, tick labels at 28pt - all highly
-          readable
+        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, tick
+          labels 18pt; all readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping elements; step pattern clean with well-spaced markers
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width of 4 and marker size of 18 are well-suited for the data
-          density
+        comment: Step line at line_width=5, markers at size=18 with edge color clearly
+          visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow combination is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of canvas but some empty space on the right side
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units "(units)", X-axis "Month" is descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Brand green on warm off-white/near-black provides strong contrast;
+          white-edged markers add definition
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Data fills canvas well from month 1-12; balanced margins; no cut-off
+          elements
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Cumulative Sales (units) includes units; Month is descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series uses #009E73; backgrounds #FAF8F1 (light) and #1A1A17
+          (dark); chrome fully theme-adaptive in both renders'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid alpha 0.3 is appropriate, but no legend present (acceptable
-          since single series)
+        comment: 'Well-configured: brand green, theme-adaptive chrome, white-edged
+          markers, subtle fill — polished default, not yet publication-ready'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid at 10% alpha is excellent; markers have edge highlighting; but
+          outline_line_color creates visible rectangular frame border
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Step pattern shows cumulative growth but no emphasis on milestones
+          or visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct step/stair plot implementation
+        comment: Correct step plot using Bokeh p.step() with mode=after (post step
+          style)
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=Month, Y=Cumulative Sales correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Step style used, markers at data points as suggested in spec
-      - id: SC-04
-        name: Data Range
+        comment: Step mode implemented, markers at data points, grid lines present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes accommodate full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Month on x-axis, Cumulative Sales on y-axis, all 12 data points visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Single series, no legend needed
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "step-basic · bokeh · pyplots.ai"
+        comment: Title step-basic · bokeh · anyplot.ai is correct; no legend needed
+          for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows increasing cumulative pattern well, but only demonstrates one
-          step mode ("after")
+        comment: Shows clear step pattern with varying step sizes, demonstrates characteristic
+          stair-step visual
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly cumulative sales is a perfect real-world scenario for step
-          plots
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Sales values (15-195) are realistic for a yearly cumulative total
+        comment: Monthly cumulative sales is genuine neutral business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sales from 15 to 195 units over 12 months represents realistic growth;
+          step intervals plausible
     code_quality:
       score: 10
       max: 10
@@ -163,41 +183,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: 'Clean linear structure: imports -> theme tokens -> data -> figure
+          -> glyphs -> style -> save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random values)
+        comment: All data is hardcoded; fully deterministic, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: os, ColumnDataSource, export_png, output_file,
+          figure, save'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Clean and Pythonic; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-THEME.png and plot-THEME.html; current Bokeh 3.x API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource and Bokeh's native step() glyph with mode parameter,
-          plus scatter for markers. Good but could showcase more Bokeh-specific features
-          like hover tools.
+        comment: Correct use of ColumnDataSource, figure, step() with mode, scatter(),
+          export_png, output_file+save — solid idiomatic Bokeh
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses step() with mode parameter, ColumnDataSource, HTML export; does
+          not leverage HoverTool or custom JS callbacks
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - columndatasource
+  dataprep: []
+  styling:
+  - edge-highlighting
