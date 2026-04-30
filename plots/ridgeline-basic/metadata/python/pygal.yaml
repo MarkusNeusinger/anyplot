@@ -1,170 +1,178 @@
 library: pygal
+language: python
 specification_id: ridgeline-basic
 created: '2025-12-23T19:42:52Z'
-updated: '2025-12-23T20:04:29Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20469996077
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-30T03:44:15Z'
+generated_by: claude-sonnet
+workflow_run: 25145446221
+issue: 923
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep:
-  - kde
-  styling:
-  - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/pygal/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent implementation of ridgeline plot using pygal XY chart with filled polygons
-  - Beautiful seasonal color gradient that intuitively conveys temperature patterns
-  - Proper KDE computation implemented inline without functions, maintaining KISS
-    principle
-  - Good overlap between ridges (~60%) creating characteristic mountain-ridge appearance
-  - Clean month labels on Y-axis as specified, positioned at ridge baselines
-  - Correct title format following pyplots.ai convention
+  - Seasonal color gradient is semantically meaningful — cold blues for winter, warm
+    oranges for summer, effectively using color as secondary encoding
+  - Correct pygal polygon approach using XY + fill=True to simulate density fills
+    — creative and idiomatic
+  - 'Perfect data quality: realistic temperate city temperature data with appropriate
+    scale and plausible distributions'
+  - Both themes render correctly with proper background tokens and fully readable
+    chrome
   weaknesses:
-  - Vertical grid lines slightly prominent; could use lower alpha for subtler appearance
-  - Does not leverage distinctive pygal features like built-in interactivity or tooltips
-    in the HTML output
-  image_description: 'The plot displays a ridgeline visualization of monthly temperature
-    distributions. There are 12 semi-transparent, overlapping density curves stacked
-    vertically, one for each month (January at top, December at bottom). The curves
-    use a seasonal color gradient: cold months (Jan, Feb, Dec) in blue, spring months
-    transitioning through cyan/teal and green, summer months (Jun-Aug) in yellow/orange,
-    and fall months cycling back through green to blue. The X-axis shows "Temperature
-    (°C)" ranging from -10 to 40. Month labels (Jan through Dec) are displayed on
-    the Y-axis. The title reads "Monthly Temperature Distribution · ridgeline-basic
-    · pygal · pyplots.ai". The layout shows good overlap (~60%) between ridges, creating
-    the characteristic mountain-ridge appearance. Background is white with subtle
-    vertical grid lines.'
+  - 'Custom seasonal 12-color palette violates Okabe-Ito hard rule — first series
+    must be #009E73; use viridis/cividis interpolated to 12 colors for a continuous
+    seasonal progression'
+  - Ridge overlap ~28% (ridge_height=2.5, spacing=1.8) is below spec required 50-70%
+    — reduce ridge_spacing to 1.0 or increase ridge_height to 4.0
+  - Polygon baseline lines visible as faint horizontal artifacts across each ridge
+    — set stroke_style width to 0 to hide them
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "Monthly Temperature Distributions · ridgeline-basic · pygal · anyplot.ai" clearly readable in dark ink at top; Y-axis month labels (Jan top, Dec bottom) clearly visible; X-axis "Temperature (°C)" label readable; tick labels for -10 to 40°C clearly legible
+      Data: Seasonal color gradient — winter months (Jan/Dec) in royal blue, teal for Feb/Nov, emerald for Mar/Oct, lime for Apr/Sep, yellow for May/Aug, orange for Jun/Jul. 12 stacked density curves showing monthly temperature distributions. Distributions overlap and create characteristic ridgeline appearance.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct
+      Chrome: Title, axis labels, tick labels, and month labels all render in light text — fully readable against dark background. No dark-on-dark failures observed anywhere. All chrome adapts correctly via theme tokens.
+      Data: Seasonal colors identical to light render — data colors unchanged between themes (only chrome flips). Distributions equally clear on dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title, axis labels, and month labels are all clearly readable with
-          appropriate font sizes for 4800×2700 canvas
+        comment: All text readable in both renders; font sizes (72/48) exceed pixel-based
+          guide (28/18) but render well at full resolution
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No text overlap; month labels are well-separated and density curves
-          overlap intentionally as per spec
+        comment: No text collisions; minor polygon-baseline horizontal lines visible
+          at each ridge edge
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Density curves are well-sized with good opacity (0.85), distinct
-          shapes visible
+        comment: All 12 density curves clearly visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent color gradient from blue through cyan, green, yellow to
-          orange; colorblind-safe progression
+        score: 1
+        max: 2
+        passed: false
+        comment: Seasonal gradient lime-yellow-orange transition may not be CVD-safe
+          for deuteranopia users
       - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good canvas utilization; minor deduction for slightly more whitespace
-          on right side
+        comment: Good proportions; Jan ridge slightly close to top edge; minor wasted
+          space on right beyond 30°C
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis has "Temperature (°C)" with units; Y-axis has month labels
-          as per spec
+        comment: Descriptive title with spec-id, library, anyplot.ai; x-axis has units
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 1
         max: 2
         passed: false
-        comment: Grid lines could be more subtle (currently same alpha as in style);
-          no legend needed per spec but vertical guides are slightly prominent
+        comment: 'Backgrounds correct (#FAF8F1/#1A1A17); custom 12-color seasonal
+          palette used instead of Okabe-Ito — first series is #2563eb not #009E73'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Semantically meaningful seasonal color gradient; good visual appeal;
+          polygon baselines reduce polish slightly
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: No grid lines (clean); no legend (appropriate); polygon boundary
+          lines create horizontal noise at each ridge baseline
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Seasonal temperature story clear and compelling; color gradient reinforces
+          cold-warm-cold narrative
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct ridgeline/joy plot with stacked density curves
+        comment: Correct ridgeline/Joy Plot with stacked density curves
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Temperature values correctly mapped to X-axis, months as groups on
-          Y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Partial overlap (~60%), color gradient for seasons, month labels
-          on Y-axis all present
-      - id: SC-04
-        name: Data Range
+        score: 3
+        max: 4
+        passed: false
+        comment: Stacked curves, group labels, color differentiation, chronological
+          ordering all present; overlap ~28% below spec 50-70%
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis range (-10 to 40°C) covers all data appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: temperature values; Y: month names; full range -10 to 40°C'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed; month labels serve as identification per spec guidance
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "Monthly Temperature Distribution · ridgeline-basic
-          · pygal · pyplots.ai"'
+        comment: Title format correct; no legend appropriate for ridgeline
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows seasonal variation with winter months centered around 0-5°C
-          and summer months around 20-25°C; different spreads visible
+        comment: All 12 months shown; KDE computed; seasonal variation visible
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Monthly temperature data is a classic real-world use case; plausible
-          values for temperate climate
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature range (-10 to 40°C) and monthly distributions are realistic
+        comment: Monthly temperature distributions for temperate city; neutral and
+          plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Baselines 2-25°C, σ=3°C, range -10 to 40°C — realistic for temperate
+          city
     code_quality:
       score: 10
       max: 10
@@ -174,43 +182,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data generation → KDE computation → chart
-          creation → save'
+        comment: No functions or classes; flat linear flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pygal, and Style imported; all used
+        comment: All imports used; sys.path manipulation needed for package shadowing
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API
+        comment: Polygon approach is clean; no fake interactivity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; correct API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: XY chart with fill=True for polygon areas; Style object for theming;
+          y_labels for custom axis
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
         max: 5
         passed: false
-        comment: Uses pygal.XY with fill=True creatively to simulate ridgeline, but
-          pygal doesn't have native ridgeline support. This is a clever workaround
-          using polygon construction, but doesn't showcase distinctive pygal features
-          like built-in chart types or interactivity.
+        comment: Interactive HTML export used; Style theming system leveraged; but
+          pygal tooltip/animation features not exploited
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  - normalization
+  styling:
+  - alpha-blending

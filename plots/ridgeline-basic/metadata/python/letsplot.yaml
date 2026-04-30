@@ -1,168 +1,179 @@
 library: letsplot
+language: python
 specification_id: ridgeline-basic
 created: '2025-12-23T19:46:56Z'
-updated: '2025-12-23T19:56:56Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20469998631
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - custom-colormap
-    - alpha-blending
+updated: '2026-04-30T03:49:58Z'
+generated_by: claude-sonnet
+workflow_run: 25145556235
+issue: 923
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/letsplot/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent use of lets-plot's native geom_area_ridges for true ridgeline visualization
-  - Clean, publication-quality appearance with well-chosen Spectral color palette
-  - Thoughtful data generation with realistic Northern hemisphere temperature patterns
-    (varying means and stds)
-  - Proper month ordering (reversed for bottom-to-top display) with correct categorical
-    handling
-  - Good overlap parameter (scale=1.2) creating visual cohesion without obscuring
-    distributions
+  - Excellent monthly temperature data — realistic, neutral, textbook ridgeline use
+    case
+  - Spectral colormap creates an intuitive warm/cold seasonal narrative through color
+  - White ridge borders add professional polish and definition between overlapping
+    curves
+  - Clean code structure with proper seed, explicit font sizes, and no redundant legend
+  - geom_area_ridges with scale parameter is idiomatic lets-plot usage
   weaknesses:
-  - Vertical grid lines could be made subtler or removed for a cleaner ridgeline aesthetic
-  - Color palette (Spectral) is not fully colorblind-accessible; viridis or a sequential
-    palette could improve accessibility
-  image_description: The plot displays a ridgeline visualization showing monthly temperature
-    distributions arranged vertically from January at the top to December at the bottom.
-    The distributions are rendered as smooth density curves with partial overlap,
-    creating the characteristic "mountain ridge" appearance. The Spectral color palette
-    is used, transitioning from purple/magenta tones for winter months (January, February,
-    December) through blue (March), teal/green (April, May), yellow-green (June, July,
-    August), and orange/coral (September, October, November). Each ridge has a white
-    border outline and semi-transparent fill. The x-axis shows "Temperature (°C)"
-    ranging from approximately -14 to 32, and month names are displayed on the y-axis.
-    The title reads "Monthly Temperature Distribution · ridgeline-basic · letsplot
-    · pyplots.ai" at the top.
+  - 'CRITICAL: Code saves as plot.png instead of plot-{THEME}.png — must use THEME
+    = os.getenv(ANYPLOT_THEME, light) and save as plot-{THEME}.png'
+  - 'CRITICAL: No ANYPLOT_THEME handling — both renders would be identical without
+    reading env var and applying theme-adaptive chrome (PAGE_BG, INK, INK_SOFT tokens)'
+  - 'BUG: Title contains pyplots.ai — must be anyplot.ai'
+  - 'PALETTE: scale_fill_brewer(palette=Spectral) is not in the approved palette list
+    — use scale_fill_viridis(option=viridis, discrete=True) for 12 ordered groups'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — correct theme surface
+      Chrome: Title "Monthly Temperature Distribution · ridgeline-basic · letsplot · anyplot.ai" visible at top; X-axis label "Temperature (°C)" clearly readable; month names on Y-axis legible; all dark text readable against light background
+      Data: Twelve monthly ridgeline density curves stacked vertically (January top, December bottom) using Spectral colormap — deep maroon/red for cold months (Jan/Feb), transitioning through orange/amber to pale cream/yellow for summer (Jul/Aug); white borders between ridges; distributions shift rightward for warm months
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Dark near-black consistent with #1A1A17 — correct dark theme surface
+      Chrome: Title text appears medium-gray on dark background — readable but contrast is slightly marginal (code lacks ANYPLOT_THEME theme-adaptive title color); month labels are light gray and readable; temperature axis labels are readable; grid lines appear as thin light lines
+      Data: Colors are identical to the light render — same Spectral gradient from maroon (Jan) to cream (Dec); data colors are theme-independent as required
+      Legibility verdict: PASS (marginal — title has lower-than-ideal contrast; note that images appear to originate from a previous attempt since current code saves as plot.png without ANYPLOT_THEME handling, making these renders inconsistent with current code)
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title, axis labels, and month names are all clearly readable at appropriate
-          font sizes
+        comment: Sizes explicitly set (title=24, axis=20, ticks=16); light render
+          fully readable; dark render title has slightly marginal contrast
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No text overlap; ridges overlap intentionally as per spec
+        comment: No text collisions; ridge overlaps are intentional
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Density curves are well-sized with appropriate alpha for visual clarity
+        comment: Density curves clearly visible with alpha=0.8 and white borders
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 1
+        max: 2
         passed: true
-        comment: Spectral palette provides good differentiation but not fully colorblind-optimized
+        comment: Spectral has CVD concerns for red-orange adjacencies; position differentiation
+          compensates
       - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good use of canvas space, slight margin imbalance on right side
+        comment: Good canvas utilization; slight left-side whitespace accurate to
+          data range
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis has "Temperature (°C)" with units, Y-axis appropriately shows
-          month names
+        comment: Temperature (C) with units; Y-axis intentionally empty
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 1
         max: 2
+        passed: false
+        comment: Spectral not in approved palette list; code lacks ANYPLOT_THEME handling
+          for theme-adaptive chrome
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: true
-        comment: Legend correctly hidden (month labels sufficient), but vertical grid
-          lines could be subtler
+        comment: Spectral gradient creates compelling seasonal narrative; above generic
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Removed Y-gridlines and minor gridlines; no legend; theme_minimal
+          baseline
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear seasonal temperature story; ridges shift right for summer,
+          left for winter
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct ridgeline/joy plot visualization
+        comment: Correct ridgeline plot via geom_area_ridges
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Temperature on X, months as categorical Y creating ridges
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Vertical stacking with overlap (scale=1.2), color differentiation,
-          ordered groups
-      - id: SC-04
-        name: Data Range
+        comment: Partial overlap (scale=1.2), Y-axis group labels, color gradient,
+          chronological ordering
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full temperature range visible for all months
-      - id: SC-05
-        name: Legend Accuracy
+        comment: Temperature on X, Month on Y; correct for ridgeline
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Legend hidden appropriately since Y-axis labels identify groups
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "ridgeline-basic · letsplot · pyplots.ai"'
+        max: 3
+        passed: false
+        comment: Title structure correct but code contains pyplots.ai instead of anyplot.ai
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows seasonal variation well; winter months have wider distributions
-          (higher std), summer months are tighter
+        comment: 12 groups with distinct distributions, varying spreads (std 3-5),
+          realistic seasonal shift
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Northern hemisphere monthly temperatures are a perfect, relatable
-          example
+        comment: Northern hemisphere monthly temperature is a classic neutral scientific
+          use case
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Temperature ranges are realistic; some slight extreme values visible
-          due to normal distribution tails
+        comment: Jan mean 2C (+/-5), Jul mean 24C (+/-3) — plausible for temperate
+          European climate
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -170,40 +181,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: Imports -> Data -> Plot -> Save, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: numpy, pandas, lets_plot — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Clean grammar-of-graphics structure; appropriate complexity
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        passed: false
+        comment: Saves as plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html;
+          no ANYPLOT_THEME env var read
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct grammar-of-graphics; geom_area_ridges with scale, alpha,
+          color parameters is idiomatic
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses geom_area_ridges which is lets-plot specific, scale_fill_brewer,
-          theme customization; could leverage more interactive features
+        comment: geom_area_ridges is a ggridges-derived feature specific to ggplot2
+          ecosystem; scale parameter for overlap control is distinctive
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
