@@ -1,165 +1,199 @@
 library: matplotlib
+language: python
 specification_id: step-basic
 created: '2025-12-23T20:45:06Z'
-updated: '2025-12-23T20:49:14Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20471154590
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/step-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques:
-    - annotations
-  patterns:
-    - data-generation
-    - explicit-figure
-  dataprep:
-    - cumulative-sum
-  styling:
-    - grid-styling
+updated: '2026-04-30T12:47:49Z'
+generated_by: claude-sonnet
+workflow_run: 25165322245
+issue: 956
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/step-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent implementation of the stair-step pattern using ax.step() with post style
-  - Clear visual representation with well-sized markers highlighting each data point
-  - Realistic cumulative sales scenario that perfectly matches spec applications
-  - All text elements are properly sized for 4800x2700 output
-  - Clean, readable code following KISS principle
+  - 'Perfect theme adaptation: all chrome tokens (INK, INK_SOFT, ELEVATED_BG, PAGE_BG)
+    are wired through correctly — no dark-on-dark failures in either render'
+  - Excellent use of ax.step() with fill_between(step='post') — the fill area provides
+    visual depth and emphasizes cumulative growth without chartjunk
+  - Hollow circle markers with brand-green edges cleanly mark discrete monthly change
+    events as the spec recommends
+  - 'Complete spec compliance: post-style step, markers at data points, grid lines,
+    and correct title format all present'
+  - 'Perfect code quality: KISS structure, reproducible seed, clean imports, correct
+    output filename'
   weaknesses:
-  - Legend in upper-left corner slightly overlaps with the lowest data region
-  - Only demonstrates post step style; could showcase more step variations mentioned
-    in spec
-  - Could use fill_between to add visual distinction to the stepped area
-  image_description: The plot displays a step (stair-step) chart showing cumulative
-    monthly sales data over 12 months (January through December). The step line is
-    rendered in a blue color (#306998) with horizontal lines connected by vertical
-    segments creating the characteristic stair-step pattern. Yellow circular markers
-    (#FFD43B) with blue borders are placed at each data point to highlight where value
-    changes occur. The chart shows cumulative sales increasing from approximately
-    45 thousand dollars in January to about 849 thousand dollars by December. The
-    x-axis shows month abbreviations (Jan-Dec), and the y-axis displays "Cumulative
-    Sales (thousands $)" ranging from 0 to approximately 850. The title "step-basic
-    · matplotlib · pyplots.ai" appears at the top. A legend in the upper left identifies
-    "Cumulative Sales" (the step line) and "Monthly Totals" (the markers). A subtle
-    dashed grid aids in reading values.
+  - 'DE-01 moderate: Design is correct but not distinctive — the filled step area
+    is a nice touch but there is no typographic hierarchy, no emphasis on notable
+    months, and no visual focal point that elevates it above a competent-but-stock
+    implementation'
+  - 'DE-02 slight: Grid alpha=0.10 is at the very low end (nearly invisible in dark
+    render); a touch more (0.12-0.15) would provide tracing utility without competing
+    with data'
+  - 'DE-03 low storytelling: The filled area gestures at narrative but nothing highlights
+    the strongest growth period or annotates a cumulative milestone — no viewer guidance
+    beyond the shape itself'
+  - 'LM-02 moderate: fill_between(step=''post'') is a genuine matplotlib distinctive
+    feature, but the implementation stops there — no use of drawstyle, no mlines,
+    no custom step visualization beyond the standard ax.step() call'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "step-basic · matplotlib · anyplot.ai" in dark ink at 24pt, clearly readable. Y-axis label "Cumulative Sales (thousands $)" and X-axis label "Month" both in dark ink at 20pt, clearly readable. Tick labels (Jan–Dec, 0–800) in muted dark ink at 16pt, fully legible.
+      Data: Brand green #009E73 step line (linewidth=3) with a light green semi-transparent fill (alpha=0.12) below the steps. Hollow circle markers at each of the 12 monthly data points with green edges on an off-white interior — cleanly distinguishable from background.
+      Grid: Very subtle horizontal gridlines (alpha=0.10) — visible but not dominant. Top/right spines removed.
+      Legend: "Cumulative Sales" and "Monthly Totals" in upper left, text in muted dark ink, frame in ELEVATED_BG (#FFFDF6) with INK_SOFT border — readable and unobtrusive.
+      Legibility verdict: PASS — all text clearly readable against the light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light off-white (#F0EFE8), clearly readable against dark background. Axis labels and tick labels in secondary light ink (#B8B7B0) — all fully legible. No dark-on-dark failures observed.
+      Data: Brand green #009E73 step line identical to light render, same hollow circle markers — data colors unchanged as required. The fill area renders as a very dark green shadow visible against the near-black background.
+      Grid: Subtle horizontal gridlines visible — same faint alpha; slightly harder to see on dark surface but not absent.
+      Legend: ELEVATED_BG (#242420) frame with light-ink text — readable and distinct from page background.
+      Legibility verdict: PASS — all text clearly readable against the dark background; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all perfectly readable
+        comment: Title 24pt, axis labels 20pt, ticks 16pt; all text readable in both
+          light and dark renders with correct INK/INK_SOFT tokens applied
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, month labels well-spaced
+        comment: Month tick labels evenly spaced, no collisions; legend in upper left
+          does not overlap the low-value data in Jan
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Step line at linewidth=3 is clearly visible, markers at s=200 are
-          appropriately sized for 12 data points
+        comment: Step line linewidth=3 is clearly visible; hollow markers with green
+          edge stand out in both themes; fill area adds visual mass without obscuring
+          the line
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow color scheme is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins, tight_layout applied
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Month" and "Cumulative Sales (thousands
-          $)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Single series using #009E73 Okabe-Ito position 1 — CVD-safe; no
+          red-green conflict'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 figsize with tight_layout; generous whitespace; nothing cut
+          off; full 12-month range displayed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Y-axis includes units (thousands $); X-axis 'Month' is clear; title
+          follows spec-id · library · anyplot.ai format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) series is #009E73; PAGE_BG is #FAF8F1 light / #1A1A17
+          dark; both renders theme-correct'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Fill area and hollow marker treatment show intentional design decisions,
+          but overall presentation is competent rather than distinctive — no typographic
+          hierarchy beyond size, no focal emphasis
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Top/right spines removed, legend frame styled with theme tokens,
+          tight_layout applied — follows guidelines but grid at alpha=0.10 is barely
+          visible in dark render
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
         passed: false
-        comment: Grid at alpha=0.3 is subtle, but legend placement in upper-left partially
-          overlaps with the data area
+        comment: Fill area gestures at cumulative growth narrative but no annotations,
+          milestone callouts, or period emphasis to guide the viewer to an insight
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct step plot using ax.step() with stair-step pattern
+        comment: Correct step chart using ax.step() — horizontal lines connected by
+          vertical transitions
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=months (sequential), Y=cumulative sales (values) correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: ''post'' step style, markers at data
-          points, grid lines'
-      - id: SC-04
-        name: Data Range
+        comment: '''post'' step style per spec notes; markers at data points per spec
+          notes; grid lines per spec notes; fill_between as bonus enhancement'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full range from near 0 to ~850, all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=months (sequential), Y=cumulative sales; all 12 months shown on
+          x-axis
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly identify step line and markers
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "step-basic · matplotlib · pyplots.ai"'
+        comment: Title is 'step-basic · matplotlib · anyplot.ai'; legend entries 'Cumulative
+          Sales' and 'Monthly Totals' match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows cumulative increasing pattern well, but only demonstrates 'post'
-          style (spec mentions pre/mid/post options)
+        comment: Demonstrates horizontal steps, vertical transitions at change events,
+          markers at each data point, and the fill_between technique
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly cumulative sales is a realistic, comprehensible scenario
-          matching spec applications
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Sales values in realistic range (45-105k monthly, 849k cumulative)
+        comment: Monthly cumulative sales is a canonical real-world use case for step
+          plots; values (45–105k/month) are plausible; neutral business context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Monthly sales of 45–105 thousand dollars cumulating to ~850k is a
+          realistic business scale
     code_quality:
       score: 10
       max: 10
@@ -169,41 +203,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple script: imports → data → plot → save, no functions/classes'
+        comment: No functions or classes; linear top-to-bottom structure
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set for reproducibility
+        comment: np.random.seed(42) ensures deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: os, matplotlib.pyplot, numpy — all three are actually used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Appropriate complexity for a step chart; no fake UI elements
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png' with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=300 and facecolor=PAGE_BG
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses ax.step() (the dedicated step API) and fill_between(step='post')
+          — idiomatic matplotlib; all Axes methods not pyplot
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses ax.step() correctly with where='post', but doesn't leverage
-          advanced matplotlib features like fill_between for step areas or custom
-          step formatting
+        comment: fill_between with step= parameter is genuinely matplotlib-specific;
+          ax.step() is correct but standard; no use of drawstyle, StepPatch, or other
+          distinctive matplotlib step features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - edge-highlighting
