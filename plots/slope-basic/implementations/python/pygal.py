@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 slope-basic: Basic Slope Chart (Slopegraph)
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 81/100 | Updated: 2026-04-30
+Quality: 86/100 | Updated: 2026-04-30
 """
 
 import os
