@@ -1,166 +1,192 @@
 library: highcharts
+language: python
 specification_id: stem-basic
 created: '2025-12-23T20:45:38Z'
-updated: '2025-12-23T20:53:36Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20471156338
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-30T15:50:40Z'
+generated_by: claude-sonnet
+workflow_run: 25172476970
+issue: 972
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/stem-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/stem-basic/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stem-basic/python/highcharts/plot-dark.html
+quality_score: 76
 review:
   strengths:
-  - Excellent stem plot implementation using creative combination of LineSeries for
-    stems and ScatterSeries for markers
-  - Clean baseline implementation using plotLines feature
-  - Good color choice (#306998) with white marker borders for visibility
-  - 'Appropriate data: damped oscillation demonstrates both positive and negative
-    stems well'
-  - Proper use of container.screenshot() for exact dimensions
+  - 'Correct stem-plot structure: loop of LineSeries from y=0 to data point, plus
+    ScatterSeries for markers — idiomatic Highcharts approach'
+  - 'Good data choice: damped noisy oscillation shows both positive/negative stems
+    and a realistic signal-processing scenario'
+  - Explicit font sizing for 4800x2700 canvas (48px title, 36px axes, 28px ticks);
+    clean KISS structure with np.random.seed(42)
+  - plotLines at y=0 is the correct Highcharts idiom for the baseline; hover/mouse
+    tracking disabled correctly
   weaknesses:
-  - Axis labels lack units (e.g., "Amplitude (a.u.)" or "Sample Index (n)")
-  - Image height is 2661px instead of exactly 2700px (minor dimension discrepancy)
-  image_description: The plot displays a stem plot showing a damped oscillation signal
-    with 30 data points. Each data point is represented by a blue (#306998) circular
-    marker connected to the y=0 baseline by a thin vertical stem line. The title "stem-basic
-    · highcharts · pyplots.ai" appears at the top. The x-axis is labeled "Sample Index"
-    (0-29) and the y-axis is labeled "Amplitude" (ranging from approximately -0.8
-    to 1.15). The plot shows a classic damped oscillation pattern starting with high
-    amplitude (~1.0) and decaying over time with alternating positive and negative
-    values. A subtle grid is visible with light gray lines. The baseline at y=0 is
-    clearly marked with a darker horizontal line.
+  - Critical code issues persist from Attempt 2 — color=#306998 (Python Blue, banned),
+    backgroundColor=#ffffff (pure white, banned), title domain is pyplots.ai not anyplot.ai,
+    output filenames are plot.png/plot.html instead of plot-{THEME}.png/html, no ANYPLOT_THEME
+    env var read; code is not theme-adaptive
+  - 'Code-image mismatch: images appear generated from a prior corrected version —
+    running the current code would produce Python Blue stems on pure white background'
+  - Design sits at configured-defaults level — no visual hierarchy, no focal point,
+    no emphasis on the signal decay pattern; subtitle only appears in images not in
+    code
+  - 'Library mastery is generic: tooltip configuration, subtitle, responsive options
+    not used to showcase Highcharts strengths'
+  - Axis labels in code lack units (Sample Index vs Sample Index (n), Amplitude vs
+    Amplitude (a.u.))
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — not pure white, not dark. PASS
+      Chrome: Title "stem-basic · highcharts · anyplot.ai" with subtitle "Damped oscillation — amplitude decays toward zero as sample index increases" in dark text — both clearly readable. X-axis label "Sample Index (n)" and y-axis label "Amplitude (a.u.)" in dark text, readable. Tick labels 0-29 slightly crowded but no overlaps. Grid lines subtle (~10% opacity).
+      Data: Teal-green (#009E73) stems and small circle markers. 30 stems extending from y=0 baseline — mix of positive (up to ~1.03) and negative (down to ~-0.68) values showing damped oscillation pattern. Baseline at y=0 visible as a horizontal line. Markers have white edges for definition.
+      Legibility verdict: PASS — all text readable against warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17) — not pure black, not light. PASS
+      Chrome: Title, subtitle, axis labels, and tick labels all rendered in light-colored text, clearly readable against dark surface. No dark-on-dark failures observed. Grid lines remain subtle.
+      Data: Teal-green (#009E73) identical to light render — only chrome flips. Stems and markers show same oscillation pattern.
+      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark failures.
+
+    NOTE: Persistent code-image mismatch. The code (same as Attempt 2) sets color="#306998" (Python Blue) and backgroundColor="#ffffff" (pure white) with no ANYPLOT_THEME support and saves plot.png/plot.html (not plot-{THEME}.png/html). The rendered images show correct #009E73 green and theme-adaptive backgrounds — these images were generated from a different (previously correct) version. Running the current code would produce incorrect output.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable. Font
-          sizes are appropriate for the 4800x2700 canvas.
+        comment: Font sizes explicitly set (48px title, 36px axes, 28px ticks); all
+          text readable in both renders; slight crowding at x-axis ticks
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere in the plot.
+        comment: 30 x-axis tick labels slightly crowded but no actual overlaps; stems
+          do not overlap
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Markers are appropriately sized (radius 10) with good visibility.
-          Stems are thin but clearly visible. 30 data points with this marker size
-          is optimal.
+        comment: Stems and markers clearly visible at 4800x2700; appropriate sizing
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single color scheme (#306998 blue) with white marker borders. No
-          colorblind issues.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Good use of canvas space. Minor deduction: slightly more whitespace
-          at the bottom than necessary.'
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels ("Sample Index", "Amplitude") but no units provided.
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid (alpha 0.1), legend disabled which is appropriate for
-          single series.
+        comment: Single teal-green series; CVD-safe; good contrast on both backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization; reasonable margins; some empty space above
+          title area
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Images show Sample Index (n) and Amplitude (a.u.) with units; correct
+          title format in images (code has wrong units/domain)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Images show correct #009E73 and theme-adaptive backgrounds, but
+          code has #306998 (Python Blue, banned) and #ffffff (pure white, banned)
+          with no ANYPLOT_THEME support — partial score for persistent code-image
+          mismatch (same as Attempt 2)'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Clean but sits at well-configured default level; no exceptional design
+          choices or visual emphasis
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtle grid (10% opacity), tidy layout; further refinement possible
+          (remove x-axis grid, larger margins, spine removal)
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Damped oscillation displayed clearly but no visual hierarchy to guide
+          viewer to decay pattern; subtitle (only in images) helps but no visual emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct stem plot with vertical lines from baseline to markers.
+        comment: 'Correct stem plot: vertical LineSeries from y=0 + ScatterSeries
+          markers'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X is sample index, Y is amplitude value. Correctly assigned.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: thin vertical stems, circular markers
-          at top, baseline at y=0.'
-      - id: SC-04
-        name: Data Range
+        comment: Thin stems, visible circle markers, baseline at y=0 via plotLines,
+          consistent sizing
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 30 data points visible within axis range.
-      - id: SC-05
-        name: Legend Accuracy
+        comment: x=sample index, y=amplitude; all 30 positive and negative values
+          visible
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Legend appropriately disabled for single-series plot.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "stem-basic · highcharts · pyplots.ai"'
+        max: 3
+        passed: false
+        comment: Images show correct format but code has wrong domain (pyplots.ai
+          vs anyplot.ai); no legend appropriate for single series
     data_quality:
-      score: 17
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: 'Shows damped oscillation with both positive and negative values.
-          Good demonstration of stem plot capabilities. Minor: could show more variety
-          in the oscillation pattern.'
+        comment: Shows both positive and negative values; amplitude decays; individual
+          measurements clearly distinct
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Damped oscillation is a realistic signal processing scenario. Context
-          is appropriate.
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Amplitude values between -0.8 and 1.15 are realistic for normalized
-          signal data.
+        comment: Damped oscillation with noise is a plausible signal processing scenario;
+          plausible but generic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Normalized amplitude in range -0.8 to 1.1; realistic for discrete
+          signal samples
     code_quality:
       score: 9
       max: 10
@@ -170,43 +196,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → chart config → series → export. No
-          functions/classes.'
+        comment: 'Linear: imports -> data -> chart config -> series loop -> HTML/screenshot;
+          no functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducible results.
+        comment: np.random.seed(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current highcharts-core API.
+        comment: Loop for stem series is necessary and clean; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as plot.png but aspect ratio is 4800x2700 not exact (actual
-          appears 4800x2661 based on image metadata).
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot.png/plot.html instead of plot-{THEME}.png/html; no ANYPLOT_THEME
+          env read; code is not theme-adaptive
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts plotLines for baseline, scatter series for markers,
-          line series for stems. Good use of Highcharts options system but no advanced
-          interactive features enabled.
+        comment: Correct use of Chart, HighchartsOptions, LineSeries, ScatterSeries;
+          plotLines for baseline; hover/mouse tracking disabled
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses plotLines for baseline and disables hover states — some Highcharts-specific
+          but not creative; tooltip, subtitle, responsive rules not leveraged
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
