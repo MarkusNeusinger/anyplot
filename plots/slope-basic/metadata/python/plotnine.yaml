@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: slope-basic
 created: '2025-12-23T20:46:08Z'
-updated: '2026-04-30T16:57:18Z'
+updated: '2026-04-30T17:15:54Z'
 generated_by: claude-sonnet
 workflow_run: 25177574844
 issue: 981
@@ -12,43 +12,36 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/slope-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/slope-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 79
+quality_score: 80
 review:
   strengths:
-  - Effective color storytelling — increase/decrease color coding immediately orients
-    the viewer to trend direction
-  - 'Clean, realistic data: 10 products, plausible quarterly sales scenario, fully
-    deterministic'
-  - Multi-DataFrame geom layer pattern (different data= per geom_text) is idiomatic
-    ggplot2/plotnine usage
-  - All major text elements explicitly sized for high-resolution rendering (title
-    24pt, axis 20pt, ticks 18pt, legend 16pt)
-  - Correct slopegraph chart type with labels at both endpoints per spec requirements
+  - Direction color coding using Okabe-Ito colors is excellent storytelling — viewer
+    immediately reads increases vs decreases
+  - 'Correct plotnine idiom: long-format data for line geoms, separate DataFrames
+    passed to geom_text layers'
+  - Scale and data context are realistic and neutral (product sales Q1 to Q4)
+  - Both renders pass theme legibility — light and dark chrome adapts correctly, data
+    colors identical
   weaknesses:
-  - 'Non-Okabe-Ito palette: code uses #306998 (Python Blue, explicitly banned) and
-    #FFD43B (Python Yellow) — must replace with #009E73 (Increase) and #D55E00 (Decrease)'
-  - Missing ANYPLOT_THEME environment variable handling — no PAGE_BG/INK/INK_SOFT
-    tokens, no plot_background/panel_background/text color adaptation for light vs
-    dark renders
-  - Output saves as plot.png instead of required plot-light.png / plot-dark.png
-  - Title contains 'pyplots.ai' instead of required 'anyplot.ai'
-  - Left-side label crowding at close Y values (J/F, D/H, A/G pairs within 8-10 units)
-    — geom_text size=10 too small and nudge insufficient
-  - No custom background colors or legend box refinement beyond theme_minimal() defaults
+  - 'Label crowding in the mid-value band (left: Products J/F at 175-180; right: values
+    165/160/155 within 10 units) — consider nudge_y based on value ranking or reducing
+    entity count'
+  - 'Output filename: code saves plot.png instead of plot-{THEME}.png using ANYPLOT_THEME
+    environment variable'
+  - Panel border visible as full rectangle in both renders — removing panel_border
+    would improve visual refinement
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white approximately #FAF8F1 — not pure white, correct surface
-      Chrome: Title "Product Sales Q1 vs Q4 · slope-basic · plotnine · anyplot.ai" in dark text clearly readable; Y-axis label "Sales (thousands $)" readable; Q1/Q4 tick labels readable; legend text readable
-      Data: Two colors — teal-green (Increase) and orange (Decrease); 10 slope lines connecting Q1 to Q4; points at both endpoints; left labels show entity+value, right labels show Q4 value only
-      Legibility verdict: PASS — all text readable, minor label crowding on left side
-      NOTE: Images appear generated from a prior version — current code has #306998/#FFD43B (Python Blue/Yellow) not matching teal/orange shown; code also has "pyplots.ai" not "anyplot.ai" in title
+      Background: Warm off-white approximately #FAF8F1 — not pure white, consistent with anyplot light theme
+      Chrome: Title "Product Sales Q1 vs Q4 · slope-basic · plotnine · anyplot.ai" in dark text — readable. Y-axis label "Sales (thousands $)" readable. X-axis tick labels "Q1" and "Q4" readable. All chrome text dark on light background.
+      Data: 10 slope lines — teal-green (#009E73) for Increase series (first Okabe-Ito color), orange (#D55E00) for Decrease series (second Okabe-Ito color). Left entity labels combine name+value; right labels show Q4 values. Mild crowding in mid-range (Products J/F at 175-180 left; values 165/160/155 right). Lines and dots clearly visible.
+      Legibility verdict: PASS (minor label crowding but all text individually readable)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black approximately #1A1A17 — not pure black, correct surface
-      Chrome: Title and axis labels in light text clearly readable against dark background; tick labels light-colored; legend text light — no dark-on-dark failures observed
-      Data: Colors identical to light render (teal-green and orange) — only chrome flipped, data colors consistent
-      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark failures
-      NOTE: Dark render cannot have been produced by current code (which lacks ANYPLOT_THEME handling and saves as plot.png) — images are from a previous corrected version
+      Background: Warm near-black approximately #1A1A17 — not pure black, consistent with anyplot dark theme
+      Chrome: Title visible in light text. Axis labels and tick labels rendered in light color — all readable against dark surface. Entity name labels and value labels appear in light text — no dark-on-dark failures detected. Legend text light-colored and readable. Panel border visible as light rectangle frame.
+      Data: Data colors identical to light render — teal-green for Increase, orange for Decrease. No color shift between themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 23
@@ -56,79 +49,80 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Major sizes explicitly set (title 24pt, axis 20pt, ticks 18pt, legend
-          16pt); geom_text size=10 slightly small for data labels on 4800x2700 canvas
+        comment: Sizes explicitly set (title=24, axis=20, ticks=18, legend=16); geom_text
+          labels at size=10 are smaller but readable
       - id: VQ-02
         name: No Overlap
         score: 3
         max: 6
-        passed: false
-        comment: Noticeable label crowding on left side; J/F (183/175), D/H (150/140),
-          A/G (120/110) pairs cause near-touching labels
+        passed: true
+        comment: 'Moderate crowding: Products J/F (180/175) nearly touching on left;
+          right-side values 165/160/155 in tight cluster'
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Lines (size=1.5) and points (size=5) clearly visible and well-adapted
-          to slope chart density
+        comment: Lines (size=1.5) and points (size=5) clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Teal and orange in rendered images are well-contrasted and CVD-safe
+        comment: Okabe-Ito green+orange pair is colorblind-safe with good luminance
+          contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Reasonable canvas usage; left-side labels extend into margin slightly
-          compressing plot area
+        comment: 16:9 correct; x-axis limits extended to 0.3-2.7 for label space;
+          slight cramping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units 'Sales (thousands $)'; X-axis shows Q1/Q4 time point
+        comment: Y-axis includes units (thousands $); X-axis shows Q1/Q4 time point
           names
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Code uses #306998 (Python Blue, explicitly banned) and #FFD43B (Python
-          Yellow); neither is Okabe-Ito; first series must be #009E73, second #D55E00'
+        passed: true
+        comment: 'Images confirm Okabe-Ito: #009E73 for Increase (first series), #D55E00
+          for Decrease. Warm backgrounds in both themes. Text colors theme-adaptive.'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Well-configured theme_minimal() with explicit sizing; polished library
-          default but lacks custom backgrounds, sophisticated design choices
+        passed: true
+        comment: Direction color-coding is deliberate; no spine removal, full panel
+          border, no additional typographic refinement — well-configured default
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: X-axis grid explicitly removed; theme_minimal() provides clean base;
-          no custom backgrounds, legend box styling, or spine refinement
+        passed: true
+        comment: X-grid explicitly removed (correct for slope chart); Y-grid subtle;
+          panel border not removed; top/right spines remain
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color coding by increase/decrease creates effective visual hierarchy;
-          no focal point emphasis on extreme changes
+        comment: Direction color-coding creates immediate visual narrative; slope
+          direction reinforces color signal; mid-range label crowding weakens story
+          slightly
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -136,27 +130,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct slopegraph/slope chart implementation
+        comment: 'Correct slopegraph: geom_line connecting two time points per entity'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Labels at both endpoints, color by direction, time point axis labels,
-          10 entities within 5-15 spec range
+        comment: Labels at both endpoints, color coding by direction, Q1/Q4 axis labels,
+          10 entities within spec range
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time point, Y=sales value, entity grouping correct
+        comment: X encodes time points, Y encodes sales values, all 10 entities visible
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Code title has 'pyplots.ai' instead of 'anyplot.ai'; spec-id and
-          library present; legend labels Increase/Decrease are correct
+        passed: true
+        comment: Title includes slope-basic, plotnine, anyplot.ai; legend shows Change
+          Direction with correct labels
     data_quality:
       score: 15
       max: 15
@@ -166,22 +160,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both increases and decreases with varied magnitudes; all slope
-          chart aspects present
+        comment: Shows increases, decreases, rank reversals (crossings), various magnitudes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Quarterly product sales is a plausible, neutral business scenario;
-          no controversial content
+        comment: Product sales Q1 vs Q4 is neutral, realistic business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales figures 65-230 thousand are realistic for quarterly product
-          revenue
+        comment: Values 65-230 thousands for quarterly product sales are plausible
     code_quality:
       score: 9
       max: 10
@@ -191,33 +182,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports -> Data -> Plot -> Save structure, no classes or functions
+        comment: 'Clean linear flow: data arrays -> DataFrames -> plot -> save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data, no random generation needed
+        comment: Hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names are used
+        comment: All imports used, no extras
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable; multi-DataFrame approach for different geom layers
-          is appropriate
+        comment: Three separate DataFrames for different geom layers is correct ggplot
+          pattern
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as plot.png instead of plot-light.png/plot-dark.png; no ANYPLOT_THEME
-          environment variable handling
+        comment: Saves to plot.png instead of plot-{THEME}.png; should read ANYPLOT_THEME
+          env var
     library_mastery:
       score: 7
       max: 10
@@ -227,21 +218,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct ggplot grammar; proper aes(), scale_x_continuous with custom
-          breaks, scale_color_manual, multi-layer composition
+        comment: 'Proper ggplot grammar: long-format data, group aesthetic, scale_color_manual,
+          scale_x_continuous with custom breaks/labels'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses plotnine's ability to pass different data= to individual geom_text
-          layers — ggplot2-specific pattern not easily replicated elsewhere
-  verdict: REJECTED
+        comment: Separate DataFrames per geom layer via data= argument, nudge_x for
+          label offset, numeric-to-semantic x-axis via scale_x_continuous
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - manual-ticks
   patterns:
   - wide-to-long
   dataprep: []
