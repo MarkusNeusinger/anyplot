@@ -1,217 +1,246 @@
 library: seaborn
+language: python
 specification_id: ridgeline-basic
 created: '2025-12-23T19:43:58Z'
-updated: '2025-12-23T19:53:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20469993397
-issue: 0
-python_version: 3.13.11
+updated: '2026-04-30T03:15:53Z'
+generated_by: claude-sonnet
+workflow_run: 25145166418
+issue: 923
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/seaborn/plot.png
-preview_html: null
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - faceting
-  patterns:
-  - data-generation
-  dataprep:
-  - kde
-  styling:
-  - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ridgeline-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent visual design with the coolwarm color gradient that intuitively maps
-    cold months to blue and warm months to red
-  - Perfect implementation of the ridgeline pattern using seaborn FacetGrid with appropriate
-    overlap (-0.5 hspace)
-  - Highly readable with bold, color-matched month labels positioned cleanly to the
-    left
-  - Data is realistic and demonstrates clear seasonal temperature patterns in a temperate
-    climate
-  - White outline on ridges enhances visual separation and readability
+  - Correct ridgeline/Joy Plot implementation using seaborn FacetGrid pattern
+  - viridis sequential palette appropriate for 12-group temporal data — cool-to-warm
+    mirrors seasonal temperature progression
+  - 'Fully theme-adaptive chrome: PAGE_BG, INK, INK_SOFT tokens threaded through all
+    elements'
+  - 'Font sizes explicitly set throughout: title 26pt, month labels 20pt bold, x-label
+    22pt, ticks 18pt'
+  - 'Perfect spec compliance: density curves with 50% overlap, chronological order,
+    labeled ridges replacing legend'
+  - Realistic neutral domain (Northern Hemisphere monthly temperatures) with accurate
+    base temperatures and spread
   weaknesses:
-  - Contains a small helper function (label) which slightly deviates from the KISS
-    structure preference
-  - Could benefit from slightly more variation in distribution spread between months
-    to showcase the full capability of ridgeline plots
-  image_description: The plot displays a ridgeline/joy plot showing monthly temperature
-    distributions across all 12 months. The layout is vertical with December at the
-    top and January at the bottom. The density curves have partial overlap creating
-    the characteristic "mountain ridge" appearance. The color scheme uses a coolwarm
-    palette - cold months (December, November, January, February) appear in blue shades
-    while warm months (June, July, August) appear in red/coral shades. Month names
-    are displayed as bold labels on the left side, matching the color of their respective
-    ridge. The x-axis shows "Temperature (°C)" ranging from approximately -10 to 30.
-    The title "ridgeline-basic · seaborn · pyplots.ai" is prominently displayed at
-    the top. Each ridge has a white outline and the distributions clearly show seasonal
-    temperature patterns - winter months centered around 0-5°C and summer months around
-    20-25°C.
+  - 'DE-03 moderate: the viridis color story is implicit — could be stronger with
+    more explicit visual emphasis on the seasonal arc'
+  - 'LM-02 partially generic: FacetGrid ridgeline is a well-known seaborn template;
+    no truly novel seaborn-specific technique beyond the standard pattern'
+  - 'Dark-mode separator outline (color=PAGE_BG = #1A1A17) is nearly invisible on
+    dark purple January ridge — consider INK_SOFT instead of PAGE_BG for dark mode
+    separation'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correctly matches the anyplot light surface.
+      Chrome: Title "ridgeline-basic · seaborn · anyplot.ai" in bold dark ink, large and prominent at the top. Month labels positioned left of each ridge, bold 20pt, colored in their respective viridis hue — readable at all positions. X-axis label "Temperature (°C)" in dark ink at bottom. X-axis tick labels (-10, 0, 10, 20, 30) in muted dark ink, clearly readable. No y-axis labels or ticks (correct for ridgeline). All text fully readable against the off-white background.
+      Data: 12 ridges stacked vertically, January at top through December at bottom. viridis gradient runs purple (January) → blue/teal (April–August) → yellow-green (November, December). Filled density curves with alpha=0.85 and white separator outlines. Distribution centers shift progressively right (cold winter months left, warm summer months right), clearly showing the seasonal temperature cycle.
+      Legibility verdict: PASS — all text elements clearly readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correctly matches the anyplot dark surface.
+      Chrome: Title in light near-white, bold, clearly readable. Month labels retain their viridis colors (unchanged between themes, as required) — all readable against the dark background, including the lighter yellow-green November/December. X-axis label and tick labels appear in light/muted color, clearly readable. No dark-on-dark text failures detected.
+      Data: Identical viridis colors to the light render — data colors unchanged between themes as required. Ridge separator outline uses color=PAGE_BG (dark #1A1A17) in dark mode, creating subtle rather than strong separation between ridges — perceptible but less defined than in light mode on the dark purple upper ridges. Density curves remain clearly distinguishable.
+      Legibility verdict: PASS — all text readable against dark background; data colors identical to light render.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at ~26pt, month labels at ~20pt bold, axis labels at ~22pt,
-          tick labels at ~18pt - all clearly readable
+        comment: 'All font sizes explicitly set: title 26pt bold, month labels 20pt
+          bold, x-label 22pt, ticks 18pt. Readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No text overlap, month labels well-spaced, ridges overlap appropriately
-          by design
+        comment: No text collisions. Month labels positioned left with ha=right, no
+          overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Density curves are well-sized with appropriate alpha (0.8), white
-          outlines enhance visibility
+        comment: Filled density curves with alpha=0.85 clearly visible. Baseline separators
+          visible. Elements well-adapted to ridgeline density.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Coolwarm palette provides good differentiation; blue-to-red gradient
-          is colorblind-friendly for sequential data
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent canvas utilization, balanced margins, plot fills appropriate
-          portion of canvas
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: X-axis has "Temperature (°C)" with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: viridis is perceptually uniform and CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 format, good canvas utilization, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No grid (appropriate for this plot type), but no legend; month labels
-          serve as legend which is acceptable for ridgeline plots
+        comment: Temperature (°C) includes units. Title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'viridis sequential correct for 12-group temporal data (>6 groups).
+          Backgrounds #FAF8F1/#1A1A17 correct. Chrome theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: viridis gradient creates visual flow, colored ridge
+          labels are a deliberate design choice. Not FiveThirtyEight-level but clearly
+          intentional.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, y-axis hidden, transparent facet backgrounds, PAGE_BG
+          separator outline, hspace=-0.5 for proper overlap. Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: viridis cool-to-warm maps naturally to seasonal temperature story.
+          Distribution centers shift right across months. Implicit but effective narrative.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct ridgeline/joy plot with stacked density curves
+        comment: Correct ridgeline/Joy Plot with stacked overlapping density curves.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Temperature as continuous variable, months as categorical groups
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Vertical stacking with ~50% overlap, group labels displayed, color
-          gradient applied, meaningful ordering (chronological)
-      - id: SC-04
-        name: Data Range
+        comment: Partial overlap (~50%), group labels on y-axis, color gradient, chronological
+          ordering.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full temperature range displayed (-10 to 30°C)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Temperature on x-axis, months on y-axis via FacetGrid rows.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Month labels are accurate and color-coded
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "ridgeline-basic · seaborn · pyplots.ai"'
+        comment: Title matches required format. Ridge labels serve legend function.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows seasonal variation well, different distribution widths/centers;
-          could show more variation in spread between months
+        comment: All 12 months with distinct distribution centers and realistic spread.
+          Full seasonal cycle demonstrated.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly temperature data is a classic application mentioned in spec,
-          values are realistic for temperate climate
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature values are realistic (winter ~2-4°C, summer ~21-24°C
-          base temps, 3.5°C standard deviation)
+        comment: Northern Hemisphere monthly temperatures — neutral natural science
+          domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Base temps 2-24°C, sigma=3.5°C, 150 obs/month — all realistic for
+          a temperate climate.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Mostly linear flow but has one small helper function `label` for
-          text positioning
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: One small label helper required by FacetGrid.map() pattern — idiomatic,
+          not over-engineering.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib, numpy, pandas, seaborn)
+        comment: os, matplotlib.pyplot, numpy, pandas, seaborn — all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Clean, idiomatic seaborn FacetGrid ridgeline code.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as "plot.png"
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct facecolor parameter.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: FacetGrid with row faceting is the canonical seaborn ridgeline approach.
+          g.map(), g.despine(), g.set() all idiomatic.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses FacetGrid effectively for ridgeline construction, kdeplot for
-          density estimation, coolwarm palette. However, this is a fairly standard
-          seaborn ridgeline pattern rather than showcasing unique features.
+        comment: FacetGrid aspect=15/height=0.6 ratio for narrow ridges, clip_on=False
+          for cross-panel overflow, transparent axes facecolor trick — seaborn-specific
+          but a known template.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
