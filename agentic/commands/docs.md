@@ -1,6 +1,10 @@
 # Conditional Documentation Guide
 
-This prompt helps you determine what documentation you should read based on the specific changes you need to make in the codebase. Review the conditions below and read the relevant documentation before proceeding with your task.
+> Slash command: `/docs`. Renamed from `context.md` so the project command does not collide with Claude Code's
+> built-in `/context` command.
+
+This prompt helps you determine what documentation you should read based on the specific changes you need to make
+in the codebase. Review the conditions below and read the relevant documentation before proceeding with your task.
 
 ## Instructions
 

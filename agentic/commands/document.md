@@ -42,14 +42,16 @@ documentation_screenshots_dir: $3 if provided, otherwise leave it blank
   - How to use it (user perspective)
   - Any configuration or setup required
 
-### 5. Update Context Documentation
-- After creating the documentation file, read `agentic/commands/context.md`
+### 5. Update Conditional Documentation Router
+- After creating the documentation file, read `agentic/commands/docs.md` (the `/docs` slash command, formerly
+  `context.md`)
 - Add an entry for the new documentation file with appropriate conditions
 - The entry should help future developers know when to read this documentation
 - Format the entry following the existing pattern in the file
 
 ### 6. Final Output
-- When you finish writing the documentation and updating context.md, return exclusively the path to the documentation file created and nothing else
+- When you finish writing the documentation and updating `agentic/commands/docs.md`, return exclusively the path to
+  the documentation file created and nothing else
 
 ## Codebase Structure
 
@@ -119,7 +121,7 @@ to ground the documentation you generate.
 
 ## Context Entry Format
 
-After creating the documentation, add this entry to `agentic/commands/context.md`:
+After creating the documentation, add this entry to `agentic/commands/docs.md`:
 
 ```md
 - agentic/context/<your_documentation_file>.md

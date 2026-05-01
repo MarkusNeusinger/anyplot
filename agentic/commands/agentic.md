@@ -192,7 +192,7 @@ You are the **core-auditor** on the agentic-audit team. Analyze leverage points 
 **Where to look:**
 - `CLAUDE.md` — primary agent-facing context
 - `.claude/` — tool configuration, settings
-- `agentic/commands/context.md` — conditional documentation routing
+- `agentic/commands/docs.md` — conditional documentation routing (`/docs` slash command)
 - `agentic/docs/` — project guides
 - `agentic/context/` — feature-specific context documents
 - `README.md`, `.github/copilot-instructions.md`
@@ -379,7 +379,7 @@ You are the **environment-auditor** on the agentic-audit team. Analyze leverage 
 
 **Where to look:**
 - `agentic/docs/` — agent-facing documentation
-- `agentic/commands/context.md` — conditional documentation router
+- `agentic/commands/docs.md` — conditional documentation router (`/docs` slash command)
 - `agentic/context/` — feature-specific context documents
 - `docs/` — general documentation
 - `docs/concepts/`, `docs/reference/`, `docs/workflows/`
