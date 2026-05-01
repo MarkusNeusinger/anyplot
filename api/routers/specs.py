@@ -41,7 +41,13 @@ async def _build_specs_map(db: AsyncSession) -> list[SpecMapItem]:
     for spec in specs:
         if not spec.impls:
             continue
-        best = max(spec.impls, key=lambda i: ((i.quality_score or 0.0), i.library_id))
+        # Prefer impls that actually have a preview URL — otherwise the map
+        # would render blank-bordered nodes for specs whose top-quality impl
+        # happens to have no thumbnail. Fall back to the full impl list only
+        # when *no* impl has a preview (very rare, but keeps the spec on the map).
+        with_preview = [i for i in spec.impls if i.preview_url_light or i.preview_url_dark]
+        candidates = with_preview or list(spec.impls)
+        best = max(candidates, key=lambda i: ((i.quality_score or 0.0), i.library_id))
         items.append(
             SpecMapItem(
                 id=spec.id,

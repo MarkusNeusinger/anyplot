@@ -1032,7 +1032,7 @@ export function MapPage() {
                     sx={{
                       // Phones: hide tags, the smaller panel only shows
                       // image + title + plot_type chip so it doesn't cover
-                      // the gefly-tote node and its KNN edges.
+                      // the focused node and its KNN edges.
                       display: { xs: 'none', sm: 'flex' },
                       flexWrap: 'wrap',
                       gap: 0.75,
@@ -1175,7 +1175,15 @@ export function MapPage() {
               return Math.max(0.4, (l.weight ?? 0.3) * 1.5);
             }}
             onNodeClick={onNodeClick}
-            onBackgroundClick={() => setPinnedId(null)}
+            // Background tap clears the pin AND closes the preview panel.
+            // On desktop ForceGraph2D fires onNodeHover(null) when the
+            // pointer leaves a node, but on touch there's no hover event,
+            // so we need to clear hoverId explicitly here. Doing it on
+            // both is a harmless no-op for the desktop path.
+            onBackgroundClick={() => {
+              setPinnedId(null);
+              setHoverId(null);
+            }}
             onNodeHover={(n: MapNode | null) => {
               if (hoverTimerRef.current != null) {
                 window.clearTimeout(hoverTimerRef.current);

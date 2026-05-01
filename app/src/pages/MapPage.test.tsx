@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { render, screen, waitFor } from '../test-utils';
 import { MapPage } from './MapPage';
@@ -138,6 +138,14 @@ describe('MapPage', () => {
     mockTrackEvent.mockReset();
     lastFgProps.current = null;
     vi.stubGlobal('ResizeObserver', MockResizeObserver);
+  });
+
+  // Restore stubbed globals (fetch, ResizeObserver, …) after every test so
+  // they don't leak into subsequent suites — other frontend tests rely on a
+  // clean global surface and silently break otherwise.
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it('renders the spec/edge count meta after fetch', async () => {
