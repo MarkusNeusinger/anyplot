@@ -10,6 +10,7 @@ const DEBUG_CLICK_WINDOW_MS = 800;
 const NAV_LINKS: { label: string; to: string; short?: string }[] = [
   { label: 'specs', to: '/specs' },
   { label: 'plots', to: '/plots' },
+  { label: 'map', to: '/map' },
   { label: 'libraries', to: '/libraries', short: 'libs' },
   { label: 'stats', to: '/stats' },
   { label: 'palette', to: '/palette', short: 'pal' },

@@ -242,3 +242,6 @@ docker-compose.override.yml
 secrets/
 /.playwright-mcp/
 /screenshots/
+
+# Map page tuning screenshots (root-level only — must not match plots/*/preview.png etc.)
+/map-*.png

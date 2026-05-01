@@ -135,6 +135,9 @@ https://anyplot.ai/{spec_id}/{language}/{library}/{category}/{value}/...
 | `view_mode_change` | `mode`, `library` | SpecDetailView.tsx | User toggles preview ↔ interactive view inside a spec detail. `mode` ∈ `preview`, `interactive`. Fires on every toggle in either direction (cf. `open_interactive`, which only fires when the interactive HTML is opened in a new tab). |
 | `library_click` | `source`, `library` | LibrariesPage.tsx | User clicks a library card on `/libraries` to navigate to its filtered plots view. `source` is `libraries_page` from this entry point. |
 | `stats_top_impl_click` | `spec`, `library` | StatsPage.tsx | User clicks a "top implementation" thumbnail on `/stats` to jump into its spec detail. |
+| `map_node_click` | `spec` | MapPage.tsx | User clicks a node on `/map` (or, on touch, second tap on an already-pinned node) to navigate to its spec detail. |
+| `map_node_pin` | `spec` | MapPage.tsx | Touch device only: first tap on a node opens the preview panel + pin marker without navigating. A second tap on the same node fires `map_node_click` and navigates. |
+| `map_search_select` | `spec` | MapPage.tsx | User picks a result from the `/map` search dropdown (`⌘K` / `Ctrl+K` opens it). The camera flies to the node and the preview panel opens. |
 
 ### Landing Page Navigation (`nav_click`)
 
@@ -355,6 +358,9 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `view_mode_change` | Custom Event | Track preview ↔ interactive toggles in spec detail |
 | `library_click` | Custom Event | Track library-card clicks on the libraries page |
 | `stats_top_impl_click` | Custom Event | Track clicks on top-quality implementation thumbnails on /stats |
+| `map_node_click` | Custom Event | Track navigation clicks from `/map` into a spec detail |
+| `map_node_pin` | Custom Event | Track touch users opening the preview panel on `/map` (first tap) |
+| `map_search_select` | Custom Event | Track use of the `/map` search-and-fly-to feature |
 | `og_image_view` | Custom Event | Track og:image requests from social media bots |
 | `LCP` | Custom Event | Largest Contentful Paint (Core Web Vital) |
 | `CLS` | Custom Event | Cumulative Layout Shift (Core Web Vital) |
@@ -448,12 +454,15 @@ User lands on anyplot.ai
 | `view_mode_change` | `mode`, `library` | SpecDetailView.tsx |
 | `library_click` | `source`, `library` | LibrariesPage.tsx |
 | `stats_top_impl_click` | `spec`, `library` | StatsPage.tsx |
+| `map_node_click` | `spec` | MapPage.tsx |
+| `map_node_pin` | `spec` | MapPage.tsx |
+| `map_search_select` | `spec` | MapPage.tsx |
 | `LCP` | `value`, `rating` | reportWebVitals.ts |
 | `CLS` | `value`, `rating` | reportWebVitals.ts |
 | `INP` | `value`, `rating` | reportWebVitals.ts |
 | `og_image_view` | `page`, `platform`, `spec`?, `language`?, `library`?, `filter_*`? | api/analytics.py (server-side) |
 
-**Total: 25 client-side + 1 server-side = 26 events**
+**Total: 28 client-side + 1 server-side = 29 events**
 
 > Every pageview and event additionally carries a `theme` ambient prop (`dark` /
 > `light`). Set in `RootLayout` via `setAnalyticsAmbientProps` whenever the user

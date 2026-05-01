@@ -69,6 +69,22 @@ class SpecListItem(BaseModel):
     library_count: int = 0
 
 
+class SpecMapItem(BaseModel):
+    """One row per spec for the /map page: best-impl preview + full tag bag for client-side similarity clustering."""
+
+    id: str
+    title: str
+    preview_url_light: str | None = None
+    preview_url_dark: str | None = None
+    quality_score: float | None = None
+    # Tag bags: each category maps to a list of strings. Tightened from
+    # dict[str, Any] so the OpenAPI contract matches what the /map frontend
+    # expects (Record<string, string[]>) and so unexpected shapes get
+    # caught at validation time instead of breaking client-side similarity.
+    tags: dict[str, list[str]] | None = None
+    impl_tags: dict[str, list[str]] | None = None
+
+
 class ImageResponse(BaseModel):
     """Image/plot response for grid display."""
 

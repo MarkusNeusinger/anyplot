@@ -178,6 +178,7 @@ def clear_spec_cache(spec_id: str) -> int:
     count += clear_cache_by_pattern(f"spec:{spec_id}")
     count += clear_cache_by_pattern(f"spec_images:{spec_id}")
     count += clear_cache_by_pattern("specs_list")  # List might have changed
+    count += clear_cache_by_pattern("specs_map")  # Map page payload might have changed
     count += clear_cache_by_pattern("filter:")  # Filters might be affected
     count += clear_cache_by_pattern("stats")  # Stats might have changed
     count += clear_cache_by_pattern("sitemap")  # Sitemap includes spec URLs

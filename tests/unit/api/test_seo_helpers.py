@@ -38,6 +38,7 @@ class TestBuildSitemapXml:
         assert "<loc>https://anyplot.ai/plots</loc>" in result
         assert "<loc>https://anyplot.ai/specs</loc>" in result
         assert "<loc>https://anyplot.ai/libraries</loc>" in result
+        assert "<loc>https://anyplot.ai/map</loc>" in result
         assert "<loc>https://anyplot.ai/palette</loc>" in result
         assert "<loc>https://anyplot.ai/about</loc>" in result
         assert "<loc>https://anyplot.ai/mcp</loc>" in result

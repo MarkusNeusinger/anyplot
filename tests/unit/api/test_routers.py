@@ -347,6 +347,101 @@ class TestSpecsRouter:
             response = client.get("/specs/nonexistent")
             assert response.status_code == 404
 
+    def test_specs_map_without_db(self, client: TestClient) -> None:
+        """Specs map should return 503 when DB not configured."""
+        with patch(DB_CONFIG_PATCH, return_value=False):
+            response = client.get("/specs/map")
+            assert response.status_code == 503
+
+    def test_specs_map_returns_list(self, client: TestClient, mock_spec) -> None:
+        """Specs map returns one row per spec with best-impl preview + tag bag."""
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.specs.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.specs.SpecRepository", return_value=mock_spec_repo),
+        ):
+            response = client.get("/specs/map")
+            assert response.status_code == 200
+            data = response.json()
+            assert isinstance(data, list)
+            assert len(data) == 1
+            row = data[0]
+            assert row["id"] == "scatter-basic"
+            assert row["title"] == "Basic Scatter Plot"
+            assert row["preview_url_light"] == TEST_IMAGE_URL
+            assert row["quality_score"] == 92.5
+            assert row["tags"] == {
+                "plot_type": ["scatter"],
+                "domain": ["statistics"],
+                "data_type": ["numeric"],
+                "features": ["basic"],
+            }
+            assert row["impl_tags"] == {"patterns": ["data-generation"], "styling": ["alpha-blending"]}
+
+    def test_specs_map_picks_best_impl(self, client: TestClient, mock_spec) -> None:
+        """Specs map picks the impl with the highest quality_score per spec."""
+        # Append a second, lower-rated impl with a distinct preview URL
+        worse_impl = MagicMock()
+        worse_impl.library_id = "seaborn"
+        worse_impl.preview_url_light = "https://example.com/worse-light.png"
+        worse_impl.preview_url_dark = None
+        worse_impl.quality_score = 60.0
+        worse_impl.impl_tags = {"patterns": ["should-not-appear"]}
+        mock_spec.impls = [worse_impl, mock_spec.impls[0]]  # quality 60 then quality 92.5
+
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.specs.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.specs.SpecRepository", return_value=mock_spec_repo),
+        ):
+            response = client.get("/specs/map")
+            assert response.status_code == 200
+            data = response.json()
+            assert len(data) == 1
+            assert data[0]["preview_url_light"] == TEST_IMAGE_URL  # higher-rated matplotlib impl
+            assert data[0]["quality_score"] == 92.5
+            assert data[0]["impl_tags"] == {"patterns": ["data-generation"], "styling": ["alpha-blending"]}
+
+    def test_specs_map_skips_specs_without_impls(self, client: TestClient, mock_spec) -> None:
+        """Specs map omits specs with zero implementations (matches /specs behavior)."""
+        empty_spec = MagicMock()
+        empty_spec.id = "no-impls"
+        empty_spec.title = "No Implementations Yet"
+        empty_spec.impls = []
+
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec, empty_spec])
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.specs.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.specs.SpecRepository", return_value=mock_spec_repo),
+        ):
+            response = client.get("/specs/map")
+            assert response.status_code == 200
+            data = response.json()
+            assert [row["id"] for row in data] == ["scatter-basic"]
+
+    def test_specs_map_empty_db(self, client: TestClient) -> None:
+        """Specs map returns [] (not 404) when there are no specs."""
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[])
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.specs.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.specs.SpecRepository", return_value=mock_spec_repo),
+        ):
+            response = client.get("/specs/map")
+            assert response.status_code == 200
+            assert response.json() == []
+
 
 class TestDownloadRouter:
     """Tests for download router."""

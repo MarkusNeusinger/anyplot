@@ -36,6 +36,7 @@ const router = createBrowserRouter([
           { path: 'plots', lazy: () => import('./pages/PlotsPage').then(m => ({ Component: m.PlotsPage })) },
           { path: 'specs', lazy: () => import('./pages/SpecsListPage').then(m => ({ Component: m.SpecsListPage })) },
           { path: 'libraries', lazy: () => import('./pages/LibrariesPage').then(m => ({ Component: m.LibrariesPage })) },
+          { path: 'map', lazy: () => import('./pages/MapPage').then(m => ({ Component: m.MapPage })) },
           { path: 'palette', lazy: () => import('./pages/PalettePage').then(m => ({ Component: m.PalettePage })) },
           { path: 'about', lazy: () => import('./pages/AboutPage').then(m => ({ Component: m.AboutPage })) },
           { path: 'legal', lazy: () => import('./pages/LegalPage').then(m => ({ Component: m.LegalPage })) },

@@ -47,6 +47,7 @@ def _build_sitemap_xml(specs: list) -> str:
         "  <url><loc>https://anyplot.ai/plots</loc></url>",
         "  <url><loc>https://anyplot.ai/specs</loc></url>",
         "  <url><loc>https://anyplot.ai/libraries</loc></url>",
+        "  <url><loc>https://anyplot.ai/map</loc></url>",
         "  <url><loc>https://anyplot.ai/palette</loc></url>",
         "  <url><loc>https://anyplot.ai/about</loc></url>",
         "  <url><loc>https://anyplot.ai/mcp</loc></url>",
