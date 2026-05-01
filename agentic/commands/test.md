@@ -36,24 +36,8 @@ TEST_COMMAND_TIMEOUT: 5 minutes
 
 ## Codebase Structure
 
-- `README.md` - Project overview (start here)
-- `api/` - FastAPI backend
-  - `main.py` - App entry point
-  - `routers/` - API route handlers
-  - `services/` - Business logic
-- `app/` - React frontend (Vite + TypeScript)
-  - `src/` - Source code
-- `core/` - Shared Python modules
-  - `models/` - Pydantic models
-  - `database/` - Database utilities
-- `plots/` - Plot specifications and implementations
-- `tests/` - Test suites
-- `agentic/` - Agentic Layer
-  - `commands/` - Prompt templates
-  - `workflows/` - Workflow scripts (`uv run`)
-  - `specs/` - Plans (what to do)
-  - `context/` - Feature docs (what was done)
-  - `docs/` - Static project documentation
+For the full project layout, conventions, and tech stack, see `agentic/docs/project-guide.md`. You usually do not need
+to read it for this command — the test commands below are self-contained.
 
 ## Test Execution Sequence
 

@@ -86,7 +86,7 @@ When routing to a single leverage point, include the point number in the task de
 ### Phase 2: Parallel Analysis
 
 Each specialist receives a focused prompt (see below). They:
-- Use **Serena tools** (`jet_brains_get_symbols_overview`, `jet_brains_find_symbol`, `search_for_pattern`, `list_dir`, `find_file`, `jet_brains_find_referencing_symbols`) and **Glob/Grep/Read** for code analysis
+- Use **Serena tools** (`mcp__serena__get_symbols_overview`, `mcp__serena__find_symbol`, `search_for_pattern`, `list_dir`, `find_file`, `mcp__serena__find_referencing_symbols`) and **Glob/Grep/Read** for code analysis
 - Do **NOT** use Bash for file discovery or code searching — only for `uv run ruff`, `uv run pytest`, or similar shell-native commands
 - Send findings to `agentic-lead` via `SendMessage` when done
 - Mark their task completed via `TaskUpdate`
@@ -279,10 +279,10 @@ You are the **core-auditor** on the agentic-audit team. Analyze leverage points 
 
 **How to work:**
 1. Use `list_dir` to explore directories listed above
-2. Use `jet_brains_get_symbols_overview` on key files
+2. Use `mcp__serena__get_symbols_overview` on key files
 3. Use `search_for_pattern` for patterns like `CLAUDE.md`, model references, `mcp`, `prompt`
 4. Use Read to examine prompt files and configuration
-5. Use `jet_brains_find_symbol` with `depth=1` to inspect MCP tools and CLI commands
+5. Use `mcp__serena__find_symbol` with `depth=1` to inspect MCP tools and CLI commands
 6. Use Grep to count lines in large files: check for >1000-line files as context bloat risk
 7. **Do NOT use Bash** for `find`, `ls`, `grep`, `cat` — use Serena/Glob/Grep/Read tools instead
 8. You MAY use Bash for: `uv run python -c "..."` to inspect tool registrations
@@ -424,7 +424,7 @@ You are the **environment-auditor** on the agentic-audit team. Analyze leverage 
 
 **How to work:**
 1. Use `list_dir` with `recursive=false` to map top-level and sub-directory structure
-2. Use `jet_brains_get_symbols_overview` on key files to check type annotations
+2. Use `mcp__serena__get_symbols_overview` on key files to check type annotations
 3. Use `search_for_pattern` for anti-patterns (e.g., `Any`, `# type: ignore`, `print(`, `: any`, `console.log`)
 4. Use Read to examine config files (`tsconfig.json`, `pyproject.toml` type sections)
 5. Use Grep to find logging, error handling, and type annotation patterns
@@ -552,8 +552,8 @@ You are the **workflow-auditor** on the agentic-audit team. Analyze leverage poi
 
 **How to work:**
 1. Use `list_dir` to explore `tests/`, `agentic/specs/`, `agentic/workflows/`, `agentic/commands/`, `prompts/`
-2. Use `jet_brains_get_symbols_overview` on workflow scripts and test files
-3. Use `jet_brains_find_symbol` to inspect workflow classes, fixtures, orchestrators
+2. Use `mcp__serena__get_symbols_overview` on workflow scripts and test files
+3. Use `mcp__serena__find_symbol` to inspect workflow classes, fixtures, orchestrators
 4. Use Read to examine spec files, templates, and workflow configurations
 5. Use `search_for_pattern` for patterns like `prompt_claude_code`, `WorkflowState`, `@pytest.fixture`, `$ARGUMENTS`
 6. Use Glob to find all test files (`**/*test*.py`, `**/*.test.ts`) and template files

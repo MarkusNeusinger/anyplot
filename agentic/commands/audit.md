@@ -87,7 +87,7 @@ You are the **audit-lead**. Your job is to coordinate a team of specialist audit
 ### Phase 2: Parallel Analysis
 
 Each specialist receives a focused prompt loaded from `agentic/commands/audit/<name>-auditor.md` (see the Specialist Prompts index below). They:
-- Use **Serena tools** (`mcp__serena__get_symbols_overview`, `mcp__serena__find_symbol`, `search_for_pattern`, `list_dir`, `find_file`, `mcp__serena__find_referencing_symbols`) and **Glob/Grep/Read** for code analysis. **Tool-naming note:** `mcp__serena__*` is the canonical MCP-registered prefix that matches `.claude/settings.json` (`mcp__serena__*` is in `permissions.allow`); some other repo docs (`CLAUDE.md`, `.serena/project.yml`, `agentic/commands/prime.md`) still reference legacy aliases like `jet_brains_*` or unprefixed names — treat those as the same tools and prefer the `mcp__serena__*` form here.
+- Use **Serena tools** (`mcp__serena__get_symbols_overview`, `mcp__serena__find_symbol`, `search_for_pattern`, `list_dir`, `find_file`, `mcp__serena__find_referencing_symbols`) and **Glob/Grep/Read** for code analysis. **Tool-naming note:** `mcp__serena__*` is the canonical MCP-registered prefix that matches `.claude/settings.json` (`mcp__serena__*` is in `permissions.allow`). A few external configs (`CLAUDE.md`, `.serena/project.yml`) may still reference legacy `jet_brains_*` aliases — treat those as the same tools and use the `mcp__serena__*` form here.
 - Use `think_about_collected_information` after non-trivial research sequences
 - Do **NOT** use Bash for file discovery or code searching — only for the per-auditor whitelisted shell commands
 - Stay within the tool budget (~30 calls); set `COVERAGE: partial` if forced to stop early

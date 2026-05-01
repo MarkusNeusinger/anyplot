@@ -38,32 +38,17 @@ review_image_dir: `<absolute path to codebase>/agentic/runs/<run_id>/<agent_name
     - `skippable` - the issue is non-blocker for the work to be released but is still a problem
     - `tech_debt` - the issue is non-blocker for the work to be released but will create technical debt that should be addressed in the future
     - `blocker` - the issue is a blocker for the work to be released and should be addressed immediately. It will harm the user experience or will not function as expected.
-- IMPORTANT: Return ONLY the JSON array with test results
-  - IMPORTANT: Output your result in JSON format based on the `Report` section below.
-  - IMPORTANT: Do not include any additional text, explanations, or markdown formatting
-  - We'll immediately run JSON.parse() on the output, so make sure it's valid JSON
-- Ultra think as you work through the review process. Focus on the critical functionality paths and the user experience. Don't report issues if they are not critical to the feature.
+- IMPORTANT: Return ONLY the JSON object specified in the `Report` section below.
+  - IMPORTANT: Do not include any preamble, explanation, or markdown formatting around the JSON.
+  - We'll immediately run JSON.parse() on the output, so make sure it's valid JSON.
+  - Match the schema exactly — extra keys or missing required keys will fail downstream parsing.
+- Reason carefully through the review. Focus on critical functionality paths and the user experience. Do not
+  report issues that are not material to the feature — inflated issue lists are noise, not signal.
 
 ## Codebase Structure
 
-- `README.md` - Project overview (start here)
-- `api/` - FastAPI backend
-  - `main.py` - App entry point
-  - `routers/` - API route handlers
-  - `services/` - Business logic
-- `app/` - React frontend (Vite + TypeScript)
-  - `src/` - Source code
-- `core/` - Shared Python modules
-  - `models/` - Pydantic models
-  - `database/` - Database utilities
-- `plots/` - Plot specifications and implementations
-- `tests/` - Test suites
-- `agentic/` - Agentic Layer
-  - `commands/` - Prompt templates
-  - `workflows/` - Workflow scripts (`uv run`)
-  - `specs/` - Plans (what to do)
-  - `context/` - Feature docs (what was done)
-  - `docs/` - Static project documentation
+For the full project layout, conventions, and tech stack, see `agentic/docs/project-guide.md`. Read it only if you need
+to map the diff back onto specific subsystems.
 
 ## Report
 

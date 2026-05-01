@@ -17,6 +17,9 @@ Analyze the task and classify it:
 
 ## Response
 
-Respond with ONLY a JSON object on a single line. No explanation, no markdown, no code fences:
+Respond with ONLY a JSON object on a single line. No preamble, no explanation, no markdown, no code fences. The
+response will be passed directly to `JSON.parse()`, so any extra text breaks the caller.
+
+Schema (one of `bug`, `feature`, `chore`, `refactor`):
 
 {"type": "bug", "reason": "one sentence explaining why"}

@@ -30,10 +30,15 @@ task_type: $2
 
 ## Run
 
-1. Run `git diff HEAD` to understand what changes have been made
-2. Run `git status` to see which files are modified/untracked
-3. Stage changes with `git add` — prefer adding specific files over `git add -A`
-4. Run `git commit -m "<generated_commit_message>"` to create the commit
+Run steps 1 and 2 in parallel; only proceed to staging once you have read the full diff.
+
+1. Run `git diff HEAD` to read every change that will be committed.
+2. Run `git status` to confirm the set of modified/untracked files.
+3. Stage changes with `git add <specific files>` — never use `git add -A` or `git add .`, which can pull in
+   `.env`, credentials, or large binaries by accident.
+4. Run `git commit -m "<generated_commit_message>"` to create the commit. Do not pass `--no-verify`; if a
+   pre-commit hook fails, fix the underlying issue and create a new commit (do NOT amend the previous one,
+   since the failed commit was never written).
 
 ## Report
 

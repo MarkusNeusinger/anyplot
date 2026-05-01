@@ -39,8 +39,8 @@ Parse `$ARGUMENTS` using this format:
    filter. Everything after is the `description`.
 3. **Known libraries**: `matplotlib`, `seaborn`, `plotly`, `bokeh`, `altair`, `plotnine`, `pygal`, `highcharts`,
    `letsplot`
-4. **Default libraries**: If no libraries specified, scan `plots/{spec_id}/implementations/` for existing `*.py` files (
-   excluding `__init__.py`) — update all that exist.
+4. **Default libraries**: If no libraries specified, scan `plots/{spec_id}/implementations/python/` for existing
+   `*.py` files (excluding `__init__.py`) — update all that exist.
 
 **Validation:**
 
@@ -149,7 +149,7 @@ Agents report back via `SendMessage` (auto-delivered to you). Agents may report 
 
 2. **Present a summary to the user** for each library that completed successfully:
    - What was changed (bullet points from agent)
-   - **Preview:** `{absolute path}/plots/{spec_id}/implementations/.update-preview/{library}/plot.png` (use the absolute path reported by the agent in its `IMAGE:` field — display it on its own line so terminal emulators render it as a clickable link)
+   - **Preview:** `{absolute path}/plots/{spec_id}/implementations/python/.update-preview/{library}/plot.png` (use the absolute path reported by the agent in its `IMAGE:` field — display it on its own line so terminal emulators render it as a clickable link)
    - Agent's quality score with category breakdown and number of local repair iterations
    - Any spec changes the agent made
 
@@ -158,30 +158,30 @@ Agents report back via `SendMessage` (auto-delivered to you). Agents may report 
    a. **Download current GCS images** for each library:
    ```bash
    curl -sL "https://storage.googleapis.com/anyplot-images/plots/{spec_id}/{library}/plot.png" \
-     -o "plots/{spec_id}/implementations/.update-preview/{library}/before.png"
+     -o "plots/{spec_id}/implementations/python/.update-preview/{library}/before.png"
    ```
    If curl fails (non-zero exit or empty file), the library has no previous version — pass `none` as before_path.
 
    b. **Create comparison images** for each library:
    ```bash
    uv run python -m core.images compare \
-     plots/{spec_id}/implementations/.update-preview/{library}/before.png \
-     plots/{spec_id}/implementations/.update-preview/{library}/plot.png \
-     plots/{spec_id}/implementations/.update-preview/{library}/comparison.png \
+     plots/{spec_id}/implementations/python/.update-preview/{library}/before.png \
+     plots/{spec_id}/implementations/python/.update-preview/{library}/plot.png \
+     plots/{spec_id}/implementations/python/.update-preview/{library}/comparison.png \
      {spec_id} {library}
    ```
    If the before image doesn't exist, use `none` instead of the before path:
    ```bash
    uv run python -m core.images compare \
      none \
-     plots/{spec_id}/implementations/.update-preview/{library}/plot.png \
-     plots/{spec_id}/implementations/.update-preview/{library}/comparison.png \
+     plots/{spec_id}/implementations/python/.update-preview/{library}/plot.png \
+     plots/{spec_id}/implementations/python/.update-preview/{library}/comparison.png \
      {spec_id} {library}
    ```
 
    c. **Open comparisons in eog** (instead of raw plot.png files):
    ```bash
-   eog plots/{spec_id}/implementations/.update-preview/*/comparison.png &
+   eog plots/{spec_id}/implementations/python/.update-preview/*/comparison.png &
    ```
    Run this via `Bash` tool with `run_in_background: true` so it doesn't block the conversation.
 
@@ -216,8 +216,8 @@ Run ruff format and check **sequentially first**, before any parallel version-in
 If parallel Bash calls are used and one fails, all sibling calls get cancelled — so always run ruff alone.
 
 ```bash
-uv run ruff format plots/{spec_id}/implementations/*.py
-uv run ruff check --fix plots/{spec_id}/implementations/*.py
+uv run ruff format plots/{spec_id}/implementations/python/*.py
+uv run ruff check --fix plots/{spec_id}/implementations/python/*.py
 ```
 
 If there are unfixable errors, fix them manually and re-run. The agents should have already run ruff in their
@@ -225,7 +225,7 @@ lint step, but this is a safety net.
 
 #### 6b. Update Metadata YAML
 
-For each updated library, edit `plots/{spec_id}/metadata/{library}.yaml`:
+For each updated library, edit `plots/{spec_id}/metadata/python/{library}.yaml`:
 
 | Field             | Value                                                                     |
 |-------------------|---------------------------------------------------------------------------|
@@ -267,11 +267,11 @@ Quality: /100 | Updated: {YYYY-MM-DD}
 For each library, copy the preview images to the implementations directory for GCS upload:
 
 ```bash
-cp plots/{spec_id}/implementations/.update-preview/{library}/plot.png plots/{spec_id}/implementations/plot.png
+cp plots/{spec_id}/implementations/python/.update-preview/{library}/plot.png plots/{spec_id}/implementations/python/plot.png
 # Process images (optimization)
 uv run python -m core.images process \
-  plots/{spec_id}/implementations/plot.png \
-  plots/{spec_id}/implementations/plot.png
+  plots/{spec_id}/implementations/python/plot.png \
+  plots/{spec_id}/implementations/python/plot.png
 ```
 
 Note: Since we process one library at a time for GCS upload, handle sequentially.
@@ -284,12 +284,12 @@ For each library:
 STAGING_PATH="gs://anyplot-images/staging/{spec_id}/{library}"
 
 # Upload PNG
-gsutil cp plots/{spec_id}/implementations/plot.png "${STAGING_PATH}/plot.png"
+gsutil cp plots/{spec_id}/implementations/python/plot.png "${STAGING_PATH}/plot.png"
 gsutil acl ch -u AllUsers:R "${STAGING_PATH}/plot.png" 2>/dev/null || true
 
 # Upload HTML if it exists (interactive libraries: plotly, bokeh, altair, highcharts, pygal, letsplot)
-if [ -f "plots/{spec_id}/implementations/.update-preview/{library}/plot.html" ]; then
-  gsutil cp "plots/{spec_id}/implementations/.update-preview/{library}/plot.html" "${STAGING_PATH}/plot.html"
+if [ -f "plots/{spec_id}/implementations/python/.update-preview/{library}/plot.html" ]; then
+  gsutil cp "plots/{spec_id}/implementations/python/.update-preview/{library}/plot.html" "${STAGING_PATH}/plot.html"
   gsutil acl ch -u AllUsers:R "${STAGING_PATH}/plot.html" 2>/dev/null || true
 fi
 ```
@@ -303,7 +303,7 @@ GCS files from staging to production on merge):
 #### 6f. Clean Up Preview Directory
 
 ```bash
-rm -rf plots/{spec_id}/implementations/.update-preview
+rm -rf plots/{spec_id}/implementations/python/.update-preview
 ```
 
 #### 6g. Per-Library Branches, PRs & Reviews
@@ -330,8 +330,8 @@ WORKTREE=".worktrees/{spec_id}-{library}"
 git worktree add -b implementation/{spec_id}/{library} "$WORKTREE" main
 
 # Copy only this library's changed files into the worktree
-cp plots/{spec_id}/implementations/{library}.py "$WORKTREE/plots/{spec_id}/implementations/{library}.py"
-cp plots/{spec_id}/metadata/{library}.yaml "$WORKTREE/plots/{spec_id}/metadata/{library}.yaml"
+cp plots/{spec_id}/implementations/python/{library}.py "$WORKTREE/plots/{spec_id}/implementations/python/{library}.py"
+cp plots/{spec_id}/metadata/python/{library}.yaml "$WORKTREE/plots/{spec_id}/metadata/python/{library}.yaml"
 # If spec was changed (only for the first library):
 cp plots/{spec_id}/specification.md "$WORKTREE/plots/{spec_id}/specification.md"
 cp plots/{spec_id}/specification.yaml "$WORKTREE/plots/{spec_id}/specification.yaml"
@@ -339,8 +339,8 @@ cp plots/{spec_id}/specification.yaml "$WORKTREE/plots/{spec_id}/specification.y
 # Commit and push from the worktree
 cd "$WORKTREE"
 
-git add plots/{spec_id}/implementations/{library}.py
-git add plots/{spec_id}/metadata/{library}.yaml
+git add plots/{spec_id}/implementations/python/{library}.py
+git add plots/{spec_id}/metadata/python/{library}.yaml
 # If spec was changed (only in first library branch):
 git add plots/{spec_id}/specification.md
 git add plots/{spec_id}/specification.yaml
@@ -418,7 +418,7 @@ Immediately after Phase 6 completes:
 3. `TeamDelete` to clean up the team
 4. Clean up preview directory:
    ```bash
-   rm -rf plots/{spec_id}/implementations/.update-preview
+   rm -rf plots/{spec_id}/implementations/python/.update-preview
    ```
 
 #### 7b. Poll PR Status
@@ -510,8 +510,8 @@ You are **{LIBRARY}** on the `update-{SPEC_ID}` team. Your job is to update the 
 Read these files to understand what you're working with:
 
 1. `plots/{SPEC_ID}/specification.md` — the specification (what the plot should show)
-2. `plots/{SPEC_ID}/implementations/{LIBRARY}.py` — current implementation to update
-3. `plots/{SPEC_ID}/metadata/{LIBRARY}.yaml` — review feedback from last review:
+2. `plots/{SPEC_ID}/implementations/python/{LIBRARY}.py` — current implementation to update
+3. `plots/{SPEC_ID}/metadata/python/{LIBRARY}.yaml` — review feedback from last review:
     - `review.strengths` — PRESERVE these (don't break what works)
     - `review.weaknesses` — FIX these
     - `review.criteria_checklist` — items with `passed: false` need fixing
@@ -569,7 +569,7 @@ Then go idle and wait for the lead to relay the user's decision. Only proceed on
 
 ### Step 3: Modify Implementation
 
-Edit `plots/{SPEC_ID}/implementations/{LIBRARY}.py`:
+Edit `plots/{SPEC_ID}/implementations/python/{LIBRARY}.py`:
 
 - Follow all rules from `prompts/plot-generator.md` and `prompts/library/{LIBRARY}.md`
 - KISS structure: imports → data → plot → save
@@ -592,20 +592,20 @@ explain what you changed and why. Do not edit the spec just for the sake of chan
 
 Run the implementation to generate the plot image. **IMPORTANT**: Each agent MUST run in its own isolated preview
 directory to avoid race conditions with other parallel agents. All agents write `plot.png` — running in the shared
-`implementations/` directory causes file conflicts.
+`implementations/python/` directory causes file conflicts.
 
 **FILE CONTAINMENT RULES — CRITICAL:**
 - You may ONLY write files to these locations:
-  - `plots/{SPEC_ID}/implementations/{LIBRARY}.py` (the implementation itself)
-  - `plots/{SPEC_ID}/implementations/.update-preview/{LIBRARY}/` (preview output directory)
+  - `plots/{SPEC_ID}/implementations/python/{LIBRARY}.py` (the implementation itself)
+  - `plots/{SPEC_ID}/implementations/python/.update-preview/{LIBRARY}/` (preview output directory)
   - `plots/{SPEC_ID}/specification.md` (only if spec changes are needed)
-- **NEVER** create files in the project root, the `implementations/` directory directly, or any other location.
+- **NEVER** create files in the project root, the `implementations/python/` directory directly, or any other location.
 - **NEVER** download or save images outside `.update-preview/{LIBRARY}/`. If you need to view the current
   preview from GCS, use the URL directly with `WebFetch` or `Read` — do not download it to a local file.
 
 ```bash
-mkdir -p plots/{SPEC_ID}/implementations/.update-preview/{LIBRARY}
-cd plots/{SPEC_ID}/implementations/.update-preview/{LIBRARY} && MPLBACKEND=Agg uv run python ../../{LIBRARY}.py
+mkdir -p plots/{SPEC_ID}/implementations/python/.update-preview/{LIBRARY}
+cd plots/{SPEC_ID}/implementations/python/.update-preview/{LIBRARY} && MPLBACKEND=Agg uv run python ../../{LIBRARY}.py
 ```
 
 This runs `{LIBRARY}.py` from the isolated `.update-preview/{LIBRARY}/` directory, so `plot.png` and `plot.html` land
@@ -618,8 +618,8 @@ If the script fails, read the error, fix the implementation, and retry. **Up to 
 Run ruff to format and fix lint issues in the implementation before proceeding:
 
 ```bash
-uv run ruff format plots/{SPEC_ID}/implementations/{LIBRARY}.py
-uv run ruff check --fix plots/{SPEC_ID}/implementations/{LIBRARY}.py
+uv run ruff format plots/{SPEC_ID}/implementations/python/{LIBRARY}.py
+uv run ruff check --fix plots/{SPEC_ID}/implementations/python/{LIBRARY}.py
 ```
 
 If `ruff check` reports unfixable errors (exit code 1), read the error output and fix the code manually, then re-run.
@@ -631,8 +631,8 @@ Generate thumbnail and optimize:
 
 ```bash
 uv run python -m core.images process \
-  plots/{SPEC_ID}/implementations/.update-preview/{LIBRARY}/plot.png \
-  plots/{SPEC_ID}/implementations/.update-preview/{LIBRARY}/plot.png
+  plots/{SPEC_ID}/implementations/python/.update-preview/{LIBRARY}/plot.png \
+  plots/{SPEC_ID}/implementations/python/.update-preview/{LIBRARY}/plot.png
 ```
 
 ### Step 7: Quality Evaluation & Local Repair Loop
@@ -640,7 +640,7 @@ uv run python -m core.images process \
 Before shipping, formally evaluate your implementation against the same criteria CI uses. This catches issues locally
 (cheaper) instead of triggering expensive remote repair cycles.
 
-**7a. View the generated image** at `plots/{SPEC_ID}/implementations/.update-preview/{LIBRARY}/plot.png`.
+**7a. View the generated image** at `plots/{SPEC_ID}/implementations/python/.update-preview/{LIBRARY}/plot.png`.
 
 **7b. Score against all 6 quality categories** using the criteria from `prompts/quality-criteria.md` (read in Step 1).
 Produce category totals only (no per-criterion notes needed):
@@ -689,7 +689,7 @@ CHANGES:
 - {bullet point 2}
 - ...
 
-IMAGE: {absolute path to plots/{SPEC_ID}/implementations/.update-preview/{LIBRARY}/plot.png — use pwd to resolve}
+IMAGE: {absolute path to plots/{SPEC_ID}/implementations/python/.update-preview/{LIBRARY}/plot.png — use pwd to resolve}
 
 QUALITY: {total}/100 (after {N} local repair iterations, 0 = passed first evaluation)
   VQ: {vq}/30 | DE: {de}/20 | SC: {sc}/15

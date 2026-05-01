@@ -11,30 +11,13 @@ prompt: $2
 ## Instructions
 
 - If the run_id or prompt is not provided, stop and ask the user to provide them.
-- Create a plan to complete the chore described in the `prompt`
-- The plan should be simple, thorough, and precise
-- Create the plan in the `agentic/specs/` directory with filename: `{YYMMDD}-{descriptive-name}.md`
-    - Use today's date as YYMMDD prefix (e.g., "260207-update-readme.md")
-- Research the codebase starting with `README.md`
-- Replace every <placeholder> in the `Plan Format` with the requested value
-
-## Codebase Structure
-
-- `README.md` - Project overview and instructions (start here)
-- `api/` - FastAPI backend
-  - `main.py` - App entry point
-  - `routers/` - API route handlers
-- `app/` - React frontend (Vite + TypeScript)
-  - `src/` - Source code
-- `core/` - Shared Python modules
-  - `config.py` - Configuration
-  - `database/` - Database utilities, models, and repositories
-- `plots/` - Plot specifications and implementations
-- `tests/` - Test suites
-- `agentic/` - Agentic Layer
-  - `commands/` - Prompt templates
-  - `workflows/` - Workflow scripts (`uv run`)
-  - `specs/` - Generated plans
+- Plan the chore described in the `prompt`. This command produces a **plan only** — do NOT execute the chore here.
+- Keep the plan simple, thorough, and precise. Avoid over-scoping (no extra modes or speculative steps).
+- Create the plan at `agentic/specs/{YYMMDD}-{descriptive-name}.md` using today's UTC date (e.g.,
+  `260501-update-readme.md`). Run `date -u +%y%m%d` if unsure.
+- Research the codebase before writing the plan. For project layout, conventions, and tech stack, see
+  `agentic/docs/project-guide.md` and read it only if needed.
+- Replace every `<placeholder>` in the `Plan Format` with the requested value.
 
 ## Plan Format
 

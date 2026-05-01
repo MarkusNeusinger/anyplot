@@ -21,11 +21,15 @@ plan_file: $2
 
 ## Run
 
+Run steps 1-3 in parallel; analyze the full output before drafting the PR body. Only push (step 4) once the
+branch state matches what the PR description claims.
+
 1. Run `git diff origin/main...HEAD --stat` to see changed files summary
 2. Run `git log origin/main..HEAD --oneline` to see commits in this branch
 3. Run `git branch --show-current` to get the current branch name
-4. Run `git push -u origin $(git branch --show-current)` to push the branch
-5. Create the PR:
+4. Run `git push -u origin $(git branch --show-current)` to push the branch (do NOT use `--force` or
+   `--no-verify` unless the user explicitly asks for it)
+5. Create the PR — non-draft, ready for review:
 
 ```
 gh pr create --title "<pr_title>" --body "$(cat <<'EOF'
