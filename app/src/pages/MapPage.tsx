@@ -243,6 +243,16 @@ export function MapPage() {
     return maxWeight > 0 ? active : 'plot_type';
   }, [weights]);
 
+  // graphData rebuilds whenever weights/minSim/activeCategory change
+  // (because links + colorBucket depend on them). Without this cache, every
+  // slider-drag tick would recreate every MapNode with empty imgs/pendingTiers
+  // Maps, dropping the loaded HTMLImageElements — the canvas would then paint
+  // fallback rects until each <img> re-fires onload, producing a visible
+  // flicker across all 327 thumbnails on every onChange tick. We keep a
+  // stable id → MapNode cache here and reuse imgs/pendingTiers as long as
+  // thumbUrl is unchanged (theme toggle invalidates).
+  const nodeCacheRef = useRef<Map<string, MapNode>>(new Map());
+
   // 3. derive graph data from specs/theme (pure — no setState in effect)
   const graphData = useMemo<{
     nodes: MapNode[];
@@ -257,18 +267,31 @@ export function MapPage() {
     const idf = computeIDF(specs);
     const topTypes = topCategoryValues(specs, activeCategory, CLUSTER_COLORS.length);
     const typeCounts = categoryValueCounts(specs, activeCategory);
+    const cache = nodeCacheRef.current;
+    const nextCache = new Map<string, MapNode>();
     const nodes: MapNode[] = specs.map(s => {
       const v = primaryCategoryValue(s, activeCategory);
-      return {
+      const colorBucket = topTypes.includes(v) ? v : null;
+      const thumbUrl = selectMapThumbUrl(s, isDark);
+      const cached = cache.get(s.id);
+      // Reuse the loaded image cache and pending-fetch tracker when the
+      // thumbnail URL hasn't changed. weights / minSim / activeCategory
+      // never affect the thumbnail; only specs (re-fetch) and isDark
+      // (theme switch -> different preview URL) do.
+      const reuse = cached && cached.thumbUrl === thumbUrl;
+      const node: MapNode = {
         id: s.id,
         title: s.title,
         tags: flattenTags(s),
-        colorBucket: topTypes.includes(v) ? v : null,
-        thumbUrl: selectMapThumbUrl(s, isDark),
-        imgs: new Map(),
-        pendingTiers: new Set(),
+        colorBucket,
+        thumbUrl,
+        imgs: reuse ? cached.imgs : new Map(),
+        pendingTiers: reuse ? cached.pendingTiers : new Set(),
       };
+      nextCache.set(s.id, node);
+      return node;
     });
+    nodeCacheRef.current = nextCache;
     const links = buildKNNLinks(specs, idf, KNN_K, minSim, weights);
     return { nodes, links, topTypes, typeCounts, idf };
   }, [specs, isDark, weights, minSim, activeCategory]);
