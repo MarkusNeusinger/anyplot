@@ -1258,13 +1258,48 @@ export function MapPage() {
               }
             }}
             cooldownTicks={COOLDOWN_TICKS}
-            // No post-settle camera move: the simulation's centering force
-            // already lands the graph near the viewport, and an explicit
-            // zoom-to-fit changes very little visually while adding an
-            // animation that feels unmotivated. Users who land outside the
-            // visible area on small screens can pan/zoom freely once the
-            // gate overlay drops.
-            onEngineStop={() => setSettled(true)}
+            // Frame the dense cluster to ~80% of the viewport — instantly
+            // (0 ms), so the camera move happens behind the still-active
+            // gate overlay and the user just sees the final framing when
+            // `settled` flips. The trick is bounding the *5th–95th
+            // percentile* of node coordinates instead of the full bbox:
+            // a couple of far-flung outliers (typically null-bucket specs
+            // with no strong KNN edges) would otherwise dominate the bbox
+            // and shrink the readable center to half its size. Outliers
+            // remain reachable via pan.
+            onEngineStop={() => {
+              const fg = fgRef.current;
+              if (fg) {
+                const xs: number[] = [];
+                const ys: number[] = [];
+                for (const n of graphData.nodes as Array<MapNode & { x?: number; y?: number }>) {
+                  if (n.x != null && n.y != null) {
+                    xs.push(n.x);
+                    ys.push(n.y);
+                  }
+                }
+                if (xs.length > 0) {
+                  xs.sort((a, b) => a - b);
+                  ys.sort((a, b) => a - b);
+                  const trim = 0.05;
+                  const lo = Math.floor(xs.length * trim);
+                  const hi = Math.floor(xs.length * (1 - trim));
+                  const minX = xs[lo], maxX = xs[hi], minY = ys[lo], maxY = ys[hi];
+                  const cx = (minX + maxX) / 2;
+                  const cy = (minY + maxY) / 2;
+                  const bboxW = Math.max(1, maxX - minX);
+                  const bboxH = Math.max(1, maxY - minY);
+                  const padding = Math.round(Math.min(size.w, size.h) * 0.1);
+                  const fitZoom = Math.min(
+                    (size.w - 2 * padding) / bboxW,
+                    (size.h - 2 * padding) / bboxH,
+                  );
+                  fg.centerAt?.(cx, cy, 0);
+                  fg.zoom?.(fitZoom, 0);
+                }
+              }
+              setSettled(true);
+            }}
             // Wire up the custom forces once the imperative ref is available.
             // onRenderFramePre fires every frame; the __forcesWired guard makes
             // it idempotent and the cost on subsequent frames is one property read.
