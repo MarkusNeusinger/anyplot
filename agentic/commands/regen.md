@@ -234,20 +234,51 @@ uv run ruff check --fix plots/{SPEC_ID}/implementations/python/{LIBRARY}.py
 
 Fix any unfixable errors manually and re-run.
 
-### 2f. Self-score
+### 2f. Evaluate the rendered plot (full review, not just a number)
 
-View `plots/{SPEC_ID}/implementations/python/.regen-preview/{LIBRARY}/plot-light.png` (the canonical render — also
-inspect `plot-dark.png` to verify chrome flips correctly and data colors are identical) and score against the 6
-categories from `prompts/quality-criteria.md`:
+The Cloud AI review pipeline (`impl-review.yml`) is **not** dispatched on regen PRs — `ai-approved` is set
+directly. That means the regen flow is the **only** place the metadata's `quality_score` and `review` block
+get filled in. Skipping this step leaves the merged metadata with stale or null evaluation data, which
+breaks Postgres sync, the catalog UI, and the next regen's "previous review" lookup.
+
+**Open both rendered PNGs** with the `Read` tool and inspect them as you would a Cloud AI review:
+
+```
+plots/{SPEC_ID}/implementations/python/.regen-preview/{LIBRARY}/plot-light.png
+plots/{SPEC_ID}/implementations/python/.regen-preview/{LIBRARY}/plot-dark.png
+```
+
+Cross-check both: data shapes/positions/colors must be identical (Okabe-Ito positions 1–7), only the chrome
+(background, text, grid, legend box) flips. If a render breaks (wrong-theme text, missing data, cut-off
+content), that's a real defect — fix it before scoring.
+
+Then produce a **full structured evaluation**:
+
+1. **Score every item from `prompts/quality-criteria.md` individually.** All categories: Visual Quality
+   (VQ-01…VQ-07), Design Excellence (DE-01…DE-03), Spec Compliance (SC-01…SC-04), Data Quality
+   (DQ-01…DQ-03), Code Quality (CQ-01…CQ-05), Library Mastery (LM-01…LM-02). Median total is 72–78 — apply
+   the anti-inflation calibration anchors and score caps from `quality-criteria.md`. Don't inflate.
+
+2. **Write a 3–5 sentence `image_description`** describing what the plot actually shows (data shape, colors,
+   labels, key visual features, theme chrome). This is the field a future regen will read as "previous
+   image description" to decide what to keep.
+
+3. **Distill 3–6 `strengths` and 1–4 `weaknesses`** in concrete, actionable terms (no fluff). Strengths feed
+   the "KEEP these" guidance; weaknesses feed "FIX these" on the next regen.
+
+4. **Pick a `verdict`:** `APPROVED` if the score meets the cascading threshold for review 1 (≥ 90) — or for
+   subsequent reviews per `quality-criteria.md`. Otherwise `REJECTED`. The PR-label rule in step 2j is
+   simpler (`ai-approved` ≥ 50, `quality-poor` < 50) because regen accepts everything that wouldn't be
+   auto-failed; the verdict here is the honest assessment.
+
+Print the totals line for the user:
 
 ```
 VQ: __/30 | DE: __/20 | SC: __/15 | DQ: __/15 | CQ: __/10 | LM: __/10 → TOTAL: __/100
 ```
 
-Apply the calibration defaults and score caps from `quality-criteria.md`. Median is 72-78 — don't inflate.
-
-If `TOTAL < 90`: identify the 2-3 weakest criteria, fix them in code, re-run 2d-2e, re-score. **Up to 2 repair
-iterations.** After 2, accept the current score and proceed.
+If `TOTAL < 90`: identify the 2–3 weakest criteria, fix them in code, re-run 2d–2e, re-evaluate. **Up to 2
+repair iterations.** After 2, accept the current evaluation and proceed.
 
 ### 2g. Update metadata
 
@@ -262,13 +293,18 @@ present):
 | `generated_by` | From `CLAUDE_MODEL` env var, or `claude --version`, or detected model name |
 | `python_version` | From `uv run python --version` |
 | `library_version` | From `uv run python -c "from importlib.metadata import version; print(version('{pip_package}'))"` |
-| `quality_score` | `null` |
+| `quality_score` | The integer total from step 2f (e.g. `87`) — **never `null`**, since no Cloud review runs |
 | `preview_url_light` | `https://storage.googleapis.com/anyplot-images/plots/{SPEC_ID}/python/{LIBRARY}/plot-light.png` |
 | `preview_url_dark` | `https://storage.googleapis.com/anyplot-images/plots/{SPEC_ID}/python/{LIBRARY}/plot-dark.png` |
 | `preview_html_light` | `…/plot-light.html` (interactive libs only — `plotly`, `bokeh`, `altair`, `highcharts`, `pygal`, `letsplot`) — else `null` |
 | `preview_html_dark` | `…/plot-dark.html` (same condition) — else `null` |
+| `review.image_description` | The 3–5 sentence description from step 2f |
+| `review.strengths` | List from step 2f |
+| `review.weaknesses` | List from step 2f |
+| `review.criteria_checklist` | Per-category breakdown with one entry per criterion ID (`VQ-01`, …, `LM-02`), each with `score`, `max`, `passed`, `comment`. Totals must add up to `quality_score`. |
+| `review.verdict` | `APPROVED` or `REJECTED` per step 2f's cascading-threshold judgment |
+| `impl_tags`, `created` | **Keep unchanged** |
 | Legacy `preview_url`, `preview_html` | **Remove** — replaced by the four `_light`/`_dark` fields |
-| All other fields | **Keep unchanged** (especially `review`, `impl_tags`, `created`) |
 
 **Pip-package mapping:** matplotlib→matplotlib, seaborn→seaborn, plotly→plotly, bokeh→bokeh, altair→altair,
 plotnine→plotnine, pygal→pygal, highcharts→highcharts-core, letsplot→lets-plot.
