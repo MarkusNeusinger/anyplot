@@ -130,11 +130,12 @@ export type TagCategory = (typeof TAG_CATEGORIES)[number];
  * weights panel; passing a custom `weights` map to {@link weightedJaccard}
  * or {@link buildKNNLinks} replaces the defaults entirely.
  *
- * The defaults privilege plot_type (2.0) with light contributions from
- * features and data_type (0.5 each), plus a small 0.1 floor on every
- * remaining category so subtle cross-type cohesion (techniques, patterns,
- * dataprep, etc.) still nudges the layout instead of being ignored
- * entirely. Users can slide any of these up via the weights panel.
+ * The defaults privilege plot_type (2.0) so it drives the main clusters.
+ * Secondary semantic axes get non-zero contributions: data_type (0.6),
+ * features (0.5), domain (0.3), techniques (0.2). Remaining categories
+ * sit on a 0.1 floor so they still nudge the layout instead of being
+ * ignored entirely. Users can slide any of these up via the weights
+ * panel.
  */
 export const DEFAULT_CATEGORY_WEIGHT: Record<TagCategory, number> = {
   plot_type: 2.0,

@@ -40,6 +40,7 @@ import {
 
 
 const NODE_SIZE = 60;            // graph-space size of a node — large enough to read the thumbnail without hovering
+const MIN_ZOOM_FIT = 0.5;         // floor for the fit-on-overflow safety zoom — without it, a few far-flung outliers shrink the dense central cluster into pixels
 const COOLDOWN_TICKS = 450;       // a touch over the original 400 — just enough to let the slower alpha decay finish its work before the cap kicks in
 const CLUSTER_SEED_RADIUS = 600;  // distance from origin where each colorBucket cluster's centroid is initially placed
 const CLUSTER_SEED_JITTER = 150;  // per-node random offset around the cluster centroid — small enough to keep clusters identifiable, large enough that collision can settle them
@@ -165,10 +166,10 @@ export function MapPage() {
   // Mobile-only: legend collapses behind a `legend ▸` toggle to leave
   // canvas room. Tablet/desktop renders the legend list always-visible.
   const [legendOpen, setLegendOpen] = useState(false);
-  // settled = true once the post-mount camera animation has finished. Until
+  // settled = true once the force simulation has finished cooling. Until
   // then, the canvas is overlaid by a subtle gate that swallows pointer
-  // input so a click during simulation/zoom can't be clobbered when the
-  // camera then animates away from where the user tapped.
+  // input — a click on a still-moving node would otherwise pin the wrong
+  // spec by the time the simulation settles around it.
   const [settled, setSettled] = useState(false);
 
   // Search-pill state. searchOpen controls dropdown visibility (separate
@@ -528,10 +529,6 @@ export function MapPage() {
   const hasHover = useMediaQuery('(hover: hover)', { noSsr: true });
 
   const onNodeClick = (node: MapNode) => {
-    // Belt-and-braces guard: the overlay already swallows pointer events
-    // while the camera is animating, but ForceGraph2D may have buffered a
-    // tap that landed just before the gate appeared.
-    if (!settled) return;
     if (!hasHover && pinnedId !== node.id) {
       // Touch device, first tap on a fresh node: pin + open panel — same
       // semantics as desktop hover. We deliberately don't fly/zoom: the
@@ -552,7 +549,6 @@ export function MapPage() {
   // has placed the node (x/y populated) — by the time the user has typed a
   // query, the cooldown has long since finished.
   const flyTo = (id: string) => {
-    if (!settled) return;
     const fg = fgRef.current;
     if (!fg) return;
     const node = nodeById.get(id) as
@@ -1263,12 +1259,45 @@ export function MapPage() {
               }
             }}
             cooldownTicks={COOLDOWN_TICKS}
-            // The simulation's centering force already lands the graph near
-            // the viewport, so an explicit zoom-to-fit changes very little
-            // and just adds a wait. Drop the gate as soon as the engine
-            // stops — the user keeps whatever camera state the simulation
-            // produced and can pan/zoom freely.
-            onEngineStop={() => setSettled(true)}
+            // The simulation's centering force already lands the graph nicely
+            // on most viewports, so we only kick in a fit-to-view when the
+            // settled extent would actually overflow the visible area (e.g.
+            // mobile, or when far-flung outliers have spread the bbox wide).
+            // A single centerAt + zoom animation is covered by the gate
+            // overlay; the MIN_ZOOM_FIT floor prevents outliers from
+            // shrinking the dense central cluster into illegible pixels.
+            onEngineStop={() => {
+              const fg = fgRef.current;
+              if (fg) {
+                const padding = 60;
+                let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+                for (const n of graphData.nodes as Array<MapNode & { x?: number; y?: number }>) {
+                  if (n.x == null || n.y == null) continue;
+                  if (n.x < minX) minX = n.x;
+                  if (n.x > maxX) maxX = n.x;
+                  if (n.y < minY) minY = n.y;
+                  if (n.y > maxY) maxY = n.y;
+                }
+                if (Number.isFinite(minX)) {
+                  const bboxW = maxX - minX;
+                  const bboxH = maxY - minY;
+                  const overflowsX = bboxW > size.w - 2 * padding;
+                  const overflowsY = bboxH > size.h - 2 * padding;
+                  if (overflowsX || overflowsY) {
+                    const cx = (minX + maxX) / 2;
+                    const cy = (minY + maxY) / 2;
+                    const naturalFit = Math.min(
+                      (size.w - 2 * padding) / Math.max(1, bboxW),
+                      (size.h - 2 * padding) / Math.max(1, bboxH),
+                    );
+                    const targetZoom = Math.max(MIN_ZOOM_FIT, naturalFit);
+                    fg.centerAt?.(cx, cy, 400);
+                    fg.zoom?.(targetZoom, 400);
+                  }
+                }
+              }
+              setSettled(true);
+            }}
             // Wire up the custom forces once the imperative ref is available.
             // onRenderFramePre fires every frame; the __forcesWired guard makes
             // it idempotent and the cost on subsequent frames is one property read.
@@ -1309,10 +1338,10 @@ export function MapPage() {
         )}
 
         {/* Settling gate: visible while specs are loaded but the simulation
-            hasn't finished cooling and the camera hasn't completed its initial
-            fit-to-view. Sits on top of the canvas, swallows pointer events,
-            and shows a small spinner in the corner so the user sees that the
-            layout is still resolving. Drops as soon as `settled` flips. */}
+            hasn't finished cooling. Sits on top of the canvas, swallows
+            pointer events, and shows a small spinner in the corner so the
+            user sees that the layout is still resolving. Drops as soon as
+            `settled` flips on engine stop. */}
         {ready && !settled && (
           <Box
             aria-hidden="true"
