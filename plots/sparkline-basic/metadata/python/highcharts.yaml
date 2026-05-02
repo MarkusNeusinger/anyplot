@@ -1,158 +1,201 @@
 library: highcharts
+language: python
 specification_id: sparkline-basic
 created: '2025-12-23T20:47:34Z'
-updated: '2025-12-23T21:11:41Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-05-02T23:15:39Z'
+generated_by: local-regen
 workflow_run: 20471155861
 issue: 0
-python_version: 3.13.11
-library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/highcharts/plot.html
-quality_score: 91
+python_version: 3.13.12
+library_version: 1.10.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/highcharts/plot-dark.html
+quality_score: 87
 impl_tags:
   dependencies:
-    - selenium
+  - selenium
   techniques:
-    - html-export
+  - html-export
   patterns:
-    - data-generation
+  - data-generation
   dataprep: []
   styling: []
 review:
   strengths:
-  - Clean, minimal sparkline design with no chart chrome (axes, gridlines) per specification
-  - Excellent colorblind-safe color choices (orange for min, teal for max instead
-    of red/green)
-  - Three reference markers (start, min, max) enhance data comprehension without cluttering
-  - Realistic data pattern with trend + cyclical + noise components
-  - Proper use of Highcharts scatter series for point markers separate from main line
-  - Good line width (10) and marker sizes for visibility at 4800x2700 resolution
+  - 'Filled-area variant of the sparkline — explicitly mentioned in the spec as ''Optional:
+    fill under line for area effect'' — rendered with a subtle translucent green that
+    doesn''t overwhelm the line'
+  - Stock-closing-prices scenario is one of the spec's listed applications and plausibly
+    tuned (mid-cap range, realistic daily volatility, plausible earnings-pullback
+    magnitude)
+  - Data shape clearly tells a story — climb, sharp drawdown, recovery, settle — readable
+    purely from the line geometry without annotations
+  - Theme-adaptive chrome with identical Okabe-Ito data colors across both themes;
+    only background + title color flip
+  - 'Idiomatic highcharts_core composition: AreaSeries + two ScatterSeries on shared
+    axes via plot_options'
+  - Explicit y-axis bounds tied to the data range so the line variation occupies most
+    of the canvas height instead of getting lost in autoscale padding
   weaknesses:
-  - LineSeries imported from highcharts_core.options.series.area instead of highcharts_core.options.series.line
-  - Missing last point marker (specification mentions optional first/last points for
-    reference - only first is shown)
-  image_description: 'The plot displays a sparkline chart with a continuous blue line
-    (#306998) showing a trend pattern over approximately 60 data points. The line
-    exhibits a clear pattern with an initial dip, mid-chart low point, then an upward
-    trend with cyclical variations. Three marker points are visible: a gray circle
-    at the start (first point), an orange circle at the minimum value (around the
-    middle-left of the chart), and a teal/cyan circle at the maximum value (in the
-    upper-right portion). The title "sparkline-basic · highcharts · pyplots.ai" is
-    displayed at the top in bold text. No axes, gridlines, or labels are present,
-    consistent with sparkline design principles. The chart has a clean white background.'
+  - Line stroke (4px) is a touch thin against the soft area fill on a 4800px-wide
+    canvas — could read better at 6px
+  - 'Distinctive-library-features ceiling: the to_js_literal + headless-Chrome screenshot
+    pipeline is the standard Python workflow for highcharts but isn''t a deeply highcharts-unique
+    visual feature; same effect achievable in plotly/bokeh'
+  - Storytelling capped by the basic-variant rule — annotations, drawdown-percent
+    callouts, or a value axis would lift DE-03 but are forbidden by spec
+  image_description: 'A wide ~6:1 area-sparkline rendering 30 trading days of a hypothetical
+    mid-cap stock''s daily closing prices in Okabe-Ito green (#009E73) with a soft
+    translucent green fill beneath the line. The series climbs gradually through the
+    first third, plunges into a sharp earnings-week pullback around days 12–16 (highlighted
+    by a vermillion #D55E00 dot at the trough), then mounts a recovery rally that
+    peaks near day 25 (blue #0072B2 dot at the high), before settling slightly. No
+    axes, ticks, gridlines, or legend — pure data shape. The title ''sparkline-basic
+    · highcharts · anyplot.ai'' sits centered above in 30px bold. Light render uses
+    the cream #FAF8F1 background; dark uses #1A1A17. Data colors and the line/fill
+    geometry are identical across themes — only the page background and title color
+    flip.'
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is large (72px), bold, and clearly readable
+        comment: Title fontSize='30px' bold with explicit theme-correct color, perfectly
+          readable in both renders
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements; clean layout
+        comment: No overlapping elements; markers well-separated from each other and
+          from line
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Line width (10) and marker sizes (28-32 radius) are well-suited for
-          the data density
+        comment: Markers (radius 22) clearly visible; the 4px line stroke is on the
+          thin side against the soft fill on a 4800px canvas
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Uses colorblind-safe palette: blue line, orange min, teal max, gray
-          start (no red-green conflicts)'
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of canvas but margins could be better balanced; plot area
-          is well-utilized
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: true
-        comment: Legend is disabled as required, but no way to identify what the markers
-          mean without code context
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct sparkline implementation with minimal chart chrome
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Sequential values correctly displayed as continuous line
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'All optional features implemented: min/max highlighting, first point
-          marker, no axes/labels'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Full data range visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 0
-        max: 2
-        passed: true
-        comment: Legend disabled (correct for sparkline) but markers unlabeled
-      - id: SC-06
-        name: Title Format
         score: 2
         max: 2
         passed: true
-        comment: Uses exact format "sparkline-basic · highcharts · pyplots.ai"
-    data_quality:
-      score: 20
+        comment: Okabe-Ito green/vermillion/blue are CVD-safe and distinguishable
+          by hue + luminance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Compact 6:1 aspect ratio appropriate for sparkline; ~70% of canvas
+          height occupied by data with balanced top/bottom margins, but a small amount
+          of dead space above the line at peak
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: N/A for sparklines (no axes by spec design); title is descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (Okabe-Ito pos 1), MIN #D55E00 (pos 2), MAX
+          #0072B2 (pos 3); light bg #FAF8F1, dark bg #1A1A17; data colors identical
+          across themes'
+    design_excellence:
+      score: 13
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
         max: 8
         passed: true
-        comment: Shows trend with seasonal/cyclical pattern, noise, clear min/max
-          points, upward overall trend
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
+        comment: Tasteful translucent fill (alpha 0.18) + clean two-color extreme
+          markers; clearly above defaults but not publication-flair
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
         passed: true
-        comment: Daily sales figures scenario is plausible and relatable
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: No grid, no axes, no legend, no chart border; small ceiling for line
+          thickness + marker stroke polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Climb → pullback → recovery → settle is readable from the line shape;
+          vermillion MIN and blue MAX provide focal points; storytelling capped by
+          basic-variant no-annotation rule
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Values around 100 with realistic variation are sensible for sales
-          data
+        comment: Correct sparkline implementation in the filled-area variant explicitly
+          listed in the spec notes
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present — no axes/labels/grid, compact 6:1 ratio
+          (within 4:1–8:1), min/max highlights, fill under line
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Day index → x, closing price → y, correctly assigned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format `sparkline-basic · highcharts · anyplot.ai` exact; legend
+          disabled (correct for sparkline)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Multiple distinct trend phases — climb, sharp pullback, recovery
+          rally, plateau — varied geometry across the full series
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Hypothetical mid-cap stock daily closing prices over 30 trading days
+          — explicitly listed in spec applications; neutral business scenario
+      - id: DQ-03
+        name: Appropriate Scale & Factual Correctness
+        score: 4
+        max: 4
+        passed: true
+        comment: Prices in $30–$50 range plausible for a mid-cap; daily log-vol ~2.2%
+          and earnings-pullback ~3.8%/day for 4 days are realistic for the asset class
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -160,41 +203,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → chart → save'
+        comment: imports → data → plot → save; no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(7) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: os, tempfile, time, urllib, numpy, highcharts_core, selenium — all
+          used
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses LineSeries from area module (should import from line module)
+        comment: Headless-browser screenshot pipeline is unavoidable boilerplate;
+          the chart-construction part is clean and ~30 lines
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{light,dark}.png and plot-{light,dark}.html; current highcharts_core
+          2.x API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Good use of Highcharts chart options, separate scatter series for
-          markers, proper axis hiding. Could leverage Highcharts sparkline-specific
-          features.
-  verdict: APPROVED
+        comment: 'Correct highcharts_core composition: Chart + HighchartsOptions +
+          AreaSeries + ScatterSeries via plot_options for series-wide config; threshold=None
+          and fillColor are highcharts-specific area knobs used appropriately'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Area chart with explicit threshold + alpha fill is a highcharts pattern,
+          but the same area-sparkline visual is achievable in plotly/bokeh without
+          much effort; no highcharts-unique feature like accessibility module, drilldown,
+          or export-server styling
+  verdict: REJECTED
