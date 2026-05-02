@@ -131,21 +131,21 @@ export type TagCategory = (typeof TAG_CATEGORIES)[number];
  * or {@link buildKNNLinks} replaces the defaults entirely.
  *
  * The defaults privilege plot_type (2.0) with light contributions from
- * features and data_type (0.5 each). That gives a plot_type-dominant map
- * with subtle cross-type cohesion. Users can slide secondary categories up
- * via the weights panel to mix in techniques/patterns/etc. for richer
- * clustering.
+ * features and data_type (0.5 each), plus a small 0.1 floor on every
+ * remaining category so subtle cross-type cohesion (techniques, patterns,
+ * dataprep, etc.) still nudges the layout instead of being ignored
+ * entirely. Users can slide any of these up via the weights panel.
  */
 export const DEFAULT_CATEGORY_WEIGHT: Record<TagCategory, number> = {
   plot_type: 2.0,
   features: 0.5,
-  techniques: 0,
-  patterns: 0,
-  dataprep: 0,
-  dependencies: 0,
-  domain: 0,
-  data_type: 0.5,
-  styling: 0,
+  techniques: 0.2,
+  patterns: 0.1,
+  dataprep: 0.1,
+  dependencies: 0.1,
+  domain: 0.3,
+  data_type: 0.6,
+  styling: 0.1,
 };
 
 function categoryOf(prefixedTag: string): string {
