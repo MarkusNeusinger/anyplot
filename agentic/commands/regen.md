@@ -42,7 +42,24 @@ Check whether `.regen-plan.md` exists at repo root.
 
 ## Plan mode
 
-### 1a. Pick the oldest spec
+### 1a. Refresh local main
+
+Previous regen runs may have merged PRs remotely; without refreshing, the oldest-spec query below would read
+stale local metadata and could re-pick a spec that was just completed. Fetch first; if the user is on `main`,
+fast-forward it.
+
+```bash
+git fetch origin main
+if [ "$(git symbolic-ref --short HEAD 2>/dev/null)" = "main" ]; then
+  git pull --ff-only origin main
+fi
+```
+
+If the user is on a non-`main` branch, that's fine — the candidate scan below works against `origin/main`-tracked
+files as long as they're checked out, and step 2j explicitly bases each worktree on `origin/main` (not local
+`main`), so staleness can't poison the PR base either.
+
+### 1b. Pick the oldest spec
 
 ```bash
 SPEC_INFO=$(uv run python -c "
@@ -88,15 +105,15 @@ SPEC_LATEST=$(echo "$SPEC_INFO" | cut -f2)
 
 If `SPEC_ID` is empty, abort — no eligible specs.
 
-### 1b. List libraries
+### 1c. List libraries
 
 Scan `plots/$SPEC_ID/implementations/python/` for `*.py` files (excluding `__init__.py`). If empty, abort.
 
-### 1c. Extract spec title
+### 1d. Extract spec title
 
 Read the first `# ` heading from `plots/$SPEC_ID/specification.md` → `SPEC_TITLE`.
 
-### 1d. Write `.regen-plan.md`
+### 1e. Write `.regen-plan.md`
 
 Use the `Write` tool. Order libraries alphabetically. Only include libraries that actually have a `.py` file.
 
@@ -118,7 +135,7 @@ Use the `Write` tool. Order libraries alphabetically. Only include libraries tha
 ## Log
 ```
 
-### 1e. Report and exit
+### 1f. Report and exit
 
 ```
 Plan written to .regen-plan.md
@@ -250,7 +267,12 @@ fi
 
 ```bash
 WORKTREE=".worktrees/{SPEC_ID}-{LIBRARY}"
-git worktree add -b implementation/{SPEC_ID}/{LIBRARY} "$WORKTREE" main
+
+# Refresh the remote main ref before branching: a previous /regen invocation may have already merged
+# its PR via impl-merge.yml, so basing this worktree on stale local `main` would push from outdated
+# history (push rejection or merge conflict if two regen'd libraries touch shared spec files).
+git fetch origin main
+git worktree add -b implementation/{SPEC_ID}/{LIBRARY} "$WORKTREE" origin/main
 
 cp plots/{SPEC_ID}/implementations/python/{LIBRARY}.py \
    "$WORKTREE/plots/{SPEC_ID}/implementations/python/{LIBRARY}.py"
