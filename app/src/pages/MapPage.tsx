@@ -40,7 +40,6 @@ import {
 
 
 const NODE_SIZE = 60;            // graph-space size of a node — large enough to read the thumbnail without hovering
-const MIN_ZOOM_FIT = 0.5;         // floor for the fit-on-overflow safety zoom — without it, a few far-flung outliers shrink the dense central cluster into pixels
 const COOLDOWN_TICKS = 450;       // a touch over the original 400 — just enough to let the slower alpha decay finish its work before the cap kicks in
 const CLUSTER_SEED_RADIUS = 600;  // distance from origin where each colorBucket cluster's centroid is initially placed
 const CLUSTER_SEED_JITTER = 150;  // per-node random offset around the cluster centroid — small enough to keep clusters identifiable, large enough that collision can settle them
@@ -1259,45 +1258,13 @@ export function MapPage() {
               }
             }}
             cooldownTicks={COOLDOWN_TICKS}
-            // The simulation's centering force already lands the graph nicely
-            // on most viewports, so we only kick in a fit-to-view when the
-            // settled extent would actually overflow the visible area (e.g.
-            // mobile, or when far-flung outliers have spread the bbox wide).
-            // A single centerAt + zoom animation is covered by the gate
-            // overlay; the MIN_ZOOM_FIT floor prevents outliers from
-            // shrinking the dense central cluster into illegible pixels.
-            onEngineStop={() => {
-              const fg = fgRef.current;
-              if (fg) {
-                const padding = 60;
-                let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-                for (const n of graphData.nodes as Array<MapNode & { x?: number; y?: number }>) {
-                  if (n.x == null || n.y == null) continue;
-                  if (n.x < minX) minX = n.x;
-                  if (n.x > maxX) maxX = n.x;
-                  if (n.y < minY) minY = n.y;
-                  if (n.y > maxY) maxY = n.y;
-                }
-                if (Number.isFinite(minX)) {
-                  const bboxW = maxX - minX;
-                  const bboxH = maxY - minY;
-                  const overflowsX = bboxW > size.w - 2 * padding;
-                  const overflowsY = bboxH > size.h - 2 * padding;
-                  if (overflowsX || overflowsY) {
-                    const cx = (minX + maxX) / 2;
-                    const cy = (minY + maxY) / 2;
-                    const naturalFit = Math.min(
-                      (size.w - 2 * padding) / Math.max(1, bboxW),
-                      (size.h - 2 * padding) / Math.max(1, bboxH),
-                    );
-                    const targetZoom = Math.max(MIN_ZOOM_FIT, naturalFit);
-                    fg.centerAt?.(cx, cy, 400);
-                    fg.zoom?.(targetZoom, 400);
-                  }
-                }
-              }
-              setSettled(true);
-            }}
+            // No post-settle camera move: the simulation's centering force
+            // already lands the graph near the viewport, and an explicit
+            // zoom-to-fit changes very little visually while adding an
+            // animation that feels unmotivated. Users who land outside the
+            // visible area on small screens can pan/zoom freely once the
+            // gate overlay drops.
+            onEngineStop={() => setSettled(true)}
             // Wire up the custom forces once the imperative ref is available.
             // onRenderFramePre fires every frame; the __forcesWired guard makes
             // it idempotent and the cost on subsequent frames is one property read.
