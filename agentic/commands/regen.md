@@ -123,6 +123,15 @@ LIBRARY=$(echo "$NEXT" | cut -f3)
 
 Skip Context7 by default — only consult it if step 2d reveals a clear library-API issue.
 
+**Library Independence — DO NOT read sibling-library files.** This invocation
+works on **one** library only. Never open another library's `.py` or `.yaml`
+under `plots/{SPEC_ID}/implementations/` or `plots/{SPEC_ID}/metadata/` — not
+even "for reference" or "to stay consistent". Each library is its own
+interpretation of the spec; copying a sibling's data scenario, color choices,
+aspect ratio, or layout makes the catalog show the same chart rendered by
+different engines, which is the exact opposite of the catalog's purpose.
+See `prompts/plot-generator.md` → "Library Independence" for the full rule.
+
 ### 2c. Modify the implementation
 
 Edit `plots/{SPEC_ID}/implementations/python/{LIBRARY}.py`:
