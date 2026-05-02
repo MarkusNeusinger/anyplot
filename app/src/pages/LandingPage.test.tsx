@@ -114,4 +114,12 @@ describe('LandingPage', () => {
     await user.click(screen.getByText(/Okabe/));
     expect(trackEvent).toHaveBeenCalledWith('nav_click', expect.objectContaining({ source: 'palette_okabe_ito' }));
   });
+
+  it('tracks the map teaser visual click', async () => {
+    const user = userEvent.setup();
+    render(<LandingPage />);
+
+    await user.click(screen.getByLabelText(/Open the interactive specifications map/));
+    expect(trackEvent).toHaveBeenCalledWith('nav_click', { source: 'map_teaser_preview', target: '/map' });
+  });
 });

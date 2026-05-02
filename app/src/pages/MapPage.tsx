@@ -40,9 +40,10 @@ import {
 
 
 const NODE_SIZE = 60;            // graph-space size of a node — large enough to read the thumbnail without hovering
-const MIN_ZOOM = 0.5;             // floor for zoomToFit so outliers can't shrink the dense cluster into pixels
-const COOLDOWN_TICKS = 400;       // longer settling for cleaner final positions
-const KNN_K = 5;                  // edges per node in the sparse KNN graph
+const COOLDOWN_TICKS = 450;       // a touch over the original 400 — just enough to let the slower alpha decay finish its work before the cap kicks in
+const CLUSTER_SEED_RADIUS = 600;  // distance from origin where each colorBucket cluster's centroid is initially placed
+const CLUSTER_SEED_JITTER = 150;  // per-node random offset around the cluster centroid — small enough to keep clusters identifiable, large enough that collision can settle them
+const KNN_K = 8;                  // edges per node in the sparse KNN graph
 // Default threshold tuned for the plot_type-dominant default. Bumped up
 // from 0.05 because once secondary categories (features, techniques, …)
 // have non-zero weight, common tags like `features:basic` create weak
@@ -164,6 +165,13 @@ export function MapPage() {
   // Mobile-only: legend collapses behind a `legend ▸` toggle to leave
   // canvas room. Tablet/desktop renders the legend list always-visible.
   const [legendOpen, setLegendOpen] = useState(false);
+  // settled = true once the force simulation has finished cooling. Until
+  // then, the canvas is overlaid by a subtle gate that swallows pointer
+  // input — a click on a still-moving node would otherwise pin the wrong
+  // spec by the time the simulation settles around it. Resets to false
+  // whenever graphData re-derives (filter / weight / category change), so
+  // the gate also covers subsequent re-layouts.
+  const [settled, setSettled] = useState(false);
 
   // Search-pill state. searchOpen controls dropdown visibility (separate
   // from focus so we can keep showing matches briefly while a click is in
@@ -269,24 +277,54 @@ export function MapPage() {
     const typeCounts = categoryValueCounts(specs, activeCategory);
     const cache = nodeCacheRef.current;
     const nextCache = new Map<string, MapNode>();
-    const nodes: MapNode[] = specs.map(s => {
+    // Pre-compute one centroid per colorBucket on a circle around the origin.
+    // Seeding each node near its cluster centroid (instead of the FG2D
+    // default of random positions everywhere) gives the simulation a warm
+    // start: clusters don't have to first separate from a uniform soup, and
+    // the same number of cooldown ticks now produces visibly cleaner
+    // separation. Null-bucket nodes sit at the origin and let the link force
+    // pull them toward whatever clusters they connect to.
+    const clusterCentroids = new Map<string, { x: number; y: number }>();
+    topTypes.forEach((t, i) => {
+      const angle = (i / topTypes.length) * Math.PI * 2;
+      clusterCentroids.set(t, {
+        x: Math.cos(angle) * CLUSTER_SEED_RADIUS,
+        y: Math.sin(angle) * CLUSTER_SEED_RADIUS,
+      });
+    });
+    // Hash-based jitter so seed positions are stable across re-renders for
+    // the same spec id — avoids reshuffling on filter changes.
+    const jitter = (id: string, salt: number) => {
+      let h = salt;
+      for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+      return ((h & 0xffff) / 0xffff - 0.5) * 2 * CLUSTER_SEED_JITTER;
+    };
+    const nodes: (MapNode & { x?: number; y?: number; vx?: number; vy?: number })[] = specs.map(s => {
       const v = primaryCategoryValue(s, activeCategory);
       const colorBucket = topTypes.includes(v) ? v : null;
       const thumbUrl = selectMapThumbUrl(s, isDark);
-      const cached = cache.get(s.id);
-      // Reuse the loaded image cache and pending-fetch tracker when the
-      // thumbnail URL hasn't changed. weights / minSim / activeCategory
-      // never affect the thumbnail; only specs (re-fetch) and isDark
-      // (theme switch -> different preview URL) do.
+      const cached = cache.get(s.id) as
+        | (MapNode & { x?: number; y?: number; vx?: number; vy?: number })
+        | undefined;
       const reuse = cached && cached.thumbUrl === thumbUrl;
-      const node: MapNode = {
+      // Warm-start preference: keep the simulation's last x/y if we have it
+      // (filter / weight tweaks reuse positions and refine in place). Cold
+      // start: seed from the cluster centroid + stable per-id jitter.
+      const seedCenter = colorBucket ? clusterCentroids.get(colorBucket) : null;
+      const x = cached?.x ?? (seedCenter ? seedCenter.x + jitter(s.id, 1) : jitter(s.id, 3));
+      const y = cached?.y ?? (seedCenter ? seedCenter.y + jitter(s.id, 2) : jitter(s.id, 5));
+      const node: MapNode & { x: number; y: number; vx: number; vy: number } = {
         id: s.id,
         title: s.title,
         tags: flattenTags(s),
         colorBucket,
         thumbUrl,
-        imgs: reuse ? cached.imgs : new Map(),
-        pendingTiers: reuse ? cached.pendingTiers : new Set(),
+        imgs: reuse ? cached!.imgs : new Map(),
+        pendingTiers: reuse ? cached!.pendingTiers : new Set(),
+        x,
+        y,
+        vx: cached?.vx ?? 0,
+        vy: cached?.vy ?? 0,
       };
       nextCache.set(s.id, node);
       return node;
@@ -295,6 +333,16 @@ export function MapPage() {
     const links = buildKNNLinks(specs, idf, KNN_K, minSim, weights);
     return { nodes, links, topTypes, typeCounts, idf };
   }, [specs, isDark, weights, minSim, activeCategory]);
+
+  // Re-arm the settling gate whenever graphData re-derives — FG2D reheats
+  // the simulation in response, and we want the gate to cover the new
+  // cooling phase the same way it covers the initial one. No-op on the
+  // very first render (settled is already false) and while specs are
+  // still loading.
+  useEffect(() => {
+    if (graphData.nodes.length === 0) return;
+    setSettled(false);
+  }, [graphData]);
 
   // Eager-load the 400-tier thumbnails so something paints fast. Higher tiers
   // are fetched lazily from nodeCanvasObject when the user zooms in.
@@ -982,11 +1030,11 @@ export function MapPage() {
             bottom: { xs: 8, sm: 16 },
             right: { xs: 16, sm: 32, md: 64, lg: 96 },
             zIndex: 3,
-            // Phones: ~half the width, no tags. Otherwise the panel covers
-            // the searched node + its connection lines after fly-to. Tablet+:
-            // full 280 px panel as before.
-            width: { xs: 160, sm: 280 },
-            maxWidth: { xs: 'calc(60vw - 32px)', sm: 'calc(100vw - 64px)' },
+            // Phones + tablets: ~half the width, no tags. Otherwise the
+            // panel covers the searched node + its connection lines after
+            // fly-to. Desktop only: full 280 px panel with tag chips.
+            width: { xs: 160, md: 280 },
+            maxWidth: { xs: 'calc(60vw - 32px)', md: 'calc(100vw - 64px)' },
             border: '1px solid var(--rule)',
             borderRadius: '4px',
             bgcolor: 'var(--bg-surface)',
@@ -1009,16 +1057,16 @@ export function MapPage() {
                     display: 'block',
                     width: '100%',
                     height: 'auto',
-                    maxHeight: { xs: 110, sm: 200 },
+                    maxHeight: { xs: 110, md: 200 },
                     objectFit: 'contain',
                     bgcolor: isDark ? '#0a0a08' : '#FFFDF6',
                   }}
                 />
               ) : (
-                <Box sx={{ height: { xs: 90, sm: 158 }, bgcolor: isDark ? '#0a0a08' : '#FFFDF6' }} />
+                <Box sx={{ height: { xs: 90, md: 158 }, bgcolor: isDark ? '#0a0a08' : '#FFFDF6' }} />
               )}
               <Box sx={{
-                p: { xs: 0.75, sm: 1.25 },
+                p: { xs: 0.75, md: 1.25 },
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 0.5,
@@ -1053,10 +1101,10 @@ export function MapPage() {
                 {panelData.tags.length > 0 && (
                   <Box
                     sx={{
-                      // Phones: hide tags, the smaller panel only shows
-                      // image + title + plot_type chip so it doesn't cover
-                      // the focused node and its KNN edges.
-                      display: { xs: 'none', sm: 'flex' },
+                      // Phones + tablets: hide tags, the smaller panel
+                      // only shows image + title + plot_type chip so it
+                      // doesn't cover the focused node and its KNN edges.
+                      display: { xs: 'none', md: 'flex' },
                       flexWrap: 'wrap',
                       gap: 0.75,
                       fontSize: fontSize.xs,
@@ -1101,7 +1149,7 @@ export function MapPage() {
             nodeLabel={(n: MapNode) => n.title}
             // Boost global repulsion so nodes aren't crammed into a blob.
             d3VelocityDecay={0.35}
-            d3AlphaDecay={0.0228}
+            d3AlphaDecay={0.018}
             nodeCanvasObject={(node, ctx, globalScale) => {
               const n = node as WithCoords;
               if (n.x == null || n.y == null) return;
@@ -1222,19 +1270,47 @@ export function MapPage() {
               }
             }}
             cooldownTicks={COOLDOWN_TICKS}
-            // Fit the whole graph into the viewport once the engine settles,
-            // but enforce a minimum zoom afterwards — without the floor, a
-            // few far-flung outliers force zoomToFit to shrink the dense
-            // central cluster down to illegible pixels.
+            // Frame the dense cluster to ~80% of the viewport — instantly
+            // (0 ms), so the camera move happens behind the still-active
+            // gate overlay and the user just sees the final framing when
+            // `settled` flips. The trick is bounding the *5th–95th
+            // percentile* of node coordinates instead of the full bbox:
+            // a couple of far-flung outliers (typically null-bucket specs
+            // with no strong KNN edges) would otherwise dominate the bbox
+            // and shrink the readable center to half its size. Outliers
+            // remain reachable via pan.
             onEngineStop={() => {
               const fg = fgRef.current;
-              if (!fg) return;
-              fg.zoomToFit?.(600, 80);
-              setTimeout(() => {
-                if (typeof fg.zoom === 'function' && fg.zoom() < MIN_ZOOM) {
-                  fg.zoom(MIN_ZOOM, 400);
+              if (fg) {
+                const xs: number[] = [];
+                const ys: number[] = [];
+                for (const n of graphData.nodes as Array<MapNode & { x?: number; y?: number }>) {
+                  if (n.x != null && n.y != null) {
+                    xs.push(n.x);
+                    ys.push(n.y);
+                  }
                 }
-              }, 700);
+                if (xs.length > 0) {
+                  xs.sort((a, b) => a - b);
+                  ys.sort((a, b) => a - b);
+                  const trim = 0.05;
+                  const lo = Math.floor(xs.length * trim);
+                  const hi = Math.floor(xs.length * (1 - trim));
+                  const minX = xs[lo], maxX = xs[hi], minY = ys[lo], maxY = ys[hi];
+                  const cx = (minX + maxX) / 2;
+                  const cy = (minY + maxY) / 2;
+                  const bboxW = Math.max(1, maxX - minX);
+                  const bboxH = Math.max(1, maxY - minY);
+                  const padding = Math.round(Math.min(size.w, size.h) * 0.1);
+                  const fitZoom = Math.min(
+                    (size.w - 2 * padding) / bboxW,
+                    (size.h - 2 * padding) / bboxH,
+                  );
+                  fg.centerAt?.(cx, cy, 0);
+                  fg.zoom?.(fitZoom, 0);
+                }
+              }
+              setSettled(true);
             }}
             // Wire up the custom forces once the imperative ref is available.
             // onRenderFramePre fires every frame; the __forcesWired guard makes
@@ -1273,6 +1349,52 @@ export function MapPage() {
               fg.d3ReheatSimulation?.();
             }}
           />
+        )}
+
+        {/* Settling gate: visible while specs are loaded but the simulation
+            hasn't finished cooling. Sits on top of the canvas, swallows
+            pointer events, and shows a small spinner in the corner so the
+            user sees that the layout is still resolving. Drops as soon as
+            `settled` flips on engine stop. */}
+        {ready && !settled && (
+          <Box
+            aria-hidden="true"
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'auto',
+              cursor: 'wait',
+              // Above the canvas (implicit 0), below all interactive
+              // controls (search pill / legend / weights at z 2, corner
+              // panel at 3, pin-marker at 4) so the gate only swallows
+              // canvas pointer events — search, filters, etc. stay
+              // usable while the simulation is still cooling.
+              zIndex: 1,
+            }}
+          >
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: 12,
+                right: 12,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                px: 1.25,
+                py: 0.5,
+                borderRadius: 999,
+                bgcolor: isDark ? 'rgba(36, 36, 32, 0.85)' : 'rgba(255, 253, 246, 0.85)',
+                border: '1px solid var(--rule)',
+                color: 'var(--ink-soft)',
+                fontFamily: typography.mono,
+                fontSize: fontSize.xs,
+                backdropFilter: 'blur(4px)',
+              }}
+            >
+              <CircularProgress size={12} thickness={5} />
+              <span>arranging…</span>
+            </Box>
+          </Box>
         )}
 
         {/* a11y fallback: visually-hidden list so screen readers + keyboard users

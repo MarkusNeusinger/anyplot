@@ -61,6 +61,8 @@ export function LandingPage() {
 
       <SpecsSection specCount={stats?.specs} featured={featured} />
 
+      <MapSection specCount={stats?.specs} />
+
       <LibrariesSection
         libraries={librariesData}
         onLibraryClick={handleLibraryClick}
@@ -69,6 +71,175 @@ export function LandingPage() {
 
       <PaletteSection />
     </>
+  );
+}
+
+/**
+ * Map section — teases the interactive force-directed map at /map. Mirrors
+ * SpecsSection / PaletteSection two-column layout: short description on the
+ * left, decorative SVG cluster preview on the right. The preview is purely
+ * static (no data fetch, no force simulation) so it stays cheap on the
+ * landing page; it only hints at the real map's clustering aesthetic using
+ * the same Okabe-Ito palette.
+ */
+function MapSection({ specCount }: { specCount?: number }) {
+  const { trackEvent } = useAnalytics();
+  return (
+    <Box sx={{ py: { xs: 2, md: 3 } }}>
+      <SectionHeader prompt="❯" title={<em>map</em>} linkText="map.explore()" linkTo="/map" />
+
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 1.1fr) minmax(0, 1fr)' },
+          gap: { xs: 4, md: 8, lg: 12 },
+          alignItems: 'center',
+        }}
+      >
+        <Box
+          sx={{
+            fontFamily: typography.serif,
+            fontSize: { xs: '1rem', md: '1.25rem' },
+            lineHeight: 1.55,
+            color: 'var(--ink-soft)',
+            fontWeight: 300,
+            maxWidth: '52ch',
+          }}
+        >
+          {specCount != null ? `all ${specCount} specs` : 'every spec'} on a single canvas —{' '}
+          <Box component="span" sx={{ color: 'var(--ink)' }}>
+            clustered by tag similarity, coloured by plot type, searchable.
+          </Box>{' '}
+          zoom in for thumbnails, hover for details, click to open the spec.
+        </Box>
+
+        <Box
+          component={RouterLink}
+          to="/map"
+          onClick={() => trackEvent('nav_click', { source: 'map_teaser_preview', target: '/map' })}
+          sx={{
+            display: 'block',
+            textDecoration: 'none',
+            color: 'inherit',
+            border: '1px solid var(--rule)',
+            borderRadius: 2,
+            bgcolor: 'var(--bg-surface)',
+            overflow: 'hidden',
+            position: 'relative',
+            transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s, border-color 0.25s',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: '2px',
+              background: colors.primary,
+              transform: 'scaleX(0)',
+              transformOrigin: 'left',
+              transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+              zIndex: 1,
+            },
+            '&:hover': {
+              transform: 'translateY(-3px)',
+              boxShadow: '0 16px 32px -12px rgba(0,0,0,0.08)',
+              borderColor: 'rgba(0, 158, 115, 0.2)',
+              '&::before': { transform: 'scaleX(1)' },
+            },
+          }}
+          aria-label="Open the interactive specifications map"
+        >
+          <MapClusterPreview />
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
+/**
+ * Decorative SVG mini-cluster — three loose groups of circles in Okabe-Ito
+ * cluster colours, connected by hairline edges. Static (no force simulation,
+ * no data fetch) so it's cheap to render; the aspect ratio matches the
+ * featured-thumb cards (16:10) for visual rhythm. Positions are hand-picked
+ * to read as "three blobs gently bridged" — like the real map at low zoom.
+ */
+const MAP_PREVIEW_NODES: Array<{ x: number; y: number; r: number; cluster: 0 | 1 | 2 | 3 }> = [
+  // Cluster A — left, brand green
+  { x: 90, y: 95, r: 9, cluster: 0 },
+  { x: 70, y: 130, r: 7, cluster: 0 },
+  { x: 115, y: 125, r: 8, cluster: 0 },
+  { x: 95, y: 160, r: 6, cluster: 0 },
+  { x: 135, y: 95, r: 6, cluster: 0 },
+  { x: 60, y: 100, r: 5, cluster: 0 },
+  // Cluster B — top-right, vermillion
+  { x: 320, y: 70, r: 9, cluster: 1 },
+  { x: 350, y: 100, r: 7, cluster: 1 },
+  { x: 295, y: 105, r: 6, cluster: 1 },
+  { x: 365, y: 60, r: 5, cluster: 1 },
+  { x: 330, y: 130, r: 7, cluster: 1 },
+  // Cluster C — bottom-right, blue
+  { x: 290, y: 200, r: 8, cluster: 2 },
+  { x: 325, y: 220, r: 9, cluster: 2 },
+  { x: 360, y: 195, r: 6, cluster: 2 },
+  { x: 305, y: 235, r: 6, cluster: 2 },
+  { x: 350, y: 240, r: 5, cluster: 2 },
+  // Bridges — neutral nodes
+  { x: 200, y: 130, r: 6, cluster: 3 },
+  { x: 225, y: 175, r: 5, cluster: 3 },
+  { x: 175, y: 165, r: 4, cluster: 3 },
+];
+
+const MAP_PREVIEW_LINKS: Array<[number, number]> = [
+  // Cluster A internal
+  [0, 1], [0, 2], [1, 2], [2, 3], [0, 4], [1, 5], [0, 5],
+  // Cluster B internal
+  [6, 7], [6, 8], [7, 9], [6, 10], [7, 10],
+  // Cluster C internal
+  [11, 12], [12, 13], [11, 14], [13, 14], [14, 15], [12, 15],
+  // Bridges via neutrals
+  [2, 16], [16, 8], [3, 17], [17, 11], [16, 17], [17, 18], [18, 3],
+];
+
+const CLUSTER_PALETTE = ['#009E73', '#D55E00', '#0072B2'] as const;
+
+function MapClusterPreview() {
+  return (
+    <Box
+      component="svg"
+      viewBox="0 0 420 280"
+      aria-hidden="true"
+      sx={{
+        display: 'block',
+        width: '100%',
+        height: 'auto',
+        aspectRatio: '16 / 10',
+        bgcolor: 'var(--bg-elevated)',
+      }}
+    >
+      <g stroke="var(--rule)" strokeWidth={0.75} fill="none" opacity={0.85}>
+        {MAP_PREVIEW_LINKS.map(([a, b], i) => {
+          const na = MAP_PREVIEW_NODES[a];
+          const nb = MAP_PREVIEW_NODES[b];
+          return <line key={i} x1={na.x} y1={na.y} x2={nb.x} y2={nb.y} />;
+        })}
+      </g>
+      {MAP_PREVIEW_NODES.map((n, i) => {
+        const fill = n.cluster === 3 ? 'var(--ink-soft)' : CLUSTER_PALETTE[n.cluster];
+        const opacity = n.cluster === 3 ? 0.45 : 0.92;
+        return (
+          <circle
+            key={i}
+            cx={n.x}
+            cy={n.y}
+            r={n.r}
+            fill={fill}
+            opacity={opacity}
+            stroke="var(--bg-surface)"
+            strokeWidth={1.5}
+          />
+        );
+      })}
+    </Box>
   );
 }
 
