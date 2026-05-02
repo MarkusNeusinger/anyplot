@@ -1,15 +1,18 @@
 library: altair
+language: python
 specification_id: sparkline-basic
 created: '2025-12-23T20:45:04Z'
-updated: '2025-12-23T20:50:27Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-05-02T21:35:20Z'
+generated_by: claude-opus-4-7
 workflow_run: 20471153725
 issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/altair/plot.html
-quality_score: 92
+python_version: 3.13.12
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/altair/plot-dark.html
+quality_score: null
 impl_tags:
   dependencies: []
   techniques:

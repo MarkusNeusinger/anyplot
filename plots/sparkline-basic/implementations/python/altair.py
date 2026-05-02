@@ -1,73 +1,70 @@
-""" pyplots.ai
+"""anyplot.ai
 sparkline-basic: Basic Sparkline
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: altair 6.1.0 | Python 3.13.12
+Quality: /100 | Updated: 2026-05-02
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
 
 
-# Data - Simulated daily sales over 60 days with trend and fluctuations
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito categorical palette — identical across themes; only chrome flips.
+LINE_COLOR = "#009E73"
+MIN_COLOR = "#D55E00"
+MAX_COLOR = "#009E73"
+
+# Data — daily web-traffic sessions over 60 days, with a launch bump,
+# a mid-month decline, and weekend dips. Mixes ups and downs so the
+# sparkline shape is informative.
 np.random.seed(42)
 n_points = 60
-base_trend = np.linspace(100, 150, n_points)
-noise = np.random.randn(n_points) * 10
-values = base_trend + noise
+day = np.arange(n_points)
+trend = 100 + 0.6 * day
+launch_bump = 25 * np.exp(-((day - 12) ** 2) / 30.0)
+mid_decline = -22 * np.exp(-((day - 35) ** 2) / 60.0)
+weekend = np.where(day % 7 >= 5, -10.0, 0.0)
+noise = np.random.randn(n_points) * 4
+values = trend + launch_bump + mid_decline + weekend + noise
 
-# Add realistic business patterns (weekly dips on weekends)
-for i in range(n_points):
-    if i % 7 in [5, 6]:
-        values[i] *= 0.85
+df = pd.DataFrame({"x": day, "value": values})
+min_idx = int(df["value"].idxmin())
+max_idx = int(df["value"].idxmax())
+extremes = df.iloc[[min_idx, max_idx]].assign(kind=["min", "max"])
+endpoints = df.iloc[[0, -1]]
 
-df = pd.DataFrame({"x": range(n_points), "value": values})
+x_enc = alt.X("x:Q", axis=None)
+y_enc = alt.Y("value:Q", axis=None, scale=alt.Scale(zero=False))
 
-# Find min/max points for highlights
-min_idx = df["value"].idxmin()
-max_idx = df["value"].idxmax()
-highlights = df.iloc[[min_idx, max_idx]].copy()
-highlights["type"] = ["min", "max"]
+line = alt.Chart(df).mark_line(strokeWidth=3, color=LINE_COLOR, interpolate="monotone").encode(x=x_enc, y=y_enc)
 
-# First and last point markers
-endpoints = df.iloc[[0, -1]].copy()
+endpoint_dots = alt.Chart(endpoints).mark_circle(size=160, color=INK_SOFT, opacity=0.7).encode(x=x_enc, y=y_enc)
 
-# Sparkline - minimal line chart without axes or labels
-line = (
-    alt.Chart(df)
-    .mark_line(strokeWidth=3, color="#306998")
-    .encode(x=alt.X("x:Q", axis=None), y=alt.Y("value:Q", axis=None, scale=alt.Scale(zero=False)))
-)
-
-# Endpoint markers (subtle gray)
-endpoint_markers = (
-    alt.Chart(endpoints)
-    .mark_circle(size=200, color="#888888")
-    .encode(x=alt.X("x:Q", axis=None), y=alt.Y("value:Q", axis=None, scale=alt.Scale(zero=False)))
-)
-
-# Highlight min (Python Yellow) and max (Python Blue) points
-points = (
-    alt.Chart(highlights)
-    .mark_circle(size=400)
+extreme_dots = (
+    alt.Chart(extremes)
+    .mark_circle(size=420)
     .encode(
-        x=alt.X("x:Q", axis=None),
-        y=alt.Y("value:Q", axis=None, scale=alt.Scale(zero=False)),
-        color=alt.Color("type:N", scale=alt.Scale(domain=["min", "max"], range=["#FFD43B", "#306998"]), legend=None),
+        x=x_enc,
+        y=y_enc,
+        color=alt.Color("kind:N", scale=alt.Scale(domain=["min", "max"], range=[MIN_COLOR, MAX_COLOR]), legend=None),
     )
 )
 
-# Combine layers
 chart = (
-    (line + endpoint_markers + points)
+    (line + endpoint_dots + extreme_dots)
     .properties(
-        width=1600,
-        height=300,  # Compact aspect ratio ~5:1
-        title=alt.Title("sparkline-basic · altair · pyplots.ai", fontSize=28),
+        width=1600, height=260, title=alt.Title("sparkline-basic · altair · anyplot.ai", fontSize=28, color=INK)
     )
-    .configure_view(strokeWidth=0)  # Remove chart border
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure(background=PAGE_BG)
 )
 
-# Save as PNG and HTML
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
