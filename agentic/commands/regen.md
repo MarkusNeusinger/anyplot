@@ -1,4 +1,4 @@
-# Regen Oldest Spec (Local-Friendly)
+# Regen Spec (Local-Friendly)
 
 > Single-spec, single-library-per-invocation regen flow. Designed to stay well under local-model context budgets
 > (e.g. Gemma 3 26B at 256k) by doing exactly **one** thing per invocation and persisting state in `.regen-plan.md`
@@ -14,6 +14,18 @@
 
 ---
 
+## Usage
+
+```
+/regen              # pick the oldest spec
+/regen <spec-id>    # use the given spec instead (must exist on origin/main)
+```
+
+The slash command only takes a spec id on the **first** invocation (Plan mode). Once `.regen-plan.md` exists,
+subsequent invocations resume that plan; the argument is ignored. To switch specs, `rm .regen-plan.md` first.
+
+---
+
 ## How it works
 
 `/regen` is **idempotent and resumable**. Each invocation does exactly one of three things — auto-detected from
@@ -21,13 +33,16 @@
 
 | State file | Action |
 |------------|--------|
-| Missing | **Plan mode** — pick the oldest spec, write the checklist, exit |
+| Missing | **Plan mode** — pick (or validate) the spec, write the checklist, exit |
 | Has unchecked `- [ ]` items | **Execute mode** — do the next library, tick it off, exit |
 | All items `- [x]` or `- [!]` | **Done mode** — archive the plan, exit |
 
 Re-run `/regen` after each invocation. Per spec, expect ~10 invocations (1 plan + 1 per library + 1 finalize).
 Each invocation runs entirely in the lead session — **no agent teams, no parallel agents** — keeping the working
 context small.
+
+All non-trivial logic lives in the Python helper at `agentic/workflows/modules/regen/`. The steps below call it
+via `uv run python -m agentic.workflows.modules.regen <subcommand>`.
 
 ---
 
@@ -44,9 +59,8 @@ Check whether `.regen-plan.md` exists at repo root.
 
 ### 1a. Refresh local main
 
-Previous regen runs may have merged PRs remotely; without refreshing, the oldest-spec query below would read
-stale local metadata and could re-pick a spec that was just completed. Fetch first; if the user is on `main`,
-fast-forward it.
+The picker reads metadata from the `origin/main` git tree (via `git show`), so a `git fetch` is required first.
+If the user happens to be on `main`, fast-forward.
 
 ```bash
 git fetch origin main
@@ -55,134 +69,52 @@ if [ "$(git symbolic-ref --short HEAD 2>/dev/null)" = "main" ]; then
 fi
 ```
 
-**Branch caveat:** the picker below reads metadata YAML from `git show origin/main:…` rather than the working
-tree, so the result is independent of which branch is checked out — even if the local checkout has stale
-plots/ files, the oldest-spec selection reflects the current `main`. Step 2j also bases each worktree on
-`origin/main`, so the PR base is always current.
-
-### 1b. Pick the oldest spec
+### 1b. Pick (or validate) the spec
 
 ```bash
-SPEC_INFO=$(uv run python -c "
-import subprocess
-from datetime import datetime, timezone
-import yaml
-
-
-def git_show(path: str) -> str:
-    return subprocess.check_output(['git', 'show', f'origin/main:{path}'], text=True)
-
-
-def list_specs():
-    out = subprocess.check_output(['git', 'ls-tree', '-d', '--name-only', 'origin/main', 'plots/'], text=True)
-    return [line.split('/')[-1] for line in out.splitlines() if line.strip() and not line.endswith('.')]
-
-
-def list_meta_files(spec):
-    try:
-        out = subprocess.check_output(
-            ['git', 'ls-tree', '--name-only', 'origin/main', f'plots/{spec}/metadata/python/'],
-            text=True,
-        )
-    except subprocess.CalledProcessError:
-        return []
-    return [line for line in out.splitlines() if line.endswith('.yaml')]
-
-candidates = []
-for spec in sorted(list_specs()):
-    if spec.startswith('.'):
-        continue
-    meta_files = list_meta_files(spec)
-    if not meta_files:
-        continue
-    latest = None
-    for path in meta_files:
-        try:
-            d = yaml.safe_load(git_show(path)) or {}
-        except Exception:
-            continue
-        u = d.get('updated') or d.get('created')
-        if u and (latest is None or str(u) > str(latest)):
-            latest = u
-    if latest is None:
-        candidates.append((datetime.min.replace(tzinfo=timezone.utc), spec))
-        continue
-    try:
-        dt = datetime.fromisoformat(str(latest).replace('Z', '+00:00'))
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-        candidates.append((dt, spec))
-    except Exception:
-        continue
-candidates.sort()
-if candidates:
-    dt, name = candidates[0]
-    print(f'{name}\t{dt.isoformat()}')
-")
-
+# /regen <spec-id> uses the given spec; bare /regen picks the oldest.
+if [ -n "$ARGUMENTS" ]; then
+  SPEC_INFO=$(uv run python -m agentic.workflows.modules.regen validate-spec "$ARGUMENTS")
+else
+  SPEC_INFO=$(uv run python -m agentic.workflows.modules.regen pick-oldest)
+fi
 SPEC_ID=$(echo "$SPEC_INFO" | cut -f1)
 SPEC_LATEST=$(echo "$SPEC_INFO" | cut -f2)
 ```
 
-If `SPEC_ID` is empty, abort — no eligible specs.
+If `validate-spec` fails (unknown spec), abort and tell the user.
 
-### 1c. List libraries
+### 1c. Write the plan
 
-Scan `plots/$SPEC_ID/implementations/python/` for `*.py` files (excluding `__init__.py`). If empty, abort.
-
-### 1d. Extract spec title
-
-Read the first `# ` heading from `plots/$SPEC_ID/specification.md` → `SPEC_TITLE`.
-
-### 1e. Write `.regen-plan.md`
-
-Use the `Write` tool. Order libraries alphabetically. Only include libraries that actually have a `.py` file.
-
-```markdown
-# Regen plan: {SPEC_ID}
-
-- Spec: `{SPEC_ID}`
-- Title: `{SPEC_TITLE}`
-- Latest implementation update: `{SPEC_LATEST}`
-- Plan created: `{ISO 8601 UTC timestamp now}`
-
-## Libraries
-
-- [ ] altair
-- [ ] bokeh
-- [ ] matplotlib
-- ...
-
-## Log
+```bash
+uv run python -m agentic.workflows.modules.regen write-plan "$SPEC_ID"
 ```
 
-### 1f. Report and exit
+This single call lists the python implementations, extracts the spec title, and writes `.regen-plan.md` with
+all libraries unchecked.
 
-```
-Plan written to .regen-plan.md
-- Spec: {SPEC_ID} ({SPEC_TITLE})
-- Libraries: {comma-separated list}
+### 1d. Report and exit
 
-Run /regen again to start the first library.
-```
-
-Do **not** start working on a library in this invocation. Exit.
+Tell the user the plan was written, list the libraries, and ask them to run `/regen` again to start the first
+library. Do **not** start working in this invocation.
 
 ---
 
 ## Execute mode
 
-### 2a. Read the plan
+### 2a. Resolve the next library
 
-Read `.regen-plan.md`. Extract:
-- `SPEC_ID` from the `- Spec:` line
-- `SPEC_TITLE` from the `- Title:` line
-- The first unchecked library (`- [ ] {library}`) → `LIBRARY`
+```bash
+NEXT=$(uv run python -m agentic.workflows.modules.regen next-library)  # exits 2 if none left
+SPEC_ID=$(echo "$NEXT" | cut -f1)
+SPEC_TITLE=$(echo "$NEXT" | cut -f2)
+LIBRARY=$(echo "$NEXT" | cut -f3)
+```
 
 ### 2b. Read working context (only what's needed)
 
 1. `plots/{SPEC_ID}/specification.md`
-2. `plots/{SPEC_ID}/specification.yaml` — for the primary `plot_type` tag
+2. `plots/{SPEC_ID}/specification.yaml` — for the primary `plot_type` tag and `issue` number
 3. `plots/{SPEC_ID}/implementations/python/{LIBRARY}.py`
 4. `plots/{SPEC_ID}/metadata/python/{LIBRARY}.yaml` — `review.strengths`, `review.weaknesses`, `review.criteria_checklist`
 5. `prompts/library/{LIBRARY}.md` (CRITICAL — follow exactly)
@@ -214,48 +146,31 @@ PAGE_BG     = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK         = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT    = "#4A4A44" if THEME == "light" else "#B8B7B0"
-# ... apply to background, text, grid, legend chrome
-chart.save(f"plot-{THEME}.png")          # not "plot.png"
-chart.save(f"plot-{THEME}.html")         # if interactive lib
+chart.save(f"plot-{THEME}.png")
+chart.save(f"plot-{THEME}.html")  # if interactive lib
 ```
 
 Data colors (Okabe-Ito positions 1–7) **must be identical across both themes**; only chrome flips.
 
 If the spec itself genuinely needs improvement, edit `plots/{SPEC_ID}/specification.md` and note it in the log entry
-in step 2k.
+in step 2g.
 
-### 2d. Generate both theme renders locally
-
-The implementation file is named after its library (e.g. `altair.py`), which **collides with `import altair as alt`**
-when run as a script — `sys.path[0]` is the script's directory, so the local file shadows the installed package and
-the script crashes (`AttributeError: module 'altair' has no attribute 'X'`). Sidestep by copying the impl into the
-preview dir under a non-colliding name and running that copy:
+### 2d. Render both themes
 
 ```bash
-PREVIEW_DIR="plots/{SPEC_ID}/implementations/python/.regen-preview/{LIBRARY}"
-
-# Always start from a clean slate. If a previous attempt left plot-light.png /
-# plot-dark.png behind, the existence checks below would happily pass with
-# stale artifacts even when the current code only regenerates one render.
-rm -rf "$PREVIEW_DIR"
-mkdir -p "$PREVIEW_DIR"
-cp "plots/{SPEC_ID}/implementations/python/{LIBRARY}.py" "$PREVIEW_DIR/run_impl.py"
-
-# Render both themes — required by impl-generate.yml / impl-merge.yml
-for THEME in light dark; do
-  (cd "$PREVIEW_DIR" && MPLBACKEND=Agg ANYPLOT_THEME="$THEME" uv run python run_impl.py)
-done
+uv run python -m agentic.workflows.modules.regen render "$SPEC_ID" "$LIBRARY"
 ```
 
-After both runs the preview dir must contain at least `plot-light.png` and `plot-dark.png` (interactive libraries
-also produce `plot-light.html` + `plot-dark.html`). Up to 3 retries on script failure. After 3 → see "Per-library
-failure" below.
+This sidesteps the self-import collision (impl named `altair.py` shadows `import altair`) by copying the impl into
+`.regen-preview/{LIBRARY}/run_impl.py` first, then runs it twice with `ANYPLOT_THEME=light` and `=dark`. Up to 3
+retries per theme; missing `plot-light.png` or `plot-dark.png` raises and the step exits non-zero. On failure see
+"Per-library failure" below.
 
 ### 2e. Lint
 
 ```bash
-uv run ruff format plots/{SPEC_ID}/implementations/python/{LIBRARY}.py
-uv run ruff check --fix plots/{SPEC_ID}/implementations/python/{LIBRARY}.py
+uv run ruff format plots/$SPEC_ID/implementations/python/$LIBRARY.py
+uv run ruff check --fix plots/$SPEC_ID/implementations/python/$LIBRARY.py
 ```
 
 Fix any unfixable errors manually and re-run.
@@ -270,8 +185,8 @@ breaks Postgres sync, the catalog UI, and the next regen's "previous review" loo
 **Open both rendered PNGs** with the `Read` tool and inspect them as you would a Cloud AI review:
 
 ```
-plots/{SPEC_ID}/implementations/python/.regen-preview/{LIBRARY}/plot-light.png
-plots/{SPEC_ID}/implementations/python/.regen-preview/{LIBRARY}/plot-dark.png
+plots/$SPEC_ID/implementations/python/.regen-preview/$LIBRARY/plot-light.png
+plots/$SPEC_ID/implementations/python/.regen-preview/$LIBRARY/plot-dark.png
 ```
 
 Cross-check both: data shapes/positions/colors must be identical (Okabe-Ito positions 1–7), only the chrome
@@ -284,18 +199,12 @@ Then produce a **full structured evaluation**:
    (VQ-01…VQ-07), Design Excellence (DE-01…DE-03), Spec Compliance (SC-01…SC-04), Data Quality
    (DQ-01…DQ-03), Code Quality (CQ-01…CQ-05), Library Mastery (LM-01…LM-02). Median total is 72–78 — apply
    the anti-inflation calibration anchors and score caps from `quality-criteria.md`. Don't inflate.
-
-2. **Write a 3–5 sentence `image_description`** describing what the plot actually shows (data shape, colors,
-   labels, key visual features, theme chrome). This is the field a future regen will read as "previous
-   image description" to decide what to keep.
-
-3. **Distill 3–6 `strengths` and 1–4 `weaknesses`** in concrete, actionable terms (no fluff). Strengths feed
-   the "KEEP these" guidance; weaknesses feed "FIX these" on the next regen.
-
+2. **Write a 3–5 sentence `image_description`** describing what the plot actually shows.
+3. **Distill 3–6 `strengths` and 1–4 `weaknesses`**.
 4. **Pick a `verdict`:** `APPROVED` if the score meets the cascading threshold for review 1 (≥ 90) — or for
-   subsequent reviews per `quality-criteria.md`. Otherwise `REJECTED`. The PR-label rule in step 2j is
-   simpler (`ai-approved` ≥ 50, `quality-poor` < 50) because regen accepts everything that wouldn't be
-   auto-failed; the verdict here is the honest assessment.
+   subsequent reviews per `quality-criteria.md`. Otherwise `REJECTED`. The PR-label rule is simpler
+   (`ai-approved` ≥ 50, `quality-poor` < 50) because regen accepts everything that wouldn't be auto-failed;
+   the verdict here is the honest assessment.
 
 Print the totals line for the user:
 
@@ -306,173 +215,75 @@ VQ: __/30 | DE: __/20 | SC: __/15 | DQ: __/15 | CQ: __/10 | LM: __/10 → TOTAL:
 If `TOTAL < 90`: identify the 2–3 weakest criteria, fix them in code, re-run 2d–2e, re-evaluate. **Up to 2
 repair iterations.** After 2, accept the current evaluation and proceed.
 
-### 2g. Update metadata
+Now build a JSON object matching the `QualityEval` shape (the dispatcher reads it from stdin in steps 2g and 2i):
 
-Edit `plots/{SPEC_ID}/metadata/python/{LIBRARY}.yaml` to match what `impl-generate.yml` writes (theme-aware preview
-URLs under the `python/` segment — legacy single-render `preview_url`/`preview_html` fields must be removed if
-present):
-
-| Field | Value |
-|-------|-------|
-| `language` | `python` (add if missing) |
-| `updated` | Current UTC timestamp ISO 8601 |
-| `generated_by` | From `CLAUDE_MODEL` env var, or `claude --version`, or detected model name |
-| `python_version` | From `uv run python --version` |
-| `library_version` | From `uv run python -c "from importlib.metadata import version; print(version('{pip_package}'))"` |
-| `quality_score` | The integer total from step 2f (e.g. `87`) — **never `null`**, since no Cloud review runs |
-| `preview_url_light` | `https://storage.googleapis.com/anyplot-images/plots/{SPEC_ID}/python/{LIBRARY}/plot-light.png` |
-| `preview_url_dark` | `https://storage.googleapis.com/anyplot-images/plots/{SPEC_ID}/python/{LIBRARY}/plot-dark.png` |
-| `preview_html_light` | `…/plot-light.html` (interactive libs only — `plotly`, `bokeh`, `altair`, `highcharts`, `pygal`, `letsplot`) — else `null` |
-| `preview_html_dark` | `…/plot-dark.html` (same condition) — else `null` |
-| `review.image_description` | The 3–5 sentence description from step 2f |
-| `review.strengths` | List from step 2f |
-| `review.weaknesses` | List from step 2f |
-| `review.criteria_checklist` | Per-category breakdown with one entry per criterion ID (`VQ-01`, …, `LM-02`), each with `score`, `max`, `passed`, `comment`. Totals must add up to `quality_score`. |
-| `review.verdict` | `APPROVED` or `REJECTED` per step 2f's cascading-threshold judgment |
-| `impl_tags`, `created` | **Keep unchanged** |
-| Legacy `preview_url`, `preview_html` | **Remove** — replaced by the four `_light`/`_dark` fields |
-
-**Pip-package mapping:** matplotlib→matplotlib, seaborn→seaborn, plotly→plotly, bokeh→bokeh, altair→altair,
-plotnine→plotnine, pygal→pygal, highcharts→highcharts-core, letsplot→lets-plot.
-
-### 2h. Update implementation header
-
-Ensure the impl file's docstring is:
-
-```python
-""" anyplot.ai
-{SPEC_ID}: {SPEC_TITLE}
-Library: {LIBRARY} {lib_version} | Python {py_version}
-Quality: {SCORE}/100 | Updated: {YYYY-MM-DD}
-"""
+```json
+{
+  "score": 90,
+  "vq": 30, "de": 13, "sc": 15, "dq": 14, "cq": 10, "lm": 8,
+  "image_description": "...",
+  "strengths": ["...", "..."],
+  "weaknesses": ["..."],
+  "criteria_checklist": {
+    "visual_quality": {"score": 30, "max": 30, "items": [{"id": "VQ-01", "name": "Text Legibility", "score": 8, "max": 8, "passed": true, "comment": "..."}]},
+    "design_excellence": {"score": 13, "max": 20, "items": [...]},
+    "spec_compliance": {"score": 15, "max": 15, "items": [...]},
+    "data_quality": {"score": 14, "max": 15, "items": [...]},
+    "code_quality": {"score": 10, "max": 10, "items": [...]},
+    "library_mastery": {"score": 8, "max": 10, "items": [...]}
+  },
+  "verdict": "APPROVED"
+}
 ```
 
-`{SCORE}` is the integer total from step 2f — **must match `quality_score` in the metadata YAML**. Don't leave
-`Quality: /100` blank; downstream tooling and humans both read this header.
+Save it to `/tmp/regen-eval.json` so it can be piped into the next two steps.
 
-### 2i. Process and stage images (both themes + responsive variants)
-
-Mirror the `impl-generate.yml` pipeline: optimize each theme PNG in place, then generate the responsive
-`plot-{theme}_{400,800,1200}.{png,webp}` + full `plot-{theme}.webp` variants, then upload the entire bundle
-to `gs://anyplot-images/staging/{SPEC_ID}/python/{LIBRARY}/` (note the `python/` segment — `impl-merge.yml`
-promotes from this exact path to `gs://anyplot-images/plots/{SPEC_ID}/python/{LIBRARY}/`).
+### 2g. Update metadata + impl header
 
 ```bash
-PREVIEW_DIR="plots/{SPEC_ID}/implementations/python/.regen-preview/{LIBRARY}"
-STAGING_PATH="gs://anyplot-images/staging/{SPEC_ID}/python/{LIBRARY}"
-
-# Both renders are required — abort if either is missing
-[ -f "${PREVIEW_DIR}/plot-light.png" ] || { echo "::error::missing plot-light.png"; exit 1; }
-[ -f "${PREVIEW_DIR}/plot-dark.png"  ] || { echo "::error::missing plot-dark.png";  exit 1; }
-
-# Optimize + responsive variants for each theme
-for THEME in light dark; do
-  uv run python -m core.images process    "${PREVIEW_DIR}/plot-${THEME}.png" "${PREVIEW_DIR}/plot-${THEME}.png"
-  uv run python -m core.images responsive "${PREVIEW_DIR}/plot-${THEME}.png" "${PREVIEW_DIR}/"
-done
-
-# Upload PNGs + WebPs (originals + responsive) for both themes in one batch
-gsutil -m -h "Cache-Control:public, max-age=604800" cp \
-  "${PREVIEW_DIR}"/plot-light*.png "${PREVIEW_DIR}"/plot-light*.webp \
-  "${PREVIEW_DIR}"/plot-dark*.png  "${PREVIEW_DIR}"/plot-dark*.webp \
-  "${STAGING_PATH}/"
-gsutil -m acl ch -u AllUsers:R "${STAGING_PATH}/plot-light*" "${STAGING_PATH}/plot-dark*" 2>/dev/null || true
-
-# Interactive libraries also produce HTML for each theme
-for THEME in light dark; do
-  if [ -f "${PREVIEW_DIR}/plot-${THEME}.html" ]; then
-    gsutil -h "Cache-Control:public, max-age=604800" cp \
-      "${PREVIEW_DIR}/plot-${THEME}.html" "${STAGING_PATH}/plot-${THEME}.html"
-    gsutil acl ch -u AllUsers:R "${STAGING_PATH}/plot-${THEME}.html" 2>/dev/null || true
-  fi
-done
+uv run python -m agentic.workflows.modules.regen write-metadata "$SPEC_ID" "$LIBRARY" < /tmp/regen-eval.json
+SCORE=$(uv run python -c "import json; print(json.load(open('/tmp/regen-eval.json'))['score'])")
+uv run python -m agentic.workflows.modules.regen update-impl-header "$SPEC_ID" "$LIBRARY" "$SCORE"
 ```
 
-The `acl ch` lines may fail with `Failed to set acl ... ensure you have OWNER-role access` on uniform-IAM
-buckets — that's expected, the `|| true` swallows it.
+This writes the YAML with theme-aware preview URLs, full criteria_checklist, and verdict — preserving the
+original `created` timestamp, `issue`, and `impl_tags` if the file already exists. The impl header's
+`Quality:` line is rewritten to match.
 
-### 2j. Worktree → commit → push → PR
+### 2h. Stage images to GCS (both themes + responsive variants)
 
 ```bash
-WORKTREE=".worktrees/{SPEC_ID}-{LIBRARY}"
-
-# Refresh the remote main ref before branching: a previous /regen invocation may have already merged
-# its PR via impl-merge.yml, so basing this worktree on stale local `main` would push from outdated
-# history (push rejection or merge conflict if two regen'd libraries touch shared spec files).
-git fetch origin main
-git worktree add -b implementation/{SPEC_ID}/{LIBRARY} "$WORKTREE" origin/main
-
-cp plots/{SPEC_ID}/implementations/python/{LIBRARY}.py \
-   "$WORKTREE/plots/{SPEC_ID}/implementations/python/{LIBRARY}.py"
-cp plots/{SPEC_ID}/metadata/python/{LIBRARY}.yaml \
-   "$WORKTREE/plots/{SPEC_ID}/metadata/python/{LIBRARY}.yaml"
-# If you edited the spec in step 2c, also copy:
-# cp plots/{SPEC_ID}/specification.md   "$WORKTREE/plots/{SPEC_ID}/specification.md"
-# cp plots/{SPEC_ID}/specification.yaml "$WORKTREE/plots/{SPEC_ID}/specification.yaml"
-
-cd "$WORKTREE"
-git add plots/{SPEC_ID}/implementations/python/{LIBRARY}.py
-git add plots/{SPEC_ID}/metadata/python/{LIBRARY}.yaml
-# git add plots/{SPEC_ID}/specification.* if changed
-
-git commit -m "regen({SPEC_ID}): {LIBRARY}"
-git push -u origin implementation/{SPEC_ID}/{LIBRARY}
-
-# impl-merge.yml extracts the spec issue number from the literal
-# "**Parent Issue:** #N" line in the PR body and uses it to comment on
-# the spec issue and add the impl:{library}:done label. Without the
-# marker, the PR still merges but those downstream side effects are lost.
-SPEC_ISSUE=$(uv run python -c "
-import sys, yaml
-data = yaml.safe_load(open('plots/{SPEC_ID}/specification.yaml')) or {}
-issue = data.get('issue')
-print(issue if issue else '', end='')
-")
-if [ -n "$SPEC_ISSUE" ]; then
-  PARENT_LINE="**Parent Issue:** #${SPEC_ISSUE}"
-else
-  PARENT_LINE=""
-fi
-
-PR_URL=$(gh pr create \
-  --title "regen({SPEC_ID}): {LIBRARY}" \
-  --body "$(cat <<EOF
-Locally regenerated **{LIBRARY}** for **{SPEC_ID}**.
-
-Quality: {SCORE}/100
-- VQ: {vq}/30 | DE: {de}/20 | SC: {sc}/15 | DQ: {dq}/15 | CQ: {cq}/10 | LM: {lm}/10
-
-${PARENT_LINE}
-
-Generated by \`/regen\` (local model, no Cloud AI review dispatched).
-EOF
-)")
-
-PR_NUMBER=$(gh pr view --json number -q '.number')
-gh pr edit "$PR_NUMBER" --add-label "quality:{SCORE}"
-if [ {SCORE} -ge 50 ]; then
-  gh pr edit "$PR_NUMBER" --add-label "ai-approved"
-else
-  gh pr edit "$PR_NUMBER" --add-label "quality-poor"
-fi
-
-cd -
-git worktree remove "$WORKTREE" --force
-git worktree prune
+uv run python -m agentic.workflows.modules.regen stage-images "$SPEC_ID" "$LIBRARY"
 ```
 
-### 2k. Tick off and log
+Mirrors the `impl-generate.yml` pipeline: optimizes each theme PNG in place via `core.images process`,
+generates `plot-{theme}_{400,800,1200}.{png,webp}` + full `plot-{theme}.webp` via `core.images responsive`,
+then uploads the entire bundle to `gs://anyplot-images/staging/{SPEC_ID}/python/{LIBRARY}/` (the same path
+`impl-merge.yml` promotes from to `gs://anyplot-images/plots/{SPEC_ID}/python/{LIBRARY}/`). ACL failures on
+uniform-IAM buckets are swallowed.
 
-Edit `.regen-plan.md`:
+### 2i. Worktree → commit → push → PR
 
-- Change `- [ ] {LIBRARY}` to `- [x] {LIBRARY}`
-- Append under `## Log`:
-
+```bash
+PR_OUTPUT=$(uv run python -m agentic.workflows.modules.regen create-pr "$SPEC_ID" "$LIBRARY" < /tmp/regen-eval.json)
+PR_URL=$(echo "$PR_OUTPUT" | sed -n '1p')
+PR_NUMBER=$(echo "$PR_OUTPUT" | sed -n '2p')
 ```
-- {LIBRARY}: PR {PR_URL}, score {SCORE}, label {ai-approved|quality-poor} ({timestamp}){, spec edited if applicable}
+
+Internally: fetches `origin/main`, creates `implementation/{SPEC_ID}/{LIBRARY}` worktree from it, copies the
+regenerated files in, commits, pushes, opens the PR with the `**Parent Issue:** #N` marker (read from the
+spec's `specification.yaml`) so `impl-merge.yml` can comment on the spec issue and add `impl:{LIBRARY}:done`.
+Adds `quality:{SCORE}` plus `ai-approved` (≥ 50) or `quality-poor` (< 50) via REST. Always cleans up the
+worktree afterward, even on failure.
+
+### 2j. Tick off and log
+
+```bash
+VERDICT=$(uv run python -c "import json; print(json.load(open('/tmp/regen-eval.json'))['verdict'])")
+uv run python -m agentic.workflows.modules.regen mark-done "$LIBRARY" "$PR_URL" "$SCORE" "$VERDICT"
 ```
 
-### 2l. Report and exit
+### 2k. Report and exit
 
 ```
 {LIBRARY} done — score {SCORE}, PR: {PR_URL}
@@ -487,12 +298,14 @@ Exit.
 
 If any step fails irrecoverably (script won't run after 3 retries, `gh push` rejected, `gsutil` unauthenticated):
 
-1. Append to `## Log`: `- {LIBRARY}: FAILED — {reason} ({timestamp})`
-2. Change `- [ ] {LIBRARY}` to `- [!] {LIBRARY}`
-3. Clean up: remove the worktree (`git worktree remove ... --force && git worktree prune`) and `.regen-preview/{LIBRARY}/` if they exist
-4. Print the failure reason to the user and exit
+```bash
+uv run python -m agentic.workflows.modules.regen mark-failed "$LIBRARY" "<reason>"
+```
 
-`- [!]` items are skipped by future invocations. The user can edit them back to `- [ ]` to retry.
+Records `- [!] {LIBRARY}` in the plan, appends a `FAILED — {reason}` log line, and cleans up the worktree +
+preview dir. `[!]` items are skipped by future invocations. The user can edit them back to `[ ]` to retry.
+
+Print the failure reason and exit.
 
 ---
 
@@ -500,9 +313,13 @@ If any step fails irrecoverably (script won't run after 3 retries, `gh push` rej
 
 If no `- [ ]` lines remain:
 
-1. Print final summary: counts of done / failed, list of PR URLs from the log.
-2. Move `.regen-plan.md` to `.regen-history/{SPEC_ID}-{YYYYMMDD-HHMMSS}.md` (create directory if needed).
-3. Tell the user: `Spec {SPEC_ID} complete. Run /regen to start the next oldest spec.`
+```bash
+ARCHIVED=$(uv run python -m agentic.workflows.modules.regen archive)
+echo "$ARCHIVED"
+```
+
+Tell the user the spec is complete and they can run `/regen` again to start the next oldest spec (or
+`/regen <spec-id>` to target a specific one).
 
 Exit.
 
@@ -530,9 +347,9 @@ Exit.
 
 ## Log
 
-- altair: PR https://github.com/.../pull/1234, score 88, ai-approved (2026-05-02T14:02:00Z)
-- bokeh: PR https://github.com/.../pull/1235, score 91, ai-approved (2026-05-02T14:18:00Z)
-- highcharts: FAILED — gsutil not authenticated (2026-05-02T14:31:00Z)
+- altair: PR https://github.com/.../pull/1234, score 88, label ai-approved, verdict APPROVED (...)
+- bokeh: PR https://github.com/.../pull/1235, score 91, label ai-approved, verdict APPROVED (...)
+- highcharts: FAILED — gsutil not authenticated (...)
 ```
 
 The user can:
@@ -544,26 +361,11 @@ The user can:
 
 ## Notes
 
-- **No agent teams.** Runs entirely in the lead session. No `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` flag needed.
-- **One library per invocation.** Restart-safe: kill Claude Code anytime, the next `/regen` picks up where the plan
-  left off.
+- **No agent teams.** Runs entirely in the lead session.
+- **One library per invocation.** Restart-safe.
 - **No Cloud AI review.** Each PR carries `quality:{N}` plus `ai-approved` (≥50) or `quality-poor` (<50).
   `impl-merge.yml` still triggers on `ai-approved` (squash-merge, GCS staging→production, `impl:{lib}:done` label,
-  `sync-postgres.yml`). Verify nothing fired in the review/repair pipeline:
-  ```bash
-  gh run list --workflow=impl-review.yml --limit 5
-  gh run list --workflow=impl-repair.yml --limit 5
-  ```
-- **Model-agnostic.** Whatever Claude Code is configured for (default Sonnet, or any local OpenAI/Anthropic-compatible
-  endpoint via `ANTHROPIC_BASE_URL` + `ANTHROPIC_AUTH_TOKEN`) is what runs. No code path branches on model.
-- **`.gitignore`** must contain `.regen-plan.md`, `.regen-history/`, and `.regen-preview/` (added alongside the
-  existing `.update-preview/` and `.worktrees/` entries).
-
-## Usage
-
-```
-/regen
-```
-
-No arguments. Run repeatedly — once to plan, once per library, once to finalize. Each invocation does exactly one
-step.
+  `sync-postgres.yml`).
+- **`.gitignore`** must contain `.regen-plan.md`, `.regen-history/`, and `.regen-preview/`.
+- **Helper module** lives at `agentic/workflows/modules/regen/` with unit tests under `tests/unit/agentic/regen/`.
+  Subcommands are documented in `agentic/workflows/modules/regen/__main__.py`.
