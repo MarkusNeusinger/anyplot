@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { forwardRef, useImperativeHandle } from 'react';
 
-import { render, screen, waitFor } from '../test-utils';
+import { act, render, screen, waitFor } from '../test-utils';
 import { MapPage } from './MapPage';
 
 
@@ -28,9 +29,10 @@ vi.mock('../hooks/useLayoutContext', () => ({
 }));
 
 // Default to "(hover: hover)" matching → desktop behaviour. Touch-specific
-// branches (e.g. tap-to-pin) need a per-test override.
+// branches (e.g. tap-to-pin) need a per-test override via mockHasHover.
+const mockHasHover = { current: true };
 vi.mock('@mui/material/useMediaQuery', () => ({
-  default: () => true,
+  default: () => mockHasHover.current,
 }));
 
 // Capture the props passed to ForceGraph2D so individual callbacks can be exercised
@@ -39,9 +41,31 @@ vi.mock('@mui/material/useMediaQuery', () => ({
 type FgProps = Record<string, unknown>;
 const lastFgProps: { current: FgProps | null } = { current: null };
 
+// Mock instance returned via ref. The page calls imperative methods like
+// `fgRef.current?.centerAt(...)` from `onEngineStop`; without forwardRef the
+// ref would be null and those branches would silently early-return.
+type FgInstance = {
+  centerAt: ReturnType<typeof vi.fn>;
+  zoom: ReturnType<typeof vi.fn>;
+  zoomToFit: ReturnType<typeof vi.fn>;
+  d3Force: ReturnType<typeof vi.fn>;
+  d3ReheatSimulation: ReturnType<typeof vi.fn>;
+  refresh: ReturnType<typeof vi.fn>;
+  __forcesWired?: boolean;
+};
+const fgInstance: FgInstance = {
+  centerAt: vi.fn(),
+  zoom: vi.fn().mockReturnValue(1),
+  zoomToFit: vi.fn(),
+  d3Force: vi.fn().mockReturnValue({ strength: vi.fn().mockReturnThis(), distance: vi.fn().mockReturnThis() }),
+  d3ReheatSimulation: vi.fn(),
+  refresh: vi.fn(),
+};
+
 vi.mock('react-force-graph-2d', () => ({
-  default: (props: FgProps) => {
+  default: forwardRef<FgInstance, FgProps>((props, ref) => {
     lastFgProps.current = props;
+    useImperativeHandle(ref, () => fgInstance, []);
     const data = props.graphData as { nodes: unknown[]; links: unknown[] };
     return (
       <div
@@ -50,7 +74,7 @@ vi.mock('react-force-graph-2d', () => ({
         data-link-count={data.links.length}
       />
     );
-  },
+  }),
 }));
 
 
@@ -137,6 +161,14 @@ describe('MapPage', () => {
     mockNavigate.mockReset();
     mockTrackEvent.mockReset();
     lastFgProps.current = null;
+    mockHasHover.current = true;
+    fgInstance.centerAt.mockReset();
+    fgInstance.zoom.mockReset().mockReturnValue(1);
+    fgInstance.zoomToFit.mockReset();
+    fgInstance.d3Force.mockReset().mockReturnValue({ strength: vi.fn().mockReturnThis(), distance: vi.fn().mockReturnThis() });
+    fgInstance.d3ReheatSimulation.mockReset();
+    fgInstance.refresh.mockReset();
+    fgInstance.__forcesWired = undefined;
     vi.stubGlobal('ResizeObserver', MockResizeObserver);
   });
 
@@ -268,5 +300,85 @@ describe('MapPage', () => {
     const large = linkWidth({ weight: 0.9 });
     expect(large).toBeGreaterThan(small);
     expect(small).toBeGreaterThan(0);
+  });
+
+  it('seeds initial node positions per cluster (warm start for the simulation)', async () => {
+    mockFetchSuccess();
+    render(<MapPage />);
+    await waitFor(() => expect(lastFgProps.current).not.toBeNull());
+
+    const nodes = (lastFgProps.current!.graphData as { nodes: Array<{ id: string; x?: number; y?: number; vx?: number; vy?: number }> }).nodes;
+    // Every node should have a numeric seed position before FG2D ever ticks the simulation —
+    // without seeding, FG2D's random initialiser would leave x/y undefined here.
+    for (const n of nodes) {
+      expect(typeof n.x).toBe('number');
+      expect(typeof n.y).toBe('number');
+      expect(Number.isFinite(n.x as number)).toBe(true);
+      expect(Number.isFinite(n.y as number)).toBe(true);
+    }
+    // Same plot_type (= colorBucket) should land near the same centroid; nodes from
+    // different buckets should land further apart on average. Take the two scatters
+    // (bucketed together) vs. line-basic and compare distances.
+    const scatterA = nodes.find(n => n.id === 'scatter-basic')!;
+    const scatterB = nodes.find(n => n.id === 'scatter-color-mapped')!;
+    const line = nodes.find(n => n.id === 'line-basic')!;
+    const dist = (a: typeof scatterA, b: typeof scatterA) =>
+      Math.hypot((a.x ?? 0) - (b.x ?? 0), (a.y ?? 0) - (b.y ?? 0));
+    expect(dist(scatterA, scatterB)).toBeLessThan(dist(scatterA, line));
+  });
+
+  it('shows the settling overlay until the simulation cools, then hides it', async () => {
+    mockFetchSuccess();
+    render(<MapPage />);
+    await waitFor(() => expect(screen.getByTestId('force-graph-2d')).toBeInTheDocument());
+
+    // Gate is visible while the engine is still cooling.
+    expect(screen.getByText(/arranging/i)).toBeInTheDocument();
+
+    // Engine stops → settled flips → overlay disappears.
+    const onEngineStop = lastFgProps.current!.onEngineStop as () => void;
+    act(() => onEngineStop());
+    await waitFor(() => expect(screen.queryByText(/arranging/i)).not.toBeInTheDocument());
+  });
+
+  it('frames the bbox via centerAt + zoom on engine stop', async () => {
+    mockFetchSuccess();
+    render(<MapPage />);
+    await waitFor(() => expect(lastFgProps.current).not.toBeNull());
+
+    // The percentile-trimmed fit reads node x/y; seed positions guarantee these are set.
+    const onEngineStop = lastFgProps.current!.onEngineStop as () => void;
+    act(() => onEngineStop());
+
+    expect(fgInstance.centerAt).toHaveBeenCalledTimes(1);
+    expect(fgInstance.zoom).toHaveBeenCalled();
+    // Animation duration is 0 → instant, hidden behind the gate.
+    const centerCall = fgInstance.centerAt.mock.calls[0];
+    expect(centerCall[2]).toBe(0);
+  });
+
+  it('first tap pins on touch devices, second tap navigates', async () => {
+    mockHasHover.current = false;
+    mockFetchSuccess();
+    render(<MapPage />);
+    await waitFor(() => expect(lastFgProps.current).not.toBeNull());
+
+    // First tap: pin (no navigation, analytics fires map_node_pin).
+    act(() => {
+      const onNodeClick = lastFgProps.current!.onNodeClick as (n: { id: string }) => void;
+      onNodeClick({ id: 'scatter-basic' });
+    });
+    expect(mockNavigate).not.toHaveBeenCalled();
+    expect(mockTrackEvent).toHaveBeenCalledWith('map_node_pin', { spec: 'scatter-basic' });
+
+    // Second tap on the same node: navigate. After the first tap React
+    // re-rendered MapPage with the new pinnedId, so lastFgProps.current
+    // now holds a fresh onNodeClick closure that reads the updated state.
+    act(() => {
+      const onNodeClick = lastFgProps.current!.onNodeClick as (n: { id: string }) => void;
+      onNodeClick({ id: 'scatter-basic' });
+    });
+    expect(mockNavigate).toHaveBeenCalledWith('/scatter-basic');
+    expect(mockTrackEvent).toHaveBeenCalledWith('map_node_click', { spec: 'scatter-basic' });
   });
 });
