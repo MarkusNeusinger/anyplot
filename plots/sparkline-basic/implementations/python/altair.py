@@ -1,7 +1,7 @@
 """anyplot.ai
 sparkline-basic: Basic Sparkline
 Library: altair 6.1.0 | Python 3.13.12
-Quality: /100 | Updated: 2026-05-02
+Quality: 90/100 | Updated: 2026-05-02
 """
 
 import os
