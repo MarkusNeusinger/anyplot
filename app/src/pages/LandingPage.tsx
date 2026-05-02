@@ -107,7 +107,7 @@ function MapSection({ specCount }: { specCount?: number }) {
               maxWidth: '52ch',
             }}
           >
-            {specCount ? `all ${specCount} specs` : 'every spec'} on a single canvas —{' '}
+            {specCount != null ? `all ${specCount} specs` : 'every spec'} on a single canvas —{' '}
             <Box component="span" sx={{ color: 'var(--ink)' }}>
               clustered by tag similarity, coloured by plot type, searchable.
             </Box>{' '}
@@ -213,8 +213,7 @@ function MapClusterPreview() {
     <Box
       component="svg"
       viewBox="0 0 420 280"
-      role="img"
-      aria-label="Three clusters of circles connected by hairlines, mirroring the map's force-directed layout"
+      aria-hidden="true"
       sx={{
         display: 'block',
         width: '100%',
