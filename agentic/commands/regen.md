@@ -317,9 +317,12 @@ Ensure the impl file's docstring is:
 """ anyplot.ai
 {SPEC_ID}: {SPEC_TITLE}
 Library: {LIBRARY} {lib_version} | Python {py_version}
-Quality: /100 | Updated: {YYYY-MM-DD}
+Quality: {SCORE}/100 | Updated: {YYYY-MM-DD}
 """
 ```
+
+`{SCORE}` is the integer total from step 2f — **must match `quality_score` in the metadata YAML**. Don't leave
+`Quality: /100` blank; downstream tooling and humans both read this header.
 
 ### 2i. Process and stage images (both themes + responsive variants)
 
