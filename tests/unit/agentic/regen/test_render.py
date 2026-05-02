@@ -90,17 +90,23 @@ def test_run_theme_renders_preserves_dunder_file(tmp_path, monkeypatch):
 def test_run_theme_renders_avoids_self_import_collision(tmp_path, monkeypatch):
     """The impl file is named after its library (e.g. altair.py). Without
     python -P, sys.path[0] contains the impl's dir and `import altair`
-    resolves to the local file. With -P, the install-tree package wins."""
+    resolves to the local file. With -P, the install-tree package wins.
+
+    We use the stdlib `json` module here (not `altair`) so the test runs
+    in any Python env, even ones without the plotting extras installed.
+    The collision behavior is identical: an impl named `json.py` would
+    shadow the stdlib without -P."""
     monkeypatch.chdir(tmp_path)
     plots = tmp_path / "plots"
-    # The stub imports altair and asserts it has the real package's API
     body = (
         "import os, pathlib\n"
-        "import altair as alt\n"
-        "assert hasattr(alt, 'Chart'), 'local altair.py shadowed the installed package'\n"
+        "import json\n"
+        # If shadowing happened, the local json.py would be re-executed and
+        # there'd be no `loads` attribute. With -P, we get the stdlib.
+        "assert hasattr(json, 'loads'), 'local json.py shadowed the stdlib'\n"
         "theme = os.environ['ANYPLOT_THEME']\n"
         "pathlib.Path(f'plot-{theme}.png').write_bytes(b'fake')\n"
     )
-    _stub_impl(plots, "scatter-basic", "altair", body)
-    result = run_theme_renders("scatter-basic", "altair")
+    _stub_impl(plots, "scatter-basic", "json", body)
+    result = run_theme_renders("scatter-basic", "json")
     assert result.light_png.is_file()
