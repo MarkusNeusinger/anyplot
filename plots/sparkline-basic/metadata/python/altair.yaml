@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: sparkline-basic
 created: '2025-12-23T20:45:04Z'
-updated: '2026-05-02T21:35:20Z'
+updated: '2026-05-02T21:50:00Z'
 generated_by: claude-opus-4-7
 workflow_run: 20471153725
 issue: 0
@@ -12,193 +12,199 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sparkline
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/altair/plot-dark.html
-quality_score: null
+quality_score: 90
 impl_tags:
   dependencies: []
   techniques:
     - layer-composition
     - html-export
+    - theme-adaptive
   patterns:
     - data-generation
   dataprep: []
-  styling: []
+  styling:
+    - okabe-ito
+    - theme-aware-chrome
 review:
   strengths:
-  - Excellent minimalist sparkline design with no axes or labels as specified
-  - Good use of Altair layered chart composition (line + endpoint markers + highlight
-    points)
-  - Realistic business data scenario with weekend dips pattern
-  - Appropriate compact aspect ratio (~5:1)
-  - Colorblind-safe color choices (blue/yellow/gray)
-  - Clean readable code following KISS principles
+    - Theme-adaptive rendering with identical Okabe-Ito data colors across light and dark; only chrome flips, exactly as required
+    - Idiomatic Altair layer composition (line + endpoint dots + extreme dots) with shared encoding channels
+    - Clean KISS structure — imports → data → plot → save, no functions or classes
+    - Realistic web-traffic data with launch bump, mid-month decline, and weekend dips so the sparkline shape is informative rather than monotonic
+    - Title format matches `{spec-id} · {library} · anyplot.ai` exactly; legend correctly hidden via `legend=None`
+    - Visual hierarchy via colored extremes (vermillion min, green max) creates immediate focal points
   weaknesses:
-  - Canvas height creates more whitespace than necessary for compact sparkline aesthetic
-  - Data trend is monotonically increasing - adding a period of decline would better
-    demonstrate sparkline ability to show varied trends
-  image_description: 'The plot displays a minimalist sparkline with a blue line (#306998)
-    showing an upward trend over 60 data points with realistic fluctuations including
-    periodic dips (weekend pattern). The visualization includes: a small gray circle
-    marking the first data point, a yellow circle highlighting the minimum value (around
-    position 15-20), and a blue circle at the end marking both the last point and
-    the maximum value. The title "sparkline-basic · altair · pyplots.ai" appears at
-    the top in a clear font. True to sparkline design, there are no axes, labels,
-    gridlines, or other chart chrome. The aspect ratio is approximately 5:1, appropriately
-    compact for a sparkline.'
+    - Storytelling ceiling: spec is `basic`, so annotations and trendlines are forbidden; DE-03 plateau is structural, not a code defect
+    - Layer composition is idiomatic but not deeply distinctive to Altair — a similar effect could be reached in plotly/bokeh
+  image_description: |
+    A minimalist sparkline rendered at ~5:1 aspect ratio with no axes, ticks, or gridlines. The series traces 60 sequential data points (daily web-traffic sessions) in Okabe-Ito green (#009E73) with a smooth monotone interpolation, climbing through an early launch bump near day 12, dipping into a mid-month trough around day 36, then recovering toward a peak at the right end. A small soft-gray endpoint dot marks day 0 at the left, a vermillion (#D55E00) circle highlights the minimum at the trough, and a green dot marks the maximum at the rightmost point. The title "sparkline-basic · altair · anyplot.ai" sits centered above the canvas. The light render uses a cream `#FAF8F1` background with dark text; the dark render uses `#1A1A17` with light text — data colors and positions are identical between both, only chrome flips.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is clear and readable at fontSize=28
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping elements
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Line strokeWidth=3 is appropriate, markers well-sized (200-400)
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/gray are colorblind-safe, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good aspect ratio but plot could use more vertical canvas space
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: N/A for sparklines (no axes by design) - full points
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: true
-        comment: Legend is correctly hidden, but there's no grid (by design for sparklines,
-          however the legend=None is correct)
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct sparkline implementation
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X (sequential) and Y (values) correctly mapped
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'All spec features present: no axes, compact ratio, min/max highlights,
-          endpoint markers'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Scale(zero=False) ensures all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly hidden for sparkline
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: sparkline-basic · altair · pyplots.ai'
-    data_quality:
-      score: 18
+        - id: VQ-01
+          name: Text Legibility
+          score: 8
+          max: 8
+          passed: true
+          comment: Title fontSize=28 explicitly set, theme-correct color, perfectly readable in both renders
+        - id: VQ-02
+          name: No Overlap
+          score: 6
+          max: 6
+          passed: true
+          comment: No overlapping elements
+        - id: VQ-03
+          name: Element Visibility
+          score: 6
+          max: 6
+          passed: true
+          comment: strokeWidth=3 line + size=160 endpoint dots + size=420 extreme dots — well-tuned for 60 data points
+        - id: VQ-04
+          name: Color Accessibility
+          score: 2
+          max: 2
+          passed: true
+          comment: Okabe-Ito green/vermillion are CVD-safe; gray endpoint distinguishable by lightness in both themes
+        - id: VQ-05
+          name: Layout & Canvas
+          score: 4
+          max: 4
+          passed: true
+          comment: Compact aspect ratio (~5:1) appropriate for a sparkline; balanced margins; chart fills canvas well
+        - id: VQ-06
+          name: Axis Labels & Title
+          score: 2
+          max: 2
+          passed: true
+          comment: N/A for sparklines (no axes by spec design); title is descriptive — full points
+        - id: VQ-07
+          name: Palette Compliance
+          score: 2
+          max: 2
+          passed: true
+          comment: First series #009E73 (Okabe-Ito green); light bg #FAF8F1, dark bg #1A1A17; data colors identical across themes
+    design_excellence:
+      score: 13
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 6
-        max: 8
-        passed: true
-        comment: Shows upward trend with fluctuations and weekend dips, but could
-          show more variety (e.g., a period of decline)
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Daily sales figures with weekend dips is a realistic business scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
-        max: 5
-        passed: true
-        comment: Sales values 85-165 range is realistic
+        - id: DE-01
+          name: Aesthetic Sophistication
+          score: 5
+          max: 8
+          passed: true
+          comment: Clean intentional palette and professional polish, clearly above defaults but not Nature/Science publication-level
+        - id: DE-02
+          name: Visual Refinement
+          score: 5
+          max: 6
+          passed: true
+          comment: No grid (correct for sparkline), no axes, generous whitespace, theme-correct chrome — small ceiling left for hand-tuned spacing
+        - id: DE-03
+          name: Data Storytelling
+          score: 3
+          max: 6
+          passed: true
+          comment: Visual hierarchy via colored extremes guides the eye to min/max, but spec variant `basic` forbids annotations so storytelling is structurally capped
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+        - id: SC-01
+          name: Plot Type
+          score: 5
+          max: 5
+          passed: true
+          comment: Correct sparkline implementation with all subtypes
+        - id: SC-02
+          name: Required Features
+          score: 4
+          max: 4
+          passed: true
+          comment: All spec features present — no axes/labels/grid, compact ratio, min/max highlights, endpoint markers
+        - id: SC-03
+          name: Data Mapping
+          score: 3
+          max: 3
+          passed: true
+          comment: X (sequential day index), Y (sessions value) correctly assigned; Scale(zero=False) shows full data range
+        - id: SC-04
+          name: Title & Legend
+          score: 3
+          max: 3
+          passed: true
+          comment: Title format `sparkline-basic · altair · anyplot.ai` exact; legend correctly hidden
+    data_quality:
+      score: 14
+      max: 15
+      items:
+        - id: DQ-01
+          name: Feature Coverage
+          score: 6
+          max: 6
+          passed: true
+          comment: Shows growth, decline, weekly seasonality (weekend dips), launch bump, recovery — varied trend across full series
+        - id: DQ-02
+          name: Realistic Context
+          score: 4
+          max: 5
+          passed: true
+          comment: Daily web-traffic sessions with launch bump and weekend dips is a plausible neutral business scenario; not labeled with units in-plot but spec forbids labels
+        - id: DQ-03
+          name: Appropriate Scale & Factual Correctness
+          score: 4
+          max: 4
+          passed: true
+          comment: Values ~80–160 daily sessions plausible for a small-to-mid product; weekend-dip ~15% magnitude realistic
     code_quality:
       score: 10
       max: 10
       items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: Simple imports → data → plot → save structure
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: np.random.seed(42) is set
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: Only altair, numpy, pandas used and needed
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        - id: CQ-01
+          name: KISS Structure
+          score: 3
+          max: 3
+          passed: true
+          comment: imports → data → plot → save; no functions or classes
+        - id: CQ-02
+          name: Reproducibility
+          score: 2
+          max: 2
+          passed: true
+          comment: np.random.seed(42) set
+        - id: CQ-03
+          name: Clean Imports
+          score: 2
+          max: 2
+          passed: true
+          comment: os, altair, numpy, pandas — all used and necessary
+        - id: CQ-04
+          name: Code Elegance
+          score: 2
+          max: 2
+          passed: true
+          comment: ~50 lines, no over-engineering, no fake interactivity
+        - id: CQ-05
+          name: Output & API
+          score: 1
+          max: 1
+          passed: true
+          comment: Saves plot-{light,dark}.png and plot-{light,dark}.html; current Altair API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of layered charts and declarative encoding, but could leverage
-          more Altair features like tooltips or selection
+        - id: LM-01
+          name: Idiomatic Usage
+          score: 5
+          max: 5
+          passed: true
+          comment: Layered chart composition with shared encoding channels — the recommended Altair pattern
+        - id: LM-02
+          name: Distinctive Features
+          score: 3
+          max: 5
+          passed: true
+          comment: Layer composition + per-layer color scaling is core Altair grammar but achievable in other declarative libs; no use of Altair-unique features like selection/condition
   verdict: APPROVED
