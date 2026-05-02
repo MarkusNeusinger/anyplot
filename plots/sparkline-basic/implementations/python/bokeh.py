@@ -1,63 +1,72 @@
-""" pyplots.ai
+"""anyplot.ai
 sparkline-basic: Basic Sparkline
 Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Quality: 90/100 | Updated: 2026-05-02
 """
+
+import os
 
 import numpy as np
 from bokeh.io import export_png, output_file, save
+from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure
 
 
-# Data - Daily website traffic over 30 days showing realistic trends
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito categorical palette — identical across themes; only chrome flips.
+LINE_COLOR = "#009E73"
+MIN_COLOR = "#D55E00"
+MAX_COLOR = "#009E73"
+
+# Data — daily web-traffic sessions over 60 days, with a launch bump,
+# a mid-month decline, and weekend dips. Mixes ups and downs so the
+# sparkline shape is informative.
 np.random.seed(42)
-base = 1000
-trend = np.linspace(0, 200, 30)  # Gradual upward trend
-noise = np.random.randn(30) * 80
-seasonality = 50 * np.sin(np.linspace(0, 4 * np.pi, 30))  # Weekly pattern
-values = base + trend + noise + seasonality
+n_points = 60
+day = np.arange(n_points)
+trend = 100 + 0.6 * day
+launch_bump = 25 * np.exp(-((day - 12) ** 2) / 30.0)
+mid_decline = -22 * np.exp(-((day - 35) ** 2) / 60.0)
+weekend = np.where(day % 7 >= 5, -10.0, 0.0)
+noise = np.random.randn(n_points) * 4
+values = trend + launch_bump + mid_decline + weekend + noise
 
-x = list(range(len(values)))
+min_idx = int(np.argmin(values))
+max_idx = int(np.argmax(values))
 
-# Find min/max points for highlighting
-min_idx = np.argmin(values)
-max_idx = np.argmax(values)
+line_source = ColumnDataSource(data={"x": day, "y": values})
+endpoint_source = ColumnDataSource(data={"x": [day[0], day[-1]], "y": [values[0], values[-1]]})
+extreme_source = ColumnDataSource(
+    data={"x": [day[min_idx], day[max_idx]], "y": [values[min_idx], values[max_idx]], "color": [MIN_COLOR, MAX_COLOR]}
+)
 
-# Plot - Sparkline with compact aspect ratio
-# Using 4800x1200 for ~4:1 aspect ratio (sparkline characteristic)
-p = figure(width=4800, height=1200, toolbar_location=None, title="sparkline-basic · bokeh · pyplots.ai")
+# Compact ~4:1 sparkline canvas
+p = figure(width=4800, height=1200, title="sparkline-basic · bokeh · anyplot.ai", toolbar_location=None)
 
-# Remove all chart chrome for sparkline minimalism
+# Strip all chart chrome — sparkline minimalism
 p.xaxis.visible = False
 p.yaxis.visible = False
 p.xgrid.visible = False
 p.ygrid.visible = False
 p.outline_line_color = None
+p.min_border = 80
 
-# Main sparkline
-p.line(x, values, line_width=4, color="#306998", alpha=0.9)
-
-# Highlight first point (reference)
-p.scatter([x[0]], [values[0]], size=20, color="#306998", alpha=0.7)
-
-# Highlight last point (current)
-p.scatter([x[-1]], [values[-1]], size=20, color="#306998", alpha=0.7)
-
-# Highlight min point
-p.scatter([x[min_idx]], [values[min_idx]], size=25, color="#E74C3C", alpha=0.9)
-
-# Highlight max point
-p.scatter([x[max_idx]], [values[max_idx]], size=25, color="#27AE60", alpha=0.9)
-
-# Title styling
-p.title.text_font_size = "28pt"
+# Theme-adaptive chrome (data colors stay identical across themes)
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.title.text_color = INK
+p.title.text_font_size = "32pt"
 p.title.align = "center"
 
-# Add some padding
-p.min_border = 40
+# Sparkline geometry
+p.line(x="x", y="y", source=line_source, line_width=6, color=LINE_COLOR, alpha=0.95)
+p.scatter(x="x", y="y", source=endpoint_source, size=22, color=INK_SOFT, alpha=0.7)
+p.scatter(x="x", y="y", source=extreme_source, size=44, color="color", alpha=0.95)
 
-# Save outputs
-export_png(p, filename="plot.png")
-
-output_file("plot.html")
+export_png(p, filename=f"plot-{THEME}.png")
+output_file(f"plot-{THEME}.html")
 save(p)

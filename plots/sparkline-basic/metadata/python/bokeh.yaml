@@ -1,150 +1,192 @@
 library: bokeh
+language: python
 specification_id: sparkline-basic
 created: '2025-12-23T20:44:47Z'
-updated: '2025-12-23T20:48:27Z'
-generated_by: claude-opus-4-5-20251101
+updated: '2026-05-02T22:57:49Z'
+generated_by: local-regen
 workflow_run: 20471153299
 issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/bokeh/plot.html
-quality_score: 92
+python_version: 3.13.12
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/python/bokeh/plot-dark.html
+quality_score: 90
 impl_tags:
   dependencies: []
   techniques:
-    - html-export
+  - html-export
   patterns:
-    - data-generation
+  - data-generation
   dataprep: []
   styling: []
 review:
   strengths:
-  - Excellent sparkline minimalism - no axes, gridlines, or labels as spec requires
-  - Perfect 4:1 aspect ratio ideal for sparkline visualization
-  - Good use of colored markers to highlight min (red) and max (green) points
-  - First and last points highlighted for reference as spec suggests
-  - Clean data generation with realistic website traffic scenario including trend
-    and seasonality
-  - Correct title format following pyplots.ai conventions
+  - Theme-adaptive rendering with identical Okabe-Ito data colors across light and
+    dark; only chrome flips, exactly as required
+  - Idiomatic Bokeh ColumnDataSource pattern — separate sources for line, endpoints,
+    and extremes with per-row color column for the extreme glyph
+  - Clean KISS structure — imports → data → plot → save, no functions or classes
+  - Realistic web-traffic data with launch bump, mid-month decline, and weekend dips
+    so the sparkline shape is informative rather than monotonic
+  - Title format matches `{spec-id} · {library} · anyplot.ai` exactly with explicit
+    32pt sizing for legibility on the 4800×1200 canvas
+  - Visual hierarchy via colored extremes (vermillion min, green max) creates immediate
+    focal points without violating the basic-variant no-annotation rule
   weaknesses:
-  - Title font size could be slightly larger for the 4800x1200 canvas
-  - Consider using ColumnDataSource for better Bokeh idiom (minor)
-  image_description: 'The plot displays a minimalist sparkline visualization with
-    a blue line (#306998) showing 30 data points representing daily website traffic.
-    The line exhibits a general upward trend combined with weekly seasonality patterns.
-    The chart correctly omits all axes, gridlines, and labels in keeping with sparkline
-    conventions. Four highlighted points are visible: a small blue dot at the first
-    point (left edge), a small blue dot at the last point (right edge), a red dot
-    marking the minimum value, and a green dot marking the maximum peak. The aspect
-    ratio is approximately 4:1 (4800x1200 pixels), which is ideal for sparklines.
-    The title "sparkline-basic · bokeh · pyplots.ai" appears centered at the top in
-    a readable font.'
+  - 'Storytelling ceiling: spec is `basic`, so annotations and trendlines are forbidden;
+    DE-03 plateau is structural, not a code defect'
+  - ColumnDataSource is idiomatic Bokeh but the same effect (layered glyphs with shared
+    data) is reachable in plotly/altair, so distinctive-library-features ceiling is
+    moderate
+  image_description: 'A minimalist sparkline rendered at ~4:1 aspect ratio with no
+    axes, ticks, or gridlines. The series traces 60 sequential data points (daily
+    web-traffic sessions) in Okabe-Ito green (#009E73) with a thin clean line, climbing
+    through an early launch bump near day 12, dipping into a mid-month trough around
+    day 36 (highlighted with a vermillion #D55E00 dot marking the minimum), then recovering
+    to a peak at the rightmost point (highlighted with a green dot marking the maximum).
+    A small soft-gray endpoint dot marks day 0 at the left. The title ''sparkline-basic
+    · bokeh · anyplot.ai'' sits centered above the canvas in 32pt. The light render
+    uses a cream #FAF8F1 background with dark text; the dark render uses #1A1A17 with
+    light text — data colors and positions are identical between both, only chrome
+    flips.'
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title is readable but could be slightly larger for canvas size
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
+        passed: true
+        comment: Title text_font_size='32pt' explicitly set, theme-correct color,
+          perfectly readable in both renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
         passed: true
         comment: No overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width and markers well-sized for data density
+        comment: line_width=6 + size=22 endpoint dots + size=44 extreme dots well-tuned
+          for 60 data points across 4800px
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/red/green distinguishable, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions, sparkline fills canvas appropriately
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: No grid as intended, no legend needed but could add subtle context
+        comment: Okabe-Ito green/vermillion are CVD-safe; gray endpoint distinguishable
+          by lightness in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Compact 4:1 aspect ratio appropriate for a sparkline; balanced margins
+          via min_border=80; chart fills canvas well
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: N/A for sparklines (no axes by spec design); title is descriptive
+          — full points
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (Okabe-Ito green); light bg #FAF8F1, dark bg
+          #1A1A17; data colors identical across themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean intentional palette with hierarchy (line + soft endpoints +
+          bright extremes), clearly above defaults but not Nature/Science publication-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No grid, no axes, outline removed, generous whitespace, theme-correct
+          chrome — small ceiling left for hand-tuned spacing
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Visual hierarchy via colored extremes guides the eye to min/max,
+          but spec variant `basic` forbids annotations so storytelling is structurally
+          capped
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct sparkline type
+        comment: Correct sparkline implementation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Sequential values correctly displayed over time
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: no axes/labels, compact ratio, min/max
-          highlights, first/last highlights'
-      - id: SC-04
-        name: Data Range
+        comment: All spec features present — no axes/labels/grid, compact ratio, min/max
+          highlights, endpoint markers
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X (sequential day index), Y (sessions value) correctly assigned via
+          ColumnDataSource
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for sparklines, no legend needed
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "sparkline-basic · bokeh · pyplots.ai"'
+        comment: Title format `sparkline-basic · bokeh · anyplot.ai` exact; no legend
+          needed for sparkline
     data_quality:
-      score: 19
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows upward trend, weekly seasonality, and noise - all aspects of
-          sparkline data
+        comment: Shows growth, decline, weekly seasonality (weekend dips), launch
+          bump, recovery — varied trend across full series
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Website traffic is plausible; scenario is good but generic
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Values around 1000-1300 are realistic for daily traffic
+        comment: Daily web-traffic sessions with launch bump and weekend dips is a
+          plausible neutral business scenario; not labeled with units in-plot but
+          spec forbids labels
+      - id: DQ-03
+        name: Appropriate Scale & Factual Correctness
+        score: 4
+        max: 4
+        passed: true
+        comment: Values ~80–160 daily sessions plausible for a small-to-mid product;
+          weekend-dip ~10% magnitude realistic
     code_quality:
       score: 10
       max: 10
@@ -154,11 +196,11 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: imports → data → plot → save; no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: np.random.seed(42) set
       - id: CQ-03
@@ -166,28 +208,39 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, numpy, bokeh.io, bokeh.models, bokeh.plotting — all used and
+          necessary
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: ~65 lines, no over-engineering, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{light,dark}.png and plot-{light,dark}.html; current Bokeh
+          3.8 API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Basic Bokeh usage; could use ColumnDataSource for more idiomatic
-          code, but scatter/line methods are appropriate
+        comment: Uses ColumnDataSource — Bokeh's recommended data-binding pattern
+          — with separate sources per glyph and a per-row color column for the extreme
+          dots
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: ColumnDataSource declarative data binding is core Bokeh grammar;
+          figure() with toolbar_location=None is Bokeh-specific; doesn't use Bokeh-unique
+          HoverTool/CustomJS but interactive HTML output is a Bokeh strength
   verdict: APPROVED
