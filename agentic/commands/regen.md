@@ -245,6 +245,58 @@ This sidesteps the self-import collision (impl named `altair.py` shadows `import
 `.regen-preview/{LIBRARY}/` so the artifacts land there. Up to 3 retries per theme; missing `plot-light.png`
 or `plot-dark.png` raises and the step exits non-zero. On failure see "Per-library failure" below.
 
+The helper already wraps each invocation in `xvfb-run` so headless-Chrome screenshots work without a real
+display. **Don't waste time re-debugging the display**, it's handled.
+
+#### Browser rendering: the snap-chromedriver pitfall (READ BEFORE TOUCHING bokeh / pygal / anything that
+exports PNG via a built-in webdriver)
+
+On this Ubuntu/WSL2 dev box `/usr/bin/chromedriver` is a **broken snap shim** that errors out with
+`Command '/usr/bin/chromedriver' requires the chromium snap to be installed`. `xvfb-run` does NOT fix this —
+the chromedriver binary itself fails before a display is ever needed.
+
+What works on this box:
+
+- **Direct Selenium 4** with `webdriver.Chrome(options=...)`. Selenium Manager auto-resolves a working driver
+  for the system Chrome at `/usr/bin/google-chrome`, bypassing the snap shim entirely. This is the pattern
+  `plots/*/implementations/python/highcharts.py` already uses — copy its `chrome_options` block verbatim
+  (`--headless=new`, `--no-sandbox`, `--disable-dev-shm-usage`, `--disable-gpu`, `--window-size=...`,
+  `--hide-scrollbars`).
+- **Anything that does NOT need a browser** (matplotlib `savefig`, plotly `write_image` via kaleido, altair
+  `chart.save("plot.png")` via vl-convert, plotnine `.save()`, lets-plot `ggsave`, seaborn → matplotlib).
+
+What does NOT work — even after `xvfb-run`:
+
+- `bokeh.io.export_png(...)` — calls `bokeh.io.webdriver.webdriver_control` which probes
+  `/usr/bin/chromedriver` first and fails with the snap message. **Do not use** `export_png` for bokeh.
+- `chart.render_to_png(...)` in pygal if it routes through CairoSVG with a missing system lib — verify by
+  running once before assuming it works.
+
+For libraries where the default PNG-export path uses a bundled webdriver, replace it with the
+write-HTML + Selenium-screenshot pattern from `highcharts.py`:
+
+```python
+import tempfile, time
+from pathlib import Path
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+# ... build chart, save HTML to tempfile ...
+opts = Options()
+for arg in ("--headless=new", "--no-sandbox", "--disable-dev-shm-usage",
+            "--disable-gpu", f"--window-size={W},{H}", "--hide-scrollbars"):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{html_path}")
+time.sleep(3)  # let chart render
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
+```
+
+If the existing impl on origin/main uses `bokeh.io.export_png`, **swap it for this pattern as part of the
+regen** — that's a real defect on this dev box, not an unrelated change.
+
 ### 2e. Lint
 
 ```bash
