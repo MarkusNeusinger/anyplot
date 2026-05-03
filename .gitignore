@@ -245,3 +245,6 @@ secrets/
 
 # Map page tuning screenshots (root-level only — must not match plots/*/preview.png etc.)
 /map-*.png
+
+# Generated OG image samples (issue #5652) — review-only output of scripts/generate_og_samples.py
+/out/

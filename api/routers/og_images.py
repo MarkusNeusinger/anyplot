@@ -1,6 +1,7 @@
 """OG Image endpoints for branded social media preview images."""
 
 import asyncio
+from io import BytesIO
 from pathlib import Path
 
 import httpx
@@ -12,24 +13,48 @@ from api.analytics import track_og_image
 from api.cache import cache_key, get_cache, set_cache
 from api.dependencies import optional_db
 from core.database import SpecRepository
-from core.images import create_branded_og_image, create_og_collage
+from core.images import create_branded_og_image, create_home_og_image, create_og_collage
 
 
-# Static og:image (loaded once at startup)
+# Bump this when the OG visual template changes — it's folded into every
+# `cache_key()` call below so a deploy invalidates already-cached PNGs without
+# needing a manual `clear_cache()`. Issue #5652 introduces the any.plot()
+# visual identity, so we bump v1 → v2.
+OG_VERSION = "v2"
+
+# Static og:image (lazily generated once per process at first request)
 _STATIC_OG_IMAGE: bytes | None = None
 
 
 def _get_static_og_image() -> bytes:
-    """Load static og-image.png (cached in memory)."""
+    """Render the home/plots fallback OG image (cached in memory).
+
+    Previously read a hardcoded `api/static/og-image.png`; now it generates the
+    new any.plot() hero-style card on the fly so a single source of truth in
+    `core/images.py` controls the entire OG surface. Process-local memoisation
+    means we still only pay the render cost once per worker.
+    """
     global _STATIC_OG_IMAGE
     if _STATIC_OG_IMAGE is None:
-        # Use api/static/ which is bundled in the Docker image
-        path = Path(__file__).parent.parent / "static" / "og-image.png"
         try:
-            _STATIC_OG_IMAGE = path.read_bytes()
-        except FileNotFoundError as exc:
-            raise HTTPException(status_code=500, detail="Static OG image not found") from exc
+            result = create_home_og_image(theme="light")
+            _STATIC_OG_IMAGE = result if isinstance(result, bytes) else _image_to_bytes(result)
+        except Exception as exc:
+            # Last-resort: try the bundled static asset so the endpoint never
+            # 500s if font loading or PIL is broken in a fresh container.
+            path = Path(__file__).parent.parent / "static" / "og-image.png"
+            try:
+                _STATIC_OG_IMAGE = path.read_bytes()
+            except FileNotFoundError:
+                raise HTTPException(status_code=500, detail="Static OG image not available") from exc
     return _STATIC_OG_IMAGE
+
+
+def _image_to_bytes(img) -> bytes:
+    """Convert a PIL Image to PNG bytes (only used by the static-fallback branch)."""
+    buf = BytesIO()
+    img.save(buf, "PNG", optimize=True)
+    return buf.getvalue()
 
 
 router = APIRouter(prefix="/og", tags=["og-images"])
@@ -102,7 +127,7 @@ async def get_branded_impl_image(
     track_og_image(request, page="spec_detail", spec=spec_id, language=language, library=library)
 
     # Check cache first
-    key = cache_key("og", spec_id, language, library)
+    key = cache_key("og", OG_VERSION, spec_id, language, library)
     cached = get_cache(key)
     if cached:
         return Response(content=cached, media_type="image/png", headers={"Cache-Control": "public, max-age=3600"})
@@ -153,7 +178,7 @@ async def get_spec_collage_image(
     track_og_image(request, page="spec_overview", spec=spec_id)
 
     # Check cache first
-    key = cache_key("og", spec_id, "collage")
+    key = cache_key("og", OG_VERSION, spec_id, "collage")
     cached = get_cache(key)
     if cached:
         return Response(content=cached, media_type="image/png", headers={"Cache-Control": "public, max-age=3600"})
@@ -180,10 +205,12 @@ async def get_spec_collage_image(
     try:
         # Fetch all images in parallel
         images = list(await asyncio.gather(*[_fetch_image(impl.preview_url) for impl in selected_impls]))
-        labels = [f"{spec_id} · {impl.library_id}" for impl in selected_impls]
+        # Labels are just the library id — chip color picks deterministically
+        # off the trailing token, and the spec_id is now in the section title.
+        labels = [impl.library_id for impl in selected_impls]
 
         # Create collage
-        collage_bytes = create_og_collage(images, labels=labels)
+        collage_bytes = create_og_collage(images, labels=labels, spec_id=spec_id)
 
         # Cache the result
         set_cache(key, collage_bytes)
