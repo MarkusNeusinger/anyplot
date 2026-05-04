@@ -1,153 +1,188 @@
 library: plotly
+language: python
 specification_id: sunburst-basic
 created: '2025-12-23T21:54:49Z'
-updated: '2025-12-23T22:01:00Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472385200
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/plotly/plot.html
+updated: '2026-05-04T22:55:03Z'
+generated_by: claude-sonnet
+workflow_run: 25347094831
+issue: 821
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/plotly/plot-dark.html
 quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
 review:
   strengths:
-  - Excellent hierarchical data representation with clear parent-child relationships
-  - Consistent color scheme within branches (Engineering teams in blue variations,
-    Sales teams in yellow variations)
-  - Realistic company budget scenario with meaningful department/team structure
-  - Proper use of branchvalues=total for accurate proportional representation
-  - Custom hover template provides useful budget information
-  - Clean white line separators between segments enhance readability
-  - Radial text orientation improves label placement
+  - Excellent color family approach — Okabe-Ito tints/shades per branch encode hierarchy
+    relationships visually
+  - 'Strong data storytelling: explicit annotation calls out Engineering''s 37.5%
+    dominance'
+  - Theme adaptation is thorough — PAGE_BG, ELEVATED_BG, INK, and INK_MUTED all adapt;
+    center root circle is especially elegant
+  - 'Idiomatic Plotly sunburst usage: branchvalues=''total'', insidetextorientation=''radial'',
+    custom hovertemplate with percentParent'
+  - Internally consistent data values (all parent totals equal sum of children)
+  - HTML output included for interactive experience
+  - Square 3600×3600 format is appropriate for a symmetric radial chart
   weaknesses:
-  - Some outer ring segments (HR, Brand) have relatively similar sizes, reducing visual
-    variation
-  - Chart could be slightly larger to better utilize canvas space for maximum visual
-    impact
-  image_description: 'The sunburst chart displays a company budget breakdown with
-    three hierarchical levels rendered as concentric rings. The innermost circle shows
-    "Company Budget" in dark Python Blue (#306998). The second ring displays four
-    departments: Engineering (Python Blue), Sales (Python Yellow #FFD43B), Marketing
-    (Light Blue), and Operations (Light Yellow). The outermost ring shows teams within
-    each department: Backend, Frontend, DevOps under Engineering; Enterprise, SMB
-    under Sales; Digital, Brand under Marketing; and HR, Finance under Operations.
-    Labels are displayed radially within each segment. The chart uses white line separators
-    between segments, with the title "sunburst-basic · plotly · pyplots.ai" centered
-    at the top. The overall layout is well-balanced with the chart centered on a white
-    background.'
+  - Segment text color is not explicitly set — relies on Plotly's auto-contrast for
+    text inside colored segments; 'Enterprise' label renders in dark brown on the
+    lighter orange variant in both renders (readable but uncontrolled)
+  - 'Custom hex variants for child segments (#00B589, #007A58, #F07030, etc.) technically
+    deviate from pure Okabe-Ito; the family approach is appropriate but worth noting'
+  - DE-01 ceiling limited by the derivative nature of the color choices (tints of
+    Okabe-Ito rather than a fully custom palette)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "sunburst-basic · plotly · anyplot.ai" in dark ink, clearly readable at top center; bottom annotation text in INK_MUTED gray, readable
+      Data: Three-level sunburst — center 'Company' circle in dark charcoal (ELEVATED_BG applied via Plotly's root rendering); second ring: Engineering (teal-green #009E73), Sales (orange-vermillion #D55E00), Marketing (blue #0072B2), Operations (pink #CC79A7); outer ring shows child segments in color-family tints/shades of their parents; all segment labels in radial orientation with white or dark auto-contrast text
+      Legibility verdict: PASS — all labels readable; segment text at 22px is adequate; title at 36px is prominent; annotation at 20px is visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title rendered in light ink (#F0EFE8), clearly readable against dark background; annotation text in light-muted gray, readable
+      Data: Data segment colors are identical to light render — same Engineering green, Sales orange, Marketing blue, Operations pink, and their respective tints/shades for child segments; center root circle renders as light silver-gray (ELEVATED_BG #242420 interpreted by Plotly); separator lines use dark PAGE_BG creating clean segment boundaries
+      Legibility verdict: PASS — no dark-on-dark failures; white text on saturated segments is clear; auto-contrast dark text on lighter orange Enterprise segment is still readable; brand green #009E73 is clearly visible
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: all text is readable; font size is adequate, though some smaller
-          segments have slightly compressed text
+        comment: Title 36px and segment text 22px are explicitly set and readable
+          in both themes; segment text color relies on Plotly auto-contrast (not explicitly
+          controlled)
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: no overlapping text, all labels fit within their segments
+        comment: All segment labels fit within their wedges; radial orientation prevents
+          overlap; no collisions observed
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: all segments are clearly visible with appropriate proportional sizing
+        comment: All three hierarchy levels are clearly visible; color families distinguish
+          branches; leaf opacity 0.88 adds subtle depth
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: uses Python Blue/Yellow palette with variations, colorblind-friendly
-          blue-yellow scheme
+        comment: Okabe-Ito based palette is CVD-safe; no red-green as sole signal
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: chart is well-centered but could utilize slightly more canvas area
+        comment: Square 3600x3600 is ideal for symmetric radial chart; good margins;
+          annotation uses bottom space well; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels needed for sunburst; title 'sunburst-basic · plotly
+          · anyplot.ai' is correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First data category (Engineering) = #009E73; backgrounds #FAF8F1
+          light / #1A1A17 dark correct; both renders theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful color family approach (tints/shades per branch), theme-adaptive
+          root circle, radial text, custom hovertemplate; above default but colors
+          are derivative
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: PAGE_BG separator lines create clean segment separation; no unnecessary
+          chrome; good margins; inherently clean radial form
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Explicit insight annotation highlights Engineering's 37.5% dominance;
+          color families communicate hierarchy; Engineering segment is naturally dominant
+          focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: correct sunburst chart type
+        comment: Correct sunburst chart with concentric rings
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: hierarchical levels correctly mapped (root → departments → teams)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'all spec features present: 3 hierarchy levels, proportional segment
-          angles, consistent colors within branches'
-      - id: SC-04
-        name: Data Range
+        comment: Concentric rings for hierarchy levels, consistent colors within branches,
+          segment labels, proportional angles
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: all data segments visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 3 hierarchy levels (Company > Departments > Teams); values in $M;
+          branchvalues=total for correct proportions
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: labels accurately represent data categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: correctly uses "sunburst-basic · plotly · pyplots.ai"
+        comment: Correct title format; labels on segments serve as legend; no redundant
+          legend needed
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: shows multi-level hierarchy with varying segment sizes; could benefit
-          from more variation in proportions
+        comment: 3 hierarchy levels; 14 nodes including root; demonstrates part-to-whole
+          at multiple levels; color family encoding
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: company budget breakdown is an excellent real-world scenario matching
-          spec's application examples
+        comment: Company budget breakdown is a realistic, neutral, and common business
+          use case
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: budget values in millions are reasonable; some teams have similar
-          values reducing visual contrast
+        comment: Budget values $3M-$48M are realistic; data arithmetic is internally
+          consistent (all parents equal sum of children)
     code_quality:
       score: 10
       max: 10
@@ -157,41 +192,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: clean imports → data → plot → save structure, no unnecessary functions/classes
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: deterministic data (no random values)
+        comment: Hardcoded deterministic data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: only plotly.graph_objects is imported and used
+        comment: Only 'os' and 'plotly.graph_objects' — both used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: uses current Plotly API
+        comment: Appropriate complexity for the chart type; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: uses go.Sunburst with branchvalues="total", custom hover template,
-          radial text orientation; could leverage more Plotly interactivity features
-          in HTML output
+        comment: go.Sunburst with branchvalues='total', insidetextorientation='radial',
+          leaf opacity — all idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom hovertemplate with %{percentParent} formatting, HTML export,
+          leaf opacity — good Plotly-specific usage; slightly short of exceptional
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
