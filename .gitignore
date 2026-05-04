@@ -227,6 +227,9 @@ nul
 # Project-specific
 temp/
 .update-preview/
+.regen-preview/
+.regen-plan.md
+.regen-history/
 .worktrees/
 
 # Agentic runs output

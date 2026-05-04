@@ -5,7 +5,7 @@
 ```python
 from bokeh.plotting import figure
 from bokeh.models import ColumnDataSource
-from bokeh.io import export_png
+from bokeh.io import output_file, save
 ```
 
 ## Create Figure
@@ -45,15 +45,44 @@ source = ColumnDataSource(data={
 })
 ```
 
-## Save (PNG)
+## Save (HTML + PNG via headless Chrome)
+
+**Do NOT use `bokeh.io.export_png`.** It probes `/usr/bin/chromedriver` first; on this dev box that's a snap
+shim that fails with "requires the chromium snap to be installed", regardless of whether `xvfb-run` wraps
+the call. Save the HTML and screenshot it directly with Selenium instead — this is the same pattern
+`highcharts.py` already uses successfully:
 
 ```python
-from bokeh.io import export_png
+import time
+from pathlib import Path
+from bokeh.io import output_file, save
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
-export_png(p, filename=f'plot-{THEME}.png')
+# Write the interactive HTML (also a required catalog artifact)
+output_file(f"plot-{THEME}.html")
+save(p)
+
+# Screenshot it with headless Chrome — Selenium 4 / Selenium Manager
+# auto-resolves a working driver for the system Chrome.
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)  # let bokeh's JS render the canvas
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
 ```
-
-**Note**: Requires `selenium` and WebDriver for PNG export.
 
 ## Sizing for 4800×2700 px
 
@@ -125,9 +154,7 @@ if p.legend:
     p.legend.border_line_color     = INK_SOFT
     p.legend.label_text_color      = INK_SOFT
 
-from bokeh.io import export_png, output_file, save
-export_png(p, filename=f'plot-{THEME}.png')
-output_file(f'plot-{THEME}.html'); save(p)
+# See "Save (HTML + PNG via headless Chrome)" above for output_file + Selenium screenshot.
 ```
 
 ## Output Files

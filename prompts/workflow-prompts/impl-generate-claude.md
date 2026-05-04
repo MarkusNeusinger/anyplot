@@ -38,6 +38,20 @@ When regenerating an existing implementation, you MUST read these BEFORE writing
 - Do NOT discard working structure / data generation / layout choices that the previous review did not flag.
 - Your deliverable is a refined version of the previous file, not a fresh rewrite from the spec.
 
+### Library Independence — DO NOT read sibling implementations
+
+This implementation is for **one library only**. Never read another library's
+`.py` or `.yaml` under `plots/{SPEC_ID}/implementations/` or
+`plots/{SPEC_ID}/metadata/` — not even "for reference" or "to stay consistent
+with the catalog". Each library is an independent interpretation of the spec;
+identical charts rendered by different engines defeat the catalog's purpose.
+
+Pick your own example data scenario (the spec lists multiple applications),
+your own valid visual variant, your own aspect ratio within the spec's range,
+and your own idiomatic API. The shared anchors are only the spec, the library
+prompt, and the base style guide. See `prompts/plot-generator.md` →
+"Library Independence" for the full rule.
+
 ### Feasibility Check (Static Libraries Only)
 
 If LIBRARY is **matplotlib**, **seaborn**, or **plotnine**, AND the specification mentions interactive features (hover, zoom, click, brush, animation, streaming):

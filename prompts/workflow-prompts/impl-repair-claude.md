@@ -41,6 +41,13 @@ Read both sources to understand what needs to be fixed:
 
 `plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}.py`
 
+**Do NOT read sibling-library implementations under
+`plots/{SPEC_ID}/implementations/`** (other libraries' `.py` or `.yaml`).
+Each library is an independent interpretation; copying data scenarios,
+color choices, layout, or aspect ratio from a sibling defeats the point of
+having multiple libraries in the catalog. See `prompts/plot-generator.md` →
+"Library Independence" for the full rule.
+
 ## Step 4: Fix the issues
 
 Based on the AI feedback, fix:

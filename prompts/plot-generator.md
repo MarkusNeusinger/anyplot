@@ -48,6 +48,35 @@ review:
 - **Strengths**: Keep these aspects unchanged
 - **Weaknesses**: Fix these problems (decide HOW yourself)
 
+## Library Independence (no cross-library cloning)
+
+Each library implementation is generated **in isolation**. The catalog's value
+is showing how *different* libraries solve the same spec — different idiomatic
+APIs, different valid visual interpretations, different example data. Identical
+charts rendered by different engines defeat the point.
+
+**Allowed inputs for this implementation:**
+- `plots/{spec-id}/specification.md` and `specification.yaml`
+- `plots/{spec-id}/implementations/{language}/{this-library}.py` (if regenerating, same library only)
+- `plots/{spec-id}/metadata/{language}/{this-library}.yaml` (its own previous review only)
+- `prompts/library/{this-library}.md`
+- `prompts/plot-generator.md`, `prompts/quality-criteria.md`, `prompts/default-style-guide.md`
+
+**Forbidden:**
+- Reading another library's `.py` or `.yaml` under `plots/{spec-id}/implementations/` or `plots/{spec-id}/metadata/` — even "for reference" or "to stay consistent"
+- Copying another library's example data, scenario, color choices, aspect ratio, or layout decisions
+- Treating earlier-generated sibling impls as a template
+
+**Encouraged differences (all spec-compliant variants are valid):**
+- Different example data domain (the spec lists multiple applications — pick one freely)
+- Different valid visual interpretation (e.g., for sparklines: pure line vs. filled-area vs. min/max-highlighted vs. endpoint-marked)
+- Different aspect ratio within the spec's allowed range
+- Different idiomatic API choice that plays to this library's strengths
+
+The shared anchors are the **spec**, the **library prompt**, and the **base style
+guide** (Okabe-Ito palette, theme-adaptive chrome). Everything else is this
+implementation's own decision.
+
 ## Output
 
 A simple Python script with this structure:
