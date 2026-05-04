@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sunburst-basic: Basic Sunburst Chart
 Library: plotnine 0.15.3 | Python 3.13.13
 Quality: 85/100 | Created: 2026-05-04
@@ -35,6 +35,8 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+# Slightly lighter than PAGE_BG in dark mode so ring boundaries remain visible
+RING_SEP = PAGE_BG if THEME == "light" else "#2E2D2B"
 
 OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
@@ -58,6 +60,7 @@ cumsum = 0
 
 for idx, (dept, teams) in enumerate(hierarchy.items()):
     dept_total = sum(teams.values())
+    pct = round(dept_total / total * 100)
     a0 = 2 * np.pi * cumsum / total - np.pi / 2
     a1 = 2 * np.pi * (cumsum + dept_total) / total - np.pi / 2
     color = OKABE_ITO[idx]
@@ -69,10 +72,13 @@ for idx, (dept, teams) in enumerate(hierarchy.items()):
     for xi, yi in zip(xs, ys, strict=False):
         l1_rows.append({"x": xi, "y": yi, "group": dept, "fill": color})
 
-    # L1 label at ring midpoint
+    # L1 department name: outer half of inner ring
     a_mid = (a0 + a1) / 2
-    r_mid = (R_INNER_L1 + R_OUTER_L1) / 2
-    label_rows.append({"x": r_mid * np.cos(a_mid), "y": r_mid * np.sin(a_mid), "label": dept, "level": 1})
+    r_name = 0.54
+    label_rows.append({"x": r_name * np.cos(a_mid), "y": r_name * np.sin(a_mid), "label": dept, "level": 1})
+    # Percentage annotation: inner half of inner ring
+    r_pct = 0.44
+    label_rows.append({"x": r_pct * np.cos(a_mid), "y": r_pct * np.sin(a_mid), "label": f"{pct}%", "level": 3})
 
     # L2 arc polygons (sub-departments)
     team_cumsum = cumsum
@@ -101,25 +107,29 @@ df_l2 = pd.DataFrame(l2_rows)
 df_labels = pd.DataFrame(label_rows)
 df_l1_labels = df_labels[df_labels["level"] == 1]
 df_l2_labels = df_labels[df_labels["level"] == 2]
+df_pct_labels = df_labels[df_labels["level"] == 3]
 
 # Plot
 plot = (
     ggplot()
-    + geom_polygon(data=df_l1, mapping=aes(x="x", y="y", group="group", fill="fill"), color=PAGE_BG, size=1.5)
+    + geom_polygon(data=df_l1, mapping=aes(x="x", y="y", group="group", fill="fill"), color=RING_SEP, size=1.5)
     + geom_polygon(
-        data=df_l2, mapping=aes(x="x", y="y", group="group", fill="fill"), color=PAGE_BG, size=0.8, alpha=0.65
+        data=df_l2, mapping=aes(x="x", y="y", group="group", fill="fill"), color=RING_SEP, size=0.8, alpha=0.65
     )
     + geom_text(
         data=df_l1_labels,
         mapping=aes(x="x", y="y", label="label"),
         color=INK,
-        size=15,
+        size=16,
         fontweight="bold",
         ha="center",
         va="center",
     )
     + geom_text(
-        data=df_l2_labels, mapping=aes(x="x", y="y", label="label"), color=INK, size=10, ha="center", va="center"
+        data=df_pct_labels, mapping=aes(x="x", y="y", label="label"), color=INK_SOFT, size=13, ha="center", va="center"
+    )
+    + geom_text(
+        data=df_l2_labels, mapping=aes(x="x", y="y", label="label"), color=INK, size=16, ha="center", va="center"
     )
     + scale_fill_identity()
     + coord_equal()
