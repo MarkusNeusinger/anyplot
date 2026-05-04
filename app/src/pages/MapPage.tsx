@@ -63,6 +63,18 @@ const LINK_DISTANCE_MAX = NODE_SIZE * 3.5;   // longest link (lowest sim above t
 const LINK_STRENGTH_CAP = 0.4;    // max pull from a single link
 const COLLIDE_PADDING = 6;        // px padding on top of the bounding-box radius — visible breathing room between thumbnails
 const CENTER_GRAVITY = 0.04;      // gentle pull toward the viewport center; ~25× weaker than d3-force-3d's default to corral outliers without flattening clusters
+// Outlier-squash: a custom radial force that activates only beyond a
+// distance percentile of the centroid. Inside the threshold, geometry
+// is untouched — the inner cluster keeps its exact shape. Outside, each
+// outlier's distance is compressed via a sigmoid-like map
+//     r' = R + (r - R) / (1 + (r - R) / k)
+// so far-flung points stay visibly *separate* (their order is preserved)
+// but bounded — the asymptote is R + k. This corrects the "everything
+// collapses to a dot because of one runaway outlier" zoomToFit problem
+// without needing stronger global gravity (which would crush clusters).
+const OUTLIER_THRESHOLD_PERCENTILE = 0.95;  // distance percentile beyond which compression starts
+const OUTLIER_SQUASH_K = 200;                // graph-units of extra room outliers can use beyond R; smaller = harder squash
+const OUTLIER_SQUASH_STRENGTH = 0.18;        // velocity-correction factor; tuned so outliers settle within COOLDOWN_TICKS
 
 // visually-hidden style — keeps the spec list readable for screen readers
 // even though the canvas is the primary interface.
@@ -109,6 +121,66 @@ function linkEndId(end: MapLink['source']): string | undefined {
   return (end as { id?: string })?.id;
 }
 
+// Custom d3-force that compresses extreme outliers radially toward the
+// cluster centroid while leaving inner geometry untouched. See the block
+// comment on OUTLIER_THRESHOLD_PERCENTILE for the math; this is the
+// implementation. The simulation calls force(alpha) every tick, alpha
+// decays from 1 → 0, so the velocity correction tapers off as the layout
+// cools — the force is *active* during the same window the gate covers,
+// then becomes a no-op once outliers are at their compressed targets.
+type SimNode = { x?: number; y?: number; vx?: number; vy?: number };
+function outlierSquashForce(
+  percentile: number,
+  k: number,
+  strength: number,
+) {
+  let nodes: SimNode[] = [];
+  function force(alpha: number) {
+    if (nodes.length === 0) return;
+    let cx = 0, cy = 0, n = 0;
+    for (const node of nodes) {
+      if (node.x == null || node.y == null) continue;
+      cx += node.x;
+      cy += node.y;
+      n++;
+    }
+    if (n === 0) return;
+    cx /= n;
+    cy /= n;
+    // One pass to compute distances; second pass to apply velocity
+    // adjustment to outliers. Allocating a fresh array per tick is fine
+    // at ~300 nodes (~3 µs); we'd only avoid it at 10k+.
+    const dists: number[] = new Array(nodes.length);
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+      if (node.x == null || node.y == null) {
+        dists[i] = 0;
+        continue;
+      }
+      dists[i] = Math.hypot(node.x - cx, node.y - cy);
+    }
+    const sorted = dists.slice().sort((a, b) => a - b);
+    const R = sorted[Math.floor(sorted.length * percentile)];
+    if (!(R > 0)) return;
+    for (let i = 0; i < nodes.length; i++) {
+      const r = dists[i];
+      if (r <= R) continue;
+      const node = nodes[i];
+      if (node.x == null || node.y == null) continue;
+      const excess = r - R;
+      const compressed = excess / (1 + excess / k);
+      const targetR = R + compressed;
+      const factor = (targetR - r) / r;  // negative — pulls toward the centroid
+      const dx = node.x - cx;
+      const dy = node.y - cy;
+      node.vx = (node.vx ?? 0) + dx * factor * strength * alpha;
+      node.vy = (node.vy ?? 0) + dy * factor * strength * alpha;
+    }
+  }
+  force.initialize = (n: SimNode[]) => { nodes = n; };
+  return force;
+}
+
 // Hairline border around a thumbnail node, theme-aware. Top-N plot types
 // paint with a brand color; the rest fall back to a neutral hairline.
 // On hover we keep the cluster color (or fall back to brand primary for
@@ -139,9 +211,12 @@ export function MapPage() {
   const [size, setSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
   const [hoverId, setHoverId] = useState<string | null>(null);
   // panelNodeId trails hoverId on mouse-out so the corner preview can fade
-  // out while still showing the last node's content. It only updates to a
-  // *new* node when hoverId becomes non-null.
-  const [panelNodeId, setPanelNodeId] = useState<string | null>(null);
+  // out while still showing the last node's content. It only "advances" to
+  // a *new* node when hoverId or pinnedId becomes non-null. Stored as a ref
+  // + derived value (instead of useState + useEffect) to satisfy React's
+  // set-state-in-effect rule: this is not external sync, it's pure
+  // last-non-null memoization that belongs in render.
+  const lastPanelNodeIdRef = useRef<string | null>(null);
   // pinnedId persists a visual marker on the searched node so the user
   // doesn't lose track of it when the mouse drifts onto a different node
   // (which would otherwise overwrite hoverId and replace the panel content).
@@ -172,6 +247,12 @@ export function MapPage() {
   // whenever graphData re-derives (filter / weight / category change), so
   // the gate also covers subsequent re-layouts.
   const [settled, setSettled] = useState(false);
+  // Throttled tick counter for the "computing" overlay's progress bar.
+  // We update React state at most every PROGRESS_TICK_BATCH simulation
+  // ticks to avoid re-rendering MapPage at ~60 Hz while the layout cools.
+  // tickCountRef holds the un-throttled count so we know when to flush.
+  const tickCountRef = useRef(0);
+  const [tickProgress, setTickProgress] = useState(0);
 
   // Search-pill state. searchOpen controls dropdown visibility (separate
   // from focus so we can keep showing matches briefly while a click is in
@@ -217,10 +298,15 @@ export function MapPage() {
   // searched node's details stay visible while the user looks around).
   // If neither hover nor pin is set, the previous content lingers in the
   // DOM but fades out via the opacity transition.
-  useEffect(() => {
-    if (hoverId) setPanelNodeId(hoverId);
-    else if (pinnedId) setPanelNodeId(pinnedId);
-  }, [hoverId, pinnedId]);
+  //
+  // Derived during render rather than via a useState+useEffect pair: the
+  // value is purely a function of (hoverId, pinnedId, last-non-null) and
+  // never needs to react to external systems. The ref write below is
+  // permitted by the project's eslint config (`react-hooks/refs: off`) —
+  // it's idempotent (writes the same value on identical renders) and
+  // happens *before* React commits, so subsequent reads see the update.
+  const panelNodeId = hoverId ?? pinnedId ?? lastPanelNodeIdRef.current;
+  if (panelNodeId !== null) lastPanelNodeIdRef.current = panelNodeId;
 
   // Clean up any pending hover-debounce timer on unmount.
   useEffect(() => {
@@ -339,10 +425,22 @@ export function MapPage() {
   // cooling phase the same way it covers the initial one. No-op on the
   // very first render (settled is already false) and while specs are
   // still loading.
-  useEffect(() => {
-    if (graphData.nodes.length === 0) return;
-    setSettled(false);
-  }, [graphData]);
+  //
+  // Implemented via the "store previous prop in state" pattern (see
+  // https://react.dev/reference/react/useState#storing-information-from-previous-renders)
+  // instead of useEffect: React supports calling setState during render of
+  // the *same* component, batches the updates, and re-renders once before
+  // commit — no infinite loop, and the rule that bans setState in effects
+  // doesn't apply to setState during render.
+  const [prevGraphData, setPrevGraphData] = useState(graphData);
+  if (graphData !== prevGraphData) {
+    setPrevGraphData(graphData);
+    if (graphData.nodes.length > 0) {
+      setSettled(false);
+      setTickProgress(0);
+      tickCountRef.current = 0;
+    }
+  }
 
   // Eager-load the 400-tier thumbnails so something paints fast. Higher tiers
   // are fetched lazily from nodeCanvasObject when the user zooms in.
@@ -389,11 +487,14 @@ export function MapPage() {
   // stays glued to it while the user pans/zooms. Cheap (one RAF tick = a
   // graph→screen coord transform + a setState that no-ops on sub-pixel
   // diffs), no canvas repaint involved.
+  //
+  // When pinnedId becomes null we just stop the RAF loop — the marker
+  // visibility is gated on `pinnedId` at the JSX site, so there's no need
+  // to setState(null) inside this effect (which would trip the
+  // set-state-in-effect rule). pinScreen lingers at its last value but is
+  // simply not rendered, then gets overwritten the next time a pin lands.
   useEffect(() => {
-    if (!pinnedId) {
-      setPinScreen(null);
-      return;
-    }
+    if (!pinnedId) return;
     let raf = 0;
     const tick = () => {
       const fg = fgRef.current;
@@ -426,7 +527,7 @@ export function MapPage() {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [pinnedId, graphData]);
+  }, [pinnedId, graphData, nodeById]);
 
   // 5. derive everything the corner hover-panel needs from the (lagged)
   //    panelNodeId, so the panel can fade out without losing its content.
@@ -455,7 +556,7 @@ export function MapPage() {
       // of the same node are instant.
       previewUrl: node.thumbUrl ? buildVariantUrl(node.thumbUrl, 800) : null,
     };
-  }, [panelNodeId, graphData]);
+  }, [panelNodeId, graphData, nodeById]);
 
   // Pulse colour: match the pinned node's natural cluster border so the
   // ring isn't a foreign green halo when the node itself is e.g. orange.
@@ -507,10 +608,9 @@ export function MapPage() {
     return scored.slice(0, 8).map(x => x.spec);
   }, [searchQuery, searchHaystacks]);
 
-  // Reset the keyboard-cursor whenever the result list shrinks/reshuffles.
-  useEffect(() => {
-    setSearchIdx(0);
-  }, [searchQuery]);
+  // (searchIdx is reset inline in the input's onChange handler — moved out
+  // of useEffect to avoid set-state-in-effect: it's a one-line followup
+  // to a user event, not external sync.)
 
   // Cmd/Ctrl+K focuses the search pill from anywhere on the page. Always
   // preventDefault so the browser's own ⌘K (Chrome address bar) doesn't fire.
@@ -651,7 +751,14 @@ export function MapPage() {
             type="text"
             value={searchQuery}
             placeholder="specs.search()"
-            onChange={e => setSearchQuery((e.target as HTMLInputElement).value)}
+            onChange={e => {
+              setSearchQuery((e.target as HTMLInputElement).value);
+              // Reset the keyboard-cursor inline: every keystroke produces
+              // a fresh result ranking, so position 0 is the only sensible
+              // default. Done here (rather than in a useEffect on
+              // searchQuery) to satisfy set-state-in-effect.
+              setSearchIdx(0);
+            }}
             onFocus={() => setSearchOpen(true)}
             onBlur={() => window.setTimeout(() => setSearchOpen(false), 150)}
             onKeyDown={e => {
@@ -988,7 +1095,7 @@ export function MapPage() {
             position is recomputed every frame from graph2ScreenCoords so it
             tracks pan/zoom. pointerEvents:none keeps it from intercepting
             clicks/hovers on the node underneath. */}
-        {pinScreen && (
+        {pinnedId && pinScreen && (
           <Box
             sx={{
               position: 'absolute',
@@ -1345,54 +1452,119 @@ export function MapPage() {
               // mass instead of vanishing to the corners. Strength is well
               // below the default 1.0 so cluster shapes stay intact.
               fg.d3Force('center')?.strength?.(CENTER_GRAVITY);
+              // Outlier-squash: register the custom radial-compression force
+              // AFTER the standard ones so its velocity correction is the
+              // last word per tick. Inner geometry is untouched (force is a
+              // no-op below the percentile threshold), so this stacks on the
+              // existing layout instead of fighting it.
+              fg.d3Force(
+                'outlier-squash',
+                outlierSquashForce(
+                  OUTLIER_THRESHOLD_PERCENTILE,
+                  OUTLIER_SQUASH_K,
+                  OUTLIER_SQUASH_STRENGTH,
+                ),
+              );
               fg.__forcesWired = true;
               fg.d3ReheatSimulation?.();
+            }}
+            // Drive the loading-overlay progress bar. Each simulation tick
+            // bumps the un-throttled ref; we flush to React state every
+            // PROGRESS_TICK_BATCH ticks (~5×/s at 60 Hz) so the bar advances
+            // smoothly without re-rendering MapPage on every tick.
+            onEngineTick={() => {
+              tickCountRef.current += 1;
+              const PROGRESS_TICK_BATCH = 6;
+              if (tickCountRef.current % PROGRESS_TICK_BATCH === 0) {
+                setTickProgress(Math.min(1, tickCountRef.current / COOLDOWN_TICKS));
+              }
             }}
           />
         )}
 
         {/* Settling gate: visible while specs are loaded but the simulation
             hasn't finished cooling. Sits on top of the canvas, swallows
-            pointer events, and shows a small spinner in the corner so the
-            user sees that the layout is still resolving. Drops as soon as
-            `settled` flips on engine stop. */}
-        {ready && !settled && (
+            pointer events, and shows a centered spinner + progress bar so
+            non-technical users get an unmistakable signal that the map is
+            *computing*, not broken. Renders as long as `ready` so the fade
+            transition runs both ways — opacity drops to 0 after `settled`
+            flips, then the next graphData re-derive fades it back in.
+            pointerEvents flips to `none` once settled so canvas drags work
+            even during the fade-out. */}
+        {ready && (
           <Box
-            aria-hidden="true"
+            aria-hidden={settled}
             sx={{
               position: 'absolute',
               inset: 0,
-              pointerEvents: 'auto',
-              cursor: 'wait',
+              pointerEvents: settled ? 'none' : 'auto',
+              cursor: settled ? 'default' : 'wait',
               // Above the canvas (implicit 0), below all interactive
               // controls (search pill / legend / weights at z 2, corner
               // panel at 3, pin-marker at 4) so the gate only swallows
               // canvas pointer events — search, filters, etc. stay
               // usable while the simulation is still cooling.
               zIndex: 1,
+              opacity: settled ? 0 : 1,
+              transition: 'opacity 250ms ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              // Slight dim + blur so users register that the canvas is in
+              // a transient state without losing the underlying preview of
+              // where points are heading.
+              bgcolor: isDark ? 'rgba(20, 20, 18, 0.55)' : 'rgba(252, 251, 243, 0.55)',
+              backdropFilter: 'blur(2px)',
+              WebkitBackdropFilter: 'blur(2px)',
             }}
           >
             <Box
+              role="status"
+              aria-live="polite"
+              aria-label="Computing map layout"
               sx={{
-                position: 'absolute',
-                bottom: 12,
-                right: 12,
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
-                gap: 1,
-                px: 1.25,
-                py: 0.5,
-                borderRadius: 999,
-                bgcolor: isDark ? 'rgba(36, 36, 32, 0.85)' : 'rgba(255, 253, 246, 0.85)',
-                border: '1px solid var(--rule)',
-                color: 'var(--ink-soft)',
+                gap: 1.25,
+                px: 3,
+                py: 2,
                 fontFamily: typography.mono,
-                fontSize: fontSize.xs,
-                backdropFilter: 'blur(4px)',
               }}
             >
-              <CircularProgress size={12} thickness={5} />
-              <span>arranging…</span>
+              <CircularProgress size={48} thickness={4} />
+              <Box
+                sx={{
+                  fontFamily: typography.mono,
+                  fontSize: fontSize.sm,
+                  color: 'var(--ink)',
+                }}
+              >
+                Arranging map…
+              </Box>
+              {/* Hand-rolled thin progress bar — slimmer than MUI's
+                  LinearProgress and avoids an extra import. Width
+                  transitions on each batched tick-progress update so the
+                  bar slides smoothly between throttle frames. */}
+              <Box
+                aria-hidden="true"
+                sx={{
+                  width: 160,
+                  height: 3,
+                  borderRadius: 2,
+                  bgcolor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+                  overflow: 'hidden',
+                }}
+              >
+                <Box
+                  sx={{
+                    width: `${Math.round(tickProgress * 100)}%`,
+                    height: '100%',
+                    bgcolor: colors.primary,
+                    transition: 'width 140ms linear',
+                  }}
+                />
+              </Box>
             </Box>
           </Box>
         )}

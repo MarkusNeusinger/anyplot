@@ -332,13 +332,16 @@ describe('MapPage', () => {
     render(<MapPage />);
     await waitFor(() => expect(screen.getByTestId('force-graph-2d')).toBeInTheDocument());
 
-    // Gate is visible while the engine is still cooling.
-    expect(screen.getByText(/arranging/i)).toBeInTheDocument();
+    // Gate is visible (role="status" is reachable) while the engine is still cooling.
+    expect(screen.getByRole('status')).toHaveTextContent(/arranging/i);
 
-    // Engine stops → settled flips → overlay disappears.
+    // Engine stops → settled flips → overlay sets aria-hidden=true and fades.
+    // We keep the node in the DOM for the fade transition, so query-by-role
+    // (which filters aria-hidden by default) is the right invariant: it
+    // becomes unreachable to assistive tech the moment the gate is settled.
     const onEngineStop = lastFgProps.current!.onEngineStop as () => void;
     act(() => onEngineStop());
-    await waitFor(() => expect(screen.queryByText(/arranging/i)).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument());
   });
 
   it('frames the bbox via centerAt + zoom on engine stop', async () => {
