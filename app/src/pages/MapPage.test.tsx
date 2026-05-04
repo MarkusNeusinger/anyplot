@@ -346,7 +346,7 @@ describe('MapPage', () => {
     await waitFor(() => expect(screen.getByTestId('force-graph-2d')).toBeInTheDocument());
 
     // Gate is visible (role="status" is reachable) while the engine is still cooling.
-    expect(screen.getByRole('status')).toHaveTextContent(/arranging/i);
+    expect(screen.getByRole('status')).toHaveTextContent(/map\.simulate\(\)/);
 
     // Engine stops → settled flips → overlay sets aria-hidden=true and fades.
     // We keep the node in the DOM for the fade transition, so query-by-role

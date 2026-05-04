@@ -40,7 +40,19 @@ import {
 
 
 const NODE_SIZE = 60;            // graph-space size of a node — large enough to read the thumbnail without hovering
-const COOLDOWN_TICKS = 450;       // a touch over the original 400 — just enough to let the slower alpha decay finish its work before the cap kicks in
+const COOLDOWN_TICKS = 300;       // simulation lifetime in ticks; the engine cap and alpha-decay below both derive from this so they stop together
+// Stop the engine while motion is still perceptible. With d3-force's default
+// alphaMin (0.001), alpha keeps decaying for ~150 more ticks after movement
+// drops below the visible threshold (alpha ≈ 0.01) — that tail is dead time
+// for the user. We bump alphaMin to 0.01 so engine-stop coincides with where
+// the layout already looks frozen.
+const COOLDOWN_ALPHA_MIN = 0.01;
+// Couple alpha decay to COOLDOWN_TICKS so the engine stops exactly when the
+// progress bar (denominated in COOLDOWN_TICKS) reaches 100%. Without this,
+// alpha hits alphaMin before the bar is full and the "map.simulate()"
+// overlay fades out with the bar still partway across.
+//   alpha(n) = (1 - decay)^n  →  solve (1 - decay)^COOLDOWN_TICKS = alphaMin.
+const COOLDOWN_ALPHA_DECAY = 1 - Math.pow(COOLDOWN_ALPHA_MIN, 1 / COOLDOWN_TICKS);
 const CLUSTER_SEED_RADIUS = 600;  // distance from origin where each colorBucket cluster's centroid is initially placed
 const CLUSTER_SEED_JITTER = 150;  // per-node random offset around the cluster centroid — small enough to keep clusters identifiable, large enough that collision can settle them
 const KNN_K = 8;                  // edges per node in the sparse KNN graph
@@ -73,7 +85,7 @@ const CENTER_GRAVITY = 0.04;      // gentle pull toward the viewport center; ~25
 // collapses to a dot because of one runaway outlier" zoomToFit problem
 // without needing stronger global gravity (which would crush clusters).
 const OUTLIER_THRESHOLD_PERCENTILE = 0.95;  // distance percentile beyond which compression starts
-const OUTLIER_SQUASH_K = 200;                // graph-units of extra room outliers can use beyond R; smaller = harder squash
+const OUTLIER_SQUASH_K = 120;                // graph-units of extra room outliers can use beyond R; smaller = harder squash
 const OUTLIER_SQUASH_STRENGTH = 0.18;        // velocity-correction factor; tuned so outliers settle within COOLDOWN_TICKS
 
 // visually-hidden style — keeps the spec list readable for screen readers
@@ -1266,7 +1278,8 @@ export function MapPage() {
             nodeLabel={(n: MapNode) => n.title}
             // Boost global repulsion so nodes aren't crammed into a blob.
             d3VelocityDecay={0.35}
-            d3AlphaDecay={0.018}
+            d3AlphaDecay={COOLDOWN_ALPHA_DECAY}
+            d3AlphaMin={COOLDOWN_ALPHA_MIN}
             nodeCanvasObject={(node, ctx, globalScale) => {
               const n = node as WithCoords;
               if (n.x == null || n.y == null) return;
@@ -1550,7 +1563,7 @@ export function MapPage() {
                   color: 'var(--ink)',
                 }}
               >
-                Arranging map…
+                map.simulate()
               </Box>
               {/* Hand-rolled thin progress bar — slimmer than MUI's
                   LinearProgress and avoids an extra import. Width
