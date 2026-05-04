@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: strip-basic
 created: '2025-12-23T21:54:18Z'
-updated: '2026-05-04T20:38:21Z'
+updated: '2026-05-04T20:50:03Z'
 generated_by: claude-sonnet
 workflow_run: 25341738114
 issue: 975
@@ -15,33 +15,28 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - 'Perfect Visual Quality (30/30): all theme tokens correctly applied to every element
-    in both renders, no dark-on-dark failure'
-  - Correct Okabe-Ito order with Engineering=#009E73 first and full multi-series sequencing
-  - Mean reference lines adapt correctly between light/dark themes and add real analytical
-    value
-  - Well-calibrated jitter (±0.2) and alpha (0.6) for 35-52 point groups
+  - 'Perfect spec compliance: jitter, transparency, mean reference lines all present
+    and well-configured'
+  - Exemplary theme-adaptive chrome — both renders are clean, no dark-on-dark failures,
+    backgrounds correct
+  - Full Okabe-Ito palette applied correctly in canonical order across all four series
   weaknesses:
-  - 'DE-03 LOW: Key story (Sales highest satisfaction, HR most variable) not visually
-    emphasised — annotate mean values next to reference lines or use alpha contrast
-    to create focal point'
-  - 'DE-01 MODERATE: Clean design lacks a distinctive element above well-configured
-    defaults — no typographic contrast or callout of standout group'
-  - 'DE-02 MINOR: Tick marks visible — add ax.tick_params(length=0); inter-group whitespace
-    could be more generous'
-  - 'LM-02 LOW: Jitter via manual for-loop with numpy uniform noise — no use of matplotlib-specific
-    features like ax.annotate, axvspan, or zorder layering'
+  - 'DE-03 moderate: Mean reference lines add comparison context but no visual hierarchy
+    singles out the highest-scoring group (Sales) or widest-spread group (HR) as the
+    focal insight'
+  - 'LM-02 low: Core plotting relies on basic ax.scatter with manual numpy jitter;
+    no distinctive matplotlib artist/collection features leveraged'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "strip-basic · matplotlib · anyplot.ai" in dark ink (#1A1A17) at top-center; Y-axis label "Satisfaction Score (1–10)" and X-axis label "Department" in dark ink; tick labels (score values, department names) in INK_SOFT (#4A4A44) — all clearly readable
-      Data: Four groups — Engineering (teal #009E73), Marketing (orange #D55E00), Sales (blue #0072B2), HR (pink #CC79A7); jittered scatter points with alpha=0.6; dark horizontal mean reference lines per group; subtle y-axis grid lines
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "strip-basic · matplotlib · anyplot.ai" in dark ink 24pt; x-label "Department" 20pt dark; y-label "Satisfaction Score (1–10)" 20pt dark; tick labels 16pt INK_SOFT — all clearly readable
+      Data: Engineering=#009E73, Marketing=#D55E00, Sales=#0072B2, HR=#CC79A7 — Okabe-Ito canonical order; s=200 alpha=0.6 markers with PAGE_BG edge color; black horizontal mean lines per group
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light text (#F0EFE8) clearly visible; axis labels and tick labels in light text (INK_SOFT #B8B7B0 in dark mode) — no dark-on-dark failure; mean reference lines appear as white/light horizontal bars (INK adapts to #F0EFE8 in dark mode)
-      Data: Colors identical to light render — teal, orange, blue, and pink groups unchanged; Okabe-Ito data colors (positions 1-4) are theme-invariant as required
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: All text rendered in light tokens (INK=#F0EFE8, INK_SOFT=#B8B7B0) — title, axis labels, tick labels all clearly readable against dark surface; no dark-on-dark failures detected
+      Data: Colors identical to light render (#009E73, #D55E00, #0072B2, #CC79A7); mean lines appear white/light; edgecolors match dark background
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -60,38 +55,38 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: No collisions between labels or tick marks
+        comment: Jitter ±0.2 adequate; no text overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: s=200, alpha=0.6 well-calibrated for 35-52 points per group
+        comment: s=200 alpha=0.6 appropriate for 35-52 points per group
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito CVD-safe, good contrast in both themes
+        comment: Okabe-Ito CVD-safe; good contrast both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: ~75% canvas utilisation, balanced margins, nothing cut off
+        comment: 16:9, four groups well-distributed, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Satisfaction Score (1-10) has units; Department is descriptive
+        comment: Satisfaction Score (1-10) includes scale; Department descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Engineering=#009E73 first, canonical Okabe-Ito order, correct backgrounds
-          #FAF8F1/#1A1A17'
+        comment: 'First series #009E73; Okabe-Ito canonical order; correct backgrounds;
+          both renders theme-correct'
     design_excellence:
       score: 12
       max: 20
@@ -100,24 +95,23 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Above configured-default: intentional Okabe-Ito assignments and
-          mean lines. Not at strong-design level — no typographic emphasis or focal
-          point'
+        passed: true
+        comment: Clean professional with Okabe-Ito palette, adaptive theme, edge-color
+          tokens; clearly above defaults but not FiveThirtyEight-level
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Spines removed, subtle grid, tight_layout. Tick marks still visible;
-          inter-group spacing could be more generous
+        passed: true
+        comment: Spines removed (top/right), grid alpha=0.10, INK_SOFT spine colors,
+          adaptive edge colors
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Sales highest/HR most variable story exists but no visual emphasis
-          or hierarchy guides the viewer to it
+        comment: Mean lines enable comparison but no visual hierarchy directs viewer
+          to a specific insight
     spec_compliance:
       score: 15
       max: 15
@@ -127,26 +121,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct strip plot with jitter
+        comment: Strip plot with categorical x-axis and jittered scatter
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Jitter +/-0.2, alpha=0.6 transparency, mean reference lines all present
+        comment: Jitter ±0.2, alpha=0.6, mean reference lines all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x, scores on y, y-range 0.5-10.5
+        comment: Categories on x, values on y, full range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title strip-basic · matplotlib · anyplot.ai; no legend needed (x-axis
-          labels identify groups)
+        comment: strip-basic · matplotlib · anyplot.ai; no legend needed
     data_quality:
       score: 15
       max: 15
@@ -156,20 +149,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 4 groups with different means AND variances; outliers visible (Marketing
-          1.8, HR 2.8)
+        comment: 'All strip plot aspects: jitter, density accumulation, transparency,
+          mean lines, varied distributions'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Employee satisfaction by department: real, neutral business scenario'
+        comment: Employee satisfaction by department — real-world neutral HR analytics
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1-10 scale, means 6.0-7.8, std 1.2-2.0, n=35-52 per group all realistic
+        comment: 1-10 scale, 35-52 obs per group, means 6.0-7.8 plausible
     code_quality:
       score: 10
       max: 10
@@ -179,7 +173,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> tokens -> data -> plot -> save; no functions or classes
+        comment: Linear flow, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -191,19 +185,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy; all used
+        comment: os, matplotlib.pyplot, numpy all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Two clean loops, no over-engineering, no fake UI
+        comment: No fake UI; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no deprecated functions
+        comment: f'plot-{THEME}.png' with dpi=300
     library_mastery:
       score: 6
       max: 10
@@ -213,16 +207,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct Axes-method pattern (ax.scatter, ax.hlines, ax.tick_params,
-          ax.yaxis.grid, ax.spines); above default of 3
+        comment: ax methods, fig/ax pattern, hlines, tick_params — correct and clean
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: ax.hlines and edgecolors are matplotlib-specific but overall for-loop
-          jitter approach is generic and portable to any library
-  verdict: REJECTED
+        comment: ax.hlines is a nice touch but core technique (ax.scatter + numpy
+          jitter) is generic
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
