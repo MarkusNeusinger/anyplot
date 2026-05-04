@@ -49,9 +49,14 @@ def _run_one_theme(impl_abs: Path, preview_dir: Path, theme: str) -> None:
     env = os.environ.copy()
     env["MPLBACKEND"] = "Agg"
     env["ANYPLOT_THEME"] = theme
-    # `-P` (Python ≥3.11): don't prepend the script's directory to sys.path.
-    # Avoids the local `altair.py` shadowing the installed `altair` package.
-    subprocess.run(["uv", "run", "python", "-P", str(impl_abs)], cwd=preview_dir, env=env, check=True)
+    cmd = ["uv", "run", "python", "-P", str(impl_abs)]
+    # Bokeh's export_png requires a browser. xvfb provides the display when
+    # chromedriver isn't available (snap-shim on Ubuntu).
+    try:
+        subprocess.run(["xvfb-run"] + cmd, cwd=preview_dir, env=env, check=True)
+    except FileNotFoundError:
+        # xvfb-run not available (e.g. CI on macOS); fall back to bare run.
+        subprocess.run(cmd, cwd=preview_dir, env=env, check=True)
 
 
 def run_theme_renders(spec_id: str, library: str, max_retries: int = 3) -> RenderResult:
