@@ -30,6 +30,7 @@ const mockData = {
   description: 'A scatter plot',
   library_id: 'matplotlib',
   library_name: 'Matplotlib',
+  language: 'python',
   quality_score: 9,
   preview_url: 'https://cdn.example.com/plots/scatter-basic/matplotlib/plot.png',
   image_description: 'Shows data points with clear labels',
@@ -175,7 +176,11 @@ describe('PlotOfTheDay', () => {
     await user.click(screen.getByText('Basic Scatter Plot'));
     expect(trackEvent).toHaveBeenCalledWith('nav_click', expect.objectContaining({ source: 'potd_title' }));
 
-    await user.click(screen.getByText(/python plots\/scatter-basic\/matplotlib\.py/));
+    const sourceLink = screen.getByText(/python plots\/scatter-basic\/matplotlib\.py/);
+    expect(sourceLink.getAttribute('href')).toMatch(
+      /\/blob\/main\/plots\/scatter-basic\/implementations\/python\/matplotlib\.py$/,
+    );
+    await user.click(sourceLink);
     expect(trackEvent).toHaveBeenCalledWith('nav_click', expect.objectContaining({ source: 'potd_source_link' }));
   });
 

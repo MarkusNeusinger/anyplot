@@ -102,7 +102,7 @@ export function PlotOfTheDay() {
           <Typography sx={{ fontFamily: mono, fontSize: fontSize.xs, color: colors.primary, fontWeight: 600 }}>$</Typography>
           <Typography
             component="a"
-            href={`${GITHUB_URL}/blob/main/plots/${data.spec_id}/implementations/${data.library_id}.py`}
+            href={`${GITHUB_URL}/blob/main/plots/${data.spec_id}/implementations/${data.language}/${data.library_id}.py`}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e: React.MouseEvent) => {

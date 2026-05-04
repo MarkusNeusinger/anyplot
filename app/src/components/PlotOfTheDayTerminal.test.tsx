@@ -52,7 +52,11 @@ describe('PlotOfTheDayTerminal', () => {
     await user.click(screen.getByText(/plots\/scatter-basic\/matplotlib\.py/));
     expect(trackEvent).toHaveBeenCalledWith('nav_click', expect.objectContaining({ source: 'potd_terminal_filename' }));
 
-    await user.click(screen.getByLabelText('Open source on GitHub'));
+    const githubLink = screen.getByLabelText('Open source on GitHub');
+    expect(githubLink.getAttribute('href')).toMatch(
+      /\/blob\/main\/plots\/scatter-basic\/implementations\/python\/matplotlib\.py$/,
+    );
+    await user.click(githubLink);
     expect(trackEvent).toHaveBeenCalledWith('nav_click', expect.objectContaining({ source: 'potd_terminal_github' }));
 
     await user.click(screen.getByLabelText(/Open Basic Scatter implementation/));

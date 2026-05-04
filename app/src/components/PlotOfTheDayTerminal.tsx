@@ -44,7 +44,7 @@ export function PlotOfTheDayTerminal({
 
   const displayFilename = `plots/${potd.spec_id}/${potd.library_id}.py`;
   const implPath = specPath(potd.spec_id, potd.language, potd.library_id);
-  const githubFileUrl = `${GITHUB_URL}/blob/main/plots/${potd.spec_id}/implementations/${potd.library_id}.py`;
+  const githubFileUrl = `${GITHUB_URL}/blob/main/plots/${potd.spec_id}/implementations/${potd.language}/${potd.library_id}.py`;
 
   return (
     <Box
