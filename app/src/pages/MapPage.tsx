@@ -128,8 +128,10 @@ function linkEndId(end: MapLink['source']): string | undefined {
 // decays from 1 → 0, so the velocity correction tapers off as the layout
 // cools — the force is *active* during the same window the gate covers,
 // then becomes a no-op once outliers are at their compressed targets.
-type SimNode = { x?: number; y?: number; vx?: number; vy?: number };
-function outlierSquashForce(
+// Exported for unit tests — the simulation only ever calls this through
+// d3-force's `force(alpha)` interface, so the public surface is internal.
+export type SimNode = { x?: number; y?: number; vx?: number; vy?: number };
+export function outlierSquashForce(
   percentile: number,
   k: number,
   strength: number,
@@ -160,7 +162,15 @@ function outlierSquashForce(
       dists[i] = Math.hypot(node.x - cx, node.y - cy);
     }
     const sorted = dists.slice().sort((a, b) => a - b);
-    const R = sorted[Math.floor(sorted.length * percentile)];
+    // Use the (length - 1) * p index (numpy "linear" / "lower" interpolation
+    // for a discrete percentile). The naive `length * p` rounds up to
+    // `length - 1` for any n ≤ 1/(1-p) — i.e. with p = 0.95 and n ≤ 20 the
+    // cutoff would be the *max* distance and the squash force would silently
+    // disable itself. Filtered subsets of the catalog can easily land in
+    // that range, so we never want the cutoff to coincide with the maximum.
+    if (sorted.length < 2) return;
+    const idx = Math.floor((sorted.length - 1) * percentile);
+    const R = sorted[idx];
     if (!(R > 0)) return;
     for (let i = 0; i < nodes.length; i++) {
       const r = dists[i];
@@ -1547,7 +1557,11 @@ export function MapPage() {
                   transitions on each batched tick-progress update so the
                   bar slides smoothly between throttle frames. */}
               <Box
-                aria-hidden="true"
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(tickProgress * 100)}
+                aria-label="Layout computation progress"
                 sx={{
                   width: 160,
                   height: 3,
