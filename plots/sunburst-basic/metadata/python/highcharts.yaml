@@ -1,153 +1,181 @@
 library: highcharts
+language: python
 specification_id: sunburst-basic
 created: '2025-12-23T21:55:00Z'
-updated: '2025-12-23T22:15:29Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472389172
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-04T23:05:30Z'
+generated_by: claude-sonnet
+workflow_run: 25347483329
+issue: 821
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/highcharts/plot.html
-quality_score: 90
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/highcharts/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent use of Highcharts sunburst module with proper parent-child ID references
-  - Well-configured level-specific styling with brightness variations for visual hierarchy
-  - Colorblind-safe palette (blue/yellow/purple) with good contrast
-  - Smart label filtering on small segments prevents overlap
-  - Realistic budget allocation scenario that effectively demonstrates hierarchical
-    data
-  - Clean code structure following library best practices
+  - Center root node repurposed as a total-budget annotation ($1,240K) — smart design
+    that adds context without visual clutter
+  - Highcharts-native colorVariation by brightness elegantly maintains color family
+    identity across hierarchy levels
+  - Correct Okabe-Ito order (green → orange → blue) with full theme adaptation in
+    both renders
+  - dataLabels filter on innerArcLength prevents label crowding on small project segments
+    cleanly
   weaknesses:
-  - Some outer ring labels are difficult to read due to segment size and rotation
-    angle
-  - Could improve tooltip visibility documentation in code comments
-  image_description: 'The sunburst chart displays a hierarchical budget allocation
-    across three concentric rings. The innermost ring shows three departments: Engineering
-    (deep blue, ~55% of total), Marketing (golden yellow, ~25%), and Operations (purple,
-    ~20%). The middle ring shows teams within each department with brightness variations
-    of the parent color. The outer ring displays individual projects as the finest
-    granularity. The title "sunburst-basic · highcharts · pyplots.ai" appears at the
-    top with a subtitle "Budget Allocation by Department, Team, and Project". Labels
-    use circular rotation and white text with outline for readability. Colors are
-    distinct and colorblind-friendly (blue/yellow/purple palette).'
+  - Outer ring (projects) is very slightly clipped at the bottom edge of the canvas
+    — add marginBottom or reduce height
+  - Smallest project labels (28px) are borderline — consider bumping to 30-32px for
+    better readability
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct per style guide
+      Chrome: Title "sunburst-basic · highcharts · anyplot.ai" in dark INK #1A1A17 (48px bold) clearly readable; subtitle in INK_SOFT (32px) readable; center annotation "$1,240K" in 60px bold dark text
+      Data: Engineering = #009E73 (green, Okabe-Ito #1), Marketing = #D55E00 (vermillion, #2), Operations = #0072B2 (blue, #3); colorVariation by brightness for sub-levels; department labels 44px, team 34px, project 28px with cream textOutline
+      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct per style guide
+      Chrome: Title and subtitle in light #F0EFE8 text — clearly visible; center circle adopts PAGE_BG (#1A1A17) creating hollow effect; "$1,240K" in light text on dark center — correct
+      Data: Colors identical to light render (green #009E73, orange #D55E00, blue #0072B2 — data colors unchanged); labels use #F0EFE8 with dark #1A1A17 outline for contrast on colored segments
+      Legibility verdict: PASS — no dark-on-dark failures; all labels readable against dark background and colored segments
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Most text readable, some smaller segment labels slightly difficult
-          to read
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text thanks to filtering on small segments
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Segments well-sized, though some outer ring segments quite thin
+        comment: All font sizes explicitly set; all readable in both themes; minor
+          deduction for smallest project labels at 28px
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Highcharts collision handling good; filter on innerArcLength prevents
+          crowding; minor density in inner rings
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All rings clearly visible; colorVariation maintains hierarchy; segments
+          well delineated
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent colorblind-safe palette (blue/yellow/purple)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Chart fills canvas well, good proportions
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid needed, legend implicit in hierarchy
+        comment: Okabe-Ito CVD-safe palette; adequate contrast between segments
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Sunburst fills ~65% of canvas; minor bottom edge clipping of outermost
+          ring in both renders
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct title format; subtitle provides domain context with units
+          ($K)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Engineering=#009E73, Marketing=#D55E00, Operations=#0072B2; correct
+          backgrounds; both renders theme-correct
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: center focal annotation clever; colorVariation adds
+          depth; well above defaults'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Text outlines for contrast; clean circular layout; sunburst precludes
+          traditional spine/grid refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Engineering dominance immediately apparent; center annotation anchors
+          total scale; color families group related items
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct sunburst chart type with concentric rings
+        comment: Native Highcharts sunburst series with correct concentric ring structure
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Hierarchy correctly shows parent→child relationships
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: 3 hierarchy levels, proportional angles,
-          consistent branch colors'
-      - id: SC-04
-        name: Data Range
+        comment: Consistent colors within branches; major labels visible; smaller
+          segments filtered with hover fallback; inner segments encompass children
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Three hierarchy levels (dept → team → project) plus root center;
+          values determine segment angles
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Color consistency shows relationships
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: sunburst-basic · highcharts · pyplots.ai'
+        comment: Title matches spec-id · library · anyplot.ai format; on-segment labels
+          serve as legend
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varied segment sizes, 3 levels, different proportions
+        comment: All three hierarchy levels shown; part-to-whole at each level; varied
+          segment sizes
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Budget allocation scenario is realistic and comprehensible
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Budget values in $K are sensible
+        comment: Budget allocation by corporate department/team/project — canonical
+          neutral business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: $1,240K total; Engineering 58%, Marketing 25%, Operations 17%; realistic
+          tech-company proportions
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -155,41 +183,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: 'Linear: imports → theme tokens → data → chart config → export; no
+          functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 0
-        max: 3
-        passed: false
-        comment: No random seed needed (deterministic data), but data is hardcoded
-          which is fine
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current Highcharts API
+        comment: Well-structured; levels config appropriate; no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses sunburst module, levels configuration, colorVariation, allowDrillToNode,
-          but could leverage more interactive features
+        comment: Correct Chart + HighchartsOptions + sunburst module; levels array
+          is idiomatic Highcharts pattern; proper inline JS for headless Chrome
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: allowDrillToNode, colorVariation by brightness, dataLabels.filter
+          by innerArcLength, rotationMode circular — all Highcharts-specific
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  - hover-tooltips
+  patterns: []
+  dataprep: []
+  styling: []
