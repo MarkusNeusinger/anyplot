@@ -1,15 +1,274 @@
 library: altair
+language: python
 specification_id: sunburst-basic
 created: '2025-12-23T21:57:14Z'
-updated: '2025-12-23T22:02:34Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472386947
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/altair/plot.html
-quality_score: 91
+updated: '2026-05-04T23:19:03Z'
+generated_by: claude-sonnet
+workflow_run: 25347251837
+issue: 821
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/altair/plot-dark.html
+quality_score: 82
+review:
+  strengths:
+  - 'Excellent data quality: realistic tech-company budget scenario (Engineering/Marketing/Operations/Sales
+    → teams → projects) with meaningful value variation across all three hierarchy
+    levels'
+  - Correct three-ring sunburst structure using Altair mark_arc() with theta/theta2
+    — the idiomatic approach for a library lacking native sunburst support
+  - 'Color lightening technique (25%/50% for child rings) creates compelling visual
+    branching: each department family reads as a cohesive unit'
+  - Native tooltips at all three hierarchy levels with descriptive field titles
+  - Images show Okabe-Ito palette correctly applied with Engineering=#009E73 as position
+    1, proper warm backgrounds in both themes — confirming the repair logic is correct,
+    pending a commit
+  weaknesses:
+  - 'CRITICAL — Code-image discrepancy: the PR branch code is UNCHANGED from Attempt
+    1 (still contains #306998 Python Blue, no os.getenv(''ANYPLOT_THEME''), saves
+    as plot.png, title says pyplots.ai). The images appear generated from a repaired-but-uncommitted
+    version. The repair must commit the code changes; merging the current code would
+    produce wrong colors, wrong filename, and wrong branding in production'
+  - 'Non-Okabe-Ito palette in code: level1_colors must replace #306998/FFD43B/4ECDC4/FF6B6B
+    with [''#009E73'',''#D55E00'',''#0072B2'',''#CC79A7''] (or assign alphabetically
+    so Engineering=#009E73 first)'
+  - 'No theme adaptation in code: must add THEME=os.getenv(''ANYPLOT_THEME'',''light''),
+    PAGE_BG/INK/INK_SOFT tokens, apply background=PAGE_BG in .properties() and fill=PAGE_BG
+    in .configure_view(), set legend mark_text color=INK_SOFT explicitly, and save
+    as f''plot-{THEME}.png'' + f''plot-{THEME}.html'''
+  - 'Wrong output filenames in code: chart.save(''plot.png'') must become chart.save(f''plot-{THEME}.png'');
+    chart.save(''plot.html'') must become chart.save(f''plot-{THEME}.html'')'
+  - 'Wrong branding in code line 229: ''pyplots.ai'' must be ''anyplot.ai'''
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white — approximately #FAF8F1. NOT pure white. Correct for light theme.
+      Chrome: Title "sunburst-basic · altair · anyplot.ai" in dark text at top center — readable. Inner-ring department labels (Engineering, Marketing, Operations, Sales) rendered in white bold text on colored arc segments — all readable. Legend in lower-right with colored squares and dark-ish label text — readable against light background.
+      Data: Three-ring concentric sunburst. Inner ring: Engineering (large teal/green ≈ #009E73, ~44%), Marketing (orange/vermillion ≈ #D55E00), Operations (blue ≈ #0072B2), Sales (pink/lavender ≈ #CC79A7). Middle ring: team-level segments in 25%-lighter shades of parent. Outer ring: project-level in 50%-lighter shades. White stroke separators on all rings. First categorical series (Engineering) = #009E73 ✓.
+      Layout: Chart fills approximately 75-80% of the square canvas area. Some whitespace at top and bottom extremes. Legend is positioned to the right within the canvas — close enough to the chart. Not cramped.
+      Legibility verdict: PASS — all text readable in light theme. No light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Very dark near-black — consistent with #1A1A17 (warm dark, not pure black, though difference is subtle at this darkness level). Inner donut hole matches background color. Ring gaps expose background as dark bands — acceptable but slight distraction.
+      Chrome: Title "sunburst-basic · altair · anyplot.ai" in white/light text — readable against dark background. Inner-ring labels (Engineering, Marketing, Operations, Sales) in white — readable on colored segments. Legend text appears light/white — readable against dark background. No dark-on-dark text failures observed.
+      Data: Colors appear identical to light render — Engineering (teal/green), Marketing (orange), Operations (blue), Sales (pink) — all unchanged across themes as required. Okabe-Ito data colors are theme-invariant ✓.
+      Legibility verdict: PASS for text readability. Background correctness is uncertain (hard to distinguish #1A1A17 from pure black visually), but no legibility failures.
+
+    CRITICAL NOTE: The images and the PR branch code are inconsistent. The code still contains #306998 (Python Blue) and has no os.getenv("ANYPLOT_THEME") call. These images appear to have been generated from a temporarily-fixed version of the code during the repair process, but the code changes were NOT committed to the branch. The score reflects visual quality of the images, but REJECTED due to this discrepancy.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Font sizes explicitly set: title=28, inner labels=18, legend=16.
+          All text readable in both renders. Minor: legend text color in dark theme
+          not explicitly set via INK_SOFT token in code.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No significant text overlap. Inner-ring labels in smaller segments
+          (Operations, Sales) are slightly tight but readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All three rings clearly visible. White stroke separators aid segment
+          definition. Outer-ring (level-3) segments are thinner but distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Images show Okabe-Ito palette — fully CVD-safe. Four distinct hues
+          with good luminance variation. Hierarchical lightening maintains family
+          identity.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Chart fills approximately 75-80% of the 3600x3600 square canvas.
+          Some whitespace at extremes. Legend positioned within canvas near chart.
+          Improved from Attempt 1.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes needed for radial chart. Title is descriptive
+          and in correct format (per images). N/A for axis labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Images show Okabe-Ito palette and warm-themed backgrounds — visually
+          compliant. HOWEVER, the PR branch code still has #306998 (Python Blue),
+          no os.getenv(''ANYPLOT_THEME''), and no theme-adaptive chrome logic. The
+          images appear generated from a repaired-but-uncommitted version. Partial
+          credit: images pass; code does not.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Okabe-Ito lightening technique (25%/50% for child rings) creates
+          a professional color-family hierarchy. White strokes give crisp segment
+          separation. Above typical defaults, but not FiveThirtyEight-level polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: configure_view(strokeWidth=0) removes outer frame. No axes shown
+          (appropriate). White stroke separators are refined. Subtle 10px gaps between
+          arc levels are a minor visual distraction, especially in dark mode.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Engineering's ~44% budget dominance is naturally communicated through
+          arc size. Hierarchy depth is intuitively conveyed by three rings. No active
+          emphasis techniques (color contrast, annotations, size variation) guide
+          the viewer to a specific insight.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct three-ring concentric sunburst chart with inner-encompassing
+          arcs.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Three hierarchy levels (Dept→Team→Project), segment angles proportional
+          to values, labels on major inner-ring segments, tooltips for all levels,
+          inner segments encompass children's angular span.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Value correctly drives arc angle. Hierarchy correctly mapped level_1→level_2→level_3
+          with children constrained within parent arcs.
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: false
+        comment: Images show correct title 'sunburst-basic · altair · anyplot.ai'.
+          BUT code (line 229) still has 'pyplots.ai' — wrong branding that would appear
+          in production if merged as-is. Legend present and correctly labeled. -1
+          for code/branding mismatch.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all sunburst aspects: 3 hierarchy levels, meaningful size
+          variation (Engineering=700K vs Operations=220K), multiple children per parent
+          (2-3 teams each, 2 projects each team).'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Tech company budget breakdown with realistic department/team/project
+          names (Backend/Frontend/DevOps, Digital/Content, Support/HR, Enterprise/SMB).
+          Plausible, neutral, business domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Budget values 40-180 ($K per project) are realistic. Engineering
+          at ~44% of total budget is highly plausible for a software company.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'No functions or classes. Flat: Imports → Data → Angle calculations
+          → Chart layers → Save. Manual angle math is inherent complexity for Altair
+          sunburst.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data is hardcoded; fully deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: altair, numpy (np.pi, sin, cos), pandas — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI elements. Angle calculation complexity is necessary for
+          Altair sunburst. Lightening computation is clean.
+      - id: CQ-05
+        name: Output & API
+        score: 0
+        max: 1
+        passed: false
+        comment: 'Code saves as plot.png and plot.html — wrong filenames. Required:
+          plot-{THEME}.png and plot-{THEME}.html with ANYPLOT_THEME env var. No theme
+          env var call exists in code.'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of mark_arc() with theta/theta2 encoding, alt.layer()
+          composition, alt.Scale(domain=[0, 2*pi]) for angle normalization, scale=None
+          for direct color passthrough, alt.Tooltip with title fields.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: mark_arc() with dual-theta encoding for multi-ring sunburst is distinctively
+          Altair. Native hierarchical tooltip encoding at all three levels. Manual
+          coordinate text (label_x/label_y via sin/cos) with scale=None color passthrough
+          exploits Altair's layer flexibility.
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
@@ -19,187 +278,8 @@ impl_tags:
   patterns:
   - data-generation
   - groupby-aggregation
+  - iteration-over-groups
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - Excellent hierarchical color scheme with consistent lighter shades for child levels
-  - Clean visual separation between levels using white strokes
-  - Proper tooltips showing Department, Team, Project, and Budget values
-  - Well-structured data representing realistic company budget scenario
-  - Inner segment labels are bold and readable
-  - Proper use of Altair layering to combine multiple arc charts
-  weaknesses:
-  - Labels only appear on innermost ring; middle and outer rings lack visible text
-    labels (rely on hover tooltips)
-  - Legend positioned far from chart, creating visual imbalance
-  - Could benefit from more interactive features like click-to-zoom that Altair supports
-  image_description: 'The plot displays a sunburst chart with three concentric rings
-    representing a hierarchical company budget breakdown. The innermost ring shows
-    4 departments (Engineering, Operations, Marketing, Sales) with white bold text
-    labels positioned at the center of each arc. The middle ring displays teams within
-    each department using lighter shades of the parent department color. The outermost
-    ring shows projects with the lightest color shades. Engineering (Python Blue #306998)
-    occupies the largest segment, followed by Sales (Coral), Marketing (Yellow), and
-    Operations (Teal). White stroke lines clearly separate all segments. A legend
-    is positioned on the right side listing the four departments. The title "sunburst-basic
-    · altair · pyplots.ai" appears at the top center.'
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Department labels readable but slightly small for outer rings; inner
-          labels excellent
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text, clean separation
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: All segments clearly visible with good sizing and white strokes
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-safe palette with distinct hues (blue, yellow, teal, coral)
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good chart centering but legend slightly isolated on right
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: N/A for sunburst charts (no axes)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend well-organized, no grid needed
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct sunburst chart with concentric rings
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Hierarchy properly mapped: Department > Team > Project'
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'All spec features present: 3 levels, segment angles proportional
-          to values'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible, no clipping
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly shows departments with matching colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: sunburst-basic · altair · pyplots.ai'
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows 4 departments, multiple teams and projects; demonstrates hierarchy
-          well but all leaf nodes similar size
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Company budget breakdown is plausible real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Budget values ($K) are sensible, though range could be wider
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Mostly linear but has some complex angle calculations (acceptable
-          for sunburst)
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Deterministic data (no random seed needed)
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: Only necessary imports (altair, numpy, pandas)
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Modern Altair API used
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses mark_arc, layering, and tooltips; could use more interactive
-          features
-  verdict: APPROVED
+  styling:
+  - alpha-blending
+  - edge-highlighting
