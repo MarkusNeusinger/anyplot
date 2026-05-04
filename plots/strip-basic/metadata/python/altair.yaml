@@ -1,162 +1,185 @@
 library: altair
+language: python
 specification_id: strip-basic
 created: '2025-12-23T21:54:11Z'
-updated: '2025-12-23T22:00:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472385866
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/strip-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/strip-basic/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - layer-composition
-  patterns:
-    - data-generation
-    - groupby-aggregation
-  dataprep: []
-  styling:
-    - alpha-blending
-    - grid-styling
+updated: '2026-05-04T20:47:57Z'
+generated_by: claude-sonnet
+workflow_run: 25342118996
+issue: 975
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/altair/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent use of Altair transform_calculate for implementing random jitter effect
-  - Clean layering approach combining strip chart with mean reference lines
-  - Good color scheme with Python blue (#306998) and contrasting yellow mean markers
-  - Proper use of configure_axis and configure_view for styling
-  - Realistic data scenario with meaningful variation between departments
+  - Gaussian jitter via transform_calculate Box-Muller formula is a sophisticated,
+    distinctly Altair-idiomatic approach to strip-plot jitter
+  - Mean reference ticks using Okabe-Ito position 2 create clear visual hierarchy
+    between data and summary statistics
+  - 'Perfect theme adaptation: all chrome tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG)
+    correctly threaded through all configure_* calls; both renders pass readability
+    checks'
+  - Complete spec compliance with all required strip-plot features present
   weaknesses:
-  - Mean reference markers lack a legend or annotation explaining what they represent
-  - X-axis category labels could benefit from horizontal orientation for better readability
-  - Y-axis scale extends significantly below data range (down to 10 when minimum data
-    is ~35)
-  image_description: The plot displays a strip plot with four departments (Engineering,
-    Marketing, Sales, Support) along the x-axis. Individual data points are shown
-    as semi-transparent blue circles (#306998) with horizontal jitter applied to reveal
-    distribution density. Yellow horizontal tick marks indicate the group means for
-    each department. The y-axis shows "Response Score" ranging from 10 to 110, with
-    the actual data spanning approximately 35-100. The title "strip-basic · altair
-    · pyplots.ai" appears at the top. A subtle dashed grid aids readability. X-axis
-    category labels are rotated at an angle.
+  - Legend 'Group Mean' box floats isolated in the top-right corner, visually disconnected
+    from the data cloud below
+  - Top/right axis domain lines not suppressed — adding domainWidth=0 or configure_axis(domain=False)
+    for non-data spines would add refinement
+  - Lower canvas (y=20-40) is quite empty; tightening the y-domain to ~35-105 would
+    better utilize the canvas and reduce dead space
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white approximately #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "strip-basic · altair · anyplot.ai" in dark ink, clearly readable. Y-axis label "Response Score" and X-axis label "Department" in dark text. Tick labels (20-110 by 5 on Y, four department names on X) readable. Legend "Group Mean" in top-right box with light elevated fill.
+      Data: Green (#009E73) circular markers with horizontal jitter across Engineering, Marketing, Sales, Support. Orange (#D55E00) horizontal tick marks show group means. Subtle horizontal grid lines at 10% opacity.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black approximately #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title in light color (#F0EFE8 range), readable. Axis labels and tick labels in light/soft ink colors (#B8B7B0 range). Legend "Group Mean" box has dark elevated fill (#242420) with light label text. No dark-on-dark failures detected.
+      Data: Same green (#009E73) circular markers — identical to light render, confirming only chrome flips. Orange mean ticks visible against dark background.
+      Legibility verdict: PASS — all text clearly readable against near-black background; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title and axis labels are clearly readable; tick labels slightly
-          small
+        comment: 'All font sizes explicitly set: title 28px, axis titles 22px, tick
+          labels 18px, legend 16px. Readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Four well-separated categories; jitter keeps points within lanes;
+          no text collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Circle markers with opacity 0.6 work well for ~40 points per category;
-          slightly large but appropriate
+        comment: size=200, opacity=0.6 well-suited for 35-50 points per category.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color with yellow mean markers; colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels but missing units (scores could have "points"
-          or similar)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid is subtle with dashed lines at 0.3 opacity; no legend needed
-          but mean markers lack explanation
-    spec_compliance:
-      score: 24
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct strip plot with jitter
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, continuous values on Y
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Jitter, transparency, and reference lines for means all present
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Y-axis shows all data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: true
-        comment: Mean markers present but no legend explaining them
-      - id: SC-06
-        name: Title Format
         score: 2
         max: 2
         passed: true
-        comment: 'Correct format: "strip-basic · altair · pyplots.ai"'
-    data_quality:
-      score: 19
+        comment: Okabe-Ito palette; green vs. orange mean ticks distinguishable without
+          hue alone; CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Correct 4800x2700 dimensions. Minor: lower canvas (y=20-40) empty;
+          legend box floats isolated in top-right corner away from data cloud.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Response Score and Department — descriptive and appropriate for survey
+          data context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; mean ticks #D55E00 (Okabe-Ito pos 2); backgrounds
+          #FAF8F1/#1A1A17; INK/INK_SOFT tokens correct in both renders.'
+    design_excellence:
+      score: 12
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
         max: 8
         passed: true
-        comment: Shows different distributions across departments with varying spreads;
-          Support has wider spread as intended
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
+        comment: Well-configured with correct palette and mean reference lines, but
+          not at publication-quality visual sophistication. Clean and functional rather
+          than striking.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
         passed: true
-        comment: Survey response scores by department is a plausible business scenario
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: strokeWidth=0 removes view border; gridOpacity=0.10 subtle grid.
+          Above defaults but top/right axis domain lines remain visible.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Mean ticks in contrasting orange create visual hierarchy; viewer
+          compares department central tendencies while observing spread through jitter
+          density.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Scores in 20-100 range are realistic for survey data
+        comment: Correct strip plot with individual data points per category and horizontal
+          jitter.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Jitter via xOffset+transform_calculate; opacity 0.6; group means
+          as reference ticks.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Department (N), Y=Response Score (Q); all data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'strip-basic · altair · anyplot.ai' correct; legend label 'Group
+          Mean' matches mean tick encoding.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Four groups with different mean/std parameters showcase varied distributions,
+          spreads, and density — all key strip-plot features.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Survey response scores by corporate department — real-world, neutral,
+          immediately comprehensible business scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Scores clipped to 20-100; means in 65-75 range realistic for workplace
+          satisfaction surveys.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -164,41 +187,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear structure with imports, data, plot, save
+        comment: 'Linear: imports -> tokens -> data -> chart -> save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set before all random operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (altair, numpy, pandas)
+        comment: os, altair, numpy, pandas all actively used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; appropriate use of alt.layer(), transform_calculate,
+          and configure_* methods.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png but uses default filename in transform_calculate
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png (scale_factor=3.0) and plot-{THEME}.html correctly.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses transform_calculate for jitter and layering for mean lines;
-          good use of Altair's declarative grammar but could use more interactive
-          features
+        comment: 'Expert use of Altair high-level API: alt.layer() composition, transform_calculate,
+          xOffset encoding, configure_* for global styling.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: xOffset encoding for jitter within nominal bands is Altair/Vega-Lite-specific;
+          Box-Muller Gaussian jitter in transform_calculate is distinctively Altair-idiomatic.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  - layer-composition
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - alpha-blending
