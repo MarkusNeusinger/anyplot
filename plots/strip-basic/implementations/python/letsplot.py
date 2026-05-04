@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 strip-basic: Basic Strip Plot
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 96/100 | Created: 2025-12-23
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-04
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,6 +13,7 @@ from lets_plot import (
     aes,
     element_blank,
     element_line,
+    element_rect,
     element_text,
     geom_jitter,
     ggplot,
@@ -24,22 +27,25 @@ from lets_plot import (
 
 LetsPlot.setup_html()
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+BRAND = "#009E73"  # Okabe-Ito position 1
+
 # Data - Survey response scores by department
 np.random.seed(42)
 
 departments = ["Marketing", "Engineering", "Sales", "Support"]
 data = []
 
-# Create different distributions for each department
-distributions = {
-    "Marketing": (72, 12),  # Mean 72, moderate spread
-    "Engineering": (78, 8),  # Higher mean, tighter distribution
-    "Sales": (68, 15),  # Lower mean, wide spread
-    "Support": (75, 10),  # Medium-high mean, medium spread
-}
+distributions = {"Marketing": (72, 12), "Engineering": (78, 8), "Sales": (68, 15), "Support": (75, 10)}
 
 for dept in departments:
-    n_points = np.random.randint(25, 45)  # 25-44 observations per department
+    n_points = np.random.randint(25, 45)
     mean, std = distributions[dept]
     scores = np.clip(np.random.normal(mean, std, n_points), 40, 100)
     for score in scores:
@@ -50,22 +56,22 @@ df = pd.DataFrame(data)
 # Plot
 plot = (
     ggplot(df, aes(x="Department", y="Score"))
-    + geom_jitter(color="#306998", size=4, alpha=0.6, width=0.25, height=0, seed=42)
-    + labs(x="Department", y="Survey Score (points)", title="strip-basic · letsplot · pyplots.ai")
+    + geom_jitter(color=BRAND, size=4, alpha=0.65, width=0.25, height=0, seed=42)
+    + labs(x="Department", y="Survey Score (points)", title="strip-basic · letsplot · anyplot.ai")
     + ggsize(1600, 900)
     + theme_minimal()
     + theme(
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        axis_title=element_text(color=INK, size=20),
+        axis_text=element_text(color=INK_SOFT, size=16),
+        plot_title=element_text(color=INK, size=24),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_y=element_line(color="#cccccc", size=0.5),
+        panel_grid_major_y=element_line(color=INK_SOFT, size=0.3),
     )
 )
 
-# Save PNG (scale=3 gives 4800x2700)
-ggsave(plot, "plot.png", path=".", scale=3)
-
-# Save HTML for interactive version
-ggsave(plot, "plot.html", path=".")
+# Save
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.html", path=".")
