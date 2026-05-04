@@ -1,170 +1,169 @@
 library: matplotlib
+language: python
 specification_id: strip-basic
 created: '2025-12-23T21:54:18Z'
-updated: '2025-12-23T21:58:29Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472384222
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/strip-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - manual-ticks
-  patterns:
-    - data-generation
-    - explicit-figure
-  dataprep: []
-  styling:
-    - alpha-blending
-    - grid-styling
+updated: '2026-05-04T20:50:03Z'
+generated_by: claude-sonnet
+workflow_run: 25341738114
+issue: 975
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent data scenario using survey scores by department - directly matches spec
-    applications
-  - Good implementation of jitter (0.2 spread) within spec recommendation (0.1-0.3)
-  - Clean visual design with subtle grid and appropriate transparency (0.6)
-  - Mean reference lines add value as suggested in spec notes
-  - Appropriate marker sizing (s=200) for the data density
-  - Perfect KISS code structure
+  - 'Perfect spec compliance: jitter, transparency, mean reference lines all present
+    and well-configured'
+  - Exemplary theme-adaptive chrome — both renders are clean, no dark-on-dark failures,
+    backgrounds correct
+  - Full Okabe-Ito palette applied correctly in canonical order across all four series
   weaknesses:
-  - Alternating blue/yellow colors across categories have no semantic meaning - consider
-    single color or legend
-  - Mean lines lack annotation or legend entry explaining what they represent
-  - Y-axis label could include scale range (1-10)
-  image_description: 'The plot displays a strip plot showing "Survey Response Score"
-    (y-axis, scale 0-10) across four departments (x-axis): Engineering, Marketing,
-    Sales, and HR. Each department''s data points are scattered with horizontal jitter
-    to avoid overplotting. Engineering and Sales use a blue color (#306998), while
-    Marketing and HR use a yellow/gold color (#FFD43B). Black horizontal lines indicate
-    the mean score for each group (Engineering ~6.9, Marketing ~6.6, Sales ~7.7, HR
-    ~6.2). Points have white edge borders and moderate transparency (alpha 0.6). The
-    y-axis grid lines are subtle with dashed styling. The title follows the correct
-    format: "strip-basic · matplotlib · pyplots.ai". The layout is clean with good
-    use of the 16:9 canvas.'
+  - 'DE-03 moderate: Mean reference lines add comparison context but no visual hierarchy
+    singles out the highest-scoring group (Sales) or widest-spread group (HR) as the
+    focal insight'
+  - 'LM-02 low: Core plotting relies on basic ax.scatter with manual numpy jitter;
+    no distinctive matplotlib artist/collection features leveraged'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "strip-basic · matplotlib · anyplot.ai" in dark ink 24pt; x-label "Department" 20pt dark; y-label "Satisfaction Score (1–10)" 20pt dark; tick labels 16pt INK_SOFT — all clearly readable
+      Data: Engineering=#009E73, Marketing=#D55E00, Sales=#0072B2, HR=#CC79A7 — Okabe-Ito canonical order; s=200 alpha=0.6 markers with PAGE_BG edge color; black horizontal mean lines per group
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: All text rendered in light tokens (INK=#F0EFE8, INK_SOFT=#B8B7B0) — title, axis labels, tick labels all clearly readable against dark surface; no dark-on-dark failures detected
+      Data: Colors identical to light render (#009E73, #D55E00, #0072B2, #CC79A7); mean lines appear white/light; edgecolors match dark background
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No text overlap, categories well-spaced, points jittered appropriately
+        comment: Title 24pt, labels 20pt, ticks 16pt all explicitly set; readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Jitter ±0.2 adequate; no text overlap
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Marker size (s=200) is good for the data density (35-52 points per
-          group), alpha 0.6 works well
+        comment: s=200 alpha=0.6 appropriate for 35-52 points per group
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue and yellow are distinguishable but alternating colors within
-          adjacent categories could be confusing (no legend explains the color meaning)
+        comment: Okabe-Ito CVD-safe; good contrast both themes
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Excellent canvas utilization, balanced margins, plot fills appropriate
-          space
+        comment: 16:9, four groups well-distributed, nothing cut off
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels ("Department", "Survey Response Score") but no
-          units
+        comment: Satisfaction Score (1-10) includes scale; Department descriptive
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.3, dashed), y-axis only - good. No legend
-          present but mean lines lack explanation
+        comment: 'First series #009E73; Okabe-Ito canonical order; correct backgrounds;
+          both renders theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean professional with Okabe-Ito palette, adaptive theme, edge-color
+          tokens; clearly above defaults but not FiveThirtyEight-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed (top/right), grid alpha=0.10, INK_SOFT spine colors,
+          adaptive edge colors
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Mean lines enable comparison but no visual hierarchy directs viewer
+          to a specific insight
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct strip plot with jitter
+        comment: Strip plot with categorical x-axis and jittered scatter
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, continuous values on Y - correct
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Jitter (0.2 spread), transparency (0.6), horizontal mean lines as
-          reference
-      - id: SC-04
-        name: Data Range
+        comment: Jitter ±0.2, alpha=0.6, mean reference lines all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis 0-11 shows all data points (scores range ~2-10)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Categories on x, values on y, full range visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for this simple plot
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "strip-basic · matplotlib · pyplots.ai"'
+        comment: strip-basic · matplotlib · anyplot.ai; no legend needed
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows different distributions per group (varying means, spreads),
-          good variety. HR shows widest spread, Sales shows tightest - demonstrates
-          spec's point about seeing individual values
+        comment: 'All strip plot aspects: jitter, density accumulation, transparency,
+          mean lines, varied distributions'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Survey response scores by department is a realistic, comprehensible
-          scenario mentioned in spec applications
+        comment: Employee satisfaction by department — real-world neutral HR analytics
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 1-10 survey scale is appropriate, sample sizes (35-52) are within
-          spec recommendation (10-200)
+        comment: 1-10 scale, 35-52 obs per group, means 6.0-7.8 plausible
     code_quality:
       score: 10
       max: 10
@@ -174,40 +173,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save, no functions/classes
+        comment: Linear flow, no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy used
+        comment: os, matplotlib.pyplot, numpy all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Modern matplotlib API used
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: f'plot-{THEME}.png' with dpi=300
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ax.scatter() with jitter and ax.hlines() for means. Basic matplotlib
-          usage, no advanced features like zorder customization or custom markers
+        comment: ax methods, fig/ax pattern, hlines, tick_params — correct and clean
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: ax.hlines is a nice touch but core technique (ax.scatter + numpy
+          jitter) is generic
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
