@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sunburst-basic: Basic Sunburst Chart
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-05-04
+Library: plotnine 0.15.3 | Python 3.13.13
+Quality: 85/100 | Created: 2026-05-04
 """
 
 import sys
