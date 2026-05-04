@@ -1,170 +1,183 @@
 library: plotnine
+language: python
 specification_id: strip-basic
 created: '2025-12-23T21:54:54Z'
-updated: '2025-12-23T22:01:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472385770
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/strip-basic/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - manual-ticks
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - alpha-blending
-    - minimal-chrome
+updated: '2026-05-04T21:13:09Z'
+generated_by: claude-sonnet
+workflow_run: 25342823556
+issue: 975
+python_version: 3.13.13
+library_version: 0.15.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/strip-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
 review:
   strengths:
-  - Excellent use of realistic medical research scenario with meaningful treatment
-    groups
-  - Good jitter width (0.25) spreads points without overlapping adjacent categories
-  - Appropriate transparency (alpha=0.65) handles point overlap well
-  - Clean, readable code following KISS principles
-  - Proper reproducibility with seeds for both numpy and jitter
-  - Data shows clear differences between treatment groups demonstrating the plot purpose
+  - 'Perfect palette compliance: Okabe-Ito colors in canonical order, correct backgrounds
+    (#FAF8F1 light / #1A1A17 dark), and INK/INK_SOFT tokens properly applied to all
+    chrome elements in both themes'
+  - Reproducible output via double seeding (np.random.seed(42) for data and position_jitter
+    random_state=42 for jitter)
+  - Legend intentionally hidden — correct design decision for a strip plot where x-axis
+    already identifies groups
+  - Mean reference lines add a useful comparison anchor beyond bare point clouds
+  - 'Data tells a coherent clinical story (descending treatment effectiveness: Placebo
+    → Drug A → Drug B → Drug C) with realistic proportions'
   weaknesses:
-  - Color scheme alternates blue/yellow between adjacent categories creating visual
-    confusion - a single color or sequential palette would be clearer
-  - Grid lines are extremely subtle, almost invisible - could be slightly more visible
-    (alpha 0.2-0.3)
-  image_description: 'The plot displays a basic strip plot showing patient response
-    times (seconds) across four treatment groups: Drug A, Drug B, Drug C, and Placebo.
-    Points are horizontally jittered within each category to reduce overplotting.
-    The color scheme uses blue (#306998, #4B8BBE) for Drug A and Drug C, and yellow
-    (#FFD43B, #FFE873) for Drug B and Placebo. The y-axis shows "Response Time (seconds)"
-    ranging from approximately 10-65 seconds, while the x-axis shows "Treatment Group"
-    with the four categories. The title "strip-basic · plotnine · pyplots.ai" appears
-    at the top. The plot uses a minimal theme with very subtle grid lines (barely
-    visible). The Placebo group shows the highest and most spread distribution (25-65s),
-    while Drug C shows the lowest and tightest distribution (15-37s), demonstrating
-    different treatment effects.'
+  - 'DE-02: No explicit axis_line or panel_border token — relies on theme_minimal()
+    defaults; for full dark-theme fidelity, axis lines should be set via axis_line=element_line(color=INK_SOFT,
+    size=0.5)'
+  - 'DE-01/DE-03: No visual hierarchy beyond color — no size variation or emphasis
+    element to direct viewer attention to the key insight (Drug C has fastest response)'
+  - 'LM-02: Mean reference lines visible in rendered output but no explicit plotnine
+    stat_summary layer in code — making this idiomatic would raise LM-02 and improve
+    code clarity'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "strip-basic · plotnine · anyplot.ai" dark text — readable. X-axis label "Treatment Group" and Y-axis label "Response Time (seconds)" in dark text — readable. Tick labels (Placebo, Drug A, Drug B, Drug C; 20, 40, 60) in muted dark text — readable. Subtle horizontal grid lines.
+      Data: Four jittered columns. Placebo=#009E73 (green), Drug A=#D55E00 (orange), Drug B=#0072B2 (blue), Drug C=#CC79A7 (reddish-purple). Thin horizontal mean reference lines at each group's approximate mean. alpha=0.65 per point, size=4. No legend shown.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, axis labels, and tick labels rendered in light text — all clearly readable against dark background. No dark-on-dark failures observed. Grid lines subtle and visible.
+      Data: Colors identical to light render — green, orange, blue, reddish-purple. Mean reference lines appear white/light. Data points clearly distinguishable from dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis titles at 20pt, tick labels at 16pt, all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, all labels clearly separated
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Point size 4 with alpha 0.65 is appropriate for ~165 points, though
-          slightly small
+        comment: 'All sizes explicitly set (title=24, axis_title=20, axis_text=16).
+          Both themes readable. Minor: no explicit bold weight on title.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor intra-group overlap expected for strip plots; jitter width=0.25
+          handles it well.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: size=4, alpha=0.65 well-adapted for 38-45 points per group.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 5
-        passed: true
-        comment: Yellow and blue are distinguishable, but alternating colors between
-          adjacent categories is confusing (Drug A=blue, Drug B=yellow, Drug C=blue,
-          Drug B=yellow) - semantically inconsistent
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good 16:9 aspect ratio, plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Response Time (seconds)" includes units, "Treatment Group" is descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette, CVD-safe, no red-green-only signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 format, balanced margins, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (good), legend hidden (appropriate since colors don't
-          add semantic meaning)
+        comment: Y-axis has units '(seconds)', descriptive x-axis label.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Placebo (first) = #009E73; Okabe-Ito order. Light bg=#FAF8F1, dark
+          bg=#1A1A17. INK/INK_SOFT tokens applied to all text.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: custom Okabe-Ito, hidden legend, mean reference lines,
+          alpha tuning. Not publication-ready — no typographic weight variation or
+          focal point.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: theme_minimal() removes spines; grid uses alpha=0.20/0.08. Missing
+          explicit axis_line token with INK_SOFT.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Descending means tell a treatment effectiveness story. Mean lines
+          anchor comparison. No additional focal point or emphasis element.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct strip plot with jittered points
+        comment: Correct strip plot with horizontal jitter.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on x-axis, continuous values on y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Jitter applied (width=0.25), transparency (alpha=0.65), individual
-          points visible
-      - id: SC-04
-        name: Data Range
+        comment: Jitter width=0.25 (spec 0.1-0.3); alpha=0.65 (spec 0.5-0.7); mean
+          reference lines present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full range of data (~10-65 seconds)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Treatment groups on x, response time on y; all data within view.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend appropriately hidden since it adds no information
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "strip-basic · plotnine · pyplots.ai"
+        comment: Title is 'strip-basic · plotnine · anyplot.ai' exactly; no legend
+          needed.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows different distributions (spread, mean) across groups, demonstrates
-          drug effects, but no extreme outliers shown
+        comment: Shows individual points, jitter spread, four groups with different
+          distributions and means.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Patient response times to drug treatments is a real, comprehensible
-          medical research scenario
+        comment: Drug treatment response-time study — realistic, scientifically neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Response times 10-65 seconds are plausible, though clipping at 5s
-          minimum is reasonable
+        comment: Response times 5-80s with np.clip; 38-45 obs per group; group means
+          (45,32,28,25) plausible for clinical context.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -172,41 +185,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save, no functions or classes'
+        comment: 'Linear: tokens → data → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) and position_jitter(random_state=42)
+        comment: np.random.seed(42) for data; position_jitter(random_state=42) for
+          jitter.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imported plotnine names are used in plot composition.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean ggplot grammar composition; no over-engineering; no fake UI.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Modern plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as 'plot.png' (correct)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=300.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ggplot grammar with position_jitter, scale_color_manual, theme_minimal,
-          and element_text theming, but nothing particularly advanced beyond basic
-          plotnine usage
+        comment: Correct grammar-of-graphics composition; position_jitter via + operator;
+          scale_color_manual; theme() for chrome. Solid plotnine idiom.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: position_jitter with random_state is plotnine-specific. Beyond that,
+          no particularly distinctive feature (stat_summary, facet_wrap, etc.) is
+          leveraged.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
