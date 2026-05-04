@@ -1,0 +1,233 @@
+library: pygal
+language: python
+specification_id: sunburst-basic
+created: '2026-05-04T22:56:10Z'
+updated: '2026-05-04T23:52:15Z'
+generated_by: claude-sonnet
+workflow_run: 25347406390
+issue: 821
+python_version: 3.13.13
+library_version: 3.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/pygal/plot-dark.html
+quality_score: 73
+review:
+  strengths:
+  - Correct sunburst simulation using pygal multi-series Pie API
+  - Color-shading hierarchy connects team segments visually to parent departments
+  - Proper theme-adaptive chrome with correct backgrounds and foreground tokens for
+    both themes
+  - Deterministic flat code with clean imports and list comprehensions
+  - HTML interactive output provides hover labels and full interactivity
+  weaknesses:
+  - No segment labels visible in static PNG render — major segments should be labeled
+    even in static output
+  - Legend declared but not rendered in PNG export by cairosvg — remove or accept
+    HTML-only legend
+  - Only 2 hierarchy levels used; a 3rd tier would better showcase the spec range
+    of 2-4 levels
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — correct
+      Chrome: title "sunburst-basic · pygal · anyplot.ai" in dark text, clearly readable at top; no segment labels or tick labels present
+      Data: inner ring shows 4 department slices in Okabe-Ito #009E73 (green/Technology), #D55E00 (orange-vermillion/Business), #0072B2 (blue/Operations), #CC79A7 (pink-purple/Marketing); outer ring shows shaded tint variants of each parent color for team segments; no legend visible in PNG
+      Legibility verdict: PASS (title readable; segment labels absent but not a legibility failure for text that exists)
+
+    Dark render (plot-dark.png):
+      Background: near-black #1A1A17 — correct
+      Chrome: title in light text, clearly legible against dark background; no dark-on-dark failures detected
+      Data: same segment positions and proportions as light render; Okabe-Ito hues consistent between themes (only chrome flips); legend again absent in PNG
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 4
+        max: 8
+        passed: false
+        comment: Title readable in both themes but no segment labels visible in static
+          PNG render
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean ring layout, no overlapping elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All ring segments clearly visible and distinctly colored; minor deduction
+          for absent labels
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas fill; legend declared but absent in static render
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct title format; no axis labels needed for sunburst
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Light #FAF8F1 and dark #1A1A17 backgrounds correct; first series
+          #009E73; Okabe-Ito order 1-4'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Color-shading hierarchy is intentional but overall design uses default
+          pygal styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Pie chart type leaves little room for spine removal; minimal chrome
+          customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Two-ring structure conveys hierarchy but no focal point or narrative
+          emphasis
+    spec_compliance:
+      score: 11
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: pygal.Pie multi-series correctly simulates sunburst; not native but
+          idiomatic pygal approach
+      - id: SC-02
+        name: Required Features
+        score: 2
+        max: 4
+        passed: false
+        comment: Branch colors consistent, ring separation clear, inner segments encompass
+          children; major segment labels missing from static PNG
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Department totals in inner ring, teams in outer ring; proportional
+          to values
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: Title format correct; legend declared but absent from static PNG
+          render
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 4
+        max: 6
+        passed: true
+        comment: 2 hierarchy levels demonstrated; spec allows 2-4; a 3rd tier would
+          earn full marks
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Organizational budget breakdown is realistic, plausible, and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 40-180 $K are sensible for team-level budgets
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat linear script, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic; no random elements
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only os, pygal, pygal.style.Style imported and used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: List comprehensions for data series are concise and readable
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; correct pygal pattern
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Multi-series pygal.Pie for concentric rings is idiomatic; Style object
+          properly carries all theme tokens
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses pygal HTML interactive output for labeling; leverages per-datum
+          color overrides via dict format
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling: []
