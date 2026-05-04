@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 strip-basic: Basic Strip Plot
-Library: letsplot | Python 3.13
-Quality: pending | Updated: 2026-05-04
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-04
 """
 
 import os
