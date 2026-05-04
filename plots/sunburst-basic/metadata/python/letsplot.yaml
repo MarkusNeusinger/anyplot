@@ -1,211 +1,241 @@
 library: letsplot
+language: python
 specification_id: sunburst-basic
 created: '2025-12-23T21:57:59Z'
-updated: '2025-12-23T22:02:26Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472389460
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  - groupby-aggregation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-05-04T23:07:14Z'
+generated_by: claude-sonnet
+workflow_run: 25347559413
+issue: 821
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/letsplot/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent visual hierarchy with clear color progression from dark to light across
-    levels
-  - Proper use of white borders to separate segments making hierarchy relationships
-    clear
-  - Labels are well-positioned and readable with appropriate styling (bold white for
-    inner, dark for outer)
-  - Realistic organizational budget scenario that demonstrates the sunburst concept
-    effectively
-  - Clean implementation that produces a professional-looking chart
+  - 'Excellent hierarchical color gradient scheme: Okabe-Ito base colors at level
+    1 graduated to lighter shades at levels 2-3 communicates hierarchy depth naturally'
+  - 'Perfect Okabe-Ito compliance for level 1 branches with first series correctly
+    at #009E73'
+  - Clean axes-free sunburst with ring separators using PAGE_BG - elegant visual separation
+    technique
+  - Square 3600x3600 canvas correctly chosen for radially symmetric plot
+  - Both PNG and HTML output with correct theme-adaptive backgrounds
   weaknesses:
-  - Uses helper function (create_wedge) which violates the KISS principle of no functions/classes
-  - Could benefit from a simple legend explaining the color-branch relationship
-  - Some segments (like SMB, Retail) appear relatively small; could show more variation
-    in data
-  image_description: 'The plot displays a sunburst chart with three concentric rings
-    representing an organizational budget hierarchy. The innermost ring shows three
-    main departments: **Eng** (dark blue), **Sales** (yellow/gold), and **Mktg** (green)
-    - each with white bold text labels. The second ring shows subdivisions: Backend
-    and Frontend for Eng (lighter blues), North and South for Sales (lighter yellows),
-    and Digital and Brand for Mktg (lighter greens). The outermost ring displays projects/categories:
-    API, Database, Web App, Mobile (blues), Enterprise, SMB, Retail (yellows), and
-    SEO, Ads, Events (greens). White borders separate all segments clearly. The chart
-    is centered on a clean white background with the title "sunburst-basic · letsplot
-    · pyplots.ai" at the top.'
+  - Level 2/3 text labels use hardcoded color="#1A1A17" instead of INK theme token
+    - works in practice since pastel segments remain light, but should use color=INK
+    for strict theme-adaptive correctness
+  - create_wedge() helper function defined at module level - unavoidable for this
+    chart type but technically deviates from KISS no-functions guideline
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - correct, not pure white
+      Chrome: Title "sunburst-basic · letsplot · anyplot.ai" in dark ink, centered at top - clearly readable. No axis labels/ticks (appropriate for sunburst). Level 1 labels bold white on saturated segments.
+      Data: Three concentric rings. Level 1 (innermost): Eng=#009E73 (brand green), Sales=#D55E00 (vermillion), Mktg=#0072B2 (blue) - Okabe-Ito positions 1-3 correct. Level 2: medium pastel gradients per branch. Level 3: very light pastel gradients. Ring separators use #FAF8F1 for clean visual boundaries.
+      Legibility verdict: PASS - All labels readable; level 2/3 dark labels on light pastels have good contrast.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 - correct, not pure black
+      Chrome: Title in light #F0EFE8 ink (INK token) - readable against dark background. Level 1 labels use bold white (unchanged). Level 2/3 labels hardcoded #1A1A17 (dark) on light pastel segments - segments retain light colors in dark mode so labels remain readable.
+      Data: All three rings retain identical Okabe-Ito colors as in light render - only chrome flips. Ring separators merge with dark background (#1A1A17 on #1A1A17) slightly reducing ring-boundary visibility, but rings are still distinguishable by segment color.
+      Legibility verdict: PASS - No dark-on-dark text failures; title and all segment labels readable.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: All text is clearly readable; title is prominent, inner labels are
-          bold white, outer labels have good contrast
+        comment: 'Level 1 bold white on saturated segments crisp in both themes; level
+          2/3 hardcoded #1A1A17 works on light pastels but not strictly theme-adaptive'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text; labels are well-positioned within segments
+        comment: Most labels well-placed; smaller outer-ring segments have tight label
+          fits
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Segments are well-sized with clear proportions and white separators
+        comment: All rings visible; dark render ring separators blend with background
+          slightly
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Good color scheme using blue/yellow/green branches with consistent
-          shading (-1: yellow text on light yellow segments could be improved)'
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Chart is well-centered but could use more canvas space (-1: some
-          empty space around chart)'
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for sunburst; title present and properly formatted
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito base colors CVD-safe; no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 3600x3600 px appropriate; generous margins; chart fills canvas
+          well
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No legend present (not strictly needed but could help clarify hierarchy)
+        comment: Correct title format; no axis labels needed for sunburst
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Level 1 uses Okabe-Ito positions 1-3; graduated pastels for child
+          levels appropriate; backgrounds correct
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Purposeful color gradient communicates hierarchy depth; consistent
+          branch-color families; professional ring separation
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No axes, no grid, no legend; clean ring separators using PAGE_BG;
+          fully appropriate for sunburst
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color gradient reinforces hierarchy direction naturally; label size
+          variation supports reading order; clear focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct sunburst chart with concentric rings
+        comment: Correct sunburst with concentric rings
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Three hierarchy levels properly mapped to rings
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows hierarchical data, proportional segments, consistent branch
-          colors, clear level separation
-      - id: SC-04
-        name: Data Range
+        comment: 3 hierarchy levels, consistent branch colors, proportional angles,
+          labels on all segments
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All segments visible and properly proportioned
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Value determines angular span; rings correctly map level_1 to level_2
+          to level_3
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Labels directly on segments (appropriate for sunburst)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "sunburst-basic · letsplot · pyplots.ai"
+        comment: Correct title format; legend suppressed appropriately
     data_quality:
-      score: 19
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: 'Shows 3 levels, varying segment sizes, multiple branches (-1: could
-          show more variation in leaf sizes)'
+        comment: 10 leaf nodes (spec minimum), 3 levels, all branches represented;
+          slightly sparse at minimum bound
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Organizational budget breakdown is realistic and comprehensible
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Budget values (6-18) are plausible for relative comparison
+        comment: Organizational budget (Engineering/Sales/Marketing) is realistic
+          and politically neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 6-18 are sensible proportional budget units
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: 'Uses helper function `create_wedge` (-2: violates KISS principle
-          of no functions)'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Data is deterministic (no random generation)
+        comment: Defines create_wedge() helper function; necessary for polygon generation
+          but technically violates no-functions rule
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic static data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Appropriate complexity; clean loop structure; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct ggplot grammar with geom_polygon + geom_text layers, scale_fill_manual,
+          coord_fixed, labs, theme; polygon approach is right pattern for custom chart
+          types
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses geom_polygon and manual polygon construction; while creative,
-          doesn't leverage lets-plot's native pie/sector capabilities if available
+        comment: Uses coord_fixed for circular aspect ratio, scale_fill_manual with
+          named color dict, HTML export alongside PNG
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - html-export
+  patterns:
+  - groupby-aggregation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending

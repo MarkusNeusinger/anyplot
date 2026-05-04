@@ -1,172 +1,174 @@
 library: seaborn
+language: python
 specification_id: sunburst-basic
 created: '2025-12-23T21:57:04Z'
-updated: '2025-12-23T22:02:17Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472384817
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-04T22:50:50Z'
+generated_by: claude-sonnet
+workflow_run: 25347008755
+issue: 821
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/seaborn/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - subplots
-  - annotations
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 83
 review:
   strengths:
-  - Excellent sunburst visualization with three clear hierarchical levels (Department
-    > Team > Project)
-  - Smart use of seaborn light_palette() to create color gradients showing parent-child
-    relationships within each branch
-  - Effective dual-view layout combining sunburst with summary bar chart using seaborn
-    barplot
-  - Clear labeling with conditional display based on segment size to avoid clutter
-  - Center annotation shows total budget, providing immediate context
-  - Good color differentiation between branches (blue, yellow, light blue)
-  - Professional styling with sns.set_theme() for consistent poster-quality output
+  - Creative two-panel layout pairing sunburst with companion bar chart adds comparative
+    context
+  - sns.light_palette() used cleverly to create branch-coherent hierarchical colors
+    without arbitrary custom hexes
+  - Correct Okabe-Ito branch colors with proper theme adaptation; both renders pass
+    legibility checks
+  - Perfect data quality — realistic, neutral, factually consistent budget scenario
+  - Clean code with all 10/10 on Code Quality
   weaknesses:
-  - Title format should use interpunct (·) separator per spec - currently correct
-    but data label is prepended
-  - Some outer ring labels (CI/CD, Database, Mobile) appear cramped or partially overlap
-    with wedge edges
-  - The bar chart colors do not match the sunburst branch colors (Engineering shows
-    blue in sunburst but bar chart has different mapping due to hue parameter)
-  image_description: 'The plot displays a sunburst chart showing a company budget
-    breakdown across three hierarchical levels. The visualization consists of two
-    parts: (1) a sunburst/donut chart on the left with concentric rings - the innermost
-    ring shows three departments (Engineering in blue, Sales in yellow, Marketing
-    in lighter blue) with labels in white bold text. The middle ring displays teams
-    (Frontend, Backend, DevOps, North, South, Digital, Brand) in varying shades. The
-    outermost ring shows projects (Web App, Mobile, API, Database, Cloud, CI/CD, Enterprise,
-    SMB, SEO, Ads, Events, Content) in the lightest shades. The center displays "$1,530K
-    Total" in blue text. (2) A horizontal bar chart on the right titled "Department
-    Totals" showing Engineering ($700K), Sales ($500K), and Marketing ($330K) with
-    value labels. The title reads "Company Budget · sunburst-basic · seaborn · pyplots.ai"
-    at the top.'
+  - Title format uses Company Budget · sunburst-basic · seaborn · anyplot.ai instead
+    of required sunburst-basic · seaborn · anyplot.ai — spec-id must come first
+  - Level 2 labels (13pt) and level 3 labels (11pt) are below the 16pt minimum guideline
+    for 4800x2700px renders
+  - Bar chart x-axis label is 18pt, slightly below 20pt minimum
+  - Library Mastery limited because seaborn plotting surface is mainly barplot and
+    theming while sunburst uses matplotlib pie()
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Bold title readable at top; bar chart axis labels, ticks all dark-colored and clear
+      Data: 3-ring sunburst — Engineering #009E73 (innermost), Sales #D55E00, Marketing #0072B2; seaborn light_palette() tints for middle/outer rings; bar chart uses same branch colors with dollar-value annotations
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title and all text labels flip to light colors; bar chart axis labels/ticks are light-colored; no dark-on-dark failures detected
+      Data: Colors identical to light render — Engineering #009E73, Sales #D55E00, Marketing #0072B2; light_palette() tints consistent across themes
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: All text readable; center text, department labels, and bar labels
-          are clear. Some outer ring labels are slightly small.
+        comment: Title 26pt ok; bar xlabel 18pt (below 20pt min); level 2 labels 13pt
+          and level 3 labels 11pt below 16pt guideline
       - id: VQ-02
         name: No Overlap
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Minor crowding on smaller segments (CI/CD, Database labels near edges)
+        comment: Minor crowding in outer ring labels but generally non-overlapping
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Segments well-sized with good ring widths and clear separation
+        comment: All rings and bar chart bars clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/Yellow/Light Blue palette is colorblind-friendly, no red-green
-          conflicts
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of dual-panel layout, sunburst fills left side well
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Bar chart has descriptive "Budget ($K)" label with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito based, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good dual-panel layout; slight imbalance with sunburst dominating
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No legend for the sunburst (relies on inline labels); bar chart grid
-          is subtle
+        comment: Bar chart has Budget ($K) with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Engineering #009E73, Sales #D55E00, Marketing #0072B2; correct backgrounds
+          both themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Creative two-panel approach, light_palette for hierarchy, above default
+          but not publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, PAGE_BG edge color between wedges
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dual-panel adds context, center total and value labels guide viewer
     spec_compliance:
-      score: 23
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct sunburst chart with concentric rings
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Level 1 (departments) innermost, Level 2 (teams) middle, Level 3
-          (projects) outer
-      - id: SC-03
+        comment: Correct 3-ring sunburst via matplotlib pie() three times
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has hierarchical levels, proportional segments, consistent branch
-          colors. Labels present but no hover/interaction (static image limitation)
-      - id: SC-04
-        name: Data Range
+        comment: All three hierarchy levels, consistent branch colors, threshold-based
+          labels
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, segments properly sized
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: true
-        comment: No explicit legend, but inline labels are accurate
-      - id: SC-06
-        name: Title Format
+        comment: Values correctly determine angular span
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "Company Budget · sunburst-basic · seaborn · pyplots.ai"'
+        max: 3
+        passed: false
+        comment: Title is 'Company Budget · sunburst-basic · seaborn · anyplot.ai'
+          instead of required 'sunburst-basic · seaborn · anyplot.ai'
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 3 hierarchy levels, varying segment sizes, parent-child relationships
+        comment: Shows all 3 hierarchy levels with varied segment sizes
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Company budget breakdown is a perfect real-world use case
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Budget values ($60K-$200K) are realistic for project/team allocations
+        comment: Company budget breakdown is realistic, neutral business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible values summing correctly, $1.53M total for mid-size company
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,41 +176,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: Linear Imports -> Theme -> Data -> Plot -> Save
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Data is deterministic but no random seed needed (no random data used)
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib, numpy, pandas, seaborn)
+        comment: All 5 imports actively used
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses `hue` parameter correctly for modern seaborn, but `legend=False`
-          pattern is good
+        comment: Clean Pythonic code, zip strict=True, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
+        comment: Saves as plot-{THEME}.png, current API
+    library_mastery:
       score: 5
-      max: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
         passed: true
-        comment: Excellent use of seaborn's `sns.set_theme()`, `sns.light_palette()`
-          for color gradients, and `sns.barplot()` for the summary chart
+        comment: sns.set_theme(), sns.light_palette(), sns.barplot() with hue are
+          idiomatic; sunburst necessarily uses matplotlib pie()
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: sns.light_palette() for hierarchical branch colors is seaborn-specific
+          and used cleverly
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - explicit-figure
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting

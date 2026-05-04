@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 sunburst-basic: Basic Sunburst Chart
-Library: highcharts unknown | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-23
+Library: highcharts unknown | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-04
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -15,15 +16,28 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Budget breakdown by department, team, and project
-# Using a hierarchical structure with ids for parent references
-# Values show significant variation to demonstrate proportional representation
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito categorical palette — first series always #009E73
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
+# Total budget for center focal point annotation
+TOTAL_BUDGET = 1240  # Engineering 720 + Marketing 310 + Operations 210 ($K)
+
+# Data — Budget breakdown by department, team, and project (values in $K)
 data = [
-    # Level 1: Departments (innermost ring)
-    {"id": "engineering", "name": "Engineering", "color": "#306998"},
-    {"id": "marketing", "name": "Marketing", "color": "#FFD43B"},
-    {"id": "operations", "name": "Operations", "color": "#9467BD"},
-    # Level 2: Teams - varied sizes
+    # Root (center circle) — background-colored so it appears as text-only focal point
+    {"id": "root", "name": f"${TOTAL_BUDGET:,}K", "color": PAGE_BG},
+    # Level 1: Departments (innermost ring) — Okabe-Ito in canonical order
+    {"id": "engineering", "name": "Engineering", "parent": "root", "color": OKABE_ITO[0]},
+    {"id": "marketing", "name": "Marketing", "parent": "root", "color": OKABE_ITO[1]},
+    {"id": "operations", "name": "Operations", "parent": "root", "color": OKABE_ITO[2]},
+    # Level 2: Teams within each department
     {"id": "frontend", "name": "Frontend", "parent": "engineering", "value": 280},
     {"id": "backend", "name": "Backend", "parent": "engineering", "value": 350},
     {"id": "devops", "name": "DevOps", "parent": "engineering", "value": 90},
@@ -33,7 +47,7 @@ data = [
     {"id": "hr", "name": "HR", "parent": "operations", "value": 60},
     {"id": "finance", "name": "Finance", "parent": "operations", "value": 120},
     {"id": "facilities", "name": "Facilities", "parent": "operations", "value": 30},
-    # Level 3: Projects (outermost ring) - significant variation in sizes
+    # Level 3: Projects (outermost ring)
     {"name": "React App", "parent": "frontend", "value": 150},
     {"name": "Mobile UI", "parent": "frontend", "value": 90},
     {"name": "Design System", "parent": "frontend", "value": 40},
@@ -57,72 +71,90 @@ data = [
     {"name": "Equipment", "parent": "facilities", "value": 10},
 ]
 
-# Create chart with sunburst type
+# Plot
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration
-chart.options.chart = {"type": "sunburst", "width": 4800, "height": 2700, "backgroundColor": "#ffffff"}
-
-# Title
-chart.options.title = {
-    "text": "sunburst-basic · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
+chart.options.chart = {
+    "type": "sunburst",
+    "width": 4800,
+    "height": 2700,
+    "backgroundColor": PAGE_BG,
+    "style": {"color": INK},
 }
 
-# Subtitle
-chart.options.subtitle = {"text": "Budget Allocation by Department, Team, and Project", "style": {"fontSize": "32px"}}
+chart.options.title = {
+    "text": "sunburst-basic · highcharts · anyplot.ai",
+    "style": {"fontSize": "48px", "fontWeight": "bold", "color": INK},
+}
 
-# Credits
+chart.options.subtitle = {
+    "text": "Budget Allocation by Department, Team, and Project ($K)",
+    "style": {"fontSize": "32px", "color": INK_SOFT},
+}
+
 chart.options.credits = {"enabled": False}
 
-# Series data
 chart.options.series = [
     {
         "type": "sunburst",
         "data": data,
-        "name": "Budget",
+        "name": "Budget ($K)",
         "allowDrillToNode": True,
         "cursor": "pointer",
         "dataLabels": {
             "format": "{point.name}",
-            "style": {"fontSize": "28px", "textOutline": "3px white", "fontWeight": "500"},
+            "style": {"fontSize": "28px", "textOutline": f"3px {PAGE_BG}", "fontWeight": "500", "color": INK},
         },
         "levels": [
             {
-                "level": 1,
+                "level": 1,  # Root center — total budget focal point annotation
+                "dataLabels": {
+                    "style": {"fontSize": "60px", "fontWeight": "bold", "color": INK, "textOutline": "none"},
+                    "rotationMode": "horizontal",
+                },
+            },
+            {
+                "level": 2,  # Departments
                 "colorByPoint": True,
-                "dataLabels": {"style": {"fontSize": "42px", "fontWeight": "bold"}, "rotationMode": "circular"},
+                "dataLabels": {
+                    "style": {"fontSize": "44px", "fontWeight": "bold", "color": INK, "textOutline": f"3px {PAGE_BG}"},
+                    "rotationMode": "circular",
+                },
             },
             {
-                "level": 2,
+                "level": 3,  # Teams
                 "colorVariation": {"key": "brightness", "to": 0.15},
-                "dataLabels": {"style": {"fontSize": "32px", "fontWeight": "600"}, "rotationMode": "circular"},
+                "dataLabels": {
+                    "style": {"fontSize": "34px", "fontWeight": "600", "color": INK, "textOutline": f"3px {PAGE_BG}"},
+                    "rotationMode": "circular",
+                },
             },
             {
-                "level": 3,
+                "level": 4,  # Projects
                 "colorVariation": {"key": "brightness", "to": 0.35},
                 "dataLabels": {
-                    "style": {"fontSize": "28px"},
+                    "style": {"fontSize": "28px", "color": INK, "textOutline": f"3px {PAGE_BG}"},
                     "rotationMode": "circular",
                     "allowOverlap": False,
-                    "filter": {"property": "innerArcLength", "operator": ">", "value": 40},
+                    "filter": {"property": "innerArcLength", "operator": ">", "value": 90},
                 },
             },
         ],
     }
 ]
 
-# Tooltip
 chart.options.tooltip = {
     "headerFormat": "",
     "pointFormat": "<b>{point.name}</b>: ${point.value}K",
-    "style": {"fontSize": "24px"},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "style": {"color": INK, "fontSize": "24px"},
 }
 
-# Download Highcharts JS and sunburst module
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-sunburst_url = "https://code.highcharts.com/modules/sunburst.js"
+# Download Highcharts JS and sunburst module (inline for headless Chrome compatibility)
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts/highcharts.js"
+sunburst_url = "https://cdn.jsdelivr.net/npm/highcharts/modules/sunburst.js"
 
 with urllib.request.urlopen(highcharts_url, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
@@ -130,7 +162,6 @@ with urllib.request.urlopen(highcharts_url, timeout=30) as response:
 with urllib.request.urlopen(sunburst_url, timeout=30) as response:
     sunburst_js = response.read().decode("utf-8")
 
-# Generate HTML with inline scripts
 html_str = chart.to_js_literal()
 html_content = f"""<!DOCTYPE html>
 <html>
@@ -139,22 +170,21 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{sunburst_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Write temp HTML file
+# Save HTML artifact for interactive viewing
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Write temp HTML and take screenshot for PNG artifact
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
-# Also save as plot.html for interactive viewing
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
-
-# Take screenshot with Selenium
 chrome_options = Options()
 chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
@@ -164,9 +194,8 @@ chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
-driver.save_screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-# Clean up temp file
 Path(temp_path).unlink()

@@ -1,166 +1,203 @@
 library: bokeh
+language: python
 specification_id: sunburst-basic
 created: '2025-12-23T21:55:32Z'
-updated: '2025-12-23T22:01:54Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472387314
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-05-04T23:07:11Z'
+generated_by: claude-sonnet
+workflow_run: 25347176531
+issue: 821
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/bokeh/plot-dark.html
+quality_score: 83
 review:
   strengths:
-  - Excellent hierarchical visualization with clear color gradients showing parent-child
-    relationships
-  - Well-designed legend showing department colors and budget totals
-  - Clean visual separation between rings using white borders
-  - Correct proportional representation where parent segments encompass children angular
-    span
-  - Ring level labels (Dept, Team, Project) provide helpful context
-  - Good use of Label components for annotation
+  - Hierarchical tinting scheme using Okabe-Ito base colors with mid/light tints for
+    child rings — creates clear visual branch identity and professional aesthetic
+  - Per-ring HoverTool configuration (separate tooltips for Department/Team/Project
+    levels) is idiomatic Bokeh and adds genuine interactivity
+  - ColumnDataSource pattern enables efficient bulk rendering of all ring segments
+    with a single annular_wedge call per ring level
+  - Realistic organizational budget data with plausible values and 3-level hierarchy
+    (15 leaf nodes) demonstrates the chart type well
+  - Legend design showing three color swatches per department (base/mid/light) communicates
+    the tinting hierarchy elegantly
+  - Ring-level labels (Department/Team/Project) at bottom of chart explain the hierarchy
+    without cluttering the rings
   weaknesses:
-  - Missing hover tooltips which would be valuable for a Bokeh sunburst to show exact
-    values
-  - Some outer ring labels are truncated (e.g., Infra instead of Infrastructure)
-  - Colorblind accessibility could be improved - red (Sales) and green (Operations)
-    are adjacent
-  - Level 1 labels use 3-character abbreviations that may not be immediately clear
-    (Eng, Mar, Sal, Ope)
-  image_description: 'The plot displays a sunburst chart showing a company budget
-    hierarchy across three concentric rings. The innermost ring shows four departments:
-    Engineering (Eng, blue), Marketing (Mar, yellow), Sales (Sal, red), and Operations
-    (Ope, green). The middle ring shows teams within each department (Backend, Frontend,
-    DevOps, Digital, Content, Enterprise, SMB, Support, HR) in lighter shades of the
-    parent colors. The outermost ring shows projects (API, Database, Web App, Mobile,
-    Infrastructure, Social Media, SEO, Blog, Video, EMEA, APAC, Direct, Tier 1, Tier
-    2, Recruiting) in the lightest shades. A legend on the right shows the department
-    color gradients with budget totals. Ring level labels (Dept, Team, Project) appear
-    below the chart. The title "sunburst-basic · bokeh · pyplots.ai" is centered at
-    the top.'
+  - 'Level 3 (outer ring) labels use INK token (#F0EFE8 in dark mode = near-white)
+    on light-tinted segment backgrounds (#AAE0D5, #F7D899, #99CDE8, #EED2E3) — near-white
+    text on light segments fails contrast in dark render. Fix: use dark text (#1A1A17)
+    for level 3 labels unconditionally since outer ring tints are always light in
+    both themes'
+  - 'Okabe-Ito color order is non-sequential: Marketing uses position 5 (#E69F00)
+    while position 2 (#D55E00 vermillion) is skipped. Order should follow 1→N canonically
+    (Engineering=1, Marketing=2, Sales=3, Operations=4)'
+  - Level 3 label calculation loop duplicates angle computation from the l3_data-building
+    loop — minor code duplication that could be eliminated by storing mid_angle during
+    data build
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface, clearly visible
+      Chrome: Title "sunburst-basic · bokeh · anyplot.ai" visible at top center; axes hidden; no grid — appropriate for circular chart; ring-level labels "Department / Team / Project" at bottom readable at small size
+      Data: Three concentric rings. Inner ring shows 4 departments (Eng./Sales/Mktg/Ops) in Okabe-Ito base colors (#009E73 Engineering, #0072B2 Sales, #E69F00 Marketing, #CC79A7 Operations). Mid ring shows team-level tints. Outer ring shows project-level light tints. White separators between segments. Legend on right shows color swatches (base/mid/light per department) with budget totals ($410K/$150K/$170K/$95K).
+      Legibility verdict: PASS — all major labels readable, outer ring project labels are small but readable at full resolution
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title readable in light color; legend text (Departments header, department names) readable using INK/INK_SOFT tokens (light in dark mode). Ring-level labels at bottom use INK_MUTED (#A8A79F in dark mode) and are visible.
+      Data: Data colors are identical to light render (Engineering #009E73, Sales #0072B2, Marketing #E69F00, Operations #CC79A7) — only chrome flips. Dark background gaps between rings are more pronounced (0.02 radius unit gaps between r1/r2 and r2/r3 show near-black fill).
+      Legibility verdict: PARTIAL FAIL — Level 3 (outer ring) labels use INK token (#F0EFE8 in dark mode = near-white) on light-tinted segment fills (#AAE0D5 mint, #F7D899 light yellow, #99CDE8 sky, #EED2E3 pink). Contrast ratio near 1.1-1.3:1 — effectively invisible. Main structural labels (Eng./Sales/Mktg/Ops and team labels) are readable. Only the outermost project-level labels fail.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 23
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title is 32pt, labels are 14-22pt, all readable but some outer labels
-          are slightly small
+        score: 5
+        max: 8
+        passed: false
+        comment: 'Font sizes explicitly set (28pt title, 18pt dept, 16pt level2, 14pt
+          level3, 22pt legend header). Dark render: level 3 outer ring labels use
+          near-white INK on light-tinted segments — near-invisible contrast. Main
+          labels pass.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text, labels are well-positioned
+        comment: Threshold filtering (>4% for level 3, >6% for level 2) prevents most
+          collisions. Minor crowding in outer ring but no overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Wedges are clearly visible with good separation via white borders
+        comment: All three rings clearly visible with distinct color bands. Outer
+          ring level 3 labels barely visible in dark mode but rings themselves are
+          clear.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Colors are distinguishable but red/green combination could be problematic
-          for some colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent layout, chart fills canvas well, legend is properly positioned
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for sunburst (no axes), but ring level labels are present
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend is informative with gradient swatches and budget values
+        comment: Okabe-Ito base colors are CVD-safe. Tinted derivatives maintain hue
+          differentiation. White segment separators ensure element boundaries.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Sunburst fills good canvas portion with legend properly positioned
+          to the right. Ring labels at bottom edge. Minor wasted space at top.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct. Axes hidden (appropriate). Ring hierarchy explained
+          by Department/Team/Project labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'First series Engineering correctly uses #009E73 (position 1). However
+          non-sequential ordering: Marketing=position 5 (#E69F00), Sales=position
+          3, Operations=position 4. Should follow 1→N canonical order. Background
+          colors correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Sophisticated hierarchical tinting scheme using Okabe-Ito base colors
+          with curated mid/light tints creates branch identity. Custom legend with
+          three-swatch color bands is a professional touch. Clearly above library
+          defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No grid, hidden axes, clean background. White segment separators.
+          Small gaps between ring levels provide visual breathing room. Dark mode
+          shows more pronounced gap rings which slightly clutters the design.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Engineering dominates visually (largest segment) which communicates
+          budget leadership. Budget totals in legend add quantitative context. Tinting
+          shows branch membership clearly. Ring hierarchy labels explain the structure.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct sunburst chart with concentric rings
+        comment: Correct 3-level sunburst chart using annular_wedge with concentric
+          rings.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Hierarchical data correctly mapped to rings (level_1→level_2→level_3)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: 3 hierarchy levels, proportional segments,
-          clear separation'
-      - id: SC-04
-        name: Data Range
+        comment: Consistent colors within branches, labels on major segments, hover
+          for smaller segments, clear hierarchy level separation, inner segments encompass
+          children's angular span.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, segments span correctly
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: level_1/level_2/level_3 correctly mapped to rings, value correctly
+          determines segment angle.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend shows all departments with budget totals
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "sunburst-basic · bokeh · pyplots.ai"'
+        comment: Title 'sunburst-basic · bokeh · anyplot.ai' correct. Legend labels
+          match departments with budget totals.
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows hierarchy well but some smaller segments lack labels
+        comment: 15 leaf nodes across 4 departments, 9 teams. Shows varying segment
+          sizes. Could demonstrate more extreme size contrast to fully exercise the
+          chart.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Company budget breakdown is a realistic, relatable scenario
+        comment: Organizational budget breakdown is a real-world neutral business
+          scenario. Hierarchy (Engineering > Backend/Frontend/DevOps) is realistic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Budget values are plausible but units (K) only shown in legend
+        comment: Budget values in $K are realistic for team-level allocation. Proportions
+          (Engineering largest) reflect real org structures.
     code_quality:
       score: 9
       max: 10
@@ -170,40 +207,66 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Structure is logical but uses nested loops which adds complexity
+        comment: Linear structure without functions/classes. Level 3 label loop duplicates
+          angle calculations from the l3_data-building loop — minor code duplication.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random seed needed)
+        comment: Fully deterministic data — no random numbers.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: os, sys, time, math, pathlib, bokeh modules, selenium.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern Bokeh API used
+        comment: Clean Pythonic code. No fake UI elements. Appropriate complexity
+          for the chart type.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly using current
+          API.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses annular_wedge effectively but does not leverage Bokeh's interactive
-          features (hover tooltips would enhance this visualization)
+        comment: ColumnDataSource pattern enables HoverTool. Correct annular_wedge
+          glyph. HTML+Selenium export as specified. Multiple HoverTool instances targeting
+          specific renderers is proper Bokeh pattern.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Per-ring interactive HoverTool with level-specific tooltips (Department/Team/Project)
+          is distinctively Bokeh — other static libraries cannot achieve this. HTML
+          output with full JavaScript interactivity.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - hover-tooltips
+  - html-export
+  - annotations
+  patterns:
+  - columndatasource
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting
