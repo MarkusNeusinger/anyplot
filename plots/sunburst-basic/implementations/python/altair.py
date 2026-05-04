@@ -1,7 +1,7 @@
 """ anyplot.ai
 sunburst-basic: Basic Sunburst Chart
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 78/100 | Updated: 2026-05-04
+Quality: 82/100 | Updated: 2026-05-04
 """
 
 import altair as alt
