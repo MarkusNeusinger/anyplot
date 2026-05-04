@@ -1,165 +1,182 @@
 library: matplotlib
+language: python
 specification_id: sunburst-basic
 created: '2025-12-23T21:54:20Z'
-updated: '2025-12-23T22:00:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472384982
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-05-04T22:49:16Z'
+generated_by: claude-sonnet
+workflow_run: 25346927728
+issue: 821
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sunburst-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 83
 review:
   strengths:
-  - Excellent hierarchical color scheme with consistent branch coloring (children
-    visually relate to parents)
-  - Smart label placement logic that only shows labels for sufficiently large segments
-    (>15° for level 2, >12° for level 3)
-  - Clean white edge separators (linewidth=2.5) provide clear visual hierarchy distinction
-  - Square aspect ratio (12x12) is perfect choice for radial visualization
-  - Real-world budget scenario with meaningful department/team/project hierarchy
+  - 'Perfect spec compliance: all three hierarchy levels correctly implemented with
+    consistent branch colors and angle-proportional segments'
+  - Sophisticated hierarchic color tinting system (RGB blend toward white per level)
+    using only the Okabe-Ito base colors
+  - 'Solid code quality: KISS structure, deterministic data, clean imports, correct
+    output naming'
+  - 'Canvas and layout: 3600x3600 square format is ideal for radial charts; ring widths
+    and center hole are well-proportioned'
   weaknesses:
-  - No random seed or explicit reproducibility comment (deterministic data mitigates
-    this)
-  - Could use more extreme value variation between segments to better demonstrate
-    proportional sizing
-  - White label color on inner ring may reduce contrast on lighter portions
-  image_description: 'The plot displays a sunburst chart with three concentric rings
-    showing a company budget breakdown. The innermost ring shows three departments:
-    Engineering (blue, #306998), Sales (yellow, #FFD43B), and Marketing (olive/gold).
-    The middle ring displays teams: Frontend, Backend, DevOps under Engineering; North,
-    South under Sales; Digital, Brand under Marketing. The outer ring shows individual
-    projects like Web App, Mobile, API, Database, Cloud, CI/CD, Enterprise, SMB, SEO,
-    Ads, Events, and Content. The chart uses Python branding colors as the base palette
-    with lighter variations for child levels. The title "Company Budget · sunburst-basic
-    · matplotlib · pyplots.ai" appears at the top. The chart fills the square canvas
-    well with proper spacing and white edge separators between segments.'
+  - Level-2 labels hardcoded color='#1A1A17' instead of theme-adaptive INK_SOFT token;
+    level-3 labels hardcoded '#4A4A44' instead of INK_MUTED — both should flip to
+    light colors in dark theme
+  - 'DE-03 storytelling: informational but lacks a focal point or visual emphasis
+    guiding the viewer to a key insight about budget allocation'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "Company Budget · sunburst-basic · matplotlib · anyplot.ai" at 24pt bold in dark #1A1A17 — clearly readable. Level-1 department labels (Engineering, Sales, Marketing) in bold white 18pt on colored ring segments — readable. Level-2 team labels (Frontend, Backend, DevOps, North, South, Digital, Brand) in hardcoded #1A1A17 14pt — readable against lighter-tinted ring backgrounds. Level-3 project labels (Web App, Mobile, API, etc.) in hardcoded #4A4A44 12pt — readable against lightest tinted ring backgrounds. All text legible.
+      Data: First series Engineering uses #009E73 (Okabe-Ito position 1) ✓. Sales uses #D55E00 (position 2) ✓. Marketing uses #0072B2 (position 3) ✓. Middle and outer rings use progressively lighter RGB tints of the parent color. Three concentric rings clearly show the hierarchy.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct, warm near-black not pure black
+      Chrome: Title correctly uses INK token (#F0EFE8 in dark mode) — clearly readable in light text. Level-1 labels remain bold white — readable. Level-2 and level-3 labels use hardcoded light-theme colors (#1A1A17 and #4A4A44) — these appear as dark text on the colored ring segments. Since ring colors are the same lighter-tinted Okabe-Ito colors in both themes, dark text on those colored backgrounds is still legible. No dark-on-dark failure detected. Center hole shows #1A1A17 page background — correct.
+      Data: Colors are identical to light render — Engineering #009E73, Sales #D55E00, Marketing #0072B2 with same tinted hierarchy. Okabe-Ito data colors unchanged between themes as required.
+      Legibility verdict: MARGINAL PASS — label text is readable on ring backgrounds but chrome adaptation is incomplete (hardcoded colors do not flip to theme-appropriate values in dark mode).
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title is 24pt bold, department labels are 18pt white bold, team labels
-          14pt, project labels 12pt - all clearly readable
+        comment: 'All sizes explicitly set; title 24pt INK token; level-1 18pt white;
+          level-2 14pt hardcoded #1A1A17; level-3 12pt hardcoded #4A4A44 — not theme-adaptive
+          but readable on ring backgrounds'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text; smaller segments appropriately skip labels
+        comment: Minimum-angle threshold prevents labels on tiny segments; well-positioned
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Ring widths and segment sizes are well adapted; white edges provide
-          clear separation
+        comment: All three rings clearly visible; good color differentiation between
+          hierarchy levels
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Uses blue/yellow/olive palette that is largely colorblind-friendly,
-          but some lighter variations may be difficult to distinguish
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Square figure (12x12) fills canvas excellently; chart is centered
-          with balanced margins
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: No legend needed for labeled segments, but could benefit from a legend
-          or annotation showing the value hierarchy
+        comment: Okabe-Ito is CVD-safe; adequate luminance contrast between segments
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 12x12 @ 300dpi = 3600x3600px; ideal for radial chart; good
+          canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title with spec-id format; no axis labels required for
+          sunburst
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'First series #009E73 ✓; Okabe-Ito order ✓; backgrounds correct ✓;
+          but level-2 and level-3 label colors are hardcoded, not theme-adaptive'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Sophisticated RGB tinting scheme for hierarchy levels using Okabe-Ito
+          base colors; above default (4) but not publication-quality (6+)
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: PAGE_BG edgecolor creates clean ring separation; center hole; angle
+          threshold prevents label clutter; no unnecessary chrome
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Color progression communicates hierarchy; budget context is meaningful;
+          but no focal point or emphasis to guide viewer to an insight
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct sunburst chart with concentric rings
+        comment: Correct sunburst with concentric rings
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Hierarchy levels correctly mapped: Level 1 (departments) → Level
-          2 (teams) → Level 3 (projects)'
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: 3 hierarchy levels, proportional angles,
-          consistent branch colors'
-      - id: SC-04
-        name: Data Range
+        comment: Consistent branch colors, labels on major segments, visual separation
+          via PAGE_BG edges, inner segments encompass children
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 12 projects, 6 teams, and 3 departments visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: level_1 innermost, level_2 middle, level_3 outermost, values determine
+          angles
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Labels directly on segments are accurate
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "Company Budget · sunburst-basic · matplotlib
-          · pyplots.ai"'
+        comment: Title format 'Company Budget · sunburst-basic · matplotlib · anyplot.ai'
+          correct; hierarchy communicated by labels, no legend needed
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows varied hierarchy with different segment sizes, but all level-1
-          categories are roughly similar in size
+        comment: Three hierarchy levels, 12 leaf nodes, proportional angles; all three
+          top-level departments similar size limits contrast
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Company budget breakdown is a real, comprehensible scenario with
-          appropriate categories
+        comment: Company budget breakdown by department/team/project is neutral and
+          real-world plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Budget values in $thousands are reasonable (60-200k per project),
-          though some variation could be more extreme
+        comment: Budget values $50k-$200k range realistic; hierarchy depth of 3 matches
+          spec
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -167,41 +184,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → processing → plot → save'
+        comment: Imports → Data dict → Ring construction loops → Plot → Save; no classes
+          or functions
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Deterministic data used (no random), but no explicit seed comment
+        max: 2
+        passed: true
+        comment: Fully deterministic data (no random numbers)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy used, both necessary
+        comment: os, matplotlib.pyplot, numpy — all actively used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib pie() API
+        comment: Clean readable loops; no fake UI; appropriate complexity for 3-level
+          sunburst
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with facecolor=PAGE_BG
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ax.pie() with radius parameter for concentric rings; ax.text() with
+          trigonometric positioning for labels — correct matplotlib patterns
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses pie() with wedgeprops for ring widths which is matplotlib's
-          approach to sunburst, but this is not a specialized sunburst function; it's
-          a manual construction using nested pie charts
+        comment: Multiple concentric ax.pie() rings via radius parameter; custom RGB
+          tinting algorithm; trigonometric label centroid placement
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - iteration-over-groups
+  - explicit-figure
+  dataprep: []
+  styling:
+  - edge-highlighting
