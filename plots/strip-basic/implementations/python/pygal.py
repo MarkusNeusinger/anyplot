@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 strip-basic: Basic Strip Plot
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-04
 """
 
 import os
@@ -44,7 +43,7 @@ custom_style = Style(
     major_label_font_size=42,
     legend_font_size=42,
     value_font_size=36,
-    opacity=0.65,
+    opacity=0.60,
     stroke_width=0,
 )
 
@@ -58,23 +57,37 @@ chart = pygal.XY(
     y_title="Satisfaction Score (1–10)",
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=4,
+    legend_at_bottom_columns=5,
     show_x_guides=False,
     show_y_guides=True,
     stroke=False,
-    dots_size=12,
+    dots_size=17,
     x_label_rotation=0,
 )
+
+# Pygal-native tooltip formatting: value_formatter applies to all hover labels
+chart.value_formatter = lambda y: f"{y:.1f}"
 
 # X-axis labels aligned to integer positions
 chart.x_labels = ["", "Engineering", "Marketing", "Sales", "Support", ""]
 chart.xrange = (0, 5)
 
-# Add jittered points per category
+# Add jittered points per category; per-point dicts enrich HTML tooltips
 for i, cat in enumerate(categories, start=1):
     jitter = np.random.uniform(-0.25, 0.25, n_per_category)
-    points = [(float(i + j), float(v)) for j, v in zip(jitter, scores[cat], strict=True)]
+    points = [
+        {"value": (float(i + j), float(v)), "label": f"{cat}: {v:.1f}"}
+        for j, v in zip(jitter, scores[cat], strict=True)
+    ]
     chart.add(cat, points)
+
+# Mean reference markers — one dot per category at the mean position (5th Okabe color: #E69F00)
+# Positioned at exact integer x (no jitter) so they stand apart from the scattered data cloud
+mean_points = [
+    {"value": (float(i), float(np.mean(scores[cat]))), "label": f"Mean {cat}: {np.mean(scores[cat]):.2f}"}
+    for i, cat in enumerate(categories, start=1)
+]
+chart.add("─ Mean", mean_points)
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
