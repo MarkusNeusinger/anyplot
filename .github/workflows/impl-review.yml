@@ -262,6 +262,17 @@ jobs:
         run: |
           LABEL="quality:${SCORE}"
           gh label create "$LABEL" --color "0e8a16" --description "Quality score ${SCORE}/100" 2>/dev/null || true
+
+          # Strip stale quality:* labels from prior review attempts so the PR
+          # carries exactly one authoritative score. Without this, repaired
+          # PRs accumulate (e.g. quality:73 + quality:81 on the same PR)
+          # and downstream readers may pick the wrong one.
+          STALE=$(gh pr view "$PR_NUM" --json labels --jq '[.labels[].name | select(startswith("quality:")) | select(. != "'"$LABEL"'")] | join(",")')
+          if [ -n "$STALE" ]; then
+            echo "::notice::Removing stale quality labels: $STALE"
+            gh pr edit "$PR_NUM" --remove-label "$STALE" 2>/dev/null || true
+          fi
+
           # Retry on transient GitHub API failures (e.g. 504) — without this,
           # a single 5xx leaves the PR stuck with no quality label and the
           # downstream verdict step is gated on this step's success.
