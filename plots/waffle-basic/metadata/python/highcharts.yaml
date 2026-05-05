@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: waffle-basic
 created: '2025-12-24T09:53:24Z'
-updated: '2026-05-05T18:20:22Z'
+updated: '2026-05-05T18:44:36Z'
 generated_by: claude-haiku
 workflow_run: 25393641651
 issue: 998
@@ -12,49 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waffle-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/highcharts/plot-dark.html
-quality_score: 73
+quality_score: 75
 review:
   strengths:
-  - Clean, well-structured 10×10 waffle grid with perfectly proportioned squares
-  - Correct proportional mapping of data (42%, 28%, 18%, 12% = 100%)
-  - Legend with percentage labels is clear and well-positioned
-  - Theme adaptation works correctly in both light and dark renders
-  - No text overlap or legibility issues in either render
-  - Good canvas utilization with balanced margins
+  - Correct 10x10 grid structure for waffle chart representation
+  - Accurate data proportions (42%, 28%, 18%, 12% sum to 100%)
+  - Clean legend with proper category labels and percentages
+  - No text overlap or visibility issues
+  - Functional scatter-based waffle implementation
   weaknesses:
-  - Output files saved as plot.png instead of plot-{THEME}.png — prevents proper pipeline
-    integration
-  - Title hardcodes pyplots.ai instead of anyplot.ai
-  - Palette uses Python logo colors instead of Okabe-Ito (#009E73 must be first series)
-  - 'Background colors hardcoded as #ffffff instead of using ANYPLOT_THEME environment
+  - 'No theme adaptation: Code hardcodes colors instead of reading ANYPLOT_THEME environment
     variable'
-  - Design is functional but generic — no visual sophistication or intentional aesthetic
-    choices
-  - No design hierarchy or data storytelling; data is simply displayed
+  - 'Wrong color palette: Uses custom colors instead of Okabe-Ito palette'
+  - 'First series not #009E73: The brand green requirement is not met'
+  - 'Wrong backgrounds: Pure white and pure black instead of #FAF8F1 and #1A1A17'
+  - 'Data colors change between themes: Green and blue appear more saturated/lighter
+    in dark render, violating theme consistency requirement'
+  - 'Output files incorrectly named: Saves plot.png/plot.html instead of plot-light/dark.png/html'
+  - 'No theme tokens: Title and text don''t use INK/INK_SOFT tokens, legend background
+    not using ELEVATED_BG'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1), not pure white
-      Chrome: Title "waffle-basic · highcharts · anyplot.ai" clearly visible at top in dark text. Legend on right with category labels and percentages fully readable against light surface.
-      Data: 10×10 grid of 100 colored squares: 42 green (bottom), 28 blue, 18 orange, 12 pink/magenta (top). All markers clearly visible and distinct from background.
-      Legibility verdict: PASS - all text and data elements readable
+      Background: Pure white (#ffffff) — FAIL. Must be warm off-white (#FAF8F1) per style guide.
+      Chrome: Title 'waffle-basic · highcharts · anyplot.ai' is readable (dark text), legend shows categories with percentages on right side, all text is clearly visible against light background.
+      Data: Four colors used — green (42 squares), blue (28 squares), orange (18 squares), pink (12 squares). The green does not match Okabe-Ito brand color #009E73 (code uses #4DAF4A). Other colors appear to be from Okabe-Ito palette but used out of order.
+      Legibility verdict: PASS for text readability, but FAIL for palette compliance (wrong colors, wrong background).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17), not pure black
-      Chrome: Title visible in light-colored text against dark background. Legend on right with light text, readable. No dark-on-dark text failures detected.
-      Data: Square colors identical to light render (green, blue, orange, pink). Data colors preserved correctly across theme change—only chrome flips.
-      Legibility verdict: PASS - all text and data readable against dark background, theme adaptation correct
+      Background: Pure black (or very dark, near pure black) — FAIL. Must be warm near-black (#1A1A17) per style guide.
+      Chrome: Title and legend text are light-colored and readable against dark background.
+      Data: CRITICAL FAILURE — data colors have changed significantly from light render. Green appears much lighter/more vibrant, blue appears lighter and more saturated. These are NOT the same colors as light render. Okabe-Ito colors (positions 1-7) must be identical between themes; only chrome should flip.
+      Legibility verdict: FAIL for palette consistency. The data colors should be identical to light render but are visibly different in saturation and brightness.
   verdict: REJECTED
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
-        passed: true
-        comment: Title and legend explicitly sized, fully readable in both themes
+        passed: false
+        comment: Text is readable but lacks theme-adaptive colors; title should use
+          INK token
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -66,56 +67,56 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 100 squares clearly visible at optimal size
+        comment: All squares clearly visible and distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Vibrant, distinct, colorblind-safe
+        passed: false
+        comment: Colors fail theme adaptation; data colors change between light/dark
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Plot fills 60-70% with balanced margins
+        comment: Good proportions and spacing
       - id: VQ-06
         name: Axis Labels & Title
         score: 1
         max: 2
         passed: false
-        comment: Title present but format doesn't match spec
+        comment: Title format correct but background color violates spec
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: Code uses Python colors not Okabe-Ito; renders show plausible but
-          unverified
+        comment: 'CRITICAL: First color not #009E73, backgrounds pure white/black
+          not #FAF8F1/#1A1A17, data colors change between themes'
     design_excellence:
-      score: 6
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 4
         max: 8
         passed: false
-        comment: Generic defaults; Python branding colors, not intentional design
+        comment: Generic defaults, no design thinking
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization beyond library defaults
+        comment: Minimal customization
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Data displayed but no visual hierarchy or emphasis
+        passed: true
+        comment: Basic proportional representation
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -123,25 +124,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct waffle chart
+        comment: Correct waffle chart with 10x10 grid
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 10×10 grid, proportions, legend all present
+        comment: 'All features present: grid, colors, legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories correctly positioned
+        comment: Categories correctly mapped, sums to 100%
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Code has pyplots.ai not anyplot.ai
+        passed: true
+        comment: Format correct with percentages
     data_quality:
       score: 15
       max: 15
@@ -151,21 +152,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full range of proportions
+        comment: All waffle aspects shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Market share scenario is plausible
+        comment: Realistic allocation data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sum to 100, realistic percentages
+        comment: 10x10 grid appropriate
     code_quality:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -173,54 +174,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no unnecessary abstractions
+        comment: Straightforward
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data generation
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All used
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Hardcoded values instead of environment variables
+        comment: Hardcoded colors instead of style tokens
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: Saves as plot.png not plot-{THEME}.png'
+        comment: 'Wrong output naming: plot.png instead of plot-light/dark.png'
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Correct ScatterSeries usage but unconventional for waffle
+        passed: true
+        comment: Correct ScatterSeries usage
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: Uses symbol customization effectively
+        passed: false
+        comment: Creative scatter approach but generic overall
 impl_tags:
   dependencies:
   - selenium
+  - numpy
   techniques:
-  - html-export
+  - scatter-plot-variant
   patterns:
-  - data-generation
-  - matrix-construction
+  - grid-generation
   dataprep: []
   styling: []
