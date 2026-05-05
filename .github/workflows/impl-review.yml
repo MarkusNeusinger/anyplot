@@ -12,6 +12,15 @@ on:
         description: 'PR number to review'
         required: true
         type: string
+      model:
+        description: "Claude model to use (also threaded into repair)"
+        required: false
+        type: choice
+        default: 'sonnet'
+        options:
+          - haiku
+          - sonnet
+          - opus
   repository_dispatch:
     types: [review-pr]
 
@@ -40,6 +49,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ inputs.pr_number || github.event.client_payload.pr_number }}
+          MODEL_INPUT: ${{ inputs.model }}
+          MODEL_PAYLOAD: ${{ github.event.client_payload.model }}
         run: |
           PR_DATA=$(gh pr view "$PR_NUMBER" --json headRefName,headRefOid,body)
           HEAD_REF=$(echo "$PR_DATA" | jq -r '.headRefName')
@@ -53,14 +64,18 @@ jobs:
           # Extract issue number from PR body
           ISSUE_NUMBER=$(echo "$BODY" | grep -oP '\*\*Parent Issue:\*\* #\K\d+' | head -1 || echo "")
 
+          # Resolve model: explicit input > repository_dispatch payload > default sonnet
+          MODEL="${MODEL_INPUT:-${MODEL_PAYLOAD:-sonnet}}"
+
           echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
           echo "specification_id=$SPEC_ID" >> $GITHUB_OUTPUT
           echo "library=$LIBRARY" >> $GITHUB_OUTPUT
           echo "branch=$HEAD_REF" >> $GITHUB_OUTPUT
           echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
           echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+          echo "model=$MODEL" >> $GITHUB_OUTPUT
 
-          echo "::notice::Reviewing PR #$PR_NUMBER for $LIBRARY implementation of $SPEC_ID (branch: $HEAD_REF)"
+          echo "::notice::Reviewing PR #$PR_NUMBER for $LIBRARY implementation of $SPEC_ID (branch: $HEAD_REF, model: $MODEL)"
 
       - name: Checkout PR code
         run: |
@@ -148,7 +163,7 @@ jobs:
           ATTEMPT: ${{ steps.attempts.outputs.display }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: "--model sonnet"
+          claude_args: "--model ${{ steps.pr.outputs.model }}"
           allowed_bots: '*'
           prompt: |
             Read `prompts/workflow-prompts/ai-quality-review.md` and follow those instructions.
@@ -189,6 +204,7 @@ jobs:
           LIBRARY: ${{ steps.pr.outputs.library }}
           REPOSITORY: ${{ github.repository }}
           RUN_ID: ${{ github.run_id }}
+          MODEL: ${{ steps.pr.outputs.model }}
         run: |
           echo "::error::AI Review did not produce valid output files (score=0)"
 
@@ -230,8 +246,9 @@ jobs:
 
           gh api repos/$REPOSITORY/dispatches \
             -f event_type=review-pr \
-            -f "client_payload[pr_number]=$PR_NUM"
-          echo "::notice::Auto-re-triggered impl-review.yml for PR #$PR_NUM"
+            -f "client_payload[pr_number]=$PR_NUM" \
+            -f "client_payload[model]=$MODEL"
+          echo "::notice::Auto-re-triggered impl-review.yml for PR #$PR_NUM (model=$MODEL)"
           # Mark this run as failed so the run status reflects that no verdict
           # was produced. The auto-retry runs in a separate workflow run.
           exit 1
@@ -499,6 +516,7 @@ jobs:
           LIBRARY: ${{ steps.pr.outputs.library }}
           REPOSITORY: ${{ github.repository }}
           RUN_ID: ${{ github.run_id }}
+          MODEL: ${{ steps.pr.outputs.model }}
         run: |
           MARKER="<!-- review-retry:${SPEC_ID}:${LIBRARY} -->"
           # Paginate so the marker is found even on PRs with >30 comments.
@@ -532,8 +550,9 @@ jobs:
 
           gh api repos/$REPOSITORY/dispatches \
             -f event_type=review-pr \
-            -f "client_payload[pr_number]=$PR_NUM"
-          echo "::notice::Auto-re-triggered impl-review.yml for PR #$PR_NUM"
+            -f "client_payload[pr_number]=$PR_NUM" \
+            -f "client_payload[model]=$MODEL"
+          echo "::notice::Auto-re-triggered impl-review.yml for PR #$PR_NUM (model=$MODEL)"
           # Mark this run as failed so the run status reflects that no verdict
           # was produced. The auto-retry runs in a separate workflow run.
           exit 1
@@ -552,6 +571,7 @@ jobs:
           ISSUE_NUMBER: ${{ steps.pr.outputs.issue_number }}
           REPOSITORY: ${{ github.repository }}
           RUN_ID: ${{ github.run_id }}
+          MODEL: ${{ steps.pr.outputs.model }}
         run: |
           # Cascading thresholds:
           # Attempt 0 (Review 1): >= 90
@@ -580,7 +600,8 @@ jobs:
                 -f pr_number="$PR_NUM" \
                 -f specification_id="$SPEC_ID" \
                 -f library="$LIBRARY" \
-                -f attempt="$ATTEMPT"
+                -f attempt="$ATTEMPT" \
+                -f model="$MODEL"
             else
               # All 4 repair attempts exhausted
               echo "::notice::All 4 repair attempts exhausted (Score $SCORE < 50)"

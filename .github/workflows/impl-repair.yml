@@ -23,6 +23,15 @@ on:
         description: "Current attempt number (1, 2, 3, or 4)"
         required: true
         type: string
+      model:
+        description: "Claude model to use (also threaded back into review)"
+        required: false
+        type: choice
+        default: 'sonnet'
+        options:
+          - haiku
+          - sonnet
+          - opus
 
 # Per-library deps now come from `pyproject.toml` `lib-{library}` extras
 # (single source of truth — same change as impl-generate.yml).
@@ -107,7 +116,7 @@ jobs:
         uses: anthropics/claude-code-action@ef50f123a3a9be95b60040d042717517407c7256  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: "--model sonnet"
+          claude_args: "--model ${{ inputs.model || 'sonnet' }}"
           allowed_bots: '*'
           prompt: |
             Read `prompts/workflow-prompts/impl-repair-claude.md` and follow those instructions.
@@ -126,7 +135,7 @@ jobs:
         uses: anthropics/claude-code-action@ef50f123a3a9be95b60040d042717517407c7256  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: "--model sonnet"
+          claude_args: "--model ${{ inputs.model || 'sonnet' }}"
           allowed_bots: '*'
           prompt: |
             Read `prompts/workflow-prompts/impl-repair-claude.md` and follow those instructions.
@@ -225,12 +234,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ inputs.pr_number }}
+          MODEL: ${{ inputs.model || 'sonnet' }}
         run: |
           # Use repository_dispatch as workaround for workflow_dispatch caching issue
           gh api repos/${{ github.repository }}/dispatches \
             -f event_type=review-pr \
-            -f "client_payload[pr_number]=$PR_NUM"
-          echo "::notice::Triggered impl-review.yml via repository_dispatch for PR #$PR_NUM"
+            -f "client_payload[pr_number]=$PR_NUM" \
+            -f "client_payload[model]=$MODEL"
+          echo "::notice::Triggered impl-review.yml via repository_dispatch for PR #$PR_NUM (model=$MODEL)"
 
       # ========================================================================
       # Failure handling: when the repair workflow itself crashes (e.g. Claude
@@ -245,6 +256,7 @@ jobs:
           SPEC_ID: ${{ inputs.specification_id }}
           LIBRARY: ${{ inputs.library }}
           ATTEMPT: ${{ inputs.attempt }}
+          MODEL: ${{ inputs.model || 'sonnet' }}
         run: |
           # Restore ai-rejected label that was removed at start of repair so the
           # PR state stays consistent (otherwise it looks "stuck approved").
@@ -264,7 +276,7 @@ jobs:
 
           **Manual restart:**
           \`\`\`
-          gh workflow run impl-repair.yml -f pr_number=${PR_NUM} -f specification_id=${SPEC_ID} -f library=${LIBRARY} -f attempt=${ATTEMPT}
+          gh workflow run impl-repair.yml -f pr_number=${PR_NUM} -f specification_id=${SPEC_ID} -f library=${LIBRARY} -f attempt=${ATTEMPT} -f model=${MODEL}
           \`\`\`
 
           ---
@@ -283,5 +295,6 @@ jobs:
               -f pr_number="$PR_NUM" \
               -f specification_id="$SPEC_ID" \
               -f library="$LIBRARY" \
-              -f attempt="$ATTEMPT"
+              -f attempt="$ATTEMPT" \
+              -f model="$MODEL"
           fi
