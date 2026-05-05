@@ -1,13 +1,25 @@
-""" pyplots.ai
+"""anyplot.ai
 treemap-basic: Basic Treemap
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-24
+Library: matplotlib | Python 3.13
+Quality: pending | Created: 2025-05-05
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette for categories
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
 
 # Data - Budget allocation by department and project
 data = [
@@ -25,19 +37,14 @@ data = [
     ("HR", "Training", 8),
 ]
 
-# Extract sorted data (already sorted by value descending)
+# Extract sorted data
 categories = [d[0] for d in data]
 subcategories = [d[1] for d in data]
 values = [d[2] for d in data]
 
-# Color mapping for main categories
-category_colors = {
-    "Engineering": "#306998",  # Python Blue
-    "Marketing": "#FFD43B",  # Python Yellow
-    "Sales": "#4B8BBE",  # Light blue
-    "Operations": "#646464",  # Gray
-    "HR": "#FFE873",  # Light yellow
-}
+# Category to color mapping (using Okabe-Ito palette)
+unique_categories = ["Engineering", "Sales", "Marketing", "Operations", "HR"]
+category_colors = {cat: OKABE_ITO[i % len(OKABE_ITO)] for i, cat in enumerate(unique_categories)}
 
 # Normalize values to fill a 160x90 area (matching figsize aspect ratio)
 total = sum(values)
@@ -45,7 +52,6 @@ width, height = 160, 90
 normalized = [v / total * width * height for v in values]
 
 # Squarify algorithm - compute rectangle positions
-# Uses slice-and-dice with aspect ratio optimization
 rects = []
 remaining = list(zip(normalized, range(len(normalized)), strict=True))
 x, y, w, h = 0, 0, width, height
@@ -123,31 +129,23 @@ while remaining:
     remaining = [(a, i) for a, i in remaining if i not in placed_indices]
 
 # Create plot (4800x2700 px)
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Draw rectangles
+# Draw rectangles with labels
 for rx, ry, rw, rh, idx in rects:
     color = category_colors[categories[idx]]
-    rect = Rectangle((rx, ry), rw, rh, facecolor=color, edgecolor="white", linewidth=3, alpha=0.85)
+    rect = Rectangle((rx, ry), rw, rh, facecolor=color, edgecolor=PAGE_BG, linewidth=3, alpha=0.85)
     ax.add_patch(rect)
 
-    # Add label for larger rectangles
+    # Add labels for all visible rectangles
     area = rw * rh
-    if area > 150:
-        # Choose text color based on background brightness
-        text_color = "white" if color in ["#306998", "#4B8BBE", "#646464"] else "black"
-        fontsize = min(18, max(12, int(area**0.35)))
+    if area > 80:
+        fontsize = min(18, max(11, int(area**0.35)))
 
         label = f"{subcategories[idx]}\n${values[idx]}M"
         ax.text(
-            rx + rw / 2,
-            ry + rh / 2,
-            label,
-            ha="center",
-            va="center",
-            fontsize=fontsize,
-            fontweight="bold",
-            color=text_color,
+            rx + rw / 2, ry + rh / 2, label, ha="center", va="center", fontsize=fontsize, fontweight="bold", color=INK
         )
 
 # Set axis limits and remove axes
@@ -157,21 +155,23 @@ ax.axis("off")
 ax.set_aspect("equal")
 
 # Title
-ax.set_title(
-    "Budget Allocation by Department · treemap-basic · matplotlib · pyplots.ai", fontsize=24, fontweight="bold", pad=20
-)
+ax.set_title("treemap-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
 
-# Legend for categories (horizontal at bottom to avoid overlap with treemap)
-legend_handles = [mpatches.Patch(color=color, label=cat) for cat, color in category_colors.items()]
-ax.legend(
+# Legend for categories
+legend_handles = [mpatches.Patch(color=category_colors[cat], label=cat) for cat in unique_categories]
+leg = ax.legend(
     handles=legend_handles,
     loc="upper center",
-    fontsize=14,
+    fontsize=16,
     framealpha=0.95,
-    edgecolor="gray",
+    edgecolor=INK_SOFT,
     ncol=5,
     bbox_to_anchor=(0.5, -0.02),
 )
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+for text in leg.get_texts():
+    text.set_color(INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
