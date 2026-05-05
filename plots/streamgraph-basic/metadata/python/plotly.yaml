@@ -1,164 +1,179 @@
 library: plotly
+language: python
 specification_id: streamgraph-basic
 created: '2025-12-23T21:54:18Z'
-updated: '2025-12-23T22:00:35Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472382233
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-    - matrix-construction
-  dataprep: []
-  styling:
-    - alpha-blending
+updated: '2026-05-05T03:40:17Z'
+generated_by: claude-sonnet
+workflow_run: 25355962769
+issue: 856
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/plotly/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent implementation of centered baseline algorithm creating true streamgraph
-    appearance
-  - Smooth spline curves create the flowing, organic look specified
-  - Python Blue/Yellow color scheme with harmonious colorblind-safe palette
-  - Proper use of Plotly fill=toself for creating the stacked areas
-  - Both PNG and HTML outputs generated correctly
-  - Well-structured code following KISS principles
-  - Good font sizing for all text elements at target resolution
+  - Perfect spec compliance — streamgraph with centered baseline, smooth splines,
+    correct data mapping
+  - 'Flawless theme adaptation: all chrome tokens (INK, INK_SOFT, GRID, PAGE_BG, ELEVATED_BG)
+    correctly applied in both themes'
+  - 'Excellent code quality: clean, flat, reproducible, idiomatic Plotly'
+  - 'Correct Okabe-Ito order starting with #009E73 for Pop'
+  - 'Appropriate use of Plotly-specific features: fill-hover interaction and HTML
+    export'
   weaknesses:
-  - Y-axis label Streaming Hours (Millions) is slightly confusing when the centered
-    baseline creates negative values
-  image_description: 'The plot displays a streamgraph showing monthly streaming hours
-    by music genre (Pop, Rock, Hip-Hop, Electronic, Jazz, Classical) over a 2-year
-    period from early 2022 to late 2023. The streamgraph uses a centered baseline
-    creating a symmetric, river-like appearance around the x-axis. Colors used are:
-    Python Blue (#306998) for Pop at the bottom, Yellow (#FFD43B) for Rock, Red/Orange
-    (#E24A33) for Hip-Hop, Green (#8EBA42) for Electronic, Purple (#988ED5) for Jazz,
-    and Light Blue (#348ABD) for Classical at the top. The title "streamgraph-basic
-    · plotly · pyplots.ai" is centered at the top. The x-axis shows "Month" with quarterly
-    date labels, and the y-axis shows "Streaming Hours (Millions)" ranging from -100
-    to 100. A horizontal legend is positioned above the plot area. The curves are
-    smooth and flowing, with subtle grid lines in the background.'
+  - 'DE-01: Opacity-based visual hierarchy (1.0 vs 0.80) is too subtle to create a
+    perceptible focal point; a stronger emphasis technique would improve storytelling'
+  - 'DE-03: No clear narrative focal point or annotation to guide the viewer''s eye;
+    the plot is informative but doesn''t tell a story'
+  - 'LM-02: hovertemplate is not customized — default tooltip format misses an opportunity
+    to show formatted hours or genre share percentage'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "streamgraph-basic · plotly · anyplot.ai" in dark ink (#1A1A17) at 28px; subtitle "Monthly streaming hours by music genre, 2022–2023" in muted secondary color; x-axis label "Month" clearly visible; tick labels (Jan 2022 … Oct 2023) readable at 18px; y-axis tick labels intentionally hidden
+      Data: Six flowing streams from bottom to top — Pop (#009E73), Rock (#D55E00), Hip-Hop (#0072B2), Electronic (#CC79A7), Jazz (#E69F00), Classical (#56B4E9); smooth spline curves; symmetric centered baseline with visible zero line; horizontal legend below chart
+      Legibility verdict: PASS — all text elements clearly readable against the warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title, subtitle, axis labels, tick labels, and legend text all rendered in light warm colors (near-white/warm gray); legend uses elevated dark background (#242420) with light border; zero line and subtle grid visible against dark surface
+      Data: Stream colors identical to light render — #009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9 — confirming only chrome flips between themes
+      Legibility verdict: PASS — no dark-on-dark failures; all text clearly readable against the near-black background
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 36pt, axis labels at 28pt, ticks at 22pt - all perfectly
-          readable
+        comment: Title 28px, axis labels 22px, tick labels 18px; all clearly readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, legend is well-spaced
+        comment: Streams, legend items, and tick labels all non-overlapping
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Stream layers are clearly visible with good distinction
+        comment: All 6 genre streams clearly distinct and visible in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses Python Blue/Yellow with colorblind-safe palette, good contrast
-          between adjacent areas
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Y-axis has units "(Millions)" but could be clearer (streaming hours
-          is somewhat abstract for negative values)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.2), legend well positioned above plot
+        comment: Okabe-Ito palette; CVD-safe by design
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions, generous margins, legend well-placed below
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Month x-axis label present; y-axis labels intentionally hidden for
+          streamgraph
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Pop=#009E73; Okabe-Ito order; backgrounds #FAF8F1/#1A1A17
+          correct'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Opacity hierarchy (Pop 1.0 vs others 0.80), smooth splines, zero-line
+          anchor, subtitle typography — above defaults but opacity difference barely
+          perceptible
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Bottom-only x spine, y spine removed, y-tick labels hidden, adaptive
+          subtle grid — clean but not highly refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Centered baseline correctly shows flow; subtle Pop emphasis present
+          but not strong enough for clear focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct streamgraph with centered baseline
+        comment: Correct streamgraph with symmetric centered baseline using cumsum
+          offset
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on X, categories stacked, values determine area height
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Smooth curves (spline), centered baseline, distinct colors, legend
-          present
-      - id: SC-04
-        name: Data Range
+        comment: Smooth spline interpolation, centered baseline, distinct colors,
+          legend — all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=time (months), Y=centered stacked values, all 6 categories present
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: All 6 genres correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses exact format: "streamgraph-basic · plotly · pyplots.ai"'
+        comment: Title 'streamgraph-basic · plotly · anyplot.ai'; legend labels match
+          genre names
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows variation over time, different category sizes, seasonal patterns
-          - minor: all categories follow similar trends'
+        comment: 'All core streamgraph aspects: stacking, centering, smooth flow,
+          multi-category composition'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Music streaming by genre is a plausible, comprehensible scenario
+        comment: Music genre streaming hours — well-known, neutral, real-world streamgraph
+          use case
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
-        passed: false
-        comment: Values are reasonable but "millions" unit on y-axis is somewhat arbitrary
-          for example data
+        max: 4
+        passed: true
+        comment: 24 time points (2 years monthly), 6 genres (within 3-8 spec), base
+          values 12-45 hrs plausible
     code_quality:
       score: 10
       max: 10
@@ -168,40 +183,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: No functions or classes; flat, readable linear script
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set before data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, plotly.graph_objects used
+        comment: sys, os, numpy, pandas, plotly.graph_objects — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: All APIs are current
+        comment: Clean iteration over genres, appropriate numpy vectorization for
+          baseline computation
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png (1600x900 scale=3 = 4800x2700) and plot-{THEME}.html
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses plotly's spline smoothing, interactive hover, HTML export, go.Scatter
-          with fill="toself"
+        comment: go.Scatter with fill=toself, line.shape=spline, hovermode=x unified,
+          hoveron=fills — idiomatic Plotly area chart patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Interactive hover on area fills and HTML export present; hovertemplate
+          not customized — misses showcase of Plotly's tooltip formatting advantage
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep:
+  - cumulative-sum
+  - time-series
+  styling:
+  - alpha-blending
+  - grid-styling
