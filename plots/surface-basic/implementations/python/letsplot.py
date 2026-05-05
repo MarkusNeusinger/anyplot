@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 surface-basic: Basic 3D Surface Plot
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: letsplot | Python 3.13
+Quality: pending | Created: 2025-12-23
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,6 +12,7 @@ from lets_plot import (
     LetsPlot,
     aes,
     element_blank,
+    element_rect,
     element_text,
     geom_polygon,
     ggplot,
@@ -23,6 +26,12 @@ from lets_plot.export import ggsave
 
 
 LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - create a smooth surface z = sin(x) * cos(y)
 np.random.seed(42)
@@ -78,23 +87,26 @@ df = pd.DataFrame(poly_data)
 # Create surface plot with filled polygons
 plot = (
     ggplot(df, aes(x="x", y="y", group="group", fill="z"))
-    + geom_polygon(color="#306998", size=0.2, alpha=1.0)
+    + geom_polygon(color=INK_SOFT, size=0.2, alpha=1.0)
     + scale_fill_viridis(name="Z Value")
-    + labs(x="X (projected)", y="Z (height)", title="surface-basic · letsplot · pyplots.ai")
+    + labs(x="X (projected)", y="Z (height)", title="surface-basic · letsplot · anyplot.ai")
     + theme_minimal()
     + theme(
-        axis_title=element_text(size=22),
-        axis_text=element_text(size=18),
-        plot_title=element_text(size=28),
-        legend_text=element_text(size=16),
-        legend_title=element_text(size=18),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        plot_title=element_text(size=24, color=INK),
+        legend_background=element_rect(fill=PAGE_BG),
+        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
         panel_grid=element_blank(),
     )
     + ggsize(1600, 900)
 )
 
 # Save PNG (scale=3 gives 4800x2700)
-ggsave(plot, "plot.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
 
 # Save HTML for interactivity
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
