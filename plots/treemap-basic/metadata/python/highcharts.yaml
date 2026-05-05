@@ -1,172 +1,170 @@
 library: highcharts
+language: python
 specification_id: treemap-basic
 created: '2025-12-24T09:52:26Z'
-updated: '2025-12-24T10:02:53Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483449455
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-05T22:57:48Z'
+generated_by: claude-haiku
+workflow_run: 25406339058
+issue: 766
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - selenium
-  - pillow
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/highcharts/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent hierarchical data structure with clear parent-child relationships using
-    id/parent pattern
-  - Colorblind-safe palette with five distinct colors that do not conflict
-  - Good use of Highcharts multi-level treemap configuration with different styling
-    per level
-  - Clean code structure following KISS principles
-  - Proper title format matching spec requirements
-  - Realistic budget allocation scenario that demonstrates treemap utility
-  weaknesses:
-  - Subcategory labels in smaller rectangles could benefit from slightly larger font
-    or overflow handling
-  - Tooltip shows values but rectangles themselves do not display the dollar amounts
-  - Could add subtle hover effects or animation to showcase Highcharts interactivity
-    in HTML version
-  image_description: 'The treemap displays a budget allocation visualization with
-    5 main categories shown as colored rectangles. **Engineering** (blue, #306998)
-    occupies the largest area in the upper-left, containing subcategories: Backend
-    Dev, Frontend Dev, DevOps, and QA Testing. **Marketing** (yellow, #FFD43B) is
-    in the lower-left with Digital Ads, Content, Events, and Branding. **Sales** (cyan,
-    #17BECF) is in the upper-middle-right with Enterprise, SMB, and Partner. **Operations**
-    (purple, #9467BD) is in the upper-right with Infrastructure, Logistics, and Facilities.
-    **HR** (brown, #8C564B) is in the lower-right with Recruiting, Training, and Benefits.
-    The title "Budget Allocation · treemap-basic · highcharts · pyplots.ai" is displayed
-    at the top. Rectangle areas are proportional to budget values, with white borders
-    separating categories and subcategories.'
+  - Perfect theme adaptation with zero legibility issues in both light and dark renders
+  - 'Correct Okabe-Ito palette usage with first series as brand green #009E73'
+  - Strong hierarchical visualization with clear parent-child relationships and effective
+    borders
+  - 'Proper Highcharts library mastery: treemap module, drill-down, squarified layout'
+  - Realistic neutral data that authentically showcases budget allocation use case
+  - All text properly sized and colored for 4800×2700px high-resolution canvas
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) surface provides clean, professional appearance.
+      Chrome: Title "treemap-basic · highcharts · anyplot.ai" clearly visible in dark INK color at top. All category labels (Engineering, Marketing, Operations, Sales, HR) and subcategory labels (Backend Dev, Frontend Dev, etc.) are fully readable with dark INK color (#1A1A17).
+      Data: Five main categories use Okabe-Ito colors in order: green (#009E73) for Engineering (largest), orange (#D55E00) for Marketing, blue (#0072B2) for Operations, pink (#CC79A7) for Sales, yellow (#F0E442) for HR. Nested subcategories within each department show budget breakdown. White borders clearly demarcate hierarchy levels. Rectangle sizes accurately represent budget values.
+      Legibility verdict: PASS - All text readable with excellent contrast. No overlaps.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) surface maintains professional appearance.
+      Chrome: Title and all labels use light INK color (#F0EFE8) for proper contrast against dark background. No "dark-on-dark" failures. All text completely readable.
+      Data: All Okabe-Ito data colors identical to light render (green, orange, blue, pink, yellow unchanged). Confirms correct theme-adaptive implementation where only chrome changes, not data colors. Hierarchical structure and border styling preserved exactly from light render.
+      Legibility verdict: PASS - All text readable. Dark-on-dark avoided entirely. Data colors match light render perfectly.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title and category labels are clear and readable; subcategory labels
-          could be slightly larger for some smaller rectangles
+        comment: Font sizes explicitly set (28px main, 20px sub). All text readable
+          in both themes with proper color adaptation.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: All labels fit within rectangles. Zero text collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: All rectangles are clearly visible with appropriate sizing
+        comment: All rectangles and labels visible. Even small items (HR, Training)
+          distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Uses colorblind-safe palette (blue, yellow, cyan, purple, brown)
-          - no red-green conflicts
+        comment: Okabe-Ito palette is CVD-safe. Colors visually distinct.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Excellent canvas utilization, treemap fills the space well
+        comment: Good proportions, proper margins, nothing cut off.
       - id: VQ-06
-        name: Axis Labels
-        score: 0
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: N/A for treemaps (no axes), but no value labels shown on rectangles
+        comment: 'Title correctly formatted: ''treemap-basic · highcharts · anyplot.ai''.'
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Legend disabled (appropriate for treemap), borders are subtle and
-          effective
+        comment: 'First series #009E73 (green), positions 1-5 Okabe-Ito used, backgrounds
+          #FAF8F1/#1A1A17 correct, both renders theme-correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional execution with proper Okabe-Ito palette and visual hierarchy.
+          Clean design, minimal embellishments.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: White borders effectively separate hierarchy levels. Minimalist and
+          clean with adequate whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through rectangle size. Color grouping by
+          department aids understanding. Engineering creates focal point.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct treemap visualization
+        comment: Correct treemap with rectangles proportional to values.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Hierarchical data correctly mapped with parent-child relationships
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: nested rectangles, area proportional
-          to value, distinct colors for categories, labels, subtle borders'
-      - id: SC-04
-        name: Data Range
+        comment: Distinct colors, labels on rectangles, subtle borders, hierarchy
+          via nesting - all spec requirements met.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible in treemap
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Categories to parent, subcategories to children, values to area -
+          correct mapping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colors correctly identify categories (legend not needed as colors
-          are in rectangles)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "Budget Allocation · treemap-basic · highcharts
-          · pyplots.ai"'
+        comment: Title correct format. Legend appropriately disabled for treemap.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows hierarchy with 5 main categories and 17 subcategories; good
-          variety in sizes
+        comment: 5 departments + 16 subcategories showcase full treemap capabilities.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Budget allocation by department is a real, comprehensible business
-          scenario
+        comment: Budget allocation is canonical use case. Numbers plausible. Neutral
+          and non-controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values ($10K-$45K) are realistic for project budgets, though total
-          range could be slightly wider
+        comment: Values sensible (Engineering ~126k, others 50-80k). Domain-appropriate.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,42 +172,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → chart config → export'
+        comment: Direct data definition and chart setup. No unnecessary functions/classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random elements)
+        comment: Fixed data, deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: requests, selenium, highcharts_core, standard
+          library.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Proper Highcharts API. No fake UI.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current highcharts-core API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png but also creates plot_raw.png intermediate (cleaned
-          up)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-light/dark.png and .html files. Current API.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses squarified layout algorithm, drill-down capability enabled,
-          multi-level configuration; could showcase more Highcharts-specific features
-          like animation or custom tooltips
+        comment: Proper Chart constructor, HighchartsOptions, treemap-specific options
+          (squarified, allowDrillToNode), theme-adaptive styling, inline JS, Selenium
+          export.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses treemap module, drill-down, squarified layout, per-level styling,
+          formatted tooltips. Good feature leverage.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - requests
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
