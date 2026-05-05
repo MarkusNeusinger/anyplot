@@ -19,6 +19,11 @@ logger = logging.getLogger(__name__)
 PLAUSIBLE_ENDPOINT = "https://plausible.io/api/event"
 DOMAIN = "anyplot.ai"
 
+# Hold strong references to in-flight fire-and-forget tasks.
+# asyncio only weak-references tasks, so without this set the GC can collect
+# them mid-flight and silently drop analytics events.
+_BACKGROUND_TASKS: set[asyncio.Task] = set()
+
 # All platforms from nginx.conf bot detection (27 total)
 # Order matters for some patterns - more specific patterns checked first via _detect_whatsapp_or_signal()
 PLATFORM_PATTERNS = {
@@ -190,6 +195,9 @@ def track_og_image(
         for key, value in filters.items():
             props[f"filter_{key}"] = value
 
-    # Fire-and-forget: create task without awaiting, but add exception handler
+    # Fire-and-forget: create task without awaiting, but add exception handler.
+    # Track via _BACKGROUND_TASKS so the GC cannot collect the task before it runs.
     task = asyncio.create_task(_send_plausible_event(user_agent, client_ip, "og_image_view", url, props))
+    _BACKGROUND_TASKS.add(task)
+    task.add_done_callback(_BACKGROUND_TASKS.discard)
     task.add_done_callback(_handle_task_exception)

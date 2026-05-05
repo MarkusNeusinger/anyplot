@@ -10,7 +10,7 @@ import sys
 import time
 import uuid
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional, Tuple, Type, TypeVar
+from typing import Any, Dict, List, Literal, Tuple, Type, TypeVar
 
 from dotenv import load_dotenv
 from pydantic import BaseModel
@@ -52,8 +52,8 @@ class AgentPromptRequest(BaseModel):
     cli: Literal["claude", "copilot", "gemini"] = "claude"
     dangerously_skip_permissions: bool = False
     output_file: str
-    working_dir: Optional[str] = None
-    timeout: Optional[int] = 1800  # seconds (default: 30 min)
+    working_dir: str | None = None
+    timeout: int | None = 1800  # seconds (default: 30 min)
 
 
 class AgentPromptResponse(BaseModel):
@@ -61,7 +61,7 @@ class AgentPromptResponse(BaseModel):
 
     output: str
     success: bool
-    session_id: Optional[str] = None
+    session_id: str | None = None
     retry_code: RetryCode = RetryCode.NONE
 
 
@@ -74,7 +74,7 @@ class AgentTemplateRequest(BaseModel):
     run_id: str
     model: Literal["small", "medium", "large"] = "large"
     cli: Literal["claude", "copilot", "gemini"] = "claude"
-    working_dir: Optional[str] = None
+    working_dir: str | None = None
 
 
 class ClaudeCodeResultMessage(BaseModel):
@@ -98,7 +98,7 @@ class TestResult(BaseModel):
     passed: bool
     execution_command: str
     test_purpose: str
-    error: Optional[str] = None
+    error: str | None = None
 
 
 class ReviewIssue(BaseModel):
@@ -276,7 +276,7 @@ def build_cli_command(
     prompt: str,
     model: str,
     dangerously_skip_permissions: bool,
-    mcp_config_path: Optional[str] = None,
+    mcp_config_path: str | None = None,
 ) -> List[str]:
     """Build CLI-specific command arguments.
 
@@ -383,7 +383,7 @@ def truncate_output(output: str, max_length: int = 500, suffix: str = "... (trun
     return output[:truncate_at] + suffix
 
 
-def check_cli_installed(cli: str = "claude") -> Optional[str]:
+def check_cli_installed(cli: str = "claude") -> str | None:
     """Check if CLI tool is installed. Return error message if not.
 
     Args:
@@ -402,7 +402,7 @@ def check_cli_installed(cli: str = "claude") -> Optional[str]:
     return None
 
 
-def parse_jsonl_output(output_file: str) -> Tuple[List[Dict[str, Any]], Optional[Dict[str, Any]]]:
+def parse_jsonl_output(output_file: str) -> Tuple[List[Dict[str, Any]], Dict[str, Any] | None]:
     """Parse JSONL output file and return all messages and the result message.
 
     Returns:
@@ -448,7 +448,7 @@ def convert_jsonl_to_json(jsonl_file: str) -> str:
     return json_file
 
 
-def save_last_entry_as_raw_result(json_file: str) -> Optional[str]:
+def save_last_entry_as_raw_result(json_file: str) -> str | None:
     """Save the last entry from a JSON array file as cc_final_object.json.
 
     Args:

@@ -5,7 +5,7 @@ Defines database tables for specs, libraries, and impls.
 """
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from uuid import uuid4
 
 from sqlalchemy import BigInteger, CheckConstraint, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
@@ -44,17 +44,17 @@ class Spec(Base):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
 
     # From spec.md
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # Prose text
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)  # Prose text
     applications: Mapped[list[str]] = mapped_column(StringArray, default=list)  # Use cases
     data: Mapped[list[str]] = mapped_column(StringArray, default=list)  # Data requirements
     notes: Mapped[list[str]] = mapped_column(StringArray, default=list)  # Optional hints
 
     # From metadata.yaml
-    created: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)  # When spec was first created
-    updated: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)  # When spec was last modified
-    issue: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # GitHub issue number
-    suggested: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)  # GitHub username
-    tags: Mapped[Optional[dict[str, Any]]] = mapped_column(
+    created: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)  # When spec was first created
+    updated: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)  # When spec was last modified
+    issue: Mapped[int | None] = mapped_column(Integer, nullable=True)  # GitHub issue number
+    suggested: Mapped[str | None] = mapped_column(String(100), nullable=True)  # GitHub username
+    tags: Mapped[dict[str, Any] | None] = mapped_column(
         UniversalJSON, nullable=True
     )  # {plot_type, data_type, domain, features}
 
@@ -73,10 +73,10 @@ class Language(Base):
     id: Mapped[str] = mapped_column(String(MAX_LANGUAGE_ID_LENGTH), primary_key=True)  # e.g., "python", "r"
     name: Mapped[str] = mapped_column(String(100), nullable=False)  # e.g., "Python", "R"
     file_extension: Mapped[str] = mapped_column(String(10), nullable=False)  # e.g., ".py", ".R", ".js"
-    runtime_version: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # e.g., "3.14"
-    documentation_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    created: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=func.now())
+    runtime_version: Mapped[str | None] = mapped_column(String(50), nullable=True)  # e.g., "3.14"
+    documentation_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created: Mapped[datetime | None] = mapped_column(DateTime, server_default=func.now())
 
     # Relationships
     libraries: Mapped[list["Library"]] = relationship("Library", back_populates="language_ref")
@@ -96,9 +96,9 @@ class Library(Base):
         nullable=False,
         default="python",
     )
-    version: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # Current version
-    documentation_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # Short description
+    version: Mapped[str | None] = mapped_column(String, nullable=True)  # Current version
+    documentation_url: Mapped[str | None] = mapped_column(String, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)  # Short description
 
     # Backward-compat: .language reads/writes language_id. Keeps all existing
     # `library.language` access working after the FK refactor.
@@ -126,14 +126,14 @@ class Impl(Base):
     )
 
     # Code (deferred — ~13 MB total, only loaded when explicitly accessed or undeferred)
-    code: Mapped[Optional[str]] = deferred(mapped_column(Text, nullable=True))  # Source
+    code: Mapped[str | None] = deferred(mapped_column(Text, nullable=True))  # Source
 
     # Previews — one per theme (filled by Phase C pipeline, synced from metadata YAML).
     # Light and dark PNGs are always emitted; HTML variants are emitted only for interactive libraries.
-    preview_url_light: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    preview_url_dark: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    preview_html_light: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    preview_html_dark: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    preview_url_light: Mapped[str | None] = mapped_column(String, nullable=True)
+    preview_url_dark: Mapped[str | None] = mapped_column(String, nullable=True)
+    preview_html_light: Mapped[str | None] = mapped_column(String, nullable=True)
+    preview_html_dark: Mapped[str | None] = mapped_column(String, nullable=True)
 
     # Backward-compat synonyms for callers still using single-theme field names.
     # These resolve to the light variant so existing behavior (single preview) is preserved
@@ -142,35 +142,35 @@ class Impl(Base):
     preview_html = synonym("preview_html_light")
 
     # Creation versions (filled by workflow)
-    python_version: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # e.g., "3.13"
-    library_version: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # e.g., "3.9.0"
+    python_version: Mapped[str | None] = mapped_column(String, nullable=True)  # e.g., "3.13"
+    library_version: Mapped[str | None] = mapped_column(String, nullable=True)  # e.g., "3.9.0"
 
     # Test matrix (deferred — unused by any endpoint)
-    tested: Mapped[Optional[list]] = deferred(mapped_column(UniversalJSON, nullable=True))
+    tested: Mapped[list | None] = deferred(mapped_column(UniversalJSON, nullable=True))
 
     # Quality & Generation - quality_score constrained to 0-100 range
-    quality_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    generated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)  # First generation
-    updated: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)  # Last update
-    generated_by: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)  # Model ID
-    issue: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # GitHub Issue
-    workflow_run: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)  # GitHub Actions run ID
+    quality_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    generated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)  # First generation
+    updated: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)  # Last update
+    generated_by: Mapped[str | None] = mapped_column(String(100), nullable=True)  # Model ID
+    issue: Mapped[int | None] = mapped_column(Integer, nullable=True)  # GitHub Issue
+    workflow_run: Mapped[int | None] = mapped_column(BigInteger, nullable=True)  # GitHub Actions run ID
 
     # Review feedback (structured arrays from impl-review)
     review_strengths: Mapped[list[str]] = mapped_column(StringArray, default=list)  # What's good
     review_weaknesses: Mapped[list[str]] = mapped_column(StringArray, default=list)  # What needs work
 
     # Extended review data (deferred — ~12 MB total, only needed on detail pages)
-    review_image_description: Mapped[Optional[str]] = deferred(
+    review_image_description: Mapped[str | None] = deferred(
         mapped_column(Text, nullable=True)
     )  # AI's visual description
-    review_criteria_checklist: Mapped[Optional[dict[str, Any]]] = deferred(
+    review_criteria_checklist: Mapped[dict[str, Any] | None] = deferred(
         mapped_column(UniversalJSON, nullable=True)
     )  # Detailed scoring
-    review_verdict: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)  # "APPROVED" or "REJECTED"
+    review_verdict: Mapped[str | None] = mapped_column(String(20), nullable=True)  # "APPROVED" or "REJECTED"
 
     # Implementation-level tags (from impl-review)
-    impl_tags: Mapped[Optional[dict[str, Any]]] = mapped_column(
+    impl_tags: Mapped[dict[str, Any] | None] = mapped_column(
         UniversalJSON, nullable=True
     )  # {dependencies, techniques, patterns, dataprep, styling}
 

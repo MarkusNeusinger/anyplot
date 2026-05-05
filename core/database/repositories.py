@@ -4,7 +4,7 @@ Repository classes for database access.
 Provides abstraction layer between API and database models.
 """
 
-from typing import Generic, Optional, TypeVar
+from typing import Generic, TypeVar
 
 from sqlalchemy import String, cast, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -69,7 +69,7 @@ class BaseRepository(Generic[T]):
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_by_id(self, entity_id: str) -> Optional[T]:
+    async def get_by_id(self, entity_id: str) -> T | None:
         """Get an entity by its primary-key *id* column."""
         result = await self.session.execute(select(self.model).where(self.model.id == entity_id))
         return result.scalar_one_or_none()
@@ -88,7 +88,7 @@ class BaseRepository(Generic[T]):
             if key in self.updatable_fields:
                 setattr(entity, key, value)
 
-    async def update(self, entity_id: str, data: dict) -> Optional[T]:
+    async def update(self, entity_id: str, data: dict) -> T | None:
         """Update an existing entity. Returns None if not found."""
         entity = await self.get_by_id(entity_id)
         if not entity:
@@ -114,7 +114,7 @@ class SpecRepository(BaseRepository[Spec]):
     model = Spec
     updatable_fields = SPEC_UPDATABLE_FIELDS
 
-    async def get_by_id(self, spec_id: str) -> Optional[Spec]:
+    async def get_by_id(self, spec_id: str) -> Spec | None:
         """Get a spec by ID with implementations and library info.
 
         Loads review_image_description and review_criteria_checklist (needed for detail display).
@@ -130,7 +130,7 @@ class SpecRepository(BaseRepository[Spec]):
         )
         return result.scalar_one_or_none()
 
-    async def get_by_id_with_code(self, spec_id: str) -> Optional[Spec]:
+    async def get_by_id_with_code(self, spec_id: str) -> Spec | None:
         """Like get_by_id, but additionally eager-loads Impl.code.
 
         Use this when the caller needs `impl.code` on every implementation
@@ -280,7 +280,7 @@ class ImplRepository(BaseRepository[Impl]):
         )
         return list(result.scalars().all())
 
-    async def get_code(self, spec_id: str, library_id: str, language_id: str = "python") -> Optional[Impl]:
+    async def get_code(self, spec_id: str, library_id: str, language_id: str = "python") -> Impl | None:
         """Get a specific implementation with only the code field undeferred."""
         result = await self.session.execute(
             select(Impl)
@@ -289,9 +289,7 @@ class ImplRepository(BaseRepository[Impl]):
         )
         return result.scalar_one_or_none()
 
-    async def get_by_spec_and_library(
-        self, spec_id: str, library_id: str, language_id: str = "python"
-    ) -> Optional[Impl]:
+    async def get_by_spec_and_library(self, spec_id: str, library_id: str, language_id: str = "python") -> Impl | None:
         """Get a specific implementation by spec + language + library (includes all deferred fields).
 
         Defaults to language_id="python" so existing callers keep working. Pass ``language_id``

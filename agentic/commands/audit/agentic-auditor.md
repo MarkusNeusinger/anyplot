@@ -7,7 +7,7 @@ You are the **agentic-auditor** on the audit team. Your scope is the **agent erg
 - `agentic/commands/` and `.claude/commands/` (the symlink): command consistency, broken inter-command references, oversized commands that exceed sane budgets, ambiguous slash-command semantics, missing or duplicated commands, slash-command argument patterns that drift between commands
 - `prompts/`: same drift checks the llm-pipeline-auditor does at the SDK layer, but at the *prompt-management* layer — versioning, ownership, where prompts are loaded from, whether inline prompts in code should have moved to files
 - `.claude/`: settings sanity (`settings.json`, `settings.local.json`), permission/hook configuration, MCP server registration consistency
-- `agentic/workflows/`, `agentic/audits/`, `agentic/scripts/`, `agentic/docs/`: directory hygiene, naming conventions, abandoned subdirectories, docs that contradict CLAUDE.md
+- `agentic/workflows/`, `agentic/audits/`, `automation/scripts/`, `agentic/docs/`: directory hygiene, naming conventions, abandoned subdirectories, docs that contradict CLAUDE.md
 - TAC-style sanity (only flag what's actually weak): conditional docs (`/docs`-style routing), model routing per task, self-validation loops, ADWs, context-window discipline (commands that load way more than they need)
 
 **How to work:**

@@ -5,7 +5,7 @@ All environment variables are defined here with type validation,
 defaults, and documentation.
 """
 
-from typing import Annotated, Any, Optional
+from typing import Annotated, Any
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
@@ -24,10 +24,10 @@ class Settings(BaseSettings):
     # DATABASE
     # =============================================================================
 
-    database_url: Optional[str] = None
+    database_url: str | None = None
     """PostgreSQL connection URL (postgresql+asyncpg://user:pass@host:5432/dbname)"""
 
-    instance_connection_name: Optional[str] = None
+    instance_connection_name: str | None = None
     """Cloud SQL instance connection name (for Cloud Run deployment)"""
 
     db_user: str = "postgres"
@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     gcs_bucket: str = "anyplot-images"
     """Google Cloud Storage bucket for plot images"""
 
-    google_application_credentials: Optional[str] = None
+    google_application_credentials: str | None = None
     """Path to Google Cloud service account credentials JSON"""
 
     # =============================================================================
@@ -66,7 +66,7 @@ class Settings(BaseSettings):
     # GITHUB
     # =============================================================================
 
-    github_token: Optional[str] = None
+    github_token: str | None = None
     """GitHub personal access token for API access"""
 
     github_repository: str = "MarkusNeusinger/anyplot"
@@ -76,13 +76,13 @@ class Settings(BaseSettings):
     # API KEYS (for AI services)
     # =============================================================================
 
-    anthropic_api_key: Optional[str] = None
+    anthropic_api_key: str | None = None
     """Anthropic API key for Claude"""
 
-    openai_api_key: Optional[str] = None
+    openai_api_key: str | None = None
     """OpenAI API key"""
 
-    google_ai_api_key: Optional[str] = None
+    google_ai_api_key: str | None = None
     """Google AI API key for Gemini"""
 
     # =============================================================================
@@ -145,25 +145,25 @@ class Settings(BaseSettings):
     cache_maxsize: int = 1000
     """Maximum number of cache entries"""
 
-    cache_invalidate_token: Optional[str] = None
+    cache_invalidate_token: str | None = None
     """Shared secret required by the POST /debug/cache/invalidate endpoint.
     When unset, the endpoint is disabled (503). Set via Secret Manager in Cloud Run
     and as a GitHub Actions secret so sync-postgres can invalidate the cache after
     writing new data to PostgreSQL."""
 
-    admin_token: Optional[str] = None
+    admin_token: str | None = None
     """Shared secret required by sensitive /debug/* endpoints (status, ping).
     When unset, those endpoints return 503 instead of leaking quality scores,
     weakness aggregates, and DB latency to the public internet. Set via Secret
     Manager in Cloud Run; pass via the `X-Admin-Token` request header."""
 
-    cf_access_team_domain: Optional[str] = None
+    cf_access_team_domain: str | None = None
     """Cloudflare Access team domain, e.g. `anyplot.cloudflareaccess.com`.
     Used as the JWT issuer and for fetching JWKS keys at
     `https://{team_domain}/cdn-cgi/access/certs`. When unset, the JWT path in
     require_admin is skipped (token-only mode)."""
 
-    cf_access_aud: Optional[str] = None
+    cf_access_aud: str | None = None
     """Cloudflare Access Application AUD tag (UUID from the Zero Trust
     dashboard). Validated as the JWT `aud` claim."""
 

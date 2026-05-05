@@ -76,46 +76,46 @@ class WorkflowState:
         return self.data.get("prompt", "")
 
     @property
-    def task_type(self) -> Optional[str]:
+    def task_type(self) -> str | None:
         return self.data.get("task_type")
 
     @property
-    def plan_file(self) -> Optional[str]:
+    def plan_file(self) -> str | None:
         return self.data.get("plan_file")
 
     @property
-    def test_passed(self) -> Optional[bool]:
+    def test_passed(self) -> bool | None:
         return self.data.get("test_passed")
 
     @property
-    def test_failed_count(self) -> Optional[int]:
+    def test_failed_count(self) -> int | None:
         return self.data.get("test_failed_count")
 
     @property
-    def review_success(self) -> Optional[bool]:
+    def review_success(self) -> bool | None:
         return self.data.get("review_success")
 
     @property
-    def review_blocker_count(self) -> Optional[int]:
+    def review_blocker_count(self) -> int | None:
         return self.data.get("review_blocker_count")
 
     @property
-    def document_path(self) -> Optional[str]:
+    def document_path(self) -> str | None:
         return self.data.get("document_path")
 
     @property
-    def commit_message(self) -> Optional[str]:
+    def commit_message(self) -> str | None:
         return self.data.get("commit_message")
 
     @property
-    def pr_url(self) -> Optional[str]:
+    def pr_url(self) -> str | None:
         return self.data.get("pr_url")
 
     def _get_state_path(self, working_dir: str) -> str:
         """Get path to state file."""
         return os.path.join(working_dir, "agentic", "runs", self.run_id, self.STATE_FILENAME)
 
-    def save(self, working_dir: str, phase: Optional[str] = None) -> str:
+    def save(self, working_dir: str, phase: str | None = None) -> str:
         """Save state to agentic/runs/{run_id}/state.json.
 
         Returns:

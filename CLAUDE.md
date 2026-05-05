@@ -32,12 +32,12 @@ This rule applies to every PR Claude opens, including small fixes and follow-ups
 
 ## MCP Tools (Serena & Context7)
 
-**Serena** - Prefer for Python/TypeScript code navigation and editing:
-- `jet_brains_find_symbol` / `jet_brains_get_symbols_overview` - Find classes, functions, methods
-- `jet_brains_find_referencing_symbols` - Find all usages of a symbol
-- `replace_symbol_body` / `insert_after_symbol` - Edit entire functions/classes
-- `replace_content` (regex) - Small inline edits
-- `search_for_pattern` / `list_dir` / `find_file` - Non-code files, directory exploration
+**Serena** - Prefer for Python/TypeScript code navigation and editing (canonical MCP-prefix is `mcp__serena__*`):
+- `mcp__serena__jet_brains_find_symbol` / `mcp__serena__jet_brains_get_symbols_overview` - Find classes, functions, methods
+- `mcp__serena__jet_brains_find_referencing_symbols` - Find all usages of a symbol
+- `mcp__serena__replace_symbol_body` / `mcp__serena__insert_after_symbol` - Edit entire functions/classes
+- `mcp__serena__replace_content` (regex) - Small inline edits
+- `mcp__serena__search_for_pattern` / `mcp__serena__list_dir` / `mcp__serena__find_file` - Non-code files, directory exploration
 
 **Context7** - Use for up-to-date library documentation:
 - `resolve-library-id` -> `query-docs` - Get current API docs, code examples

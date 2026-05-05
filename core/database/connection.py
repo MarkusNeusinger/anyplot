@@ -13,7 +13,6 @@ import re
 import threading
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, contextmanager
-from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
@@ -36,13 +35,13 @@ DEFAULT_MAX_OVERFLOW = 10
 
 # Global instances
 engine = None
-AsyncSessionLocal: Optional[async_sessionmaker] = None
+AsyncSessionLocal: async_sessionmaker | None = None
 _sync_session_factory = None
 _connector = None
 
 # Thread safety locks for lazy initialization
 # Note: asyncio.Lock is created lazily to avoid event loop binding issues at module import
-_async_init_lock: Optional[asyncio.Lock] = None
+_async_init_lock: asyncio.Lock | None = None
 _sync_init_lock = threading.Lock()
 
 
