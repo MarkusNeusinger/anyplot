@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 waffle-basic: Basic Waffle Chart
-Library: plotnine 0.15.1 | Python 3.13.11
-Quality: pending | Created: 2025-12-21
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 42/100 | Created: 2026-05-05
 """
 
 import os
