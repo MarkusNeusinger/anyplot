@@ -1,37 +1,248 @@
 library: pygal
+language: python
 specification_id: streamgraph-basic
 created: '2025-12-23T21:57:05Z'
-updated: '2025-12-23T22:25:41Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472385283
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-05T03:41:39Z'
+generated_by: claude-sonnet
+workflow_run: 25356184730
+issue: 856
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/pygal/plot.html
-quality_score: 75
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling:
-  - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/pygal/plot-dark.html
+quality_score: 79
 review:
   strengths:
-  - Successfully implements a centered streamgraph using pygal StackedLine chart with
-    mathematical baseline shifting
-  - Excellent colorblind-safe palette with high contrast between adjacent layers (dark
-    blue, orange, teal, crimson, gold)
-  - Smooth flowing curves achieved through cubic interpolation
-  - Realistic data scenario with seasonal patterns and genre trends
-  - Clean code structure following KISS principles with proper random seed
+  - Correct title format (streamgraph-basic · pygal · anyplot.ai)
+  - 'Okabe-Ito palette correctly applied with #009E73 as first series (Pop)'
+  - Theme-adaptive style tokens properly derived from ANYPLOT_THEME for both light
+    and dark renders
+  - Cubic interpolation via interpolate="cubic" gives smooth flowing curves
+  - Smart x-axis label management (x_labels_major + show_minor_x_labels=False) reduces
+    clutter
+  - Data seed set (np.random.seed(42)) for reproducibility
+  - 'Correct dual output: plot-{THEME}.png and plot-{THEME}.html'
   weaknesses:
-  - X-axis labels are truncated showing Jan... instead of full Jan 23 labels despite
-    truncate_label=-1 setting
-  - Y-axis label includes (centered) which is a technical detail not a meaningful
-    unit
-  - Grid lines are not visible in the output despite configuration
+  - Large empty space below data in lower half of chart — centered baseline only shifts
+    first series (Pop), resulting in data occupying y=-45 to +85 while y-axis extends
+    to -100, making the lower ~25% of plot area empty and unbalanced
+  - Streamgraph centering is imperfect — a true streamgraph should distribute the
+    stacked area symmetrically around y=0, but the current approach produces asymmetric
+    layout
+  - Design is a well-configured library default — no aesthetic sophistication beyond
+    palette and theme tokens; no visual refinement beyond subtle y-grid and no dots
+  - No data storytelling — chart displays genre trends but provides no visual hierarchy
+    or emphasis to guide the viewer toward an insight
+  - 'CQ-04 minor: the baseline-centering approach (shifting only the first series
+    and passing the rest as raw positive values) is a suboptimal workaround that does
+    not produce the desired symmetric result'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, clearly warm not pure white.
+      Chrome: Title "streamgraph-basic · pygal · anyplot.ai" is dark text at top, readable. Y-axis label "Streaming Hours (centered)" rotated vertically, readable. X-axis label "Month" readable. Tick labels visible in dark ink. Four x-axis major labels (Jan 23, Jul 23, Jan 24, Jul 24) rotated 45°, readable without overlap.
+      Data: Five stacked filled areas with smooth cubic curves. Pop (#009E73 green) forms the baseline shifted below zero. Rock (#D55E00 orange-brown) visible below zero spanning a thin band. Hip-Hop (#0072B2 blue) is the dominant area spanning zero and above. Electronic (#CC79A7 pink-purple) above Hip-Hop. Jazz (#E69F00 yellow-gold) at the top. Subtle horizontal y-grid lines (dotted) visible.
+      Layout issue: The data region spans roughly y=-45 to y=+85 while the y-axis extends to ±100. The lower quarter of the plot area (y=-100 to ~-45) is entirely empty, creating a significant unbalanced empty zone at the bottom of the chart area.
+      Legibility verdict: PASS — all text is readable against the light background, no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Very dark near-black (#1A1A17) — code-confirmed, not pure black.
+      Chrome: Title, axis labels, tick labels, and legend text all appear in light-colored ink against the dark background. All text is clearly readable. No dark-on-dark failures detected.
+      Data: Colors are identical to the light render — Pop (#009E73), Rock (#D55E00), Hip-Hop (#0072B2), Electronic (#CC79A7), Jazz (#E69F00). Opacity 0.88 slightly mutes the fills but all areas remain distinguishable.
+      Same layout issue as light render: large empty space in the lower portion of the plot area.
+      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=28px, labels=22px, major_label=18px,
+          legend=16px. Readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Only 4 major x-axis labels, no overlap; y-ticks clear; legend at
+          bottom with adequate spacing.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All five stacked areas clearly visible with distinct Okabe-Ito colors;
+          opacity=0.88 preserves distinction.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; adjacent areas have sufficient contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Data spans y=-45 to +85 but y-axis extends to ±100; lower ~25% of
+          plot area (y=-100 to -45) is entirely empty, creating an unbalanced layout.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Streaming Hours (centered)'' — descriptive. X-axis: ''Month''
+          — descriptive. Title correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Pop) is #009E73; Okabe-Ito order followed; background
+          #FAF8F1 (light) / #1A1A17 (dark); foreground tokens theme-adaptive.'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library default with Okabe-Ito palette and theme
+          tokens. No exceptional design choices.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: 'Some visible refinement: y-guides only (no x-guides), no dots, legend
+          at bottom, generous margin. Above default but not ''good'' level.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Music streaming data is displayed but no visual emphasis, hierarchy,
+          or focal insight is communicated.
+    spec_compliance:
+      score: 12
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses StackedLine + fill + cubic interpolation — correct base type
+          but centered baseline is imperfect. Data asymmetrically distributed, not
+          a symmetric river-like streamgraph.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: false
+        comment: Smooth interpolation ✓, distinct colors ✓, legend ✓. Centered baseline
+          attempted but not achieved symmetrically — large empty space below data
+          breaks the river appearance.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on x-axis, streaming hours on y-axis, categories as stacked
+          areas. Correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'streamgraph-basic · pygal · anyplot.ai' correct. Legend shows
+          all 5 genres.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 5 genres with trend + seasonal + noise. Shows varying shapes and
+          proportions. Good coverage.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly streaming hours by music genre (Pop, Rock, Hip-Hop, Electronic,
+          Jazz) over 2023-2024. Realistic and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Base values 15-45 hours/month per genre, plausible relative proportions.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports → tokens → data → style → chart → save. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, sys, numpy, pygal, pygal.style.Style — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: The baseline-centering workaround (shifting only the first series
+          to negative while leaving others as raw positive values) is a suboptimal
+          approach that doesn't produce a true streamgraph and creates the layout
+          issue.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct for pygal.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses StackedLine appropriately, Style object for theming, chart.add()
+          API, x_labels/x_labels_major. Good idiomatic usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses interpolate='cubic' (pygal-native), x_labels_major + show_minor_x_labels=False
+          (pygal-specific label system), opacity_hover (pygal interactivity token),
+          HTML output.
+  verdict: REJECTED
