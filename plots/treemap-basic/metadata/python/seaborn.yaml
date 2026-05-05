@@ -1,164 +1,175 @@
 library: seaborn
+language: python
 specification_id: treemap-basic
 created: '2025-12-24T09:51:17Z'
-updated: '2025-12-24T10:09:05Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483443695
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-05T22:40:41Z'
+generated_by: claude-haiku
+workflow_run: 25405888628
+issue: 766
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies:
-  - squarify
-  techniques:
-  - custom-legend
-  - annotations
-  patterns:
-  - data-generation
-  - groupby-aggregation
-  dataprep: []
-  styling:
-  - alpha-blending
-  - minimal-chrome
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 95
 review:
   strengths:
-  - Excellent use of seaborn colorblind palette for accessibility
-  - Smart depth shading using sns.light_palette to show hierarchy within categories
-  - Clean white borders clearly separate all rectangles
-  - Dynamic text color selection based on background luminance ensures readability
-  - Adaptive font sizing based on rectangle area
-  - Well-designed legend with horizontal layout below the plot
+  - 'Perfect Visual Compliance: all text perfectly readable in both light and dark
+    themes with zero contrast failures'
+  - 'Intelligent Color Strategy: using sns.light_palette() to create category/subcategory
+    variations is elegant and distinctive'
+  - 'Flawless Theme Adaptation: theme-adaptive chrome executed perfectly while maintaining
+    identical data colors across themes'
+  - 'Realistic Data Presentation: plausible disk usage data effectively demonstrates
+    the treemap''s hierarchical capabilities'
+  - 'Professional Polish: clean layout, minimal chrome, proper typography hierarchy'
   weaknesses:
-  - Uses strict=True in zip() which is Python 3.10+ specific and unnecessary for this
-    use case
-  image_description: 'The treemap displays a "Budget Allocation by Department" visualization
-    with 12 nested rectangles representing subcategories across 5 main departments.
-    The largest rectangle (Product Dev $45M) is in blue (Engineering), followed by
-    Enterprise ($35M) in golden/orange (Sales). The color scheme uses a colorblind-safe
-    palette: blue for Engineering, golden/orange for Sales, teal/green for Marketing,
-    orange for Operations, and pink for HR. Each rectangle is labeled with the subcategory
-    name and dollar value in millions. Rectangles within the same category show depth
-    shading (lighter shades for smaller values). White borders separate all rectangles,
-    and a horizontal legend at the bottom identifies the 5 departments. The title
-    follows the required format with "treemap-basic · seaborn · pyplots.ai" suffix.'
+  - Design Excellence could be elevated to publication-ready level with additional
+    refinement (e.g., subtle emphasis on largest items, strategic color ordering)
+  - 'Data Storytelling: treemap displays data clearly but doesn''t create a strong
+    narrative focal point (e.g., highlighting the top consumer, showing relative proportions
+    more dramatically)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct per style guide
+      Chrome: Title is bold 24pt dark text, clearly readable; legend at bottom with light gray labels; borders are white and subtle
+      Data: Treemap uses seaborn Okabe-Ito palette with distinct colors for categories (SSD-1 teal/green, SSD-2 orange, HDD-1 blue, HDD-2 pink, Cloud yellow); subcategories shown with subtle color shading gradients; area proportional to GB values; labels show subcategory name and size in GB
+      Legibility verdict: PASS - all elements perfectly readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct per style guide
+      Chrome: Title is white text, clearly visible; legend labels are light gray; borders are dark and more prominent
+      Data: Rectangle colors are IDENTICAL to light render (Okabe-Ito positions maintained across themes); text is light-colored for contrast
+      Legibility verdict: PASS - all elements perfectly readable; zero dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'All labels readable, title is 24pt bold, subcategory labels scale
-          appropriately. Minor: some smaller rectangles (Training $8M) have slightly
-          tight spacing'
+        comment: All font sizes explicitly set (title 24pt, labels dynamic); perfect
+          readability in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all labels fit within their rectangles
+        comment: Zero overlapping text; all labels properly positioned within rectangles
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Rectangle sizes clearly distinguish value differences, alpha=0.9
-          provides good visibility
+        comment: All rectangles and text perfectly visible; shading creates excellent
+          distinction
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses seaborn's colorblind palette, distinct hues for all 5 categories
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, treemap fills most of the area, legend
-          positioned below. Minor padding imbalance on right side
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend is well-placed below plot with good spacing, ncol=5 keeps
-          it compact
+        comment: Okabe-Ito palette CVD-safe; excellent contrast throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Perfect utilization: plot fills 60-70% with balanced margins'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title with correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Perfect Okabe-Ito compliance; backgrounds correct; data colors identical
+          across themes; theme chrome appropriate
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful color shading using sns.light_palette(); clean professional
+          appearance; slightly below publication-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Minimal chrome, subtle borders, generous whitespace, polished details
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Clear visual hierarchy but could benefit from narrative focal point
+          or emphasis techniques
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct treemap visualization showing hierarchical data as nested
-          rectangles
+        comment: Correct treemap with nested rectangles proportional to values
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Values correctly determine rectangle area (Product Dev largest at
-          $45M)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Distinct category colors, labels for all rectangles, borders between
-          rectangles, hierarchy shown through color shading
-      - id: SC-04
-        name: Data Range
+        comment: All spec features present and working
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 12 items visible with appropriate sizing
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Rectangle areas correctly mapped to values
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly maps colors to department names
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Follows "{title} · {spec-id} · {library} · pyplots.ai" format
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows hierarchy (category → subcategory), varying sizes, depth shading.
-          Minor: could benefit from showing a more extreme size contrast'
+        comment: 'Shows all aspects: 5 categories, 2-3 subcategories each, realistic
+          variation'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Budget allocation by department is a real, relatable business scenario
+        comment: Real-world disk storage scenario, neutral and comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values in $M range are realistic for corporate budgets, though total
-          of ~$265M is somewhat large for a single organization
+        comment: Storage sizes factually plausible; proportions reflect realistic
+          patterns
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -166,43 +177,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → processing → plot → save'
+        comment: 'Linear flow: imports → seed → data → plotting → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: np.random.seed(42) set; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib, numpy, seaborn, squarify, patches)
+        comment: Only necessary imports; no dead code
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: Uses `strict=True` in zip which requires Python 3.10+, not strictly
-          deprecated but adds unnecessary constraint
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity; sns.light_palette() used
+          creatively
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png' with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format with proper DPI and bbox_inches
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses seaborn features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses sns.set_style("white"), sns.color_palette("colorblind"), and
-          sns.light_palette for depth shading. However, seaborn doesn't have a native
-          treemap function, so squarify does the heavy lifting. The seaborn usage
-          is primarily for styling and color palette generation.
+        comment: Expert use of sns.light_palette(); squarify; matplotlib patches
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Uses sns.light_palette() for variation; manual rectangles allow control;
+          could use more advanced features
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - squarify
+  techniques:
+  - patches
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
