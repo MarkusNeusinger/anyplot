@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 streamgraph-basic: Basic Stream Graph
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-05
@@ -63,12 +63,16 @@ for i, genre in enumerate(genres):
     x_fill = month_labels + month_labels[::-1]
     y_fill = list(y_upper) + list(y_lower)[::-1]
 
+    # Dominant stream (Pop) at full opacity; others slightly dimmed for visual hierarchy
+    opacity = 1.0 if i == 0 else 0.80
+
     fig.add_trace(
         go.Scatter(
             x=x_fill,
             y=y_fill,
             fill="toself",
             fillcolor=OKABE_ITO[i],
+            opacity=opacity,
             line={"color": OKABE_ITO[i], "width": 0.5, "shape": "spline", "smoothing": 1.0},
             name=genre,
             mode="none",
@@ -77,9 +81,11 @@ for i, genre in enumerate(genres):
         )
     )
 
+subtitle = f"<span style='font-size:18px;color:{INK_SOFT}'>Monthly streaming hours by music genre, 2022–2023</span>"
+
 fig.update_layout(
     title={
-        "text": "streamgraph-basic · plotly · anyplot.ai",
+        "text": f"streamgraph-basic · plotly · anyplot.ai<br>{subtitle}",
         "font": {"size": 28, "color": INK},
         "x": 0.5,
         "xanchor": "center",
@@ -88,19 +94,21 @@ fig.update_layout(
         "title": {"text": "Month", "font": {"size": 22, "color": INK}},
         "tickfont": {"size": 18, "color": INK_SOFT},
         "showgrid": False,
+        "showline": True,
         "linecolor": INK_SOFT,
+        "mirror": False,  # bottom spine only — no top spine
         "zeroline": False,
     },
     yaxis={
-        "title": {"text": "Streaming Hours (Millions)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "showticklabels": False,  # hide confusing negative offset values
         "showgrid": True,
         "gridcolor": GRID,
         "gridwidth": 1,
         "zeroline": True,
         "zerolinecolor": INK_SOFT,
         "zerolinewidth": 1,
-        "linecolor": INK_SOFT,
+        "showline": False,  # no left spine (y labels hidden anyway)
+        "mirror": False,
     },
     legend={
         "font": {"size": 18, "color": INK_SOFT},
@@ -108,15 +116,15 @@ fig.update_layout(
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
         "orientation": "h",
-        "yanchor": "bottom",
-        "y": 1.02,
+        "yanchor": "top",
+        "y": -0.12,
         "xanchor": "center",
         "x": 0.5,
     },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     hovermode="x unified",
-    margin={"l": 100, "r": 50, "t": 120, "b": 80},
+    margin={"l": 60, "r": 50, "t": 140, "b": 120},
 )
 
 # Save
