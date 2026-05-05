@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: treemap-basic
 created: '2025-12-24T09:51:26Z'
-updated: '2026-05-05T22:42:40Z'
+updated: '2026-05-05T22:48:23Z'
 generated_by: claude-haiku
 workflow_run: 25406082051
 issue: 766
@@ -12,32 +12,31 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/treemap-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/plotly/plot-dark.html
-quality_score: 82
+quality_score: 86
 review:
   strengths:
-  - Perfect specification compliance with correct treemap hierarchy and color mapping
-  - Flawless theme-adaptive implementation with no legibility issues in either render
-  - 'Correct Okabe-Ito palette with first series as #009E73'
-  - Clean, reproducible code with proper theme token structure
-  - Proper output format (both PNG and HTML files)
+  - Perfect visual quality across both light and dark themes with zero theme-adaptation
+    failures
+  - Clean, readable code with proper KISS structure and deterministic data
+  - Expert use of Plotly's Treemap API including branchvalues and custom hover formatting
+  - All spec requirements met; treemap correctly shows hierarchical budget data with
+    distinct category colors
+  - Theme-adaptive tokens properly applied throughout; text legible in both renders
   weaknesses:
-  - Design Excellence limited to defaults with no custom styling beyond standard treemap
-  - Library Mastery basic without leveraging Plotly's distinctive features
-  - Generic appearance with standard white borders lacking refinement
-  - No visual emphasis or data storytelling elements
-  - Basic hover template without enhanced information display
+  - 'Design Excellence underdeveloped: relies on library defaults without custom refinement'
+  - No visual storytelling or emphasis beyond the inherent treemap structure
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title "treemap-basic · plotly · anyplot.ai" in dark text clearly visible; all category and subcategory labels in dark text, fully readable; "Budget" label visible in upper left
-      Data: Okabe-Ito colors for five categories (#009E73 Engineering, #D55E00 Marketing, #0072B2 Sales, #CC79A7 Operations, #E69F00 HR); white borders (width 2) separate rectangles; values displayed with labels
-      Legibility verdict: PASS - All text legible, no contrast issues, proper visual hierarchy
+      Background: Warm off-white #FAF8F1 with good contrast
+      Chrome: Title at top (dark #1A1A17 text, 28px), all labels dark and readable against light background
+      Data: Five departments in Okabe-Ito colors (green, orange, blue, purple, yellow) with nested subcategories; area proportional to values; white borders show hierarchy
+      Legibility verdict: PASS - All text clear and readable; excellent contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color
-      Chrome: Title in light text clearly visible; all labels rendered in light text with no dark-on-dark issues; borders adapted to dark theme
-      Data: Data colors identical to light render (Okabe-Ito palette unchanged); only chrome elements adapted for dark theme; rectangle proportions and hierarchy preserved
-      Legibility verdict: PASS - All text legible in dark theme, proper color contrast, theme adaptation correct
+      Background: Warm near-black #1A1A17 with excellent contrast
+      Chrome: Title at top (light #F0EFE8 text), all labels light-colored and readable against dark background; no dark-on-dark failures
+      Data: Data colors identical to light render (green, orange, blue, purple, yellow unchanged); dark borders visible and distinguish rectangles
+      Legibility verdict: PASS - All text readable; strong contrast; no legibility issues in either render
   criteria_checklist:
     visual_quality:
       score: 30
@@ -48,45 +47,45 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes 22 and 28 appropriately scaled; all text readable in both
+        comment: Title 28px, labels 22px, all explicitly set and readable in both
           themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean borders separate rectangles; no text collisions
+        comment: No overlapping text; all labels positioned cleanly within rectangles
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All rectangles clearly visible; hierarchy apparent
+        comment: All rectangles clearly visible; sizes properly represent values
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe
+        comment: Okabe-Ito palette CVD-safe; excellent contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, generous spacing, nothing cut off
+        comment: 4800×2700 landscape; plot fills canvas well with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; label+value textinfo appropriate
+        comment: Title format correct; category/subcategory labels descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order 1-5; correct backgrounds;
-          both renders theme-correct'
+        comment: 'First series #009E73; remaining colors follow Okabe-Ito; backgrounds
+          and text colors theme-correct'
     design_excellence:
       score: 8
       max: 20
@@ -96,19 +95,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Generic defaults; no custom design refinement
+        comment: Well-configured defaults; professional but not exceptional
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Standard Plotly appearance; minimal customization
+        comment: Clean borders and layout; minimal customization
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Color creates hierarchy but no visual emphasis
+        comment: Hierarchy guides viewer; no additional emphasis or focal points
     spec_compliance:
       score: 15
       max: 15
@@ -118,25 +117,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct treemap with hierarchical structure
+        comment: Correct treemap implementation with proper nesting
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present
+        comment: 'All features present: categories, subcategories, values, colors,
+          hierarchy'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct mapping and proportions
+        comment: Category/value mapping correct; hierarchy properly represented
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct
+        comment: Title format correct; labels clear and descriptive
     data_quality:
       score: 15
       max: 15
@@ -146,19 +146,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete budget hierarchy
+        comment: 5 departments with 2-4 subcategories; values 80-450K
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic and neutral data
+        comment: Budget allocation; real-world, neutral, comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values and proportions
+        comment: Factually plausible; proportions correct
     code_quality:
       score: 10
       max: 10
@@ -168,53 +168,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, no unnecessary functions
+        comment: 'Linear flow: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Theme token system elegant
+        comment: Clean, Pythonic; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: Saves as plot-{THEME}.png + HTML; current API
     library_mastery:
-      score: 4
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Proper API usage but limited depth
+        comment: Expert use of go.Treemap(), proper hierarchy, branchvalues, hovertemplate
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Generic usage without distinctive Plotly features
+        comment: Uses Plotly-specific features but relatively standard patterns
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
   - html-export
-  patterns: []
+  patterns:
+  - data-generation
   dataprep: []
   styling:
-  - edge-highlighting
+  - publication-ready
