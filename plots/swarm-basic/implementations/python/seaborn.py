@@ -1,7 +1,7 @@
 """ anyplot.ai
 swarm-basic: Basic Swarm Plot
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 80/100 | Updated: 2026-05-05
+Quality: 86/100 | Updated: 2026-05-05
 """
 
 import matplotlib.pyplot as plt
