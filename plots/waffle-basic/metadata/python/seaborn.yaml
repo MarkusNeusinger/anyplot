@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: waffle-basic
 created: '2025-12-24T09:51:26Z'
-updated: '2026-05-05T18:07:28Z'
+updated: '2026-05-05T18:14:29Z'
 generated_by: claude-haiku
 workflow_run: 25393294952
 issue: 998
@@ -15,38 +15,32 @@ preview_html_dark: null
 quality_score: 85
 review:
   strengths:
-  - 'Perfect spec compliance: correct waffle chart type with all required features'
-  - 'Excellent data quality: realistic budget allocation example with natural proportions'
-  - 'Clean code structure: simple KISS pattern, fully reproducible, all imports used'
-  - 'Strong visual quality: all text explicitly sized and readable in both themes,
-    clear color differentiation'
-  - 'Correct palette: Okabe-Ito first series (#009E73) with proper theme-adaptive
-    backgrounds'
-  - 'Perfect legend: shows all categories with percentages, well-positioned'
+  - Correct 10x10 waffle grid with 1% per square representation
+  - Perfect Okabe-Ito palette compliance with brand green first
+  - Theme-adaptive styling works flawlessly in both light and dark renders
+  - Legend clearly shows category names and percentages
+  - All text readable in both themes
+  - Realistic and neutral data example
   weaknesses:
-  - Grid lines in dark theme use PAGE_BG (#1A1A17) making them too subtle; should
-    use INK_SOFT for better contrast in dark render
-  - 'Design excellence below target: generic aesthetic sophistication (looks like
-    well-configured defaults) and minimal visual refinement'
-  - 'Data storytelling is basic: displays budget proportions clearly but lacks visual
-    hierarchy or emphasis to guide interpretation'
+  - Design sophistication limited to functional requirements
+  - No visual refinement beyond basic heatmap styling
+  - Spines remain visible without creative L-shape or spine removal
+  - No distinctive seaborn features leveraged
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), perfect for light theme
-      Chrome: Title "waffle-basic · seaborn · anyplot.ai" in dark text (24pt, medium weight), legend below with dark text (18pt), white grid lines separate all 100 squares clearly
-      Data: Okabe-Ito colors perfectly applied — green (#009E73) for Housing (35%), orange (#D55E00) for Food (25%), blue (#0072B2) for Transportation (20%), pink (#CC79A7) for Utilities (12%), yellow (#E69F00) for Entertainment (8%). Squares fill from bottom-to-top creating intuitive "glass filling" effect
-      Legibility verdict: PASS — all elements clearly readable, excellent contrast
+      Background: Warm off-white surface (#FAF8F1) — correct theme background
+      Chrome: Title "waffle-basic · seaborn · anyplot.ai" in dark text at top (clearly readable); legend at bottom with category names and percentages in dark text on light legend background (clearly readable)
+      Data: 10x10 grid with squares colored in Okabe-Ito order — green (#009E73) for Housing dominates bottom section, orange (#D55E00) for Food in middle-bottom, blue (#0072B2) for Transportation in middle, pink (#CC79A7) for Utilities upper-middle, yellow (#E69F00) for Entertainment at top. Grid lines are dark and clearly visible between all squares.
+      Legibility verdict: PASS — all text is readable; no "light on light" conflicts; gridlines clearly distinguish squares
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct for dark theme
-      Chrome: Title in light text, legend in light text, grid lines darker/more subtle (using PAGE_BG instead of lighter color)
-      Data: All Okabe-Ito colors identical to light render — green, orange, blue, pink, yellow squares in same proportions. Grid separation still visible.
-      Legibility verdict: PASS with minor note — all elements readable, but dark grid lines on dark background are more subtle than ideal; could benefit from using INK_SOFT (#B8B7B0) for better contrast
-
-    Both renders successfully demonstrate the waffle chart with clear proportions and readable legend.
+      Background: Warm near-black surface (#1A1A17) — correct theme background
+      Chrome: Title in light text (clearly readable against dark background); legend at bottom with light text on dark elevated background (clearly readable); no dark-on-dark failures detected
+      Data: Identical 10x10 grid with squares in same positions and identical colors to light render (green, orange, blue, pink, yellow); grid lines are light/white, providing appropriate contrast against dark background. Brand green (#009E73) Housing squares are distinctly visible and accessible.
+      Legibility verdict: PASS — all text is readable in light colors appropriate for dark theme; no legibility failures
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -54,52 +48,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, legend 18pt); perfectly
-          readable in both themes
+        comment: Title (24pt) and legend (18pt) fonts clearly visible in both themes;
+          readable at full resolution
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend positioned below plot with proper spacing; no text collisions
+        comment: Grid is clean with no collisions; legend positioned clearly below
+          grid
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 100 waffle squares optimally sized and distinct; grid lines clearly
-          separate all cells
+        comment: All 100 squares clearly distinguished by color and gridlines; density-appropriate
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe; excellent contrast between
-          data colors
+        comment: Okabe-Ito palette is CVD-safe; no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format (16x16 figsize) fills 60-70% of canvas; generous margins;
-          well-balanced
+        comment: Square format (16x16 figsize) ideal for waffle chart; excellent proportions;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title correct format: ''waffle-basic · seaborn · anyplot.ai''; axes
-          removed (appropriate for waffle chart)'
+        comment: 'Title format correct: ''waffle-basic · seaborn · anyplot.ai''; no
+          axis labels (appropriate for waffle)'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Okabe-Ito perfect; backgrounds correct (#FAF8F1/#1A1A17); text colors
-          adapt correctly; grid lines use PAGE_BG which darkens them unnecessarily
-          in dark theme (should use INK_SOFT for contrast)
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order; backgrounds #FAF8F1/#1A1A17;
+          both renders theme-correct'
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -107,22 +99,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Professional and clean but looks like well-configured library defaults;
-          uses mandatory Okabe-Ito palette without distinctive design touches
+        comment: Generic heatmap approach; no custom design sophistication beyond
+          requirements
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Clean square grid with clear separations; good whitespace; minimal
-          customization beyond defaults
+        comment: Spines visible and styled with INK_SOFT; functional but minimal refinement
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Budget allocation clearly displayed and proportioned; legend shows
-          percentages; but lacks visual hierarchy or emphasis to guide interpretation
+        comment: Waffle format clearly shows proportions; legend adds context; no
+          special emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -132,28 +123,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct waffle chart type with 10x10 grid (100 squares) representing
-          percentages
+        comment: Correct 10x10 waffle grid; 1% per square representation
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: grid, distinct colors per category, legend
-          with percentages'
+        comment: Categories, values, distinct colors, legend with percentages all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories correctly mapped to colors and proportions; all 100 squares
-          accounted for
+        comment: Categories map correctly; values render as correct square counts
+          (35,25,20,12,8)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format perfect; legend labels match data with percentages
+        comment: Title and legend format correct; all categories with percentages
     data_quality:
       score: 15
       max: 15
@@ -163,21 +153,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all 5 budget categories with variety: 35%, 25%, 20%, 12%,
-          8%'
+        comment: 'All aspects of waffle plot type present: grid, proportions, categories,
+          colors'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Budget allocation is real-world plausible and neutral (housing, food,
-          transportation, utilities, entertainment)
+        comment: Budget allocation realistic and neutral; percentages plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sum to 100%; all proportions factually reasonable
+        comment: Percentages match 10x10 grid perfectly; 1% = 1 square
     code_quality:
       score: 10
       max: 10
@@ -187,50 +176,48 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → theme tokens → data → plot → save; no functions/classes'
+        comment: No functions/classes; straightforward direct plot generation
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data; no randomness
+        comment: Deterministic hardcoded data; no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib, numpy, pandas, seaborn'
+        comment: All imports used; no unused dependencies
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no over-engineering; no fake functionality
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly; current API
+        comment: Saves as plot-{THEME}.png; current API
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Correct seaborn heatmap usage with proper parameters; creative use
-          as waffle grid; could leverage more seaborn theme patterns
+        passed: true
+        comment: Proper seaborn heatmap usage; theme tokens correctly implemented
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
         passed: false
-        comment: Uses seaborn heatmap creatively with custom ListedColormap; somewhat
-          generic approach
-  verdict: REJECTED
+        comment: No distinctive seaborn features; straightforward heatmap application
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -238,6 +225,7 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
+  - explicit-figure
   dataprep: []
   styling:
   - custom-colormap
