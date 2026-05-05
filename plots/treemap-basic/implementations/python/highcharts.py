@@ -1,30 +1,40 @@
-""" pyplots.ai
+"""anyplot.ai
 treemap-basic: Basic Treemap
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-24
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2025-05-05
 """
 
+import os
 import tempfile
 import time
-import urllib.request
 from pathlib import Path
 
+import requests
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
-from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (positions 1-7)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
 # Data - Budget allocation by department and project
-# Hierarchical structure with parent-child relationships
 data = [
-    # Parent categories (level 1)
-    {"id": "engineering", "name": "Engineering", "color": "#306998"},
-    {"id": "marketing", "name": "Marketing", "color": "#FFD43B"},
-    {"id": "operations", "name": "Operations", "color": "#9467BD"},
-    {"id": "sales", "name": "Sales", "color": "#17BECF"},
-    {"id": "hr", "name": "HR", "color": "#8C564B"},
+    # Parent categories (level 1) with Okabe-Ito colors
+    {"id": "engineering", "name": "Engineering", "color": OKABE_ITO[0]},
+    {"id": "marketing", "name": "Marketing", "color": OKABE_ITO[1]},
+    {"id": "operations", "name": "Operations", "color": OKABE_ITO[2]},
+    {"id": "sales", "name": "Sales", "color": OKABE_ITO[3]},
+    {"id": "hr", "name": "HR", "color": OKABE_ITO[4]},
     # Engineering subcategories
     {"name": "Backend Dev", "parent": "engineering", "value": 45000},
     {"name": "Frontend Dev", "parent": "engineering", "value": 38000},
@@ -54,42 +64,57 @@ chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
 # Chart configuration
-chart.options.chart = {"type": "treemap", "width": 4800, "height": 2700, "backgroundColor": "#ffffff"}
+chart.options.chart = {
+    "type": "treemap",
+    "width": 4800,
+    "height": 2700,
+    "backgroundColor": PAGE_BG,
+    "marginTop": 120,
+    "marginBottom": 100,
+    "marginLeft": 100,
+    "marginRight": 100,
+}
 
 # Title
 chart.options.title = {
-    "text": "Budget Allocation · treemap-basic · highcharts · pyplots.ai",
-    "style": {"fontSize": "64px", "fontWeight": "bold"},
+    "text": "treemap-basic · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "color": INK, "fontWeight": "normal"},
 }
 
-# Tooltip
-chart.options.tooltip = {"style": {"fontSize": "36px"}, "pointFormat": "<b>{point.name}</b>: ${point.value:,.0f}"}
+# Tooltip with formatted values
+chart.options.tooltip = {
+    "style": {"fontSize": "18px", "color": INK},
+    "pointFormat": "<b>{point.name}</b><br/>Budget: ${point.value:,.0f}",
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
+}
 
-# Treemap series configuration
+# Treemap series configuration with Okabe-Ito colors
 series_config = {
     "type": "treemap",
     "name": "Budget",
     "layoutAlgorithm": "squarified",
     "allowDrillToNode": True,
-    "animationLimit": 1000,
-    "dataLabels": {"enabled": True, "style": {"fontSize": "32px", "fontWeight": "bold", "textOutline": "2px contrast"}},
+    "colors": OKABE_ITO,
+    "dataLabels": {"enabled": True, "style": {"fontSize": "20px", "color": INK}},
     "levels": [
         {
             "level": 1,
             "dataLabels": {
                 "enabled": True,
-                "align": "left",
-                "verticalAlign": "top",
-                "style": {"fontSize": "42px", "fontWeight": "bold", "textOutline": "3px contrast"},
+                "align": "center",
+                "verticalAlign": "middle",
+                "style": {"fontSize": "24px", "fontWeight": "normal", "color": INK},
             },
-            "borderWidth": 4,
-            "borderColor": "#ffffff",
+            "borderWidth": 3,
+            "borderColor": PAGE_BG,
         },
         {
             "level": 2,
-            "dataLabels": {"enabled": True, "style": {"fontSize": "28px", "fontWeight": "normal"}},
+            "dataLabels": {"enabled": True, "style": {"fontSize": "18px", "color": INK}},
             "borderWidth": 2,
-            "borderColor": "#ffffff",
+            "borderColor": PAGE_BG,
         },
     ],
     "data": data,
@@ -100,15 +125,29 @@ chart.options.series = [series_config]
 # Disable legend for treemap (colors are visible in rectangles)
 chart.options.legend = {"enabled": False}
 
-# Download Highcharts JS and treemap module
+# Download Highcharts JS and treemap module with fallback
 highcharts_url = "https://code.highcharts.com/highcharts.js"
 treemap_url = "https://code.highcharts.com/modules/treemap.js"
 
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+try:
+    resp = requests.get(highcharts_url, timeout=30)
+    resp.raise_for_status()
+    highcharts_js = resp.text
+except Exception:
+    # Fallback to alternate CDN
+    resp = requests.get("https://cdnjs.cloudflare.com/ajax/libs/highcharts/10.3.2/highcharts.min.js", timeout=30)
+    resp.raise_for_status()
+    highcharts_js = resp.text
 
-with urllib.request.urlopen(treemap_url, timeout=30) as response:
-    treemap_js = response.read().decode("utf-8")
+try:
+    resp = requests.get(treemap_url, timeout=30)
+    resp.raise_for_status()
+    treemap_js = resp.text
+except Exception:
+    # Fallback to alternate CDN
+    resp = requests.get("https://cdnjs.cloudflare.com/ajax/libs/highcharts/10.3.2/modules/treemap.min.js", timeout=30)
+    resp.raise_for_status()
+    treemap_js = resp.text
 
 # Generate HTML with inline scripts
 html_str = chart.to_js_literal()
@@ -119,27 +158,15 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{treemap_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
 # Save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    standalone_html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/treemap.js"></script>
-</head>
-<body style="margin:0;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>{html_str}</script>
-</body>
-</html>"""
-    f.write(standalone_html)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
 
 # Write temp HTML and take screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
@@ -151,18 +178,12 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2900")
+chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
-driver.save_screenshot("plot_raw.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-# Crop to exact 4800x2700 dimensions
-img = Image.open("plot_raw.png")
-img_cropped = img.crop((0, 0, 4800, 2700))
-img_cropped.save("plot.png")
-Path("plot_raw.png").unlink()
-
-Path(temp_path).unlink()  # Clean up temp file
+Path(temp_path).unlink()
