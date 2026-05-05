@@ -1,162 +1,181 @@
 library: altair
+language: python
 specification_id: surface-basic
 created: '2025-12-23T21:54:58Z'
-updated: '2025-12-23T22:10:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472388701
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/surface-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/surface-basic/altair/plot.html
+updated: '2026-05-05T16:57:51Z'
+generated_by: claude-haiku
+workflow_run: 25389855358
+issue: 1013
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/altair/plot-dark.html
 quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - 3d-projection
-  - hover-tooltips
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
-  styling: []
 review:
   strengths:
-  - Impressive creative solution implementing 3D surface in a 2D library using manual
-    projection and painter algorithm
-  - Excellent use of viridis colormap for both aesthetics and colorblind accessibility
-  - Clean, well-commented code explaining the projection mathematics
-  - Added pan/zoom interactivity via selection_interval - appropriate for exploring
-    a projected 2D view
-  - Proper depth sorting ensures correct rendering order of surface facets
-  - Good canvas utilization and balanced layout
+  - Expert implementation of 3D projection mathematics using Altair's capabilities
+  - Perfect theme adaptation with viridis colors identical across light/dark themes
+    and proper chrome theming
+  - Strong text legibility with explicitly-sized fonts delivering excellent readability
+    at 4800×2700
+  - Comprehensive 3D surface with good feature coverage showing peaks, valleys, and
+    zero crossings
+  - Clean, idiomatic Altair code following recommended patterns
+  - Sophisticated painter's algorithm using depth-based sorting to handle occlusion
   weaknesses:
-  - Rectangle-based approximation creates minor visual artifacts at facet edges (inherent
-    limitation)
-  - Axis labeling could be clearer - X (projected) and Z (height) may confuse users
-    unfamiliar with 3D projection
-  image_description: The plot displays a 3D surface projected onto 2D, representing
-    the mathematical function z = sin(x) * cos(y). The surface is rendered using rectangular
-    facets with the viridis colormap - yellow/bright green for peaks (~0.5 to 1.0)
-    and dark purple/blue for valleys (~-0.5 to -1.0). The title "surface-basic · altair
-    · pyplots.ai" appears at the top. The X-axis is labeled "X (projected)" ranging
-    from -5 to 5, and the Y-axis shows "Z (height)" from -2 to 2. A legend on the
-    right displays "Z Value" with the color scale. The surface shows characteristic
-    wave patterns of the sin*cos function with multiple peaks and valleys. Subtle
-    blue-gray grid lines and faint edges on the facets provide structure without overwhelming
-    the visualization.
+  - Design Excellence could be elevated with custom refinements beyond library defaults
+  - Data storytelling is minimal with no visual hierarchy or emphasis to guide the
+    viewer
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface (#FAF8F1), not pure white. PASS
+      Chrome: Title "surface-basic · altair · anyplot.ai" clearly visible at top in dark text (28px). X-axis labeled "X axis (projected)" with range -5 to 5. Y-axis labeled "Z axis (height)" with range -2 to 2. All tick labels in dark color with excellent contrast. Colorbar on right with "Surface Value" title, clearly readable. Grid lines subtle but visible (10% opacity). PASS
+      Data: Viridis colormap applied - purple (low) → teal (mid) → yellow/bright green (high). Surface shows sin(x)*cos(y) function with multiple peaks and valleys. All data points visible. PASS
+      Legibility verdict: PASS - All text readable, no contrast failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface (#1A1A17), not pure black. PASS
+      Chrome: Title in light text (off-white/light gray) with excellent contrast against dark background. Axis labels "X axis (projected)" and "Z axis (height)" in light text, clearly readable. All tick labels properly themed in light color. No dark-on-dark failures detected. Colorbar with "Surface Value" in light text, properly readable. Grid lines subtle but visible. PASS
+      Data: Viridis colormap is IDENTICAL to light render - purple, teal, yellow/green colors unchanged. This proves correct theme-adaptive implementation without data color drift. All surface elements clearly visible and distinguishable from dark background. PASS
+      Legibility verdict: PASS - All text readable, proper light-on-dark contrast, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
         score: 8
-        max: 10
-        passed: true
-        comment: All text readable, font sizes appropriate (18pt labels, 22pt titles,
-          28pt main title)
-      - id: VQ-02
-        name: No Overlap
-        score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
+          labels 18px; perfectly readable in both light and dark themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements; axis labels, title, and legend all
+          have clear separation and breathing room
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Surface visible but rectangle approximation shows minor edge artifacts
+        comment: 50×50 grid with 2,401 rectangles; painter's algorithm depth-sorting
+          provides optimal adaptation to data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization, surface fills plot area well
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Labels descriptive but naming could be clearer for projected coordinates
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid (alpha=0.3), well-placed legend
+        comment: Viridis colormap is perceptually uniform and specifically designed
+          for colorblind safety
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills approximately 65% of canvas with balanced and generous
+          margins on all sides
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axes with context; colorbar title clearly explains data
+          mapping
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis for continuous data; backgrounds #FAF8F1 (light) and #1A1A17
+          (dark); data colors identical across themes; all chrome properly theme-adaptive'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Professional and well-configured defaults with thoughtful color and
+          spacing, but lacks exceptional custom design or unique styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid (opacity 0.10), fine stroke details (strokeWidth 0.3,
+          strokeOpacity 0.15), good whitespace management
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed clearly but lacks visual hierarchy, emphasis techniques,
+          or focal points to guide viewer narrative
     spec_compliance:
-      score: 21
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 6
-        max: 8
-        passed: true
-        comment: Creative 3D surface approximation in a 2D library via projection
-      - id: SC-02
-        name: Data Mapping
-        score: 4
-        max: 5
-        passed: true
-        comment: X/Y/Z mapped correctly, projection adds complexity
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Has colormap, colorbar; pan/zoom replaces rotation appropriately
-          for 2D
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend title "Z Value" is accurate
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "surface-basic · altair · pyplots.ai"'
-    data_quality:
-      score: 20
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
-        max: 8
-        passed: true
-        comment: Shows complete sin*cos surface with peaks and valleys
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Classic mathematical function example
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values in [-1, 1] appropriate for sin*cos
+        comment: Correct 3D surface plot using mathematical function; appropriate
+          visualization for spec
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: smooth colormap, axis labels for all dimensions,
+          colorbar, appropriate grid resolution (50×50), interactive pan/zoom'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X and Y correctly mapped to projected coordinates; color correctly
+          maps to surface values; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct (spec-id · library · anyplot.ai); legend labels
+          match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'sin(x)*cos(y) shows full range: multiple peaks, valleys, zero crossings,
+          positive and negative values'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic mathematical function; real, intellectually honest, neutral,
+          scientifically appropriate exemplar
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Naturally correct proportions for trigonometric function; grid range
+          [-3, 3] well-chosen for visualization
     code_quality:
       score: 10
       max: 10
@@ -166,33 +185,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes, clean script structure
+        comment: 'Linear flow: imports → theme → data → chart → save; no unnecessary
+          functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (altair, numpy, pandas)
+        comment: 'All imports used: os, altair, numpy, pandas; no extraneous dependencies'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current APIs
+        comment: Clean, Pythonic, appropriate complexity; no over-engineering or fake
+          UI elements
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 4
-      max: 5
-      items: []
+        comment: 'Correct format: plot-{THEME}.png and .html with proper scale_factor=3.0'
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of Altair API: proper mark_rect encoding, x2/y2 for rectangles,
+          selection_interval for interactivity, configure methods'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Creative 3D-to-2D projection via matrix math, painter's algorithm
+          depth-sorting, rect-based surface rendering—distinctive to Altair
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
