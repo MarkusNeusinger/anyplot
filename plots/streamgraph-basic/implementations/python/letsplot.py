@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 streamgraph-basic: Basic Stream Graph
-Library: letsplot | Python 3.13
-Quality: pending | Updated: 2026-05-05
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-05
 """
 
 import os
