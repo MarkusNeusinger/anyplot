@@ -1,5 +1,5 @@
 name: "Scheduled: Regen oldest specs"
-run-name: "Scheduled regen (${{ github.event.inputs.count || '1' }} specs)"
+run-name: "Scheduled regen (${{ github.event.inputs.specification_id || github.event.inputs.count || '1' }} / ${{ github.event.inputs.model || 'haiku' }})"
 
 # Picks the N oldest specs (by most-recent implementation `updated` timestamp)
 # and re-dispatches `bulk-generate.yml` for each. Default N=1 per cron tick.
@@ -9,21 +9,34 @@ run-name: "Scheduled regen (${{ github.event.inputs.count || '1' }} specs)"
 # 02, 04, 06, 08, 10, 12, 14, 16. The 20:00 and 22:00 Berlin slots (UTC 18, 20)
 # are intentionally skipped so runs never start during the user's evening.
 #
-# bulk-generate is serialised via its own concurrency group. With Sonnet +
-# reduced bulk-generate pace, a single spec completes well within the 2h slot,
-# leaving the user window clean.
+# bulk-generate is serialised via its own concurrency group. Default model is
+# Haiku, so a single spec completes well within the 2h slot, leaving the user
+# window clean. The model can be overridden per manual run.
 #
 # Triggers:
-#   - schedule: 10× daily (UTC, every 2h except 18:00 and 20:00 UTC)
-#   - workflow_dispatch: manual, with inputs for count + dry-run
+#   - schedule: 10× daily (UTC, every 2h except 18:00 and 20:00 UTC) → Haiku
+#   - workflow_dispatch: manual, with inputs for spec id, model, count, dry-run
 
 on:
   schedule:
     - cron: '0 0,2,4,6,8,10,12,14,16,22 * * *'
   workflow_dispatch:
     inputs:
+      specification_id:
+        description: "Specific spec id to regen (leave empty to pick the oldest)"
+        required: false
+        default: ''
+      model:
+        description: "Claude model to use across all generate / review / repair steps"
+        required: false
+        type: choice
+        default: 'haiku'
+        options:
+          - haiku
+          - sonnet
+          - opus
       count:
-        description: "How many of the oldest specs to regen (default 1)"
+        description: "How many of the oldest specs to regen (ignored when specification_id is set, default 1)"
         required: false
         default: '1'
       min_age_hours:
@@ -60,14 +73,16 @@ jobs:
       - name: Install PyYAML
         run: pip install pyyaml
 
-      - name: Pick oldest spec(s)
+      - name: Pick oldest spec(s) (or use override)
         id: pick
         env:
           COUNT: ${{ inputs.count || '1' }}
           MIN_AGE_HOURS: ${{ inputs.min_age_hours || '20' }}
+          SPEC_OVERRIDE: ${{ inputs.specification_id }}
         run: |
           python3 <<'PY'
           import os
+          import sys
           from datetime import datetime, timedelta, timezone
           from pathlib import Path
 
@@ -76,9 +91,24 @@ jobs:
 
           COUNT = int(os.environ["COUNT"])
           MIN_AGE = timedelta(hours=int(os.environ["MIN_AGE_HOURS"]))
+          OVERRIDE = (os.environ.get("SPEC_OVERRIDE") or "").strip()
           NOW = datetime.now(timezone.utc)
 
           specs_dir = Path("plots")
+
+          # Manual override: caller specified a spec id — validate and use it.
+          if OVERRIDE:
+              if not (specs_dir / OVERRIDE / "specification.md").is_file():
+                  print(f"::error::Spec '{OVERRIDE}' not found at plots/{OVERRIDE}/specification.md")
+                  sys.exit(1)
+              picks = [OVERRIDE]
+              print(f"::notice::Using override spec: {OVERRIDE}")
+              github_output = os.environ["GITHUB_OUTPUT"]
+              with open(github_output, "a", encoding="utf-8") as f:
+                  f.write(f"specs={OVERRIDE}\n")
+                  f.write(f"count=1\n")
+              sys.exit(0)
+
           candidates: list[tuple[datetime, str]] = []
 
           for spec_dir in sorted(specs_dir.iterdir()):
@@ -142,13 +172,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPECS: ${{ needs.pick.outputs.specs }}
+          MODEL: ${{ inputs.model || 'haiku' }}
         run: |
           for spec in $SPECS; do
-            echo "::notice::Dispatching bulk-generate for $spec (all 9 libs)"
+            echo "::notice::Dispatching bulk-generate for $spec (all 9 libs, model=$MODEL)"
             gh workflow run bulk-generate.yml \
               --repo "${{ github.repository }}" \
               -f specification_id="$spec" \
-              -f library=all
+              -f library=all \
+              -f model="$MODEL"
             # Small pause between dispatches so GitHub's webhook processing has a moment.
             sleep 5
           done

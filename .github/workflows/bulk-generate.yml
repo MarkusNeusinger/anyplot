@@ -36,6 +36,15 @@ on:
         description: "Seconds to wait between dispatches (0 = fire all at once, default 120 = 2 min)"
         required: false
         default: '120'
+      model:
+        description: "Claude model to use across generate / review / repair (default sonnet)"
+        required: false
+        type: choice
+        default: 'sonnet'
+        options:
+          - haiku
+          - sonnet
+          - opus
 
 env:
   ALL_LIBRARIES: "matplotlib seaborn plotly bokeh altair plotnine pygal highcharts letsplot"
@@ -168,13 +177,14 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MATRIX: ${{ needs.build-matrix.outputs.matrix }}
           PACE_SECONDS: ${{ inputs.pace_seconds || '120' }}
+          MODEL: ${{ inputs.model || 'sonnet' }}
         run: |
           set -u
 
           pace="${PACE_SECONDS}"
           pairs=$(echo "$MATRIX" | jq -r '.include[] | "\(.specification_id) \(.library)"')
           total=$(echo "$pairs" | wc -l | tr -d ' ')
-          echo "::notice::Dispatching $total item(s) with ${pace}s pacing between each"
+          echo "::notice::Dispatching $total item(s) with ${pace}s pacing between each (model=${MODEL})"
 
           i=0
           failed=0
@@ -203,11 +213,13 @@ jobs:
                 gh workflow run impl-generate.yml --repo "${{ github.repository }}" \
                   -f specification_id="${SPEC_ID}" \
                   -f library="${LIBRARY}" \
-                  -f issue_number="${ISSUE}" && dispatched=1 && break
+                  -f issue_number="${ISSUE}" \
+                  -f model="${MODEL}" && dispatched=1 && break
               else
                 gh workflow run impl-generate.yml --repo "${{ github.repository }}" \
                   -f specification_id="${SPEC_ID}" \
-                  -f library="${LIBRARY}" && dispatched=1 && break
+                  -f library="${LIBRARY}" \
+                  -f model="${MODEL}" && dispatched=1 && break
               fi
               echo "::warning::Dispatch attempt $attempt failed for ${SPEC_ID}/${LIBRARY}, retrying in 10s"
               sleep 10
