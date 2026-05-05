@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 streamgraph-basic: Basic Stream Graph
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-05
@@ -71,9 +71,12 @@ x_smooth = np.linspace(0, len(months) - 1, 400)
 fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
+# Store splines to reuse for trend lines and annotations
+splines = []
 for i in range(len(genres)):
     spl_lower = make_interp_spline(x_numeric, lowers[:, i], k=3)
     spl_upper = make_interp_spline(x_numeric, uppers[:, i], k=3)
+    splines.append((spl_lower, spl_upper))
     ax.fill_between(
         x_smooth,
         spl_lower(x_smooth),
@@ -84,6 +87,55 @@ for i in range(len(genres)):
         edgecolor=PAGE_BG,
         linewidth=0.5,
     )
+
+# Seaborn-native center-line trend highlights for Hip-Hop and Rock
+# sns.lineplot adds a genuine seaborn plotting element over the streams
+for gname, linestyle in [("Hip-Hop", (0, (6, 3))), ("Rock", (0, (6, 3)))]:
+    gi = genres.index(gname)
+    spl_lo, spl_up = splines[gi]
+    center_vals = (spl_lo(x_smooth) + spl_up(x_smooth)) / 2
+    center_df = pd.DataFrame({"x": x_smooth, "y": center_vals})
+    sns.lineplot(
+        data=center_df,
+        x="x",
+        y="y",
+        ax=ax,
+        color=OKABE_ITO[gi],
+        linewidth=2.5,
+        linestyle=linestyle,
+        alpha=0.85,
+        legend=False,
+    )
+
+# Data storytelling: annotate the two dominant narrative threads
+hip_hop_idx = genres.index("Hip-Hop")
+rock_idx = genres.index("Rock")
+
+# Hip-Hop center near month 20 (growth is visible by then)
+hh_x = 20
+hh_center = (splines[hip_hop_idx][0](hh_x) + splines[hip_hop_idx][1](hh_x)) / 2
+ax.annotate(
+    "Hip-Hop\nrising ↑",
+    xy=(hh_x, hh_center),
+    xytext=(hh_x - 4, hh_center + 28),
+    fontsize=15,
+    fontweight="bold",
+    color=OKABE_ITO[hip_hop_idx],
+    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.5},
+)
+
+# Rock center near month 18 (decline well established)
+rk_x = 18
+rk_center = (splines[rock_idx][0](rk_x) + splines[rock_idx][1](rk_x)) / 2
+ax.annotate(
+    "Rock\ndeclining ↓",
+    xy=(rk_x, rk_center),
+    xytext=(rk_x - 5, rk_center - 32),
+    fontsize=15,
+    fontweight="bold",
+    color=OKABE_ITO[rock_idx],
+    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.5},
+)
 
 # Style
 tick_positions = [0, 4, 8, 12, 16, 20, 23]
@@ -99,7 +151,7 @@ ax.set_title("streamgraph-basic · seaborn · anyplot.ai", fontsize=24, fontweig
 
 ax.legend(
     loc="upper left",
-    fontsize=14,
+    fontsize=16,
     title="Genre",
     title_fontsize=16,
     facecolor=ELEVATED_BG,
