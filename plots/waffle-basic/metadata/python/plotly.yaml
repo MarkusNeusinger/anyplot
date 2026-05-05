@@ -1,156 +1,168 @@
 library: plotly
+language: python
 specification_id: waffle-basic
 created: '2025-12-24T09:50:53Z'
-updated: '2025-12-24T09:57:03Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483444359
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/plotly/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-05-05T18:02:23Z'
+generated_by: claude-haiku
+workflow_run: 25393131410
+issue: 998
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/plotly/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent color palette with Python Blue (#306998) as primary color and complementary
-    colorblind-safe colors
-  - Clean implementation using scatter plot with square markers and white borders
-    for visual separation
-  - Legend format with percentages is clear and informative
-  - Title follows the exact required format
-  - Realistic budget allocation scenario that demonstrates waffle chart purpose well
-  - Proper 16:9 output at 4800x2700 resolution
+  - Perfect legibility across both light and dark themes with no chrome conflicts
+  - Excellent implementation of Okabe-Ito palette with brand green (#009E73) as first
+    series
+  - Clean waffle grid construction with white/dark borders providing clear visual
+    separation
+  - Proper theme-adaptive styling throughout (backgrounds, text colors, borders)
+  - Correct proportional data mapping (each square = 1%)
+  - Well-structured, readable code with clear variable names and logic flow
+  - Realistic budget allocation scenario that's intuitive and plausible
   weaknesses:
-  - Grid could fill more of the canvas area for better visual impact (currently somewhat
-    small relative to available space)
-  - Could add hover interactivity to show category details when hovering over squares
-    (Plotly strength not utilized)
-  image_description: 'The plot displays a 10x10 waffle chart (100 squares) representing
-    budget allocation across 5 categories. From bottom to top: dark blue squares for
-    Operations (35%), golden yellow squares for Marketing (25%), teal/cyan squares
-    for R&D (22%), coral/orange squares for HR (12%), and purple squares for Other
-    (6%). The title "Budget Allocation · waffle-basic · plotly · pyplots.ai" is centered
-    at the top in black text. A horizontal legend below the grid shows all categories
-    with their percentages. The squares have white borders separating them, and the
-    overall background is white.'
+  - Design Excellence limited by straightforward implementation (no custom embellishments)
+  - Library Mastery limited to basic Plotly features; no advanced capabilities (callbacks,
+    subplots, secondary axes)
+  - 105+ separate traces (functional but somewhat inefficient; could use single image-based
+    approach)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct theme color
+      Chrome: Title "waffle-basic · plotly · anyplot.ai" in dark text clearly readable; legend with all category labels and percentages legible
+      Data: All 100 squares visible with clear Okabe-Ito colors in correct order - Operations (35%, #009E73), Marketing (25%, #D55E00), R&D (22%, #0072B2), HR (12%, #CC79A7), Other (6%, #E69F00); white square borders provide clean separation
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct theme color
+      Chrome: Title in light text clearly readable; legend text light-colored on elevated background, fully legible with no dark-on-dark conflicts
+      Data: All colors identical to light render (Okabe-Ito #1-5 unchanged); dark borders visible against background; brand green (#009E73) vibrant and readable
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title and legend text are large and clearly readable
+        comment: All text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements anywhere
+        comment: White borders provide clean separation
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Squares are well-sized with clear white borders
+        comment: All 100 squares clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colors are distinct and colorblind-friendly (blue, yellow, teal,
-          orange, purple)
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Grid is centered but could use more canvas space; some empty areas
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed horizontally below chart with clear labels
+        comment: Okabe-Ito palette ensures CVD safety
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent proportions and spacing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches spec format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order correct, themes correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean professional rendering with thoughtful borders
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Border styling and legend presentation refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy guides focus; colors aid distinction
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct waffle chart with 10x10 grid
+        comment: Correct waffle chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Values correctly mapped to square counts
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: 10x10 grid, distinct colors, legend with
-          percentages'
-      - id: SC-04
-        name: Data Range
+        comment: All features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 100 squares filled, values sum to 100%
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct proportional mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all categories with percentages
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Follows "{topic} · {spec-id} · {library} · pyplots.ai" format
+        comment: Format matches specification
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows 5 categories with varying proportions; could benefit from more
-          contrast in sizes
+        comment: Complete waffle visualization
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Budget allocation is a perfect real-world use case for waffle charts
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Percentages are realistic for budget categories
+        comment: Real-world plausible scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible percentages
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -158,40 +170,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → grid creation → plot → save'
+        comment: Straightforward script
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: No random seed needed (deterministic data), but numpy imported unnecessarily
+        max: 2
+        passed: true
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses go.Scatter with square markers and proper layout; could leverage
-          more Plotly-specific features like hover info
+        comment: Proper go.Figure() and Scatter API usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Limited use of advanced Plotly features
+    total:
+      score: 90
+      max: 100
+      verdict: APPROVED
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - edge-highlighting
