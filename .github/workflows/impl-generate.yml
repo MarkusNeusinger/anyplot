@@ -773,6 +773,9 @@ jobs:
           LIBRARY: ${{ steps.inputs.outputs.library }}
           ISSUE: ${{ steps.issue.outputs.number }}
           MODEL: ${{ steps.inputs.outputs.model }}
+          # Pass via env (not template-interpolated into the script) so hints
+          # containing quotes / $ / backticks can't break shell parsing.
+          CHANGE_REQUEST: ${{ inputs.change_request }}
         run: |
           echo "::notice::Handling generation failure for $LIBRARY/$SPEC_ID"
 
@@ -835,12 +838,18 @@ jobs:
             # Forward `change_request` so cross-library divergence hints from
             # daily-regen pre-flight survive the retry — otherwise the first
             # attempt has the hint but the retry doesn't, defeating the audit.
+            # CHANGE_REQUEST is read from env to keep raw quotes/$/backticks
+            # inside the hint from breaking shell parsing.
             gh workflow run impl-generate.yml \
               -f specification_id="${SPEC_ID}" \
               -f library="${LIBRARY}" \
               -f issue_number="${ISSUE}" \
               -f model="${MODEL}" \
-              -f change_request="${{ inputs.change_request }}"
+              -f change_request="${CHANGE_REQUEST}"
 
-            echo "::notice::Triggered automatic retry for ${LIBRARY}/${SPEC_ID} (attempt $((ATTEMPT + 1)), model=${MODEL}, change_request=$([ -n "${{ inputs.change_request }}" ] && echo present || echo none))"
+            if [ -n "${CHANGE_REQUEST}" ]; then
+              echo "::notice::Triggered automatic retry for ${LIBRARY}/${SPEC_ID} (attempt $((ATTEMPT + 1)), model=${MODEL}, change_request=present)"
+            else
+              echo "::notice::Triggered automatic retry for ${LIBRARY}/${SPEC_ID} (attempt $((ATTEMPT + 1)), model=${MODEL}, change_request=none)"
+            fi
           fi
