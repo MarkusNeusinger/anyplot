@@ -1,12 +1,23 @@
-""" pyplots.ai
+"""anyplot.ai
 treemap-basic: Basic Treemap
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-24
+Library: pygal | Python 3.13
+Quality: pending | Created: 2025-12-21
 """
+
+import os
 
 import pygal
 from pygal.style import Style
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette (first series always brand green)
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
 
 # Data - Budget allocation by department and project (in $K)
 data = {
@@ -32,20 +43,19 @@ data = {
     ],
 }
 
-# Custom style for 4800x2700 px canvas
+# Custom style for 4800x2700 px canvas with theme-adaptive colors
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333",
-    foreground_strong="#333",
-    foreground_subtle="#666",
-    colors=("#306998", "#FFD43B", "#4ECDC4", "#FF6B6B"),
-    title_font_size=72,
-    label_font_size=42,
-    major_label_font_size=42,
-    legend_font_size=42,
-    value_font_size=36,
-    tooltip_font_size=36,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=18,
+    major_label_font_size=16,
+    legend_font_size=16,
+    value_font_size=14,
 )
 
 # Create treemap
@@ -53,7 +63,7 @@ chart = pygal.Treemap(
     width=4800,
     height=2700,
     style=custom_style,
-    title="Budget Allocation · treemap-basic · pygal · pyplots.ai",
+    title="Budget Allocation · treemap-basic · pygal · anyplot.ai",
     legend_at_bottom=True,
     legend_at_bottom_columns=4,
     print_values=True,
@@ -64,6 +74,7 @@ chart = pygal.Treemap(
 for category, items in data.items():
     chart.add(category, items)
 
-# Save as PNG and HTML
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Save as PNG and HTML with theme suffix
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
