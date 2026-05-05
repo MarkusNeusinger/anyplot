@@ -1,7 +1,7 @@
 """ anyplot.ai
 swarm-basic: Basic Swarm Plot
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 83/100 | Updated: 2026-05-05
+Quality: 85/100 | Updated: 2026-05-05
 """
 
 import os

@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: swarm-basic
 created: '2025-12-23T21:54:54Z'
-updated: '2026-05-05T01:10:07Z'
+updated: '2026-05-05T01:21:18Z'
 generated_by: claude-sonnet
 workflow_run: 25352065729
 issue: 974
@@ -12,44 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swarm-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/altair/plot-dark.html
-quality_score: 83
+quality_score: 85
 review:
   strengths:
-  - Excellent data quality with realistic, varied distributions showcasing swarm plot
-    strengths (bimodal Sales, HR outliers)
-  - Clean idiomatic Altair code using transform_calculate for jitter and proper layer
-    composition
-  - Full theme-adaptive chrome with correct Okabe-Ito palette and background tokens
-    in both renders
-  - Mean diamond markers with dashed reference lines add analytical value beyond a
-    plain scatter
-  - Font sizes explicitly set throughout; both light and dark renders are fully readable
+  - Perfect Okabe-Ito palette application with correct first series (#009E73) and
+    correct canonical order across all 4 categories
+  - Mean diamond markers + dashed reference lines add meaningful statistical context
+    per group
+  - 'Excellent data design: four groups with deliberately contrasting distributions
+    (tight, wide, bimodal, outlier-heavy) showcase all swarm plot features'
+  - Full theme-adaptive chrome with correct token mapping in both light and dark renders
+  - Clean layered Altair architecture using transform_calculate and layer composition
   weaknesses:
-  - Vega-Lite random() jitter in transform_calculate is not reproducible — pre-compute
-    numpy-seeded jitter offsets as a dataframe column instead
-  - configure_view stroke creates a visible border around the plot area adding visual
-    clutter — remove or set stroke=None
-  - Y-axis extends to 20 but data starts around 40 — tighten range to approximately
-    30-105
-  - No visual emphasis on interesting data patterns (Sales bimodality, HR extreme
-    outliers) — use opacity or size variation to guide the viewer
-  - Typography is functional but not intentional — consider heavier title weight or
-    removing the legend box border
+  - Random jitter via Vega-Lite random() in transform_calculate is not seeded — jitter
+    positions change between renders, breaking reproducibility (CQ-02)
+  - 'Canvas slightly undersized: 1400x800 (4200x2400 at scale 3) vs recommended 1600x900
+    (4800x2700)'
+  - Y-axis domain starts at 20 but data begins near 40 — wasteful empty band at the
+    bottom of the chart
+  - Full view box frame not removed (configure_view stroke still visible) and both
+    horizontal and vertical grid lines present — vertical ones add visual noise
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "swarm-basic · altair · anyplot.ai" in dark ink, clearly readable. Axis titles "Department" and "Performance Score" in dark text at 22px. Tick labels at 18px, all readable. Legend labels in secondary ink color, readable.
-      Data: Four groups of scatter points in Okabe-Ito colors — Engineering (#009E73 green), Marketing (#D55E00 orange), Sales (#0072B2 blue), HR (#CC79A7 pink). Mean diamond markers in dark INK color with dashed reference lines. Horizontal-only subtle grid at 10% opacity.
+      Background: Warm off-white consistent with #FAF8F1
+      Chrome: Title "swarm-basic · altair · anyplot.ai" dark and bold at top-center; axis titles "Department" and "Performance Score" in dark INK; tick labels in INK_SOFT — all clearly readable against light background
+      Data: Four jitter-spread groups — Engineering (#009E73 teal), Marketing (#D55E00 orange), Sales (#0072B2 blue), HR (#CC79A7 pink). Dark INK-colored diamond mean markers with dashed reference lines per group. Subtle 10%-opacity grid lines (both H and V). Legend in top-right with elevated-bg fill.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (~#1A1A17) — correct dark surface, not pure black
-      Chrome: Title in light (#F0EFE8) — clearly readable against dark background. Axis titles and tick labels in light secondary color (#B8B7B0), all readable. Legend text in light colors. No dark-on-dark failures detected.
-      Data: Data point colors are IDENTICAL to the light render (green, orange, blue, pink — Okabe-Ito positions 1-4). Mean diamond markers appear in light/white tone, clearly visible. Dashed reference lines visible in light color.
+      Background: Near-black consistent with #1A1A17
+      Chrome: Title and axis labels appear as light text on dark background; tick labels are light-colored (INK_SOFT token for dark = #B8B7B0); no dark-on-dark text failures observed. Mean diamonds flip to near-white/light in dark mode, contrasting well against dark background.
+      Data: All four category colors identical to light render (Engineering teal, Marketing orange, Sales blue, HR pink — Okabe-Ito positions 1-4 unchanged as required). Grid lines remain subtle.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -57,51 +54,53 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=28, axis titles=22, tick labels=18,
-          legend=16/18. Both renders fully readable.'
+        comment: 'All font sizes explicitly set: title 28px, axis titles 22px, tick
+          labels 18px, legend 16px. Readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Minor point overlap within groups due to random jitter vs. true beeswarm
-          algorithm. Text and tick labels unobstructed.
+        comment: Random jitter creates moderate point overlap in Engineering and Sales
+          groups — inherent to jitter-based (not true beeswarm) approach.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: size=180 x scale_factor=3.0 gives visible markers. Some clustering
-          in denser groups.
+        comment: size=180, opacity=0.75 appropriate for 35-52 points per group. All
+          markers clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; opacity=0.75 appropriate for density.
+        comment: Okabe-Ito palette is CVD-safe. Adequate luminance contrast between
+          all four category colors.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Plot fills canvas well; legend outside right. Y-axis extends to 20
-          but data starts ~40, leaving some empty lower space.
+        comment: Canvas 1400x800 (4200x2400) slightly below 4800x2700 standard. Y-axis
+          domain 20-110 with data starting at ~40 creates wasteful empty lower band.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Department and Performance Score are descriptive; no units but performance
-          scores have no natural unit.
+        comment: Department (x) and Performance Score (y) are descriptive. No units
+          needed for a score metric.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Okabe-Ito order. Light bg #FAF8F1,
-          dark bg #1A1A17. Chrome fully theme-correct in both renders.'
+        comment: 'First series Engineering = #009E73. Okabe-Ito order correct for
+          all 4 categories. Backgrounds #FAF8F1 light / #1A1A17 dark. Chrome adapts
+          correctly in both renders.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -109,56 +108,57 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above default due to mean diamond markers and dashed reference lines.
-          Not yet at strong design level — typography functional rather than intentional.
+        comment: 'Above plain default: mean diamond markers + dashed reference lines
+          add visual sophistication. Theme-adaptive INK tokens applied cleanly. Not
+          quite at strong design level (6+) but above well-configured defaults (4).'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Subtle horizontal grid and configured chrome are positive. configure_view
-          stroke leaves visible border. No spines removal equivalent. Whitespace generous.
+        passed: true
+        comment: 'Grid opacity 10% is very subtle. However no spine removal: full
+          box frame visible via configure_view(stroke=INK_SOFT). Both H and V grid
+          lines present; vertical lines at category positions feel mildly distracting.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Interesting data patterns (bimodal Sales, HR outliers) present but
-          not emphasized. Mean lines add context. No deliberate visual hierarchy to
-          guide viewer to key insights.
+        passed: true
+        comment: 'Mean diamonds in INK color serve as clear focal anchors. Different
+          distribution shapes visible: Engineering tight/high, Marketing wide with
+          outliers, Sales bimodal, HR with extreme outliers (45, 92, 95). Visual hierarchy
+          guides reader.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Jitter-based approximation via transform_calculate random(). Practical
-          maximum for Altair; true beeswarm would require computational layout step.
-          Some overlap present.
+        comment: Jitter-scatter as swarm plot is standard Altair approach (no native
+          beeswarm). Individual points, categorical axis, horizontal spread achieved.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Individual points, horizontal spread, mean/median markers, color-coded
-          categories, clear inter-group spacing.
+        comment: Individual data points, color by category, horizontal jitter spread,
+          mean marker per category, clear group spacing — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Department (categorical), Y=Performance Score (quantitative). All
-          data visible.
+        comment: Category on x, Performance Score on y, all data in range visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'swarm-basic · altair · anyplot.ai'. Legend labels
-          match four departments.
+        comment: Title 'swarm-basic · altair · anyplot.ai' matches required format.
+          Legend labels match department categories.
     data_quality:
       score: 15
       max: 15
@@ -168,22 +168,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Varied distribution shapes: tight Engineering, wide Marketing, bimodal
-          Sales, HR with outliers at both extremes.'
+        comment: 'Four groups with deliberately varied distributions: tight normal
+          (Engineering), wide normal with outliers (Marketing), bimodal (Sales), tight
+          cluster + extreme outliers (HR). Shows all swarm plot features.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Employee performance scores across departments: neutral, plausible
-          real-world HR scenario.'
+        comment: Employee performance scores across business departments. Neutral,
+          recognizable, real-world scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scores 30-100, means 69-76. Bimodal Sales and HR outliers are realistic
-          workplace patterns.
+        comment: Scores on 0-100 scale with realistic per-department means (78, 72,
+          73, 70). HR outliers at 45, 92, 95 are plausible edge cases.
     code_quality:
       score: 9
       max: 10
@@ -193,52 +194,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat linear flow: imports, tokens, data, chart, save.'
+        comment: 'Linear flow: imports -> tokens -> data -> chart layers -> save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 1
         max: 2
         passed: false
         comment: np.random.seed(42) seeds data generation but Vega-Lite random() in
-          transform_calculate is not seeded — jitter positions differ between renders.
+          transform_calculate is independent of numpy seed — jitter positions vary
+          between renders.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, altair, numpy, pandas. All used.
+        comment: os, altair, numpy, pandas — all used, no unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Altair idioms; layer composition well-structured; no over-engineering.
+        comment: Clean layer composition with +, transform_calculate for computed
+          field, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API used.
+        comment: Saves both plot-{THEME}.png and plot-{THEME}.html (correct for interactive
+          library). Current Altair API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Correct Altair grammar: encoding types (:Q, :N), mark_circle/mark_point/mark_rule,
-          transform_calculate, layer composition, configure_* global styling.'
+        comment: Uses Altair declarative encoding, transform_calculate, layer composition,
+          and configure_* methods correctly. Slightly above baseline for using transforms.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: transform_calculate with Vega-Lite random() for jitter is Altair-distinctive.
-          Layer composition leverages grammar of graphics. Interactive HTML tooltips
-          add value.
-  verdict: REJECTED
+        comment: transform_calculate with random() for in-chart jitter is distinctively
+          Altair/Vega-Lite. Layer composition (+) and multi-mark chart (circle + point
+          + rule) leverages Altair multi-mark API.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
