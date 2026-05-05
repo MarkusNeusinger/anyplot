@@ -831,12 +831,16 @@ jobs:
             # Clean up generate label before retry
             gh issue edit "$ISSUE" --remove-label "generate:${LIBRARY}" 2>/dev/null || true
 
-            # Automatic retry via workflow_dispatch
+            # Automatic retry via workflow_dispatch.
+            # Forward `change_request` so cross-library divergence hints from
+            # daily-regen pre-flight survive the retry — otherwise the first
+            # attempt has the hint but the retry doesn't, defeating the audit.
             gh workflow run impl-generate.yml \
               -f specification_id="${SPEC_ID}" \
               -f library="${LIBRARY}" \
               -f issue_number="${ISSUE}" \
-              -f model="${MODEL}"
+              -f model="${MODEL}" \
+              -f change_request="${{ inputs.change_request }}"
 
-            echo "::notice::Triggered automatic retry for ${LIBRARY}/${SPEC_ID} (attempt $((ATTEMPT + 1)), model=${MODEL})"
+            echo "::notice::Triggered automatic retry for ${LIBRARY}/${SPEC_ID} (attempt $((ATTEMPT + 1)), model=${MODEL}, change_request=$([ -n "${{ inputs.change_request }}" ] && echo present || echo none))"
           fi
