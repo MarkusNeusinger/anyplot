@@ -180,7 +180,7 @@ jobs:
   # ============================================================================
   preflight-dispatch:
     needs: pick
-    if: ${{ needs.pick.outputs.count != '0' && !inputs.dry_run }}
+    if: ${{ needs.pick.outputs.count != '0' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write       # spec polish: branch + commit
@@ -192,6 +192,10 @@ jobs:
         spec_id: ${{ fromJson(needs.pick.outputs.specs_json) }}
       fail-fast: false
       max-parallel: 1   # serialize so polish PRs and dispatches don't race
+    # Note on dry_run: the JOB always runs when there's a spec to process, so
+    # operators can exercise skip-gate + similarity-audit + collect on demand.
+    # Side-effect steps (polish, dispatch) are individually gated on
+    # `!inputs.dry_run` below.
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
@@ -219,7 +223,10 @@ jobs:
           fi
 
       - name: Spec polish (autonomous, opens PR — no auto-merge)
-        if: steps.gate.outputs.skip_polish == '0'
+        if: ${{ steps.gate.outputs.skip_polish == '0' && !inputs.dry_run }}
+        # Optional quality pass: a transient action failure here must not
+        # block the main regeneration pipeline. Skip cleanly and continue.
+        continue-on-error: true
         timeout-minutes: 15
         uses: anthropics/claude-code-action@2cc1ac1331eac7a6a96d716dd204dd2888d0fcd2  # v1
         with:
@@ -233,6 +240,9 @@ jobs:
             - SPEC_ID: ${{ matrix.spec_id }}
 
       - name: Cross-library similarity audit
+        # Read-only audit; if it fails, fall back to empty change_requests
+        # rather than aborting the dispatch.
+        continue-on-error: true
         timeout-minutes: 15
         uses: anthropics/claude-code-action@2cc1ac1331eac7a6a96d716dd204dd2888d0fcd2  # v1
         with:
@@ -267,6 +277,7 @@ jobs:
           echo "::notice::change_requests for ${{ matrix.spec_id }}: ${flagged} lib(s) flagged — ${CR_COMPACT}"
 
       - name: Dispatch bulk-generate with change_requests
+        if: ${{ !inputs.dry_run }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPEC_ID: ${{ matrix.spec_id }}
