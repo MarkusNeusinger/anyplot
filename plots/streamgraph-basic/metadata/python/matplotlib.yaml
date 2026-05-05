@@ -1,174 +1,192 @@
 library: matplotlib
+language: python
 specification_id: streamgraph-basic
 created: '2025-12-23T21:54:32Z'
-updated: '2025-12-23T22:00:32Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472382316
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - manual-ticks
-  patterns:
-    - data-generation
-    - matrix-construction
-  dataprep: []
-  styling:
-    - alpha-blending
+updated: '2026-05-05T03:41:17Z'
+generated_by: claude-sonnet
+workflow_run: 25355850299
+issue: 856
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent use of matplotlib stackplot with wiggle baseline to create authentic
-    streamgraph appearance
-  - Well-chosen color palette starting with Python blue/yellow, all colors visually
-    harmonious and colorblind-safe
-  - Realistic music streaming scenario with thoughtful trends (growing Hip-Hop, seasonal
-    Electronic peaks in summer)
-  - Clean code structure following KISS principles with appropriate font sizes for
-    4800x2700 output
-  - Smart removal of y-axis ticks emphasizing relative proportions rather than absolute
-    values
+  - Correct streamgraph using ax.stackplot with baseline=wiggle — the idiomatic matplotlib
+    approach
+  - Smooth cubic spline interpolation via scipy creates genuinely flowing, organic
+    curves
+  - 'Full Okabe-Ito palette compliance with #009E73 as first series and canonical
+    order for all 6 categories'
+  - Both light and dark themes implemented correctly with theme-adaptive chrome tokens
+    throughout
+  - 'Perfect spec compliance: symmetric baseline, smooth curves, distinct colors,
+    legend, realistic music streaming data'
+  - Clean KISS code structure with seed, explicit font sizes at correct sizes (24/20/16),
+    and all-used imports
+  - No grid and hidden y-axis are appropriate design choices for a streamgraph
   weaknesses:
-  - Legend overlaps slightly with the top stream area - could be positioned outside
-    the plot or in a less intrusive location
-  - X-axis label Month is minimal - could include the date range for context
-  - Streams could show more dramatic variation to better demonstrate the visual power
-    of streamgraphs
-  image_description: 'The plot displays a streamgraph showing monthly streaming hours
-    by music genre over two years (Jan''23 to Dec''24). Six colored stacked areas
-    represent different genres: Pop (Python blue #306998), Rock (yellow #FFD43B),
-    Hip-Hop (salmon/coral #E07A5F), Electronic (teal/mint #81B29A), Jazz (tan/beige
-    #F2CC8F), and Classical (dark gray #3D405B). The streams are centered around an
-    invisible baseline creating a symmetric, flowing river-like appearance. The x-axis
-    shows months with quarterly labels, and the title "streamgraph-basic · matplotlib
-    · pyplots.ai" is prominently displayed at the top. A legend in the upper-left
-    corner identifies each genre. The y-axis ticks are intentionally removed for cleaner
-    aesthetics.'
+  - Design storytelling is absent — no visual hierarchy or emphasis to guide the viewer
+    toward any insight (DE-03)
+  - Aesthetic sophistication is at the well-configured-default level — no distinctive
+    typographic choices, no annotations, no focal points to elevate the design (DE-01)
+  - Library mastery could be stronger — the smooth curves rely on scipy preprocessing
+    rather than any matplotlib-native curve-smoothing technique (LM-02)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "streamgraph-basic · matplotlib · anyplot.ai" in dark ink at top, x-axis label "Month (Jan 2023 – Dec 2024)" in dark ink at bottom, tick labels (Jan'23, Apr'23, Jul'23... Oct'24) in muted dark tone (INK_SOFT), y-axis hidden (appropriate for streamgraph). Legend in upper-left with elevated off-white frame, dark-muted text, all 6 category names readable.
+      Data: 6 smooth flowing bands in Okabe-Ito order — #009E73 (Pop, bottom/largest), #D55E00 (Rock, orange), #0072B2 (Hip-Hop, dark blue, growing toward end), #CC79A7 (Electronic, pink), #E69F00 (Jazz, gold/orange), #56B4E9 (Classical, sky blue at top). Alpha=0.85 gives slight translucency. Bands are clearly distinguishable.
+      Legibility verdict: PASS — all text is readable against the warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title and x-axis label in light ink (INK token for dark theme = #F0EFE8), tick labels in lighter muted tone (INK_SOFT for dark = #B8B7B0). Legend has dark elevated frame (#242420) with light-colored text. All chrome elements are clearly readable against the dark background. No dark-on-dark failures observed.
+      Data: Identical colors to light render — #009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9 — confirming only chrome flips between themes, not data colors.
+      Legibility verdict: PASS — all text is clearly readable against the near-black background
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, x-label at 20pt, tick labels at 16pt - all perfectly
-          readable
+        comment: 'All font sizes explicitly set: title=24, xlabel=20, ticks=16, legend=16.
+          Readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, quarterly x-axis labels are well-spaced
+        comment: No overlapping text. X-axis labels spaced every 3 months, legend
+          does not obscure critical data.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Stream areas are well-sized with appropriate alpha (0.85), all layers
-          clearly visible
+        comment: Stream bands clearly visible and well-proportioned. Alpha=0.85 adds
+          depth without obscuring.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Six distinct, harmonious colors that are colorblind-safe (no red-green
-          confusion)
+        comment: Okabe-Ito palette is CVD-safe. Adjacent bands have sufficient luminance
+          contrast.
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions, plot fills canvas well, but legend position in
-          upper-left slightly overlaps the first data point area
+        comment: Streamgraph fills canvas well with balanced margins. tight_layout
+          used correctly.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: '"Month" label is descriptive but lacks context (no units needed
-          for time, but could say "Month (2023-2024)")'
+        comment: X-axis label descriptive with time range 'Month (Jan 2023 – Dec 2024)'.
+          Y-axis hidden appropriately for streamgraph.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: No grid (appropriate for streamgraph), legend well-placed with good
-          framealpha, but could be outside the plot area
+        comment: 'First series #009E73 (Pop). All 6 follow Okabe-Ito canonical order.
+          Backgrounds #FAF8F1 / #1A1A17. Chrome tokens correct in both themes.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: smooth spline curves, alpha blending,
+          clean spine removal. Not quite ''strong design'' — no distinctive typographic
+          or focal-point choices.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: all spines removed except bottom, y-axis hidden,
+          no grid, legend frame styled with elevated background and INK_SOFT border.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed but no visual hierarchy or emphasis. No focal point
+          draws the viewer to any insight (e.g., Hip-Hop growth trend).
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct streamgraph using stackplot with "wiggle" baseline for symmetric
-          centering
+        comment: 'Correct streamgraph: ax.stackplot with baseline=''wiggle'' creates
+          symmetric centered baseline. Smooth flowing curves via spline interpolation.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on x-axis, stacked categories correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Smooth curves, centered baseline, distinct colors, legend present
-          - all spec requirements met
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: smooth interpolation, symmetric baseline,
+          distinct harmonious colors, legend, 6 categories (within 3-8 range), 24
+          time points.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 24 months visible, all data within bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Time on X-axis (Jan 2023 – Dec 2024), all 6 genre values stacked,
+          all data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: All 6 genre labels correctly identified
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "streamgraph-basic · matplotlib · pyplots.ai"
+        comment: Title 'streamgraph-basic · matplotlib · anyplot.ai' correct format.
+          Legend labels match all 6 category names.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple genres with different trends (growing Hip-Hop, seasonal
-          Electronic, steady Pop, declining Jazz), demonstrates the streamgraph concept
-          well, but could show more dramatic variation
+        comment: 'Shows full range: growing trends (Hip-Hop, Pop), declining trends
+          (Jazz, Classical), oscillating (Rock, Electronic). Demonstrates streamgraph
+          composition well.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Music streaming hours by genre is a perfect, relatable real-world
-          scenario
+        comment: Music streaming hours by genre is highly realistic, neutral, and
+          comprehensible. Named genres, Jan 2023–Dec 2024 timeframe. No controversial
+          content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values in reasonable range (5-60+ streaming hours), though the exact
-          scale is hidden
+        comment: Values 15-100 hours/month are plausible. Pop as largest, Hip-Hop
+          growing, Jazz/Classical declining — all realistic market trends.
     code_quality:
       score: 10
       max: 10
@@ -178,41 +196,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save, no functions/classes'
+        comment: No functions or classes. Clean Imports → Data → Plot → Save structure.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set for deterministic data
+        comment: np.random.seed(42) set at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: os, matplotlib.pyplot, numpy, scipy.interpolate.make_interp_spline
+          — all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Clean, Pythonic. List comprehension for smooth data array. No fake
+          UI or over-engineering.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches='tight', facecolor=PAGE_BG.
+          Current matplotlib API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses ax.stackplot() with baseline='wiggle' — the recommended matplotlib
+          approach for streamgraphs. Axes methods throughout. plt.setp() for legend
+          text.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses stackplot with baseline="wiggle" which is matplotlib's native
-          way to create streamgraphs, appropriate use of spines removal for clean
-          aesthetics
+        comment: baseline='wiggle' in stackplot is matplotlib-specific and creates
+          the streamgraph effect. However, smooth curves rely on scipy preprocessing
+          rather than any matplotlib-native smoothing.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - manual-ticks
+  - custom-legend
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
+  - minimal-chrome
