@@ -1,172 +1,188 @@
 library: bokeh
+language: python
 specification_id: swarm-basic
 created: '2025-12-23T21:56:08Z'
-updated: '2025-12-23T22:02:03Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472388587
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - columndatasource
-  patterns:
-    - data-generation
-    - iteration-over-groups
-  dataprep: []
-  styling:
-    - alpha-blending
-    - edge-highlighting
-    - grid-styling
+updated: '2026-05-05T01:49:22Z'
+generated_by: claude-sonnet
+workflow_run: 25352006335
+issue: 974
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/bokeh/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent custom swarm jitter algorithm that creates proper beeswarm layout based
-    on local density
-  - Strong data storytelling with distinct distribution shapes per department (bimodal
-    Sales, tight Engineering, outliers in HR)
-  - Good visual design with white point borders, subtle grid, and professional color
-    palette
-  - Mean markers for each category add statistical context as suggested in spec
-  - Proper 4800x2700 sizing with appropriate font sizes for the canvas
+  - Perfect spec compliance — all required features (jitter spread, median markers,
+    category color coding) correctly implemented
+  - Excellent data quality — realistic employee performance scenario with varied distributions
+    (bimodal Sales, outlier HR), great storytelling potential in the data
+  - Perfect code quality — clean KISS structure, np.random.seed(42), all imports used,
+    correct output file names
+  - Full theme adaptation — both light (#FAF8F1) and dark (#1A1A17) renders are correct;
+    data colors are identical across themes; INK-derived median lines adapt correctly
   weaknesses:
-  - No legend explaining what the horizontal black lines represent (mean markers)
-  - Swarm algorithm is implemented manually rather than using a library feature
-  image_description: 'The plot displays a swarm (beeswarm) plot showing employee performance
-    scores across 4 departments: Engineering (blue points, ~45 observations clustered
-    around 80), Marketing (yellow points, ~38 observations with wider spread around
-    75), Sales (green points, ~52 observations showing bimodal distribution with clusters
-    around 65 and 88), and HR (purple points, ~35 observations around 78 with visible
-    outliers at ~45 and ~98). Each department has a black horizontal line indicating
-    the mean value. Points are horizontally jittered to avoid overlap, revealing the
-    full distribution shape. The background is light gray (#fafafa), with subtle horizontal
-    grid lines. Title "swarm-basic · bokeh · pyplots.ai" is centered at the top. Y-axis
-    shows "Performance Score (points)" ranging from ~30-100, X-axis shows "Department"
-    with category labels.'
+  - Library mastery gap — Bokeh's most distinctive feature (interactive tooltips)
+    is completely unused; HoverTool for showing department name and exact score per
+    data point is the obvious improvement
+  - Design refinement — outline_line_color creates a full rectangular border/box frame;
+    style guide prefers L-shaped (top/right removed) or no frame at all; set p.outline_line_color
+    = None
+  - Minor canvas waste — browser window height offset (+200) leaves a visible blank
+    strip at the bottom of both renders; layout could be tighter
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "swarm-basic · bokeh · anyplot.ai" in dark INK text, clearly readable; Y-axis label "Performance Score" rotated left, readable dark text; X-axis label "Department" bold dark text; tick labels (Engineering, Marketing, Sales, HR and numeric y-ticks) in softer dark INK_SOFT — all legible
+      Data: Four groups with Okabe-Ito colors — Engineering=teal #009E73 (first series, correct), Marketing=orange #D55E00, Sales=blue #0072B2, HR=pink/purple #CC79A7. Points jittered horizontally per density, size=18, alpha=0.75. Median lines per category in dark INK color. Y-grid subtle (alpha=0.10). Slight blank strip at bottom of canvas (~8% height) from browser window capture.
+      Legibility verdict: PASS — all text is readable against the light background
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in near-white (#F0EFE8) text, clearly readable; axis labels in same near-white tone; tick labels in lighter INK_SOFT (#B8B7B0) — all readable; median lines in near-white adapting correctly to dark theme; subtle y-grid at alpha=0.10. No dark-on-dark failures observed.
+      Data: Colors are identical to light render — Engineering teal #009E73, Marketing orange, Sales blue, HR pink remain unchanged (only chrome flips). Points with background-colored edge blend into dark background subtly.
+      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark failure
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title at 36pt, axis labels at 26pt, tick labels at 18-20pt - all
-          clearly readable, though category labels could be slightly larger
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, swarm jitter effectively separates
-          points
+        comment: 'All font sizes explicitly set: title 36pt, axis labels 26pt, tick
+          labels 20pt — all readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Jitter algorithm spreads points well; minimal overlap in dense regions
+          of Sales/Engineering clusters
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Point size=18 with alpha=0.7 works well for ~170 total points; some
-          minor overlap in dense regions
+        comment: size=18 at 4800x2700 is appropriate for ~170 total points; alpha=0.75
+          good; clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, green, purple palette is colorblind-friendly (no red-green
-          distinction)
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, though data is concentrated in upper portion
-          (60-100 range)
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units "Performance Score (points)", X-axis has descriptive
-          "Department"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette is CVD-safe; adequate luminance differences between
+          series
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good overall layout; minor blank strip at canvas bottom (~8% height)
+          from browser window height offset
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3, dashed), but no legend explaining mean
-          markers
+        comment: 'Y-axis: ''Performance Score'', X-axis: ''Department'' — descriptive;
+          units not needed for normalized scores'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Engineering=#009E73; Marketing=#D55E00, Sales=#0072B2,
+          HR=#CC79A7 follow Okabe-Ito order; light bg #FAF8F1, dark bg #1A1A17; chrome
+          theme-correct in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above default — custom swarm jitter algorithm, median markers, no
+          toolbar, careful font sizing; but not publication-ready polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: y-grid only at alpha=0.10, no toolbar; but outline_line_color
+          creates a full rectangular border frame instead of L-shaped or no-frame'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Above default — median markers add visual reference; bimodal Sales
+          distribution is visible; but no active emphasis or annotation guiding viewer
+          to key insights
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct swarm/beeswarm plot with horizontal jitter to avoid overlap
+        comment: Correct swarm/beeswarm plot with density-aware horizontal jitter
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X-axis, continuous values on Y-axis as expected
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Includes mean markers as suggested in spec notes, proper point sizing
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: jitter spread, consistent point sizes, median
+          markers, category color coding, clear group spacing'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis 25-105 shows all data points comfortably
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: Categories on x-axis, performance values on y-axis; all data points
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Mean markers present but not labeled in a legend
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format "swarm-basic · bokeh · pyplots.ai"
+        comment: Title 'swarm-basic · bokeh · anyplot.ai' exact match; no separate
+          legend needed as x-axis labels identify categories
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows different distribution shapes: tight (Engineering), wide (Marketing),
-          bimodal (Sales), outliers (HR) - excellent variety'
+        comment: 'Excellent variety: Engineering tightly clustered, Marketing wider
+          spread, Sales bimodal (two performance tiers), HR with extreme outliers'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Employee performance scores by department is a perfect real-world
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Performance scores 30-100 are realistic, group sizes 35-52 appropriate
-          for swarm
+        comment: Employee performance scores by department — realistic, neutral, comprehensible
+          business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Scores 30-100 clipped range, different group means (82/75/65+88/78)
+          are realistic for HR performance data
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,41 +190,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → jitter calculation → plot → save'
+        comment: 'Linear flow: imports → theme tokens → data → jitter algorithm →
+          plot → style → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (numpy, bokeh.io, bokeh.models, bokeh.plotting)
+        comment: 'All imports used: os, time, pathlib, numpy, bokeh, selenium'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; custom jitter algorithm is appropriately complex
+          for the plot type
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves plot.png and plot.html but strict=True in zip could cause issues
-          in edge cases
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png; current Bokeh API
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, figure customization, but swarm algorithm
-          is manual numpy rather than a Bokeh-specific feature
+        comment: Uses ColumnDataSource correctly; numeric x_range with major_label_overrides
+          is pragmatic for jitter (vs categorical axis); correct Bokeh patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: HTML export via Selenium is Bokeh-specific; but HoverTool (Bokeh's
+          signature interactive feature for per-point tooltips) is completely absent
+          — tools='' disables everything
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - columndatasource
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
