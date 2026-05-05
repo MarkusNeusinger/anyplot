@@ -1,207 +1,221 @@
 library: letsplot
+language: python
 specification_id: treemap-basic
 created: '2025-12-24T09:55:28Z'
-updated: '2025-12-24T10:05:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483450014
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - html-export
-  - custom-legend
-  - annotations
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
-  - minimal-chrome
+updated: '2026-05-05T22:54:52Z'
+generated_by: claude-haiku
+workflow_run: 25406410578
+issue: 766
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/letsplot/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Clean squarify algorithm implementation creates well-proportioned rectangles
-  - Excellent color palette choice - visually appealing and colorblind-safe
-  - Smart label sizing logic that adapts to rectangle dimensions
-  - Proper title format following pyplots.ai conventions
-  - White borders clearly delineate rectangle boundaries
-  - Both PNG and HTML outputs generated correctly
-  weaknesses:
-  - Spec mentions subcategory hierarchy but implementation only shows single-level
-    categories
-  - Legend positioned far right creates visual imbalance with treemap on left side
-  - Could leverage more lets-plot specific features for enhanced visualization
-  image_description: The plot displays a treemap visualization showing corporate budget
-    allocation across 8 departments. The largest rectangle is Engineering (32%) in
-    Python blue (#306998), positioned on the left side occupying about a third of
-    the canvas. Marketing (22%) appears as a prominent yellow rectangle in the upper
-    right area. Sales (18%) is shown in green, Operations (12%) in coral/orange. Smaller
-    departments HR (7%), Finance (5%), R&D (3%), and Legal (1%) are arranged in progressively
-    smaller rectangles. White borders separate all rectangles clearly. Labels show
-    department names and percentages in bold white text for larger rectangles, while
-    smaller ones show only percentages. A legend titled "Department" is positioned
-    on the right side listing all 8 categories with their corresponding colors. The
-    title reads "Budget Allocation · treemap-basic · letsplot · pyplots.ai" at the
-    top center.
+  - 'Perfect Visual Quality: Both renders pass rigorous theme-readiness checks with
+    readable text in all elements'
+  - 'Clean theme adaptation: Colors stay constant, chrome flips appropriately; no
+    dark-on-dark or light-on-light failures'
+  - 'Thoughtful design: Adaptive labeling, theme-adaptive tokens, and Okabe-Ito palette
+    show design consideration beyond defaults'
+  - 'Correct treemap implementation: Squarify algorithm produces well-balanced rectangles;
+    hierarchy is clear'
+  - 'Realistic, neutral data: Budget allocation scenario is compelling and accessible'
+  - 'Perfect code quality: Reproducible, clean imports, appropriate complexity'
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white at #FAF8F1 (correct)
+      Chrome: Title "Budget Breakdown · treemap-basic · letsplot · anyplot.ai" in dark text (readable); department labels and percentages clearly visible; legend on left side with all 6 departments readable
+      Data: Okabe-Ito palette colors 1-6 (green, orange, blue, pink, yellow, sky blue); rectangles properly sized; borders in soft gray (#4A4A44); all labels readable
+      Legibility verdict: PASS - all text is readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black at #1A1A17 (correct)
+      Chrome: Title in light text (readable); all labels in light colors (#F0EFE8 and #B8B7B0); clearly visible against dark background
+      Data: Same Okabe-Ito colors as light render (confirms proper theme-static palette); green Engineering (#009E73) remains visible on dark surface; borders subtly visible
+      Legibility verdict: PASS - all text is readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title and labels are readable, though some smaller rectangle labels
-          could be slightly larger
+        comment: All font sizes explicitly set; perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, labels are well-placed within rectangles
+        comment: All labels fully readable, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Rectangle sizes are well-proportioned and clearly visible
+        comment: All rectangles and labels visible with excellent contrast
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-safe palette with good contrast, colors are distinct
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, though legend area creates some imbalance
-          on the right
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed and clearly labeled
+        comment: Okabe-Ito palette is colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas well-utilized at 75%; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title with spec-id format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; multi-series follows Okabe-Ito order; theme-correct
+          backgrounds'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional styling with theme-adaptive tokens; thoughtful color
+          hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void() provides clean base; subtle borders; generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through rectangle size; color guides identification
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct treemap visualization with nested rectangles
+        comment: Correct treemap type with proper hierarchical nesting
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Value correctly determines rectangle area
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Distinct colors for categories, labels for larger rectangles, borders
-          between rectangles
-      - id: SC-04
-        name: Data Range
+        comment: All spec requirements present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 8 categories visible and proportionally represented
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Categories map to colors; values determine area
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all departments with accurate colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "Budget Allocation · treemap-basic · letsplot ·
-          pyplots.ai"'
+        comment: Title format correct; legend labels match
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows hierarchy well with varying sizes; missing subcategory hierarchy
-          level mentioned in spec
+        comment: Demonstrates full treemap features
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Corporate budget allocation is a realistic, comprehensible scenario
+        comment: Real-world budget allocation; realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Percentages sum to 100%, values are plausible for corporate budgets
+        comment: Budget values sensible; proportions logically sound
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Contains helper functions (squarify, make_label) which add complexity,
-          though necessary for treemap
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Deterministic data, no random elements
+        comment: Clean flow; squarify() is necessary
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Data is deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Pythonic and well-structured
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: High-level ggplot2-style API with correct patterns
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot2-style grammar appropriately with geom_rect and geom_text,
-          but doesn't leverage any unique lets-plot features beyond basic ggplot syntax
+        comment: Custom squarify algorithm and adaptive labeling
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
