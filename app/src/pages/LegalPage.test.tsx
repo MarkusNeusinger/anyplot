@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+import { fireEvent } from '@testing-library/react';
 import { render, screen } from '../test-utils';
 import { LegalPage } from './LegalPage';
 
@@ -6,10 +7,11 @@ vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+const trackEvent = vi.fn();
 vi.mock('../hooks', () => ({
   useAnalytics: () => ({
     trackPageview: vi.fn(),
-    trackEvent: vi.fn(),
+    trackEvent: (...args: unknown[]) => trackEvent(...args),
   }),
 }));
 
@@ -59,6 +61,19 @@ describe('LegalPage', () => {
     render(<LegalPage />);
 
     expect(screen.getByText('~$34/month')).toBeInTheDocument();
+  });
+
+  it('tracks external link clicks for linkedin, x and github', () => {
+    trackEvent.mockClear();
+    render(<LegalPage />);
+
+    fireEvent.click(screen.getByRole('link', { name: 'markus-neusinger' }));
+    fireEvent.click(screen.getByRole('link', { name: '@MarkusNeusinger' }));
+    fireEvent.click(screen.getByRole('link', { name: 'MarkusNeusinger' }));
+
+    expect(trackEvent).toHaveBeenCalledWith('external_link', { destination: 'linkedin' });
+    expect(trackEvent).toHaveBeenCalledWith('external_link', { destination: 'x' });
+    expect(trackEvent).toHaveBeenCalledWith('external_link', { destination: 'github_personal' });
   });
 
 });
