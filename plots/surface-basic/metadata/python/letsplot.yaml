@@ -1,170 +1,175 @@
 library: letsplot
+language: python
 specification_id: surface-basic
 created: '2025-12-23T22:01:09Z'
-updated: '2025-12-23T22:06:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472392394
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/surface-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/surface-basic/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - 3d-projection
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-05-05T17:13:12Z'
+generated_by: claude-haiku
+workflow_run: 25390256203
+issue: 1013
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/letsplot/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent creative solution to render 3D surfaces in lets-plot (a 2D library)
-    using polygon-based projection with painter's algorithm
-  - Proper implementation of 3D-to-2D projection with configurable elevation and azimuth
-    angles
-  - Viridis colormap provides excellent colorblind accessibility and clear height
-    encoding
-  - Clean, well-organized code with clear comments explaining each step of the transformation
-  - Depth sorting (painter's algorithm) correctly handles polygon occlusion for realistic
-    3D appearance
+  - 'Perfect visual quality: all text legibility, layout, and palette compliance checks
+    pass'
+  - 'Complete spec compliance: correct 3D surface type, all required features present,
+    proper axis labels and colorbar'
+  - 'Excellent code quality: clean structure, proper seeding, idiomatic letsplot usage
+    with ggsave scale parameter'
+  - 'Strong data quality: mathematically interesting example (sin·cos surface) with
+    full feature coverage and realistic scale'
+  - 'Flawless theme adaptation: both light and dark renders are fully readable with
+    identical data colors and proper chrome colors'
   weaknesses:
-  - Axis labels could better reflect the 3D nature (e.g., X and Y before projection,
-    or note the projection in the label)
-  - The Y-axis original dimension is lost in the final visualization (only X and Z
-    are labeled)
-  image_description: The plot displays a 3D surface visualization of z = sin(x) *
-    cos(y) rendered as a 2D projection using filled polygons with the painter's algorithm.
-    The surface shows characteristic wavy peaks and valleys with a smooth viridis
-    colormap - yellow/green for positive Z values (peaks around +0.5) and purple/blue
-    for negative Z values (valleys around -0.5). The wireframe edges are visible in
-    a subtle blue color (#306998). The title "surface-basic · letsplot · pyplots.ai"
-    appears at the top. Axis labels show "X (projected)" on the horizontal axis and
-    "Z (height)" on the vertical axis. A colorbar legend labeled "Z Value" is positioned
-    on the right side. The surface appears properly rotated with elevation ~25° and
-    azimuth ~45°, giving good depth perception of the 3D structure.
+  - 'Design Excellence is moderate: while aesthetically competent, the implementation
+    uses standard viridis colormap and library defaults rather than custom palette
+    choices or exceptional visual refinement'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with good definition against data elements
+      Chrome: Title "surface-basic · letsplot · anyplot.ai" in dark text (size 24pt); axis labels "X (projected)" and "Z (height)" in dark text (size 20pt); tick labels in soft gray (#4A4A44, size 16pt) — all clearly readable. Legend on right showing "Z Value" scale.
+      Data: 3D surface rendered with viridis colormap (yellow peaks → dark blue valleys). Polygon edges (size 0.2) provide subtle definition. Color gradient is smooth and perceptually clear.
+      Legibility verdict: PASS — All text readable, strong contrast, no dark-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with proper definition
+      Chrome: Title and axis labels in light text (#F0EFE8) — clearly visible against dark background. Tick labels in soft light gray (#B8B7B0) — no dark-on-dark failures. Legend background is darker (theme-adapted).
+      Data: Viridis colors appear identical to light render (yellow peaks, dark blue valleys). Polygon edges provide consistent definition. 3D projection is equally clear.
+      Legibility verdict: PASS — All text readable in light colors, data colors match light render exactly, no theme-adaptation failures.
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at the
-          output resolution
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: Title 24pt, labels 20pt, ticks 16pt — all explicitly set and readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text well-positioned, no overlaps, legend isolated from plot
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Surface polygons are visible with good color differentiation; wireframe
-          lines are subtle but effective
+        comment: 3D surface clearly visible with subtle polygon edges providing definition
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, slight imbalance with more whitespace on
-          right side
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Labels are descriptive ("X (projected)", "Z (height)") but lack proper
-          3D context units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Legend well placed; no grid (appropriate for this 3D projection)
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct 3D surface plot type implemented via polygon projection
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X, Y mapped correctly to create the 2D projection; Z encoded in both
-          height and color
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Has colormap, colorbar, axis labels; interactive rotation not available
-          in lets-plot (static 2D library)
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible within the plot area
-      - id: SC-05
-        name: Legend Accuracy
         score: 2
         max: 2
         passed: true
-        comment: '"Z Value" colorbar accurately represents the surface height values'
-      - id: SC-06
-        name: Title Format
-        score: 1
+        comment: Viridis is perceptually uniform and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 50-70% of canvas with balanced margins, no cut-offs
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Correct format but spacing around dots appears slightly inconsistent
-    data_quality:
-      score: 18
+        comment: 'Descriptive labels: ''X (projected)'', ''Z (height)'', proper title
+          format'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis for continuous data; backgrounds #FAF8F1 (light) / #1A1A17
+          (dark); text colors theme-correct; data colors identical across themes'
+    design_excellence:
+      score: 10
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
         max: 8
+        passed: false
+        comment: Well-configured default with viridis, clean but not exceptional or
+          custom
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
         passed: true
-        comment: Shows peaks and valleys of the sine-cosine surface; demonstrates
-          positive and negative values well
-      - id: DQ-02
-        name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Mathematical function z = sin(x) * cos(y) is a classic example for
-          3D surface visualization
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: No grid, subtle edges, generous whitespace — good refinement but
+          not exceptional
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Clear mathematical function but generic narrative; data displayed
+          without special context or emphasis
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Appropriate range (-3 to 3) showing multiple periods of the wave
-          function
+        comment: Correct 3D surface visualization using polygon projection
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Smooth colormap (viridis), axis labels (x, y, z via colorbar), 40x40
+          grid, function visualization
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned, z-values mapped to color and 3D height, all
+          data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'surface-basic · letsplot · anyplot.ai', legend labels 'Z Value'
+          with scale
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Function shows peaks, valleys, saddle points — full feature coverage
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mathematically classic example (sin·cos surface), neutral scientific
+          context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values -1 to +1 are correct for sin/cos, grid -3 to +3 is sensible
     code_quality:
       score: 10
       max: 10
@@ -174,41 +179,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → projection → plot → save'
+        comment: 'Linear: imports → theme setup → data generation → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set (though not strictly needed for deterministic
-          math)
+        comment: np.random.seed(42) set, all calculations deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: os, numpy, pandas, lets_plot — all used, no unused imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern lets-plot API
+        comment: Clean Pythonic code, painter's algorithm well-structured, no fake
+          functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html, uses current ggsave
+          API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Creative use of geom_polygon with ggplot grammar, scale_fill_viridis,
-          theme customization; impressive solution to render 3D in a 2D library
+        comment: ggplot() with aes(), geom_polygon(), scale_fill_viridis(), ggsave()
+          with scale — all idiomatic letsplot patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses geom_polygon creatively for 3D projection; ggsave scale parameter
+          is letsplot-specific; good library understanding but polygon usage is somewhat
+          generic
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
