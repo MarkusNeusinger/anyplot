@@ -1,12 +1,24 @@
-""" pyplots.ai
+"""anyplot.ai
 swarm-basic: Basic Swarm Plot
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: matplotlib | Python 3.13
+Quality: pending | Updated: 2026-05-05
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette — 4 departments
+COLORS = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Data - Employee performance scores by department
 np.random.seed(42)
@@ -14,40 +26,31 @@ np.random.seed(42)
 departments = ["Engineering", "Sales", "Marketing", "Support"]
 n_points = [50, 45, 40, 55]
 
-# Generate scores with different distributions to showcase the plot
 scores_data = {
-    "Engineering": np.random.normal(78, 12, n_points[0]),
-    "Sales": np.random.normal(72, 15, n_points[1]),
-    "Marketing": np.random.normal(82, 10, n_points[2]),
-    "Support": np.random.normal(68, 14, n_points[3]),
+    "Engineering": np.clip(np.random.normal(78, 12, n_points[0]), 0, 100),
+    "Sales": np.clip(np.random.normal(72, 15, n_points[1]), 0, 100),
+    "Marketing": np.clip(np.random.normal(82, 10, n_points[2]), 0, 100),
+    "Support": np.clip(np.random.normal(68, 14, n_points[3]), 0, 100),
 }
 
-# Clip scores to realistic range (0-100)
-for dept in scores_data:
-    scores_data[dept] = np.clip(scores_data[dept], 0, 100)
-
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
-
-colors = ["#306998", "#FFD43B", "#4CAF50", "#FF7043"]
-
-# Calculate y-range for proper scaling
+# Calculate point radius for swarm collision detection
 all_values = np.concatenate(list(scores_data.values()))
 y_min, y_max = all_values.min() - 5, all_values.max() + 5
-point_radius = 150 / 150 * 0.03 * (y_max - y_min)
+point_radius = 0.03 * (y_max - y_min)
 
-# Plot each department with swarm positioning
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+
 for i, dept in enumerate(departments):
     vals = scores_data[dept]
     n = len(vals)
     offsets = np.zeros(n)
 
-    # Sort by value and process in order for swarm positioning
     sorted_idx = np.argsort(vals)
 
     for j, idx in enumerate(sorted_idx):
         val = vals[idx]
-        # Find nearby points already placed
         placed_idx = sorted_idx[:j]
         nearby = [(offsets[k], vals[k]) for k in placed_idx if abs(vals[k] - val) < point_radius * 2.5]
 
@@ -55,7 +58,6 @@ for i, dept in enumerate(departments):
             offsets[idx] = 0
             continue
 
-        # Try positions outward from center
         best_offset = 0
         found = False
         for offset in np.linspace(0, 0.35, 50):
@@ -76,27 +78,34 @@ for i, dept in enumerate(departments):
                 break
         offsets[idx] = best_offset
 
-    # Plot points
-    ax.scatter(i + offsets, vals, s=150, alpha=0.7, color=colors[i], edgecolors="white", linewidth=0.5, label=dept)
+    ax.scatter(i + offsets, vals, s=150, alpha=0.75, color=COLORS[i], edgecolors=PAGE_BG, linewidth=0.5, label=dept)
 
-    # Add mean marker
     mean_val = np.mean(vals)
-    ax.scatter(i, mean_val, s=350, color=colors[i], marker="D", edgecolors="black", linewidth=2, zorder=5)
+    ax.scatter(i, mean_val, s=350, color=COLORS[i], marker="D", edgecolors=INK, linewidth=2, zorder=5)
 
-# Styling
-ax.set_xlabel("Department", fontsize=20)
-ax.set_ylabel("Performance Score", fontsize=20)
-ax.set_title("swarm-basic · matplotlib · pyplots.ai", fontsize=24)
+# Add invisible mean-marker entry for legend
+ax.scatter([], [], s=350, color=INK_SOFT, marker="D", edgecolors=INK, linewidth=2, label="Mean")
+
+# Style
+ax.set_xlabel("Department", fontsize=20, color=INK)
+ax.set_ylabel("Performance Score", fontsize=20, color=INK)
+ax.set_title("swarm-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
 ax.set_xticks(range(len(departments)))
-ax.set_xticklabels(departments)
-ax.tick_params(axis="both", labelsize=16)
+ax.set_xticklabels(departments, fontsize=16)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 ax.set_ylim(25, 105)
 ax.set_xlim(-0.6, 3.6)
-ax.grid(True, alpha=0.3, linestyle="--", axis="y")
 
-# Legend for mean marker
-ax.scatter([], [], s=350, color="gray", marker="D", edgecolors="black", linewidth=2, label="Mean")
-ax.legend(fontsize=16, loc="upper right")
+ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for spine in ("left", "bottom"):
+    ax.spines[spine].set_color(INK_SOFT)
+
+leg = ax.legend(fontsize=16, loc="upper right", framealpha=0.9)
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
