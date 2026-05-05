@@ -56,22 +56,22 @@ OK_YELLOW = "#F0E442"
 OKABE_PALETTE = [OK_GREEN, OK_VERMILLION, OK_BLUE, OK_PURPLE, OK_ORANGE, OK_SKY, OK_YELLOW]
 
 LIGHT_THEME: dict[str, str] = {
-    "bg_page": "#FFFDF6",  # cream — slightly brighter than --bg-page (#F5F3EC) so the OG pops in feeds
-    "bg_surface": "#FAF8F1",  # plot card surface
-    "ink": "#1A1A17",  # primary text
-    "ink_soft": "#4A4A44",  # secondary text
-    "ink_muted": "#6B6A63",  # tertiary / meta
-    "rule": "#E2DFD6",  # ~rgba(26,26,23,0.10) flattened
+    "bg_page": "#F5F3EC",  # warm cream — matches `--bg-page` in app/src/styles/tokens.css
+    "bg_surface": "#FAF8F1",  # plot card surface — `--bg-surface`
+    "ink": "#1A1A17",  # primary text — `--ink`
+    "ink_soft": "#4A4A44",  # secondary text — `--ink-soft`
+    "ink_muted": "#6B6A63",  # tertiary / meta — `--ink-muted`
+    "rule": "#DFDDD6",  # ~rgba(26,26,23,0.10) flattened on bg_page
     "card_shadow": "#D9D5C8",
 }
 
 DARK_THEME: dict[str, str] = {
-    "bg_page": "#0A0A08",  # near-black per issue spec ("#0a0a08 surface")
+    "bg_page": "#121210",  # warm near-black — matches dark `--bg-page` in tokens.css
     "bg_surface": "#1A1A17",
     "ink": "#F0EFE8",
     "ink_soft": "#B8B7B0",
     "ink_muted": "#A8A79F",
-    "rule": "#2A2A26",
+    "rule": "#1E1E1B",  # ~rgba(240,239,232,0.10) flattened on bg_page
     "card_shadow": "#000000",
 }
 
@@ -490,25 +490,17 @@ def _draw_anyplot_wordmark(
 
     cursor_x = x
 
-    # "any"
+    # "any" — bold ink
     draw.text((cursor_x, y), "any", fill=ink, font=bold_font)
     cursor_x += _text_advance(draw, "any", bold_font)
 
-    # Green dot — drawn as a filled circle so it reads as a real "data point",
-    # not a punctuation glyph that disappears against the ink.
-    dot_diameter = max(int(font_size * 0.16), 4)
-    dot_pad_x = max(int(font_size * 0.05), 2)
-    cursor_x += dot_pad_x
-    # Vertically center the dot against the cap-height of the surrounding glyphs.
-    # For most monospace fonts the cap-height sits roughly at y + font_size * 0.7.
-    dot_center_y = y + int(font_size * 0.78)
-    draw.ellipse(
-        [cursor_x, dot_center_y - dot_diameter // 2, cursor_x + dot_diameter, dot_center_y + dot_diameter // 2],
-        fill=OK_GREEN,
-    )
-    cursor_x += dot_diameter + dot_pad_x
+    # "." — the actual MonoLisa period glyph, recolored brand green. Matches the
+    # website where the dot is a `.` character with `color: var(--ok-green)` and
+    # a 1.3× scale, NOT a filled circle (which used to read way too heavy).
+    draw.text((cursor_x, y), ".", fill=OK_GREEN, font=bold_font)
+    cursor_x += _text_advance(draw, ".", bold_font)
 
-    # "plot"
+    # "plot" — bold ink
     draw.text((cursor_x, y), "plot", fill=ink, font=bold_font)
     cursor_x += _text_advance(draw, "plot", bold_font)
 
@@ -603,6 +595,50 @@ def _draw_section_title(
     cursor_x += _text_advance(draw, prompt, prompt_font) + int(title_size * 0.35)
     draw.text((cursor_x, y), text, fill=theme["ink"], font=title_font)
     return y + int(title_size * 1.2)
+
+
+def _draw_eyebrow_and_domain(
+    draw: ImageDraw.ImageDraw,
+    theme: dict[str, str],
+    *,
+    eyebrow_text: str,
+    pad: int = 56,
+    font_size: int = 20,
+    with_wordmark: bool = False,
+    wordmark_size: int = 30,
+) -> int:
+    """Top frame for an OG card — eyebrow rule + text on the left, `~/{domain}` on the right.
+
+    When `with_wordmark` is set, the `any.plot()` brand wordmark is rendered
+    above the eyebrow row (left-aligned, with the domain centered against it on
+    the right). Used by branded + collage variants so `any.plot()` shows on
+    every share card; home omits it because the giant centered headline IS the
+    wordmark.
+    Returns the y-coord directly below the rendered top frame.
+    """
+    font = _get_font(font_size, weight=500)
+    domain_text = f"~/{DOMAIN}"
+    domain_w, _ = _text_size(draw, domain_text, font)
+    rule_w = 32
+
+    if with_wordmark:
+        # Row 1 — any.plot() wordmark left + domain right
+        _draw_anyplot_wordmark(draw, pad, pad, font_size=wordmark_size, theme=theme)
+        domain_y = pad + (wordmark_size - font_size) // 2 + 4
+        draw.text((OG_WIDTH - pad - domain_w, domain_y), domain_text, fill=theme["ink_muted"], font=font)
+        # Row 2 — eyebrow rule + text
+        eyebrow_y = pad + wordmark_size + 18
+        rule_y = eyebrow_y + 14
+        draw.line([(pad, rule_y), (pad + rule_w, rule_y)], fill=theme["rule"], width=1)
+        draw.text((pad + rule_w + 16, eyebrow_y), eyebrow_text, fill=theme["ink_muted"], font=font)
+        return eyebrow_y + font_size + 18
+
+    # Single-row layout (home): eyebrow left, domain right.
+    rule_y = pad + 14
+    draw.line([(pad, rule_y), (pad + rule_w, rule_y)], fill=theme["rule"], width=1)
+    draw.text((pad + rule_w + 16, pad), eyebrow_text, fill=theme["ink_muted"], font=font)
+    draw.text((OG_WIDTH - pad - domain_w, pad), domain_text, fill=theme["ink_muted"], font=font)
+    return pad + font_size + 18
 
 
 def _draw_method_chip(
@@ -907,90 +943,101 @@ def create_branded_header(width: int = OG_WIDTH, height: int = HEADER_HEIGHT) ->
     return header
 
 
-def create_home_og_image(
-    output_path: str | Path | None = None, *, theme: str = "light", tagline: str = TAGLINE_FULL
-) -> Image.Image | bytes:
-    """Render the home/plots fallback OG card in the any.plot() style.
+def _draw_text_with_features(
+    draw: ImageDraw.ImageDraw, xy: tuple[int, int], text: str, *, font, fill, features: list[str] | None = None
+) -> None:
+    """Draw text with optional OpenType features (e.g. `ss02` for MonoLisa Italic swashes).
 
-    Used by `/og/home.png` and `/og/plots.png` — replaces the static
-    `api/static/og-image.png` asset with a card that mirrors the site hero:
+    Falls back to plain `draw.text(...)` when Pillow is built without libraqm
+    (no feature support) or when the font doesn't supply the requested feature.
+    """
+    try:
+        if features:
+            draw.text(xy, text, font=font, fill=fill, features=features)
+        else:
+            draw.text(xy, text, font=font, fill=fill)
+    except Exception:
+        draw.text(xy, text, font=font, fill=fill)
+
+
+def create_home_og_image(
+    output_path: str | Path | None = None,
+    *,
+    theme: str = "light",
+    tagline: str = TAGLINE_FULL,  # legacy kwarg, ignored — hero copy is fixed below
+    hero_plot: str | Path | Image.Image | bytes | None = None,  # reserved for the future "with image" variant
+) -> Image.Image | bytes:
+    """Render the home/plots OG card — typographic, centered, hero-style.
+
+    1200×630 layout:
 
         ┌──────────────────────────────────────────────────────────────┐
-        │  any.plot()                                  ~/anyplot.ai    │
-        │  ──────────────────────────────────────────────────────────  │
+        │ ── the open plot catalogue                    ~/anyplot.ai   │
         │                                                              │
-        │              any.plot() — any library.                       │
         │                                                              │
-        │              get inspired.                                   │
-        │              grab the code.                                  │
-        │              make it yours._                                 │
+        │              any.plot()                                      │
+        │              — any library.                                  │
         │                                                              │
-        │  ■ matplotlib  ■ seaborn  ■ plotly  ■ bokeh  ■ altair  ■ +4  │
+        │              from .md to art._                               │
+        │                                                              │
         └──────────────────────────────────────────────────────────────┘
-    """
-    theme_dict = DARK_THEME if theme == "dark" else LIGHT_THEME
 
-    final = Image.new("RGB", (OG_WIDTH, OG_HEIGHT), theme_dict["bg_page"])
+    `hero_plot` is reserved — a future iteration will swap this for the
+    two-column hero-with-plot variant. For now it's ignored.
+    """
+    del tagline, hero_plot  # held for forward-compat, not used in the simple variant
+
+    theme_dict = DARK_THEME if theme == "dark" else LIGHT_THEME
+    final = Image.new("RGBA", (OG_WIDTH, OG_HEIGHT), theme_dict["bg_page"])
     draw = ImageDraw.Draw(final)
 
-    # Masthead at the top.
-    _draw_masthead(draw, OG_WIDTH, OG_OUTER_PADDING, theme_dict, font_size=28)
+    _draw_eyebrow_and_domain(draw, theme_dict, eyebrow_text="the open plot catalogue")
 
-    # Hero block — `any.plot() — any library.` rendered as a giant centered wordmark.
-    hero_size = 100
-    measure = Image.new("RGB", (OG_WIDTH, OG_HEIGHT))
+    # --- Center hero block: any.plot() / — any library. / from .md to art. ---
+    wm_size = 130
+    accent_size = int(wm_size * 0.72)
+    md_size = 36
+
+    # Measure each line so we can build a left-aligned block, centered as a whole.
+    measure = Image.new("RGBA", (OG_WIDTH, OG_HEIGHT))
     measure_draw = ImageDraw.Draw(measure)
-    wordmark_width = _draw_anyplot_wordmark(measure_draw, 0, 0, font_size=hero_size, theme=theme_dict)
+    wm_w = _draw_anyplot_wordmark(measure_draw, 0, 0, font_size=wm_size, theme=theme_dict)
 
-    accent_font = _get_font(int(hero_size * 0.55), weight=400, italic=True)
-    accent_text = f" — {TAGLINE_SHORT}"
+    accent_font = _get_font(accent_size, weight=400, italic=True)
+    accent_text = f"— {TAGLINE_SHORT}"
     accent_w, _ = _text_size(measure_draw, accent_text, accent_font)
 
-    hero_total_w = wordmark_width + accent_w
-    hero_x = (OG_WIDTH - hero_total_w) // 2
-    hero_y = 165
-    advance = _draw_anyplot_wordmark(draw, hero_x, hero_y, font_size=hero_size, theme=theme_dict)
-    # Italic accent — color flips to brand green per the style guide (`<em>` in headlines).
-    draw.text((hero_x + advance, hero_y + int(hero_size * 0.32)), accent_text, fill=OK_GREEN, font=accent_font)
+    # Headline block — `any.plot()` and `— any library.` share the same left
+    # edge (matches the H1 on the site, where both lines are inside the same
+    # left-aligned heading). Block left = center of the wider of the two.
+    block_w = max(wm_w, accent_w)
+    block_left = (OG_WIDTH - block_w) // 2
 
-    # Tagline lines (typed-out hero block).
-    tagline_lines = tagline.split(". ")
-    tagline_lines = [line.rstrip(".") + "." for line in tagline_lines if line]
-    tagline_font = _get_font(28, weight=400)
-    line_height = 38
-    tagline_y = hero_y + hero_size + 30
+    # Vertical: headline (2 lines) sits in the upper half; `from .md to art.`
+    # gets generous breathing room below.
+    line_gap_headline = 24  # extra leading between any.plot() and — any library.
+    md_gap = 86  # generous separation before the mono accent
+    headline_h = wm_size + line_gap_headline + accent_size
+    block_top = 158  # below the eyebrow row
 
-    # Render the tagline left-aligned to the visual center of the hero block, so
-    # all three lines start in the same column (matches the hero terminal box).
-    line_widths = [_text_size(draw, line, tagline_font)[0] for line in tagline_lines]
-    block_left = (OG_WIDTH - max(line_widths)) // 2
-    for i, line in enumerate(tagline_lines):
-        draw.text((block_left, tagline_y + i * line_height), line, fill=theme_dict["ink_soft"], font=tagline_font)
-    # Blinking cursor on the last line — just a static green block for the OG.
-    last_w = line_widths[-1]
-    cursor_x = block_left + last_w + 6
-    cursor_y = tagline_y + (len(tagline_lines) - 1) * line_height + 4
-    draw.rectangle([cursor_x, cursor_y, cursor_x + 14, cursor_y + 28], fill=OK_GREEN)
+    # Line 1 — `any.plot()`
+    _draw_anyplot_wordmark(draw, block_left, block_top, font_size=wm_size, theme=theme_dict)
 
-    # Footer: row of library chips so the surface-level "any library" claim has receipts.
-    chip_y = OG_HEIGHT - OG_OUTER_PADDING - 22
-    chip_libraries = ["matplotlib", "seaborn", "plotly", "bokeh", "altair", "plotnine"]
-    chip_font = _get_font(16, weight=500)
-    chip_x = OG_OUTER_PADDING
-    chip_gap = 22
-    square = 10
-    for lib in chip_libraries:
-        color = LIBRARY_COLORS.get(lib, OK_GREEN)
-        # Colored square
-        draw.rectangle([chip_x, chip_y + 4, chip_x + square, chip_y + 4 + square], fill=color)
-        # Label
-        draw.text((chip_x + square + 6, chip_y), lib, fill=theme_dict["ink_soft"], font=chip_font)
-        chip_x += square + 6 + _text_advance(draw, lib, chip_font) + chip_gap
-    # `+ N more` at the end.
-    more_text = "+ 3 more"
-    draw.text((chip_x, chip_y), more_text, fill=theme_dict["ink_muted"], font=chip_font)
+    # Line 2 — italic `— any library.`, same left edge as the wordmark
+    accent_y = block_top + wm_size + line_gap_headline
+    _draw_text_with_features(
+        draw, (block_left, accent_y), accent_text, font=accent_font, fill=theme_dict["ink"], features=["ss02"]
+    )
 
-    return _finalize_og_image(final.convert("RGBA"), output_path, theme=theme_dict)
+    # Line 3 — mono accent `from .md to art.` (centered in canvas, big gap above)
+    md_font = _get_font(md_size, weight=500)
+    md_text = "from .md to art."
+    md_w, _ = _text_size(draw, md_text, md_font)
+    md_x = (OG_WIDTH - md_w) // 2
+    md_y = block_top + headline_h + md_gap
+    draw.text((md_x, md_y), md_text, fill=theme_dict["ink_soft"], font=md_font)
+
+    return _finalize_og_image(final, output_path, theme=theme_dict)
 
 
 def create_branded_og_image(
@@ -1001,6 +1048,7 @@ def create_branded_og_image(
     *,
     theme: str = "light",
     method: str | None = None,
+    language: str | None = None,
 ) -> Image.Image | bytes:
     """Render a branded OG card for a single implementation in the any.plot() style.
 
@@ -1033,17 +1081,14 @@ def create_branded_og_image(
     final = Image.new("RGBA", (OG_WIDTH, OG_HEIGHT), theme_dict["bg_page"])
     draw = ImageDraw.Draw(final)
 
-    # --- Masthead ---
-    rule_y = _draw_masthead(draw, OG_WIDTH, OG_OUTER_PADDING, theme_dict, font_size=24)
-
-    # --- Section title (❯ spec-id) ---
-    section_title = spec_id or "plot"
-    title_y = rule_y + OG_MASTHEAD_GAP
-    title_bottom = _draw_section_title(draw, section_title, OG_OUTER_PADDING, title_y, theme_dict, title_size=28)
+    # --- Top frame: any.plot() wordmark + spec_id eyebrow + domain ---
+    eyebrow_bottom = _draw_eyebrow_and_domain(
+        draw, theme_dict, eyebrow_text=spec_id or "specification", with_wordmark=True
+    )
 
     # --- Plot card ---
     chip_row_height = 30
-    available_top = title_bottom + OG_SECTION_TITLE_GAP
+    available_top = eyebrow_bottom + 18
     available_bottom = OG_HEIGHT - OG_OUTER_PADDING - chip_row_height - OG_FOOTER_GAP
     available_height = available_bottom - available_top - 2 * OG_CARD_PADDING
     available_width = OG_WIDTH - 2 * OG_OUTER_PADDING - 2 * OG_CARD_PADDING
@@ -1067,20 +1112,23 @@ def create_branded_og_image(
         shadow_color=theme_dict["card_shadow"],
     )
 
-    # --- Footer chip + tagline (refresh draw context after `_draw_rounded_card` paste) ---
+    # --- Footer (refresh draw context after `_draw_rounded_card` paste) ---
+    # Bottom-left: `language library` (e.g. "python matplotlib"); bottom-right:
+    # `from .md to art.` Same eyebrow font size as the home OG so the editorial
+    # surface reads as one consistent typographic system.
+    del method  # superseded by the simpler language+library footer
     footer_draw = ImageDraw.Draw(final)
-    footer_y = OG_HEIGHT - OG_OUTER_PADDING - 22
-    if library:
-        _draw_method_chip(footer_draw, OG_OUTER_PADDING, footer_y, library, method, theme_dict, chip_size=20)
+    footer_pad = 56
+    footer_font = _get_font(20, weight=500)
+    footer_y = OG_HEIGHT - footer_pad - 20
 
-    tagline_font = _get_font(18, weight=400)
-    tagline_w, _ = _text_size(footer_draw, TAGLINE_FULL, tagline_font)
-    footer_draw.text(
-        (OG_WIDTH - OG_OUTER_PADDING - tagline_w, footer_y + 2),
-        TAGLINE_FULL,
-        fill=theme_dict["ink_muted"],
-        font=tagline_font,
-    )
+    if library:
+        impl_label = f"{language or 'python'} {library}"
+        footer_draw.text((footer_pad, footer_y), impl_label, fill=theme_dict["ink_muted"], font=footer_font)
+
+    md_text = "from .md to art."
+    md_w, _ = _text_size(footer_draw, md_text, footer_font)
+    footer_draw.text((OG_WIDTH - footer_pad - md_w, footer_y), md_text, fill=theme_dict["ink_muted"], font=footer_font)
 
     return _finalize_og_image(final, output_path, theme=theme_dict)
 
@@ -1210,16 +1258,12 @@ def create_og_collage(
     final = Image.new("RGBA", (OG_WIDTH, OG_HEIGHT), theme_dict["bg_page"])
     draw = ImageDraw.Draw(final)
 
-    # --- Masthead ---
-    rule_y = _draw_masthead(draw, OG_WIDTH, COLLAGE_TOP_MARGIN, theme_dict, font_size=24)
-
-    # --- Section title ---
-    section_title = f"{spec_id} — every library." if spec_id else "every library."
-    title_y = rule_y + 14
-    title_bottom = _draw_section_title(draw, section_title, COLLAGE_SIDE_MARGIN, title_y, theme_dict, title_size=24)
+    # --- Top frame: any.plot() wordmark + spec eyebrow + domain ---
+    collage_eyebrow = f"{spec_id} — {TAGLINE_SHORT}" if spec_id else TAGLINE_SHORT
+    eyebrow_bottom = _draw_eyebrow_and_domain(draw, theme_dict, eyebrow_text=collage_eyebrow, with_wordmark=True)
 
     # --- Grid ---
-    grid_top = title_bottom + 4
+    grid_top = eyebrow_bottom + 6
     grid_bottom = OG_HEIGHT - COLLAGE_BOTTOM_MARGIN
     slot_width, slot_height, inner_width, inner_height = _calculate_collage_grid(grid_top, grid_bottom)
     _draw_collage_cards(
