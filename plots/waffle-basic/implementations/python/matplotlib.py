@@ -1,37 +1,47 @@
-""" pyplots.ai
+""" anyplot.ai
 waffle-basic: Basic Waffle Chart
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-24
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-05
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 
 
-# Data - Market share distribution (sums to 100%)
-categories = ["Product A", "Product B", "Product C", "Product D"]
-values = [42, 28, 18, 12]  # Percentages that sum to 100
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Colors - Python Blue and Yellow first, then colorblind-safe additions
-colors = ["#306998", "#FFD43B", "#4DAF4A", "#E377C2"]
+# Okabe-Ito palette (canonical order)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
+# Data - Survey responses (sums to 100%)
+categories = ["Strongly Agree", "Agree", "Neutral", "Disagree"]
+values = [48, 32, 15, 5]
 
 # Create 10x10 grid (100 squares, each = 1%)
 grid_size = 10
 total_squares = grid_size * grid_size
 
-# Build the grid data - fill squares by category
+# Build grid data - fill squares by category
 grid = np.zeros(total_squares, dtype=int)
 start_idx = 0
 for i, val in enumerate(values):
     grid[start_idx : start_idx + val] = i
     start_idx += val
 
-# Reshape to 10x10 grid, fill from bottom-left
+# Reshape to 10x10 grid
 grid = grid.reshape((grid_size, grid_size))
 
 # Create plot (4800x2700 px)
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Draw squares
 square_size = 0.9  # Slightly smaller than 1 for gaps
@@ -43,9 +53,9 @@ for row in range(grid_size):
             square_size,
             square_size,
             boxstyle="round,pad=0.02,rounding_size=0.1",
-            facecolor=colors[category_idx],
-            edgecolor="white",
-            linewidth=2,
+            facecolor=OKABE_ITO[category_idx],
+            edgecolor=PAGE_BG,
+            linewidth=1.5,
         )
         ax.add_patch(rect)
 
@@ -57,20 +67,29 @@ ax.axis("off")
 
 # Create legend with percentage labels
 legend_patches = [
-    mpatches.Patch(color=colors[i], label=f"{categories[i]} ({values[i]}%)") for i in range(len(categories))
+    mpatches.Patch(color=OKABE_ITO[i], label=f"{categories[i]} ({values[i]}%)") for i in range(len(categories))
 ]
-ax.legend(
-    handles=legend_patches,
-    loc="center left",
-    bbox_to_anchor=(1.02, 0.5),
-    fontsize=18,
-    frameon=True,
-    fancybox=True,
-    shadow=True,
+leg = ax.legend(
+    handles=legend_patches, loc="center left", bbox_to_anchor=(1.02, 0.5), fontsize=18, frameon=True, fancybox=True
 )
+if leg:
+    leg.get_frame().set_facecolor(ELEVATED_BG)
+    leg.get_frame().set_edgecolor(INK_SOFT)
+    leg.get_frame().set_linewidth(0.8)
+    plt.setp(leg.get_texts(), color=INK_SOFT)
 
-# Title
-ax.set_title("waffle-basic · matplotlib · pyplots.ai", fontsize=24, pad=20)
+# Title and subtitle
+ax.text(
+    0.5,
+    1.08,
+    "waffle-basic · matplotlib · anyplot.ai",
+    transform=ax.transAxes,
+    fontsize=24,
+    fontweight="medium",
+    color=INK,
+    ha="center",
+)
+ax.text(0.5, 1.02, "Survey Response Distribution", transform=ax.transAxes, fontsize=16, color=INK_SOFT, ha="center")
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)

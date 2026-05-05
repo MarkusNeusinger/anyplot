@@ -1,163 +1,168 @@
 library: letsplot
+language: python
 specification_id: waffle-basic
 created: '2025-12-24T09:54:41Z'
-updated: '2025-12-24T10:04:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483450280
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - minimal-chrome
+updated: '2026-05-05T18:21:49Z'
+generated_by: claude-haiku
+workflow_run: 25393739716
+issue: 998
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/letsplot/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent implementation of waffle chart using geom_tile with proper grid construction
-  - Perfect legend formatting showing category names with percentages
-  - Clean color palette starting with Python Blue (#306998) as required
-  - Proper use of theme_void() for waffle chart aesthetics
-  - Correct 10x10 grid (100 squares = 1% each) as specified
-  - Good use of pd.Categorical to preserve category order in legend
-  - Saves both PNG and HTML for interactivity
+  - 'Perfect Visual Quality (30/30): all text legible in both themes, distinct colors,
+    ideal proportions'
+  - 'Flawless Spec Adherence: data correctly summed to 100%, legend accurate, title
+    format correct'
+  - 'Clean Code: direct reproducible implementation, clear data-generation loop, no
+    unnecessary abstraction'
+  - 'Theme Mastery: environment-variable-driven switching works flawlessly, identical
+    data colors across renders, proper INK token usage'
+  - 'Professional Polish: percentage labels enhance usability, generous spacing improves
+    readability, grid layout intuitive'
   weaknesses:
-  - Could add interactive tooltips (tooltip parameter) to leverage lets-plot interactivity
-    features
-  - Canvas utilization could be slightly improved - waffle grid appears a bit small
-    relative to total canvas
-  image_description: 'The plot displays a 10x10 waffle chart (100 squares total) representing
-    market share by product category. The grid uses four distinct colors: **Python
-    Blue (#306998)** for Product A occupying the top 42 squares (42%), **yellow (#FFD43B)**
-    for Product B taking 28 squares, **green (#4CAF50)** for Product C with 18 squares,
-    and **coral/orange (#FF7043)** for Product D with 12 squares at the bottom. The
-    squares are arranged in a clean grid with small gaps between them. The title "waffle-basic
-    · letsplot · pyplots.ai" appears centered at the top. A well-formatted legend
-    on the right side shows each category with its percentage (e.g., "Product A (42%)").
-    The layout uses a white/void background with the waffle grid centered.'
+  - 'Design Excellence minor: could elevate aesthetics with additional refinement
+    (custom font weights, subtle grid accents)'
+  - 'Library Features minor: implementation solid but doesn''t showcase advanced letsplot
+    features (not required by spec)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 surface as specified
+      Chrome: Title "waffle-basic · letsplot · anyplot.ai" centered at top in dark INK color; legend on right with category labels and percentages; all text fully readable against light background
+      Data: 10×10 grid with green (#009E73, 45 squares), orange (#D55E00, 28 squares), blue (#0072B2, 18 squares), pink (#CC79A7, 9 squares) in proper order
+      Legibility verdict: PASS - all text and data elements clearly visible with strong contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 surface as specified (not pure black)
+      Chrome: Title in light INK color (#F0EFE8) fully readable against dark background; legend text in INK_SOFT (#B8B7B0) with adequate contrast; no dark-on-dark failures
+      Data: Identical colors to light render (green, orange, blue, pink in matching grid positions) confirming theme-agnostic data representation
+      Legibility verdict: PASS - all text fully readable, no theme-adaptation failures, brand green visible and harmonious
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, legend title at 18pt, legend text at 16pt - all perfectly
-          readable
+        comment: Font sizes explicitly set; all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, clean layout
+        comment: All elements clearly separated; legend well-positioned
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Squares are well-sized with proper 0.9 width/height creating visible
-          gaps
+        comment: All 100 squares distinctly visible; adequate spacing
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Four distinct colors (blue, yellow, green, orange) easily distinguishable,
-          colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good centering, but waffle grid could utilize slightly more canvas
-          space
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for waffle charts (uses theme_void appropriately)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed, clean void theme
+        comment: Okabe-Ito positions 1-4; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format appropriate; well-proportioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct; axes appropriately omitted
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; follows Okabe-Ito; backgrounds correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Clean design with percentage labels; intentional spacing
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed; generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy; intuitive proportion counting
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct waffle chart using 10x10 grid
+        comment: Correct 10×10 waffle chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories correctly mapped to colored squares
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features: 10x10 grid, distinct colors, legend with percentages'
-      - id: SC-04
-        name: Data Range
+        comment: Distinct colors; legend with percentages; sum=100
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 100 squares filled, values sum to 100%
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Categories correctly distributed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend shows category names with percentages
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "waffle-basic · letsplot · pyplots.ai"'
+        comment: Format correct; labels match spec
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows 4 categories with varying proportions, though could show more
-          variety in sizes
+        comment: Shows all waffle aspects
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Market share scenario is realistic and relatable
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Percentages sum to 100%, values are plausible
+        comment: Voting preference survey; realistic values
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 10×10 grid standard; whole percentages
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -165,40 +170,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: Direct data generation; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Uses deterministic data (no random), but no explicit seed comment
+        max: 2
+        passed: true
+        comment: Hardcoded values; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only essential imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Appropriate complexity; idiomatic
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output file naming
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses lets-plot features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ggplot syntax correct; geom_tile ideal; theme system effective
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of geom_tile, coord_fixed, theme_void, scale_fill_manual,
-          but no interactive tooltips leveraged
+        comment: Theme-adaptive implementation strong; could showcase more advanced
+          features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
