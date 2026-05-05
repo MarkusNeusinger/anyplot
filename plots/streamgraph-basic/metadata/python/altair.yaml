@@ -1,178 +1,189 @@
 library: altair
+language: python
 specification_id: streamgraph-basic
 created: '2025-12-23T21:54:28Z'
-updated: '2025-12-23T22:00:58Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472383734
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/altair/plot.html
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - alpha-blending
+updated: '2026-05-05T03:34:43Z'
+generated_by: claude-sonnet
+workflow_run: 25356072521
+issue: 856
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/altair/plot-dark.html
+quality_score: 82
 review:
   strengths:
-  - Excellent use of Altair's declarative grammar with proper encoding types (T, Q,
-    N)
-  - Perfect streamgraph implementation using stack='center' for the centered baseline
-    aesthetic
-  - Beautiful smooth curves achieved with basis interpolation
-  - Realistic music streaming scenario with seasonal variation and growth trends
-  - Clean, well-organized code following KISS principles
-  - Appropriate hiding of y-axis tick labels for streamgraph aesthetic while keeping
-    descriptive axis title
-  - Good colorblind-safe palette with distinct colors for all 6 genres
-  - Includes both PNG and interactive HTML output
+  - 'Correct streamgraph implementation: stack=center + interpolate=basis creates
+    the organic river-like centered baseline as specified'
+  - Clean visual design with grid removed, y-axis ticks suppressed, and stroke width
+    zeroed — appropriate refinements for the streamgraph aesthetic
+  - 'Excellent spec compliance: right chart type, right data domain, right feature
+    set, all within spec size constraints'
+  - Deterministic data generation with np.random.seed(42) and realistic genre streaming
+    data with seasonal variation
   weaknesses:
-  - Y-axis shows "Streaming Hours (millions)" title but no tick values, which creates
-    slight visual inconsistency - consider removing y-axis title entirely or adding
-    back subtle tick values
-  - Legend could benefit from being integrated into the plot (e.g., direct labels
-    on streams) rather than separate legend box
-  - Color palette uses Python Blue/Yellow prominently but Jazz (purple) and Classical
-    (orange) could be slightly more saturated for better visibility against adjacent
-    areas
-  image_description: 'The plot displays a streamgraph (centered stacked area chart)
-    showing monthly streaming hours by music genre over two years (Jan 2022 to Nov
-    2023). Six genres are visualized with smooth, flowing curves using basis spline
-    interpolation: Pop (steel blue), Rock (golden yellow), Hip-Hop (pink), Electronic
-    (green), Jazz (purple), and Classical (orange). The baseline is symmetrically
-    centered around the x-axis, creating the characteristic river-like appearance.
-    The x-axis shows time labels at -45° angle with "Time" label, the y-axis shows
-    "Streaming Hours (millions)" but without tick labels (appropriate for streamgraph
-    aesthetic). A legend on the right identifies each genre with colored dots. The
-    title follows the required format. The colors are distinct and visually harmonious.'
+  - 'Critical code/image mismatch: code uses pyplots.ai in chart title (must be anyplot.ai)
+    and non-Okabe-Ito custom colors; rendered images appear from a corrected version
+    — re-executing this code would produce incorrect output'
+  - 'Critical: No theme adaptation — missing ANYPLOT_THEME env var, PAGE_BG/INK/INK_SOFT
+    tokens, and theme-adaptive configure calls; both renders happen to look correct
+    due to pipeline defaults but code does not implement adaptive chrome'
+  - 'Critical: Wrong output filenames — chart.save(plot.png) must be chart.save(f
+    plot-{THEME}.png) and same for HTML'
+  - 'Palette violation: colors list uses #306998 as first color instead of brand green
+    #009E73; must use full Okabe-Ito palette in canonical order'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), not pure white — correct theme surface
+      Chrome: Title "streamgraph-basic · altair · anyplot.ai" in dark text — clearly readable. X-axis label "Time" readable. Date tick labels (Jan 2022 through Nov 2023) readable with -45 degree rotation. Y-axis ticks and labels intentionally hidden for streamgraph aesthetic. Legend (Genre: Pop, Rock, Hip-Hop, Electronic, Jazz, Classical) readable on right side.
+      Data: Six smooth flowing area bands with basis spline interpolation, centered baseline. Colors appear Okabe-Ito-consistent: Pop in brand teal-green (~#009E73), Rock in vermillion-orange, Hip-Hop in blue, Electronic in reddish-purple, Jazz in yellow-gold, Classical in sky blue. Opacity 0.85. No data/chrome overlap issues.
+      Legibility verdict: PASS — all visible text readable against warm off-white background. No light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), not pure black — correct dark theme surface
+      Chrome: Title, axis label, and tick labels rendered in white/light text — clearly readable against dark background. Legend text is light-colored and legible. No dark-on-dark failures observed.
+      Data: Colors are identical to light render — same teal-green, orange, blue, purple, gold, sky-blue for the six genres. Basis spline curves and centered baseline preserved.
+      Legibility verdict: PASS — all visible text readable against near-black background. No dark-on-dark failures.
+
+    Note: Despite both renders appearing correct, the code file uses non-Okabe-Ito colors (#306998 as first color instead of #009E73) and saves as plot.png (not plot-{THEME}.png) with no ANYPLOT_THEME handling. The images were likely generated from a different (correct) code version. This is a critical code quality issue flagged in weaknesses.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt, legend at
-          18-20pt - all perfectly readable
+        comment: Title, x-axis label, tick labels, and legend readable in both themes.
+          Y-axis title hidden by design (acceptable for streamgraph).
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: X-axis labels rotated at -45° prevent overlap, no text overlaps anywhere
+        comment: X-axis dates slightly dense but readable; no collisions between elements.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Stream areas with 0.85 opacity are clearly visible, smooth curves
-          are well-defined
+        comment: All six genre bands clearly distinguishable with smooth flowing curves
+          and 0.85 opacity.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Six distinct colors that work well for colorblind users, good contrast
-          between adjacent areas
+        score: 1
+        max: 2
+        passed: false
+        comment: Rendered colors appear CVD-safe (Okabe-Ito-like) but code defines
+          non-Okabe-Ito palette.
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good canvas utilization, plot fills most of the space, legend well-positioned
-          on right; minor deduction for slight extra whitespace at top
+        comment: 1600x900 landscape, good proportions, nothing clipped, legend well-positioned.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Time" and "Streaming Hours (millions)" with units'
+        comment: Correct title format in rendered image; Time x-axis label clearly
+          present.
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: Grid removed (appropriate for streamgraph), legend well-placed, but
-          y-axis title is shown despite no y-axis values/ticks which is slightly inconsistent
+        comment: 'Code uses custom non-Okabe-Ito colors (#306998 for Pop instead of
+          #009E73); no ANYPLOT_THEME handling. Images look correct but from different
+          code version.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean professional streamgraph with smooth basis spline curves, 0.85
+          opacity, right-aligned legend.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid removed, y-axis ticks/labels suppressed, view stroke removed
+          — well-executed refinements.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Centered baseline creates organic river-like effect. Seasonal patterns
+          visible. Genre size variations tell a coherent story.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct streamgraph with centered baseline (stack='center')
+        comment: Correct streamgraph via stack=center with basis interpolation.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on x-axis, category for color, value for y
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
         comment: Smooth interpolation (basis), centered baseline, distinct colors,
-          legend present
-      - id: SC-04
-        name: Data Range
+          legend present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, 24 months spanning full x-axis
-      - id: SC-05
-        name: Legend Accuracy
+        comment: Time on X (temporal), streaming hours on Y (center-stacked quantitative),
+          genre as color (nominal).
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: All 6 genres correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: '"streamgraph-basic · altair · pyplots.ai" - correct format'
+        max: 3
+        passed: false
+        comment: Rendered image shows correct title but code contains 'pyplots.ai'
+          instead of 'anyplot.ai' — would generate wrong title if re-executed.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation in all categories with seasonal patterns and growth
-          trends; categories have different base sizes; minor deduction because the
-          flowing curves could show more dramatic variation between categories
+        comment: 6 categories (3-8 spec range), 24 time points (10-100 spec range),
+          all streamgraph characteristics demonstrated.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Music streaming hours by genre is a real, comprehensible scenario
-          matching spec's example
+        comment: Monthly streaming hours by music genre — realistic, plausible, and
+          neutral domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values in tens to hundreds of millions of streaming hours are realistic;
-          slight deduction for y-axis label saying "millions" but showing raw values
-          that could imply confusion
+        comment: Base values 30-150 streaming hours per genre with seasonal variation
+          and organic growth.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -180,41 +191,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas imported and all used
+        comment: Only altair, numpy, pandas imported — all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Clean Altair chain, appropriate complexity.
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        passed: false
+        comment: Saves as plot.png not plot-{THEME}.png. No os.getenv(ANYPLOT_THEME)
+          — theme entirely ignored.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper encoding types (:T, :Q, :N), clean mark_area chain, alt.Order
+          for stacking, alt.Tooltip with format.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Altair's declarative encoding with stack='center', basis interpolation,
-          tooltips, and interactive() for HTML version; could have used more advanced
-          features like selection/highlighting
+        comment: Altair stack=center for streamgraph (idiomatic), interactive HTML
+          export, hover tooltips.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
