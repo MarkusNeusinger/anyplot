@@ -1,7 +1,7 @@
 """ anyplot.ai
 swarm-basic: Basic Swarm Plot
 Library: plotnine 0.15.3 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-05
+Quality: 87/100 | Updated: 2026-05-05
 """
 
 import sys

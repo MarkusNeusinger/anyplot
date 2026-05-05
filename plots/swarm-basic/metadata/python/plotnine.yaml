@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: swarm-basic
 created: '2025-12-23T21:55:33Z'
-updated: '2026-05-05T01:11:04Z'
+updated: '2026-05-05T01:26:34Z'
 generated_by: claude-sonnet
 workflow_run: 25352125050
 issue: 974
@@ -12,42 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swarm-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 87
 review:
   strengths:
-  - 'Perfect visual quality: correct theme-adaptive chrome in both renders, explicit
-    font sizing hierarchy, Okabe-Ito palette in correct order'
-  - 'Excellent data: realistic clinical trial context with clear dose-response story
-    and good sample sizes per group'
-  - 'Clean code: deterministic with dual random seeds, KISS structure, all imports
-    used'
-  - 'Smart design choices: legend suppressed (x-axis labels suffice), very subtle
-    grid (alpha=0.08/0.04), median diamond markers add insight layer'
+  - 'Correct Okabe-Ito palette with first series #009E73; colors identical across
+    both themes'
+  - Theme-adaptive chrome fully implemented — warm off-white light background, near-black
+    dark background, all text tokens applied correctly
+  - Median diamond markers (stat_summary) add a useful summary statistic layer, enhancing
+    storytelling
+  - Font sizes explicitly set at all hierarchy levels (title 24pt, axis labels 20pt,
+    ticks 16pt)
+  - 'Perfect data quality: realistic clinical dose-response scenario with varied distributions
+    per group'
+  - Reproducible with np.random.seed(42) and random_state=42 in position_jitter
+  - Legend correctly hidden — group identity conveyed by color + x-axis labels alone
+  - Dose-response trend immediately legible from point clusters and median markers
   weaknesses:
-  - 'SC-01: Uses random position_jitter instead of true beeswarm point-packing algorithm;
-    visible point overlap (especially Medium Dose cluster) rather than characteristic
-    non-overlapping beeswarm spread'
-  - 'DE-01: Design reads as well-configured default rather than strong design — no
-    visual statement distinguishing it; lacks deliberate design emphasis on the dose-response
-    trend'
-  - 'DE-02: panel_border not explicitly removed; y-grid lines unnecessary for categorical
-    swarm plot and could be removed entirely for cleaner look; relies entirely on
-    theme_minimal() for spine removal rather than deliberate element_blank() controls'
+  - Uses position_jitter (random scatter) rather than a true beeswarm algorithm —
+    introduces visible point overlap in denser groups (Medium Dose ~55 pts). Consider
+    using beeswarm-like packing or reducing jitter width further with smaller point
+    size
+  - 'Design Excellence ceiling: theme_minimal base is clean but no top/right spine
+    removal is explicitly added (they are removed by theme_minimal, but panel_border
+    could be explicitly set to None), and no additional typographic or spacing refinements
+    elevate it to publication level'
+  - 'LM-02: stat_summary with custom fun_y and geom=point is idiomatic, but no other
+    highly distinctive plotnine feature (e.g., faceting, coord_flip, or scale_x_discrete
+    with guide customization) is used'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct, not pure white
-      Chrome: Title "swarm-basic · plotnine · anyplot.ai" in dark ink, clearly readable; axis labels "Treatment Group" and "Biomarker Level (ng/mL)" in dark INK (#1A1A17); tick labels in muted dark gray (INK_SOFT #4A4A44); all text readable against light background
-      Data: Four jittered columns in Okabe-Ito order — teal (#009E73) for Placebo, orange (#D55E00) for Low Dose, blue (#0072B2) for Medium Dose, reddish-purple (#CC79A7) for High Dose; dark median diamond markers (INK token) visible on all groups; very subtle grid lines
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct theme surface, no pure white
+      Chrome: Title "swarm-basic · plotnine · anyplot.ai" in dark near-black ink, clearly readable. Axis labels "Treatment Group" and "Biomarker Level (ng/mL)" in dark ink, tick labels in slightly softer dark ink (#4A4A44). All chrome elements fully readable.
+      Data: Four treatment groups (Placebo, Low Dose, Medium Dose, High Dose) colored with Okabe-Ito positions 1-4 (#009E73 green, #D55E00 orange, #0072B2 blue, #CC79A7 pink-purple). Points jittered horizontally with size 3.5 and alpha 0.75. Near-black diamond markers show the median per group. A dashed diagonal line connects the four medians, clearly illustrating the dose-response trend upward from ~42 to ~75 ng/mL.
+      Legibility verdict: PASS — all text is clearly readable against the light background
 
     Dark render (plot-dark.png):
-      Background: Near-black (~#1A1A17) — correct, not pure black
-      Chrome: Title and axis labels rendered in near-white light text (INK → #F0EFE8 in dark mode); tick labels in muted light gray (INK_SOFT → #B8B7B0 in dark mode); all text readable against dark background; no dark-on-dark failures detected
-      Data: Colors are identical to light render — same teal, orange, blue, reddish-purple confirming Okabe-Ito positions 1-7 are theme-stable; median diamond markers switch to near-white (correct INK adaptation) and are clearly visible
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct dark surface, no pure black
+      Chrome: Title and axis labels rendered in light cream (#F0EFE8), tick labels in soft light gray (#B8B7B0). All text is clearly readable — no dark-on-dark failures observed.
+      Data: Data colors are IDENTICAL to the light render — same green, orange, blue, and pink-purple Okabe-Ito palette. Median diamonds now appear in near-white (#F0EFE8) against the dark background, making them clearly visible. The dashed trend line connecting medians is also visible. Brand green #009E73 remains well-visible on the dark surface.
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures, chrome correctly flips while data colors remain constant
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -55,48 +62,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, tick labels 16pt all explicitly set;
-          fully readable in both themes
+        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
+          16pt. Readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text collisions; jitter spreads data points adequately for swarm
-          approximation
+        comment: No text overlap. Some point overlap in denser groups (Medium Dose
+          55 pts) due to random jitter vs true beeswarm algorithm.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: size=3.5 alpha=0.75 appropriate for 40-55 points per group; median
-          diamonds clearly visible at size=8
+        comment: Points clearly visible with size 3.5 and alpha 0.75. Median diamonds
+          prominent. Not a true beeswarm packing so some overlap exists.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; adequate luminance contrast in both
-          themes
+        comment: Okabe-Ito palette is CVD-safe. Good contrast across all groups. Alpha
+          blending appropriate.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 canvas well-utilized; balanced margins; nothing cut off
+        comment: 16:9 canvas, plot fills ~75% of canvas, balanced margins, nothing
+          cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Biomarker Level (ng/mL) includes units; Treatment Group is descriptive
+        comment: Treatment Group (x), Biomarker Level (ng/mL) (y), correct title format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order 1-4; backgrounds #FAF8F1/#1A1A17;
-          fully theme-adaptive chrome in both renders'
+        comment: 'First series #009E73 (Placebo=green). Positions 2-4 follow Okabe-Ito
+          order. Background #FAF8F1 light / #1A1A17 dark. Data colors identical across
+          themes.'
     design_excellence:
       score: 13
       max: 20
@@ -105,26 +114,26 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Clean professional look with correct palette and legend suppressed;
-          but theme_minimal() is a library default and design does not transcend it
-          to strong design territory
+        passed: true
+        comment: 'Clearly above defaults: Okabe-Ito palette, warm backgrounds, summary
+          statistics, theme-adaptive chrome. Not yet FiveThirtyEight-level publication
+          quality.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Grid very subtle (major alpha=0.08, minor alpha=0.04); spines removed
-          via theme_minimal(); legend removed; panel_border not explicitly removed;
-          y-grid unnecessary for swarm
+        passed: true
+        comment: theme_minimal removes spines, very subtle grid (alpha 0.08/0.04),
+          legend hidden. Good refinement but no explicit panel_border=None or tick
+          mark removal.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Clear dose-response narrative; ascending median diamonds guide the
-          eye; decreasing variance visible; visual hierarchy present but no additional
-          emphasis on the trend
+        passed: true
+        comment: Dose-response story immediately visible. Median diamonds highlight
+          central tendency. Dashed line connecting medians reinforces the trend. Good
+          visual hierarchy.
     spec_compliance:
       score: 14
       max: 15
@@ -133,29 +142,29 @@ review:
         name: Plot Type
         score: 4
         max: 5
-        passed: false
-        comment: Uses position_jitter (random) rather than true beeswarm algorithm;
-          plotnine has no native beeswarm geom; overlap visible in Medium Dose cluster
+        passed: true
+        comment: Individual points for categorical comparison — correct base type.
+          Uses random jitter rather than true beeswarm algorithm (plotnine limitation).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Individual points, horizontal spread, median markers, color by category,
-          clear category separation all present
+        comment: Individual points, horizontal spread, median marker (diamond), color
+          by category, clear group spacing — all spec features present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis, continuous values on y-axis; all data visible
+        comment: X=Treatment Group (categorical), Y=Biomarker Level. All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format swarm-basic · plotnine · anyplot.ai correct; legend_position=none
-          appropriate since x-axis labels identify groups
+        comment: 'Title: swarm-basic · plotnine · anyplot.ai. Legend hidden (appropriate
+          for this design).'
     data_quality:
       score: 15
       max: 15
@@ -165,22 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows individual points, different means, different spreads, dose-response
-          gradient, and outliers across all 4 groups
+        comment: Shows 4 groups with different means, different spreads (decreasing
+          variance with dose), individual points, median markers, and overall trend.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Patient biomarker study with Placebo/dose groups is a real neutral
-          scientifically valid scenario
+        comment: Clinical trial biomarker (patient biomarker levels across dose groups)
+          — realistic, neutral, non-controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 20-100 ng/mL range; 40-55 points per group; decreasing std with increasing
-          dose is realistic for drug trials
+        comment: Biomarker values 20-100 ng/mL, dose-response means 45/55/68/75, decreasing
+          variance — all clinically plausible.
     code_quality:
       score: 10
       max: 10
@@ -190,32 +199,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports → Data → Plot → Save; no functions or classes
+        comment: 'Linear: imports → data → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) + position_jitter(random_state=42) ensures deterministic
-          output
+        comment: np.random.seed(42) and random_state=42 in position_jitter.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used; sys and os both consumed
+        comment: All imports are used. No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic ggplot-style chaining; appropriate complexity; no over-engineering
+        comment: Clean, Pythonic, no fake UI elements, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no deprecated API usage
+        comment: Saves as plot-{THEME}.png using current plotnine API.
     library_mastery:
       score: 7
       max: 10
@@ -225,23 +233,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Grammar of graphics layering is idiomatic; stat_summary with fun_y=np.median
-          is sophisticated plotnine usage; position_jitter inside geom is the correct
-          plotnine pattern
+        comment: Correct grammar of graphics composition with multiple layers, position
+          modifiers, stat_summary, scale_color_manual. Good plotnine usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: stat_summary as a separate layer is distinctively ggplot2/plotnine;
-          grammar-of-graphics separation of aesthetics geoms and stats is library-distinctive
-  verdict: REJECTED
+        passed: true
+        comment: stat_summary with custom fun_y=np.median and shape='D' is a plotnine/ggplot2-distinctive
+          feature. position_jitter as a modifier is idiomatic. Could further leverage
+          faceting or scale customization.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
