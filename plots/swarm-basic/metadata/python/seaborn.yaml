@@ -1,167 +1,182 @@
 library: seaborn
+language: python
 specification_id: swarm-basic
 created: '2025-12-23T21:54:13Z'
-updated: '2025-12-23T21:57:04Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472387038
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-05T01:19:26Z'
+generated_by: claude-sonnet
+workflow_run: 25351884403
+issue: 974
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/seaborn/plot.png
-preview_html: null
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-    - data-generation
-    - groupby-aggregation
-  dataprep: []
-  styling:
-    - alpha-blending
-    - edge-highlighting
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Excellent data design showing diverse distributions (tight, wide, bimodal, outliers)
-    that effectively demonstrates swarm plot capabilities
-  - Clean implementation of median markers with proper legend explanation
-  - Proper use of hue parameter with legend=False to avoid seaborn 0.14+ deprecation
-    warnings
-  - Good color palette that is colorblind-accessible and visually appealing
-  - Appropriate point size and alpha for the data density
+  - 'Excellent data design: four distinct distribution shapes (tight, wide, bimodal,
+    skewed-with-outliers) make the swarm immediately informative'
+  - Median diamond markers with contrasting white edges are a high-quality focal-point
+    addition
+  - Correct Okabe-Ito palette and theme-adaptive chrome in rendered output
+  - Seaborn's swarm algorithm is used idiomatically via sns.swarmplot() with proper
+    hue+legend=False API
+  - Neutral and realistic employee performance scenario with plausible per-department
+    distributions
   weaknesses:
-  - Axis labels could include units (e.g., "Performance Score (points)" or "Performance
-    Score (0-100)")
-  - Could leverage more seaborn features like sns.set_theme() for consistent styling
-  image_description: 'The plot displays a swarm plot showing employee performance
-    scores across four departments: Engineering (blue), Marketing (yellow), Sales
-    (teal), and Support (coral/salmon). Each department has its data points spread
-    horizontally in a beeswarm pattern to avoid overlap, clearly showing the distribution
-    shape. The title "swarm-basic · seaborn · pyplots.ai" is at the top. The y-axis
-    shows "Performance Score" ranging from about 30 to 100, and the x-axis shows "Department"
-    with the four category labels. Each department has a dark diamond marker indicating
-    the median value. A legend in the upper right identifies the diamond as "Median".
-    The grid is subtle with dashed horizontal lines. The Engineering group shows a
-    tight cluster around 75-90, Marketing has a wider spread with some points below
-    50, Sales shows a bimodal pattern with clusters around 60-70 and 80-90, and Support
-    shows outliers both high (~95) and low (~45-48).'
+  - 'Source code palette uses non-Okabe-Ito hexes (#306998, #FFD43B, #4ECDC4, #E76F51)
+    — must be replaced with [''#009E73'', ''#D55E00'', ''#0072B2'', ''#CC79A7'']'
+  - No os.getenv('ANYPLOT_THEME') block and no sns.set_theme(rc={...}) — theme-adaptive
+    chrome not wired into the code
+  - Output filename is bare 'plot.png' — must be 'plot-{THEME}.png' (e.g., plot-light.png,
+    plot-dark.png)
+  - Legend fontsize=14 is below the 16pt standard for high-resolution canvas
+  - Y-axis label 'Performance Score' missing units/range hint '(0-100)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — correct theme surface
+      Chrome: Title "swarm-basic · seaborn · anyplot.ai" in dark text — clearly readable. Axis labels ("Department", "Performance Score") and tick labels in dark ink — all legible.
+      Data: Engineering = #009E73 (teal-green, Okabe-Ito pos 1), Marketing = #D55E00 (vermillion, pos 2), Sales = #0072B2 (blue, pos 3), Support = #CC79A7 (reddish-purple, pos 4). Black diamond median markers with white edges anchor each group. alpha=0.8 reduces overlap at high density.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (~#1A1A17) — correct dark theme surface
+      Chrome: Title, axis labels, and tick labels rendered in light off-white text — clearly readable against the dark background. No dark-on-dark failures observed. Median markers flip to white diamond with dark fill, adapting correctly to the dark surface.
+      Data: Colors identical to light render — Okabe-Ito positions 1-4 unchanged as required. Grid lines remain subtle and visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
+        comment: All sizes explicitly set (title 24pt, labels 20pt, ticks 16pt); legend
+          fontsize=14 slightly below 16pt standard
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, swarm algorithm effectively spreads points
+        comment: Swarm algorithm distributes points cleanly; no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Point size of 8 with alpha 0.8 is well-suited for ~175 total points
+        comment: size=8 with alpha=0.8 appropriate for 40-52 pts/group; median diamond
+          s=150 stands out
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Four distinct colors (blue, yellow, teal, coral) are colorblind-distinguishable
+        comment: Okabe-Ito is CVD-safe; alpha-blending aids density areas
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: Plot fills canvas well; balanced margins; legend in upper-right
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 1
         max: 2
-        passed: true
-        comment: Labels are descriptive ("Performance Score", "Department") but lack
-          units
+        passed: false
+        comment: Labels descriptive but y-axis lacks units/range '(0-100)'
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3), legend is well-placed but could be positioned
-          better to not overlap potential data area
+        comment: 'Rendered images show correct Okabe-Ito first series #009E73; positions
+          2-4 follow; correct backgrounds; chrome flips correctly'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Clean and professional; median markers add thoughtful touch; well-configured
+          default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle dashed y-axis grid (alpha=0.3); spines cleanly handled; good
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bimodal Sales immediately visible; Engineering tight vs Sales/Support
+          spread; median markers as focal points
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct swarm/beeswarm plot type
+        comment: sns.swarmplot() is definitive beeswarm implementation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X-axis, continuous values on Y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has median markers as suggested in spec, color distinguishes categories
-      - id: SC-04
-        name: Data Range
+        comment: Individual points, collision-free spread, category colors, median
+          markers all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis range (25-105) shows all data appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: x=Department, y=Performance Score; all 175 observations visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies median marker
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "{spec-id} · {library} · pyplots.ai"
+        comment: Rendered title correct 'swarm-basic · seaborn · anyplot.ai'; Median
+          legend accurate
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows diverse distributions: tight (Engineering), wide (Marketing),
-          bimodal (Sales), with outliers (Support)'
+        comment: 'Four distinct distributions: tight normal, wide spread, bimodal,
+          lower with outliers'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Employee performance scores across departments is a real, relatable
-          business scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Performance scores 30-100 are realistic, sample sizes (38-52 per
-          dept) are appropriate
+        comment: Employee performance by department — neutral real-world business
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Scores clipped to [30,100]; per-department means plausible; outliers
+          (45,48,95) realistic
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -169,41 +184,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: 'Linear: imports → data → plot → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib, numpy, pandas, seaborn)
+        comment: All four imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Pythonic code but palette uses non-Okabe-Ito hexes and no os.getenv
+          ANYPLOT_THEME block
+      - id: CQ-05
+        name: Output & API
         score: 0
         max: 1
-        passed: true
-        comment: Using hue with legend=False is correct for seaborn 0.14+, but `strict=True`
-          in zip is unnecessarily explicit
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 2
-      max: 5
+        passed: false
+        comment: Saves to bare 'plot.png' instead of 'plot-{THEME}.png'
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 2
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses sns.swarmplot which is seaborn's distinctive feature, but doesn't
-          leverage additional seaborn strengths like set_theme() or statistical annotations
+        comment: sns.swarmplot() with hue+legend=False follows seaborn 0.13+ API;
+          axes-level with ax=ax
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Swarmplot collision-avoidance is seaborn-exclusive; sns.despine()
+          and sns.set_theme() not leveraged
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - groupby-aggregation
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
