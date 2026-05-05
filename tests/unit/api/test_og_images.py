@@ -122,9 +122,26 @@ class TestStaticOgImage:
         assert response.status_code == 200
         assert response.headers["content-type"] == "image/png"
 
-    def test_static_og_image_file_not_found(self, client) -> None:
-        """Should return 500 when og-image.png is missing from disk."""
+    def test_static_og_image_falls_back_to_disk_when_dynamic_fails(self, client) -> None:
+        """Dynamic any.plot() generation is the primary path; the bundled
+        `api/static/og-image.png` is the last-resort fallback if PIL/font
+        loading is broken in the container.
+        """
         with (
+            patch("api.routers.og_images.create_home_og_image", side_effect=RuntimeError("PIL broken")),
+            patch("pathlib.Path.read_bytes", return_value=FAKE_PNG),
+            patch("api.routers.og_images.track_og_image"),
+        ):
+            response = client.get("/og/home.png")
+
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "image/png"
+
+    def test_static_og_image_500_when_dynamic_and_disk_both_fail(self, client) -> None:
+        """If dynamic generation AND the bundled static fallback both fail,
+        return 500 — there's nothing to serve."""
+        with (
+            patch("api.routers.og_images.create_home_og_image", side_effect=RuntimeError("PIL broken")),
             patch("pathlib.Path.read_bytes", side_effect=FileNotFoundError("not found")),
             patch("api.routers.og_images.track_og_image"),
         ):

@@ -722,6 +722,109 @@ class TestBrandingFunctions:
 
         assert isinstance(result, bytes)
 
+    def test_create_home_og_image_light(self) -> None:
+        """create_home_og_image renders a 1200x630 PNG in light theme."""
+        from io import BytesIO
+
+        from core.images import OG_HEIGHT, OG_WIDTH, create_home_og_image
+
+        result = create_home_og_image(theme="light")
+
+        assert isinstance(result, bytes)
+        img = Image.open(BytesIO(result))
+        assert img.width == OG_WIDTH
+        assert img.height == OG_HEIGHT
+
+    def test_create_home_og_image_dark(self) -> None:
+        """create_home_og_image renders a 1200x630 PNG in dark theme."""
+        from io import BytesIO
+
+        from core.images import OG_HEIGHT, OG_WIDTH, create_home_og_image
+
+        result = create_home_og_image(theme="dark")
+
+        assert isinstance(result, bytes)
+        img = Image.open(BytesIO(result))
+        assert img.width == OG_WIDTH
+        assert img.height == OG_HEIGHT
+
+    def test_create_home_og_image_to_file(self, tmp_path: Path) -> None:
+        """create_home_og_image writes to disk when output_path is given."""
+        from core.images import OG_HEIGHT, OG_WIDTH, create_home_og_image
+
+        output_path = tmp_path / "home.png"
+        create_home_og_image(output_path=output_path, theme="light")
+
+        assert output_path.exists()
+        img = Image.open(output_path)
+        assert img.width == OG_WIDTH
+        assert img.height == OG_HEIGHT
+
+    def test_create_comparison_image_before_and_after(self, sample_plot_image: Path, tmp_path: Path) -> None:
+        """create_comparison_image writes a 2400x800 PNG with both panels."""
+        from core.images import COMPARE_HEIGHT, COMPARE_WIDTH, create_comparison_image
+
+        output_path = tmp_path / "compare.png"
+        create_comparison_image(
+            sample_plot_image, sample_plot_image, output_path, spec_id="area-basic", library="matplotlib"
+        )
+
+        assert output_path.exists()
+        img = Image.open(output_path)
+        assert img.width == COMPARE_WIDTH
+        assert img.height == COMPARE_HEIGHT
+
+    def test_create_comparison_image_no_before(self, sample_plot_image: Path, tmp_path: Path) -> None:
+        """create_comparison_image handles the 'first version' case (before=None)."""
+        from core.images import COMPARE_HEIGHT, COMPARE_WIDTH, create_comparison_image
+
+        output_path = tmp_path / "compare.png"
+        create_comparison_image(None, sample_plot_image, output_path, spec_id="area-basic", library="matplotlib")
+
+        assert output_path.exists()
+        img = Image.open(output_path)
+        assert img.width == COMPARE_WIDTH
+        assert img.height == COMPARE_HEIGHT
+
+    def test_create_comparison_image_dark_theme(self, sample_plot_image: Path, tmp_path: Path) -> None:
+        """create_comparison_image honors theme='dark'."""
+        from core.images import create_comparison_image
+
+        output_path = tmp_path / "compare.png"
+        create_comparison_image(
+            sample_plot_image, sample_plot_image, output_path, spec_id="x", library="seaborn", theme="dark"
+        )
+
+        assert output_path.exists()
+
+    def test_create_branded_og_image_unknown_library_falls_back(self, sample_plot_image: Path) -> None:
+        """Unknown library names should still render (chip falls back to brand green)."""
+        from io import BytesIO
+
+        from core.images import create_branded_og_image
+
+        result = create_branded_og_image(sample_plot_image, spec_id="x", library="not-a-real-lib")
+
+        assert isinstance(result, bytes)
+        img = Image.open(BytesIO(result))
+        assert img.width == 1200
+
+    def test_create_branded_og_image_dark_theme(self, sample_plot_image: Path) -> None:
+        """create_branded_og_image renders correctly in dark theme."""
+        from core.images import create_branded_og_image
+
+        result = create_branded_og_image(sample_plot_image, spec_id="x", library="bokeh", theme="dark")
+
+        assert isinstance(result, bytes)
+
+    def test_create_og_collage_dark_theme(self, sample_plot_image: Path) -> None:
+        """create_og_collage honors theme='dark'."""
+        from core.images import create_og_collage
+
+        result = create_og_collage([sample_plot_image], labels=["x · matplotlib"], theme="dark")
+
+        assert isinstance(result, bytes)
+
 
 class TestGetMonolisaFontPath:
     """Tests for _get_monolisa_font_path GCS font download."""

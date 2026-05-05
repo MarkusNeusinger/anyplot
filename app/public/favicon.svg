@@ -4,5 +4,5 @@
     @media (prefers-color-scheme: dark) { .letter { fill: #F0EFE8; } }
   </style>
   <text x="16" y="15" text-anchor="middle" class="letter">ap</text>
-  <rect x="9" y="16" width="7" height="7" fill="#009E73"/>
+  <rect x="9" y="18" width="5" height="5" fill="#009E73"/>
 </svg>

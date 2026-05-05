@@ -774,17 +774,20 @@ class TestOgImagesRouter:
                 call_kwargs = mock_track.call_args[1]
                 assert call_kwargs["page"] == "plots"
 
-    def test_get_static_og_image_file_not_found(self, client: TestClient) -> None:
-        """Should return 500 when static image file not found."""
+    def test_home_og_returns_500_when_dynamic_and_disk_fallback_both_fail(self, client: TestClient) -> None:
+        """Should return 500 when both dynamic generation AND the disk fallback fail."""
         import api.routers.og_images as og_module
 
         # Reset cached image
         og_module._STATIC_OG_IMAGE = None
 
-        with patch("api.routers.og_images.track_og_image"):
-            with patch("pathlib.Path.read_bytes", side_effect=FileNotFoundError("not found")):
-                response = client.get("/og/home.png")
-                assert response.status_code == 500
+        with (
+            patch("api.routers.og_images.track_og_image"),
+            patch("api.routers.og_images.create_home_og_image", side_effect=RuntimeError("PIL broken")),
+            patch("pathlib.Path.read_bytes", side_effect=FileNotFoundError("not found")),
+        ):
+            response = client.get("/og/home.png")
+            assert response.status_code == 500
 
         # Reset for other tests
         og_module._STATIC_OG_IMAGE = None
