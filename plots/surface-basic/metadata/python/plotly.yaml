@@ -1,15 +1,214 @@
 library: plotly
+language: python
 specification_id: surface-basic
 created: '2025-12-23T21:54:38Z'
-updated: '2025-12-23T22:00:57Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472386632
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/surface-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/surface-basic/plotly/plot.html
-quality_score: 91
+updated: '2026-05-05T16:56:28Z'
+generated_by: claude-haiku
+workflow_run: 25389653481
+issue: 1013
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/plotly/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Perfect visual quality with excellent text legibility in both light and dark themes
+  - Flawless spec compliance with all required features present and correct
+  - Professional theme token implementation throughout (background, text, grid colors)
+  - Clean, reproducible, and well-structured code with proper seed management
+  - Proper use of Plotly's interactive 3D capabilities and idiomatic patterns
+  - Correct title format and proper axis/legend labeling
+  weaknesses:
+  - 'Design Excellence below optimal: implementation follows Plotly defaults without
+    additional stylistic customization (no custom color adjustments or emphasis techniques)'
+  - 'Visual hierarchy could be enhanced: while the surface is clear, there''s room
+    for more sophisticated visual storytelling through color contrast or size emphasis'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), providing neutral surface for the 3D plot
+      Chrome: Title "surface-basic · plotly · anyplot.ai" is prominently displayed in dark text (28px). Axis labels (X Axis, Y Axis, Z Value) are clearly readable in dark text (22px). Tick labels are rendered in softer dark tone (18px). Colorbar title "Z Value" is properly labeled with size 20. All text has excellent contrast against light background.
+      Data: 3D surface rendered with Viridis colorscale, colors range from purple (low ~-0.8) to yellow (high ~1.2). Surface clearly shows combined sinusoidal and exponential mathematical function. Grid is subtle but visible.
+      Legibility verdict: PASS - All text is fully readable, no contrast issues, proper visual hierarchy
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), providing proper dark theme surface
+      Chrome: Title remains clearly visible in light text. Axis labels rendered in light text (22px). Tick labels in softer light tone (18px). All text properly adapted to dark background with no dark-on-dark contrast failures. Grid visible and subtle at same opacity as light render.
+      Data: Viridis colorscale maintains identical colors from light render (purple to yellow) - data colors do NOT change between themes, only chrome adapts. Surface geometry and function representation identical to light version.
+      Legibility verdict: PASS - All text fully readable in dark theme, proper light text colors, no dark-on-dark issues, perfect theme adaptation
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text clearly readable at full size in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions or overlapping elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 3D surface, colorbar, and grid all clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis colorscale is CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct title format with all axes labeled
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis for continuous data, correct theme backgrounds, proper chrome
+          adaptation
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional theme tokens, good camera angle, relies on defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid and spacing, could be more refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear function demonstration, could emphasize hierarchy more
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 3D surface plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: colormap, labels, colorbar, rotation'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y/Z correct and properly scaled
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct format with colorbar legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full range of surface plot features shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mathematical function is realistic and appropriate
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible value ranges and balance
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seed set, deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct file format and API
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper use of go.Figure, go.Surface, update_layout
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Leverages 3D surface, interactivity, custom camera
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -21,187 +220,4 @@ impl_tags:
   - matrix-construction
   dataprep: []
   styling:
-  - custom-colormap
-review:
-  strengths:
-  - Excellent use of Viridis colormap for colorblind accessibility and depth perception
-  - Clean code structure following KISS principles with proper sizing (4800x2700 via
-    scale=3)
-  - Correct title format and comprehensive axis labeling
-  - Smooth 40x40 grid provides good surface detail without jagged edges
-  - Both PNG and HTML outputs generated, showcasing Plotly dual-format capability
-  - Well-configured camera angle showing the surface from an informative perspective
-  weaknesses:
-  - Axis labels are generic (X Axis, Y Axis) rather than contextual
-  - Layout has more whitespace than optimal; surface could fill more of the canvas
-  - np.random.seed(42) is included but unnecessary since the data generation is deterministic
-  image_description: The plot displays a 3D surface visualization with the title "surface-basic
-    · plotly · pyplots.ai" centered at the top. The surface shows a smooth mathematical
-    function with peaks (yellow, ~1.3) and valleys (purple, ~-0.8) created from combining
-    sinusoidal patterns. The Viridis colormap transitions from dark purple/blue at
-    low Z values to bright yellow/green at high values. The X and Y axes range from
-    -4 to 4, with "X Axis" and "Y Axis" labels. The Z axis shows "Z Value" ranging
-    from approximately -1 to 1.5. A vertical colorbar on the right displays the Z
-    Value scale. The surface is viewed from a 3D perspective with subtle gray grid
-    lines, and the overall layout uses a clean white background.
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 20pt, tick fonts at 14-16pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, all labels clearly separated
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Surface is well-rendered with 40x40 grid providing smooth detail
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is colorblind-safe and provides excellent contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Plot centered but has significant whitespace around it; surface could
-          be larger
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Labels are descriptive ("X Axis", "Y Axis", "Z Value") but lack units
-          or more meaningful context
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid at alpha 0.1 is appropriately subtle; colorbar well-placed
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct 3D surface plot type
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X, Y grid correctly mapped to Z height values
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'All spec features present: smooth surface, colormap, colorbar, axis
-          labels'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Axes show all data with appropriate range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Colorbar accurately represents Z values
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Title follows exact format `{spec-id} · {library} · pyplots.ai`
-    data_quality:
-      score: 17
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 6
-        max: 8
-        passed: true
-        comment: Shows peaks and valleys but mathematical function is abstract rather
-          than showcasing full range of surface features
-      - id: DQ-02
-        name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Mathematical function demonstration is plausible but generic rather
-          than a real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
-        max: 5
-        passed: true
-        comment: Values range appropriately for mathematical function visualization
-    code_quality:
-      score: 10
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses `np.random.seed(42)` (though seed not used since data is deterministic)
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as `plot.png` and `plot.html`
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses go.Surface and colorbar, but does not leverage Plotly's interactive
-          features in the static output; HTML export included which is good
-  verdict: APPROVED
+  - theme-adaptive

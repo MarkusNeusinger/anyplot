@@ -1,12 +1,22 @@
-""" pyplots.ai
+""" anyplot.ai
 surface-basic: Basic 3D Surface Plot
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-05
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Data - Create a smooth mathematical surface
 np.random.seed(42)
@@ -17,7 +27,7 @@ X, Y = np.meshgrid(x, y)
 # Create an interesting surface combining sinusoidal patterns
 Z = np.sin(np.sqrt(X**2 + Y**2)) * np.cos(X / 2) + 0.5 * np.exp(-0.1 * (X**2 + Y**2))
 
-# Create 3D surface plot
+# Plot
 fig = go.Figure(
     data=[
         go.Surface(
@@ -25,36 +35,52 @@ fig = go.Figure(
             y=Y,
             z=Z,
             colorscale="Viridis",
-            colorbar={"title": {"text": "Z Value", "font": {"size": 20}}, "tickfont": {"size": 16}, "len": 0.7},
+            colorbar={
+                "title": {"text": "Z Value", "font": {"size": 20, "color": INK}},
+                "tickfont": {"size": 16, "color": INK_SOFT},
+                "len": 0.7,
+            },
         )
     ]
 )
 
-# Layout and styling for 4800x2700 px
+# Style
 fig.update_layout(
-    title={"text": "surface-basic · plotly · pyplots.ai", "font": {"size": 28}, "x": 0.5, "xanchor": "center"},
+    title={
+        "text": "surface-basic · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
     scene={
         "xaxis": {
-            "title": {"text": "X Axis", "font": {"size": 20}},
-            "tickfont": {"size": 14},
-            "gridcolor": "rgba(0, 0, 0, 0.1)",
+            "title": {"text": "X Axis", "font": {"size": 22, "color": INK}},
+            "tickfont": {"size": 18, "color": INK_SOFT},
+            "gridcolor": GRID,
+            "showbackground": True,
+            "backgroundcolor": PAGE_BG,
         },
         "yaxis": {
-            "title": {"text": "Y Axis", "font": {"size": 20}},
-            "tickfont": {"size": 14},
-            "gridcolor": "rgba(0, 0, 0, 0.1)",
+            "title": {"text": "Y Axis", "font": {"size": 22, "color": INK}},
+            "tickfont": {"size": 18, "color": INK_SOFT},
+            "gridcolor": GRID,
+            "showbackground": True,
+            "backgroundcolor": PAGE_BG,
         },
         "zaxis": {
-            "title": {"text": "Z Value", "font": {"size": 20}},
-            "tickfont": {"size": 14},
-            "gridcolor": "rgba(0, 0, 0, 0.1)",
+            "title": {"text": "Z Value", "font": {"size": 22, "color": INK}},
+            "tickfont": {"size": 18, "color": INK_SOFT},
+            "gridcolor": GRID,
+            "showbackground": True,
+            "backgroundcolor": PAGE_BG,
         },
         "camera": {"eye": {"x": 1.5, "y": 1.5, "z": 1.2}},
     },
-    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
     margin={"l": 20, "r": 20, "t": 80, "b": 20},
 )
 
-# Save as PNG and HTML
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
