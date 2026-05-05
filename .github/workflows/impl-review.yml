@@ -262,7 +262,14 @@ jobs:
         run: |
           LABEL="quality:${SCORE}"
           gh label create "$LABEL" --color "0e8a16" --description "Quality score ${SCORE}/100" 2>/dev/null || true
-          gh pr edit "$PR_NUM" --add-label "$LABEL"
+          # Retry on transient GitHub API failures (e.g. 504) — without this,
+          # a single 5xx leaves the PR stuck with no quality label and the
+          # downstream verdict step is gated on this step's success.
+          gh pr edit "$PR_NUM" --add-label "$LABEL" 2>/dev/null || {
+            echo "::warning::Failed to add quality score label, retrying..."
+            sleep 2
+            gh pr edit "$PR_NUM" --add-label "$LABEL"
+          }
 
       - name: Add preliminary verdict label (early)
         if: steps.review.conclusion == 'success' && steps.score.outputs.score != '0'
