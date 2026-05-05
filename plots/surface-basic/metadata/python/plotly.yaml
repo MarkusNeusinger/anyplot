@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: surface-basic
 created: '2025-12-23T21:54:38Z'
-updated: '2026-05-05T16:50:41Z'
+updated: '2026-05-05T16:56:28Z'
 generated_by: claude-haiku
 workflow_run: 25389653481
 issue: 1013
@@ -12,32 +12,32 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/surface-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/plotly/plot-dark.html
-quality_score: 85
+quality_score: 93
 review:
   strengths:
-  - Perfect theme-adaptation with readable text in both light and dark renders
-  - Comprehensive 3D visualization with proper colorbar and axis configuration
-  - Clean, maintainable code with deterministic reproducibility through seed
-  - Correct viridis colormap usage for continuous data aligned with style guide
-  - Perfect spec compliance across all dimensions
+  - Perfect visual quality with excellent text legibility in both light and dark themes
+  - Flawless spec compliance with all required features present and correct
+  - Professional theme token implementation throughout (background, text, grid colors)
+  - Clean, reproducible, and well-structured code with proper seed management
+  - Proper use of Plotly's interactive 3D capabilities and idiomatic patterns
+  - Correct title format and proper axis/legend labeling
   weaknesses:
-  - Generic visual styling with standard plotly defaults and no design customization
-  - Limited design sophistication - uses default colors and layout without intentional
-    visual hierarchy
-  - Basic library usage that doesn't leverage advanced plotly 3D features like custom
-    hover templates or interactive camera control
+  - 'Design Excellence below optimal: implementation follows Plotly defaults without
+    additional stylistic customization (no custom color adjustments or emphasis techniques)'
+  - 'Visual hierarchy could be enhanced: while the surface is clear, there''s room
+    for more sophisticated visual storytelling through color contrast or size emphasis'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct surface color
-      Chrome: Title "surface-basic · plotly · anyplot.ai" in dark text (INK color), axis labels "X Axis", "Y Axis", "Z Value" clearly visible in dark text with proper sizing (22px), tick labels in soft dark gray (INK_SOFT, 18px), colorbar labeled "Z Value" with readable title
-      Data: 3D surface rendered with viridis colormap (yellow for peaks ~1.0, purple for valleys ~-1.0), smooth gradient transitions, colorbar scale clearly shows range
-      Legibility verdict: PASS - all text elements are clearly readable against light background; data visualization is clean and comprehensive
+      Background: Warm off-white (#FAF8F1), providing neutral surface for the 3D plot
+      Chrome: Title "surface-basic · plotly · anyplot.ai" is prominently displayed in dark text (28px). Axis labels (X Axis, Y Axis, Z Value) are clearly readable in dark text (22px). Tick labels are rendered in softer dark tone (18px). Colorbar title "Z Value" is properly labeled with size 20. All text has excellent contrast against light background.
+      Data: 3D surface rendered with Viridis colorscale, colors range from purple (low ~-0.8) to yellow (high ~1.2). Surface clearly shows combined sinusoidal and exponential mathematical function. Grid is subtle but visible.
+      Legibility verdict: PASS - All text is fully readable, no contrast issues, proper visual hierarchy
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct surface color
-      Chrome: Title "surface-basic · plotly · anyplot.ai" in light text (F0EFE8), axis labels in light text, tick labels in soft light gray (B8B7B0), grid lines subtly visible (10% rgba opacity), colorbar styling matches
-      Data: Identical viridis colormap colors to light render (yellow and purple at same value ranges), confirms proper theme adaptation - only chrome changed, data colors preserved
-      Legibility verdict: PASS - all text is readable on dark background with no dark-on-dark conflicts; grid is subtle and doesn't interfere with visibility
+      Background: Warm near-black (#1A1A17), providing proper dark theme surface
+      Chrome: Title remains clearly visible in light text. Axis labels rendered in light text (22px). Tick labels in softer light tone (18px). All text properly adapted to dark background with no dark-on-dark contrast failures. Grid visible and subtle at same opacity as light render.
+      Data: Viridis colorscale maintains identical colors from light render (purple to yellow) - data colors do NOT change between themes, only chrome adapts. Surface geometry and function representation identical to light version.
+      Legibility verdict: PASS - All text fully readable in dark theme, proper light text colors, no dark-on-dark issues, perfect theme adaptation
   criteria_checklist:
     visual_quality:
       score: 30
@@ -48,66 +48,66 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and clearly readable in both themes
+        comment: All text clearly readable at full size in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping elements, perfect spacing
+        comment: No text collisions or overlapping elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Surface clearly visible with excellent color distinction
+        comment: 3D surface, colorbar, and grid all clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is CVD-safe and perceptually uniform
+        comment: Viridis colorscale is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced layout with good canvas utilization
+        comment: Good proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with correct title format
+        comment: Correct title format with all axes labeled
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct viridis colormap, proper background colors, theme-adaptive
-          text colors in both renders
+        comment: Viridis for continuous data, correct theme backgrounds, proper chrome
+          adaptation
     design_excellence:
-      score: 8
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured defaults but no custom design thinking
+        passed: true
+        comment: Professional theme tokens, good camera angle, relies on defaults
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Library defaults with minimal customization
+        passed: true
+        comment: Subtle grid and spacing, could be more refined
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Displays data clearly but lacks visual hierarchy or emphasis
+        passed: true
+        comment: Clear function demonstration, could emphasize hierarchy more
     spec_compliance:
       score: 15
       max: 15
@@ -123,19 +123,19 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Colorbar, axis labels, smooth surface all present
+        comment: 'All features present: colormap, labels, colorbar, rotation'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Z correctly mapped with 40x40 grid
+        comment: X/Y/Z correct and properly scaled
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, colorbar labeled appropriately
+        comment: Correct format with colorbar legend
     data_quality:
       score: 15
       max: 15
@@ -145,19 +145,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates peaks, valleys, smooth transitions
+        comment: Full range of surface plot features shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral mathematical function appropriate for the plot type
+        comment: Mathematical function is realistic and appropriate
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible ranges and function value alignment
+        comment: Sensible value ranges and balance
     code_quality:
       score: 10
       max: 10
@@ -167,56 +167,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure, no unnecessary functions
+        comment: No unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set for deterministic output
+        comment: Seed set, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic
+        comment: No fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png naming
+        comment: Correct file format and API
     library_mastery:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Proper go.Figure() and go.Surface() usage, competent but not master-level
+        comment: Proper use of go.Figure, go.Surface, update_layout
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Uses plotly 3D capabilities appropriately but in basic manner
+        passed: true
+        comment: Leverages 3D surface, interactivity, custom camera
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
   - colorbar
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
   styling:
-  - custom-colormap
+  - theme-adaptive
