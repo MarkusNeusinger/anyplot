@@ -130,9 +130,10 @@ export function LegalPage() {
               <Box
                 component="img"
                 src={AVATAR_URL}
-                alt="Markus Neusinger"
+                alt=""
+                aria-hidden="true"
                 width={240}
-                height={519}
+                height={518}
                 loading="lazy"
                 sx={{ width: 120, height: 'auto', flexShrink: 0, display: 'block' }}
               />
