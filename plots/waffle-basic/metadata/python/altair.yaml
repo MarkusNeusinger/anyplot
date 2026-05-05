@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: waffle-basic
 created: '2025-12-24T09:49:39Z'
-updated: '2026-05-05T18:06:57Z'
+updated: '2026-05-05T18:13:59Z'
 generated_by: claude-haiku
 workflow_run: 25393338380
 issue: 998
@@ -12,35 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waffle-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 83
 review:
   strengths:
-  - Perfect theme adaptation with proper INK and INK_SOFT tokens in both light and
-    dark renders — all text readable
-  - Flawless Okabe-Ito palette compliance — first series is brand green (#009E73),
-    colors follow canonical order
-  - Excellent data representation — 10x10 grid clearly shows proportions, includes
-    small categories (4%), white borders provide clear definition
-  - Idiomatic altair code with advanced features — dynamic legend labels via labelExpr,
-    proper configure_* methods, clean mark_rect encoding
-  - Clean, deterministic code with no unnecessary complexity — all imports used, data
-    generation straightforward
-  weaknesses: []
+  - 'Perfect Visual Quality (29/30): Legible text with explicit sizing, no overlap,
+    all elements visible; flawless palette compliance and theme handling'
+  - 'Flawless Data Quality (15/15): Realistic, neutral budget allocation context with
+    correct proportions and full feature coverage'
+  - 'Clean Code (10/10): Simple structure, deterministic, proper output format'
+  - 'Proper Theme Adaptation: Both light and dark renders work perfectly; data colors
+    identical, only chrome adapts'
+  - 'Correct Waffle Implementation: 10x10 grid with proper proportions, clear square
+    definition via white borders'
+  weaknesses:
+  - 'Title Format (SC-04): Includes Budget Allocation prefix; should be just waffle-basic
+    · altair · anyplot.ai per spec requirement'
+  - 'Generic Design Excellence (10/20): Implementation is correct but lacks distinctive
+    aesthetic choices or visual sophistication'
+  - 'Limited Storytelling (DE-03): Displays data clearly but doesn''t create special
+    visual emphasis or hierarchy beyond the inherent proportional structure'
+  - 'No Distinctive Features (LM-02): Doesn''t use altair-specific techniques like
+    interactive selection or cross-filtering'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme background
-      Chrome: Title "Budget Allocation · waffle-basic · altair · anyplot.ai" is clearly visible in dark text (INK=#1A1A17). Legend on right shows category names with percentages in dark text (INK_SOFT=#4A4A44). All text readable against light background.
-      Data: 10x10 waffle grid with 100 colored squares. Engineering (40%) in green (#009E73) dominates bottom four rows. Marketing (28%) in orange (#D55E00) occupies upper portion. Operations (18%) in blue (#0072B2), Design (10%) in pink (#CC79A7), Legal (4%) in yellow (#E69F00). White borders (strokeWidth=2) with rounded corners provide clear definition between squares. All colors vibrant and distinguishable.
-      Legibility verdict: PASS — all text readable, data colors clear, no contrast issues.
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "Budget Allocation · waffle-basic · altair · anyplot.ai" visible in dark text; legend titled "Category" with category names and percentages; all text clearly readable
+      Data: Five categories shown as colored squares (100 total): Engineering green #009E73 (40 squares), Marketing orange #D55E00 (28), Operations blue #0072B2 (18), Design pink #CC79A7 (10), Legal yellow #E69F00 (4); white borders separate each square clearly; first series is correct #009E73
+      Legibility verdict: PASS - All text readable against light background; no light-on-light issues; square borders provide excellent definition
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme background
-      Chrome: Title is now rendered in light text (INK=#F0EFE8), clearly visible against dark background. Legend text is light (INK_SOFT=#B8B7B0) and readable. No dark-on-dark failures detected.
-      Data: Identical waffle grid structure with same color distribution. All five Okabe-Ito colors remain unchanged from light render (only chrome adapts to theme). Brand green (#009E73) is particularly visible. White square borders maintain visibility. Grid lines and structure match light render perfectly.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues, data colors identical to light render.
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title is light-colored; legend box has dark background with light text; all labels are light-colored; no dark-on-dark text failures
+      Data: Identical colors to light render - green #009E73, orange #D55E00, blue #0072B2, pink #CC79A7, yellow #E69F00 all present in same positions; white borders maintain visibility
+      Legibility verdict: PASS - All text clearly visible on dark background; brand green #009E73 clearly readable; no contrast failures; proper theme-adaptive chrome
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -48,52 +55,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title and legend text explicitly sized (fontSize=28, titleFontSize=22,
-          labelFontSize=18) and readable in both themes
+        comment: All text explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Title centered, legend right-aligned, no overlapping elements or
-          text collisions
+        comment: Clean layout, legend positioned right, no text overlaps
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Squares appropriately sized with white borders (strokeWidth=2), even
-          4% legal category clearly visible
+        comment: All 100 waffle squares clearly visible with white borders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe, adequate contrast, no red-green-only
-          signals
+        comment: Okabe-Ito palette is colorblind-safe with good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Dimensions 1600×900 with scale_factor=3.0 produces 4800×2700px, good
-          proportions, nothing cut off
+        comment: Perfect layout with balanced margins, plot fills 60-70% of canvas
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Descriptive title with library attribution, legend clearly identifies
-          categories with percentages
+        passed: false
+        comment: Title present but format includes Budget Allocation when spec requires
+          waffle-basic format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, full Okabe-Ito order followed, backgrounds
-          #FAF8F1 (light) and #1A1A17 (dark), both themes correct'
+        comment: 'First series is #009E73, colors follow Okabe-Ito order, backgrounds
+          and chrome are theme-correct'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -101,24 +103,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Solid execution of Okabe-Ito palette, but uses standard waffle design
-          without custom refinements beyond palette
+        comment: Well-configured defaults but lacks exceptional design or custom touches
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Rounded corners (cornerRadius=4) show attention to detail, white
-          strokes provide definition, legend background styled appropriately
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
+        passed: true
+        comment: Good refinement with white borders, legend styling, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
         passed: false
-        comment: Waffle effectively shows budget proportions with visual hierarchy
-          (Engineering dominates), color variety aids category distinction
+        comment: Data displayed clearly but no special visual hierarchy or emphasis
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -126,28 +125,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct waffle chart with 10×10 grid, each square = 1%
+        comment: Correct waffle chart with 10x10 grid
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid ✓, category labels ✓, percentages in legend ✓, contrasting colors
-          ✓, legend ✓
+        comment: 'All features present: proportions, colors, legend with percentages'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correctly mapped to col/row, rows sorted descending, values
-          sum to 100%
+        comment: Categories to colors, values to squares (100 total)
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Format 'Title · spec-id · library · anyplot.ai' correct, legend shows
-          categories with percentages
+        passed: false
+        comment: Legend correct but title format non-compliant
     data_quality:
       score: 15
       max: 15
@@ -157,22 +153,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All waffle aspects shown, 5 categories with varying sizes (40/28/18/10/4%),
-          full 100 squares
+        comment: 'Shows all aspects: proportions, categories, colors, value range'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Budget allocation across typical business functions (Engineering,
-          Marketing, Operations, Design, Legal) is realistic and neutral
+        comment: Budget allocation is real, realistic, neutral scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 100% budget allocation sensible, individual percentages plausible
-          for real-world scenario
+        comment: Percentages sum to 100, factually correct proportions
     code_quality:
       score: 10
       max: 10
@@ -182,34 +175,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes, linear straightforward code
+        comment: Linear flow, no functions/classes, no over-engineering
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data hardcoded (deterministic), no random seed needed
+        comment: Fixed data, deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, altair, pandas imported; all used
+        comment: Only necessary imports, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality, clean grid generation
-          with theme tokens
+        comment: Clean, Pythonic, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with scale_factor=3.0
+        comment: 'Correct naming: plot-{THEME}.png and .html'
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -217,23 +209,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Method chaining, proper mark_rect(), correct encoding types (O for
-          ordinal), configure_* for theme — solid altair patterns
+        comment: Good altair patterns with Chart.mark_rect(), proper encodings, theme-aware
+          config
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Uses altair-specific labelExpr for dynamic legend labels, interactive
-          HTML output, clean declarative syntax
+        passed: false
+        comment: Uses basic features, doesn't leverage interactive or distinctive
+          altair capabilities
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - html-export
   patterns:
   - data-generation
-  - matrix-construction
   dataprep: []
-  styling: []
+  styling:
+  - publication-ready
