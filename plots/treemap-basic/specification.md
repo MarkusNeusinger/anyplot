@@ -17,6 +17,7 @@ A treemap displaying hierarchical data as nested rectangles, where each rectangl
 - `subcategory` (string) - optional sub-category for nested hierarchy
 - `value` (numeric) - size/magnitude determining each rectangle's area
 - Size: 5-50 items
+- Example: Company expense breakdown by department and cost center, or product catalog by category and subcategory with sales volume
 
 ## Notes
 
