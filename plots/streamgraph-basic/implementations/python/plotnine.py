@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 streamgraph-basic: Basic Stream Graph
-Library: plotnine 0.15.1 | Python 3.13.11
-Quality: 98/100 | Created: 2025-12-14
+Library: plotnine 0.15.3 | Python 3.13.13
+Quality: 79/100 | Created: 2026-05-05
 """
 
 import numpy as np
