@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: treemap-basic
 created: '2025-12-24T09:53:29Z'
-updated: '2026-05-05T22:43:16Z'
+updated: '2026-05-05T22:49:25Z'
 generated_by: claude-haiku
 workflow_run: 25406119791
 issue: 766
@@ -12,36 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/treemap-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/altair/plot-dark.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - Perfect visual quality with flawless theme adaptation—both light and dark renders
-    are fully readable and properly styled
-  - Excellent Okabe-Ito palette compliance with correct brand green (#009E73) for
-    first series
-  - Clean, maintainable code with proper separation of data preparation and visualization
-    logic
-  - Professional legend styling with appropriate elevated background color in both
-    themes
-  - Intelligent label placement strategy using area thresholds to avoid clutter on
-    small rectangles
+  - 'Perfect visual quality: all typography, colors, and accessibility requirements
+    met in both themes'
+  - 'Theme-adaptive excellence: backgrounds, text colors, and borders correctly adapt
+    between light and dark; data colors remain constant'
+  - Clean, readable treemap with effective manual layout and well-considered label
+    placement
+  - 'Strong spec compliance: all features from specification implemented'
   weaknesses:
-  - Limited design sophistication—relies on default styling and does not explore custom
-    refinements beyond requirements
-  - Minimal use of Altair-specific features for data-driven design—treemap layout
-    computed manually in Python rather than leveraging Altair's declarative strengths
+  - 'Design Excellence moderate (13/20): strip-layout treemap is effective but straightforward
+    without unusual sophistication or visual refinement beyond basics'
+  - 'Library Mastery not fully maximized (6/10): while using idiomatic Altair well,
+    implementation doesn''t showcase distinctive Altair features beyond layer composition
+    and tooltips'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with professional appearance
-      Chrome: Title "treemap-basic · altair · anyplot.ai" in dark text (#1A1A17) clearly visible at top. Legend on right displays "Sector" label with category names (Technology, Consumer, Healthcare, Finance, Energy) in readable secondary text color (#4A4A44).
-      Data: Five sectors color-coded with Okabe-Ito palette—Technology (green #009E73), Consumer (orange #D55E00), Healthcare (blue #0072B2), Finance (pink #CC79A7), Energy (golden #E69F00). Company names and values displayed in dark text on larger rectangles. Subtle gray borders separate rectangles. All values clearly formatted as dollar amounts (e.g., "$2800B").
-      Legibility verdict: PASS - All text elements are clearly readable with excellent contrast against the light background.
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "treemap-basic · altair · anyplot.ai" in bold dark text (#1A1A17), subtitle visible, axis labels removed appropriately
+      Data: Technology sector (green #009E73, dominant left) shows Apple, Microsoft, Google, NVIDIA. Consumer (orange #D55E00) shows Amazon, Tesla, Walmart. Healthcare (blue #0072B2), Finance (pink #CC79A7), Energy (yellow #F0E442) sectors properly colored. All company names bold 20px, values 16px, both readable.
+      Legend: Right-side legend with light background (#FFFDF6), dark text labels for sectors
+      Borders: Subtle gray (#4A4A44) between rectangles
+      Legibility verdict: PASS - all text clearly readable against light background, no low-contrast failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with consistent theme
-      Chrome: Title in light text (#F0EFE8) maintains excellent visibility. Legend frame uses elevated background (#242420) with light text (#B8B7B0) for category labels. No dark-on-dark issues detected.
-      Data: Okabe-Ito colors (positions 1-5) remain identical to light render—only chrome elements adapted. Company names and values in light text provide clear contrast. Subtle light-colored borders are visible against the dark surface.
-      Legibility verdict: PASS - All text elements properly adapted to dark theme with no contrast failures. Brand green (#009E73) remains prominent and readable.
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title in light text (F0EFE8), clearly visible. No low-contrast elements.
+      Data: All category colors IDENTICAL to light render - Technology green (#009E73), Consumer orange (#D55E00), Healthcare blue (#0072B2), Finance pink (#CC79A7), Energy yellow (#F0E442). Company labels now in light text (#F0EFE8 primary, #B8B7B0 secondary), all readable.
+      Legend: Dark background (#242420) with light text labels, proper adaptation
+      Borders: Visible in dark INK_SOFT color
+      Legibility verdict: PASS - all text clearly readable against dark background, no dark-on-dark failures, perfect theme adaptation
   criteria_checklist:
     visual_quality:
       score: 30
@@ -224,11 +226,14 @@ impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - custom-legend
+  - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  - matrix-construction
+  - iteration-over-groups
+  dataprep:
   - groupby-aggregation
-  dataprep: []
   styling:
+  - minimal-chrome
   - edge-highlighting
