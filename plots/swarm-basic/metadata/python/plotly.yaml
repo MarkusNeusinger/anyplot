@@ -1,170 +1,180 @@
 library: plotly
+language: python
 specification_id: swarm-basic
 created: '2025-12-23T21:55:15Z'
-updated: '2025-12-23T22:01:43Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472387610
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/plotly/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - hover-tooltips
-    - html-export
-  patterns:
-    - data-generation
-    - iteration-over-groups
-  dataprep: []
-  styling:
-    - alpha-blending
-    - edge-highlighting
+updated: '2026-05-05T01:22:25Z'
+generated_by: claude-sonnet
+workflow_run: 25351945965
+issue: 974
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/swarm-basic/python/plotly/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent custom beeswarm algorithm that effectively spreads points to avoid overlap
-    while maintaining visual clarity
-  - Good use of mean diamond markers to show central tendency for each group as suggested
-    in the spec
-  - Thoughtful data design showing varied distribution shapes (bimodal, wide spread,
-    tight clusters)
-  - Clean, readable code structure with proper comments
-  - Correct title format and proper output sizing (4800x2700 via scale=3)
-  - Well-designed hover templates showing classroom and score
+  - Perfect theme adaptation in both renders — chrome flips correctly, no dark-on-dark
+    failures
+  - 'Correct Okabe-Ito palette with Room A as #009E73 first across all four categories'
+  - Varied distribution shapes (bimodal, high-variance, narrow) showcase swarm-plot
+    strengths effectively
+  - Hover tooltips, boxmean markers, and HTML export demonstrate Plotly-distinctive
+    features
+  - Clean reproducible code with proper seed and linear KISS structure
   weaknesses:
-  - Does not leverage Plotly's distinctive features like violin mode, built-in jitter,
-    or advanced interactivity beyond basic hover
-  - Axis labels lack units (could be "Test Score (points)" or similar)
-  - Legend placement has slight isolation from the main plot area
-  image_description: 'The plot displays a swarm plot showing student test scores across
-    4 classrooms (Room A through Room D). Each classroom has its own color: Room A
-    in dark blue (#306998), Room B in yellow (#FFD43B), Room C in light blue (#5A9BD4),
-    and Room D in orange (#E07B39). Individual data points are displayed as circular
-    markers with dark outlines, spread horizontally to avoid overlap. Each classroom
-    includes a white diamond marker indicating the mean score. The title "swarm-basic
-    · plotly · pyplots.ai" is centered at the top. The x-axis shows "Classroom" with
-    category labels, and the y-axis shows "Test Score" ranging from approximately
-    40-100. A legend on the right identifies each classroom color. The plot uses a
-    clean white template with subtle gridlines.'
+  - Box/whisker elements are visually prominent and compete with the individual-point
+    focus that defines a swarm plot — hiding the box while keeping the mean line would
+    read more clearly as a swarm
+  - Room C bimodal distribution is not visually emphasized despite being the most
+    analytically interesting feature — add annotation or focal emphasis
+  - Random jitter (jitter=0.5) causes visible point overlap in dense groups vs. a
+    true beeswarm pack algorithm
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) - correct surface color, not pure white
+      Chrome: title "swarm-basic · plotly · anyplot.ai" centered, dark text (#1A1A17), clearly readable; Y-axis label "Test Score (points)" and X-axis "Classroom" in dark text at 22px; tick labels in INK_SOFT (#4A4A44) at 18px, all readable
+      Data: 4 groups (Room A-D) in Okabe-Ito order — Room A #009E73, Room B #D55E00, Room C #0072B2, Room D #CC79A7; individual points with opacity=0.8 and white edges overlaid on box/whisker elements with semi-transparent fills; mean markers visible
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: near-black (#1A1A17) - correct dark surface, not pure black
+      Chrome: all text switches to light tokens (#F0EFE8 / #B8B7B0); title, axis labels, tick labels all clearly readable against dark background; no dark-on-dark failures detected
+      Data: colors identical to light render — Room A #009E73, Room B #D55E00, Room C #0072B2, Room D #CC79A7; only chrome elements flipped
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 32pt, axis titles at 24pt, tick labels at 20pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, categories well-spaced
+        comment: Title 28px, axis labels 22px, ticks 18px all explicitly set; both
+          themes fully readable
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Some point overlap in dense groups due to random jitter; all text
+          elements non-overlapping
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Markers well-sized at 14px with good opacity (0.8) and visible outlines.
-          Slight overlap in dense areas but acceptable for swarm plot
+        comment: Markers size=10 with opacity=0.8 and white edges are well-visible;
+          slight crowding in Room D
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses blue, yellow, light blue, orange palette - distinguishable for
-          most colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Good use of canvas space, plot fills majority of area. Minor issue:
-          legend slightly isolated on right'
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels ("Test Score", "Classroom") but no units
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle gridlines (alpha 0.05-0.1), legend well placed and clear
+        comment: Okabe-Ito palette is CVD-safe; alpha=0.8 reduces occlusion
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700px canvas well-utilized; balanced margins; legend not obstructing
+          data
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Test Score (points) includes units; Classroom is descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 confirmed; Okabe-Ito order followed; correct
+          backgrounds; chrome fully theme-adaptive'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Semi-transparent fills, white-edge markers, theme-adaptive tokens
+          — above generic defaults; not publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-only grid, generous margins, edge highlighting on markers, clean
+          legend frame
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Varied distribution shapes tell a story but bimodal Room C receives
+          no visual emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 4
+        max: 5
         passed: true
-        comment: Correct swarm/beeswarm plot with horizontal point spreading
+        comment: go.Box with boxpoints=all is Plotly's best swarm approach but prominent
+          box/whisker elements compete with individual-point focus
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X-axis, continuous values on Y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows individual points, horizontal spreading to avoid overlap, mean
-          markers as suggested in spec
-      - id: SC-04
-        name: Data Range
+        comment: Individual points, horizontal spread, mean markers, color by category,
+          consistent sizes, group spacing — all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis range [35, 105] shows all data points appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Categories on X, values on Y, full range displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all four classrooms
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "swarm-basic · plotly · pyplots.ai"'
+        comment: swarm-basic · plotly · anyplot.ai centered; legend labels match data
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Excellent variety: Room A shows bimodal (main cluster + high performers),
-          Room B has wide spread with outliers, Room C is bimodal (two clusters),
-          Room D has tight clustering - demonstrates various distribution shapes'
+        comment: 'Four distinct distribution shapes: right-skewed bimodal, high-variance,
+          bimodal two-cluster, tight normal'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Student test scores by classroom is plausible and relatable, though
-          somewhat generic
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Test scores 40-95 are realistic for classroom assessments
+        comment: Student test scores by classroom — neutral, realistic, educationally
+          relevant
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Scores 37-95 realistic; 35-50 students per classroom plausible; means
+          68-80 credible
     code_quality:
       score: 10
       max: 10
@@ -174,41 +184,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → plot → save, no functions/classes'
+        comment: 'Linear flow: theme tokens -> data -> figure loop -> layout -> save;
+          no functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used
+        comment: sys, os, numpy, plotly.graph_objects all used; no dead imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotly API
+        comment: zip() iteration clean; dict-style config idiomatic; sys.path.pop(0)
+          guard legitimate
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Implements beeswarm algorithm manually instead of using plotly's
-          built-in jitter or a violin plot overlay. Does not leverage plotly's distinctive
-          interactive features in an interesting way
+        passed: true
+        comment: Correct go.Box usage, update_layout dict-style, write_image/write_html
+          — idiomatic; doesn't exploit advanced layout features
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: hovertemplate for per-point tooltips, boxmean=True for mean overlay,
+          HTML export — Plotly-distinctive capabilities
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

@@ -1,127 +1,93 @@
-""" pyplots.ai
+""" anyplot.ai
 swarm-basic: Basic Swarm Plot
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-23
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-05
 """
+
+import sys
+
+
+# Remove the script directory from sys.path so this file (plotly.py) does not
+# shadow the installed plotly package.
+sys.path.pop(0)
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+FILL_COLORS = ["rgba(0,158,115,0.18)", "rgba(213,94,0,0.18)", "rgba(0,114,178,0.18)", "rgba(204,121,167,0.18)"]
+
 # Data - student test scores across 4 classrooms with varied distributions
 np.random.seed(42)
 classrooms = ["Room A", "Room B", "Room C", "Room D"]
-colors = ["#306998", "#FFD43B", "#5A9BD4", "#E07B39"]
 
 scores_a = np.concatenate([np.random.normal(75, 8, 35), np.random.normal(90, 5, 10)])
-scores_b = np.random.normal(68, 12, 50)  # Wide spread
-scores_c = np.concatenate([np.random.normal(60, 6, 20), np.random.normal(82, 6, 25)])  # Bimodal
-scores_d = np.random.normal(78, 6, 40)  # Tight cluster
+scores_b = np.random.normal(68, 12, 50)
+scores_c = np.concatenate([np.random.normal(60, 6, 20), np.random.normal(82, 6, 25)])
+scores_d = np.random.normal(78, 6, 40)
 
-all_data = [scores_a, scores_b, scores_c, scores_d]
+all_scores = [scores_a, scores_b, scores_c, scores_d]
 
-# Calculate beeswarm positions for each category
-x_all = []
-y_all = []
-color_all = []
-classroom_all = []
-
-for cat_idx, scores in enumerate(all_data):
-    # Sort values to place nearby values together
-    sorted_indices = np.argsort(scores)
-    y_sorted = scores[sorted_indices]
-    x_positions = np.zeros(len(scores))
-
-    value_range = scores.max() - scores.min()
-    point_threshold = 0.015 * value_range  # Vertical proximity threshold
-
-    for i, orig_idx in enumerate(sorted_indices):
-        y_val = y_sorted[i]
-
-        # Find points already placed that are nearby vertically
-        placed_y = y_sorted[:i]
-        placed_x = x_positions[sorted_indices[:i]]
-        nearby_mask = np.abs(placed_y - y_val) < point_threshold
-
-        if not np.any(nearby_mask):
-            x_positions[orig_idx] = cat_idx
-        else:
-            nearby_x = placed_x[nearby_mask]
-            # Find available horizontal slot by alternating left/right
-            offset = 0.02
-            found = False
-            for sign in [1, -1, 1, -1, 1, -1, 1, -1]:
-                test_x = cat_idx + sign * offset
-                if not np.any(np.abs(nearby_x - test_x) < 0.015):
-                    x_positions[orig_idx] = test_x
-                    found = True
-                    break
-                offset += 0.015
-            if not found:
-                x_positions[orig_idx] = cat_idx + np.random.uniform(-0.2, 0.2)
-
-    x_all.extend(x_positions)
-    y_all.extend(scores)
-    color_all.extend([colors[cat_idx]] * len(scores))
-    classroom_all.extend([classrooms[cat_idx]] * len(scores))
-
-# Create figure
+# Plot — use Plotly's native go.Box with boxpoints='all' for a beeswarm effect:
+# individual jittered points, box/whisker statistics, and mean line overlay.
 fig = go.Figure()
 
-# Add swarm points for each category
-for cat_idx, (classroom, scores) in enumerate(zip(classrooms, all_data, strict=True)):
-    mask = [c == classroom for c in classroom_all]
-    x_cat = [x_all[i] for i in range(len(x_all)) if mask[i]]
-    y_cat = [y_all[i] for i in range(len(y_all)) if mask[i]]
-
+for i, (classroom, scores) in enumerate(zip(classrooms, all_scores, strict=False)):
+    color = OKABE_ITO[i]
     fig.add_trace(
-        go.Scatter(
-            x=x_cat,
-            y=y_cat,
-            mode="markers",
+        go.Box(
+            y=scores,
             name=classroom,
-            marker={"size": 14, "color": colors[cat_idx], "opacity": 0.8, "line": {"width": 1.5, "color": "#333333"}},
+            boxpoints="all",
+            jitter=0.5,
+            pointpos=0,
+            marker={"color": color, "size": 10, "opacity": 0.8, "line": {"width": 1.5, "color": PAGE_BG}},
+            line={"color": color, "width": 2},
+            fillcolor=FILL_COLORS[i],
+            whiskerwidth=0.5,
+            boxmean=True,
             hovertemplate=f"{classroom}<br>Score: %{{y:.1f}}<extra></extra>",
-        )
-    )
-
-    # Add mean marker
-    mean_val = np.mean(scores)
-    fig.add_trace(
-        go.Scatter(
-            x=[cat_idx],
-            y=[mean_val],
-            mode="markers",
-            marker={"symbol": "diamond", "size": 20, "color": "white", "line": {"width": 3, "color": colors[cat_idx]}},
-            showlegend=False,
-            hovertemplate=f"{classroom} Mean: {mean_val:.1f}<extra></extra>",
         )
     )
 
 # Layout
 fig.update_layout(
-    title={"text": "swarm-basic · plotly · pyplots.ai", "font": {"size": 32}, "x": 0.5, "xanchor": "center"},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
+    title={"text": "swarm-basic · plotly · anyplot.ai", "font": {"size": 28, "color": INK}, "x": 0.5, "xanchor": "center"},
     xaxis={
-        "title": {"text": "Classroom", "font": {"size": 24}},
-        "tickfont": {"size": 20},
-        "tickmode": "array",
-        "tickvals": list(range(len(classrooms))),
-        "ticktext": classrooms,
-        "gridcolor": "rgba(0,0,0,0.05)",
+        "title": {"text": "Classroom", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": GRID,
+        "showgrid": False,
     },
     yaxis={
-        "title": {"text": "Test Score", "font": {"size": 24}},
-        "tickfont": {"size": 20},
-        "gridcolor": "rgba(0,0,0,0.1)",
-        "gridwidth": 1,
-        "range": [35, 105],
+        "title": {"text": "Test Score (points)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": GRID,
+        "range": [30, 110],
     },
-    template="plotly_white",
+    legend={"bgcolor": ELEVATED_BG, "bordercolor": INK_SOFT, "borderwidth": 1, "font": {"size": 16, "color": INK_SOFT}},
     showlegend=True,
-    legend={"font": {"size": 18}, "x": 1.02, "y": 0.98, "xanchor": "left"},
-    margin={"l": 100, "r": 150, "t": 100, "b": 80},
+    margin={"l": 100, "r": 120, "t": 100, "b": 80},
 )
 
 # Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
