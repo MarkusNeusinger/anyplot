@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: treemap-basic
 created: '2025-12-24T09:49:49Z'
-updated: '2026-05-05T22:35:28Z'
+updated: '2026-05-05T22:42:22Z'
 generated_by: claude-haiku
 workflow_run: 25405809226
 issue: 766
@@ -15,113 +15,124 @@ preview_html_dark: null
 quality_score: 86
 review:
   strengths:
-  - 'Correct Okabe-Ito palette usage (position 1 is #009E73) with all 5 colors in
-    canonical order'
-  - 'Perfect theme adaptation: both light and dark renders are readable with no dark-on-dark
-    or light-on-light failures'
-  - Proper Squarify algorithm implementation for hierarchical treemap layout and rectangle
-    positioning
-  - Intelligent label sizing based on rectangle area (area > 80 threshold, fontsize
-    11-18) ensures readability without clutter
-  - Comprehensive theme-token implementation (PAGE_BG, ELEVATED_BG, INK, INK_SOFT)
-    applied consistently across all elements
+  - Correct treemap implementation with proper hierarchical visualization
+  - 'Palette compliance perfect: Okabe-Ito colors correctly ordered with #009E73 as
+    primary'
+  - 'Theme adaptation flawless: data colors identical between light/dark, only chrome
+    flips'
+  - 'Text legibility excellent in both renders: no overlap, dynamic sizing appropriate'
+  - 'Full spec compliance: categories, hierarchy, labels, borders, and legend all
+    correct'
+  - 'Data quality strong: realistic budget allocation scenario with appropriate scale'
+  - 'Code is clean and Pythonic: KISS structure, hard-coded deterministic data, all
+    imports used'
+  - 'No layout issues: generous margins, legend well-integrated, plot fills canvas
+    effectively'
   weaknesses:
-  - 'Design Excellence: implementation follows defaults without adding visual sophistication,
-    emphasis, or custom aesthetic refinements beyond spec requirements'
-  - 'Library Mastery: does not showcase distinctive matplotlib features beyond basic
-    Rectangle patches and standard legend construction'
+  - 'Design Excellence modest (9/20): uses correct palette and clean styling but lacks
+    sophisticated customization or visual hierarchy that would elevate to publication-ready
+    (consider spine customization, enhanced color contrast, or emphasis technique
+    for future iterations)'
+  - 'Data storytelling minimal (DE-03: 2/6): plot displays allocation clearly but
+    doesn''t create visual narrative or focal point (could enhance with size/shade
+    variation or color grouping)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white. Clean and readable surface.
-      Chrome: Title "treemap-basic · matplotlib · anyplot.ai" in bold, 24pt dark text; all visible in full resolution. Legend at bottom with warm elevated background (#FFFDF6), secondary-text color labels (#4A4A44), 5 categories properly displayed.
-      Data: All 12 rectangles labeled with subcategory + value. Okabe-Ito palette in order: #009E73 (Engineering), #D55E00 (Sales), #0072B2 (Marketing), #CC79A7 (Operations), #E69F00 (HR). Larger rectangles have labels; smaller ones (Training $8M, Support $15M) are labeled but squeezed due to area constraints. Label font scales from 11-18pt based on rectangle size. All text is dark (INK token) and clearly readable against colored rectangles.
-      Legibility verdict: PASS. All chrome and data labels are readable in the light theme with no light-on-light failures.
+      Background: Warm off-white surface at #FAF8F1 with subtle warmth, not pure white
+      Chrome: Title "treemap-basic · matplotlib · anyplot.ai" in dark text at 24pt, clearly readable; legend at bottom with 5 category boxes in Okabe-Ito colors + labels in dark text (16pt), all readable
+      Data: Treemap of nested rectangles showing budget allocation (Engineering, Sales, Marketing, Operations, HR) with subcategory labels. First series (Engineering) renders in #009E73 (brand green), followed by #D55E00, #0072B2, #CC79A7, #E69F00 in correct Okabe-Ito order. Rectangle borders use background color (light separators) for clear hierarchy. All labels dynamically sized 11-18pt within rectangles, using dark text (INK = #1A1A17) against colored backgrounds
+      Legibility verdict: PASS - Title, legend, and all 12 labels fully readable with excellent contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black. Professional dark surface.
-      Chrome: Title in light text (#F0EFE8), clearly visible. Legend with dark elevated frame (#242420), light text labels, properly distinguished.
-      Data: Identical data colors to light render—all five Okabe-Ito palette colors (#009E73 through #E69F00) remain constant, proving only chrome flips. Every label is now light text against colored rectangles. No dark-on-dark failures: title, axis text (none, axis off), tick labels (none), and legend text are all light colors on appropriate backgrounds.
-      Legibility verdict: PASS. All text is readable in the dark theme; zero dark-on-dark contrast failures.
+      Background: Warm near-black surface at #1A1A17, not pure black, subtle brownish tone
+      Chrome: Title now rendered in light text against dark background, perfectly readable; legend frame with dark-adjusted colors (#242420), text in light secondary tone (#B8B7B0), all readable
+      Data: Identical treemap layout and structure to light render. Data rectangle colors are **pixel-identical** to light render - #009E73, #D55E00, #0072B2, #CC79A7, #E69F00 unchanged. Rectangle borders now light-colored (creating light separators on dark background). All labels use INK theme-adaptive color (#F0EFE8 in dark mode), rendering as light text within and against the colored rectangles
+      Legibility verdict: PASS - No dark-on-dark failures; all text readable with good contrast; brand green #009E73 highly visible; chrome correctly theme-adapted while data colors remain constant
+
+    Both renders demonstrate proper theme architecture: identical data palette across themes, flipped chrome only.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title, all labels, and legend text explicitly set with appropriate
-          colors (INK or INK_SOFT) and sizes; readable in both light and dark themes
+        comment: Title 24pt, legend 16pt, labels dynamically 11-18pt - all explicitly
+          sized and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Squarify algorithm guarantees non-overlapping rectangles; no label
-          collisions
+        comment: Zero overlap - all 12 labels well-positioned in rectangle centers,
+          legend below plot
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 12 rectangles clearly visible with distinct Okabe-Ito colors;
-          borders subtle but defining hierarchy
+        comment: All rectangles and labels clearly visible; sizing optimal for data
+          density and area-proportional representation
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe; adequate contrast in both themes
+        comment: Okabe-Ito palette CVD-safe; good contrast throughout; no red-green
+          dependency
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 format, tight_layout() used, good proportions, nothing cut off
+        comment: Plot fills ~75% of canvas; balanced margins; legend well-integrated;
+          no wasted space
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows format 'treemap-basic · matplotlib · anyplot.ai'; no
-          axes (appropriate for treemap)
+        comment: 'Title format correct: ''treemap-basic · matplotlib · anyplot.ai'';
+          no axes needed for treemap'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First category (Engineering) uses #009E73; multi-series follows
-          positions 1-5; backgrounds correct (#FAF8F1 light, #1A1A17 dark); both renders
-          theme-correct'
+        comment: 'First categorical series #009E73 ✓; multi-series follows Okabe-Ito
+          order ✓; backgrounds #FAF8F1/#1A1A17 ✓; theme-adaptive chrome ✓; data colors
+          identical light/dark ✓'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: 'Shows intentional hierarchy (size and color), but no custom palette
-          or exceptional polish beyond requirements (default: 4, raised 1 point for
-          hierarchy)'
+        comment: Well-configured library defaults with correct palette and clean styling,
+          but no custom refinements or design intent beyond palette selection - typical
+          of standard implementation
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: 'Spines removed, whitespace generous, borders subtle; mostly standard
-          implementation (default: 2, raised 1 point for subtle borders)'
+        comment: Axes removed (minimal-chrome via axis('off')), clean layout with
+          generous margins, but minimal additional refinement - some customization
+          visible but not extensive
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: 'Visual hierarchy through size/color guides viewer; large items are
-          focal points; categorical grouping evident (default: 2, raised 2 points
-          for natural hierarchy)'
+        comment: Displays budget allocation hierarchy clearly but lacks visual emphasis,
+          focal point, or narrative that guides interpretation - shows data but doesn't
+          interpret it
     spec_compliance:
       score: 15
       max: 15
@@ -131,25 +142,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct treemap with proportional areas and nested rectangles
+        comment: Correct treemap implementation with proper hierarchical nesting
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Labels for larger rectangles; subtle borders; distinct category colors
+        comment: 'All spec features present: hierarchy, distinct colors, labels for
+          larger rectangles, subtle borders'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category to color, area to value, all data displayed
+        comment: Categories mapped to colors; subcategories labeled; values determine
+          rectangle area; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title and legend both present with correct format and category labels
+        comment: Title correct format; legend shows all 5 categories with matching
+          colors
     data_quality:
       score: 15
       max: 15
@@ -159,19 +173,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows complete hierarchy, all categories, part-to-whole relationships
+        comment: 'Demonstrates full treemap feature set: multi-level hierarchy, varying
+          values (12M-45M), different sizes'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Budget allocation by department is realistic, neutral, and plausible
+        comment: Budget allocation by department is realistic, neutral, professional
+          business context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: M-dollar values reasonable; distribution realistic
+        comment: Values plausible for company budget allocation; proportions logically
+          consistent
     code_quality:
       score: 10
       max: 10
@@ -181,35 +198,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes; direct rectangle drawing in clean
-          loop
+        comment: 'Clean flow: imports → theme → data → algorithm → plot → legend →
+          save; no unnecessary functions'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded data; deterministic output; no randomness
+        comment: Hard-coded deterministic data, fully reproducible execution
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, matplotlib.patches, matplotlib.pyplot) are used
+        comment: 'All imports used: os (theme), mpatches (legend), pyplot (plotting),
+          patches.Rectangle (shapes)'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Squarify algorithm is sophisticated and correct; no fake UI or simulated
-          interactivity
+        comment: Squarify algorithm appropriately complex; no fake UI; clean Pythonic
+          code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300 and bbox_inches='tight'
+        comment: Saves as plot-{THEME}.png at 300 DPI; correct current API
     library_mastery:
-      score: 4
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -217,25 +235,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Uses fig, ax = plt.subplots(); ax methods (add_patch, text, legend);
-          theme tokens correctly implemented (default: 3, raised 1)'
+        comment: Correct usage of subplots, ax methods, theme-adaptive colors, add_patch,
+          text, legend - standard idiomatic patterns
       - id: LM-02
         name: Distinctive Features
-        score: 0
+        score: 4
         max: 5
-        passed: false
-        comment: 'No distinctive matplotlib features beyond basic Rectangle and Patch
-          usage (kept at default: 1; adjusted to 0 due to generic pattern)'
+        passed: true
+        comment: Implements custom Squarify algorithm for treemap layout using low-level
+          Rectangle patches - demonstrates architecture knowledge
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - patches
-  - annotations
   - custom-legend
+  - annotations
   patterns:
-  - explicit-figure
+  - data-generation
+  - matrix-construction
   dataprep: []
   styling:
-  - publication-ready
   - minimal-chrome
