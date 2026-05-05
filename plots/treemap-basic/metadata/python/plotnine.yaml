@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: treemap-basic
 created: '2025-12-24T09:50:34Z'
-updated: '2026-05-05T22:45:08Z'
+updated: '2026-05-05T22:53:16Z'
 generated_by: claude-haiku
 workflow_run: 25406195588
 issue: 766
@@ -12,40 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/treemap-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 75
+quality_score: 80
 review:
   strengths:
-  - Correct treemap implementation using squarified layout algorithm
-  - Excellent data quality and realistic budget allocation scenario
-  - All text readable in both light and dark renders
-  - Well-designed custom treemap layout algorithm
-  - Good color distinction between departments
-  - Proper canvas utilization with balanced layout
+  - Correct treemap implementation with squarified layout algorithm proportioning
+    rectangles to values
+  - Readable in both light and dark themes with clear visual hierarchy
+  - Realistic, neutral budget allocation data with excellent hierarchical representation
+  - Clean, balanced layout with generous whitespace and no overlapping elements
+  - Rectangle size and color both aid understanding of budget distribution across
+    departments
   weaknesses:
-  - Color palette must use Okabe-Ito standard (#009E73 for first series)
-  - Text colors must be theme-adaptive (read ANYPLOT_THEME environment variable)
-  - 'Title format error: should end with ''anyplot.ai'' not ''pyplots.ai'''
-  - Output filename must be 'plot-{THEME}.png' not 'plot.png'
-  - Missing theme integration with theme tokens
-  - 'Design excellence needs improvement: add intentional hierarchy, remove generic
-    defaults'
+  - 'Palette does not follow Okabe-Ito spec: uses custom colors (Python Blue, Yellow,
+    Teal, etc.) instead of starting with #009E73 (hard rule violation)'
+  - 'Title contains typo: ''pyplots.ai'' should be ''anyplot.ai'''
+  - 'Text color hardcoded to black instead of theme-adaptive: does not read ANYPLOT_THEME
+    environment variable or use INK/INK_SOFT tokens'
+  - 'Output filename ''plot.png'' does not match API specification: should save to
+    f''plot-{THEME}.png'' and read environment variable'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface at approximately #FAF8F1 (correct)
-      Chrome: Title "Budget Allocation by Department · treemap-basic · plotnine · anyplot.ai" clearly visible in dark text at top. Legend on right showing "Department" with category labels in readable dark text.
-      Data: Rectangles in custom colors (green #009E73-like, blue, orange, coral, light-green, plum) with white borders separating them. Each labeled with subcategory name and value (e.g., "R&D $450K", "Direct $350K") in dark bold text readable against colored backgrounds.
-      Legibility verdict: PASS (all text readable, no dark-on-light failures)
+      Background: Warm off-white (#FAF8F1) as specified in style guide
+      Chrome: Title in dark text ("Budget Allocation by Department · treemap-basic · plotnine · pyplots.ai") centered at top; Department legend on right with clear labels; all text readable against light background
+      Data: Six department categories color-coded (Engineering=Python Blue, Marketing=Yellow, Sales=Teal, Operations=Coral, HR=Light Green, Finance=Plum); rectangle areas proportional to budget values ($80K-$450K); white borders separate rectangles; subcategory labels and dollar amounts displayed in dark text centered in each rectangle
+      Legibility verdict: PASS - All text is readable, though some text on darker rectangle backgrounds (dark green for Engineering, coral for Operations) has reduced contrast but remains legible at full resolution
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface at approximately #1A1A17 (correct)
-      Chrome: Title clearly visible in white/light text. Legend text and labels all light-colored for readability against dark background.
-      Data: Rectangle data colors appear identical to light render (confirming theme-correct data coloring). White borders remain visible. Text labels now appear in light/white color for readability.
-      Legibility verdict: PASS (all text readable in light color, no dark-on-dark failures)
-
-    Both renders successfully demonstrate theme adaptation for chrome while maintaining identical data colors across themes. No contrast issues observed in either render.
+      Background: Warm near-black (#1A1A17) as specified in style guide
+      Chrome: Title in light text (appears white), readable against dark background; Department legend on right with light text; all chrome elements clearly visible
+      Data: Rectangle fills are identical to light render (same category colors); white borders provide contrast; labels display in white/light text, readable against both dark background and colored rectangles
+      Legibility verdict: PASS - No dark-on-dark failures; all text is clearly distinguishable. Data colors identical to light render; only chrome (background, text, legend frame) adapts to dark theme as intended
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -53,67 +52,68 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Readable in both renders, but relying on defaults rather than explicit
-          sizing
+        comment: Readable in both renders; code hardcodes black instead of using theme-adaptive
+          tokens
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text, all labels fit cleanly
+        comment: No overlapping text; labels well-positioned in rectangle centers
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Rectangle sizes adapt well to data values
+        comment: All rectangles and labels visible; white borders provide clear separation
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Good contrast and colorblind-safe choices
+        passed: false
+        comment: Colors are distinct and CVD-safe but don't use Okabe-Ito palette
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout with balanced margins
+        comment: Excellent 16:9 proportions with balanced margins and whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 1
         max: 2
         passed: false
-        comment: 'Title format incorrect: says pyplots.ai instead of anyplot.ai'
+        comment: 'Title has typo: ''pyplots.ai'' should be ''anyplot.ai'''
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: Uses custom palette instead of Okabe-Ito; first series
-          should be #009E73'
+        comment: 'Uses custom palette instead of Okabe-Ito; first category should
+          be #009E73 not Python Blue'
     design_excellence:
-      score: 8
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 4
         max: 8
         passed: false
-        comment: Generic defaults with non-compliant custom colors
+        comment: Custom palette chosen but violates hard palette rules; default raised
+          minimally
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Minimal refinement beyond theme_void and white borders
+        passed: true
+        comment: White borders add definition; theme_void() is clean; generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color coding provides visual organization and hierarchy
+        comment: Clear hierarchy through rectangle size; color aids department identification
     spec_compliance:
       score: 14
       max: 15
@@ -123,25 +123,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct treemap with nested rectangles
+        comment: Correct treemap with squarified layout
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present
+        comment: 'All spec features present: categories, subcategories, values, colors,
+          labels, borders'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Coordinates correctly calculated and proportional
+        comment: Value-to-area mapping correct; all data visible
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
         passed: false
-        comment: 'Title format error: pyplots.ai instead of anyplot.ai'
+        comment: Legend correct; title format correct except typo (pyplots.ai not
+          anyplot.ai)
     data_quality:
       score: 15
       max: 15
@@ -151,19 +153,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of treemap visualization
+        comment: Full hierarchical structure with color coding, proportional sizing,
+          and labeled values
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic budget allocation scenario
+        comment: Budget allocation is realistic and neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Budget values realistic and proportionally accurate
+        comment: Budget ranges ($80K-$450K) plausible for company allocation
     code_quality:
       score: 9
       max: 10
@@ -173,48 +176,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple structure with inline algorithm
+        comment: No unnecessary abstractions; inline algorithm is necessary
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data
+        comment: Hardcoded data and deterministic algorithm
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All imports used; no clutter
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-implemented treemap algorithm
+        comment: No fake UI; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves to plot.png instead of plot-{THEME}.png
+        comment: Saves to 'plot.png' instead of 'plot-{THEME}.png'; doesn't read ANYPLOT_THEME
     library_mastery:
       score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct plotnine usage with geom_rect and geom_text
+        comment: Uses ggplot/aes/geoms idiomatically; missing theme-adaptive chrome
+          pattern
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Custom treemap layout algorithm is distinctive
-  verdict: REJECTED
+        passed: false
+        comment: geom_rect for custom shapes is appropriate but techniques are standard
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -225,3 +229,4 @@ impl_tags:
   dataprep: []
   styling:
   - minimal-chrome
+  - edge-highlighting

@@ -1,7 +1,7 @@
 """ anyplot.ai
 treemap-basic: Basic Treemap
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 75/100 | Updated: 2026-05-05
+Quality: 80/100 | Updated: 2026-05-05
 """
 
 import pandas as pd
