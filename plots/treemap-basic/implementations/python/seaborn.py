@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 treemap-basic: Basic Treemap
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-24
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2026-05-05
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,48 +13,46 @@ import squarify
 from matplotlib.patches import Patch, Rectangle
 
 
-# Random seed for reproducibility
 np.random.seed(42)
 
-# Set seaborn style for clean aesthetics
-sns.set_style("white")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - Budget allocation by department and project
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
+# Data - Disk usage by storage device and data type (GB)
 data = [
-    ("Engineering", "Product Dev", 45),
-    ("Engineering", "Infrastructure", 25),
-    ("Engineering", "QA", 15),
-    ("Sales", "Enterprise", 35),
-    ("Sales", "SMB", 25),
-    ("Sales", "Partners", 15),
-    ("Marketing", "Digital", 30),
-    ("Marketing", "Events", 20),
-    ("Operations", "Logistics", 20),
-    ("Operations", "Support", 15),
-    ("HR", "Recruiting", 12),
-    ("HR", "Training", 8),
+    ("SSD-1", "Documents", 120),
+    ("SSD-1", "Media", 85),
+    ("SSD-1", "Cache", 45),
+    ("SSD-2", "Applications", 150),
+    ("SSD-2", "System", 60),
+    ("HDD-1", "Archives", 320),
+    ("HDD-1", "Backups", 280),
+    ("HDD-2", "Videos", 410),
+    ("HDD-2", "Photos", 190),
+    ("Cloud", "Sync", 75),
+    ("Cloud", "Versioning", 40),
 ]
 
 categories = [d[0] for d in data]
 subcategories = [d[1] for d in data]
 values = [d[2] for d in data]
 
-# Use seaborn color palette for main categories
-unique_categories = ["Engineering", "Sales", "Marketing", "Operations", "HR"]
-palette = sns.color_palette("colorblind", n_colors=len(unique_categories))
-category_colors = dict(zip(unique_categories, palette, strict=True))
+unique_categories = ["SSD-1", "SSD-2", "HDD-1", "HDD-2", "Cloud"]
+category_colors = dict(zip(unique_categories, OKABE_ITO, strict=False))
 
-# Normalize values to fill the rectangle area (160x90 to match figsize aspect ratio)
 width, height = 160, 90
 
-# Use squarify to compute rectangle positions
 rects = squarify.normalize_sizes(values, width, height)
 rects = squarify.squarify(rects, 0, 0, width, height)
 
-# Create plot (4800x2700 px at 300 dpi)
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Count items per category to compute depth shading
 category_counts = {}
 category_indices = {}
 for i, cat in enumerate(categories):
@@ -62,36 +62,30 @@ for i, cat in enumerate(categories):
     category_indices[cat].append(i)
     category_counts[cat] += 1
 
-# Draw rectangles with depth-based shading (hierarchy visualization)
 for i, rect in enumerate(rects):
     cat = categories[i]
     base_color = category_colors[cat]
 
-    # Create depth shading: use seaborn's light_palette to generate shades
-    # Larger values (more prominent) get darker colors, smaller get lighter
     cat_items = category_indices[cat]
     rank_in_category = cat_items.index(i)
     num_in_category = len(cat_items)
 
-    # Generate shades using seaborn's light_palette
     shades = sns.light_palette(base_color, n_colors=num_in_category + 2, reverse=True)
-    shade_color = shades[rank_in_category + 1]  # Skip the darkest (index 0)
+    shade_color = shades[rank_in_category + 1]
 
     rectangle = Rectangle(
-        (rect["x"], rect["y"]), rect["dx"], rect["dy"], facecolor=shade_color, edgecolor="white", linewidth=3, alpha=0.9
+        (rect["x"], rect["y"]), rect["dx"], rect["dy"], facecolor=shade_color, edgecolor=PAGE_BG, linewidth=3, alpha=0.9
     )
     ax.add_patch(rectangle)
 
-    # Add label for larger rectangles
     area = rect["dx"] * rect["dy"]
     if area > 150:
-        # Determine text color based on luminance
         r_val, g_val, b_val = shade_color[:3]
         luminance = 0.299 * r_val + 0.587 * g_val + 0.114 * b_val
-        text_color = "white" if luminance < 0.5 else "black"
+        text_color = INK if luminance > 0.5 else "#FFFFFF"
         fontsize = min(18, max(12, int(area**0.35)))
 
-        label = f"{subcategories[i]}\n${values[i]}M"
+        label = f"{subcategories[i]}\n{values[i]}GB"
         ax.text(
             rect["x"] + rect["dx"] / 2,
             rect["y"] + rect["dy"] / 2,
@@ -103,28 +97,26 @@ for i, rect in enumerate(rects):
             color=text_color,
         )
 
-# Set axis limits and remove axes
 ax.set_xlim(0, width)
 ax.set_ylim(0, height)
 ax.axis("off")
 ax.set_aspect("equal")
 
-# Title
 ax.set_title(
-    "Budget Allocation by Department · treemap-basic · seaborn · pyplots.ai", fontsize=24, fontweight="bold", pad=20
+    "Disk Usage by Device · treemap-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20
 )
 
-# Legend for categories using seaborn palette colors
-legend_handles = [Patch(facecolor=category_colors[cat], label=cat, edgecolor="white") for cat in unique_categories]
+legend_handles = [Patch(facecolor=category_colors[cat], label=cat, edgecolor=INK_SOFT) for cat in unique_categories]
 ax.legend(
     handles=legend_handles,
     loc="upper center",
-    fontsize=14,
+    fontsize=16,
     framealpha=0.95,
-    edgecolor="gray",
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
     ncol=5,
     bbox_to_anchor=(0.5, -0.02),
 )
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
