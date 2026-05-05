@@ -1,7 +1,7 @@
 """ anyplot.ai
 treemap-basic: Basic Treemap
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-05
+Quality: 93/100 | Updated: 2026-05-05
 """
 
 import os
