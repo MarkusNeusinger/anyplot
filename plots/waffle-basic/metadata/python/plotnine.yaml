@@ -1,15 +1,217 @@
 library: plotnine
+language: python
 specification_id: waffle-basic
 created: 2025-12-16 07:44:55+00:00
-updated: 2025-12-16 07:44:55+00:00
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20260266002
+updated: '2026-05-05T18:25:01Z'
+generated_by: claude-haiku
+workflow_run: 25393441505
 issue: 998
-python_version: 3.13.11
-library_version: 0.15.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/plotnine/plot.png
-preview_html: null
-quality_score: 95
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 79
+review:
+  strengths:
+  - Perfect theme adaptation with correct light/dark backgrounds and text colors
+  - Proper Okabe-Ito palette with brand green as first series
+  - All text legible and explicitly sized for large canvas
+  - Clean waffle grid implementation with clear proportional squares
+  - Correct title format and legend with percentages
+  - No theme-chrome failures in either render
+  weaknesses:
+  - Data values sum to 90 instead of 100 — creates ~10% proportional gap
+  - Generic design relying on library defaults with minimal visual refinement
+  - No visual hierarchy or storytelling — data displayed factually without emphasis
+  - Legend styling is minimal; could leverage plotnine theme features for sophistication
+  - Typography could be more intentional beyond minimum readable sizes
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title centered in dark text (#1A1A17), legend on right with dark labels (#4A4A44) — all clearly readable
+      Data: 10×9 waffle grid with Housing (green #009E73, 35 squares), Food (vermillion #D55E00, 25), Transport (blue #0072B2, 18), Entertainment (purple #CC79A7, 12); white grid dividers separate squares cleanly
+      Legibility verdict: PASS — all elements readable, no contrast failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: Title in light text (#F0EFE8), legend labels in secondary light (#B8B7B0) — all clearly readable; dark grid dividers visible against surface
+      Data: Identical colors to light render (#009E73, #D55E00, #0072B2, #CC79A7 unchanged); brand green remains vivid against dark background
+      Legibility verdict: PASS — no dark-on-dark failures, all text light-colored and readable
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit sizing (title 24pt, legend 16pt), all readable but typography
+          could be more refined
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero overlap, all elements fully legible
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Squares properly sized and distinct
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe with excellent contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 50-60% of canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title in correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, colors follow Okabe-Ito order, backgrounds
+          correct in both themes'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults but no distinctive visual innovation
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Grid styling functional but minimal; legend styling default
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Displays data without visual hierarchy or emphasis
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 10×9 waffle chart
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: false
+        comment: Grid and legend present; values sum to 90 instead of 100
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories correctly mapped to grid
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct format with percentages
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows four distinct categories
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Budget allocation is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: false
+        comment: Values reasonable but sum to 90% not 100%
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear structure with clear flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only necessary plotnine imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-{THEME}.png format
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct ggplot + geom_tile pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic grammar-of-graphics usage; doesn't leverage distinctive plotnine
+          features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
@@ -17,74 +219,3 @@ impl_tags:
   - data-generation
   dataprep: []
   styling: []
-review:
-  strengths: []
-  weaknesses: []
-  improvements: []
-  image_description: 'The plot displays a 10x10 waffle grid (100 squares total) representing
-    budget allocation across 5 categories. The grid is filled from top-left, reading
-    left-to-right then row-by-row downward. Categories are:
-
-    - **Housing (35%)**: Dark blue (#306998) - occupies 35 squares in the top portion
-
-    - **Food (25%)**: Yellow (#FFD43B) - occupies 25 squares in the middle
-
-    - **Transport (18%)**: Teal/cyan (#4ECDC4) - occupies 18 squares
-
-    - **Entertainment (12%)**: Coral/orange-red (#E76F51) - occupies 12 squares
-
-    - **Savings (10%)**: Gray (#95A5A6) - occupies 10 squares at the bottom
-
-
-    The title "waffle-basic · plotnine · pyplots.ai" is centered at the top. A legend
-    on the right shows each category with its percentage. The squares have white borders
-    separating them. No axis labels or ticks are shown (appropriate for this chart
-    type). The overall layout is clean with good proportions.'
-  criteria_checklist:
-    code_quality:
-      score: 13
-      max: 15
-      items:
-      - id: CQ-01
-        name: KISS structure
-        score: 4
-        max: 4
-        passed: true
-        comment: Simple imports → data → plot → save structure
-      - id: CQ-02
-        name: Reproducible
-        score: 3
-        max: 3
-        passed: true
-        comment: Deterministic data (no random elements)
-      - id: CQ-03
-        name: Library idioms
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses plotnine ggplot syntax correctly
-      - id: CQ-04
-        name: Clean imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used
-      - id: CQ-05
-        name: Helpful comments
-        score: 0
-        max: 1
-        passed: false
-        comment: Data section has comment, but grid logic could use explanation
-      - id: CQ-06
-        name: No deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current plotnine API
-      - id: CQ-07
-        name: Output correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-  verdict: APPROVED

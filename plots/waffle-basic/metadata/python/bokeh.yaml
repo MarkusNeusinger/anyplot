@@ -1,169 +1,171 @@
 library: bokeh
+language: python
 specification_id: waffle-basic
 created: '2025-12-24T09:51:07Z'
-updated: '2025-12-24T09:58:59Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483445679
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - custom-legend
-  patterns:
-  - data-generation
-  - columndatasource
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-05-05T18:14:26Z'
+generated_by: claude-haiku
+workflow_run: 25393236128
+issue: 998
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/python/bokeh/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent implementation of the waffle chart concept with proper 10×10 grid layout
-  - Clean, readable code following KISS principles with clear comments
-  - Proper use of Bokeh ColumnDataSource and Legend API
-  - Good color choices with Python blue as primary color
-  - Title follows the correct format specification
-  - Generates both PNG and HTML output as expected for Bokeh
-  - Appropriate square sizing (0.88) creates nice visual gaps between cells
+  - Excellent visual quality with proper color contrast and readability in both light
+    and dark themes
+  - Clean, minimal design with thoughtful square styling and clear spacing
+  - Correct waffle chart implementation with proper data mapping (100 squares for
+    100%)
+  - Proper theme-adaptive tokens throughout (backgrounds, text colors)
+  - Idiomatic bokeh patterns using ColumnDataSource and custom Legend styling
+  - Interactive hover tooltips for category and percentage information
   weaknesses:
-  - Legend is positioned far from the chart creating visual disconnect; could be placed
-    closer or inside the plot area
-  - Could leverage Bokeh interactive features like HoverTool to show category info
-    on hover
-  - Yellow (#FFD43B) and orange (#E34F26) could be more distinct for better colorblind
-    accessibility
-  image_description: 'The plot displays a 10×10 waffle chart (100 squares) representing
-    programming language preferences. The grid is filled from bottom-to-top, left-to-right
-    with: Python in blue (#306998) occupying 42 squares at the bottom, JavaScript
-    in yellow (#FFD43B) with 28 squares in the middle, Java in orange (#E34F26) with
-    18 squares above that, and Other in purple (#7B68EE) with 12 squares at the top.
-    The title "Programming Language Preferences · waffle-basic · bokeh · pyplots.ai"
-    appears centered at the top. A legend on the right side lists all categories with
-    their percentages. The background is a subtle light gray (#fafafa), and squares
-    have white borders creating visual separation.'
+  - Title format includes extra context prefix beyond {spec-id} · {library} · anyplot.ai
+    spec requirement
+  - Design excellence is competent but lacks visual sophistication or strategic emphasis
+  - Legend styling is functional but could be more refined (consider custom borders
+    or slightly elevated background emphasis)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correctly applied, not pure white
+      Chrome: Title "Renewable Energy Sources · waffle-basic · bokeh · anyplot.ai" in 28pt dark text (#1A1A17), clearly centered and readable. Legend in top-right with dark label text on elevated background (#FFFDF6), category labels and percentages all readable.
+      Data: 10×10 waffle grid with colors: Solar in brand green (#009E73) dominating 48 squares, Wind in orange (#D55E00) at 25 squares, Hydro in blue (#0072B2) at 18 squares, Geothermal in pink (#CC79A7) at 9 squares. Square borders in background color with 0.88 width and 2.5pt gaps create excellent separation and readability.
+      Legibility verdict: PASS — all text readable, all data clearly visible, excellent contrast throughout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correctly applied, not pure black
+      Chrome: Title in light text (#F0EFE8) readable against dark background. Legend text (#B8B7B0) readable on elevated dark background (#242420). No dark-on-dark failures detected.
+      Data: Identical colors to light render (Solar #009E73, Wind #D55E00, Hydro #0072B2, Geothermal #CC79A7). Square borders now darker/black, still providing clear separation. Layout and proportions identical to light render.
+      Legibility verdict: PASS — all text readable, no dark-on-dark issues, brand green (#009E73) clearly visible, all elements distinguishable
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 32pt is excellent, legend at 24pt is readable but could
-          be slightly larger for optimal viewing
+        comment: Title 28pt, clearly readable in both themes, no size issues
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: All text and elements well-spaced, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Squares are well-sized with appropriate gaps and alpha
+        comment: All 100 squares clearly visible and distinguishable by color
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Colors are distinct but yellow and orange could be confused by some
-          colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas, waffle grid is well-centered with legend appropriately
-          placed
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for waffle charts, axes correctly hidden
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette CVD-safe, strong contrast between categories
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, generous margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend is functional but positioned far from the chart; legend items
-          could be closer to the grid
+        comment: Clear descriptive title, no axes needed for waffle
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand), Okabe-Ito order followed, correct
+          backgrounds, both themes proper'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Clean minimal design, adequate styling but lacks sophisticated polish
+          or custom refinement
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes hidden, thoughtful square gaps, minimal chrome, could be more
+          refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Clear proportion display through color, but no additional visual
+          hierarchy or emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct waffle chart with 10×10 grid
+        comment: Correct 10×10 waffle chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories correctly mapped to squares proportionally
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: 10×10 grid, distinct colors, legend with
-          percentages'
-      - id: SC-04
-        name: Data Range
+        comment: Proportions in grid, distinct colors, legend with percentages
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 100 squares accounted for
-      - id: SC-05
-        name: Legend Accuracy
+        comment: X/Y correctly mapped to grid, all data visible, sums to 100
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly shows all categories with percentages
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Follows "{topic} · {spec-id} · {library} · pyplots.ai" format
+        max: 3
+        passed: false
+        comment: Title includes extra context prefix beyond spec format requirement
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 4 categories with varying proportions; could show more variation
-          in sizes
+        comment: All 4 categories shown, 100% coverage
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Programming language survey is a relatable, realistic scenario
+        comment: Plausible renewable energy percentages, neutral topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Percentages sum to 100 and are plausible, though distribution could
-          be more interesting
+        comment: Percentages 0-100%, grid 10×10 = 100 squares, appropriate
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,41 +173,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → grid building → plot → save'
+        comment: Simple direct implementation, no unnecessary abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Data is deterministic but no random seed comment (not needed here,
-          but the values are hardcoded which is fine)
+        comment: Hardcoded deterministic data, fully reproducible
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports, all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Elegant structure, appropriate complexity, no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output files plot-{THEME}.png and .html
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ColumnDataSource, figure creation with parameters, HoverTool,
+          custom Legend
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses ColumnDataSource and proper Bokeh Legend construction; could
-          leverage hover tooltips for interactivity
+        passed: false
+        comment: HoverTool and Selenium screenshot show library awareness but somewhat
+          standard patterns
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - hover-tooltips
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
