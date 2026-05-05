@@ -1,165 +1,170 @@
 library: matplotlib
+language: python
 specification_id: surface-basic
 created: '2025-12-23T21:54:26Z'
-updated: '2025-12-23T22:00:29Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472386399
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/surface-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - 3d-projection
-  - colorbar
-  - manual-ticks
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling:
-  - custom-colormap
+updated: '2026-05-05T16:47:12Z'
+generated_by: claude-haiku
+workflow_run: 25389452116
+issue: 1013
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 81
 review:
   strengths:
-  - Excellent use of viridis colormap for colorblind accessibility
-  - Clean KISS code structure with logical flow
-  - Good viewing angle (30° elev, 45° azim) providing clear 3D perspective
-  - Smooth surface rendering with antialiasing enabled
-  - Correct title format following specification
-  - Colorbar with proper labeling enhances readability
+  - Both renders display with correct visual appearance and proper theme-adaptive
+    chrome
+  - Excellent clarity with no overlapping text, readable in both themes, all elements
+    visible
+  - All specification requirements met completely
+  - Clean code structure with good naming and logical flow
+  - Appropriate mathematical function demonstrating diverse surface features
+  - Proper 3D perspective with good viewing angle (elev=30, azim=45)
+  - Professional colorbar integration with proper labeling
   weaknesses:
-  - Axis labels are generic (X Axis, Y Axis, Z Axis) rather than descriptive with
-    units
-  - Font sizes could be slightly larger for optimal 4800x2700 rendering (xlabel/ylabel
-    at 18pt vs recommended 20pt)
-  image_description: The plot displays a 3D surface showing a radial ripple/wave pattern
-    centered at the origin. The surface uses the viridis colormap, transitioning from
-    dark purple (low Z values around 0) at the edges to bright yellow (high Z values
-    around 0.8) at the center peak. The surface has a characteristic sombrero/Mexican
-    hat shape with concentric wave patterns. The title "surface-basic · matplotlib
-    · pyplots.ai" is clearly displayed at the top. All three axes are labeled ("X
-    Axis", "Y Axis", "Z Axis") with values ranging from -4 to 4 on X and Y, and 0.0
-    to 0.8 on Z. A vertical colorbar on the right shows the "Z Value" scale. The viewing
-    angle is set at approximately 30° elevation and 45° azimuth, providing a good
-    3D perspective.
+  - Source code lacks explicit theme-adaptive styling implementation - images show
+    proper theming but code doesn't include ANYPLOT_THEME reading or PAGE_BG/INK token
+    assignments
+  - 'Font sizes undersized: axis labels 18pt (need 20pt), tick labels 14pt (need 16pt),
+    colorbar ticks 12pt'
+  - Output filename hardcoded to plot.png instead of plot-{THEME}.png
+  - Generic styling using library defaults without custom design elements
+  - No visual storytelling or visual hierarchy to guide viewer attention
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 with proper contrast
+      Chrome: Title and axis labels dark and readable; tick labels clearly visible; grid subtle and appropriate
+      Data: Gaussian-with-ripples surface using viridis colormap (purple to yellow); colorbar labeled "Z Value"
+      Legibility verdict: PASS - All elements readable with good contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 with proper contrast
+      Chrome: Title and axis labels light-colored and readable; tick labels visible; grid subtle and light-themed
+      Data: Identical viridis colors to light render (purple to yellow gradient maintained); colorbar properly themed
+      Legibility verdict: PASS - No dark-on-dark failures; all text readable; proper theme adaptation throughout
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are clearly readable. Slightly
-          smaller than optimal for 4800x2700 but still good.
+        score: 5
+        max: 8
+        passed: false
+        comment: Readable but font sizes undersized (18/14pt instead of 20/16pt)
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Clean layout with no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Surface is well-rendered with good resolution (40x40 grid), smooth
-          antialiasing
+        comment: Surface mesh, grid, and colorbar all excellently visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Viridis is an excellent colorblind-safe colormap
+        comment: Viridis is perceptually-uniform and CVD-safe
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good proportions, though colorbar is slightly separated from main
-          plot
+        comment: Perfect balance and canvas utilization
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive ("X Axis", "Y Axis", "Z Axis") but lack units
+        comment: Correct title format; appropriate labels for mathematical data
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: 3D grid visible but could be more subtle; colorbar serves as legend
+        comment: Images show correct viridis colormap and theme-adaptive chrome in
+          both renders
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 3
+        max: 8
+        passed: false
+        comment: Generic library defaults without custom design thinking
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization beyond defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Good data choice but no visual hierarchy or emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct 3D surface plot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X, Y grid correctly mapped to Z height values
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: smooth colormap (viridis), axis labels,
-          colorbar'
-      - id: SC-04
-        name: Data Range
+        comment: All features present including colormap, labels, colorbar
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show complete data range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X, Y, Z correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled "Z Value"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "surface-basic · matplotlib · pyplots.ai"'
+        comment: Correct title format 'surface-basic · matplotlib · anyplot.ai'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows smooth surface with interesting radial pattern, demonstrates
-          height variation well. Could show more complex features.
+        comment: Shows peaks, valleys, oscillations
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Mathematical function (sin * exp decay) is a classic demo. Plausible
-          but generic.
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values are sensible (-4 to 4 range, 0 to 0.8 height)
+        comment: Neutral mathematical/scientific context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid range and proportions correct
     code_quality:
       score: 9
       max: 10
@@ -169,34 +174,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: Clean Imports → Data → Plot → Save
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Uses deterministic mathematical function (good), but no explicit
-          random seed comment for clarity
+        max: 2
+        passed: true
+        comment: Deterministic data generation via np.linspace
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy used
+        comment: Only matplotlib and numpy imported
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern API usage
+        comment: Clean, Pythonic, appropriate complexity
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
+        passed: false
+        comment: Saves to plot.png instead of plot-{THEME}.png
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
-      items: []
-  verdict: APPROVED
+        comment: Correct matplotlib patterns with 3D projection and Axes methods
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses 3D projection and view_init but in standard way
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - colorbar
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling: []
