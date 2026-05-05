@@ -42,6 +42,11 @@ on:
           - haiku
           - sonnet
           - opus
+      change_request:
+        description: "One-sentence cross-library divergence hint from daily-regen pre-flight similarity audit (empty = none)"
+        required: false
+        type: string
+        default: ''
 
 # Global concurrency: max 3 concurrent implementation workflows
 concurrency:
@@ -317,6 +322,16 @@ jobs:
           mkdir -p "plots/${SPEC_ID}/implementations/${LANGUAGE}"
           mkdir -p "plots/${SPEC_ID}/metadata/${LANGUAGE}"
           echo "::notice::Ensured implementation + metadata directories exist for language '${LANGUAGE}'"
+
+      - name: Stage change_request hint (cross-library divergence)
+        if: ${{ inputs.change_request != '' }}
+        env:
+          CHANGE_REQUEST: ${{ inputs.change_request }}
+        run: |
+          # Written to a file so the prompt template stays variable-free; impl-generate-claude.md
+          # checks for the file's existence and reads it if present.
+          printf '%s\n' "$CHANGE_REQUEST" > /tmp/anyplot-change-request.txt
+          echo "::notice::Change request staged: ${CHANGE_REQUEST}"
 
       - name: Run Claude Code to generate implementation
         id: claude

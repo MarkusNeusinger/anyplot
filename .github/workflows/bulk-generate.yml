@@ -45,6 +45,11 @@ on:
           - haiku
           - sonnet
           - opus
+      change_requests:
+        description: "JSON object {library: one-sentence-hint} from daily-regen similarity audit. Empty = no clusters."
+        required: false
+        type: string
+        default: '{}'
 
 env:
   ALL_LIBRARIES: "matplotlib seaborn plotly bokeh altair plotnine pygal highcharts letsplot"
@@ -178,13 +183,22 @@ jobs:
           MATRIX: ${{ needs.build-matrix.outputs.matrix }}
           PACE_SECONDS: ${{ inputs.pace_seconds || '120' }}
           MODEL: ${{ inputs.model || 'sonnet' }}
+          CHANGE_REQUESTS: ${{ inputs.change_requests || '{}' }}
         run: |
           set -u
 
           pace="${PACE_SECONDS}"
           pairs=$(echo "$MATRIX" | jq -r '.include[] | "\(.specification_id) \(.library)"')
           total=$(echo "$pairs" | wc -l | tr -d ' ')
-          echo "::notice::Dispatching $total item(s) with ${pace}s pacing between each (model=${MODEL})"
+
+          # Validate change_requests is a JSON object early — bad JSON would
+          # silently produce empty hints later and we'd never know.
+          if ! echo "$CHANGE_REQUESTS" | jq -e 'type == "object"' >/dev/null 2>&1; then
+            echo "::warning::change_requests input is not a valid JSON object; ignoring (got: ${CHANGE_REQUESTS})"
+            CHANGE_REQUESTS='{}'
+          fi
+          flagged_count=$(echo "$CHANGE_REQUESTS" | jq 'length')
+          echo "::notice::Dispatching $total item(s) with ${pace}s pacing between each (model=${MODEL}, change_requests for ${flagged_count} libs)"
 
           i=0
           failed=0
@@ -199,12 +213,19 @@ jobs:
               [ "$ISSUE" = "null" ] && ISSUE=""
             fi
 
+            # Per-library divergence hint (empty if not flagged).
+            HINT=$(echo "$CHANGE_REQUESTS" | jq -r --arg lib "$LIBRARY" '.[$lib] // ""')
+
             # Best-effort pending label so the issue shows the in-flight lib.
             if [ -n "$ISSUE" ]; then
               gh issue edit "$ISSUE" --add-label "impl:${LIBRARY}:pending" 2>/dev/null || true
             fi
 
-            echo "::notice::[$i/$total] $(date -u +%H:%M:%SZ)  dispatching impl-generate for ${SPEC_ID}/${LIBRARY} (issue: ${ISSUE:-none})"
+            if [ -n "$HINT" ]; then
+              echo "::notice::[$i/$total] $(date -u +%H:%M:%SZ)  dispatching impl-generate for ${SPEC_ID}/${LIBRARY} (issue: ${ISSUE:-none}, change_request: ${HINT})"
+            else
+              echo "::notice::[$i/$total] $(date -u +%H:%M:%SZ)  dispatching impl-generate for ${SPEC_ID}/${LIBRARY} (issue: ${ISSUE:-none})"
+            fi
 
             # Retry dispatch up to 3× with linear backoff.
             dispatched=0
@@ -214,12 +235,14 @@ jobs:
                   -f specification_id="${SPEC_ID}" \
                   -f library="${LIBRARY}" \
                   -f issue_number="${ISSUE}" \
-                  -f model="${MODEL}" && dispatched=1 && break
+                  -f model="${MODEL}" \
+                  -f change_request="${HINT}" && dispatched=1 && break
               else
                 gh workflow run impl-generate.yml --repo "${{ github.repository }}" \
                   -f specification_id="${SPEC_ID}" \
                   -f library="${LIBRARY}" \
-                  -f model="${MODEL}" && dispatched=1 && break
+                  -f model="${MODEL}" \
+                  -f change_request="${HINT}" && dispatched=1 && break
               fi
               echo "::warning::Dispatch attempt $attempt failed for ${SPEC_ID}/${LIBRARY}, retrying in 10s"
               sleep 10

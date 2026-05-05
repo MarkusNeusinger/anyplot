@@ -52,6 +52,36 @@ and your own idiomatic API. The shared anchors are only the spec, the library
 prompt, and the base style guide. See `prompts/plot-generator.md` →
 "Library Independence" for the full rule.
 
+### Change Request — cross-library divergence hint
+
+If the file `/tmp/anyplot-change-request.txt` exists, read it. Its content is a
+**hard requirement** of this regen: the cross-library similarity audit (in
+`daily-regen` pre-flight) flagged this library as too close to a sibling on a
+dimension the spec didn't dictate, and produced a one-sentence direction hint
+to break the convergence.
+
+When a change_request is present:
+
+- **Apply it.** This is the only cross-library context permitted in this run;
+  treat it as binding.
+- **Do NOT open sibling-library files** even to "verify" the request. The hint
+  contains everything you need; the Library Independence rule above still
+  binds.
+- The "no changes for the sake of changes" exception (default regen mindset
+  prefers incremental improvement) does **NOT** apply when a change_request is
+  present — you must implement the requested change.
+- **Preserve `review.strengths`** while applying the new direction. Override
+  "Respect the spec variant" (below) only insofar as the change_request
+  explicitly permits — the spec-variant rule still binds the rest of the
+  implementation.
+- The hint is short by design (~1 sentence). It will name the sibling and the
+  shared signal, then suggest 2–3 alternative directions along that dimension.
+  Pick one of the suggested alternatives, or another that fits the same
+  dimension; do not invent a tangential change.
+
+If `/tmp/anyplot-change-request.txt` does not exist, ignore this section
+entirely — there is nothing to apply.
+
 ### Feasibility Check (Static Libraries Only)
 
 If LIBRARY is **matplotlib**, **seaborn**, or **plotnine**, AND the specification mentions interactive features (hover, zoom, click, brush, animation, streaming):
