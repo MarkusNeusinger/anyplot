@@ -208,6 +208,7 @@ __marimo__/
 
 # Claude
 /.claude/settings.local.json
+/.claude/*.lock
 
 # Node.js / Frontend
 node_modules/
