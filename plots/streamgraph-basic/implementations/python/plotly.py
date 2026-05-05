@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 streamgraph-basic: Basic Stream Graph
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-05
