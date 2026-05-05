@@ -61,6 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       specs: ${{ steps.pick.outputs.specs }}
+      specs_json: ${{ steps.pick.outputs.specs_json }}
       count: ${{ steps.pick.outputs.count }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
@@ -81,6 +82,7 @@ jobs:
           SPEC_OVERRIDE: ${{ inputs.specification_id }}
         run: |
           python3 <<'PY'
+          import json
           import os
           import sys
           from datetime import datetime, timedelta, timezone
@@ -106,6 +108,7 @@ jobs:
               github_output = os.environ["GITHUB_OUTPUT"]
               with open(github_output, "a", encoding="utf-8") as f:
                   f.write(f"specs={OVERRIDE}\n")
+                  f.write(f"specs_json={json.dumps(picks)}\n")
                   f.write(f"count=1\n")
               sys.exit(0)
 
@@ -158,29 +161,126 @@ jobs:
           github_output = os.environ["GITHUB_OUTPUT"]
           with open(github_output, "a", encoding="utf-8") as f:
               f.write(f"specs={' '.join(picks)}\n")
+              f.write(f"specs_json={json.dumps(picks)}\n")
               f.write(f"count={len(picks)}\n")
           PY
 
-  dispatch:
+  # ============================================================================
+  # Pre-flight: per spec, run autonomous spec polish + cross-library similarity
+  # audit, then dispatch bulk-generate with the resulting change_requests.
+  #
+  # Each matrix entry is one spec from the pick job. We do polish + audit +
+  # dispatch in the same job so we don't have to aggregate matrix outputs back
+  # into a separate dispatch job (which is awkward in GitHub Actions).
+  #
+  # The two pre-flight LLM steps are HARDCODED to Haiku regardless of
+  # `inputs.model` — they're narrow, cheap audits. The user-selected model is
+  # passed through to bulk-generate (and from there to impl-generate / review /
+  # repair) unchanged.
+  # ============================================================================
+  preflight-dispatch:
     needs: pick
     if: ${{ needs.pick.outputs.count != '0' && !inputs.dry_run }}
     runs-on: ubuntu-latest
     permissions:
-      actions: write
+      contents: write       # spec polish: branch + commit
+      pull-requests: write  # spec polish: open PR + add label
+      actions: write        # dispatch bulk-generate
+      id-token: write
+    strategy:
+      matrix:
+        spec_id: ${{ fromJson(needs.pick.outputs.specs_json) }}
+      fail-fast: false
+      max-parallel: 1   # serialize so polish PRs and dispatches don't race
     steps:
-      - name: Trigger bulk-generate for each picked spec
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+        with:
+          fetch-depth: 0
+
+      - name: Skip-gate — open PRs touching this spec?
+        id: gate
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SPECS: ${{ needs.pick.outputs.specs }}
-          MODEL: ${{ inputs.model || 'haiku' }}
+          SPEC_ID: ${{ matrix.spec_id }}
         run: |
-          for spec in $SPECS; do
-            echo "::notice::Dispatching bulk-generate for $spec (all 9 libs, model=$MODEL)"
-            gh workflow run bulk-generate.yml \
-              --repo "${{ github.repository }}" \
-              -f specification_id="$spec" \
-              -f library=all \
-              -f model="$MODEL"
-            # Small pause between dispatches so GitHub's webhook processing has a moment.
-            sleep 5
-          done
+          # If any PR is open that touches plots/{spec}/, skip the polish step
+          # to avoid racing against human edits or stacking auto-polish PRs.
+          # Similarity audit still runs — it's read-only.
+          OPEN=$(gh pr list \
+            --repo "${{ github.repository }}" \
+            --search "plots/${SPEC_ID}/ in:files is:open" \
+            --json number --jq 'length' 2>/dev/null || echo 0)
+          if [ "${OPEN:-0}" -gt 0 ]; then
+            echo "::notice::Open PR(s) touch plots/${SPEC_ID}/ — skipping spec polish"
+            echo "skip_polish=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip_polish=0" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Spec polish (autonomous, opens PR — no auto-merge)
+        if: steps.gate.outputs.skip_polish == '0'
+        timeout-minutes: 15
+        uses: anthropics/claude-code-action@2cc1ac1331eac7a6a96d716dd204dd2888d0fcd2  # v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: '--model haiku'
+          allowed_bots: '*'
+          prompt: |
+            Read `prompts/workflow-prompts/spec-polish-claude.md` and follow those instructions.
+
+            Variables for this run:
+            - SPEC_ID: ${{ matrix.spec_id }}
+
+      - name: Cross-library similarity audit
+        timeout-minutes: 15
+        uses: anthropics/claude-code-action@2cc1ac1331eac7a6a96d716dd204dd2888d0fcd2  # v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: '--model haiku'
+          allowed_bots: '*'
+          prompt: |
+            Read `prompts/workflow-prompts/impl-similarity-claude.md` and follow those instructions.
+
+            Variables for this run:
+            - SPEC_ID: ${{ matrix.spec_id }}
+
+      - name: Collect change_requests
+        id: collect
+        run: |
+          # Default to empty object if the audit never wrote a file (e.g.
+          # fewer than 2 metadata files exist).
+          if [ -f /tmp/change-requests.json ]; then
+            CR=$(cat /tmp/change-requests.json)
+            # Validate it's a JSON object; fall back to empty otherwise.
+            if ! echo "$CR" | jq -e 'type == "object"' >/dev/null 2>&1; then
+              echo "::warning::/tmp/change-requests.json is not a valid JSON object; using {} (got: ${CR})"
+              CR='{}'
+            fi
+          else
+            CR='{}'
+          fi
+          # Compact + escape newlines so it survives as a single GitHub Actions output line.
+          CR_COMPACT=$(echo "$CR" | jq -c '.')
+          echo "change_requests=${CR_COMPACT}" >> "$GITHUB_OUTPUT"
+          flagged=$(echo "$CR_COMPACT" | jq 'length')
+          echo "::notice::change_requests for ${{ matrix.spec_id }}: ${flagged} lib(s) flagged — ${CR_COMPACT}"
+
+      - name: Dispatch bulk-generate with change_requests
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SPEC_ID: ${{ matrix.spec_id }}
+          MODEL: ${{ inputs.model || 'haiku' }}
+          CHANGE_REQUESTS: ${{ steps.collect.outputs.change_requests }}
+        run: |
+          echo "::notice::Dispatching bulk-generate for ${SPEC_ID} (all 9 libs, model=${MODEL})"
+          gh workflow run bulk-generate.yml \
+            --repo "${{ github.repository }}" \
+            -f specification_id="${SPEC_ID}" \
+            -f library=all \
+            -f model="${MODEL}" \
+            -f change_requests="${CHANGE_REQUESTS}"
+          # Small pause so GitHub's webhook processing has a moment before
+          # the next matrix entry's dispatch (matrix is serialized via
+          # max-parallel: 1, so this is between specs).
+          sleep 5
