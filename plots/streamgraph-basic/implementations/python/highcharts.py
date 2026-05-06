@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 streamgraph-basic: Basic Stream Graph
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-23
+Library: highcharts unknown | Python 3.13.13
+Quality: 83/100 | Updated: 2026-05-05
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -17,9 +18,18 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+
 # Data - Monthly streaming hours by music genre over two years
 np.random.seed(42)
-months = np.arange(24)  # 24 months
+months = np.arange(24)
 month_labels = [
     "Jan '23",
     "Feb '23",
@@ -47,11 +57,8 @@ month_labels = [
     "Dec '24",
 ]
 
-# Generate genre data with realistic patterns
 genres = ["Pop", "Rock", "Hip-Hop", "Electronic", "Jazz"]
-colors = ["#306998", "#FFD43B", "#9467BD", "#17BECF", "#E377C2"]
 
-# Base values and trends for each genre
 genre_data = {}
 genre_data["Pop"] = 4000 + 200 * np.sin(2 * np.pi * months / 12) + np.random.normal(0, 200, 24)
 genre_data["Rock"] = 2500 - months * 30 + 150 * np.sin(2 * np.pi * months / 6) + np.random.normal(0, 150, 24)
@@ -59,76 +66,100 @@ genre_data["Hip-Hop"] = 2000 + months * 80 + 100 * np.sin(2 * np.pi * months / 4
 genre_data["Electronic"] = 1800 + 300 * np.sin(2 * np.pi * months / 12 + np.pi) + np.random.normal(0, 120, 24)
 genre_data["Jazz"] = 1200 + 50 * np.sin(2 * np.pi * months / 8) + np.random.normal(0, 80, 24)
 
-# Ensure no negative values
 for genre in genres:
     genre_data[genre] = np.clip(genre_data[genre], 300, None)
 
-# Create chart
+# Chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration
 chart.options.chart = {
     "type": "streamgraph",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
-    "marginBottom": 250,
-    "marginLeft": 200,
+    "backgroundColor": PAGE_BG,
+    "marginBottom": 220,
+    "marginLeft": 180,
     "marginRight": 100,
+    "style": {"color": INK},
 }
 
-# Title
 chart.options.title = {
-    "text": "Music Streaming Trends · streamgraph-basic · highcharts · pyplots.ai",
-    "style": {"fontSize": "64px", "fontWeight": "bold"},
+    "text": "Music Streaming Trends · streamgraph-basic · highcharts · anyplot.ai",
+    "style": {"fontSize": "56px", "fontWeight": "bold", "color": INK},
 }
 
-# Subtitle
-chart.options.subtitle = {"text": "Monthly streaming hours by genre (2023-2024)", "style": {"fontSize": "36px"}}
+chart.options.subtitle = {
+    "text": "Monthly streaming hours by genre (2023–2024)",
+    "style": {"fontSize": "32px", "color": INK_SOFT},
+}
 
-# X-axis with category labels
-chart.options.x_axis = {"categories": month_labels, "labels": {"style": {"fontSize": "28px"}}, "crosshair": True}
+chart.options.x_axis = {
+    "categories": month_labels,
+    "title": {"text": "Month", "style": {"fontSize": "24px", "color": INK}},
+    "labels": {"style": {"fontSize": "22px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+}
 
-# Y-axis (hidden for streamgraph as values are relative)
 chart.options.y_axis = {"visible": False, "startOnTick": False, "endOnTick": False}
 
-# Plot options for streamgraph styling
 chart.options.plot_options = {"streamgraph": {"fillOpacity": 0.85, "lineWidth": 0, "marker": {"enabled": False}}}
 
-# Legend configuration
 chart.options.legend = {
     "enabled": True,
     "layout": "horizontal",
     "align": "center",
     "verticalAlign": "bottom",
-    "itemStyle": {"fontSize": "32px"},
+    "itemStyle": {"fontSize": "28px", "color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
     "symbolWidth": 40,
     "symbolHeight": 20,
     "symbolRadius": 6,
     "y": 20,
 }
 
-# Colors
-chart.options.colors = colors
+chart.options.colors = OKABE_ITO
 
-# Add series for each genre
 for genre in genres:
     series = StreamGraphSeries()
     series.data = [float(v) for v in genre_data[genre]]
     series.name = genre
     chart.add_series(series)
 
-# Download Highcharts JS and streamgraph module for inline embedding
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Download Highcharts JS modules for inline embedding
+_HC_URLS = ["https://code.highcharts.com/highcharts.js", "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js"]
+_SG_URLS = [
+    "https://code.highcharts.com/modules/streamgraph.js",
+    "https://cdn.jsdelivr.net/npm/highcharts@11/modules/streamgraph.js",
+]
 
-streamgraph_url = "https://code.highcharts.com/modules/streamgraph.js"
-with urllib.request.urlopen(streamgraph_url, timeout=30) as response:
-    streamgraph_js = response.read().decode("utf-8")
+highcharts_js = None
+for url in _HC_URLS:
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=30) as response:
+            highcharts_js = response.read().decode("utf-8")
+        break
+    except Exception:
+        continue
+if highcharts_js is None:
+    raise RuntimeError("Failed to download Highcharts JS")
 
-# Generate HTML with inline scripts
+streamgraph_js = None
+for url in _SG_URLS:
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=30) as response:
+            streamgraph_js = response.read().decode("utf-8")
+        break
+    except Exception:
+        continue
+if streamgraph_js is None:
+    raise RuntimeError("Failed to download Highcharts streamgraph module")
+
 html_str = chart.to_js_literal()
 html_content = f"""<!DOCTYPE html>
 <html>
@@ -137,47 +168,30 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{streamgraph_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
-
-# Also save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    standalone_html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/streamgraph.js"></script>
-</head>
-<body style="margin:0;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>{html_str}</script>
-</body>
-</html>"""
-    f.write(standalone_html)
 
 chrome_options = Options()
 chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=5000,3000")
+chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
-
-# Screenshot the chart element specifically for exact 4800x2700
-container = driver.find_element("id", "container")
-container.screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-Path(temp_path).unlink()  # Clean up temp file
+Path(temp_path).unlink()

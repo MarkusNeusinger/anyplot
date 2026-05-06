@@ -1,167 +1,181 @@
 library: highcharts
+language: python
 specification_id: streamgraph-basic
 created: '2025-12-23T21:55:08Z'
-updated: '2025-12-23T22:01:34Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20472385372
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-05T03:41:32Z'
+generated_by: claude-sonnet
+workflow_run: 25356245682
+issue: 856
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/highcharts/plot.html
-quality_score: 92
-impl_tags:
-  dependencies:
-    - selenium
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamgraph-basic/python/highcharts/plot-dark.html
+quality_score: 83
 review:
   strengths:
-  - Excellent implementation of streamgraph with proper centered baseline and smooth
-    flowing curves
-  - Colorblind-safe color palette with good visual distinction between genres
-  - Realistic music streaming scenario with meaningful data trends (growth, decline,
-    seasonal)
-  - Proper title format and well-structured legend
-  - Good use of Highcharts-specific StreamGraphSeries class
+  - Correct Highcharts StreamGraph type with properly downloaded streamgraph.js module
+  - 'Okabe-Ito palette applied perfectly (first series #009E73, correct order for
+    5 genres)'
+  - 'Full theme-adaptive chrome: all visible text, backgrounds, and borders correctly
+    flip between themes'
+  - Realistic, neutral music streaming data with meaningful trend shapes (rising Hip-Hop,
+    declining Rock, seasonal Pop)
+  - CDN fallback pattern for JS downloads is robust and production-quality
   weaknesses:
-  - Layout could be tighter - generous margins mean the actual chart area is slightly
-    smaller than optimal
-  - X-axis lacks a descriptive label (though Month context is clear from labels)
+  - 'Legend not visible in either render: y:20 offset in verticalAlign bottom legend
+    config pushes it outside canvas boundary — fix by removing y offset or setting
+    y: -20'
+  - 'Minor: 24 x-axis tick labels slightly dense at this canvas size — could thin
+    or rotate'
   image_description: |-
-    The plot displays a streamgraph (stacked area chart with centered baseline) showing music streaming trends over 24 months (Jan '23 to Dec '24). Five music genres are visualized as flowing, stacked layers:
-    - **Pop** (blue, #306998) - top layer, largest area, relatively stable with slight seasonal variation
-    - **Rock** (yellow, #FFD43B) - second layer, showing gradual decline over time
-    - **Hip-Hop** (purple, #9467BD) - middle layer, showing growth trend over the period
-    - **Electronic** (cyan, #17BECF) - fourth layer, with subtle seasonal oscillation
-    - **Jazz** (pink, #E377C2) - bottom layer, smallest and most stable
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Music Streaming Trends · streamgraph-basic · highcharts · anyplot.ai" in bold dark ink (~56px) — readable. Subtitle in INK_SOFT — readable. X-axis tick labels (Jan '23 … Dec '24) in INK_SOFT (22px) — readable. "Month" axis label in INK (24px) — readable.
+      Data: Five Okabe-Ito streams: Pop (#009E73 green, largest), Rock (#D55E00 vermillion), Hip-Hop (#0072B2 blue), Electronic (#CC79A7 pink), Jazz (#E69F00 yellow-orange). Fill opacity 0.85 gives good visual depth. Smooth spline curves. Centered baseline visible.
+      Legend: NOT VISIBLE — no genre labels appear anywhere in the render. Likely pushed outside canvas by y:20 bottom-aligned offset.
+      Legibility verdict: PASS for all rendered elements; FAIL for legend (not rendered)
 
-    The chart has a white background with a clear title "Music Streaming Trends · streamgraph-basic · highcharts · pyplots.ai" and subtitle "Monthly streaming hours by genre (2023-2024)". X-axis shows month labels, y-axis is hidden (as typical for streamgraphs). A horizontal legend at the bottom identifies each genre.
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct, warm near-black not pure black
+      Chrome: Title text in white/near-white (#F0EFE8) — clearly readable against dark background. X-axis tick labels in medium gray (#B8B7B0 INK_SOFT dark) — readable against dark. "Month" axis label in light ink — readable. No dark-on-dark failures observed.
+      Data: Identical Okabe-Ito colors to light render (green, vermillion, blue, pink, yellow-orange) — data colors correctly unchanged between themes. Only chrome flips.
+      Legend: NOT VISIBLE — same issue as light render.
+      Legibility verdict: PASS for all rendered elements; FAIL for legend (not rendered)
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title is large (64px), subtitle (36px), and axis labels (28px) are
-          all clearly readable
+        comment: All visible text explicitly sized and readable in both themes; -1
+          for legend not rendering
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text; month labels are well-spaced
+        comment: No collisions; 24 monthly x-axis labels slightly dense but readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Stream layers are well-sized with good fill opacity (0.85), smooth
-          curves visible
+        comment: All five stream areas clearly distinct; 0.85 fill opacity gives good
+          depth
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses colorblind-safe palette avoiding red-green conflicts
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good layout but could use slightly more vertical space for the chart
-          area; margins are generous
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: Y-axis is intentionally hidden for streamgraphs, but x-axis lacks
-          descriptive title (acceptable for this plot type, but no units shown)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend is well-positioned at bottom, no distracting grid
+        comment: Okabe-Ito CVD-safe; no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization; -1 for absent legend
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title and Month axis label present
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order correct, backgrounds #FAF8F1/#1A1A17
+          correct, both renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: streamgraph type is sophisticated, 0.85 opacity
+          adds depth, Okabe-Ito clean; missing legend is a gap'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis hidden appropriately, no grid, clean margins, warm backgrounds;
+          absent legend mars composition
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Flowing streams clearly show Pop dominance, rising Hip-Hop, declining
+          Rock, seasonal patterns; visual hierarchy through stream size
     spec_compliance:
-      score: 25
-      max: 25
+      score: 12
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct streamgraph with centered baseline and flowing curves
+        comment: Correct streamgraph using Highcharts StreamGraphSeries and streamgraph.js
+          module
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on x-axis, categories stacked vertically, values represented
-          by area height
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Smooth interpolation, centered baseline, distinct colors, legend
-          present
-      - id: SC-04
-        name: Data Range
+        score: 2
+        max: 4
+        passed: false
+        comment: Smooth curves and centered baseline present; legend NOT visible —
+          spec requires include a legend
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, appropriate time range
-      - id: SC-05
-        name: Legend Accuracy
+        comment: X=months, streams=genre values, correctly mapped
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly identifies all 5 genres
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "{spec-id} · {library} · pyplots.ai" format
+        max: 3
+        passed: false
+        comment: Title format correct; legend not visible so genre label verification
+          impossible
     data_quality:
-      score: 19
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: 'Shows multiple trends: growing (Hip-Hop), declining (Rock), seasonal
-          (Pop, Electronic), stable (Jazz)'
+        comment: Five genres with different trend shapes (rising, falling, seasonal);
+          good variation
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Music streaming by genre is a perfect real-world application matching
-          spec examples
+        comment: 'Monthly music streaming hours by genre 2023-2024: neutral, real-world,
+          comprehensible'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values in 1000-4000 streaming hours range are plausible, though the
-          absolute scale isn't shown
+        comment: Genre streaming hours 1200-4500+ per month is plausible at platform
+          scale
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,41 +183,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'No functions/classes, linear flow: imports → data → plot → save'
+        comment: Linear KISS structure throughout
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: CDN fallback pattern is elegant; clean and readable
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Highcharts-core API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: 'Missing: uses container.screenshot() but plot.html is also created
-          (minor)'
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-light/dark.png and plot-light/dark.html
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct Chart(container=container), HighchartsOptions, StreamGraphSeries,
+          separate module download
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts StreamGraphSeries, proper chart type, but doesn't
-          leverage advanced interactivity in the static output
-  verdict: APPROVED
+        comment: Highcharts-specific streamgraph module requiring separate JS download,
+          StreamGraphSeries class
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
