@@ -1,0 +1,231 @@
+library: seaborn
+language: python
+specification_id: wireframe-3d-basic
+created: '2026-05-06T05:18:43Z'
+updated: '2026-05-06T05:28:47Z'
+generated_by: claude-haiku
+workflow_run: 25417802749
+issue: 1015
+python_version: 3.13.13
+library_version: 0.13.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - Perfect text legibility in both light and dark themes with no adaptation failures
+  - Professional 3D visualization with refined line styling (antialiasing, custom
+    linewidth, controlled alpha)
+  - Complete specification compliance with correct perspective and all required features
+  - Clean, maintainable code with proper seed for reproducibility
+  - Excellent visual refinement through pane styling and appropriate grid subtlety
+  weaknesses:
+  - Design Excellence near default baseline—implementation is solid but could benefit
+    from additional visual sophistication (e.g., optional height-based coloring on
+    wireframe as mentioned in spec)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct specification
+      Chrome: Title "wireframe-3d-basic · seaborn · anyplot.ai" clearly readable in black (#1A1A17); X/Y/Z axis labels visible; tick labels in soft ink (#4A4A44); grid lines subtle with appropriate alpha
+      Data: Wireframe lines rendered in brand green (#009E73), standing out distinctly from light background; 3D ripple surface clearly visible with proper perspective
+      Legibility verdict: PASS - All text is readable; no legibility failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct specification
+      Chrome: Title clearly readable in light text (#F0EFE8); X/Y/Z axis labels visible in light color; tick labels in soft light ink (#B8B7B0) with no dark-on-dark failures; grid lines visible and appropriate
+      Data: Brand green (#009E73) wireframe identical to light render, creating excellent contrast against dark background; 3D ripple surface clearly visible
+      Legibility verdict: PASS - All text is readable; no dark-on-dark failures detected; data colors identical to light render (only chrome adapted)
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes with proper
+          theme-adaptive colors
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean layout with no text or element collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Wireframe lines distinctly visible; grid appropriately subtle
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green (#009E73) from Okabe-Ito palette; colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent proportions; 3D space well-utilized; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title follows spec format; all axes clearly labeled
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds are #FAF8F1 (light) / #1A1A17
+          (dark); both renders theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Intentional refinement: antialiased wireframe, custom linewidth
+          (1.3), deliberate alpha (0.95), thoughtful perspective angle'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Pane edges hidden, subtle grid (alpha=0.08), clean panes with matching
+          background
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal point at surface center; visual hierarchy from center
+          outward; perspective guides viewer through 3D topology
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 3D wireframe plot with proper mesh structure
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid lines in both x and y; consistent line color; proper 3D projection
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y grid and Z heights correctly mapped; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches format specification; legend not needed for single
+          series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Ripple surface fully demonstrates wireframe visualization; shows
+          complete topology
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mathematical function is neutral and academically appropriate
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Z range (-1 to 1) sensible for sine function; 30×30 grid appropriate
+          for clarity
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear, straightforward code; no unnecessary abstractions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic with seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only necessary imports used (os, matplotlib, numpy)
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Idiomatic matplotlib; no simulated UI or fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly saves as plot-{THEME}.png; current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper use of matplotlib 3D projection; idiomatic plot_wireframe()
+          approach; correct theme token handling
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Good use of pane styling, antialiasing, and alpha control; could
+          explore height-based coloring
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - publication-ready
+  - grid-styling
+  - alpha-blending

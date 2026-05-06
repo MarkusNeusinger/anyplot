@@ -1,175 +1,179 @@
 library: plotly
+language: python
 specification_id: wireframe-3d-basic
 created: '2025-12-24T09:50:45Z'
-updated: '2025-12-24T09:55:26Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483445884
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - 3d-projection
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-05-06T05:23:54Z'
+generated_by: claude-haiku
+workflow_run: 25417860575
+issue: 1015
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/plotly/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent implementation of wireframe using Scatter3d traces for both x and y
-    grid lines
-  - Clean, elegant visual design with consistent Python Blue color scheme
-  - Perfect title format and professional axis labeling with mathematical notation
-    for Z axis
-  - Appropriate viewing angle that showcases the 3D structure effectively
-  - Both PNG and HTML outputs generated for static and interactive viewing
-  - Code follows KISS principle with clear structure
+  - Professional 3D rendering with excellent height-based color coding that clearly
+    shows ripple topology
+  - 'Perfect theme adaptation: data colors identical between light/dark, chrome properly
+    theme-responsive'
+  - All text explicitly sized and readable in both themes — no accessibility gaps
+  - Clean, Pythonic code using Plotly's high-level API idiomatically
+  - 'Descriptive axis labels include context (Height: sin(√(x² + y²))) that explains
+    the formula'
   weaknesses:
-  - X and Y axis labels are generic (X Axis, Y Axis) rather than descriptive with
-    units
-  - Could utilize Plotly hover capabilities to show (x, y, z) coordinates on wireframe
-    lines
-  - Single uniform color misses opportunity for height-based coloring mentioned as
-    optional in spec
-  image_description: 'The plot displays a beautiful 3D wireframe visualization of
-    the mathematical ripple function z = sin(√(x² + y²)). The wireframe uses a consistent
-    Python Blue (#306998) color for all lines, creating an elegant mesh structure
-    with lines running in both x and y directions. The surface shows the characteristic
-    concentric wave pattern radiating from the center, with a peak at z=1 in the middle
-    and oscillating values outward. The title "wireframe-3d-basic · plotly · pyplots.ai"
-    is centered at the top. All three axes are clearly labeled: "X Axis" and "Y Axis"
-    for the horizontal planes, and "Z = sin(√(x² + y²))" for the vertical axis with
-    proper mathematical notation. The viewing angle (~30° elevation, ~45° azimuth)
-    provides excellent visibility of the 3D structure. The light gray background planes
-    with subtle gridlines provide good spatial reference without distraction.'
+  - 'Design could be more sophisticated: while the viridis gradient is good, no custom
+    styling beyond defaults'
+  - 'Visual refinement at default level: subtle but not exceptional (grid opacity,
+    spacing)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct light theme surface
+      Chrome: Title "wireframe-3d-basic · plotly · anyplot.ai" (32px dark gray), axis labels "Radius (x-coordinate)" / "Radius (y-coordinate)" / "Height: sin(√(x² + y²))" (22px dark ink), tick labels (16px soft gray) — all clearly readable against light background
+      Data: Viridis colorscale with height-based coloring; yellow at peaks, transitioning through green, cyan, blue, purple in valleys; 30×30 wireframe grid rendered in both x/y directions
+      Grid: Subtle 10% opacity grid lines visible but not dominant
+      Legibility verdict: PASS - all elements readable, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title and axis labels now light (#F0EFE8), tick labels soft light gray (#B8B7B0), grid lines light-transparent rgba(240,239,232,0.10) — all clearly visible against dark background; no dark-on-dark failures
+      Data: Viridis colors identical to light render (yellow→green→blue→purple); only chrome has adapted to dark theme
+      Grid: Subtle light grid lines visible
+      Legibility verdict: PASS - all elements readable in dark theme, data colors match light perfectly
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and axis labels are clearly readable at full size; font sizes
-          are appropriate (32pt title, 22pt axis labels, 16pt ticks)
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; all labels and tick marks are well-positioned
+        comment: Font sizes explicitly set (title 32px, labels 22px, ticks 16px);
+          perfectly readable in both light and dark themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text properly spaced; no collisions or overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Wireframe lines are clearly visible with good width (3px); the mesh
-          density (30x30) provides clear structure without overcrowding
+        comment: All 30×30 wireframe lines clearly visible; line width 3 is optimal
+          for this density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single Python Blue color scheme is colorblind-safe and provides excellent
-          contrast against the light background
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space; 3D plot is well-centered with appropriate
-          margins; slight deduction for some empty space on sides
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Labels are descriptive ("X Axis", "Y Axis", "Z = sin(√(x² + y²))")
-          but X and Y lack units or context
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid lines (rgba 0.15 alpha) on background planes; no legend
-          needed for single-color wireframe
+        comment: Viridis is perceptually uniform and colorblind-safe; excellent contrast
+          between colors
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well with balanced margins (20px); 3D view not
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: All labels descriptive with context including formula
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis correct for continuous height data; backgrounds are #FAF8F1
+          (light) / #1A1A17 (dark); chrome tokens properly theme-adaptive'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Height-based viridis coloring creates visual hierarchy; professional
+          3D rendering; clean typography
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid styling is subtle with appropriate opacity (10%); scene background
+          matches theme tokens; good attention to detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Viridis gradient immediately shows wave topology; clear focal point
+          at ripple peak; viewer sees concentric pattern without effort
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 3D wireframe plot showing surface as mesh of lines
+        comment: Correct 3D wireframe using go.Scatter3d with mode=lines
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X, Y grid values correctly mapped to Z height via ripple function
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Grid lines in both x and y directions, consistent line color, proper
-          3D perspective, all axes labeled
-      - id: SC-04
-        name: Data Range
+        comment: 30×30 grid in both x/y directions; camera angle ~30°/45° as specified;
+          height-based coloring
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full data range visible; axes show complete -5 to 5 range for X/Y
-          and -1 to 1 for Z
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; Z shows ripple function; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed; N/A for single-color wireframe
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "{spec-id} · {library} · pyplots.ai" format
+        comment: 'Title format correct: wireframe-3d-basic · plotly · anyplot.ai;
+          no legend needed (single series)'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows wireframe structure well with both positive and negative Z
-          values; demonstrates see-through nature of wireframe; could show more dramatic
-          terrain variation
+        comment: Shows complete ripple pattern from -1 to +1; concentric waves clearly
+          visible
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Ripple function z = sin(√(x² + y²)) is a classic mathematical example
-          for 3D visualization; appropriate for educational context
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Grid size 30x30 is within recommended range; X/Y range of -5 to 5
-          is sensible
+        comment: Classic educational example (sin(√(x² + y²))); neutral and commonly
+          used
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: X/Y range [-5,5]; Z range [-1,1] correct for sin; 30×30 resolution
+          appropriate
     code_quality:
       score: 10
       max: 10
@@ -179,43 +183,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save; no functions or
-          classes'
+        comment: 'Simple: data generation → plot creation → layout → save; no unnecessary
+          functions'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data using np.linspace and mathematical function (no
-          random values)
+        comment: Uses np.linspace (deterministic); no random seed needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used
+        comment: 'Only imports used: os, numpy, plotly'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Pythonic and appropriate complexity; for-loops for wireframe lines
+          are idiomatic
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct dimensions (4800x2700 via scale=3)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with correct naming
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Correctly uses go.Scatter3d for 3D line rendering; generates HTML
-          for interactivity; could leverage more Plotly-specific features like hover
-          data or color gradients
+        comment: Uses go.Scatter3d (idiomatic for 3D); proper scene configuration;
+          theme-adaptive colors
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Height-based colorscale (distinctive to Plotly); 3D camera configuration;
+          interactive HTML export
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap

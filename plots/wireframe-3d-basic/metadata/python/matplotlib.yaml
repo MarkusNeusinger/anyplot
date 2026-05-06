@@ -1,163 +1,171 @@
 library: matplotlib
+language: python
 specification_id: wireframe-3d-basic
 created: '2025-12-24T09:50:15Z'
-updated: '2025-12-24T09:54:49Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483446319
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/matplotlib/plot.png
-preview_html: null
+updated: '2026-05-06T05:30:37Z'
+generated_by: claude-haiku
+workflow_run: 25417742290
+issue: 1015
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - 3d-projection
-    - manual-ticks
-  patterns:
-    - data-generation
-    - matrix-construction
-    - explicit-figure
-  dataprep: []
-  styling:
-    - grid-styling
 review:
   strengths:
-  - Excellent implementation of the ripple function z = sin(sqrt(x² + y²)) as specified
-  - Proper viewing angle (elevation 30°, azimuth 45°) matching specification exactly
-  - Clean, readable code following KISS principles
-  - Subtle grid styling with transparent panes enhances 3D visibility
-  - Good use of 40x40 grid resolution within recommended 20-50 range
+  - Perfect theme adaptation — both light and dark renders fully readable with proper
+    contrast
+  - 'Correct palette compliance — brand green #009E73 used consistently; backgrounds
+    match spec'
+  - Full spec coverage — all required features implemented (grid lines, viewing angle,
+    axis labels)
+  - Clean KISS implementation with explicit theme tokens and proper reproducibility
+    seeding
+  - Good data choice — ripple function demonstrates wireframe topology clearly
   weaknesses:
-  - Axis labels use generic X, Y, Z instead of more descriptive labels
-  - Wireframe linewidth at 1.5 is slightly thin for 4800x2700 output; 2-3 would be
-    more visible
-  image_description: The plot displays a 3D wireframe visualization of the ripple
-    function z = sin(sqrt(x² + y²)). The wireframe is rendered in Python Blue (#306998)
-    with consistent linewidth creating a mesh grid structure. The surface shows the
-    characteristic concentric ripple pattern emanating from the center (0,0), with
-    peaks at approximately z=1 and troughs at z=-1. The viewing angle is set at elevation
-    30° and azimuth 45°, providing a good perspective of the 3D structure. All three
-    axes (X, Y, Z) are labeled with clear tick marks ranging from -6 to 6 for X and
-    Y, and -1.0 to 1.0 for Z. The title "wireframe-3d-basic · matplotlib · pyplots.ai"
-    appears at the top. The grid panes have subtle gray edges and a dashed grid pattern
-    with low alpha. The overall layout is well-balanced with the 3D plot utilizing
-    good canvas space.
+  - Design Excellence below maximum — generic visual refinement; could benefit from
+    additional polishing beyond defaults
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with proper contrast — not pure white
+      Chrome: Title "wireframe-3d-basic · matplotlib · anyplot.ai" in dark ink (#1A1A17) at 24pt; axis labels "Distance from Center (X/Y)", "Amplitude (Z)" in dark ink at 20pt; tick labels in INK_SOFT (#4A4A44) at 16pt — all clearly readable against light background
+      Data: Wireframe mesh in brand green (#009E73) with linewidth 2.5, alpha 0.85; 40×40 grid density; 3D panes match background color with INK_SOFT edges; grid lines subtle (alpha=0.15) but visible
+      Legibility verdict: PASS — all text readable, no light-on-light issues, proper contrast throughout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with proper contrast — not pure black
+      Chrome: Title in light text (#F0EFE8) at 24pt; axis labels in light text at 20pt; tick labels in INK_SOFT (#B8B7B0 in dark mode) at 16pt — all clearly readable against dark background, no dark-on-dark failures
+      Data: Wireframe mesh in brand green (#009E73) — visually identical to light render, confirming theme-independent data color; 3D panes match dark background with light edges; grid lines subtle but visible
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures, proper contrast maintained across all elements, perfect theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, ticks at 14pt - all clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements
+        comment: All text explicitly sized (title 24pt, labels 20pt, ticks 16pt) and
+          colored; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean spacing with labelpad=15 and title pad=20; no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Wireframe lines visible with good alpha, linewidth could be slightly
-          thicker (1.5 vs recommended 2-3)
+        comment: 40×40 grid at optimal density; wireframe lines visible at linewidth
+          2.5
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single color (#306998 Python Blue), no colorblind issues
+        comment: 'Brand green #009E73 (Okabe-Ito position 1) is CVD-safe with adequate
+          contrast'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: 3D plot fills canvas well, balanced margins
+        comment: 16:9 aspect fills canvas well; 3D projection properly framed; nothing
+          cut off
       - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: Uses generic "X", "Y", "Z" without descriptive context or units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3), no legend needed for single-color wireframe
+        comment: Title includes spec-id, library, site; axes labeled with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Backgrounds #FAF8F1 (light) / #1A1A17 (dark); data color #009E73
+          in both; chrome tokens properly applied'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Intentional choices show design thought but lacks exceptional polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Properly themed panes and subtle grid; minimal customization beyond
+          defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Ripple function demonstrates topology; viewing angle creates clear
+          focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 3D wireframe visualization
+        comment: 3D wireframe using ax.plot_wireframe() correctly
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X, Y grid correctly mapped to Z height values
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Grid lines in both X and Y, consistent color, 3D projection with
-          viewing angle
-      - id: SC-04
-        name: Data Range
+        comment: Grid lines, consistent color, proper angle, all axes labeled
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X, Y, Z correctly mapped; 40×40 grid; z = sin(sqrt(x² + y²)) ripple
+          function
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for single-series wireframe
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "{spec-id} · {library} · pyplots.ai"
+        comment: Proper title format; no legend needed for single-series
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows peaks, troughs, and full ripple pattern demonstrating wireframe
-          capabilities
+        comment: Ripple surface fully displayed; all wireframe aspects visible
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
+        max: 5
         passed: true
-        comment: Uses standard mathematical ripple function, good for demonstrating
-          3D surfaces but abstract
+        comment: Mathematically appropriate ripple function; neutral and educational
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values sensible for mathematical function (-6 to 6 range, -1 to 1
-          output)
+        comment: X/Y ∈ [-6, 6]; Z ∈ [-1, 1]; 40×40 resolution optimal
     code_quality:
       score: 10
       max: 10
@@ -167,34 +175,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: No unnecessary functions or classes; straightforward
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) though not strictly needed for deterministic
-          function
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported
+        comment: Only os, matplotlib.pyplot, numpy; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: All APIs current
+        comment: No fake interactivity; clean theme handling
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 3
-      max: 5
-      items: []
+        comment: Saves as plot-{THEME}.png with correct DPI and facecolor
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ax.plot_wireframe() idiomatic; proper 3D projection and axes config
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of 3D projection and pane customization; theme-adaptive
+          styling
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - grid-styling
