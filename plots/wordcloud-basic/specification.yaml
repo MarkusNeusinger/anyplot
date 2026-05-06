@@ -6,7 +6,7 @@ title: Basic Word Cloud
 
 # Specification tracking
 created: 2025-12-15T20:45:54Z
-updated: 2025-12-15T20:45:54Z
+updated: 2026-05-06T07:05:48Z
 issue: 1012
 suggested: MarkusNeusinger
 
@@ -22,4 +22,3 @@ tags:
     - marketing
   features:
     - basic
-    - text
