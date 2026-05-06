@@ -1,34 +1,243 @@
 library: pygal
+language: python
 specification_id: wordcloud-basic
 created: '2025-12-24T09:58:23Z'
-updated: '2025-12-24T10:23:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483452016
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-06T07:27:00Z'
+generated_by: claude-haiku
+workflow_run: 25421922436
+issue: 1012
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/pygal/plot.html
-quality_score: 86
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/pygal/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Perfect visual quality with excellent text legibility and no overlap
+  - 'Flawless theme adaptation: data colors identical between light/dark, chrome properly
+    theme-switched'
+  - Clean spiral placement algorithm with intelligent collision detection and padding
+  - 'Strong design sophistication: intentional use of theme tokens and Okabe-Ito palette
+    throughout'
+  - Realistic, neutral tech industry data with excellent frequency distribution
+  - Well-structured code with deterministic, reproducible results
+  weaknesses:
+  - 'Library mastery: pygal used minimally as SVG canvas rather than leveraging higher-level
+    features'
+  - 'Design refinement: while clean and minimal, limited visual embellishment beyond
+    necessity'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) – correct per style guide, not pure white
+      Chrome: Title "wordcloud-basic · pygal · anyplot.ai" centered in dark text (INK=#1A1A17), perfectly readable
+      Data: 28 tech industry words sized by frequency (Python=180 down to Build=14). Primary series (Python) rendered in brand green (#009E73). Multi-series follows Okabe-Ito order: Data=#D55E00, Machine=#0072B2, Learning=#CC79A7, Analytics=#E69F00, Cloud=#56B4E9, API=#F0E442. Each color distinct and vibrant.
+      Layout: Centered composition with even distribution across canvas. Largest words (Python, Data, Machine) draw visual attention. No overlap, excellent spacing via spiral algorithm with 50px padding.
+      Legibility verdict: **PASS** – All text perfectly readable with explicit font sizes (60-280px), dark text on light background, zero readability issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) – correct per style guide, not pure black
+      Chrome: Title in light text (INK=#F0EFE8), perfectly readable against dark background. No dark-on-dark failures.
+      Data: Identical color scheme to light render – Python still #009E73, Data still #D55E00, etc. All colors unchanged between themes (only chrome flips). Placement and sizing identical.
+      Layout: Same centered composition as light render. All words remain visible and well-spaced. No overlap or crowding issues.
+      Legibility verdict: **PASS** – All text perfectly readable with light colors on dark background, brand green remains vibrant and visible, zero theme-adaptation failures.
+
+    **Both renders pass the theme-readability check.** Data colors are identical between themes; only background, title text, and chrome adapted. Implementation correctly threads theme tokens throughout.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title at 84px, words 60-280px, all explicitly set and perfectly readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Spiral algorithm with 50px collision padding ensures zero overlaps
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 28 words optimally sized from 60-280px based on frequency scaling
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; good contrast on both light/dark backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 canvas well-utilized (60-70%), balanced margins, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title format correct: ''wordcloud-basic · pygal · anyplot.ai'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, multi-series in Okabe-Ito order, backgrounds
+          #FAF8F1/#1A1A17, theme-adaptive chrome'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: intentional theme tokens, bold typography, professional
+          palette application'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean, minimal approach with excellent whitespace; limited embellishment
+          opportunity given form
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Frequency-based sizing creates visual hierarchy; tech industry context
+          is clear and engaging
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct word cloud with frequency-based sizing
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Word display, frequency mapping, size variation, color coding all
+          present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Word→frequency mapped correctly; size linear to frequency; positions
+          calculated properly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches spec format; legend not needed for word cloud
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all word cloud aspects: frequency range, diverse tech terms,
+          realistic distribution'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Tech industry buzzwords from Python to GraphQL; neutral, professional,
+          comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Frequencies (14-180) realistic for term counts; proportions logically
+          consistent
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports → data → algorithm → SVG → output; no functions/classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Deterministic: hardcoded data, no randomness, repeatable results'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os, sys (path), ET (SVG), cairosvg (rendering),
+          numpy (trig), pygal (canvas)'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-written spiral algorithm; no fake UI; appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct output: plot-{THEME}.png, plot-{THEME}.html'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct Style/render API but uses pygal minimally as SVG canvas;
+          manual ET manipulation rather than high-level text API
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom SVG manipulation and spiral algorithm distinctive; cairosvg
+          integration creative but not purely pygal
+  verdict: APPROVED
 impl_tags:
   dependencies:
-  - pillow
+  - cairosvg
   techniques:
   - html-export
   patterns:
   - data-generation
+  - matrix-construction
+  - iteration-over-groups
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - Creative approach using pygal XY chart as SVG canvas for word cloud rendering
-  - Well-implemented spiral placement algorithm that fills 16:9 canvas effectively
-  - Excellent color palette using pyplots brand colors with colorblind-safe contrast
-  - Tech buzzwords provide realistic relatable context for demonstration
-  - Clean code structure following KISS principles despite custom placement logic
-  - Outputs multiple formats (PNG, SVG, HTML) for flexibility
-  weaknesses:
-  - Data and Machine words positioned very close together nearly touching
-  - Word distribution is slightly right-heavy with more whitespace on left side
-  - Could include more words to demonstrate word cloud density better
-  - Frequency range could be wider for more dramatic visual size differences
+  styling:
+  - minimal-chrome
+  - publication-ready

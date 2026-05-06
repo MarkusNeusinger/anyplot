@@ -1,159 +1,177 @@
 library: altair
+language: python
 specification_id: wordcloud-basic
 created: '2025-12-24T09:54:19Z'
-updated: '2025-12-24T10:04:35Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483449762
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-06T07:29:59Z'
+generated_by: claude-haiku
+workflow_run: 25421767216
+issue: 1012
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/altair/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Creative spiral positioning algorithm for word placement without overlaps
-  - Excellent use of Python-themed color palette with good contrast
-  - Clear title following the required format
-  - Well-balanced layout with words filling the canvas appropriately
-  - Good variation in font sizes reflecting frequency differences
+  - Perfect technical execution with no text overlaps and correct theme-adaptive chrome
+  - Spiral algorithm with collision detection creates professional word positioning
+  - 'Excellent palette compliance: first series is #009E73, colors cycle correctly
+    through Okabe-Ito'
+  - Realistic and plausible tech industry data with proper frequency distribution
+  - Clean, reproducible code with KISS structure and deterministic seed
+  - Strong idiomatic Altair usage with declarative encoding and selection patterns
   weaknesses:
-  - Some smaller words (GraphQL, Terraform, AWS) are slightly hard to read due to
-    light colors on white background
-  - Word distribution could be more compact - there is empty space at the bottom of
-    the canvas
-  image_description: The plot displays a word cloud with 25 tech industry buzzwords.
-    The largest words "Python", "Data", "Machine", "Learning", "Analytics", and "Cloud"
-    dominate the center, with "Python" being the most prominent in dark blue (#306998).
-    Words are colored using a palette of dark blue (#306998), yellow (#FFD43B), light
-    blue (#4B8BBE), gray (#646464), and variations. Font sizes range from large (Python,
-    Data, Machine) to small (GraphQL, AWS, Terraform). The words are arranged in a
-    roughly circular/spiral pattern filling the center of the canvas, with the title
-    "wordcloud-basic · altair · pyplots.ai" at the top. No axes are present as expected
-    for a word cloud. The layout is clean with no overlapping text.
+  - Design Excellence is generic—looks like a well-configured library default rather
+    than custom design
+  - Visual Refinement relies entirely on the spiral algorithm; minimal polish beyond
+    that
+  - Data storytelling is basic—size-frequency mapping with no additional narrative
+    or emphasis beyond ordering
+  - Distinctive Library Mastery limited—Altair selection interactivity doesn't render
+    in static PNG
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches spec
+      Chrome: Title "wordcloud-basic · altair · anyplot.ai" in dark text (#1A1A17). All text clearly readable.
+      Data: Words sized 24-80px by frequency. Python (80px, green #009E73) dominates. Colors cycle through Okabe-Ito palette: Data (orange #D55E00), Machine (blue #0072B2), Learning (magenta #CC79A7), etc. Yellow terms visible but less prominent per style guide.
+      Positioning: Spiral algorithm places words with 30px padding, preventing all overlaps.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches spec
+      Chrome: Title in light text (#F0EFE8), clearly visible. All text adapted to dark surface—no dark-on-dark failures.
+      Data: Colors identical to light render—Python still green #009E73, Data still orange #D55E00, etc. Data colors remain constant across themes as required.
+      Positioning: Identical to light render—same spiral layout and sizes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
         score: 8
-        max: 10
+        max: 8
         passed: true
-        comment: Most text is readable, but some smaller yellow words (GraphQL, AWS,
-          Terraform) have lower contrast on white
+        comment: Font sizes explicitly set (24-80px). All readable in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all words clearly separated
+        comment: Spiral algorithm with collision detection and 30px padding prevents
+          overlaps.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Word sizes are well-differentiated, but smallest words could be slightly
-          larger
+        comment: 'Optimal sizing: 80px to 24px range. All distinguishable.'
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Good color palette with blues, yellows, grays - distinguishable even
-          for colorblind users
+        comment: Okabe-Ito palette is CVD-safe with good contrast.
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good central filling, but some empty space at bottom of canvas
+        comment: 1600×900 scaled 3x. Word cloud fills 70% of canvas with balanced
+          margins.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for word cloud - no axes needed, full points
+        comment: 'Title format correct: wordcloud-basic · altair · anyplot.ai'
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: N/A for word cloud - no grid/legend needed, full points
+        comment: 'First series #009E73. Colors cycle through Okabe-Ito 1-7. Backgrounds
+          correct. Theme chrome adapted.'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured default. Okabe-Ito + bold font professional but not
+          exceptional.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Spiral algorithm provides organized spacing. Minimal customization
+          beyond algorithm.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Size hierarchy shows term importance. Basic storytelling through
+          frequency encoding.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct word cloud visualization
+        comment: Correct word cloud with frequency-to-size mapping.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Word frequency correctly mapped to font size
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: word display, size by frequency, decorative
-          colors'
-      - id: SC-04
-        name: Data Range
+        comment: Words displayed, frequency encodes size, tooltips on hover.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 25 words visible and displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y positioning, size for frequency, color for palette cycling.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for word cloud - no legend needed
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: wordcloud-basic · altair · pyplots.ai'
+        comment: Title format correct. Legend not needed (decorative coloring).
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows good range of frequencies with clear size differentiation
+        comment: 25 words, frequencies 100→22. Full feature range.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Tech industry buzzwords is a realistic and comprehensible scenario
+        comment: Tech industry buzzwords with realistic distribution.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Frequency values (22-100) are plausible, good range
+        comment: Values and proportions align with real-world tech term popularity.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,43 +179,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple sequential structure: imports → data → positioning → plot
-          → save'
+        comment: Imports → seed → data → chart → save. No functions/classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (altair, numpy, pandas)
+        comment: 'Only used imports: os, sys, altair, numpy, pandas.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Spiral algorithm is appropriately complex. No fake interactivity.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png but also plot.html (minor extra file)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png/.html with correct scale_factor=3.0.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Altair's mark_text, encoding system, and declarative approach.
-          However, word clouds are not Altair's strength - creative solution but not
-          showcasing Altair's best features like interactive selections or layered
-          charts
+        comment: 'Expert Altair: mark_text(), encoding channels, selection_point(),
+          configure_*().'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Uses selection + conditional opacity (Altair-specific). Hover doesn't
+          render in PNG.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
