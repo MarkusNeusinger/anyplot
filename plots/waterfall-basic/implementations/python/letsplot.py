@@ -1,14 +1,17 @@
-""" pyplots.ai
+""" anyplot.ai
 waterfall-basic: Basic Waterfall Chart
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-24
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-06
 """
+
+import os
 
 import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
     element_blank,
+    element_rect,
     element_text,
     geom_rect,
     geom_segment,
@@ -27,6 +30,18 @@ from lets_plot.export import ggsave
 
 LetsPlot.setup_html()
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+BRAND = "#009E73"  # Position 1 - green
+ACCENT_1 = "#D55E00"  # Position 2 - orange
+ACCENT_2 = "#0072B2"  # Position 3 - blue
+
 # Data - Quarterly financial breakdown from revenue to net income
 categories = [
     "Starting Balance",
@@ -37,7 +52,7 @@ categories = [
     "Taxes",
     "Net Profit",
 ]
-values = [50000, 35000, 18000, -22000, -8000, -12000, 0]  # Last is placeholder for total
+values = [50000, 35000, 18000, -22000, -8000, -12000, 0]
 
 # Calculate waterfall positions
 running_total = 0
@@ -109,22 +124,22 @@ plot = (
     + geom_rect(
         data=df,
         mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="color_type"),
-        color="white",
-        size=1,
+        color=INK_SOFT,
+        size=0.8,
     )
     # Connector lines between bars
     + geom_segment(
         data=connector_df,
         mapping=aes(x="x_start", xend="x_end", y="y", yend="y"),
-        color="#555555",
-        size=1,
+        color=INK_SOFT,
+        size=0.6,
         linetype="dashed",
     )
     # Value labels on bars
-    + geom_text(data=df, mapping=aes(x="x_pos", y="label_y", label="label"), color="white", size=12, fontface="bold")
-    # Custom colors: green for positive, red for negative, Python Blue for totals
+    + geom_text(data=df, mapping=aes(x="x_pos", y="label_y", label="label"), color=INK, size=12, fontface="bold")
+    # Colors: Okabe-Ito palette
     + scale_fill_manual(
-        values={"positive": "#22C55E", "negative": "#EF4444", "total": "#306998"},
+        values={"positive": BRAND, "negative": ACCENT_1, "total": ACCENT_2},
         name="Change Type",
         labels={"positive": "Increase", "negative": "Decrease", "total": "Total"},
     )
@@ -133,24 +148,29 @@ plot = (
     # Y axis
     + scale_y_continuous(format="${,.0f}")
     # Labels
-    + labs(title="waterfall-basic · letsplot · pyplots.ai", x="", y="Amount ($)")
+    + labs(title="waterfall-basic · letsplot · anyplot.ai", x="", y="Amount ($)")
     # Theme
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24, hjust=0.5),
-        axis_title=element_text(size=20),
-        axis_text_x=element_text(size=14, angle=30),
-        axis_text_y=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
-        legend_position="right",
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_grid_major_y=element_rect(color=INK_SOFT, size=0.4, linetype="solid"),
         panel_grid_major_x=element_blank(),
+        panel_grid_minor=element_blank(),
+        plot_title=element_text(size=24, color=INK),
+        axis_title=element_text(size=20, color=INK),
+        axis_text_x=element_text(size=14, color=INK_SOFT, angle=30),
+        axis_text_y=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_position="right",
     )
     + ggsize(1600, 900)
 )
 
 # Save as PNG (scale 3x for 4800x2700)
-ggsave(plot, "plot.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
 
 # Save as HTML for interactivity
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")

@@ -1,169 +1,171 @@
 library: bokeh
+language: python
 specification_id: waterfall-basic
 created: '2025-12-24T09:51:37Z'
-updated: '2025-12-24T10:02:41Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483446395
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - columndatasource
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-06T01:08:47Z'
+generated_by: claude-haiku
+workflow_run: 25410718422
+issue: 777
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/bokeh/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent implementation of waterfall chart logic with proper bar positioning
-    (floating bars for changes)
-  - Clear visual distinction between totals (blue), increases (green), and decreases
-    (red)
-  - Connector lines effectively show the cumulative flow between bars
-  - Well-formatted value labels with +/- signs for changes
-  - Good use of Bokeh ColumnDataSource and FactorRange for categorical data
-  - Proper canvas utilization at 4800x2700 with appropriate font scaling
-  - Clean, readable code structure following KISS principles
+  - Perfect text legibility and theme adaptation in both light and dark renders
+  - Correct waterfall implementation with effective positive/negative/total semantic
+    coloring
+  - Well-placed connector lines and value labels enhance clarity and data storytelling
+  - All visual quality criteria met - no overlaps, excellent element visibility
+  - Clean, deterministic code with perfect spec compliance
+  - Professional use of Okabe-Ito palette across all data elements
+  - Proper theme-aware styling with no legibility failures
   weaknesses:
-  - Missing HoverTool for interactivity (Bokeh key strength)
-  - Red-green color scheme could be improved for colorblind accessibility (consider
-    blue-orange)
-  image_description: 'The waterfall chart displays a quarterly financial breakdown
-    from "Starting Revenue" ($150,000) to "Net Income" ($130,000). Seven bars are
-    shown with distinct coloring: blue (#306998) for total bars (first and last),
-    green (#2ECC71) for positive changes (Product Sales +$50,000, Services +$35,000),
-    and red (#E74C3C) for negative changes (Refunds -$8,000, Operating Costs -$75,000,
-    Marketing -$22,000). Dashed gray connector lines show the cumulative flow between
-    bars. Value labels appear above each bar with appropriate formatting. The title
-    reads "waterfall-basic · bokeh · pyplots.ai" in the top-left. X-axis shows "Financial
-    Category" with rotated category labels, Y-axis shows "Amount ($)" with values
-    from 0 to ~250,000. Background is light gray (#FAFAFA) with subtle horizontal
-    grid lines.'
+  - Design excellence limited by minimal custom styling beyond library defaults
+  - Visual refinement could be enhanced with more thoughtful grid/spine customization
+  - Limited exploitation of bokeh's distinctive interactive features beyond basic
+    HoverTool
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title, axis labels, tick labels all in dark text - clearly readable. Axis lines, gridlines subtle but visible.
+      Data: Starting Revenue and Net Income bars in blue (#0072B2); Product Sales and Services in green (#009E73); Refunds, Operating Costs, Marketing in orange (#D55E00). Value labels above bars with currency formatting. Dashed connector lines visible at cumulative totals.
+      Legibility verdict: PASS - all elements readable with excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title, axis labels, tick labels all in light colors - clearly readable against dark background. Axis lines, gridlines subtle but visible. No dark-on-dark failures.
+      Data: Data colors identical to light render - blue, green, orange bars preserved. Connector lines and value labels maintain full legibility on dark background.
+      Legibility verdict: PASS - perfect theme adaptation with no readability issues
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 32pt, axis labels at 24pt, tick labels at 18pt, value labels
-          at 20pt - all readable, slight room for improvement on value label contrast
+        comment: All text sizes explicitly set (title 28pt, labels 22pt, ticks 18pt,
+          values 20pt); readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, category labels properly rotated
+        comment: No overlapping elements; labels positioned above bars with clear
+          offset
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars well-sized with good alpha (0.9), white line borders add definition
+        comment: All bars, lines, and labels clearly visible and well-sized
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Green/red scheme is common for financial data but not fully colorblind-safe;
-          blue for totals helps differentiate
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, good use of 4800x2700 space
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Financial Category" and "Amount ($)" are descriptive with units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette with excellent colorblind safety
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout with balanced margins and good canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No legend present (acceptable since colors are intuitive for financial
-          context), but grid is subtle
+        comment: Title correct format; axis labels descriptive (Financial Category,
+          Amount)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito applied correctly; backgrounds correct; theme-adaptive
+          chrome perfect
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults but minimal custom design touches
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Subtle grid and bar styling, but library defaults with minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Waterfall structure and coloring effectively show revenue-to-income
+          flow
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct waterfall chart implementation
+        comment: Correct waterfall chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, amounts on Y, correctly positioned floating bars
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'Has: different colors for +/-, connecting lines, start/end totals
-          in blue, value labels'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: coloring, connectors, totals, labels'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis starts at 0, extends to ~250k with 15% padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Categories on X, amounts on Y, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed as color coding is self-explanatory in financial
-          context
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "waterfall-basic · bokeh · pyplots.ai"
+        comment: Title format correct; no legend needed
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both positive and negative changes, totals at start/end; could
-          show more varied magnitudes
+        comment: Shows starting value, intermediate changes, final value
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Quarterly financial breakdown is a realistic, comprehensible scenario
+        comment: Realistic quarterly financial breakdown
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are reasonable for a business context ($150k revenue down
-          to $130k net income)
+        comment: Values and proportions accurate for financial domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,41 +173,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → calculations → plot → style → save'
+        comment: Simple script with no over-engineering
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Data is deterministic (hardcoded), but no random seed comment indicating
-          intentional determinism
+        max: 2
+        passed: true
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Clean, Pythonic code; no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format; current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, FactorRange, Label annotations, figure styling;
-          could leverage HoverTool for interactivity
+        comment: Proper ColumnDataSource, figure(), vbar(), HoverTool usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses HoverTool and Selenium but limited distinctive features
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - hover-tooltips
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep: []
+  styling: []

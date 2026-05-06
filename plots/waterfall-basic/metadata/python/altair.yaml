@@ -1,170 +1,166 @@
 library: altair
+language: python
 specification_id: waterfall-basic
 created: '2025-12-24T09:50:48Z'
-updated: '2025-12-24T10:02:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483446558
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/altair/plot.html
+updated: '2026-05-06T01:05:57Z'
+generated_by: claude-haiku
+workflow_run: 25410774625
+issue: 777
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/altair/plot-dark.html
 quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
 review:
   strengths:
-  - Excellent implementation of waterfall chart using Altair layered approach with
-    separate charts for bars, labels, and connectors
-  - Clean color scheme using Python Blue for totals, green for gains, red for losses
-    - visually intuitive
-  - Well-formatted value labels showing both change values (+$XX/-$XX) and totals
-    ($XX)
-  - Proper use of y/y2 encoding for floating bars - idiomatic Altair approach
-  - Dashed connector lines effectively show the cumulative flow between categories
+  - Correct waterfall semantics with three-color palette (green for positive, orange
+    for negative, blue for totals) aligned to spec requirements
+  - Effective connector lines (dashed) create clear visual flow between cumulative
+    levels
+  - Value labels on bars provide precise amounts; labels are properly positioned and
+    legible
+  - 'Flawless theme adaptation: both light and dark renders are readable with appropriate
+    INK/INK_SOFT tokens applied consistently'
+  - 'Clean Altair idioms: proper use of y/y2 encoding, layering, and custom scales'
   weaknesses:
-  - Revenue bar shows "+$500" which implies an increase, but as a starting total it
-    should show "$500" without the plus sign
-  - No legend explaining the color scheme (blue=total, green=positive, red=negative)
-  - Could benefit from interactive tooltips showing additional context
-  image_description: 'The plot displays a waterfall chart showing a quarterly financial
-    breakdown from Revenue to Net Income. The chart has 7 bars: Revenue (blue, starting
-    at $500), Cost of Goods (red, showing -$200 decrease), Gross Profit (blue subtotal
-    at $300), Operating Expenses (red, -$150), Other Income (green, +$25), Taxes (red,
-    -$45), and Net Income (blue final total at $130). Each bar shows a value label
-    in white text centered on the bar. Dashed connector lines connect the running
-    totals between bars. The color scheme uses Python Blue (#306998) for totals, green
-    (#4CAF50) for positive changes, and red (#E53935) for negative changes. The title
-    "waterfall-basic · altair · pyplots.ai" appears at the top. Y-axis shows "Amount
-    ($)" and X-axis shows "Category" with slightly angled labels.'
+  - Grid styling could be subtly refined for more sophisticated visual polish
+  - DE-02 and DE-03 scores reflect competent but not elevated design; no additional
+    visual hierarchy or emphasis beyond the data structure itself
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct surface color
+      Chrome: Title "waterfall-basic · altair · anyplot.ai" in dark text (28px), axis labels "Category" and "Amount ($)" in 22px dark text, tick labels in 18px dark text - all clearly readable
+      Data: Blue bars for totals (Revenue, Gross Profit, Net Income), orange bars for negatives (Cost of Goods, Operating Expenses, Taxes), green bar for positive (Other Income). Value labels (+$500, -$200, $300, -$150, +$25, -$45, $130) centered on bars. Dashed connector lines link bars.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct surface color
+      Chrome: Title in light text, axis labels in light text (#F0EFE8), tick labels in light text (#B8B7B0) - all clearly readable against dark background. No dark-on-dark failures.
+      Data: Blue, orange, and green data colors identical to light render (Okabe-Ito palette positions 1-3 are theme-independent). Value labels in white, fully legible. Dashed connector lines in light gray, visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: All text is clearly readable; title is 28pt, axis labels 18-22pt.
-          Slightly smaller than ideal but very legible.
+        comment: All text readable in both themes at specified sizes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; x-axis labels are angled to prevent overlap.
+        comment: X-axis labels angled -20°, no overlaps
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar sizes are well-proportioned (size=65), white stroke provides
-          good separation.
+        comment: All bars, labels, and connectors clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Green/red color coding is common but uses distinct shades; blue totals
-          help differentiate. Could be improved with patterns for colorblind users.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Chart fills canvas well with balanced margins.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has "Amount ($)" with units, X-axis has "Category" which is
-          descriptive.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette, colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600×900 proportions, generous margins, well-balanced
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Subtle grid with alpha=0.3 and dashed lines. No legend needed as
-          colors are intuitive, but a small legend could help clarify the color scheme.
+        comment: Descriptive labels and correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito positions 1-3, correct backgrounds, theme-correct
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom color scheme for waterfall semantics, intentional bar styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Dashed connectors and subtle grid, could be more refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear progression, but no additional emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct waterfall chart type.
+        comment: Correct waterfall with y/y2 encoding
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, values on Y correctly assigned.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has positive/negative coloring, connector lines, total bars, and
-          value labels.
-      - id: SC-04
-        name: Data Range
+        comment: Positive/negative colors, connectors, totals, labels all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data from 0 to 500.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: categories, Y: amounts, all data shown'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend, but color scheme is self-explanatory with totals in blue.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "waterfall-basic · altair · pyplots.ai".'
+        comment: Correct title format, legend appropriately omitted
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows positive changes, negative changes, and subtotals. Good variety
-          but "Gross Profit" label shows +$500 when it should show $300 (minor inconsistency
-          in labeling - actually it correctly shows $300).
+        comment: All waterfall aspects shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Quarterly financial breakdown is a classic waterfall use case with
-          realistic categories.
+        comment: Quarterly financial breakdown, realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are reasonable for a business scenario ($500 revenue down
-          to $130 net income), though scale is simplified.
+        comment: Sensible financial values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -172,42 +168,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; follows imports → data → plot → save pattern.
+        comment: Straightforward calculation, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Deterministic data (hardcoded values), no random seed needed, but
-          explicit about being deterministic would be better.
+        comment: Fixed data, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both used.
+        comment: Only os, pandas, altair - all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API.
+        comment: No fake interactivity, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and .html correctly
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: High-level Chart API, proper encodings and marks
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of Altair's layering (connectors, bars, labels), encoding
-          with y/y2, and declarative style. Could leverage more Altair-specific features
-          like tooltips or interactive selection.
+        comment: y/y2 encoding and layering used well
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
