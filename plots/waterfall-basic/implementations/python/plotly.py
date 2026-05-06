@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" anyplot.ai
 waterfall-basic: Basic Waterfall Chart
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 97/100 | Created: 2025-12-24
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 98/100 | Updated: 2026-05-06
 """
 
 import os
