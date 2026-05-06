@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 wordcloud-basic: Basic Word Cloud
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 78/100 | Created: 2025-12-24
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-06
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -21,6 +23,15 @@ from plotnine import (
     theme,
 )
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette for frequency tiers
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Word frequency data - technology survey responses
 np.random.seed(42)
@@ -57,16 +68,14 @@ words_data = {
 
 df = pd.DataFrame(words_data)
 
-# Calculate font sizes scaled by frequency (range 14-38) - larger minimum for better visibility
+# Calculate font sizes with more dramatic range (10-50) for better emphasis
 min_freq, max_freq = df["frequency"].min(), df["frequency"].max()
-df["size"] = 14 + (df["frequency"] - min_freq) / (max_freq - min_freq) * 24
+df["size"] = 10 + (df["frequency"] - min_freq) / (max_freq - min_freq) * 40
 
 # Sort by frequency descending
 df = df.sort_values("frequency", ascending=False).reset_index(drop=True)
 
 # Hand-crafted positions to ensure no overlap
-# Improved layout with better vertical distribution (shifted upward for balance)
-# Canvas is 100x56.25 with legend in top-right
 positions = [
     (45, 28),  # Python (largest) - center
     (70, 36),  # Data
@@ -98,46 +107,47 @@ positions = [
 df["x"] = [p[0] for p in positions]
 df["y"] = [p[1] for p in positions]
 
-# Assign colors based on frequency tiers - using high contrast colors
+# Assign Okabe-Ito colors based on frequency tiers
 colors = []
 for freq in df["frequency"]:
     if freq >= 65:
-        colors.append("#306998")  # Python Blue - high frequency
+        colors.append(OKABE_ITO[0])  # Bluish green (brand) - highest
     elif freq >= 35:
-        colors.append("#E67E22")  # Deep Orange - medium frequency (high contrast)
+        colors.append(OKABE_ITO[1])  # Vermillion - medium-high
     elif freq >= 15:
-        colors.append("#27AE60")  # Emerald Green - lower medium
+        colors.append(OKABE_ITO[2])  # Blue - medium-low
     else:
-        colors.append("#8E44AD")  # Purple - low frequency
+        colors.append(OKABE_ITO[3])  # Reddish purple - lowest
+
 df["color"] = colors
 
-# Create legend data with colored squares - positioned in top right area
+# Create legend using colored text labels instead of bullets
 legend_df = pd.DataFrame(
     {
         "x": [92, 92, 92, 92],
         "y": [46, 42, 38, 34],
-        "label": ["● High (65+)", "● Medium (35-64)", "● Low-Med (15-34)", "● Low (<15)"],
-        "color": ["#306998", "#E67E22", "#27AE60", "#8E44AD"],
+        "label": ["High (65+)", "Medium (35-64)", "Low-Med (15-34)", "Low (<15)"],
+        "color": OKABE_ITO,
     }
 )
 
 # Create plot
 plot = (
     ggplot(df, aes(x="x", y="y", label="word", size="size", color="color"))
-    + geom_text(family="sans-serif", fontstyle="normal", show_legend=False)
+    + geom_text(family="sans-serif", fontweight="normal", show_legend=False)
     + geom_text(
         data=legend_df, mapping=aes(x="x", y="y", label="label", color="color"), size=9, ha="left", show_legend=False
     )
-    + annotate("text", x=92, y=50, label="Frequency", size=11, ha="left", fontweight="bold")
+    + annotate("text", x=92, y=50, label="Frequency", size=11, ha="left", fontweight="bold", color=INK)
     + scale_size_identity()
     + scale_color_identity()
     + coord_cartesian(xlim=(0, 100), ylim=(0, 56.25))
-    + labs(title="Tech Survey Keywords · wordcloud-basic · plotnine · pyplots.ai")
+    + labs(title="wordcloud-basic · plotnine · anyplot.ai")
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, ha="center", weight="bold", margin={"b": 15}),
-        panel_background=element_rect(fill="white"),
-        plot_background=element_rect(fill="white"),
+        plot_title=element_text(size=24, ha="center", weight="bold", color=INK, margin={"b": 15}),
+        panel_background=element_rect(fill=PAGE_BG, color=None),
+        plot_background=element_rect(fill=PAGE_BG, color=None),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
         axis_text=element_blank(),
@@ -147,4 +157,4 @@ plot = (
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)

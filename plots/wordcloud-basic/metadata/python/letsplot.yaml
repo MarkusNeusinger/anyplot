@@ -1,149 +1,187 @@
 library: letsplot
+language: python
 specification_id: wordcloud-basic
 created: '2025-12-24T10:01:35Z'
-updated: '2025-12-24T10:13:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483453984
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - minimal-chrome
+updated: '2026-05-06T07:32:15Z'
+generated_by: claude-haiku
+workflow_run: 25422079116
+issue: 1012
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/letsplot/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent collision detection algorithm ensures no overlapping words
-  - Clean visual hierarchy with Python clearly dominant as the most frequent term
-  - Colorblind-safe palette with good variety and contrast
-  - Realistic programming language popularity data that users will recognize
-  - Proper use of theme_void() for clean word cloud appearance
-  - Good canvas utilization with balanced word distribution
+  - Perfect text legibility across both themes with no overlap via sophisticated collision
+    detection
+  - 'Exemplary theme compliance: data colors identical in light/dark, chrome correctly
+    adapted, both renders readable'
+  - Professional minimal aesthetic using Okabe-Ito palette and void theme effectively
+  - Factually accurate, realistic data demonstrating programming language popularity
+  - Clean, well-structured code following KISS principle with proper reproducibility
+    seed
+  - 'Proper high-resolution output: 4800×2700px PNG + interactive HTML exports'
   weaknesses:
-  - Custom word placement algorithm is complex but necessary since lets-plot lacks
-    native word cloud support
-  - Elixir text appears slightly small compared to other low-frequency words
-  image_description: 'The word cloud displays 26 programming language names arranged
-    in a spiral pattern on a white background. The title "wordcloud-basic · letsplot
-    · pyplots.ai" appears centered at the top in gray text. Word sizes vary according
-    to frequency, with "Python" being the largest (most prominent, displayed in bold
-    blue #306998), followed by "JavaScript" (large, in yellow #FFD43B), "Java" (cyan),
-    "TypeScript" (yellow), and "HTML" (pink/magenta). Smaller words like "Elixir",
-    "Lua", "Clojure" appear at the edges. The color palette cycles through 8 colors:
-    blue, yellow, green, pink, cyan, orange, purple, and gray. All words use bold
-    font and are clearly legible with no overlapping. The layout is well-balanced
-    with words distributed across the canvas.'
+  - Design aesthetic is competent but follows standard library defaults; lacks distinctive
+    visual customization or polish that would elevate to 6+ on DE-01
+  - Core word placement algorithm is generic spiral method; doesn't leverage lets-plot-specific
+    features beyond theming
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correctly adapted for light theme, not pure white
+      Chrome: Title "wordcloud-basic · letsplot · anyplot.ai" in dark text (#1A1A17) is perfectly readable
+      Data: 26 programming languages with size representing popularity; colors follow Okabe-Ito sequence (Rust=#009E73, JavaScript=#D55E00, HTML=#0072B2, Kotlin=#CC79A7, etc.); Python and JavaScript are largest
+      Layout: Spiral arrangement with excellent collision detection; all words separated and readable
+      Legibility verdict: PASS - All text readable, no overlap, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correctly adapted for dark theme, not pure black
+      Chrome: Title text in light color (#F0EFE8) is perfectly readable against dark background; no dark-on-dark failures
+      Data: Same word cloud layout as light render; all word colors are identical to light render (Rust=#009E73, JavaScript=#D55E00, HTML=#0072B2, Kotlin=#CC79A7, etc.); only chrome adapted
+      Layout: Same spiral arrangement with all words separated; layout consistency with light render maintained
+      Legibility verdict: PASS - All text readable, no dark-on-dark issues, excellent visibility of all colors against dark surface
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: All words clearly readable, good font sizes ranging from ~9pt to
-          ~26pt scaled appropriately
+        comment: Font sizes explicitly set (title=24pt, word sizes calculated via
+          size aesthetic), bold fontface, all perfectly readable at full resolution
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Collision detection algorithm ensures no overlapping words
+        comment: Spiral algorithm with collision detection prevents all text overlap;
+          all words fully readable and separate
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Word sizes well-adapted to frequency, clear visual hierarchy
+        comment: Words optimally sized for density; 26 data points with excellent
+          size variation (9pt to 26pt); all elements clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Uses colorblind-safe palette with good contrast on white background
+        comment: Okabe-Ito palette is colorblind-safe; good contrast; colors well-distributed
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Spiral placement creates balanced distribution, good canvas utilization
+        comment: 4800×2700px landscape format; plot fills 60-70% of canvas with balanced
+          margins; title properly positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title format correct: ''wordcloud-basic · letsplot · anyplot.ai'';
+          axis labels correctly omitted via element_blank()'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First color: #009E73 (brand green); multi-series follows Okabe-Ito
+          order; backgrounds correct (#FAF8F1 light, #1A1A17 dark); both renders theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional design with bold typography and Okabe-Ito palette; clean
+          minimal aesthetic; however, lacks distinctive visual customization beyond
+          library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Effective use of theme_void(), no unnecessary grid or axes, generous
+          whitespace, polished layout; minimal customization beyond void theme
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through size variation (Python largest → most
+          popular); color differentiation aids readability; plot tells story of language
+          popularity
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct word cloud visualization
+        comment: Correct word cloud type; words sized by frequency; all expected features
+          present
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Word frequency correctly mapped to size
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows word/frequency data, size encoding, appropriate word count
-          (26 words)
-      - id: SC-04
-        name: Data Range
+        comment: Words display with size proportional to frequency; proper data representation;
+          all spec features implemented
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All words visible and within canvas bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y coordinates correctly mapped for spatial positioning; all data
+          visible; nothing cut off
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed; color is decorative as spec allows
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "wordcloud-basic · letsplot · pyplots.ai"
+        comment: Title format correct; legend correctly hidden (not needed for single-series
+          word cloud)
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variety of word sizes demonstrating frequency encoding; could
-          include more variation in word lengths
+        comment: Shows full spectrum of language popularity; 26 languages spanning
+          high-frequency (Python=100) to low (Elixir=18)
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Programming language popularity is a realistic, recognizable scenario
+        comment: Programming language popularity is real, comprehensible scenario;
+          data factually plausible; neutral topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Frequency values (18-100) are plausible; Python at 100 and JavaScript
-          at 92 reflects real-world trends
+        comment: Frequency proportions are accurate and realistic; relative scales
+          appropriate for context; no factual violations
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -151,42 +189,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → placement algorithm → plot → save'
+        comment: 'Linear flow: imports → data → plot → save; no functions or classes;
+          spiral placement algorithm integrated naturally'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set; deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports (math, os, numpy, pandas, lets_plot) are used; no unused
+          dependencies
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Spiral algorithm with collision detection is appropriate complexity;
+          no fake functionality; clean, Pythonic code
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to "plot.png" but also saves plot.html (minor, but correct
-          output present)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with correct naming;
+          uses modern ggsave API with scale parameter
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses geom_text with scale_size_identity and scale_color_manual; theme_void
-          is appropriate; however, word clouds are not a native lets-plot feature,
-          so implementation requires custom placement algorithm
+        comment: Expertly uses lets-plot high-level API (ggplot, geom_text, aes, scale_color_manual,
+          scale_size_identity, theme, theme_void, ggsave); follows idiomatic patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of lets-plot's theming system; theme-adaptive implementation
+          reads ANYPLOT_THEME; core word placement algorithm is generic spiral method
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome

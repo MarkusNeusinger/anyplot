@@ -1,32 +1,221 @@
 library: plotnine
+language: python
 specification_id: wordcloud-basic
 created: '2025-12-24T09:53:44Z'
-updated: '2025-12-24T10:23:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483449932
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/plotnine/plot.png
-preview_html: null
-quality_score: 78
+updated: '2026-05-06T07:34:13Z'
+generated_by: claude-haiku
+workflow_run: 25421964746
+issue: 1012
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Perfect theme adaptation with zero dark-on-dark failures in both renders
+  - Okabe-Ito palette correctly applied; colors identical between light and dark themes
+  - Thoughtful frequency-tier color scheme creates visual hierarchy
+  - Clean, minimalist layout with proper whitespace and no chartjunk
+  - Proper reproducibility with seed; deterministic hand-positioned layout
+  weaknesses:
+  - Library Mastery could showcase more advanced plotnine patterns beyond basic geom_text
+  - Design Excellence moderate—could enhance visual refinement with subtle styling
+    touches like text shadows or background variation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "wordcloud-basic · plotnine · anyplot.ai" in bold dark text (24pt), legend labels in dark text (9pt) — all clearly readable
+      Data: Words sized 10–50pt by frequency; colors: green (#009E73) for freq≥65, orange (#D55E00) for 35–64, blue (#0072B2) for 15–34, purple (#CC79A7) for <15. Okabe-Ito positions 1–4 correctly applied.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title rendered in white; legend labels in light gray — all readable against dark surface
+      Data: Colors identical to light render (green, orange, blue, purple — only chrome flipped)
+      Legibility verdict: PASS — no dark-on-dark failures, excellent contrast, all text legible
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title 24pt, words 10–50pt, legend 9pt; all readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Hand-positioned words prevent collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Word sizes scale dramatically by frequency; all distinct
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette CVD-safe; adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, balanced spacing, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title with spec-id, library, site
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito 1–4 applied correctly; backgrounds #FAF8F1/#1A1A17; both
+          renders theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Frequency-tier color scheme intentional; clean, professional polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean layout, no spines/grid, good whitespace; could enhance with
+          more distinctive styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy; 'Python' dominant focal point through size
+          and color
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct word cloud visualization
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Words with frequency-scaled sizes; color encodes frequency tier
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y positioning effective; 25-word dataset fills canvas well
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format; legend explains frequency tiers
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All aspects shown: sizes, colors, legend, positioning'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Technology survey data; realistic, neutral, relevant
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 25 words, frequency 16–95; optimal for word cloud readability
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Simple, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) for determinism
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Only used imports: plotnine, pandas, numpy, os'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; hand positioning reasonable for layout
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with correct DPI
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_text, scale_color_identity, scale_size_identity used correctly
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Custom legend functional; could showcase more advanced patterns
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - custom-legend
   patterns:
-  - explicit-figure
+  - data-generation
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - Excellent no-overlap word placement with hand-crafted positions
-  - Clean, readable visualization with clear frequency-based coloring
-  - Good use of plotnine grammar of graphics with aes mappings and scale_identity
-  - Professional color palette that is colorblind-accessible
-  - Realistic tech survey context that makes sense
-  weaknesses:
-  - Legend uses bullet symbols that do not match the actual word rendering style
-  - Word size range could be more dramatic to better emphasize high vs low frequency
-    differences
-  - Some smaller words (AWS, Azure) are at the edge of comfortable readability
+  styling:
+  - minimal-chrome
