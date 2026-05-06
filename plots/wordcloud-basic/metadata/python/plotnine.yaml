@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: wordcloud-basic
 created: '2025-12-24T09:53:44Z'
-updated: '2026-05-06T07:29:28Z'
+updated: '2026-05-06T07:34:13Z'
 generated_by: claude-haiku
 workflow_run: 25421964746
 issue: 1012
@@ -12,35 +12,30 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - Perfect visual quality with all text legible in both themes and no overlap issues
-  - Full spec compliance with correct chart type, all required features, and proper
-    data mapping
-  - Correct Okabe-Ito palette with brand green (#009E73) as first series; theme-adaptive
-    chrome flawless in both renders
-  - Clean, reproducible code with proper theme tokens and explicit font sizing throughout
-  - Thoughtful manual positioning avoids all overlaps while maximizing space efficiency
+  - Perfect theme adaptation with zero dark-on-dark failures in both renders
+  - Okabe-Ito palette correctly applied; colors identical between light and dark themes
+  - Thoughtful frequency-tier color scheme creates visual hierarchy
+  - Clean, minimalist layout with proper whitespace and no chartjunk
+  - Proper reproducibility with seed; deterministic hand-positioned layout
   weaknesses:
-  - Design excellence is functional but not particularly sophisticated—relies on library
-    defaults with theme tokens added
-  - Limited use of distinctive plotnine features; implementation is generic and could
-    be replicated in other grammar-of-graphics libraries
-  - Data storytelling relies mainly on size variation; could benefit from additional
-    visual emphasis or intentional visual hierarchy
+  - Library Mastery could showcase more advanced plotnine patterns beyond basic geom_text
+  - Design Excellence moderate—could enhance visual refinement with subtle styling
+    touches like text shadows or background variation
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 - correctly rendered, not pure white
-      Chrome: Title "wordcloud-basic · plotnine · anyplot.ai" in bold dark text (#1A1A17), clearly readable. Legend on right with "Frequency" header and four frequency tiers with matching colors.
-      Data: 25 technology terms with sizes 10-50pt. Largest (Python, 95) in brand green #009E73. Medium-high terms (65+) in orange #D55E00. Medium-low (35-64) in blue #0072B2. Low (<15) in reddish-purple #CC79A7.
-      Legibility verdict: PASS - All text perfectly readable, no overlaps, excellent contrast against light background.
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "wordcloud-basic · plotnine · anyplot.ai" in bold dark text (24pt), legend labels in dark text (9pt) — all clearly readable
+      Data: Words sized 10–50pt by frequency; colors: green (#009E73) for freq≥65, orange (#D55E00) for 35–64, blue (#0072B2) for 15–34, purple (#CC79A7) for <15. Okabe-Ito positions 1–4 correctly applied.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 - correctly rendered, not pure black
-      Chrome: Title in light off-white #F0EFE8, clearly readable. Legend text in matching light color. All text visible and properly contrasted.
-      Data: Identical colors to light render - no color shift between themes. Green #009E73 (brand), orange #D55E00, blue #0072B2, purple #CC79A7 all match exactly.
-      Legibility verdict: PASS - All text perfectly readable, no dark-on-dark failures, identical layout and positioning confirmed. Theme-adaptive implementation verified.
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title rendered in white; legend labels in light gray — all readable against dark surface
+      Data: Colors identical to light render (green, orange, blue, purple — only chrome flipped)
+      Legibility verdict: PASS — no dark-on-dark failures, excellent contrast, all text legible
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,73 +46,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set. Title 24pt, legend 9pt, words 10-50pt.
-          Perfectly readable in both themes.
+        comment: Title 24pt, words 10–50pt, legend 9pt; all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Hand-crafted positions eliminate all overlaps. All 25 words fully
-          readable.
+        comment: Hand-positioned words prevent collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All words clearly visible with optimal size adaptation to frequency
-          variation.
+        comment: Word sizes scale dramatically by frequency; all distinct
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD safety. Colors well-separated and accessible.
+        comment: Okabe-Ito palette CVD-safe; adequate contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape (4800×2700px). Balanced margins, efficient space utilization.
+        comment: Good proportions, balanced spacing, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows format. Legend labels descriptive with frequency band
-          context.
+        comment: Descriptive title with spec-id, library, site
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand). Multi-series follows Okabe-Ito. Backgrounds
-          correct. Theme-adaptive chrome perfect.'
+        comment: 'Okabe-Ito 1–4 applied correctly; backgrounds #FAF8F1/#1A1A17; both
+          renders theme-correct'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Well-crafted with Okabe-Ito and intentional sizing. Looks like well-configured
-          default rather than exceptional.
+        passed: true
+        comment: Frequency-tier color scheme intentional; clean, professional polish
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Axes hidden appropriately. Clean theming. Minimal customization beyond
-          theme tokens.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Visual hierarchy through size and color-coded frequency tiers. Good
-          but reliant on natural variation.
+        passed: true
+        comment: Clean layout, no spines/grid, good whitespace; could enhance with
+          more distinctive styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy; 'Python' dominant focal point through size
+          and color
     spec_compliance:
       score: 15
       max: 15
@@ -127,26 +117,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct word cloud with text and frequency-based sizing.
+        comment: Correct word cloud visualization
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: word display, frequency encoding,
-          color, title, legend.'
+        comment: Words with frequency-scaled sizes; color encodes frequency tier
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 25 words displayed. Frequency correctly encoded in size.
+        comment: X/Y positioning effective; 25-word dataset fills canvas well
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels clear and descriptive.
+        comment: Correct title format; legend explains frequency tiers
     data_quality:
       score: 15
       max: 15
@@ -156,20 +145,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full range of frequencies (16-95). All word cloud aspects demonstrated.
+        comment: 'All aspects shown: sizes, colors, legend, positioning'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Technology survey data. Real, neutral, authentic vocabulary.
+        comment: Technology survey data; realistic, neutral, relevant
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Proportions realistic for survey data. Font range creates excellent
-          visual differentiation.
+        comment: 25 words, frequency 16–95; optimal for word cloud readability
     code_quality:
       score: 10
       max: 10
@@ -179,33 +167,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean flow with no unnecessary functions. Direct and readable.
+        comment: Simple, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42). All positioning deterministic.
+        comment: np.random.seed(42) for determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only required imports used. No cruft.
+        comment: 'Only used imports: plotnine, pandas, numpy, os'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic and appropriate complexity. No over-engineering.
+        comment: No fake UI; hand positioning reasonable for layout
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file naming and current API.
+        comment: Saves as plot-{THEME}.png with correct DPI
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -213,18 +201,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Solid ggplot patterns (aes, geom_text, scales, theme).
+        comment: geom_text, scale_color_identity, scale_size_identity used correctly
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Generic usage. Could be replicated in other grammar-of-graphics libraries.
+        comment: Custom legend functional; could showcase more advanced patterns
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - custom-legend
   patterns:
   - data-generation
   dataprep: []
