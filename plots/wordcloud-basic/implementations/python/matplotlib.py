@@ -1,12 +1,24 @@
-""" pyplots.ai
+""" anyplot.ai
 wordcloud-basic: Basic Word Cloud
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-24
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-06
 """
+
+import os
 
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Data - Tech industry survey responses about most valued skills
 word_frequencies = {
@@ -52,12 +64,16 @@ word_frequencies = {
     "Documentation": 7,
 }
 
-# Create word cloud with Python-themed colors
+
+# Create word cloud with Okabe-Ito color palette and proper backgrounds
+def color_func(word, font_size, position, orientation, random_state=None, **kwargs):
+    return OKABE_ITO[hash(word) % len(OKABE_ITO)]
+
+
 wc = WordCloud(
     width=4800,
     height=2700,
-    background_color="white",
-    colormap="Blues",
+    background_color=PAGE_BG,
     max_words=100,
     min_font_size=20,
     max_font_size=300,
@@ -65,14 +81,15 @@ wc = WordCloud(
     prefer_horizontal=0.7,
     margin=10,
 ).generate_from_frequencies(word_frequencies)
+wc.recolor(color_func=color_func)
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 ax.imshow(wc, interpolation="bilinear")
 ax.axis("off")
 
-# Title - positioned above the word cloud
-fig.suptitle("Tech Skills Survey · wordcloud-basic · matplotlib · pyplots.ai", fontsize=24, y=0.98)
+# Title
+fig.suptitle("wordcloud-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, y=0.98)
 
 plt.tight_layout(rect=[0, 0, 1, 0.95])
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
