@@ -1,13 +1,30 @@
-""" pyplots.ai
+"""anyplot.ai
 ternary-basic: Basic Ternary Plot
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-24
+Library: altair | Python 3.13
+Quality: pending | Created: 2026-05-06
 """
 
-import altair as alt
+import os
+import sys
+
 import numpy as np
 import pandas as pd
 
+
+# Clean sys.path early to avoid importing this file as 'altair' (file naming conflict)
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+while _script_dir in sys.path:
+    sys.path.remove(_script_dir)
+
+import altair as alt  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"
 
 # Data - Soil composition samples (sand, silt, clay)
 np.random.seed(42)
@@ -32,9 +49,7 @@ y = clay / total * height
 df = pd.DataFrame({"x": x, "y": y, "Sand (%)": sand.round(1), "Silt (%)": silt.round(1), "Clay (%)": clay.round(1)})
 
 # Create triangle outline
-triangle_vertices = pd.DataFrame(
-    {"x": [0, 1, 0.5, 0], "y": [0, 0, height, 0], "order": [0, 1, 2, 3]}  # Close the triangle
-)
+triangle_vertices = pd.DataFrame({"x": [0, 1, 0.5, 0], "y": [0, 0, height, 0], "order": [0, 1, 2, 3]})
 
 # Create grid lines at 20% intervals
 grid_lines = []
@@ -124,36 +139,36 @@ vertex_labels = pd.DataFrame(
 # Triangle outline
 triangle = (
     alt.Chart(triangle_vertices)
-    .mark_line(strokeWidth=3, color="#333333")
+    .mark_line(strokeWidth=3, color=INK_SOFT)
     .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), order="order:O")
 )
 
 # Grid lines
 grid = (
     alt.Chart(grid_df)
-    .mark_rule(strokeWidth=1, opacity=0.3, color="#888888", strokeDash=[4, 4])
+    .mark_rule(strokeWidth=1, opacity=0.15, color=INK_SOFT)
     .encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q")
 )
 
 # Tick marks
-ticks = alt.Chart(tick_df).mark_rule(strokeWidth=2, color="#333333").encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q")
+ticks = alt.Chart(tick_df).mark_rule(strokeWidth=2, color=INK_SOFT).encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q")
 
 # Tick labels
 tick_labels = (
-    alt.Chart(tick_df).mark_text(fontSize=14, color="#555555").encode(x="label_x:Q", y="label_y:Q", text="label:N")
+    alt.Chart(tick_df).mark_text(fontSize=14, color=INK_SOFT).encode(x="label_x:Q", y="label_y:Q", text="label:N")
 )
 
 # Vertex labels
 vertex_text = (
     alt.Chart(vertex_labels)
-    .mark_text(fontSize=22, fontWeight="bold", color="#333333")
+    .mark_text(fontSize=22, fontWeight="bold", color=INK)
     .encode(x="x:Q", y="y:Q", text="label:N")
 )
 
-# Data points
+# Data points - Okabe-Ito brand green
 points = (
     alt.Chart(df)
-    .mark_point(filled=True, size=300, color="#306998", opacity=0.8)
+    .mark_point(filled=True, size=300, color=BRAND, opacity=0.8)
     .encode(
         x="x:Q",
         y="y:Q",
@@ -171,12 +186,13 @@ chart = (
     .properties(
         width=1600,
         height=900,
-        title=alt.Title(text="Soil Composition · ternary-basic · altair · pyplots.ai", fontSize=28),
+        background=PAGE_BG,
+        title=alt.Title(text="ternary-basic · altair · anyplot.ai", fontSize=28, color=INK),
     )
     .configure_axis(grid=False, domain=False, ticks=False, labels=False, title=None)
-    .configure_view(strokeWidth=0)
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
 )
 
 # Save (1600 * 3 = 4800, 900 * 3 = 2700)
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
