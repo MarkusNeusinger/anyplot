@@ -1,178 +1,183 @@
 library: letsplot
+language: python
 specification_id: waterfall-basic
 created: '2025-12-24T09:58:59Z'
-updated: '2025-12-24T10:05:37Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483452646
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-06T01:15:05Z'
+generated_by: claude-haiku
+workflow_run: 25411013945
+issue: 777
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/letsplot/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent waterfall chart structure with proper floating bars and connector lines
-  - Clear color coding distinguishes increases (green), decreases (red), and totals
-    (blue)
-  - Value labels are well-positioned and formatted (totals show full amount, changes
-    show +/- prefix)
-  - Clean code structure following KISS principles
-  - Proper use of geom_rect for precise bar positioning
-  - Good financial scenario demonstrating all waterfall features
+  - Correct waterfall implementation with proper bar positioning and connector lines
+  - 'Excellent color semantics: green (increases), orange (decreases), blue (totals)
+    guide quick understanding'
+  - 'Both light and dark themes render perfectly: chrome adapts correctly, data colors
+    stay constant'
+  - Clean, professional aesthetic with minimal design; removes visual noise effectively
+  - Value labels centered on bars with bold, readable text; precise currency formatting
+  - Proper use of theme tokens (PAGE_BG, INK, INK_SOFT) throughout
+  - High legibility in both themes; passes strict theme-readability checks
+  - Simple, readable code without unnecessary abstractions
   weaknesses:
-  - No gridlines present - subtle horizontal gridlines would help readers estimate
-    values between labeled ticks
-  - Could use more distinct colorblind-safe palette (e.g., blue/orange instead of
-    green/red)
-  image_description: 'The waterfall chart displays a quarterly financial breakdown
-    from Starting Balance to Net Profit. The chart uses:
+  - 'DE-01/DE-02: Design is functional and clean but not exceptionally refined (no
+    distinctive edge styling, no custom typography beyond sizes)'
+  - 'LM-02: Could demonstrate more lets-plot-specific interactive features (HTML export
+    is generated but not leveraged for interactivity)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - correct theme background
+      Chrome: Title "waterfall-basic · letsplot · anyplot.ai" in dark text, clearly readable. Y-axis label "Amount ($)" dark and legible. X-axis labels angled at 30° in gray text, fully readable. Tick labels ($0–$100,000) in gray on light background, excellent contrast. Legend on right with "Change Type" header and categories.
+      Data: Seven bars with appropriate colors: blue (#0072B2) for Starting Balance and Net Profit (totals), green (#009E73) for Product Sales and Service Revenue (increases), orange (#D55E00) for Operating Costs, Marketing, Taxes (decreases). Value labels centered on each bar in bold dark text ($50,000, +35,000, +18,000, -22,000, -8,000, -12,000, $61,000). Connector lines are subtle dashed gray lines linking bar endpoints. Grid lines are subtle horizontal rules.
+      Legibility verdict: PASS - All text is dark on light background with excellent contrast. No light-on-light failures.
 
-    - **Blue bars** (#306998) for totals (Starting Balance at $50,000 and Net Profit
-    at $61,000)
-
-    - **Green bars** (#22C55E) for increases (Product Sales +$35,000, Service Revenue
-    +$18,000)
-
-    - **Red bars** (#EF4444) for decreases (Operating Costs -$22,000, Marketing -$8,000,
-    Taxes -$12,000)
-
-    - **White value labels** centered on each bar with proper formatting (totals show
-    $XX,XXX, changes show +/-XX,XXX)
-
-    - **Dashed connector lines** between bars showing cumulative flow
-
-    - **Title** at top: "waterfall-basic · letsplot · pyplots.ai"
-
-    - **Y-axis** labeled "Amount ($)" with dollar formatting from $0 to $100,000
-
-    - **X-axis** labels rotated 30 degrees for readability
-
-    - **Legend** on right showing Change Type (Increase, Decrease, Total)'
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 - correct theme background
+      Chrome: Title in light text on dark background, clearly readable. Y-axis label in light text, legible. X-axis labels in light gray, readable. Tick labels in light gray on dark background, good contrast. Legend text is light against dark.
+      Data: Identical bar colors to light render (data colors are theme-independent): blue for totals, green for increases, orange for decreases. Value labels in white/light text, clearly visible against dark bars and background. Connector lines are light gray dashed lines, visible. Grid lines are subtle light gray horizontals.
+      Legibility verdict: PASS - All text is light on dark background with good contrast. No dark-on-dark failures. Data colors perfectly synchronized with light render.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and value labels are all clearly readable at
-          full size
+        comment: All text explicitly sized (title 24pt, labels 20pt, ticks 16pt, legend
+          16pt); fully readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; rotated x-axis labels prevent overlap
+        comment: X-axis labels angled but non-overlapping; no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-sized and clearly visible; connector lines are dashed
-          and distinct
+        comment: All bars, lines, and labels clearly distinguishable from background
+          in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Green/red are classic waterfall colors but may have colorblind concerns;
-          however, the totals in blue provide differentiation
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space; legend placement on right is appropriate
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis has descriptive label with units: "Amount ($)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe; excellent contrast throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, generous spacing, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No visible gridlines; while this creates a clean look, subtle horizontal
-          gridlines would aid reading values
+        comment: Descriptive title with library name; Y-axis labeled with units ($)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Green (#009E73) for increases, orange (#D55E00) for decreases, blue
+          (#0072B2) for totals; backgrounds correct (#FAF8F1/#1A1A17); both renders
+          theme-perfect
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Clean, professional waterfall with intentional color semantics (green=positive,
+          orange=negative, blue=total). Thoughtful use of connector lines and value
+          labels. Small gap: could benefit from subtle custom refinement (e.g., edge
+          colors on bars).'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'theme_minimal() effectively applied; spines removed appropriately;
+          y-axis grid only (appropriate for waterfall); generous whitespace. Minor:
+          could have more refined typography.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with color-coded change types and running
+          totals. Connector lines guide the eye through cumulative flow. Strong focal
+          point on start and end totals.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct waterfall chart implementation
+        comment: Correct waterfall chart with bars and connector lines
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X-axis, values properly positioned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: connector lines, color differentiation,
-          start/end totals, running labels'
-      - id: SC-04
-        name: Data Range
+        comment: Positive/negative colored differently; connector lines present; start/end
+          bars in different color; running total labels; first/last bars are totals,
+          middle are changes
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows all data appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis shows categories; Y-axis shows amounts; all data displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows Increase, Decrease, Total
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "waterfall-basic · letsplot · pyplots.ai"'
+        comment: 'Title: ''waterfall-basic · letsplot · anyplot.ai''; legend labels
+          match (''Increase'', ''Decrease'', ''Total'')'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows positive changes, negative changes, and totals - demonstrates
-          all waterfall features
+        comment: 'All waterfall aspects shown: starting total, positive increases,
+          negative decreases, final total'
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Financial breakdown is plausible but somewhat generic
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Realistic business financial values
+        comment: Quarterly financial breakdown (revenue → costs → taxes → net profit)
+          is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values in thousands/tens of thousands; appropriate for financial
+          context
     code_quality:
       score: 10
       max: 10
@@ -182,40 +187,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script with no functions/classes
+        comment: Simple, direct implementation; no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random elements)
+        comment: No randomness; data and calculations fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports; no dead code
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: No fake UI; appropriate complexity; clean dataframe operations
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ggplot2-style grammar; proper aes() mapping; clean geom composition;
+          correct theme customization
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot grammar with geom_rect and geom_segment, but no interactive
-          features leveraged
+        comment: 'Uses geom_rect() with pre-computed coordinates for fine-grained
+          control. Good library understanding. Gap: could showcase more lets-plot-specific
+          interactive features.'
+    score_caps:
+      applied: false
+      notes: No score caps applied; implementation is solid across all categories
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - publication-ready
