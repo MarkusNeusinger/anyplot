@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 wireframe-3d-basic: Basic 3D Wireframe Plot
-Library: letsplot | Python 3.13
-Quality: pending | Created: 2026-05-06
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 94/100 | Created: 2026-05-06
 """
 
 import os
