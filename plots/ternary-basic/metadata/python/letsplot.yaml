@@ -1,168 +1,172 @@
 library: letsplot
+language: python
 specification_id: ternary-basic
 created: '2025-12-24T09:50:57Z'
-updated: '2025-12-24T09:58:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483447796
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - manual-ticks
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-05-06T03:39:09Z'
+generated_by: claude-haiku
+workflow_run: 25415009627
+issue: 1001
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/letsplot/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent implementation of ternary coordinates from scratch using Cartesian transformation
-  - Clean, well-organized code with clear comments explaining the coordinate conversion
-  - Appropriate use of soil classification as a realistic domain example
-  - Grid lines and tick labels enhance readability without cluttering
-  - Good color choices that are colorblind-accessible
+  - 'Perfect theme adaptation: data colors identical between light/dark renders, chrome
+    correctly inverted'
+  - 'Excellent visual quality: all text perfectly legible at 4800×2700px with no overlaps'
+  - 'Complete spec implementation: all required ternary plot features present and
+    correctly rendered'
+  - Clean, maintainable code with explicit font sizing and reproducible synthetic
+    data
+  - 'Scientific accuracy: realistic soil composition data with proper sum-to-100%
+    constraints'
+  - Professional design with thoughtful Okabe-Ito color choices and balanced layout
   weaknesses:
-  - Title format includes extra text before the required format
-  - Legend position could be closer to the plot to reduce empty space
-  - Tick label font size could be slightly larger for better readability at full resolution
-  image_description: 'The plot displays a ternary diagram in the form of an equilateral
-    triangle representing soil composition data. The three vertices are labeled "Sand
-    (%)" (bottom-left), "Silt (%)" (bottom-right), and "Clay (%)" (top), all in bold
-    black text. Grid lines are drawn at 20% intervals (20, 40, 60, 80) with subtle
-    gray lines creating a readable reference system. Tick labels appear along each
-    edge. Data points are shown as colored circles: blue (Sandy soils clustered in
-    lower-left), yellow (Silty soils clustered in lower-right), and red (Clayey soils
-    clustered toward the top). A legend titled "Soil Type" on the right side identifies
-    the three categories. The title "Soil Composition · ternary-basic · letsplot ·
-    pyplots.ai" appears at the top-left.'
+  - 'Library mastery LM-02: doesn''t showcase features distinctly unique to letsplot
+    (though letsplot''s ggplot2 API inherently limits distinctiveness)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 with dark borders and grid
+      Chrome: Title, vertex labels, and tick labels all dark (#1A1A17) and fully readable; no text contrast issues
+      Data: Sandy (green #009E73) in lower-left, Silty (orange #D55E00) in lower-right, Clayey (blue #0072B2) in upper region; 60 markers clearly visible with alpha=0.8
+      Legibility verdict: PASS - all elements readable, no overlaps, perfect theme adaptation
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 with light borders and grid
+      Chrome: Title, vertex labels, and tick labels all light (#F0EFE8, #B8B7B0) and fully readable; no dark-on-dark failures
+      Data: Data colors identical to light render - Sandy green #009E73, Silty orange #D55E00, Clayey blue #0072B2 in same regions; legend box correctly uses #242420 background with light text
+      Legibility verdict: PASS - all text readable, data colors unchanged, chrome correctly theme-adapted
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and vertex labels are bold and readable; tick labels are slightly
-          small but legible
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All font sizes explicitly set; perfectly readable at 4800×2700px
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All labels positioned with offsets; no overlapping text
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points are well-sized with good alpha; some clustering makes individual
-          points harder to distinguish
+        comment: 60 markers (size=6, alpha=0.8) clearly visible; categories well-separated
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, and red are distinguishable and colorblind-friendly
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas; triangle is well-proportioned but some empty
-          space on the right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Vertex labels include units "(%)"; descriptive component names
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette with excellent contrast; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Triangle fills 60-70% of canvas; balanced margins; proper proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (good alpha); legend is placed well but slightly far
-          from plot
+        comment: Vertex labels with units; correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito canonical order; backgrounds correct (#FAF8F1 light, #1A1A17
+          dark); theme chrome perfect'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong professional design with thoughtful color choices; follows
+          established patterns rather than exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid (alpha=0.3), clean legend styling, generous whitespace,
+          excellent polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good visual hierarchy through spatial arrangement; soil types occupy
+          natural regions
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct ternary plot with equilateral triangle
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Three components correctly mapped to triangle coordinates
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Grid lines at 20% intervals, vertex labels, tick marks, distinct
-          markers
-      - id: SC-04
-        name: Data Range
+        comment: Triangle outline, grid at 20% intervals, vertex labels, tick marks
+          present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within triangle bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct ternary-to-Cartesian conversion; all 60 points visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies three soil types
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Title includes spec-id, library, pyplots.ai but adds "Soil Composition"
-          prefix (minor deviation)
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows three distinct clusters representing different soil compositions;
-          could show more overlap/transition zones
+        comment: Shows all three soil types with realistic variation
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Soil classification is a classic real-world application of ternary
-          plots
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Percentages sum to 100%, realistic ranges for soil types
+        comment: Real geological scenario (soil composition); neutral and accurate
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Proportions align with soil science; constraints properly satisfied
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -170,40 +174,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → coordinate conversion → plot → save'
+        comment: 'Linear flow: imports → tokens → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no clutter
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; clear variable names; correct math
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to "plot.png" but with path="." parameter (works but unconventional)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct ggsave API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ggplot grammar, geom layers, theme customization; could leverage
-          more interactive features
+        comment: Expert-level ggplot2-style composition with proper theme configuration
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses letsplot's theme system correctly but no features distinctly
+          unique to letsplot
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - publication-ready

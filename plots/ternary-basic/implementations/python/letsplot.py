@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 ternary-basic: Basic Ternary Plot
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-24
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-06
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,6 +12,7 @@ from lets_plot import (
     LetsPlot,
     aes,
     element_blank,
+    element_rect,
     element_text,
     geom_point,
     geom_polygon,
@@ -26,10 +29,20 @@ from lets_plot import (
 
 LetsPlot.setup_html()
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+
 # Data: Soil composition samples (Sand, Silt, Clay)
 np.random.seed(42)
 
-# Generate realistic soil composition data in different regions
+# Generate realistic soil composition data in different soil type regions
 samples = []
 soil_types = []
 
@@ -82,7 +95,6 @@ vertices = pd.DataFrame({"x": [0, 1, 0.5, 0], "y": [0, 0, sqrt3_2, 0]})
 grid_segments = []
 for pct in [0.2, 0.4, 0.6, 0.8]:
     # Lines parallel to Sand-Silt edge (constant Clay)
-    # From (1-pct, 0, pct) to (0, 1-pct, pct)
     x1 = 0.5 * (0 + pct)
     y1 = sqrt3_2 * pct
     x2 = 0.5 * (2 * (1 - pct) + pct)
@@ -90,7 +102,6 @@ for pct in [0.2, 0.4, 0.6, 0.8]:
     grid_segments.append({"x": x1, "y": y1, "xend": x2, "yend": y2})
 
     # Lines parallel to Sand-Clay edge (constant Silt)
-    # From (1-pct, pct, 0) to (0, pct, 1-pct)
     x1 = 0.5 * (2 * pct + 0)
     y1 = 0
     x2 = 0.5 * (2 * pct + (1 - pct))
@@ -98,7 +109,6 @@ for pct in [0.2, 0.4, 0.6, 0.8]:
     grid_segments.append({"x": x1, "y": y1, "xend": x2, "yend": y2})
 
     # Lines parallel to Silt-Clay edge (constant Sand)
-    # From (pct, 1-pct, 0) to (pct, 0, 1-pct)
     x1 = 0.5 * (2 * (1 - pct) + 0)
     y1 = 0
     x2 = 0.5 * (0 + (1 - pct))
@@ -121,17 +131,17 @@ labels_df = pd.DataFrame(
 tick_labels = []
 for pct in [20, 40, 60, 80]:
     frac = pct / 100
-    # Along left edge (Sand axis - reading Clay percentage going up)
+    # Along left edge
     x = 0.5 * frac
     y = sqrt3_2 * frac
     tick_labels.append({"x": x - 0.04, "y": y + 0.02, "label": str(pct)})
 
-    # Along right edge (Silt axis - reading Clay percentage going up)
+    # Along right edge
     x = 0.5 * (2 * (1 - frac) + frac)
     y = sqrt3_2 * frac
     tick_labels.append({"x": x + 0.04, "y": y + 0.02, "label": str(pct)})
 
-    # Along bottom edge (reading Silt percentage going right)
+    # Along bottom edge
     x = 0.5 * (2 * frac)
     y = 0
     tick_labels.append({"x": x, "y": y - 0.04, "label": str(pct)})
@@ -142,26 +152,29 @@ tick_df = pd.DataFrame(tick_labels)
 plot = (
     ggplot()
     # Triangle outline
-    + geom_polygon(data=vertices, mapping=aes(x="x", y="y"), fill="white", color="#333333", size=1.5, alpha=1)
+    + geom_polygon(data=vertices, mapping=aes(x="x", y="y"), fill=PAGE_BG, color=INK_SOFT, size=1.5, alpha=1)
     # Grid lines
     + geom_segment(
-        data=grid_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color="#CCCCCC", size=0.8, alpha=0.6
+        data=grid_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK_SOFT, size=0.6, alpha=0.3
     )
     # Data points
     + geom_point(data=df, mapping=aes(x="x", y="y", color="soil_type"), size=6, alpha=0.8)
     # Vertex labels
-    + geom_text(data=labels_df, mapping=aes(x="x", y="y", label="label"), size=18, fontface="bold", color="#333333")
+    + geom_text(data=labels_df, mapping=aes(x="x", y="y", label="label"), size=18, fontface="bold", color=INK)
     # Tick labels
-    + geom_text(data=tick_df, mapping=aes(x="x", y="y", label="label"), size=11, color="#666666")
-    # Color scale using Python colors
-    + scale_color_manual(values=["#306998", "#FFD43B", "#DC2626"])
+    + geom_text(data=tick_df, mapping=aes(x="x", y="y", label="label"), size=11, color=INK_SOFT)
+    # Color scale using Okabe-Ito palette
+    + scale_color_manual(values=OKABE_ITO)
     # Labels and title
-    + labs(title="Soil Composition · ternary-basic · letsplot · pyplots.ai", color="Soil Type")
-    # Theme - remove axes since ternary uses its own coordinate system
+    + labs(title="ternary-basic · letsplot · anyplot.ai", color="Soil Type")
+    # Theme
     + theme(
-        plot_title=element_text(size=24, face="bold"),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        plot_title=element_text(size=24, face="bold", color=INK),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=16, color=INK_SOFT),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
@@ -172,8 +185,6 @@ plot = (
     + ggsize(1600, 900)
 )
 
-# Save as PNG (scale 3x to get 4800 x 2700 px)
-ggsave(plot, "plot.png", path=".", scale=3)
-
-# Save as HTML for interactive version
-ggsave(plot, "plot.html", path=".")
+# Save as PNG (scale 3x to get 4800 x 2700 px) and HTML
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.html", path=".")
