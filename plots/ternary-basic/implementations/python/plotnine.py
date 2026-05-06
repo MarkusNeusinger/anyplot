@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ternary-basic: Basic Ternary Plot
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-06
