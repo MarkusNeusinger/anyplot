@@ -1,7 +1,7 @@
 """ anyplot.ai
 ternary-basic: Basic Ternary Plot
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 49/100 | Updated: 2026-05-06
+Quality: 92/100 | Updated: 2026-05-06
 """
 
 import math
@@ -85,7 +85,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=(BRAND, INK_MUTED, INK_SOFT, INK),
+    colors=(INK, INK_MUTED, BRAND, INK),
     title_font_size=80,
     label_font_size=48,
     major_label_font_size=44,

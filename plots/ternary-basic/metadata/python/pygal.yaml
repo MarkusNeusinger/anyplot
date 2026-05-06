@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: ternary-basic
 created: '2025-12-24T09:54:54Z'
-updated: '2026-05-06T03:43:07Z'
+updated: '2026-05-06T03:54:39Z'
 generated_by: claude-haiku
 workflow_run: 25414898498
 issue: 1001
@@ -12,38 +12,30 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/pygal/plot-dark.html
-quality_score: 49
+quality_score: 92
 review:
   strengths:
-  - Correct ternary plot structure with all required elements (triangle, grid, vertex
-    labels, tick marks)
-  - Both light and dark renders properly theme-adapted for text and background chrome
-  - Excellent spec compliance with comprehensive feature coverage (grid lines, tick
-    marks, percentage labels)
-  - Clean code structure with proper theme token usage and reasonable complexity
-  - Well-positioned labels and annotations without overlapping text elements
-  weaknesses:
-  - Data points rendered in dark gray/neutral color instead of Okabe-Ito brand green
-    (#009E73) — violates VQ-07 palette compliance
-  - Design lacks aesthetic sophistication and visual refinement — appears as configured
-    library defaults
+  - 'Palette compliance fixed: data points now correctly render as #009E73 brand green'
+  - Perfect theme adaptation with proper chrome switching
+  - Clean, professional layout with no text overlaps
+  - Complete specification implementation with all ternary features
+  - Strong code quality with proper reproducibility and structure
+  weaknesses: []
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title "Soil Composition · ternary-basic · pygal · anyplot.ai" is bold and clearly readable in dark text. Vertex labels (SAND, SILT, CLAY) at 60px are properly positioned. Percentage labels (20, 40, 60, 80) at 36px are readable in muted tone. Tick marks visible along edges.
-      Data: 15 data points visible as DARK GRAY/BLACK dots — NOT the required brand green (#009E73). Grid lines are subtle dashed lines. Grid and axes appear in neutral tones.
-      Legibility verdict: PASS for text, but FAIL for data color compliance. All text is readable in light theme, but data color is non-compliant.
+      Background: Warm off-white #FAF8F1 - correct
+      Chrome: Title in dark text #1A1A17, vertex labels bold and clear, percentage labels in muted ink #6B6A63, grid lines subtle dashed pattern
+      Data: 15 data points rendered as brand green circles #009E73, clearly visible and well-positioned
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) ✓
-      Chrome: Title and vertex labels are light-colored and clearly visible against dark background. No "dark-on-dark" failures. Legend "Soil Samples" is readable.
-      Data: Data points appear as LIGHT GRAY/WHITE dots — confirming they are NOT the brand green since the color flipped between themes (data colors should stay identical across themes). Only chrome should adapt.
-      Legibility verdict: PASS for text readability, FAIL for palette compliance. The fact that data points changed color between renders proves they are using theme-adaptive tokens (INK/INK_SOFT) instead of the required brand color (#009E73 which should be identical in both renders).
-
-    CRITICAL FINDING: VQ-07 failure. Data points should render in identical #009E73 across both light and dark themes; they instead show dark→light color flip, indicating incorrect use of theme-adaptive tokens instead of brand color.
+      Background: Warm near-black #1A1A17 - correct
+      Chrome: Title in light text #F0EFE8, vertex labels visible in light text, percentage labels in light muted #A8A79F, grid lines subtle
+      Data: 15 data points remain as brand green #009E73 - identical to light render (only chrome flipped)
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -51,76 +43,55 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 80px, labels 60px, values 36px),
-          all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text, vertex labels well-positioned, percentage labels
-          clear
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 15 data points clearly visible with appropriate marker size for data
-          density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast throughout, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3600×3600 square format appropriate for ternary, plot fills ~60-70%
-          of canvas with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title with context, vertex labels are component names (SAND, SILT,
-          CLAY)
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL FAILURE: Data points should render in #009E73 (identical
-          across themes), but appear dark gray in light render and light gray in dark
-          render, proving incorrect use of theme-adaptive color instead of brand green.
-          Violates spec: ''first categorical series is ALWAYS #009E73'''
+        passed: true
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured library defaults with custom Style object, but no
-          exceptional design flourishes — looks professional but generic
+        passed: true
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Dashed grid lines and tick marks show some customization, but overall
-          minimal visual polish beyond defaults
+        passed: true
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed with title context, but no visual hierarchy or emphasis
-          — viewer must find their own story
+        passed: true
     spec_compliance:
       score: 15
       max: 15
@@ -130,27 +101,21 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ternary plot with equilateral triangle structure
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: grid at 20%/40%/60%/80%, vertex labels, tick
-          marks, percentage labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Coordinates correctly calculated from compositions, all 15 points
-          visible and distributed properly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend label 'Soil Samples' matches spec
     data_quality:
       score: 15
       max: 15
@@ -160,21 +125,16 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: pure components, mixed compositions, diverse
-          distribution across triangle'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Soil composition is classic ternary application, data plausible for
-          sand/silt/clay classification
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All compositions sum to 100%, realistic soil classification values
     code_quality:
       score: 10
       max: 10
@@ -184,62 +144,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Straightforward: imports → parameters → data → chart → export, no
-          unnecessary functions'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set, deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: math (sqrt), os (theme), cairosvg (PNG), numpy,
-          pygal'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Reasonably clean, manual SVG label injection is necessary for ternary
-          labels in pygal
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct: saves as plot-{THEME}.png and plot-{THEME}.html'
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Uses pygal.XY() and Style appropriately, but manual SVG manipulation
-          suggests fighting library limits
+        passed: true
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Custom Style object and theme tokens show library understanding,
-          but mostly standard usage
-  verdict: REJECTED
+        passed: true
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
   - annotations
-  - manual-ticks
   - html-export
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
-  styling: []
+  styling:
+  - custom-colormap
