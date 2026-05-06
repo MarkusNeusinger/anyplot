@@ -1,0 +1,229 @@
+library: seaborn
+language: python
+specification_id: waterfall-basic
+created: '2026-05-06T00:56:34Z'
+updated: '2026-05-06T00:59:54Z'
+generated_by: claude-haiku
+workflow_run: 25410601554
+issue: 777
+python_version: 3.13.13
+library_version: 0.13.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - 'Flawless theme adaptation: background, text, grid, spine colors all correct for
+    both light and dark renders'
+  - 'Excellent legibility: all text sizes explicitly set and perfectly readable across
+    both themes'
+  - 'Semantic color usage: blue for totals, green for positive, orange for negative
+    creates intuitive understanding'
+  - 'Clean, professional implementation: no extraneous code, no over-engineering'
+  - 'Perfect data visualization: connecting lines effectively show cumulative flow,
+    labels positioned for clarity'
+  - 'Spec compliance: every requirement met (colors, lines, start/end bars, labels)'
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct for light theme, not pure white
+      Chrome: Title (24pt), axis label "Amount ($)" (20pt), and tick labels (16pt) all clearly readable in dark text
+      Data: Blue bars for start/end totals ($100K, $117K), green for positive sales ($150K), orange for negative impacts (returns -$25K, COGS -$60K, operating -$30K, taxes -$18K). Dashed connecting lines show cumulative flow. Data labels centered on bars.
+      Legibility verdict: PASS — all elements perfectly readable, no overlap, grid is subtle and non-intrusive
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct for dark theme, not pure black
+      Chrome: All text is light-colored and clearly visible against dark background. No dark-on-dark failures. Title, labels, and ticks all readable.
+      Data: Blue, green, and orange bars maintain identical colors to light render. Data labels are readable. Connecting lines are visible. Grid remains subtle.
+      Legibility verdict: PASS — all elements perfectly readable, theme adaptation is flawless, no dark-on-dark issues
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (24/20/16pt), perfectly readable in
+          both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text fully readable, no collisions, labels centered cleanly
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars perfectly adapted, connecting lines visible, labels clear
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito semantics CVD-safe, intuitive positive/negative differentiation
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions (16:9), balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis labeled 'Amount ($)' with currency format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Theme-correct backgrounds and text, data colors identical across
+          themes
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with thoughtful semantic colors, clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: spines removed, subtle grid, connecting lines add
+          visual interest'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good visual hierarchy through color and positional flow, guides viewer
+          effectively
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct waterfall chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: color differentiation, connecting lines, distinct
+          start/end bars, labels'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with spec-id, library, and anyplot.ai
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all waterfall aspects: start, gains, drains, end'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic financial breakdown scenario, neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values realistic for financial domain ($100K-$300K range)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, straightforward setup-plot-save
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png correctly
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert sns.set_theme() with rc parameters, proper theme tokens
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses seaborn theming infrastructure effectively; limited distinctive
+          features due to waterfall not being native
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - explicit-figure
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
