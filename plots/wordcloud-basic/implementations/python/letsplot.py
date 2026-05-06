@@ -1,10 +1,11 @@
-""" pyplots.ai
+"""anyplot.ai
 wordcloud-basic: Basic Word Cloud
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-24
+Library: letsplot | Python 3.13
+Quality: pending | Created: 2025-12-24
 """
 
 import math
+import os
 
 import numpy as np
 import pandas as pd
@@ -12,6 +13,7 @@ from lets_plot import (
     LetsPlot,
     aes,
     element_blank,
+    element_rect,
     element_text,
     geom_text,
     ggplot,
@@ -29,7 +31,16 @@ from lets_plot.export import ggsave
 
 LetsPlot.setup_html()
 
-# Data - Programming language popularity (realistic survey data)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
+# Data - Programming language popularity
 np.random.seed(42)
 words_data = {
     "Python": 100,
@@ -72,9 +83,9 @@ frequencies = [frequencies[i] for i in sorted_indices]
 canvas_width = 280
 canvas_height = 140
 
-# Scale font sizes for readability (inline calculation)
+# Scale font sizes for readability
 min_freq, max_freq = min(frequencies), max(frequencies)
-min_size, max_size = 9, 26  # Increased minimum for better readability
+min_size, max_size = 9, 26
 
 sizes = []
 for freq in frequencies:
@@ -82,7 +93,7 @@ for freq in frequencies:
     size = min_size + (normalized**0.6) * (max_size - min_size)
     sizes.append(size)
 
-# Spiral word placement with collision detection (inline)
+# Spiral word placement with collision detection
 placed = []
 positions_x = []
 positions_y = []
@@ -100,7 +111,6 @@ for word, size in zip(words, sizes, strict=True):
     while t < max_iterations and not placed_word:
         r = 0.1 + t * 0.08
         angle = t * 0.35
-        # Center bias to improve layout balance
         x = canvas_width / 2 + r * math.cos(angle) * 0.95
         y = canvas_height / 2 + r * math.sin(angle)
 
@@ -141,29 +151,32 @@ for word, freq, size, x, y in zip(words, frequencies, sizes, positions_x, positi
 
 df = pd.DataFrame(df_data)
 
-# Colorblind-safe palette starting with Python colors
-colors_palette = ["#306998", "#FFD43B", "#4CAF50", "#E91E63", "#00BCD4", "#FF9800", "#9C27B0", "#607D8B"]
-df["color"] = [colors_palette[i % len(colors_palette)] for i in range(len(df))]
+# Assign Okabe-Ito colors to words
+df["color"] = [OKABE_ITO[i % len(OKABE_ITO)] for i in range(len(df))]
 
-# Plot
+# Plot with theme-adaptive chrome
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    plot_title=element_text(size=24, color=INK, hjust=0.5),
+    legend_position="none",
+    axis_title=element_blank(),
+    axis_text=element_blank(),
+)
+
 plot = (
     ggplot(df, aes(x="x", y="y", label="word", size="size", color="color"))
     + geom_text(fontface="bold")
     + scale_size_identity()
-    + scale_color_manual(values=colors_palette, guide="none")
+    + scale_color_manual(values=df["color"].unique(), guide="none")
     + xlim(0, canvas_width)
     + ylim(0, canvas_height)
-    + labs(title="wordcloud-basic \u00b7 letsplot \u00b7 pyplots.ai")
+    + labs(title="wordcloud-basic · letsplot · anyplot.ai")
     + theme_void()
-    + theme(
-        plot_title=element_text(size=24, hjust=0.5),
-        legend_position="none",
-        axis_title=element_blank(),
-        axis_text=element_blank(),
-    )
+    + anyplot_theme
     + ggsize(1600, 900)
 )
 
-# Save to current directory (not default lets-plot-images folder)
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+# Save
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.html", path=".")
