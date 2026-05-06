@@ -1,15 +1,217 @@
 library: plotly
+language: python
 specification_id: wordcloud-basic
 created: '2025-12-24T09:51:15Z'
-updated: '2025-12-24T10:01:53Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483446925
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/plotly/plot.html
-quality_score: 91
+updated: '2026-05-06T07:22:11Z'
+generated_by: claude-haiku
+workflow_run: 25421614849
+issue: 1012
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/plotly/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Excellent theme adaptation with both renders passing legibility checks
+  - Perfect overlap prevention through manual positioning of all 27 words
+  - Strong visual quality with explicit font sizing and professional Okabe-Ito palette
+  - Perfect spec compliance across all categories
+  - Clean, reproducible code with KISS structure
+  weaknesses:
+  - Design Excellence could be elevated with custom visual refinements beyond standard
+    word cloud styling
+  - Data storytelling is basic (frequency-to-size) without emphasis techniques like
+    category annotations or highlights
+  - Library Mastery could leverage Plotly's interactive features (clickable elements,
+    dynamic filtering)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "wordcloud-basic · plotly · anyplot.ai" in dark text (#1A1A17) - fully readable
+      Data: 27 words displayed with Okabe-Ito palette colors; sizes 26-88px scaled by frequency; NumPy (green #009E73) largest, Statsmodels smallest
+      Legibility verdict: PASS - all text clearly readable, no overlap, excellent contrast against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title in light text (#F0EFE8) - fully readable; no dark-on-dark failures
+      Data: Identical colors to light render (NumPy still #009E73, etc.); same positioning and sizing; all words clearly distinguishable
+      Legibility verdict: PASS - all text clearly readable, excellent contrast against dark background; data colors consistent with light render (only chrome adapted)
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title 28px, words 26-88px; readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Manual positioning eliminates all overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Words perfectly adapted to frequency; all clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is colorblind-safe with strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700px; plot fills canvas well with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; axes not needed for word cloud
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order correct, backgrounds correct
+          for both themes'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Professional palette and positioning, but standard word cloud styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean background, hidden axes, generous margins - above defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Frequency-to-size creates basic hierarchy; no strong emphasis techniques
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct word cloud visualization
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All features present; 27 words within 20-200 range
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Words to positions, frequency to size
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; no legend needed
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full distribution from 95 to 45 with variety
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic data science tools; neutral context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and scaling proportionally accurate
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports → data → plot → save; no functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeds set for both random and numpy
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct output format
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic go.Figure() + Scatter text mode
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses text mode and hover templates; could leverage more interactive
+          features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -19,184 +221,3 @@ impl_tags:
   - data-generation
   dataprep: []
   styling: []
-review:
-  strengths:
-  - Clean manual positioning algorithm that prevents word overlap while maintaining
-    cloud-like appearance
-  - Excellent color palette using Python branding colors (blues, yellows, grays)
-  - Proper use of Plotly hover functionality showing word and frequency on hover
-  - Generates both PNG and interactive HTML output
-  - Well-structured code with clear comments explaining each section
-  - Good font size scaling that creates clear visual hierarchy
-  weaknesses:
-  - Could leverage more Plotly-specific features like custom hover templates or annotations
-  - Color palette has multiple similar blue shades that could be more distinctive
-  image_description: 'The word cloud displays 28 programming language names on a white
-    background. Words are sized proportionally to their frequency, with "Python",
-    "JavaScript", "SQL", and "HTML" appearing largest. The color palette uses Python-themed
-    colors: various blues (#306998, #4B8BBE, #5A9BD5), yellows (#FFD43B, #FFE873),
-    and grays (#646464, #7F7F7F). Words are distributed across the canvas with larger
-    words in the center-top area and smaller words around the edges. The title "wordcloud-basic
-    · plotly · pyplots.ai" appears centered at the top in blue. All text is clearly
-    legible with no overlapping elements.'
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: All text is perfectly readable, font sizes scale well from 28px to
-          90px
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text, manual positioning ensures clear separation
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Word sizes appropriately scaled to frequency, all words visible
-      - id: VQ-04
-        name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Good contrast on white, blues and yellows distinguishable, though
-          similar blue shades could be slightly more varied
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good distribution across canvas, though slightly bottom-heavy with
-          empty space at very bottom
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: N/A for word cloud, axes hidden correctly
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for word cloud, no grid/legend needed
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct word cloud visualization
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Word size correctly maps to frequency values
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Shows words with frequency-based sizing as specified
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All words visible within canvas bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: N/A, no legend needed for word cloud
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "wordcloud-basic · plotly · pyplots.ai"'
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows 28 words with good frequency range (8-100), demonstrates size
-          variation well, though could include more varied word lengths
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Programming language popularity is a realistic and relatable scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Frequency values are plausible survey percentages, though some rankings
-          could be debated (e.g., SQL vs TypeScript)
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Both random.seed(42) and np.random.seed(42) set
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: Only necessary imports used (random, numpy, plotly.graph_objects)
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 0
-        passed: true
-        comment: Saves as plot.png with correct dimensions
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses go.Scatter with text mode and hover interactivity, but does
-          not leverage more advanced Plotly features like animations or custom hover
-          templates
-  verdict: APPROVED
