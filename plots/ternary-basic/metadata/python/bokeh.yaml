@@ -1,38 +1,236 @@
 library: bokeh
+language: python
 specification_id: ternary-basic
 created: 2025-12-17 11:55:23+00:00
-updated: 2025-12-17 11:55:23+00:00
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20301766686
+updated: '2026-05-06T03:30:45Z'
+generated_by: claude-haiku
+workflow_run: 25414736562
 issue: 1001
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/bokeh/plot.html
-quality_score: 94
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/bokeh/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Excellent theme adaptation: text colors, grid colors, and background all properly
+    swap between light and dark with zero legibility issues'
+  - Correct ternary coordinate transformation with proper triangle geometry
+  - Professional, clean design appropriate for scientific visualization
+  - 'Perfect data quality: realistic context, appropriate scale, full feature coverage'
+  - 'Strong code quality: reproducible, idiomatic, elegant, minimal'
+  - Proper implementation of the Bokeh library patterns recommended for this project
+  weaknesses:
+  - 'Design excellence slightly conservative: follows expected ternary plot conventions
+    without distinctive visual enhancements'
+  - Could explore visual emphasis techniques (color highlighting, size variation)
+    to highlight clustering or outliers in the soil composition data
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white around #FAF8F1 with excellent contrast
+      Chrome: Title (28pt dark text #1A1A17), vertex labels Sand/Silt/Clay (24pt bold dark text), tick labels (16pt secondary text #4A4A44) along all edges showing 0-100 percentages. All clearly readable.
+      Data: 50 scatter points in Okabe-Ito green (#009E73) with white edges, 70% opacity. Grid lines very subtle (0.15 alpha soft gray) at 20% intervals. Triangle outline clean and distinct.
+      Legibility verdict: PASS - All text readable with excellent contrast against light background. Data points stand out clearly.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black around #1A1A17 with excellent contrast
+      Chrome: Title and vertex labels use light text #F0EFE8, tick labels use light secondary text #B8B7B0. All clearly readable with no dark-on-dark failures. Triangle outline and grid lines are light gray, well-distinguished from background.
+      Data: Same 50 scatter points in #009E73 (Okabe-Ito green) - maintains excellent contrast and visibility on dark surface. Brand color reads beautifully.
+      Legibility verdict: PASS - All text readable with excellent contrast against dark background. No dark-on-dark failures. Data colors identical to light render.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text sizes appropriately scaled for 4800×2700 canvas; title,
+          vertex labels, and tick labels all readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; labels and data points well-distributed
+          with clear spacing
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All elements (grid, markers, labels) clearly visible; marker size
+          appropriate for 50-point dataset
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series uses #009E73 (Okabe-Ito position 1), colorblind-safe
+          with excellent contrast'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions; triangle fills space with adequate margins; nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title descriptive; vertex labels clear; tick labels show percentages
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1 (light) / #1A1A17 (dark);
+          both renders theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional, clean ternary plot; idiomatic Bokeh; solid work but
+          follows expected design
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent refinement: clean lines, removed clutter, subtle grid,
+          generous whitespace'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good visual hierarchy; scatter clearly shows compositional distribution;
+          could emphasize patterns
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct ternary plot structure with accurate Cartesian transformation
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: grid at 20%, vertex labels, tick labels, data
+          markers'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Transformation correct; all 50 points displayed; axes show 0-100%
+          range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; no legend needed for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All three components represented through ternary system; grid and
+          tick labels aid interpretation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real-world soil composition; Dirichlet distribution generates plausible
+          data; neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 50 points well-chosen; 0-100% values respect compositional constraint
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean, straightforward; only appropriate helper function
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Minimal, focused imports; all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Idiomatic Bokeh patterns; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png + .html; current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper Bokeh patterns; custom ternary transformation appropriate
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Excellent use of Bokeh HTML + Selenium pattern; geometric transformation
+          shows mastery
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - manual-ticks
   - annotations
-  - columndatasource
+  - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
-review:
-  strengths: []
-  weaknesses: []
-  improvements: []
-  image_description: 'The plot displays an equilateral triangle representing a ternary
-    diagram for soil composition with three components: Sand (bottom-left vertex),
-    Silt (bottom-right vertex), and Clay (top vertex). The triangle has a black outline
-    with gray grid lines at 20% intervals creating a mesh pattern inside. Approximately
-    50 blue circular data points (Python Blue #306998) with darker blue outlines are
-    scattered across the triangle, representing different soil samples. Tick labels
-    (0, 20, 40, 60, 80, 100) are placed along each edge. The title reads "Soil Composition
-    · ternary-basic · bokeh · pyplots.ai" at the top center. The vertex labels are
-    bold and clearly positioned outside the triangle. The overall layout is clean
-    with good whitespace margins.'
-  verdict: APPROVED
+  - publication-ready

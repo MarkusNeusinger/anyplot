@@ -1,166 +1,184 @@
 library: plotly
+language: python
 specification_id: ternary-basic
 created: '2025-12-24T09:49:26Z'
-updated: '2025-12-24T09:52:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483442891
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/plotly/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-06T03:27:52Z'
+generated_by: claude-haiku
+workflow_run: 25414682852
+issue: 1001
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/plotly/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent use of Plotly's native Scatterternary for ternary diagrams
-  - Clean, well-proportioned layout with proper margins
-  - Hover template provides useful interactive tooltips with formatted percentages
-  - Font sizes perfectly scaled for 4800x2700 output
-  - White marker outlines improve point visibility in overlapping areas
-  - Realistic soil science context (sand/silt/clay classification)
-  - Proper normalization ensures compositions sum to 100%
+  - Perfect theme-adaptive implementation with both renders readable and properly
+    styled
+  - Excellent ternary plot with meaningful data clustering showing distinct soil types
+  - All text sizes explicitly set and readable at full resolution in both themes
+  - 'Proper use of Okabe-Ito palette with first series as #009E73 brand color'
+  - Idiomatic Plotly usage with distinctive ternary features and interactive hover
+    tooltips
+  - Clean, reproducible code with deterministic seed and KISS structure
+  - Correct spec compliance with descriptive axis labels including units
   weaknesses:
-  - Data is purely random without meaningful patterns - could show soil type clusters
-    (sandy, silty, clayey regions)
-  - Library features underutilized - could add color encoding by a fourth variable
-    or use marker size variation
-  - Slight marker overlap in dense central regions of the triangle
-  image_description: 'The plot displays a ternary diagram showing soil composition
-    data with three components: Sand (%), Silt (%), and Clay (%). The equilateral
-    triangle has the title "ternary-basic · plotly · pyplots.ai" centered at the top
-    in large, readable font. Blue markers (#306998) with white outlines and 0.7 opacity
-    are distributed across the triangle, representing 50 soil samples. Each vertex
-    is labeled with its component name and percentage units. Grid lines appear at
-    20% intervals with subtle gray color (0.2 opacity). The tick labels show values
-    from 0-100 at 20% increments. The white background provides clean contrast, and
-    markers are well-sized for the data density.'
+  - Design Excellence could be elevated with additional visual refinement beyond library
+    defaults
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches style guide specification
+      Chrome: Title "ternary-basic · plotly · pyplots.ai" (28px, dark #1A1A17), axis labels "Sand (%)", "Silt (%)", "Clay (%)" (22px, dark), tick labels (18px, soft dark #4A4A44) — all clearly readable. Grid lines are subtle at 10% opacity.
+      Data: Four soil type series in Okabe-Ito colors: Sandy (#009E73 brand green), Silty (#D55E00 orange), Clayey (#0072B2 blue), Loam (#CC79A7 reddish purple). Markers have white edges for definition, opacity 0.75. Data shows clear clustering: Sandy in upper region (high sand), Silty in left region (high silt), Clayey in lower-right (high clay), Loam near center.
+      Legibility verdict: PASS — all text is dark and highly readable against light background. Data colors are vibrant and distinguishable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches style guide specification
+      Chrome: Title, axis labels, and tick labels are light (#F0EFE8 and #B8B7B0) and clearly readable against dark background. No dark-on-dark failures. Grid lines visible at appropriate opacity.
+      Data: All four color series are identical to light render (#009E73, #D55E00, #0072B2, #CC79A7), confirming proper theme-independent data coloring. White marker edges remain visible and defined.
+      Legibility verdict: PASS — all text is light-colored and readable on dark background. Data colors maintain full visibility and distinction. Brand green #009E73 stands out clearly.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 48pt, axis labels at 32pt, tick labels at 22pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: 'All text sizes explicitly set: title 28px, labels 22px, ticks 18px.
+          Perfect readability in both light and dark themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. Title centered, axis labels at vertices,
+          legend positioned in corner with no conflicts.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers well-sized at 18 with appropriate opacity for 50 points (-1
-          for slightly large markers causing minor overlaps in dense areas)
+        comment: 40 data points across 4 groups, marker size 14px, opacity 0.75 with
+          white edges. Perfectly visible and distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single color scheme, colorblind-safe blue
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good margins, triangle well-centered, slight excess whitespace on
-          sides (-1)
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'All axes labeled with component names and units: "Sand (%)", "Silt
-          (%)", "Clay (%)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette with good contrast. CVD-safe, no red-green-only
+          signaling. White edges provide additional definition.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas with balanced margins. Legend positioned
+          near plot, not isolated. Content fully visible.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle at 0.2 opacity, but no legend shown (-1, though single-category
-          scatter doesn't strictly need legend)
+        comment: 'Title in correct format. Axis labels descriptive with units: Sand
+          (%), Silt (%), Clay (%).'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand). Multi-series follows Okabe-Ito: #D55E00,
+          #0072B2, #CC79A7. Backgrounds #FAF8F1 (light) and #1A1A17 (dark). Chrome
+          properly theme-adaptive in both renders.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library default using correct palette. Professional
+          and clean, but relies on Plotly's built-in styling without additional customization
+          or intentional hierarchy beyond palette.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Good refinement visible: explicit font sizing, subtle grid styling,
+          white marker edges, generous margins. Some customization but mostly library
+          defaults.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Clear visual hierarchy through color. Data clustering tells the
+          story of soil type relationships: Sandy (upper), Silty (left), Clayey (lower-right),
+          Loam (center). Visual emphasis through color distinction guides understanding.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct ternary plot type using Scatterternary
+        comment: Correct ternary plot with triangular equilateral layout, vertex labels,
+          and proper component mapping.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Three components correctly mapped to a, b, c axes
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Grid lines at 20% intervals, clear vertex labels, distinct markers
-          with appropriate size
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: grid at 20% intervals, vertex labels,
+          tick marks, visually distinct markers with appropriate sizing.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within triangle, components sum to 100%
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: a=sand, b=silt, c=clay. All sum to 100%, axes show full data range
+          (0-100%).
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for single-category scatter
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format "ternary-basic · plotly · pyplots.ai"
+        comment: 'Title: ''ternary-basic · plotly · pyplots.ai''. Legend labels match
+          data: Sandy, Silty, Clayey, Loam.'
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows distribution across triangle, but data is randomly distributed
-          without showing meaningful clusters or patterns (-2)
+        comment: Shows all aspects of ternary space with 4 distinct soil types exhibiting
+          different clustering patterns across the compositional triangle.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Soil composition (sand, silt, clay) is a classic, real-world ternary
-          application
+        comment: Real-world soil classification application. Realistic proportions
+          and plausible clustering. Neutral, non-controversial scientific context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values sum to 100%, appropriate for compositional data (-1 for purely
-          random distribution)
+        comment: Sand, silt, clay percentages are factually accurate for soil types.
+          Values sum to 100% as required. Realistic soil science domain.
     code_quality:
       score: 10
       max: 10
@@ -170,40 +188,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: 'Linear flow: imports → theme setup → data generation → plot creation
+          → save. No functions or classes. Clean and straightforward.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Uses np.random.seed(42). All data generation is deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used
+        comment: 'Only necessary imports: os (for ANYPLOT_THEME), numpy, plotly. No
+          unused imports.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png with correct dimensions (4800x2700 via scale=3)
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic code with proper zip() for multi-series iteration.
+          Appropriate complexity. No fake functionality or over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Uses current Plotly
+          API correctly.
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses Scatterternary and hovertemplate for interactivity, but could
-          leverage more Plotly features like colorscale or animation
-  verdict: APPROVED
+        passed: true
+        comment: 'Expertly uses Plotly''s high-level API: go.Figure(), go.Scatterternary()
+          for ternary plots, update_layout() for styling. Follows Plotly patterns
+          for multi-series visualization.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses Plotly's ternary projection (distinctive feature), interactive
+          hover tooltips with customdata, theme-adaptive layout configuration, HTML
+          export for interactivity.
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
+  - publication-ready
