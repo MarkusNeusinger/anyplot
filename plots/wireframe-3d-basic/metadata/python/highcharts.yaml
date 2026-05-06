@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: wireframe-3d-basic
 created: '2025-12-24T09:59:00Z'
-updated: '2026-05-06T05:43:53Z'
+updated: '2026-05-06T05:50:50Z'
 generated_by: claude-haiku
 workflow_run: 25418160745
 issue: 1015
@@ -12,114 +12,114 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wireframe
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/python/highcharts/plot-dark.html
-quality_score: 75
+quality_score: 74
 review:
   strengths:
-  - Correct 3D wireframe implementation showing ripple function clearly
-  - Well-structured and reproducible code with proper seeding
-  - Creative use of Highcharts line series for wireframe effect (library-specific)
-  - Good 3D viewing angle and perspective that reveals surface topology
-  - All three axes properly labeled with units and tick marks
+  - Correct 3D wireframe visualization of ripple function
+  - Proper use of scatter3d for mesh line rendering with correct X and Y direction
+    grid lines
+  - Good viewing angle and 3D perspective setup (alpha=18, beta=30)
+  - Clear gridlines visible in both X and Y directions
+  - Readable axis labels with appropriate units and tick marks
+  - Proper selenium/Chrome headless rendering with 8-second wait for 3D rendering
   weaknesses:
-  - 'Palette compliance critical: uses custom Python Blue (#306998, #1e4c73) instead
-    of required Okabe-Ito palette starting with #009E73'
-  - 'Background color is pure white (#ffffff) instead of themed (#FAF8F1 light / #1A1A17
-    dark)'
-  - Output files saved as plot.png/html instead of plot-light.png/html and plot-dark.png/html
-    for theme support
-  - 'No theme-aware chrome implementation: axis colors, grid colors, text colors are
-    hardcoded instead of using ANYPLOT_THEME environment variable'
-  - Title text has wrong domain (pyplots.ai should be anyplot.ai)
-  - Axis label colors not properly adapted for dark theme
+  - 'CQ-05 CRITICAL: File output naming - saves plot.png instead of plot-light.png
+    and plot-dark.png per pipeline spec'
+  - 'VQ-07 CRITICAL: Uses custom blue colors (#306998, #1e4c73) instead of Okabe-Ito
+    palette (first series must be #009E73)'
+  - 'VQ-07 CRITICAL: Background colors are pure white/black, not theme-adapted (#FAF8F1
+    light, #1A1A17 dark)'
+  - 'Theme adaptation missing: Does not read ANYPLOT_THEME environment variable or
+    use theme tokens (INK, INK_SOFT, PAGE_BG, GRID)'
+  - 'SC-04: Title contains ''pyplots.ai'' instead of ''anyplot.ai'''
+  - 'Font oversizing: Title at 80px exceeds style guide (28px for pixel-based libraries)'
+  - 'Dark render legibility issues: Axis labels have dark-on-dark text contrast problems
+    in dark theme'
   image_description: |-
     Light render (plot-light.png):
-      Background: Off-white/white color (appears to be pure white #ffffff, should be #FAF8F1 per style guide)
-      Chrome: Title at top reads "wireframe-3d-basic · highcharts · pyplots.ai", X/Y/Z axis labels in blue (#306998), tick labels visible, subtitle shows formula z = sin(√(x² + y²))
-      Data: Wireframe mesh rendered with two colors - lighter blue (#306998) for X-direction lines, darker blue (#1e4c73) for Y-direction lines. All lines clearly visible and distinguishable.
-      3D Frame: Bottom, back, side frames rendered with semi-transparent blue tints
-      Legibility verdict: PASS (all text readable, but not properly themed - colors should be theme-aware)
+      Background: Pure white (#FFFFFF), not the required warm off-white (#FAF8F1)
+      Chrome: Title is small relative to canvas; axis labels (X Position, Y Position, Z Amplitude) with tick marks are present; all text readable against light background
+      Data: Wireframe rendered in custom blue (#306998 and #1e4c73), shows ripple function clearly; grid lines visible in both directions
+      Legibility verdict: PASS for readability (text is visible) but FAIL for theme compliance (wrong background color)
 
     Dark render (plot-dark.png):
-      Background: Dark color (appears correct ~#1A1A17 warm near-black)
-      Chrome: Same title and axis labels as light render - text in blue (#306998), which is visible but should be light-colored (#F0EFE8) for dark theme
-      Data: Wireframe mesh colors IDENTICAL to light render - blue lines (#306998, #1e4c73) are visible against dark background (correct data color consistency)
-      3D Frame: Dark gray semi-transparent frames
-      Legibility verdict: PASS (text is readable despite not being properly themed - blue provides contrast against dark background, but this is accidental not by design)
-
-    Both renders: Data colors are identical between light and dark (✓ correct). Chrome elements are NOT properly theme-adapted - text colors and background colors use hardcoded values instead of theme tokens. Light render has pure white background instead of warm off-white. Dark render has correct dark background but text should be lighter colored.
+      Background: Very dark/near-black (#000000 or similar), not the required warm near-black (#1A1A17)
+      Chrome: Title and axis labels present; axis label colors appear to be dark on near-black background causing dark-on-dark readability issues
+      Data: Wireframe colors identical to light render (same custom blues #306998 and #1e4c73); grid lines visible
+      Legibility verdict: FAIL - Dark-on-dark text contrast issues on axis labels in dark theme; not properly adapted for dark mode viewing
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 6
         max: 8
         passed: false
-        comment: 'Text readable but colors not theme-aware. Should use INK tokens
-          instead of hardcoded #306998'
+        comment: Readable in light render but oversized fonts; dark render has dark-on-dark
+          issues
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text properly spaced, no collisions
+        comment: No overlapping elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Wireframe clearly visible, optimal element sizing
+        comment: Wireframe and grid clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: false
-        comment: Contrast acceptable but palette is custom blue not Okabe-Ito
+        comment: Custom blues are CVD-safe but violate Okabe-Ito requirement
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good margins, plot fills ~65% of canvas, balanced whitespace
+        comment: Good proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Axes have units, but title has wrong domain (pyplots.ai not anyplot.ai)
+        passed: true
+        comment: Descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: Background pure white not themed; colors use legacy #306998
-          blue instead of Okabe-Ito #009E73; no theme token usage'
+        comment: 'Uses custom blues not Okabe-Ito; backgrounds pure white/black not
+          #FAF8F1/#1A1A17; no theme adaptation'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 4
         max: 8
         passed: false
-        comment: Generic styling with custom blue palette violating design system
+        comment: Generic defaults
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization beyond defaults
+        comment: Minimal customization
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Wireframe effectively reveals surface topology with clear focal point
+        passed: false
+        comment: Ripple function visualized but could emphasize amplitude better
     spec_compliance:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -127,49 +127,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D wireframe
+        comment: Correct 3D wireframe scatter3d
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: X/Y/Z axes, wireframe mesh, function, 3D perspective all present
+        comment: Grid lines X/Y, labeled axes, 3D perspective
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Z correctly assigned
+        comment: X/Y/Z mapping correct
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 1
         max: 3
         passed: false
-        comment: Title has wrong domain (pyplots.ai not anyplot.ai)
+        comment: Title says 'pyplots.ai' instead of 'anyplot.ai'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Ripple function shows all characteristics
+        comment: Ripple function well shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mathematical function is neutral and realistic
+        comment: Mathematical, realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values appropriate for ripple domain
+        comment: Sensible domain [-5,5], Z-range [-1.2, 1.2]
     code_quality:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: CQ-01
@@ -177,57 +177,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear code
+        comment: No unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Clean generally but lacks ANYPLOT_THEME handling pattern
+        passed: true
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: Saves as plot.png/html not plot-light.png/html and plot-dark.png/html'
+        comment: 'CRITICAL: Saves plot.png not plot-light.png/plot-dark.png'
     library_mastery:
       score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
-        max: 5
-        passed: false
-        comment: Correct highcharts_core usage but missing theme integration
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Creative use of line series for wireframe is library-specific
+        comment: Proper scatter3d, correct module downloads
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses 3D scatter3d but doesn't leverage highcharts theme system
   verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - html-export
   - 3d-projection
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep: []
   styling: []
