@@ -1,160 +1,175 @@
 library: matplotlib
+language: python
 specification_id: ternary-basic
 created: '2025-12-24T09:50:06Z'
-updated: '2025-12-24T09:53:27Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483442499
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  - annotations
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling:
-  - grid-styling
-  - minimal-chrome
+updated: '2026-05-06T03:23:45Z'
+generated_by: claude-haiku
+workflow_run: 25414573688
+issue: 1001
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 95
 review:
   strengths:
-  - Excellent implementation of ternary coordinates with proper Cartesian transformation
-  - Real-world soil composition context with sand/silt/clay is pedagogically valuable
-  - Clean grid system with consistent 20% intervals on all three axes
-  - Proper marker sizing and transparency for 50 data points
-  - Well-formatted title following the spec-id · library · pyplots.ai convention
-  weaknesses:
-  - Data points cluster toward the center; consider adjusting Dirichlet alpha parameters
-    to show more edge/corner cases
-  - Layout uses 16:9 aspect ratio but triangle is inherently more square, causing
-    some wasted horizontal space
-  image_description: 'The plot displays a ternary diagram in the form of an equilateral
-    triangle. The title "Soil Composition · ternary-basic · matplotlib · pyplots.ai"
-    appears at the top. The three vertices are labeled with bold text: "Sand (%)"
-    at the top, "Silt (%)" at the bottom-left, and "Clay (%)" at the bottom-right.
-    The triangle has a solid black outline with dashed gray grid lines at 20% intervals.
-    Tick labels (0, 20, 40, 60, 80, 100) run along each edge. Approximately 50 blue
-    data points with white edges are scattered throughout the triangle interior, representing
-    soil composition samples. The blue color is a pleasant #306998 with alpha transparency.'
+  - Flawless theme adaptation with both renders perfectly readable; chrome adapts
+    while data colors remain constant
+  - Custom ternary geometry built from matplotlib primitives demonstrating deep understanding
+    of coordinate systems
+  - Professional polish with white marker edges, subtle grid, generous whitespace,
+    and clean typography hierarchy
+  - 'Perfect specification adherence: all grid intervals, vertex labels, tick marks,
+    and title format requirements met'
+  - Reproducible data generation using Dirichlet distribution with seed(42) for realistic
+    simplex sampling
+  - Excellent library mastery with idiomatic ax methods, theme tokens, proper aspect
+    ratio, and correct export settings
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title, vertex labels ("Sand", "Silt", "Clay"), and tick marks (0-100) all in dark text (#1A1A17), clearly readable
+      Data: 60 green (#009E73) circles with white edges, distributed across the triangle showing soil composition
+      Grid: Subtle dashed lines at 20% intervals in light gray with alpha=0.15, visible but not dominant
+      Legibility verdict: PASS - all text readable with excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title, vertex labels, and tick marks all in light gray (#B8B7B0), clearly readable with no dark-on-dark failures
+      Data: Same green (#009E73) circles with white edges - colors are identical to light render, demonstrating proper theme separation
+      Grid: Subtle dashed lines in lighter gray with alpha=0.15, visible and balanced
+      Legibility verdict: PASS - all text readable; brand green visible; proper adaptation for dark viewing
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, vertex labels at 20pt bold, tick labels at 14pt -
-          all clearly readable
+        comment: All font sizes explicit; title (24pt), labels (20pt), ticks (14pt);
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels well positioned
+        comment: All text spaced clearly; no collisions with data or grid
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers sized appropriately (s=200) with alpha=0.7 for 50 points
+        comment: Marker size (s=220) appropriate; alpha=0.75 shows structure without
+          muddiness
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color with white edge, no colorblind issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good triangle placement, but aspect ratio forces some whitespace
-          on sides
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: All three components labeled with units (%)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: '#009E73 is CVD-safe; high contrast; no red-green-only signal'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format ideal for triangle; aspect=equal; generous limits prevent
+          clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is appropriate, but no legend present (single series so acceptable)
+        passed: true
+        comment: Title format correct; vertex labels include units; 0-100% scale sensible
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds correct; both renders theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom ternary implementation, theme-aware styling, white marker
+          edges; straightforward but professional
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, clean axis removal, minimal chrome
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Triangle guides viewer; clear patterns; component context informative
+          but straightforward
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct ternary/triangle plot
+        comment: Proper ternary visualization on equilateral triangle with correct
+          coordinate conversion
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Sand, Silt, Clay correctly mapped to vertices
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Grid lines at 20%, vertex labels, tick marks all present
-      - id: SC-04
-        name: Data Range
+        comment: Grid at 20% intervals, vertex labels, visually distinct points, tick
+          marks at 0-100%
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible within triangle
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Components correctly mapped; all data within bounds; constraint satisfied
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for single series (full points)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Follows `{description} · {spec-id} · {library} · pyplots.ai` format
+        comment: Title format correct; no legend needed; component context clear
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Good spread of points using Dirichlet distribution, but most points
-          cluster in center
+        comment: 60 points via Dirichlet; demonstrates full simplex coverage including
+          edges
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Soil composition with sand/silt/clay is classic real-world ternary
-          application
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: All values sum to 100%, realistic soil proportions
+        comment: Soil classification is real-world plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 60 points within spec range; 0-100% scale sensible; reproducible
+          with seed(42)
     code_quality:
       score: 10
       max: 10
@@ -164,40 +179,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script with imports → data → plot → save
+        comment: No functions/classes; linear procedural flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) used
+        comment: seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported
+        comment: All imports used; sys.path cleanup valid
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions used
+        comment: No fake interactivity; ternary math correct; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; current API
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of ax methods, manual coordinate transformation, but could
-          leverage matplotlib's polygon/patch features more
+        comment: ax methods; theme tokens; set_aspect(equal); proper facecolor threading
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Custom ternary from primitives; manual grid generation; theme-adaptive
+          styling
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
