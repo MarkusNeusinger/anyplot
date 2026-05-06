@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 waterfall-basic: Basic Waterfall Chart
-Library: seaborn | Python 3.13
-Quality: pending | Created: 2026-05-06
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 92/100 | Created: 2026-05-06
 """
 
 import os
