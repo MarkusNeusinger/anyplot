@@ -1,19 +1,25 @@
-""" pyplots.ai
+""" anyplot.ai
 wordcloud-basic: Basic Word Cloud
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 68/100 | Created: 2025-12-24
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 80/100 | Updated: 2026-05-06
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 
 
-# Set random seed for reproducibility
-np.random.seed(42)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"
+OI_PALETTE = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
-# Data - Tech industry survey responses about skills (50 words)
+# Data - Tech industry survey responses about skills
 word_frequencies = {
     "Python": 180,
     "JavaScript": 160,
@@ -73,46 +79,33 @@ words = [p[0] for p in sorted_pairs]
 frequencies = [p[1] for p in sorted_pairs]
 n_words = len(words)
 
-# Spiral-based layout using golden angle for even distribution (no overlap)
+# Spiral-based layout using golden angle for even distribution
+np.random.seed(42)
 golden_angle = np.pi * (3 - np.sqrt(5))
 x_positions = []
 y_positions = []
 
 for i in range(n_words):
     angle = i * golden_angle
-    radius = 0.15 * np.sqrt(i + 1)  # Sqrt for even spacing
+    radius = 0.15 * np.sqrt(i + 1)
     x_positions.append(radius * np.cos(angle) * 2.0)
     y_positions.append(radius * np.sin(angle) * 1.1)
 
-# Calculate font sizes (14-48pt range for better differentiation)
+# Calculate font sizes (14-52pt range)
 freq_array = np.array(frequencies)
 max_freq, min_freq = freq_array.max(), freq_array.min()
-font_sizes = 14 + (freq_array - min_freq) / (max_freq - min_freq) * 34
+font_sizes = 14 + (freq_array - min_freq) / (max_freq - min_freq) * 38
 
 # Create DataFrame
 df = pd.DataFrame({"word": words, "frequency": frequencies, "x": x_positions, "y": y_positions, "fontsize": font_sizes})
 
-# Plot using seaborn
-sns.set_theme(style="white", context="poster", font_scale=1.0)
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Use seaborn scatterplot as background layer
-sns.scatterplot(
-    data=df,
-    x="x",
-    y="y",
-    size="frequency",
-    sizes=(100, 2000),
-    hue="frequency",
-    palette="muted",
-    alpha=0.15,
-    legend=False,
-    ax=ax,
-)
-
-# Add word labels with seaborn muted palette colors
-colors = sns.color_palette("muted", n_colors=10)
+# Add word labels using Okabe-Ito palette cycling
 for idx, row_data in df.iterrows():
+    color = OI_PALETTE[idx % len(OI_PALETTE)]
     ax.text(
         row_data["x"],
         row_data["y"],
@@ -121,16 +114,15 @@ for idx, row_data in df.iterrows():
         fontweight="bold",
         ha="center",
         va="center",
-        color=colors[idx % len(colors)],
+        color=color,
     )
 
-# Clean up axes for word cloud appearance
+# Style
 ax.set_xlim(-2.4, 2.4)
 ax.set_ylim(-1.4, 1.4)
 ax.axis("off")
 
-# Title following exact pyplots.ai format
-ax.set_title("wordcloud-basic · seaborn · pyplots.ai", fontsize=26, fontweight="bold", pad=20)
+ax.set_title("wordcloud-basic · seaborn · anyplot.ai", fontsize=26, fontweight="medium", color=INK, pad=20)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)

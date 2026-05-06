@@ -1,36 +1,225 @@
 library: seaborn
+language: python
 specification_id: wordcloud-basic
 created: '2025-12-24T09:53:14Z'
-updated: '2025-12-24T10:47:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483446354
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-06T07:30:14Z'
+generated_by: claude-haiku
+workflow_run: 25421538930
+issue: 1012
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/seaborn/plot.png
-preview_html: null
-quality_score: 68
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 80
+review:
+  strengths:
+  - Excellent theme adaptation with no legibility failures in either render
+  - Perfect spec compliance; correct plot type and all features present
+  - Clean, maintainable code with proper deterministic seeding
+  - Proper Okabe-Ito palette cycling and theme-aware color application
+  - Well-scaled typography (14-52pt) with readable text at all sizes
+  weaknesses:
+  - Minor word overlap in spiral center; some words slightly collide with larger neighbors
+  - Generic design with standard spiral algorithm; no custom refinements or visual
+    storytelling
+  - Limited seaborn integration; uses raw matplotlib without leveraging higher-level
+    styling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface at #FAF8F1 with no readability issues
+      Chrome: Title "wordcloud-basic · seaborn · anyplot.ai" rendered in dark ink (#1A1A17), clearly visible and properly sized
+      Data: 48 tech terms arranged in golden spiral; colors follow Okabe-Ito palette order with Python first as #009E73; font sizes scale 14-52pt based on frequency
+      Legibility verdict: PASS — All text readable; no light-on-light failures; proper contrast throughout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface at #1A1A17 with excellent readability
+      Chrome: Title rendered in light color (#F0EFE8), clearly visible against dark background; no dark-on-dark issues
+      Data: Identical colors to light render (data colors unchanged, only background/text chrome adapted); same golden spiral layout and frequency-based sizing preserved
+      Legibility verdict: PASS — All text readable; no dark-on-dark failures; perfect theme adaptation
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable at full size in both themes; 14-52pt font sizes
+          properly scaled
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor overlap with smaller words in center (Docker/DevOps); not severe
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 48 words clearly distinguishable; font sizing well-adapted
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 proportions; nothing cut off; generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title descriptive and properly formatted
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order; backgrounds correct; both
+          renders theme-correct'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Generic defaults; standard golden spiral; no custom refinements
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization; no sophisticated spacing or emphasis
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Clear frequency display but no visual hierarchy or narrative emphasis
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct word cloud with size encoding frequency
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: words displayed, size represents frequency,
+          realistic data'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Proper frequency-to-font mapping; 48-term range displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Standard format present; legend N/A for single dimension
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 48 terms from Python (180) to Istio (2); frequency distribution somewhat
+          uniform
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Tech industry data is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Frequency range 2-180 sensible; word count (48) at readable level
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Direct implementation; no unnecessary functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses np.random.seed(42); deterministic spiral
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only necessary imports present
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png; current API
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses matplotlib directly (appropriate); could leverage sns.set_theme()
+          more
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage; word clouds lack distinctive seaborn features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
-review:
-  strengths:
-  - Creative approach using seaborn scatterplot as subtle background visualization
-  - Good use of seaborn HUSL color palette for diverse word colors
-  - Spiral placement algorithm creates organic word cloud appearance
-  - Realistic tech skills survey context with appropriate frequency distribution
-  - Reproducible with fixed random seed
-  weaknesses:
-  - 'Title format incorrect: should be wordcloud-basic · seaborn · pyplots.ai without
-    extra prefix'
-  - Code uses functions violating KISS principle - should be flat script structure
-  - Some word overlap visible in center region where large words compete
-  - Not all 30 words from dataset appear clearly visible in output
-  - Background scatter layer adds visual noise without clear benefit
