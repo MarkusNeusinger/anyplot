@@ -1,165 +1,184 @@
 library: matplotlib
+language: python
 specification_id: waterfall-basic
 created: '2025-12-24T09:50:00Z'
-updated: '2025-12-24T09:53:26Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483444373
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-06T01:01:01Z'
+generated_by: claude-haiku
+workflow_run: 25410641037
+issue: 777
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
 review:
   strengths:
-  - Excellent implementation of waterfall chart logic with proper handling of subtotals
-    (None values)
-  - Clear visual distinction between positive (green), negative (red), and total (blue)
-    bars
-  - Connecting dashed lines effectively show the cumulative flow between bars
-  - Value labels are well-positioned and highly readable with white text on colored
-    bars
-  - Realistic financial data scenario that perfectly demonstrates the waterfall chart
-    use case
-  - Clean, well-structured code following KISS principles
+  - Flawless theme adaptation with perfectly readable text in both light and dark
+    renders
+  - Excellent waterfall implementation with proper cumulative flow visualization
+  - Semantic color design (green=increase, orange=decrease, blue=total) is intuitive
+    and follows Okabe-Ito palette
+  - 'All specification requirements fully implemented: color coding, connecting lines,
+    value labels, distinct start/end totals'
+  - Clean, refined visual design with subtle grid, proper spine removal, and well-styled
+    legend
+  - Idiomatic matplotlib usage with correct Axes methods and DPI-aware sizing
   weaknesses:
-  - No legend explaining the color coding (green=increase, red=decrease, blue=total)
-  - X-axis label Category is generic - could be more descriptive like Financial Components
-  - Red-green color combination may be challenging for colorblind users
-  image_description: 'The plot displays a waterfall chart showing a quarterly financial
-    breakdown from Revenue to Net Income. The chart features 7 bars: Revenue ($500,
-    green), Cost of Goods (-$200, red), Gross Profit ($300, blue subtotal), Operating
-    Expenses (-$150, red), Other Income ($25, green), Taxes (-$45, red), and Net Income
-    ($130, blue subtotal). Dashed gray connecting lines link the bars to show the
-    cumulative flow. Each bar has a white value label centered within it. The title
-    reads "waterfall-basic · matplotlib · pyplots.ai" at the top. X-axis labels are
-    rotated 15 degrees for readability. Y-axis shows "Amount ($)" and ranges from
-    0 to 500. A subtle y-axis grid with alpha=0.3 is present.'
+  - 'Design Excellence modest: solid but straightforward styling without exceptional
+    custom refinements'
+  - 'Library Mastery LM-02 low: waterfall implementation uses standard matplotlib
+    patterns without distinctive library-specific innovations'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct light theme surface
+      Chrome: Title, axis labels, tick labels rendered in dark INK and INK_SOFT tokens - all clearly readable
+      Data: Blue bars for totals, green bars for increases, orange bars for decreases; Okabe-Ito colors used semantically
+      Connecting lines: Dashed lines in INK_SOFT color clearly show progression between bars
+      Value labels: Bold centered text on bars (e.g., "+$1000", "-$350") in INK color - fully readable
+      Legend: Clear styling with background and border, positioned upper right
+      Legibility verdict: PASS - all elements readable, no light-on-light failures, theme tokens properly applied
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title, axis labels, tick labels rendered in light text (F0EFE8 for INK, B8B7B0 for INK_SOFT) - all clearly readable
+      Data: Identical colors to light render (blue #0072B2, green #009E73, orange #D55E00) - semantic meaning preserved
+      Connecting lines: Dashed lines in light gray INK_SOFT color - clearly visible and readable
+      Value labels: Light text on bars - fully readable, no dark-on-dark failures detected
+      Legend: Proper dark theme styling with adapted colors - readable and consistent
+      Legibility verdict: PASS - all elements readable, no dark-on-dark failures, theme adaptation flawless
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, value labels
-          at 16pt bold - all clearly readable
+        comment: All text explicitly sized (24pt, 20pt, 16pt) and readable in both
+          themes using proper INK tokens
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, x-axis labels rotated appropriately
+        comment: Value labels centered on bars; rotated x-labels (15°); legend positioned
+          clearly; zero collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar widths (0.6) are well-sized, connecting lines clearly visible
+        comment: Bars, connecting lines, grid all visible; color contrast strong (Okabe-Ito
+          palette); bar edges defined with INK_SOFT
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Green/red/blue color scheme is distinguishable but red-green combination
-          is not ideal for colorblind users
+        comment: Okabe-Ito colors CVD-safe; no red-green sole signaling; adequate
+          contrast
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well with good margins, tight_layout applied
+        comment: 16:9 aspect (4800×2700px); generous margins; tight_layout() prevents
+          clipping
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Y-axis has units "Amount ($)", but X-axis label "Category" is generic
+        comment: Title, X/Y labels descriptive with appropriate units
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3), but no legend explaining color meanings
-          (totals vs increases vs decreases)
+        comment: 'Okabe-Ito colors used semantically; backgrounds correct (#FAF8F1
+          light, #1A1A17 dark); both renders theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Semantic color design (green=increase, orange=decrease, blue=total);
+          bar edges for definition; polished legend. Solid but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed; y-axis grid subtle (alpha=0.15); legend
+          styled with background/border; generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color hierarchy guides understanding; dashed lines emphasize cumulative
+          flow; value labels lead from $1000 to $450. Clear narrative
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct waterfall chart implementation
+        comment: Correct waterfall chart; positive/negative/total bars positioned
+          properly
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories and values correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has connecting lines, color differentiation, start/end totals in
-          distinct color (blue), value labels on bars
-      - id: SC-04
-        name: Data Range
+        comment: Color coding ✓; connecting lines ✓; distinct start/end totals ✓;
+          value labels ✓
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows all data from 0 to beyond max value
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: categories; Y-axis: amounts; full data range shown'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for this chart type (colors self-explanatory with context)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "waterfall-basic · matplotlib · pyplots.ai"
+        comment: Title format correct; legend labels match semantic meaning
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows positive changes (Revenue, Other Income), negative changes
-          (Cost of Goods, Operating Expenses, Taxes), and subtotals (Gross Profit,
-          Net Income)
+        comment: 'Shows all waterfall aspects: initial, expenses, contingency, savings,
+          final'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Quarterly financial breakdown is a perfect real-world use case for
-          waterfall charts
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values are realistic for a financial statement (Revenue $500, costs
-          and expenses proportional)
+        comment: Project Budget Allocation is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Y-axis range sensible; currency appropriate; no extreme outliers
     code_quality:
       score: 10
       max: 10
@@ -169,41 +188,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple sequential structure: imports → data → calculations → plot
-          → save'
+        comment: No functions/classes; straightforward setup and computation
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses deterministic hardcoded data, no randomness
+        comment: Deterministic data; consistent results
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: Only needed imports present
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API with ax methods
+        comment: Clear waterfall logic; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png correctly
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Basic matplotlib bar chart implementation without leveraging any
-          distinctive features like annotations, patches, or advanced styling
+        passed: true
+        comment: Axes methods used correctly; proper figure setup; theme via environment
+          variable; idiomatic styling
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom waterfall logic with proper positioning; manual connecting
+          lines; Patch-based legend. Standard but correct patterns
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - publication-ready
+  - grid-styling

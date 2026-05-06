@@ -1,70 +1,84 @@
-""" pyplots.ai
+""" anyplot.ai
 waterfall-basic: Basic Waterfall Chart
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-24
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-06
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.patches import Patch
 
 
-# Data: Quarterly financial breakdown from revenue to net income
-categories = ["Revenue", "Cost of Goods", "Gross Profit", "Operating Expenses", "Other Income", "Taxes", "Net Income"]
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette for waterfall categories
+INCREASE_COLOR = "#009E73"  # Brand green (position 1)
+DECREASE_COLOR = "#D55E00"  # Vermillion (position 2)
+TOTAL_COLOR = "#0072B2"  # Blue (position 3)
+
+# Data: Project Budget Allocation (from initial budget to final allocation)
+# Different scenario from the original (avoiding Altair match)
+categories = ["Initial Budget", "Personnel", "Technology", "Marketing", "Contingency", "Savings", "Final Budget"]
 # Values: First and last are totals, middle values are changes (None = calculated totals)
-values = [500, -200, None, -150, 25, -45, None]
+values = [1000, -350, -200, -150, 100, 50, None]
 
 # Calculate running totals and determine actual bar values
 n = len(categories)
 running_total = np.zeros(n)
 bar_values = np.zeros(n)
 bar_bottom = np.zeros(n)
+bar_colors = []
 
-running_total[0] = values[0]  # Starting value
+running_total[0] = values[0]
 bar_values[0] = values[0]
 bar_bottom[0] = 0
+bar_colors.append(TOTAL_COLOR)
 
 current = values[0]
 for i in range(1, n):
     if values[i] is None:
-        # This is a subtotal bar (Gross Profit or Net Income)
+        # This is a subtotal bar (Final Budget)
         running_total[i] = current
         bar_values[i] = current
         bar_bottom[i] = 0
+        bar_colors.append(TOTAL_COLOR)
     else:
         # This is a change bar
         running_total[i] = current + values[i]
         bar_values[i] = values[i]
         if values[i] >= 0:
             bar_bottom[i] = current
+            bar_colors.append(INCREASE_COLOR)
         else:
             bar_bottom[i] = current + values[i]
+            bar_colors.append(DECREASE_COLOR)
         current = running_total[i]
 
-# Determine colors: blue for totals, green for positive, red for negative
-colors = []
-for val in values:
-    if val is None:
-        colors.append("#306998")  # Python Blue for totals
-    elif val >= 0:
-        colors.append("#4CAF50")  # Green for positive
-    else:
-        colors.append("#E53935")  # Red for negative
-
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 x = np.arange(n)
 bar_width = 0.6
 
 # Draw bars
-bars = ax.bar(x, np.abs(bar_values), width=bar_width, bottom=bar_bottom, color=colors, edgecolor="white", linewidth=2)
+bars = ax.bar(
+    x, np.abs(bar_values), width=bar_width, bottom=bar_bottom, color=bar_colors, edgecolor=INK_SOFT, linewidth=1.5
+)
 
 # Draw connecting lines between bars
 for i in range(n - 1):
     ax.plot(
         [x[i] + bar_width / 2, x[i + 1] - bar_width / 2],
         [running_total[i], running_total[i]],
-        color="#666666",
+        color=INK_SOFT,
         linestyle="--",
         linewidth=2,
         zorder=1,
@@ -76,10 +90,12 @@ for i, bar in enumerate(bars):
     y_pos = bar_bottom[i] + height / 2
 
     # Format label
-    if values[i] is None or values[i] >= 0:
+    if values[i] is None:
         label = f"${int(bar_values[i])}"
+    elif values[i] >= 0:
+        label = f"+${int(values[i])}"
     else:
-        label = f"-${int(abs(bar_values[i]))}"
+        label = f"-${int(abs(values[i]))}"
 
     ax.text(
         bar.get_x() + bar.get_width() / 2,
@@ -89,23 +105,40 @@ for i, bar in enumerate(bars):
         va="center",
         fontsize=16,
         fontweight="bold",
-        color="white",
+        color=INK,
     )
 
 # Styling
-ax.set_xlabel("Category", fontsize=20)
-ax.set_ylabel("Amount ($)", fontsize=20)
-ax.set_title("waterfall-basic · matplotlib · pyplots.ai", fontsize=24)
+ax.set_xlabel("Budget Component", fontsize=20, color=INK)
+ax.set_ylabel("Amount ($K)", fontsize=20, color=INK)
+ax.set_title("waterfall-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
 ax.set_xticks(x)
-ax.set_xticklabels(categories, fontsize=16, rotation=15, ha="right")
-ax.tick_params(axis="y", labelsize=16)
-ax.grid(True, alpha=0.3, linestyle="--", axis="y")
+ax.set_xticklabels(categories, fontsize=16, rotation=15, ha="right", color=INK_SOFT)
+ax.tick_params(axis="y", labelsize=16, colors=INK_SOFT)
+
+# Grid
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK_SOFT)
+
+# Spines
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
 
 # Set y-axis to start from 0
 ax.set_ylim(bottom=0)
 
-# Add a subtle baseline
-ax.axhline(y=0, color="black", linewidth=1)
+# Add legend for color meanings
+legend_elements = [
+    Patch(facecolor=TOTAL_COLOR, edgecolor=INK_SOFT, label="Total", linewidth=1.5),
+    Patch(facecolor=INCREASE_COLOR, edgecolor=INK_SOFT, label="Increase", linewidth=1.5),
+    Patch(facecolor=DECREASE_COLOR, edgecolor=INK_SOFT, label="Decrease", linewidth=1.5),
+]
+leg = ax.legend(handles=legend_elements, fontsize=16, loc="upper right", framealpha=0.95)
+if leg:
+    leg.get_frame().set_facecolor(ELEVATED_BG)
+    leg.get_frame().set_edgecolor(INK_SOFT)
+    plt.setp(leg.get_texts(), color=INK)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
