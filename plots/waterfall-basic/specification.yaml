@@ -6,7 +6,7 @@ title: Basic Waterfall Chart
 
 # Specification tracking
 created: 2025-12-14T11:28:51Z
-updated: 2025-12-14T11:28:51Z
+updated: 2026-05-06T00:48:53Z
 issue: 777
 suggested: MarkusNeusinger
 
@@ -24,4 +24,4 @@ tags:
   features:
     - basic
     - cumulative
-    - sequential
+    - stepwise
