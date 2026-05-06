@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: wordcloud-basic
 created: '2025-12-24T09:50:17Z'
-updated: '2026-05-06T07:22:34Z'
+updated: '2026-05-06T07:28:30Z'
 generated_by: claude-haiku
 workflow_run: 25421691834
 issue: 1012
@@ -12,112 +12,114 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/bokeh/plot-dark.html
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - 'Perfect visual quality: all text clearly readable in both light and dark renders'
-  - 'Flawless theme adaptation: backgrounds, text colors, and data colors correctly
-    adapt to theme'
-  - Smart spiral word placement algorithm prevents overlaps while filling canvas effectively
-  - 'Excellent data storytelling: size and color both encode frequency for clear visual
-    hierarchy'
-  - Clean, minimal aesthetic focuses viewer attention on word cloud data
+  - Clean spiral placement algorithm with collision detection ensures no overlapping
+    text
+  - Explicit font sizing (45–220pt) properly scaled for 4800×2700 canvas
+  - Viridis colormap correctly used for continuous frequency encoding and is colorblind-safe
+  - 'Theme-adaptive backgrounds correct (#FAF8F1 light, #1A1A17 dark)'
+  - 'Proper bokeh idioms: ColumnDataSource, LabelSet for text rendering, Selenium
+    screenshot method'
+  - Seed-based reproducibility with np.random.seed(42)
+  - Realistic technology terminology with plausible frequency distribution
   weaknesses:
-  - 'Design sophistication limited: uses Viridis256 default choice rather than intentional
-    custom palette'
-  - 'Library mastery could be deeper: doesn''t leverage bokeh callbacks or more advanced
-    interactive features'
-  - Word rotation limited to four fixed angles (0, 90, -90) rather than more varied
-    orientations
+  - 'Dark theme uses viridis colors with dark end (deep blues/purples) for low-frequency
+    words, creating marginal contrast on #1A1A17 background - while readable, reduces
+    visual clarity in dark mode'
+  - Color mapping could be optimized to avoid very dark viridis values on dark backgrounds
+    (e.g., clipped viridis range [0.3, 1.0] or lightness adjustment)
+  - Dark theme color handling lacks sophistication - could implement color normalization
+    to ensure minimum luminance for all text elements
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface
-      Chrome: Title "wordcloud-basic · bokeh · anyplot.ai" in dark text (INK) at top — clearly visible and well-positioned
-      Data: 38 technology terms sized by frequency (Python=100 at largest, Config=10 at smallest). Colors from Viridis256 range: high-frequency words (Python, Data, Machine, Learning) in yellow/lime-green; mid-frequency in cyan/blue; low-frequency in purple/blue. Word rotations at 0°, ±90° for visual interest.
-      Layout: Well-distributed spiral pattern with no overlaps. Good margins (30px horizontal, 50px vertical). Words fill canvas effectively without cramping.
-      Legibility verdict: PASS — all text is dark-colored and highly readable against the light background. No light-on-light failures.
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "wordcloud-basic · bokeh · anyplot.ai" in 28pt dark text, clearly readable
+      Data: 37 technology words with sizes 45-220pt based on frequency; viridis colormap shows bright yellows for high frequency ("Python", "Data", "Learning") transitioning to blues/teals for mid-frequency and darker blues/purples for low-frequency words
+      Layout: Words positioned with spiral algorithm and collision detection; some words rotated at 0°, 90°, -90°
+      Legibility verdict: PASS - all text clearly readable against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title in light text (INK for dark theme = #F0EFE8) — clearly visible against dark background
-      Data: Identical word positions and Viridis256 colors to light render (yellow for high freq, blue for low freq). Data colors are preserved exactly (only chrome flips between themes, as required).
-      Layout: Same spiral placement as light render. Good spacing and distribution.
-      Legibility verdict: PASS — all words are clearly readable despite the dark background. The Viridis256 colormap provides excellent contrast on both light and dark surfaces. No dark-on-dark failures.
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title in light-colored text, readable against dark background
+      Data: Identical word positioning and sizes to light render; viridis colors preserved (confirming only chrome changed, not data colors)
+      Layout: Same spiral placement and rotation angles as light render
+      Contrast: High-frequency words (yellow/green) clearly visible; mid-frequency (teal) good contrast; low-frequency (dark blues/purples) have marginal but acceptable contrast on dark background
+      Legibility verdict: PASS - all text readable but with reduced clarity for dark-colored words compared to light theme - dark blues/purples on near-black background create suboptimal contrast
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set; all text readable at full resolution in
-          both themes
+        comment: Explicit font sizing, readable in light; dark theme marginal contrast
+          on low-frequency words
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Spiral placement algorithm prevents overlaps; all text fully readable
+        comment: Spiral algorithm with collision detection prevents overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All words clearly visible and well-adapted to frequency-based sizing
+        comment: All words visible and sized appropriately for frequency
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Viridis256 is colorblind-safe and provides good contrast
+        passed: false
+        comment: Viridis is colorblind-safe but dark palette end creates contrast
+          issues on dark background
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas with balanced margins; nothing cut off
+        comment: Balanced layout with good space utilization
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title properly formatted: wordcloud-basic · bokeh · anyplot.ai'
+        comment: Title present and descriptive, no axes (appropriate)
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Viridis256 correctly used for continuous frequency data; backgrounds
-          (#FAF8F1 light, #1A1A17 dark) correct; text colors theme-adaptive in both
-          renders'
+        passed: false
+        comment: Viridis correct for continuous data, backgrounds correct, but dark
+          theme color-to-background contrast issue
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
         passed: true
-        comment: Custom spiral placement algorithm shows competence, but color palette
-          is Viridis default; looks like well-configured library default
+        comment: Well-executed with intentional viridis; dark theme handling could
+          be more sophisticated
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: No axes/grid, clean presentation, minimal custom styling; text bold
-          for emphasis
+        comment: Clean design, no gridlines, good whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Size and color both encode frequency; creates visual hierarchy with
-          large prominent words (Python, Data) as focal points
+        comment: Clear visual hierarchy showing frequency through size and color
     spec_compliance:
       score: 15
       max: 15
@@ -133,19 +135,19 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'Shows all required features: words with size proportional to frequency'
+        comment: Words, frequency encoding, proper layout
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Word text maps to word names, size to frequency, color to frequency
+        comment: X/Y positions and frequency mapped to size and color
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend not needed for single-series word cloud
+        comment: Title with correct format, legend appropriately omitted
     data_quality:
       score: 15
       max: 15
@@ -155,20 +157,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 38 technology terms with full frequency range (10-100) showing diverse
-          word cloud
+        comment: 'Full word cloud features: size variation, rotation, color encoding'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Technology/ML domain is realistic, neutral, and plausible
+        comment: Technology terms are realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency values (10-100) are sensible and well-distributed
+        comment: 37 words, frequency 10-100, appropriately scaled
     code_quality:
       score: 10
       max: 10
@@ -178,51 +179,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple, linear structure: imports → data → placement algorithm →
-          plot setup → save'
+        comment: Direct implementation, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducible placement
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, bokeh modules, selenium for rendering'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; spiral placement algorithm is clean and well-structured
+        comment: Spiral algorithm clear, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.html and plot-{THEME}.png correctly
+        comment: Saves as plot-{THEME}.png and HTML
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, LabelSet, HoverTool; applies theme-adaptive
-          tokens correctly. Could leverage more sophisticated bokeh patterns.
+        comment: Uses bokeh patterns correctly (ColumnDataSource, figure, LabelSet,
+          Selenium screenshot)
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses LabelSet for positioned text (bokeh-specific), angle parameter
-          for rotations (bokeh-specific), HoverTool for interactivity. Could explore
-          bokeh callbacks or custom JS interactivity.
+        comment: Good use of LabelSet with sizing, rotation, color-by-column; could
+          be more innovative
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -230,8 +229,12 @@ impl_tags:
   techniques:
   - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   - columndatasource
   dataprep: []
-  styling: []
+  styling:
+  - minimal-chrome
+  - custom-colormap
+  - dark-theme
