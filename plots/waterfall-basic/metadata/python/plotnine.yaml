@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: waterfall-basic
 created: 2025-12-14 11:35:16+00:00
-updated: '2026-05-06T01:08:59Z'
+updated: '2026-05-06T01:15:28Z'
 generated_by: claude-haiku
 workflow_run: 25410836349
 issue: 777
@@ -12,42 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waterfall
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waterfall-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 84
 review:
   strengths:
-  - Clean theme-adaptive implementation with proper token usage across both light
-    and dark renders
-  - Effective waterfall structure with clear visual hierarchy showing cumulative financial
-    flow
-  - Professional typography scaling (title 24px, axis labels 20px, ticks 16px) matching
-    large canvas requirements
-  - Proper use of geom_rect, geom_segment, and geom_text for multi-layer composition
-  - 'All required waterfall features present: starting total, positive/negative changes,
-    ending total, connector lines, value labels'
+  - Correct waterfall chart type with all required features (positive/negative distinction,
+    connector lines, totals)
+  - Excellent text legibility in both light and dark themes with explicit font sizing
+  - Clean code structure with proper theme token usage for both renders
+  - Well-calculated waterfall positions and proper data mapping
+  - Good visual flow through connector lines and value labels
+  - Theme-correct background and chrome across both renders
   weaknesses:
-  - 'Data colors (#2ecc71 green, #e74c3c red) do not follow Okabe-Ito brand palette
-    (positions 1–7) — should use brand colors #009E73 for positive and #D55E00 or
-    other Okabe-Ito for negative. While green/red is standard financial convention,
-    brand guide requires first series = #009E73. This is a constraint conflict between
-    spec semantics and brand guidelines.'
-  - 'Design Excellence could be elevated: top/right spines already removed via theme_minimal(),
-    but could add more sophisticated visual refinement such as accent highlighting
-    on the largest flows or enhanced color contrast for categorical distinction'
+  - 'VQ-07: Custom colors (#2ecc71 green, #e74c3c red) instead of Okabe-Ito palette.
+    While semantically justified for waterfall charts (positive=green, negative=red),
+    this deviates from style guide. Fix: Use Okabe-Ito positions for positive/negative/total
+    instead'
+  - 'DE-01: Generic design with default semantic coloring. Fix: Consider custom palette
+    strategy or more intentional visual hierarchy'
+  - 'DE-02: Minimal visual refinement. Fix: Adjust grid opacity, remove unnecessary
+    spines, enhance typography weight'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct for light theme
-      Chrome: Title "Quarterly Financial Summary · waterfall-basic · plotnine · anyplot.ai" is clearly visible in dark text (size 24). Y-axis label "Amount ($1K)" and X-axis category labels are all readable (size 16-20). Axis tick values are visible. Legend with "Category" header and three entries (Decrease/red, Increase/green, Total/gray) is positioned at top and fully readable.
-      Data: Six waterfall bars showing Starting Balance (dark gray, $1000), Q1 Sales (bright green, $450 increase), Operating Costs (bright red, -$280 decrease), R&D Investment (bright red, -$120), Tax Payment (bright red, -$150), and Ending Balance (dark gray, $900). Value labels appear above/within bars (450, -280, -120, -150) and are readable in dark text. Connector lines between bars are subtle gray dashed lines. All data elements are clearly distinguishable from the background.
-      Legibility verdict: PASS - all text, labels, and data elements are readable
+      Background: Warm off-white (#FAF8F1) - correct, not pure white
+      Chrome: Title, axis labels, and tick labels all clearly visible in dark text (#1A1A17 and #4A4A44). Y-axis labeled with units "Amount ($1K)". X-axis labels rotated 45° for readability. No overlapping text.
+      Data: Six bars showing financial breakdown. Positive increase (green #2ecc71, 450), negative decreases (red #e74c3c, -280/-120/-150), totals (gray INK_SOFT). Connector lines flow between bars. Value labels visible on bars.
+      Legibility verdict: PASS - All text readable, no dark-on-light contrast issues, chrome properly colored
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct for dark theme
-      Chrome: Same title and axis labels rendered in light text/light gray against dark background - all clearly readable. Legend is identical in layout and readability.
-      Data: Waterfall structure is identical to light render. Starting Balance and Ending Balance bars have switched to light gray (#B8B7B0 from INK_SOFT token) to maintain contrast against dark background. Q1 Sales remains bright green (#2ecc71) - identical to light render. All decrease bars remain bright red (#e74c3c) - identical to light render. Value labels and connector lines are clearly visible.
-      Legibility verdict: PASS - all text and data are readable; theme-adaptive coloring correctly maintained data color identity while adjusting chrome for contrast
+      Background: Warm near-black (#1A1A17) - correct, not pure black
+      Chrome: All text in light colors (#F0EFE8 primary, #B8B7B0 secondary). Title, axis labels, tick labels clearly visible against dark background. No dark-on-dark failures. Legend background is #242420 with appropriate border.
+      Data: All bar colors identical to light render (green #2ecc71, red #e74c3c, light gray INK_SOFT). This confirms proper theme separation - only chrome adapts, data colors stay constant. Connector lines visible.
+      Legibility verdict: PASS - All text readable on dark background, no contrast issues, proper color consistency between renders
   criteria_checklist:
     visual_quality:
-      score: 28.5
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -55,76 +53,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text sizes explicitly set (title 24, axis labels 20, ticks 16);
-          readable in both light and dark themes
+        comment: All font sizes explicitly set (title=24pt, labels=20pt, ticks=16pt).
+          Perfectly readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: X-axis labels rotated 45° with ha='right'; no overlapping elements;
-          all categories readable
+        comment: X-axis labels rotated 45° with right-alignment. Clean spacing, no
+          overlapping text.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars clearly visible, connector lines visible, value labels legible
-          above bars
+        comment: Bars, connectors, and value labels all clearly visible and appropriately
+          sized.
       - id: VQ-04
         name: Color Accessibility
-        score: 1.5
+        score: 2
         max: 2
-        passed: false
-        comment: Green (#2ecc71) and red (#e74c3c) together are not CVD-safe for deuteranopia;
-          bar heights provide some additional contrast cue but not ideal
+        passed: true
+        comment: Green and red differ in luminance; good contrast and not red-green-only.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect ratio, good proportions, nothing cut off, generous whitespace
+        comment: Plot fills 60-70% of canvas with balanced margins. Legend positioned
+          well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled with units ($1K), title includes spec-id, library,
-          and site name
+        comment: Y-axis includes units. Title correctly formatted.
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Plot backgrounds correct (#FAF8F1 light, #1A1A17 dark), but data
-          colors use custom hex instead of Okabe-Ito: positive #2ecc71 instead of
-          #009E73, negative #e74c3c not in palette'
+        comment: 'Background and chrome theme-correct, but data colors use custom
+          hex (#2ecc71, #e74c3c) instead of Okabe-Ito palette.'
     design_excellence:
-      score: 11
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 3
         max: 8
         passed: false
-        comment: Clean styling using theme_minimal base; semantic color choice (green/red)
-          is intentional but not elevated; no custom palette beyond functional necessity
+        comment: Well-configured defaults with semantic coloring. Connector lines
+          are nice but lack distinctive polish.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Spines handled by theme_minimal, subtle grid with alpha=0.1, connector
-          lines add visual polish; could be more refined with accent highlighting
+        comment: Some customization (grid, borders) but minimal refinement beyond
+          structure.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Waterfall effectively shows financial flow from start to end; clear
-          visual hierarchy through bar heights and connector lines; could emphasize
-          largest flows
+        comment: Connector lines and value labels guide the flow. Subtle visual hierarchy
+          but not exceptional.
     spec_compliance:
       score: 15
       max: 15
@@ -134,30 +129,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct waterfall chart with proper cumulative positioning
+        comment: Correct waterfall chart with all subtypes.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Positive colors (green) ✓, negative colors (red) ✓, distinct start/end
-          totals ✓, connector lines ✓, value labels ✓
+        comment: 'All features present: positive/negative coloring, connector lines,
+          start/end totals, value labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on X-axis in correct order, amounts on Y-axis, cumulative
-          positioning correct
+        comment: Categories on x-axis, amounts on y-axis, correct scaling.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Quarterly Financial Summary · waterfall-basic · plotnine
-          · anyplot.ai'' ✓, legend labels match categories ✓'
+        comment: Title format correct. Legend labels match categories.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -165,22 +158,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Six-step waterfall shows starting balance, positive increase, three
-          negative decreases, ending balance—full range of waterfall features
+        comment: 'Shows all waterfall aspects: starting total, multiple changes, ending
+          total.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: $1000→$900 financial breakdown is realistic and neutral; quarterly
-          sales, operating costs, R&D, and taxes are plausible
+        comment: Quarterly financial breakdown is real, neutral, comprehensible scenario.
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Values in thousands ($1K) are appropriate for financial aggregates;
-          sensible scale
+        passed: false
+        comment: Values are plausible and mathematically correct but slightly generic.
     code_quality:
       score: 10
       max: 10
@@ -190,33 +181,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; direct computation of waterfall positions
+        comment: Simple linear flow with no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded data is fully deterministic and reproducible
+        comment: Data hardcoded deterministically.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports pandas and plotnine components actually used
+        comment: All imports used, no dead code.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no unnecessary tricks or fake functionality
+        comment: Clean, Pythonic waterfall position calculation.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct f-string substitution
+        comment: Correct output format and API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -224,27 +215,25 @@ review:
         score: 4
         max: 5
         passed: false
-        comment: 'Uses plotnine idiomatically: ggplot() + geom_rect() + geom_segment()
-          + theme() pattern; proper aes() mappings; appropriate since plotnine lacks
-          native waterfall geom'
+        comment: Uses geom_rect, geom_segment, geom_text correctly but doesn't leverage
+          some advanced patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: false
-        comment: Creative use of geom_rect and geom_segment to construct waterfall;
-          connector lines show thoughtful implementation
+        comment: Custom waterfall construction using composable geoms is distinctive
+          for plotnine.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - manual-ticks
   - annotations
+  - layer-composition
   patterns:
   - data-generation
-  dataprep:
-  - cumulative-sum
+  dataprep: []
   styling:
-  - publication-ready
   - grid-styling
+  - alpha-blending
