@@ -1,28 +1,38 @@
-""" pyplots.ai
+"""anyplot.ai
 waterfall-basic: Basic Waterfall Chart
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-24
+Library: pygal 3.1.0 | Python 3.13
+Quality: pending | Created: 2025-12-24
 """
+
+import os
 
 import pygal
 from pygal.style import Style
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette: position 1 (positive), position 2 (negative), position 3 (totals)
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+
 # Data: Quarterly financial breakdown from revenue to net income
 categories = ["Q1 Revenue", "Product Sales", "Services", "COGS", "Operating Exp", "Other Income", "Taxes", "Net Income"]
-changes = [500, 150, 80, -180, -120, 25, -68, None]  # None for the final total
+changes = [500, 150, 80, -180, -120, 25, -68, None]
 
 # Calculate running totals and positions for waterfall effect
 running_total = 0
 bar_bottoms = []
 bar_heights = []
-bar_types = []  # 'total', 'positive', 'negative'
-display_values = []  # Values to display on bars
-running_totals = []  # Track running total at each step
+bar_types = []
+display_values = []
+running_totals = []
 
 for i, val in enumerate(changes):
     if i == 0:
-        # Starting total
         bar_bottoms.append(0)
         bar_heights.append(val)
         bar_types.append("total")
@@ -30,14 +40,12 @@ for i, val in enumerate(changes):
         running_total = val
         running_totals.append(running_total)
     elif val is None:
-        # Final total - calculate from running total
         bar_bottoms.append(0)
         bar_heights.append(running_total)
         bar_types.append("total")
         display_values.append(running_total)
         running_totals.append(running_total)
     elif val >= 0:
-        # Positive change
         bar_bottoms.append(running_total)
         bar_heights.append(val)
         bar_types.append("positive")
@@ -45,7 +53,6 @@ for i, val in enumerate(changes):
         running_total += val
         running_totals.append(running_total)
     else:
-        # Negative change
         running_total += val
         bar_bottoms.append(running_total)
         bar_heights.append(abs(val))
@@ -53,23 +60,20 @@ for i, val in enumerate(changes):
         display_values.append(val)
         running_totals.append(running_total)
 
-# Colorblind-friendly palette using blue/teal/orange instead of red/green
-# Blue for totals, teal for increases, orange for decreases
+# Create custom style with theme-adaptive colors
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("transparent", "#306998", "#0077B6", "#E76F00"),  # spacer, total, increase, decrease
-    title_font_size=56,
-    label_font_size=32,
-    major_label_font_size=32,
-    legend_font_size=48,
-    value_font_size=32,
-    value_colors=("transparent", "#FFFFFF", "#FFFFFF", "#FFFFFF"),  # White labels on colored bars
-    opacity=1.0,
-    opacity_hover=0.9,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=18,
+    major_label_font_size=16,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=3,
 )
 
 # Create stacked bar chart to achieve waterfall effect
@@ -77,13 +81,11 @@ chart = pygal.StackedBar(
     width=4800,
     height=2700,
     style=custom_style,
-    title="waterfall-basic · pygal · pyplots.ai",
+    title="waterfall-basic · pygal · anyplot.ai",
     x_title="Category",
     y_title="Amount ($K)",
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=3,
-    legend_box_size=36,
     show_y_guides=True,
     show_x_guides=False,
     print_values=True,
@@ -96,12 +98,11 @@ chart = pygal.StackedBar(
     spacing=25,
 )
 
-# Set x-axis labels with running totals displayed
-# Shows category name and running total for clarity
+# Set x-axis labels
 labels_with_totals = [f"{cat} (${running_totals[i]}K)" for i, cat in enumerate(categories)]
 chart.x_labels = labels_with_totals
 
-# Build data series by type for proper coloring
+# Build data series: spacer (invisible), totals, positive changes, negative changes
 spacer_data = []
 total_data = []
 positive_data = []
@@ -113,10 +114,8 @@ for i in range(len(categories)):
     btype = bar_types[i]
     disp_val = display_values[i]
 
-    # Spacer creates the floating effect (invisible bar from 0 to bottom)
     spacer_data.append({"value": bottom if bottom > 0 else None, "label": ""})
 
-    # Format labels with change amount
     if btype == "total":
         total_data.append({"value": height, "label": f"${disp_val}K"})
         positive_data.append({"value": None})
@@ -131,11 +130,12 @@ for i in range(len(categories)):
         negative_data.append({"value": height, "label": f"${disp_val}K"})
 
 # Add series in stack order (bottom to top)
-chart.add("", spacer_data, stroke_style={"width": 0})  # Invisible spacer
+# Hide spacer series from legend by using empty title
+chart.add("", spacer_data, stroke_style={"width": 0}, show_legend=False)
 chart.add("Total", total_data)
 chart.add("Increase", positive_data)
 chart.add("Decrease", negative_data)
 
 # Save outputs
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+chart.render_to_png(f"plot-{THEME}.png")
+chart.render_to_file(f"plot-{THEME}.html")
