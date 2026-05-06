@@ -1,14 +1,21 @@
-""" pyplots.ai
+""" anyplot.ai
 ternary-basic: Basic Ternary Plot
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-24
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-06
 """
+
+import os
+import sys
+
+
+sys.path.pop(0)
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
     coord_fixed,
+    element_rect,
     element_text,
     geom_point,
     geom_polygon,
@@ -21,12 +28,19 @@ from plotnine import (
 )
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1
+
 # Data - Soil composition samples (sand, silt, clay)
 np.random.seed(42)
 n_points = 50
 
 # Generate random ternary data with varied distributions for better spread
-# Use different alpha values to create more extreme compositions
 raw1 = np.random.dirichlet(alpha=[5, 1, 1], size=n_points // 3) * 100  # Sand-heavy
 raw2 = np.random.dirichlet(alpha=[1, 5, 1], size=n_points // 3) * 100  # Silt-heavy
 raw3 = np.random.dirichlet(alpha=[1, 1, 5], size=n_points - 2 * (n_points // 3)) * 100  # Clay-heavy
@@ -36,8 +50,7 @@ sand = raw[:, 0]
 silt = raw[:, 1]
 clay = raw[:, 2]
 
-# Convert ternary coordinates to Cartesian (inline calculation)
-# Formula: x = 0.5 * (2*b + c) / total, y = (sqrt(3)/2) * c / total
+# Convert ternary coordinates to Cartesian
 total = sand + silt + clay
 x_data = 0.5 * (2 * silt + clay) / total
 y_data = (np.sqrt(3) / 2) * clay / total
@@ -45,7 +58,6 @@ y_data = (np.sqrt(3) / 2) * clay / total
 df = pd.DataFrame({"x": x_data, "y": y_data, "sand": sand, "silt": silt, "clay": clay})
 
 # Triangle vertices (for the frame)
-# A (sand) at bottom-left, B (silt) at bottom-right, C (clay) at top
 vertices = pd.DataFrame({"x": [0, 1, 0.5, 0], "y": [0, 0, np.sqrt(3) / 2, 0]})
 
 # Grid lines at 20% intervals
@@ -74,7 +86,7 @@ for pct in [0.2, 0.4, 0.6, 0.8]:
 
 grid_df = pd.DataFrame(grid_lines)
 
-# Tick labels along edges - use larger offset for better spacing with larger triangle
+# Tick labels along edges
 tick_labels = []
 label_offset = 0.06
 for pct in [0, 20, 40, 60, 80, 100]:
@@ -96,7 +108,7 @@ for pct in [0, 20, 40, 60, 80, 100]:
 
 tick_df = pd.DataFrame(tick_labels)
 
-# Vertex labels - position closer to triangle
+# Vertex labels
 vertex_labels = pd.DataFrame(
     {
         "x": [0 - 0.02, 1 + 0.02, 0.5],
@@ -109,25 +121,28 @@ vertex_labels = pd.DataFrame(
 plot = (
     ggplot()
     # Triangle frame
-    + geom_polygon(data=vertices, mapping=aes(x="x", y="y"), fill="white", color="#306998", size=2)
+    + geom_polygon(data=vertices, mapping=aes(x="x", y="y"), fill=PAGE_BG, color=BRAND, size=2)
     # Grid lines
     + geom_segment(
-        data=grid_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color="#cccccc", size=0.7, alpha=0.6
+        data=grid_df, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK_SOFT, size=0.7, alpha=0.15
     )
-    # Data points - larger for better visibility
-    + geom_point(data=df, mapping=aes(x="x", y="y"), color="#306998", size=5, alpha=0.8)
-    # Tick labels - increased size for 4800x2700 output
-    + geom_text(data=tick_df, mapping=aes(x="x", y="y", label="label"), size=14, color="#666666")
-    # Vertex labels - larger and bolder
-    + geom_text(
-        data=vertex_labels, mapping=aes(x="x", y="y", label="label"), size=18, fontweight="bold", color="#306998"
-    )
-    # Title and theme - correct spec-id format
-    + labs(title="ternary-basic · plotnine · pyplots.ai")
+    # Data points
+    + geom_point(data=df, mapping=aes(x="x", y="y"), color=BRAND, size=5, alpha=0.8)
+    # Tick labels
+    + geom_text(data=tick_df, mapping=aes(x="x", y="y", label="label"), size=14, color=INK_SOFT)
+    # Vertex labels
+    + geom_text(data=vertex_labels, mapping=aes(x="x", y="y", label="label"), size=18, fontweight="bold", color=INK)
+    # Title and theme
+    + labs(title="ternary-basic · plotnine · anyplot.ai")
     + coord_fixed(ratio=1)
     + theme_void()
-    + theme(figure_size=(16, 9), plot_title=element_text(size=28, ha="center", weight="bold"), plot_margin=0.02)
+    + theme(
+        figure_size=(16, 9),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(size=24, ha="center", color=INK, weight="medium"),
+        plot_margin=0.02,
+    )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)

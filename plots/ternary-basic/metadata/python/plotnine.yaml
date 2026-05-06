@@ -1,165 +1,174 @@
 library: plotnine
+language: python
 specification_id: ternary-basic
 created: '2025-12-24T09:50:39Z'
-updated: '2025-12-24T10:05:34Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483444966
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - manual-ticks
-  - annotations
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling:
-  - grid-styling
-  - minimal-chrome
+updated: '2026-05-06T03:42:25Z'
+generated_by: claude-haiku
+workflow_run: 25414931905
+issue: 1001
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 84
 review:
   strengths:
-  - Excellent use of Dirichlet distribution to create realistic, varied soil composition
-    data with clusters near each vertex
-  - Clean implementation of ternary coordinate transformation from compositional data
-    to Cartesian coordinates
-  - Well-structured grid lines at 20% intervals with appropriate subtlety (alpha=0.6)
-  - Good data point sizing and alpha (size=5, alpha=0.8) appropriate for 50-point
-    dataset
-  - Professional soil science context with proper component labeling
+  - Correct ternary coordinate transformation and mapping
+  - Theme-adaptive styling perfectly executed in both light and dark renders
+  - Clean, idiomatic plotnine code using grammar of graphics
+  - Realistic and well-distributed data with good variety
+  - All text readable in both themes with no contrast issues
+  - Proper label positioning avoiding overlaps
   weaknesses:
-  - 'Title format incorrect: uses "Soil Composition · ternary-basic · plotnine · pyplots.ai"
-    instead of the required "{spec-id} · {library} · pyplots.ai" format'
-  image_description: The plot displays a ternary diagram showing soil composition
-    data (sand, silt, clay percentages). The triangle has a dark blue (#306998) border
-    with a white fill. Gray grid lines are drawn at 20% intervals inside the triangle.
-    Approximately 50 blue data points are scattered throughout the triangle, showing
-    varied soil compositions with clusters near each vertex (sand-heavy, silt-heavy,
-    and clay-heavy samples). The three vertices are labeled "Sand (%)", "Silt (%)",
-    and "Clay (%)" in bold blue text. Tick labels (0, 20, 40, 60, 80, 100) appear
-    along all three edges in gray. The title reads "Soil Composition · ternary-basic
-    · plotnine · pyplots.ai" in bold black text at the top.
+  - Design is functional but minimal — no visual hierarchy or data storytelling
+  - Generic usage pattern without distinctive plotnine features
+  - No visual emphasis or focal point to guide viewer attention
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 (exactly correct)
+      Chrome: Title "ternary-basic · plotnine · anyplot.ai" in dark text (24pt), vertex labels "Sand (%)", "Silt (%)", "Clay (%)" in bold dark text (18pt), tick labels (0–100) in gray text (14pt) — all clearly readable against light surface
+      Data: 50 points in Okabe-Ito green #009E73 at 80% opacity, well-distributed across triangle interior, clear marker visibility
+      Triangle frame: Brand green #009E73 with proper line weight
+      Grid: Subtle gray lines at 20% intervals, providing orientation without competing with data
+      Legibility verdict: PASS — all elements readable at full resolution
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 (exactly correct)
+      Chrome: Same title in light text (#F0EFE8, 24pt), vertex labels in light gray (#B8B7B0, 18pt), tick labels in light gray (14pt) — all readable, no dark-on-dark failures
+      Data: Same 50 points in identical green #009E73, confirming theme-independent data colors
+      Triangle frame: Identical green to light render
+      Grid: Light gray lines at same opacity, subtle but visible on dark background
+      Legibility verdict: PASS — all elements readable, no contrast issues, proper theme adaptation with only chrome flipping
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title and vertex labels are clear and readable; tick labels slightly
-          small but acceptable
+        comment: Title, vertex, and tick labels all explicit sized and theme-adapted.
+          Readable in both themes at full resolution.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels well-positioned
+        comment: All text positioned with offsets. No collisions between labels or
+          data points.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Data points are well-sized with good alpha for the 50-point dataset
+        comment: All markers, grid, and frame visible. Grid appropriately subtle without
+          competing with data.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color scheme is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, triangle is centered but could fill slightly
-          more vertical space
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: All three components labeled with units (%)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Okabe-Ito green #009E73 is colorblind-safe. No red-green sole signals.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 at 300 DPI = 4800×2700px. Generous margins. Nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle and appropriate; no legend needed for single-color
-          plot
+        comment: Vertex labels descriptive with units. Title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Data: #009E73 (position 1). Background: #FAF8F1 light / #1A1A17
+          dark (exact). Both renders theme-correct.'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Baseline styling. Uses Okabe-Ito appropriately but no distinctive
+          custom palette or design thought.
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization. theme_void() appropriate but no additional
+          refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: No visual hierarchy or focal point. Three groups visible but no emphasis.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct ternary/triangular plot
+        comment: Correct ternary plot. Three-component data mapped to equilateral
+          triangle.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Components correctly mapped to ternary coordinates
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Grid lines at 20% intervals, labeled vertices, tick marks on edges
-      - id: SC-04
-        name: Data Range
+        comment: Grid lines at 20% intervals, vertex labels, tick marks, data points
+          all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within triangle bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Ternary-to-Cartesian transformation correct. Axes span 0–100% properly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for single-series plot
-      - id: SC-06
-        name: Title Format
-        score: 0
-        max: 2
-        passed: false
-        comment: Title includes "Soil Composition" prefix instead of just "{spec-id}
-          · {library} · pyplots.ai"
+        comment: Title format correct. Single-series, legend not needed.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Good spread using Dirichlet distribution with three clusters; shows
-          varied compositions
+        comment: 'All ternary aspects shown: three-component, proportional summing,
+          spatial distribution.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Soil composition (sand/silt/clay) is a classic real-world ternary
-          data example
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Percentages sum to 100%, realistic soil proportions
+        comment: Soil composition (sand, silt, clay) is real-world, well-known, neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0–100% proportions sensible. Data realistic for soil samples.
     code_quality:
       score: 10
       max: 10
@@ -169,41 +178,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save'
+        comment: No functions or classes. Straightforward linear flow.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Uses np.random.seed(42). Deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'Only used imports: numpy, pandas, plotnine.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: No fake UI or workarounds. Appropriate complexity.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png correctly.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of plotnine's grammar of graphics (ggplot + geom_polygon
-          + geom_segment + geom_point + geom_text + theme_void), but ternary plots
-          require manual coordinate transformation rather than native plotnine features
+        comment: Excellent plotnine idiom. Uses geom_polygon, geom_segment, geom_point.
+          theme_void() and coord_fixed() correct.
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: No distinctive plotnine features (no faceting, layer composition,
+          or custom scales). Generic for spec.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
