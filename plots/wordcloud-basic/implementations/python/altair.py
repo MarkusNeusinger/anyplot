@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 wordcloud-basic: Basic Word Cloud
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-06
@@ -13,9 +13,9 @@ script_dir = os.path.dirname(os.path.abspath(__file__)) if __file__ else os.getc
 if script_dir in sys.path:
     sys.path.remove(script_dir)
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
 
 
 # Theme tokens
@@ -136,17 +136,23 @@ for i, (word, freq) in enumerate(sorted_words):
 # Create DataFrame
 df = pd.DataFrame({"word": words_list, "x": x_positions, "y": y_positions, "size": font_sizes, "color": colors})
 
-# Create Altair chart with theme-adaptive styling
+# Create selection for interactivity
+selection = alt.selection_point(fields=["word"], on="mouseover")
+
+# Create Altair chart with enhanced styling and interactivity
 chart = (
     alt.Chart(df)
-    .mark_text(fontWeight="bold")
+    .mark_text(fontWeight="bold", align="center", baseline="middle")
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[0, canvas_w]), axis=None),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[0, canvas_h]), axis=None),
         text="word:N",
         size=alt.Size("size:Q", scale=None, legend=None),
         color=alt.Color("color:N", scale=None, legend=None),
+        opacity=alt.condition(selection, alt.value(1), alt.value(0.4)),
+        tooltip=["word:N", alt.Tooltip("size:Q", title="Size (freq)")],
     )
+    .add_params(selection)
     .properties(
         width=canvas_w,
         height=canvas_h,
@@ -155,6 +161,7 @@ chart = (
     )
     .configure_view(strokeWidth=0, fill=PAGE_BG)
     .configure_title(color=INK)
+    .configure_axis(labelFontSize=14, titleFontSize=16, labelColor=INK_SOFT, titleColor=INK)
 )
 
 # Save outputs
