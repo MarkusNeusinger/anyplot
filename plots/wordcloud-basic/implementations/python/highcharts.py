@@ -1,91 +1,103 @@
-""" pyplots.ai
+""" anyplot.ai
 wordcloud-basic: Basic Word Cloud
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-24
+Library: highcharts unknown | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-06
 """
 
+import os
 import tempfile
 import time
-import urllib.request
 from pathlib import Path
 
+import requests
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
 # Data - Technology terms and their frequency from a developer survey
-# Words preprocessed: lowercase, common terms from survey responses
 words_data = [
-    {"name": "python", "weight": 150},
-    {"name": "javascript", "weight": 142},
-    {"name": "data", "weight": 128},
-    {"name": "cloud", "weight": 115},
-    {"name": "api", "weight": 108},
-    {"name": "machine learning", "weight": 98},
-    {"name": "database", "weight": 95},
-    {"name": "security", "weight": 88},
-    {"name": "docker", "weight": 82},
-    {"name": "kubernetes", "weight": 78},
-    {"name": "react", "weight": 75},
-    {"name": "automation", "weight": 72},
-    {"name": "devops", "weight": 68},
-    {"name": "microservices", "weight": 65},
-    {"name": "testing", "weight": 62},
-    {"name": "agile", "weight": 58},
-    {"name": "frontend", "weight": 55},
-    {"name": "backend", "weight": 52},
-    {"name": "scalability", "weight": 48},
-    {"name": "typescript", "weight": 45},
-    {"name": "git", "weight": 42},
-    {"name": "analytics", "weight": 40},
-    {"name": "performance", "weight": 38},
-    {"name": "infrastructure", "weight": 35},
-    {"name": "monitoring", "weight": 32},
+    {"name": "python", "weight": 420},
+    {"name": "javascript", "weight": 380},
+    {"name": "data", "weight": 340},
+    {"name": "cloud", "weight": 310},
+    {"name": "api", "weight": 280},
+    {"name": "machine learning", "weight": 250},
+    {"name": "database", "weight": 230},
+    {"name": "security", "weight": 210},
+    {"name": "docker", "weight": 190},
+    {"name": "kubernetes", "weight": 170},
+    {"name": "react", "weight": 160},
+    {"name": "automation", "weight": 150},
+    {"name": "devops", "weight": 140},
+    {"name": "microservices", "weight": 130},
+    {"name": "testing", "weight": 120},
+    {"name": "agile", "weight": 110},
+    {"name": "frontend", "weight": 100},
+    {"name": "backend", "weight": 90},
+    {"name": "scalability", "weight": 80},
+    {"name": "typescript", "weight": 70},
+    {"name": "git", "weight": 60},
+    {"name": "analytics", "weight": 50},
+    {"name": "performance", "weight": 45},
+    {"name": "infrastructure", "weight": 40},
+    {"name": "monitoring", "weight": 35},
     {"name": "deployment", "weight": 30},
-    {"name": "integration", "weight": 28},
-    {"name": "visualization", "weight": 26},
-    {"name": "optimization", "weight": 24},
-    {"name": "debugging", "weight": 22},
-    {"name": "architecture", "weight": 20},
-    {"name": "collaboration", "weight": 18},
-    {"name": "documentation", "weight": 16},
-    {"name": "refactoring", "weight": 14},
-    {"name": "opensource", "weight": 12},
+    {"name": "integration", "weight": 25},
+    {"name": "visualization", "weight": 20},
+    {"name": "optimization", "weight": 15},
+    {"name": "debugging", "weight": 10},
 ]
 
 # Create chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration
-chart.options.chart = {"type": "wordcloud", "width": 4800, "height": 2700, "backgroundColor": "#ffffff"}
-
-# Title
-chart.options.title = {
-    "text": "Developer Survey · wordcloud-basic · highcharts · pyplots.ai",
-    "style": {"fontSize": "64px", "fontWeight": "bold"},
+# Chart configuration with theme-aware background
+chart.options.chart = {
+    "type": "wordcloud",
+    "width": 4800,
+    "height": 2700,
+    "backgroundColor": PAGE_BG,
+    "marginTop": 100,
+    "marginBottom": 80,
 }
+
+# Title with theme-aware styling
+chart.options.title = {"text": "wordcloud-basic · highcharts · anyplot.ai", "style": {"fontSize": "28px", "color": INK}}
 
 # Credits
 chart.options.credits = {"enabled": False}
 
 # Tooltip
-chart.options.tooltip = {"style": {"fontSize": "32px"}, "pointFormat": "<b>{point.name}</b>: {point.weight} mentions"}
+chart.options.tooltip = {
+    "style": {"fontSize": "18px", "color": INK},
+    "pointFormat": "<b>{point.name}</b>: {point.weight} mentions",
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+}
 
-# Wordcloud series configuration with colorblind-safe colors
+# Wordcloud series configuration using Okabe-Ito palette
 chart.options.series = [
     {
         "type": "wordcloud",
         "name": "Mentions",
         "data": words_data,
-        "minFontSize": 24,
-        "maxFontSize": 120,
-        "spiral": "archimedean",
-        "rotation": {"from": 0, "to": 60, "orientations": 5},
-        "style": {"fontFamily": "Arial, sans-serif", "fontWeight": "bold"},
-        "colors": ["#306998", "#FFD43B", "#9467BD", "#17BECF", "#8C564B", "#2CA02C", "#E377C2"],
+        "minFontSize": 28,
+        "maxFontSize": 140,
+        "spiral": "rectangular",
+        "rotation": {"from": 0, "to": 60, "orientations": 4},
+        "style": {"fontFamily": "Arial, sans-serif", "fontWeight": "normal"},
+        "colors": OKABE_ITO,
     }
 ]
 
@@ -93,14 +105,46 @@ chart.options.series = [
 chart.options.legend = {"enabled": False}
 
 # Download Highcharts JS and wordcloud module
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-wordcloud_url = "https://code.highcharts.com/modules/wordcloud.js"
+# Try jsDelivr CDN as fallback if code.highcharts.com is blocked
+highcharts_urls = [
+    "https://code.highcharts.com/highcharts.js",
+    "https://cdn.jsdelivr.net/npm/highcharts@11.0.0/highcharts.js",
+]
+wordcloud_urls = [
+    "https://code.highcharts.com/modules/wordcloud.js",
+    "https://cdn.jsdelivr.net/npm/highcharts@11.0.0/modules/wordcloud.js",
+]
 
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+session = requests.Session()
+session.headers.update(
+    {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0"}
+)
 
-with urllib.request.urlopen(wordcloud_url, timeout=30) as response:
-    wordcloud_js = response.read().decode("utf-8")
+highcharts_js = None
+for url in highcharts_urls:
+    try:
+        response = session.get(url, timeout=30)
+        response.raise_for_status()
+        highcharts_js = response.text
+        break
+    except requests.RequestException:
+        continue
+
+if highcharts_js is None:
+    raise RuntimeError("Failed to download Highcharts JS from any CDN")
+
+wordcloud_js = None
+for url in wordcloud_urls:
+    try:
+        response = session.get(url, timeout=30)
+        response.raise_for_status()
+        wordcloud_js = response.text
+        break
+    except requests.RequestException:
+        continue
+
+if wordcloud_js is None:
+    raise RuntimeError("Failed to download Wordcloud module from any CDN")
 
 # Generate HTML with inline scripts
 html_str = chart.to_js_literal()
@@ -111,30 +155,17 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{wordcloud_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Save HTML for interactive version (uses CDN for better compatibility)
-standalone_html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/wordcloud.js"></script>
-</head>
-<body style="margin:0;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>{html_str}</script>
-</body>
-</html>"""
+# Save HTML artifact with theme-aware filename
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
 
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(standalone_html)
-
-# Write temp HTML and take screenshot
+# Write temp HTML and take screenshot for PNG
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
@@ -148,9 +179,8 @@ chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
-driver.save_screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-# Clean up temp file
 Path(temp_path).unlink()

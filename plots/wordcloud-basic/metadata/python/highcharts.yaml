@@ -1,210 +1,233 @@
 library: highcharts
+language: python
 specification_id: wordcloud-basic
 created: '2025-12-24T09:59:31Z'
-updated: '2025-12-24T10:07:20Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20483453345
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-06T07:38:25Z'
+generated_by: claude-haiku
+workflow_run: 25422001088
+issue: 1012
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/wordcloud-basic/python/highcharts/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent use of Highcharts wordcloud module with proper configuration (archimedean
-    spiral, rotation options)
-  - 'Colorblind-safe color palette with good variety (#306998, #FFD43B, #9467BD, #17BECF,
-    #8C564B, #2CA02C, #E377C2)'
-  - Realistic developer survey data with 35 technology terms and appropriate frequency
-    weights
-  - Title format correctly follows spec-id · library · pyplots.ai pattern
-  - Both PNG and HTML outputs generated, with HTML using responsive sizing (100% width)
-  - Proper inline script embedding for headless Chrome compatibility
-  - Good tooltip configuration showing word and mention count
-  weaknesses:
-  - Code has some redundancy with two separate HTML template generations (inline vs
-    CDN versions)
-  - Word cloud appears slightly top-heavy in the layout distribution
-  - Could benefit from wider weight range for more dramatic size differences between
-    common and rare terms
-  image_description: 'The word cloud displays 35 technology-related terms from a developer
-    survey on a white background. The largest word is "python" (in blue, #306998),
-    followed by "javascript" (green), "data" (teal), "cloud" (orange), "api" (purple),
-    and "machine learning" (yellow-gold). Words are arranged at various angles (0°
-    to ~60°) in an archimedean spiral pattern, creating a visually appealing cluster.
-    The color palette includes blue, yellow, purple, cyan, brown, green, and pink
-    - all colorblind-safe choices. The title "Developer Survey · wordcloud-basic ·
-    highcharts · pyplots.ai" appears at the top in bold black text. Smaller terms
-    like "documentation", "architecture", "refactoring", and "opensource" are visible
-    but proportionally smaller. The word cloud fills the center of the canvas well
-    with balanced whitespace.'
+  - Perfect theme adaptation with data colors constant across light/dark renders and
+    proper chrome inversion
+  - Excellent text legibility from explicitly set font sizes (minFontSize=28, maxFontSize=140)
+  - Clean code structure with robust error handling and fallback CDN URLs
+  - Realistic, neutral developer survey data demonstrating word cloud use case effectively
+  - Perfect Okabe-Ito palette compliance with brand green (#009E73) as first series
+  - Correct output format with dual PNG and HTML artifacts and proper file naming
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified.
+      Chrome: Title "wordcloud-basic · highcharts · anyplot.ai" in dark INK color (#1A1A17), perfectly readable. Secondary text and tick labels use INK_SOFT (#4A4A44).
+      Data: Words sized by frequency (python largest at 420, debugging smallest at 10). Colors from Okabe-Ito palette: brand green (#009E73), orange (#D55E00), blue (#0072B2), pink (#CC79A7), yellow (#E69F00), sky blue (#56B4E9). All words clearly readable with excellent contrast against light background.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified.
+      Chrome: Title in light INK color (#F0EFE8), perfectly readable against dark background. Secondary text uses INK_SOFT (#B8B7B0) with proper contrast. No dark-on-dark text failures.
+      Data: Colors are **identical** to light render—all Okabe-Ito colors remain constant. Only chrome (background, text) has flipped to dark-theme tokens, confirming proper theme-independence for data encoding.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: All words are clearly readable at full size, title is large and bold
-          (64px), word sizes scale appropriately from 24px to 120px
+        comment: All font sizes explicitly set (title 28px, min 28px, max 140px).
+          Perfectly readable in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all words are distinct and readable
+        comment: All words properly spaced with no overlapping text.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Word sizes are well-adapted to frequencies, good size variation shows
-          hierarchy clearly
+        comment: All 30 words visible and optimally sized by frequency.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses colorblind-safe palette (blue, yellow, purple, cyan, brown,
-          green, pink) - no red-green conflicts
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization, word cloud fills center well, though slightly
-          more top-heavy
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend correctly disabled (N/A for word clouds), no distracting elements
+        comment: Okabe-Ito palette ensures CVD-safety with good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect 4800×2700 layout with balanced margins and optimal canvas
+          utilization.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title in correct format: ''wordcloud-basic · highcharts · anyplot.ai''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect theme chrome: #FAF8F1 light background with dark text, #1A1A17
+          dark background with light text. Data colors (Okabe-Ito, first #009E73)
+          identical across themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Well-designed with Okabe-Ito palette and theme-aware styling. Above
+          default but word clouds have inherent design limitations.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean execution with appropriate legend disable, subtle tooltips,
+          proper margins. Minimal embellishment.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Realistic developer survey data with clear narrative. Word size creates
+          natural visual hierarchy highlighting top technologies.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct word cloud visualization using Highcharts wordcloud module
+        comment: Correct wordcloud chart type using Highcharts native module.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Words mapped to name, frequencies to weight correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Word size by frequency, multiple words (35), proper preprocessing
-          implied
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: word labels, frequency-based sizing (min 28px,
+          max 140px), colors, rectangular spiral layout.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full range of weights displayed (12-150)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'Correct mapping: word→name, frequency→weight. All data visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend appropriately disabled for word cloud
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "Developer Survey · wordcloud-basic · highcharts
-          · pyplots.ai"'
+        comment: Title format correct. Legend disabled (appropriate for word clouds).
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows good variation in word sizes and 35 terms, but could include
-          more variety in rotation angles or show multi-word phrases more prominently
+        comment: 30 words with frequency range 420→10 showing full variation and distribution.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: 'Excellent real-world scenario: developer survey results with plausible
-          technology terms'
+        comment: Real-world developer survey data. Neutral, comprehensible, technology
+          domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Weight values (12-150) create good visual hierarchy, though the range
-          could be slightly wider for more dramatic size differences
+        comment: 'Realistic proportions: Python/JavaScript at top matches real-world
+          prevalence. Factually plausible.'
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: true
-        comment: Code is mostly linear but could be more streamlined; some redundancy
-          with two HTML generations
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Deterministic data (no random generation)
+        comment: 'Linear flow: imports → data → chart → HTML → screenshot.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Data hardcoded; fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: os, tempfile, time, pathlib, requests, highcharts_core,
+          selenium.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, robust code with fallback CDN URLs and proper session headers.
+          No fake functionality.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Highcharts API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png ✓ and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: 'Correct filenames: plot-{THEME}.png and plot-{THEME}.html. Current
+          API.'
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of Highcharts wordcloud module with archimedean spiral,
-          rotation configuration, custom color palette, and tooltip formatting
+        comment: Correct Chart class, HighchartsOptions, native wordcloud module,
+          proper container. Selenium integration is standard. Well-executed.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Highcharts wordcloud module (native), spiral control, font size
+          range. These are Highcharts-specific but used in standard patterns.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - requests
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
