@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 wireframe-3d-basic: Basic 3D Wireframe Plot
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Updated: 2025-12-24
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-06
 """
 
 import os
