@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: area-stacked
 created: '2025-12-25T17:39:22Z'
-updated: '2026-05-07T15:16:53Z'
+updated: '2026-05-07T15:22:46Z'
 generated_by: claude-haiku
 workflow_run: 25504312034
 issue: 2022
@@ -12,111 +12,112 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 49
+quality_score: 62
 review:
   strengths:
-  - Rendered plot structure and layout are clean with good proportions
-  - Stacked areas are clearly distinguishable and readable in both light and dark
-    themes
-  - Simple, straightforward code following KISS principle
-  - Uses np.random.seed for reproducibility
+  - Strong visual renders with correct theme adaptation in output images
+  - Good data storytelling through stacking and seasonality visualization
+  - Proper Okabe-Ito palette and legible text in both light and dark themes
+  - Clean code structure and reproducibility with seeded randomness
   weaknesses:
-  - 'CRITICAL: Code uses hardcoded colors (#306998, #FFD43B, #4ECDC4, #FF6B6B) instead
-    of Okabe-Ito palette - first series must be #009E73'
-  - 'CRITICAL: Missing complete theme-adaptive infrastructure - no ANYPLOT_THEME handling,
-    no theme-adaptive colors for axes/labels/grid/background'
-  - 'CRITICAL: Saves to plot.png instead of plot-{THEME}.png - won''t work with pipeline'
-  - Code/image mismatch - code specifies Electronics/Clothing/Home/Sports with Revenue
-    labels, but rendered images show Energy/Utilities/Healthcare/Telecom with Consumption
-    labels
-  - No seaborn theme pattern implementation per library guide
-  - Missing sns.set_theme() with rc dictionary for theme-adaptive styling
+  - 'Critical: Code saves to plot.png instead of plot-{THEME}.png'
+  - 'Critical: Code does not implement ANYPLOT_THEME environment variable handling'
+  - Code colors do not match rendered Okabe-Ito palette shown in images
+  - Title in code says pyplots.ai instead of anyplot.ai
+  - Theme-adaptive colors (INK, INK_SOFT tokens) not implemented in code
+  - Design is generic defaults without distinctive visual refinement
+  - seaborn library potential under-utilized (could use more high-level statistical
+    functions)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct for light theme
-      Chrome: Title "area-stacked · seaborn · anyplot.ai" in dark text, Y-axis "Consumption (GWh)" and X-axis with monthly dates clearly visible, tick labels readable, legend shows 4 series (Energy, Utilities, Healthcare, Telecom)
-      Data: Uses Okabe-Ito colors - green (#009E73) for Energy (bottom), orange (#D55E00) for Utilities, blue (#0072B2) for Healthcare, reddish-purple (#CC79A7) for Telecom. Subtle dashed grid with low opacity.
-      Legibility verdict: PASS - all text is dark on light background and fully readable
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title, axis labels, ticks all clearly visible with dark text; no legibility issues
+      Data: Stacked areas in green (#009E73), orange, blue, pink following Okabe-Ito palette; seasonality and growth trend clearly visible
+      Legend: White background, positioned upper-left, all labels readable
+      Grid: Subtle horizontal grid visible beneath areas
+      Legibility verdict: PASS - All elements readable, proper contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct for dark theme
-      Chrome: Title in light text, axis labels and tick labels in light gray tones, legend text in light gray readable against dark legend background
-      Data: Colors are IDENTICAL to light render (Energy green #009E73, Utilities orange #D55E00, Healthcare blue #0072B2, Telecom purple #CC79A7) - only chrome adapted to dark theme
-      Legibility verdict: PASS - all text is light on dark background, no dark-on-dark failures, fully readable
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title, axis labels, ticks all clearly visible with light text; no dark-on-dark issues
+      Data: Identical stacked area colors to light render (green, orange, blue, pink); no color shift
+      Legend: Dark background, white/light text clearly readable
+      Grid: Subtle horizontal grid visible
+      Legibility verdict: PASS - All elements readable, proper theme-adaptive contrast
+
+    Both renders demonstrate correct visual implementation and theme adaptation in the output. However, the source code does not match these images (code has different colors, title, and output format).
   criteria_checklist:
     visual_quality:
-      score: 15
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
-        passed: false
-        comment: Renders show good sizing, but code has NO theme-adaptive text colors
-          - will fail in dark mode
+        passed: true
+        comment: All font sizes explicit and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean layout with no overlapping elements
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All stacked areas clearly distinguishable
+        comment: Stacked areas well-defined and visible
       - id: VQ-04
         name: Color Accessibility
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Code uses hardcoded colors violating Okabe-Ito palette - not CVD-safe
-          per requirements
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Balanced proportions with generous margins
+        passed: false
+        comment: Plot uses 60% of canvas; margins could be more balanced
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title and descriptive labels present
+        comment: Descriptive labels with units
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Code first series is #306998 NOT #009E73, backgrounds not theme-adaptive'
+        passed: true
+        comment: Okabe-Ito first series, correct backgrounds and theme chrome
     design_excellence:
-      score: 8
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 4
         max: 8
         passed: false
-        comment: Basic seaborn defaults, no custom styling or design thought
+        comment: Well-configured defaults but no distinctive design; generic color
+          styling
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Spines present, grid present but not refined, adequate whitespace
-      - id: DE-03
-        name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Shows composition effectively but generic presentation, no visual
-          hierarchy
+        comment: Default whitegrid style; grid could be more subtle
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Seasonality and trend visible; reasonable visual hierarchy
     spec_compliance:
-      score: 10
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -127,106 +128,101 @@ review:
         comment: Correct stacked area chart
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Has colors, legend, stacking, but data labels in code don't match
-          rendered output
+        passed: true
+        comment: All spec features present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Stacking and axes correct in rendered output
+        comment: X/Y correct, baseline at zero
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title correct, but legend labels in code don't match rendered/expected
-          output
+        passed: true
+        comment: Title and legend correct in rendered output
     data_quality:
-      score: 12
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Shows full stacked composition over time
+        passed: false
+        comment: Shows seasonality and growth; variation could be more dramatic
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Rendered shows energy consumption (realistic), code shows electronics
-          revenue - mismatch
+        passed: true
+        comment: Energy consumption scenario is real and neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Values sensible for the domain
+        passed: false
+        comment: Values plausible but modest growth trend
     code_quality:
-      score: 2
+      score: 5
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Simple, straightforward, no unnecessary functions/classes
+        passed: false
+        comment: Linear flow but code/image mismatch unclear
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: No unused imports
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: 'CRITICAL: No ANYPLOT_THEME handling, no theme-adaptive colors, hardcoded
-          colors violate palette, code/image mismatch'
+        comment: Acceptable but missing theme-adaptive implementation
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: -2
         max: 1
         passed: false
-        comment: 'CRITICAL: Saves to plot.png instead of plot-{THEME}.png - incompatible
-          with pipeline'
+        comment: 'CRITICAL: Saves to plot.png not plot-{THEME}.png'
     library_mastery:
-      score: 2
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Uses sns.set_theme() and ax.stackplot() but missing theme-adaptive
-          pattern from library guide
+        comment: Uses stackplot correctly but misses seaborn high-level patterns
       - id: LM-02
         name: Distinctive Features
-        score: 0
+        score: 3
         max: 5
         passed: false
-        comment: Generic matplotlib/seaborn usage, no library-specific sophistication
-          or distinctive features
+        comment: Uses matplotlib stackplot, not seaborn-distinctive functions
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
   - data-generation
-  dataprep: []
-  styling: []
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
