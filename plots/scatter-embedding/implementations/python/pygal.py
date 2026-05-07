@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-embedding: t-SNE and UMAP Embedding Visualization
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-05-07
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 76/100 | Created: 2026-05-07
 """
 
 import os
