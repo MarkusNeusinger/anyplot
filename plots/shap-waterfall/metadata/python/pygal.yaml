@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: shap-waterfall
 created: '2026-05-07T11:56:19Z'
-updated: '2026-05-07T12:23:48Z'
+updated: '2026-05-07T12:37:21Z'
 generated_by: claude-sonnet
 workflow_run: 25493700161
 issue: 5237
@@ -12,42 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-wate
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/pygal/plot-dark.html
-quality_score: 78
+quality_score: 80
 review:
   strengths:
-  - 'Both light and dark themes render correctly: backgrounds are #FAF8F1 / #1A1A17,
-    text adapts, data colors are identical across themes'
-  - 'Per-bar color dict is idiomatic pygal and correctly maps SHAP polarity to Okabe-Ito
-    colors (#D55E00 positive, #0072B2 negative)'
-  - Realistic, neutral customer churn prediction scenario with plausible SHAP magnitudes
-  - Feature magnitude ordering (largest at top) is correct and aids immediate readability
-  - SHAP values embedded in feature label strings provide precise per-bar annotation
-  - Clean KISS code structure with proper seed and dual PNG+HTML output
+  - 'Excellent data quality: realistic telecom churn ML scenario with plausible SHAP
+    values and both positive/negative contributions'
+  - 'Perfect code quality: clean KISS structure, reproducible, correct output files,
+    elegant spacer waterfall pattern'
+  - Correct theme-adaptive chrome in both renders; dark render is particularly clean
+    and readable
+  - SHAP values embedded in Y-axis labels provide instant quantitative context without
+    cluttering the bars
   weaknesses:
-  - 'Critical: Not a true waterfall chart - bars all start from zero instead of chaining
-    cumulatively from base_value. Must calculate cumulative left-edges and use stacked
-    bar trick (invisible anchor + visible SHAP bar) to create proper waterfall stacking'
-  - Missing vertical reference lines at base_value (0.25) and final_value (0.48) -
-    spec requires labeled reference lines, not just title text
-  - Missing connector markers or step-lines between bar segments showing cumulative
-    flow
-  - Axis label (x_title via label_font_size) is 18px, below the recommended 22px for
-    pixel-based libraries
+  - 'VQ-07: First visible data color is not #009E73 (brand green); style colors tuple
+    starts with background spacer color offsetting Okabe-Ito order'
+  - 'DE-01/DE-02: Limited design sophistication beyond configured defaults; minimal
+    visual refinement options within pygal constraints'
+  - 'SC-02: SHAP values shown in Y-axis labels rather than directly annotated on/beside
+    bar segments as spec implies'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title "Customer Churn Prediction · shap-waterfall · pygal · anyplot.ai" in dark text, fully readable. Y-axis feature labels with parenthetical SHAP values readable. X-axis label readable but slightly small (18px vs recommended 22px). Tick labels readable.
-      Data: Orange (#D55E00 Okabe-Ito vermillion) for positive SHAP values, blue (#0072B2 Okabe-Ito blue) for negative. All bars originate from the same zero-line, positive extend right, negative extend left. Bars well-proportioned and clearly visible. Dashed vertical grid lines subtle.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "Customer Churn Prediction · shap-waterfall · pygal · anyplot.ai" visible in dark ink; Y-axis feature labels (e.g., "Monthly Charges (+0.20)") readable in dark text; X-axis label with full SHAP value context readable at bottom
+      Data: Orange (#D55E00 Okabe-Ito vermillion) bars for positive contributions, blue (#0072B2 Okabe-Ito blue) for negative; vertical guide lines at x=0.25 (base) and x=0.48 (prediction); bars correctly stacked showing cumulative waterfall progression
+      Legibility verdict: PASS — all elements visible and readable; some right-side whitespace beyond final prediction value
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title, y-axis feature labels, x-axis tick/title labels all rendered in light text - clearly readable against dark background. No dark-on-dark failures detected.
-      Data: Orange and blue bar colors identical to light render - only chrome (background, text) flipped as required. Grid lines remain subtle.
-      Legibility verdict: PASS
+      Background: Near-black (#1A1A17) — correct theme surface
+      Chrome: Title, Y-axis feature labels, and X-axis label all rendered in light text (#F0EFE8/INK_MUTED range), clearly readable against dark background; no dark-on-dark failures detected
+      Data: Orange and blue bars are identical to light render — only chrome (background and text) flipped; strong contrast between bar colors and dark background
+      Legibility verdict: PASS — all text clearly readable, no dark-on-dark issues, data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -55,51 +52,46 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=28, labels=18, ticks=18); all readable
-          in both themes but axis label font 18px is below recommended 22px for pixel-based
-          libraries
+        comment: Font sizes explicitly set (title=28, label=22, major_label=18); readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Feature labels well-spaced, no text collisions in either render
+        comment: No text or bar overlap; 10 features cleanly spaced
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Bars clearly visible in both themes; orange and blue have strong
-          contrast against both backgrounds
+        comment: Bars clearly visible; Monthly Charges bar dominates as expected
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito vermillion and blue are CVD-safe; polarity encoding uses
-          both hue and length
+        comment: '#D55E00 vs #0072B2 — Okabe-Ito, CVD-safe, strong contrast'
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Chart occupies good portion of 4800x2700 canvas; some right-side
-          whitespace where small-value bars leave empty space
+        comment: Good proportions; some right-side whitespace inherent to data range
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis label includes units and embeds base/prediction values; feature
-          labels include SHAP values
+        comment: Descriptive X-axis with base/prediction values; feature names on
+          Y-axis
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Spec overrides default first-series green with semantic colors; both
-          are Okabe-Ito (positions 2 & 3); backgrounds correct; chrome theme-correct
-          in both renders
+        passed: false
+        comment: 'Backgrounds correct; Okabe-Ito colors used but first data color
+          not #009E73'
     design_excellence:
       score: 10
       max: 20
@@ -109,81 +101,76 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: Clean, well-configured look with theme-adaptive colors; professional
-          but not publication-ready
+        comment: Professional two-tone semantic coloring; well-configured default
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Grid limited to x_guides only (good choice), theme-adaptive foreground,
-          generous bar spacing; no spine removal
+        comment: Clean chrome, hidden legend, controlled guides; pygal frame border
+          remains
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Magnitude ordering and color encoding are meaningful storytelling
-          choices; missing waterfall cumulative flow undermines the core narrative
+        comment: Waterfall structure communicates cumulative path; Monthly Charges
+          visually dominant
     spec_compliance:
-      score: 10
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses HorizontalBar (correct base type) but lacks waterfall stacking
-          - all bars originate from zero-line, not cumulatively chained from base_value
-          to final_value
+        passed: true
+        comment: Correct horizontal waterfall via stacked bar with spacers; no connector
+          lines
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: 'Present: horizontal layout, color coding, magnitude ordering, SHAP
-          values in labels. Missing: cumulative stacking, connector lines, explicit
-          base_value/final_value reference lines'
+        passed: true
+        comment: All features present; SHAP values in Y-axis labels vs directly on
+          bars
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Feature names on y-axis, SHAP values on x-axis, polarity colors correct.
-          But bars show raw SHAP values from zero, not cumulative positions from base_value
+        passed: true
+        comment: Features on Y-axis, SHAP values on X-axis, correct cumulative stacking
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title contains 'shap-waterfall · pygal · anyplot.ai' with contextual
-          prefix. Legend correctly omitted for single logical series
+        comment: Title contains shap-waterfall · pygal · anyplot.ai; legend appropriately
+          hidden
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows both positive and negative SHAP values with varying magnitudes,
-          10 features. Lacks demonstration of cumulative chain reaching final_value
+        comment: Both positive and negative contributions; full range of magnitudes;
+          10 features
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Customer churn prediction is a real, neutral, comprehensible business
-          scenario with domain-appropriate feature names
+        comment: Telecom customer churn prediction — textbook ML explainability scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Base value 0.25 and prediction 0.48 are plausible churn probabilities;
-          SHAP values in -0.12 to +0.20 range are realistic
+        comment: Base 0.25, prediction 0.48, SHAP in -0.12 to +0.20 — plausible probability
+          space
     code_quality:
       score: 10
       max: 10
@@ -193,8 +180,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: sys.path fix, imports, data, style, chart, save.
-          No functions or classes'
+        comment: Imports → Data → Style → Plot → Save; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -206,19 +192,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, numpy, pygal, pygal.style.Style'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. sys.path fix is necessary and commented. No over-engineering
+        comment: Canonical spacer+visible waterfall pattern; sys.path fix is necessary
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: plot-{THEME}.png and plot-{THEME}.html saved correctly
     library_mastery:
       score: 7
       max: 10
@@ -228,21 +214,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of HorizontalBar, Style object, x_labels, per-bar dict
-          for color override, show_legend=False, show_y_guides=False
+        comment: HorizontalStackedBar with per-bar color dicts is correct pygal pattern
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Per-bar color via dict format is pygal-specific; dual PNG+interactive
-          HTML output is distinctive to pygal
-  verdict: REJECTED
+        comment: Per-bar {value, color, label} dicts and HTML interactive export are
+          distinctive pygal features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
   styling: []
