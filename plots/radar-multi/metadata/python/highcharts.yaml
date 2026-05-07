@@ -1,53 +1,237 @@
 library: highcharts
+language: python
 specification_id: radar-multi
 created: '2025-12-25T19:08:15Z'
-updated: '2025-12-25T19:10:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20509624958
+updated: '2026-05-07T17:12:56Z'
+generated_by: claude-haiku
+workflow_run: 25510123511
 issue: 2026
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/radar-multi/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/radar-multi/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-    - selenium
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-    - iteration-over-groups
-  dataprep: []
-  styling:
-    - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/highcharts/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent implementation of multi-series radar chart using Highcharts polar mode
-    with area series
-  - 'All specification requirements met: 4 distinct products, 6 axes, transparent
-    fills (0.2), distinct colorblind-safe colors, legend, gridlines at 20-unit intervals'
-  - Square 3600x3600 format is well-suited for radar visualization
-  - 'Proper use of gridLineInterpolation: polygon for radar-style gridlines'
-  - Both inline JS for PNG export and CDN-based interactive HTML version provided
-  - 'Data tells a coherent story: different product positioning strategies (premium,
-    budget, balanced, feature-rich)'
+  - Perfect theme adaptation with correct ANYPLOT_THEME tokens
+  - Both renders fully readable with excellent contrast
+  - 'Correct Okabe-Ito palette compliance (first series is #009E73)'
+  - Clean, deterministic code with proper imports
+  - Realistic, neutral product comparison data
+  - 'All spec requirements met: filled polygons, transparency, legend, gridlines'
   weaknesses:
-  - Gridline width (2) is slightly heavy for optimal subtlety; alpha 0.15 is good
-    but combined with width 2 makes lines more prominent than ideal
-  - Axis labels lack units (could add "(Score)" or similar for 0-100 scale clarity)
-  - Data differentiation could be more dramatic - some values cluster in the 50-80
-    range
-  - Uses container.screenshot() instead of driver.save_screenshot() per library rules
-  image_description: 'The plot displays a multi-series radar chart with a white background.
-    The title "Product Comparison · radar-multi · highcharts · pyplots.ai" is displayed
-    at the top in bold black text. The radar chart has 6 axes radiating from the center:
-    Price, Quality, Durability, Support, Features, and Ease of Use. Four overlapping
-    polygons represent four products: Product A (Premium) in blue (#306998), Product
-    B (Budget) in yellow (#FFD43B), Product C (Balanced) in purple (#9467BD), and
-    Product D (Feature-Rich) in cyan (#17BECF). Each polygon has a semi-transparent
-    fill (~0.2 opacity) with visible outlines and data point markers. The gridlines
-    form concentric polygons at intervals of 0, 20, 40, 60, 80 (with subtle gray coloring).
-    A horizontal legend at the bottom shows all four products with their colors and
-    labels.'
+  - Design Excellence is average - follows spec defaults without distinctive visual
+    choices
+  - Missing visual emphasis techniques (highlight, annotations, size variation)
+  - Library Mastery is basic - standard Highcharts patterns without custom interactions
+  - Data storytelling relies solely on inherent comparative layout
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme color
+      Chrome: Title (28px) in dark text, axis labels (18px) in dark gray around perimeter, gridlines subtle, legend text (16px) all clearly readable
+      Data: Four overlapping polygons with distinct Okabe-Ito colors (green #009E73 for Product A, orange #D55E00, blue #0072B2, purple #CC79A7); first series is brand green; semi-transparent fill allows visibility through overlaps; marker dots visible at vertices
+      Legibility verdict: PASS — all elements have excellent contrast against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme color
+      Chrome: Title in light text, axis labels in light gray, gridlines subtle and visible, legend text readable — no dark-on-dark failures
+      Data: Polygon colors are IDENTICAL to light render (green, orange, blue, purple unchanged) — only chrome adapted to dark theme; marker dots and outlines equally visible
+      Legibility verdict: PASS — all text readable against dark background; theme adaptation correct; colors maintain identity between themes
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title (28px), axis labels (18px), ticks (16px), legend (16px) all
+          appropriately sized and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Axis labels positioned cleanly around perimeter with no text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Polygons, markers, gridlines all clearly distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette CVD-safe; strong contrast throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format (3600x3600) appropriate for radar; pane at 75% with
+          good margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Clear titles with units (Score); proper legend formatting
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand), Okabe-Ito order positions 1-4, backgrounds
+          correct (#FAF8F1 light, #1A1A17 dark), both renders theme-adaptive'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Competent palette use and sizing; mostly follows defaults without
+          distinctive design choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Subtle gridlines and reasonable spacing; minimal customization beyond
+          defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Comparative layout naturally shows strengths/weaknesses but lacks
+          visual emphasis or focal points
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct multi-series radar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Filled polygons, transparency, distinct colors, legend, gridlines,
+          axis labels all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 4 products across 6 attributes; axes show full 0-100 range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Correct format: ''Product Comparison · radar-multi · highcharts
+          · anyplot.ai''; legend matches series'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Demonstrates all radar aspects: overlapping series, multiple dimensions,
+          radial scale'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Product comparison (Premium, Budget, Balanced, Feature-Rich) realistic
+          and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100 attribute scores sensible for product evaluation
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions or classes; straightforward implementation
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic data (no random seeding)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Only necessary imports: highcharts_core, selenium, urllib, tempfile,
+          Path, os'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct: plot-{THEME}.png + plot-{THEME}.html'
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper HighchartsOptions, AreaSeries, Selenium integration; correct
+          polar config with pane and gridLineInterpolation
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Uses polar/radar correctly but employs standard patterns; no custom
+          interactions or advanced styling
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  - polar-projection
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
