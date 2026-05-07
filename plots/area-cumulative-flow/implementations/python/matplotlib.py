@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-cumulative-flow: Cumulative Flow Diagram for Workflow Analytics
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 87/100 | Created: 2026-05-07
@@ -90,7 +90,7 @@ ax.set_ylabel("Cumulative Items", fontsize=20, color=INK)
 ax.set_title(
     "Sprint Kanban Board · area-cumulative-flow · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK
 )
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT, length=0)
 
 # X-axis: bi-weekly date ticks
 ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
@@ -107,8 +107,22 @@ for spine in ("left", "bottom"):
     ax.spines[spine].set_color(INK_SOFT)
 
 # Grid (y-axis only, subtle)
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+ax.yaxis.grid(True, alpha=0.13, linewidth=0.8, color=INK)
 ax.set_axisbelow(True)
+
+# Shaded region highlighting Testing bottleneck buildup (days 15–60)
+ax.axvspan(dates[15], dates[60], alpha=0.07, color=COLORS[1], zorder=0)
+mid_bottleneck = dates[15] + (dates[60] - dates[15]) / 2
+ax.annotate(
+    "Testing Bottleneck",
+    xy=(mid_bottleneck, 0.52),
+    xycoords=("data", "axes fraction"),
+    ha="center",
+    va="center",
+    fontsize=15,
+    color=INK_MUTED,
+    style="italic",
+)
 
 # Legend — reversed so Backlog appears at top, matching visual stacking order
 handles, labels = ax.get_legend_handles_labels()
