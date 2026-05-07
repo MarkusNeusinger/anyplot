@@ -1,7 +1,7 @@
 """ anyplot.ai
 radar-multi: Multi-Series Radar Chart
 Library: highcharts unknown | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-07
+Quality: 85/100 | Updated: 2026-05-07
 """
 
 import os
