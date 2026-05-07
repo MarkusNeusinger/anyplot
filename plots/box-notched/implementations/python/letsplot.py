@@ -1,14 +1,27 @@
-""" pyplots.ai
+""" anyplot.ai
 box-notched: Notched Box Plot
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-25
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-07
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from lets_plot import *
+from lets_plot.export import ggsave
+
 
 LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
 
 # Data - department salaries with different distributions for statistical comparison
 np.random.seed(42)
@@ -48,28 +61,32 @@ data.extend([{"Department": "Operations", "Salary": s} for s in ops_salaries])
 
 df = pd.DataFrame(data)
 
-# Create notched box plot
+# Create notched box plot with Okabe-Ito palette
 plot = (
-    ggplot(df, aes(x="Department", y="Salary", fill="Department"))
-    + geom_boxplot(notch=True, outlier_size=4, outlier_alpha=0.7, size=1.2, alpha=0.85)
-    + scale_fill_manual(values=["#306998", "#FFD43B", "#2ECC71", "#E74C3C", "#9B59B6"])
-    + labs(title="box-notched · letsplot · pyplots.ai", x="Department", y="Annual Salary (USD)")
+    ggplot(df, aes(x="Department", y="Salary", fill="Department", color="Department"))
+    + geom_boxplot(notch=True, outlier_size=4, outlier_alpha=0.8, size=1.2, alpha=0.85)
+    + scale_fill_manual(values=OKABE_ITO)
+    + scale_color_manual(values=OKABE_ITO)
+    + labs(title="box-notched · letsplot · anyplot.ai", x="Department", y="Annual Salary (USD)")
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=28, hjust=0.5),
-        axis_title_x=element_text(size=22),
-        axis_title_y=element_text(size=22),
-        axis_text_x=element_text(size=18),
-        axis_text_y=element_text(size=18),
-        legend_position="none",
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_grid_major_y=element_line(color=INK, size=0.3, linetype="solid"),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
+        axis_title=element_text(size=20, color=INK),
+        axis_text_x=element_text(size=16, color=INK_SOFT),
+        axis_text_y=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.4),
+        plot_title=element_text(size=24, color=INK, hjust=0.5),
+        legend_position="none",
     )
     + ggsize(1600, 900)
 )
 
 # Save as PNG (scale 3x for 4800x2700)
-ggsave(plot, "plot.png", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
 
 # Save as HTML for interactivity
-ggsave(plot, "plot.html")
+ggsave(plot, f"plot-{THEME}.html", path=".")
