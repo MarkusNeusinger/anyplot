@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: scatter-regression-polynomial
 created: '2025-12-25T17:12:58Z'
-updated: '2026-05-07T13:04:30Z'
+updated: '2026-05-07T13:12:00Z'
 generated_by: claude-haiku
 workflow_run: 25497175728
 issue: 2028
@@ -12,47 +12,236 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/bokeh/plot-dark.html
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - Perfect visual quality with all text readable in both light and dark themes using
-    proper theme tokens
-  - Complete spec compliance with R² value, polynomial equation, scatter points, and
-    regression curve properly rendered
-  - Clean, reproducible code with correct bokeh patterns and straightforward logic
-  - Correct Okabe-Ito palette usage with proper first series color and contrasting
-    regression line
-  - Strong data quality demonstrating realistic diminishing-returns scenario with
-    excellent fit (R²=0.9765)
+  - Flawless text legibility across both light and dark themes with explicitly sized
+    fonts (28pt title, 22pt axis labels, 18pt ticks, 24pt annotation)
+  - 'Accurate theme-adaptive chrome: all non-data elements properly change between
+    themes while data colors remain identical (#009E73 and #D55E00 unchanged)'
+  - 'Perfect palette compliance: Okabe-Ito palette with correct background colors
+    (#FAF8F1 light / #1A1A17 dark) and theme-correct text colors'
+  - 'Complete spec implementation: scatter with transparency, polynomial curve (degree
+    2), R² value, polynomial equation, proper axis labels, correct title format'
+  - 'High-quality annotations: R² value (0.9765) and polynomial equation provide meaningful
+    data interpretation'
+  - Clean code structure with reproducible data (np.random.seed(42)) and proper Bokeh
+    library usage (ColumnDataSource, figure methods, HoverTool)
+  - 'Proper element visibility: scatter markers (size=18, alpha=0.65) and regression
+    line (width=5) optimally adapted to 100-point dataset'
   weaknesses:
-  - Generic styling with default bokeh appearance - no spine removal or custom visual
-    refinement
-  - Limited use of distinctive bokeh features beyond basic plotting (could explore
-    CustomJS callbacks or additional interactive tools)
-  - Minimal design hierarchy - annotation box present but could be more visually prominent
+  - Design excellence is solid but uses well-configured defaults rather than custom
+    aesthetic choices—could add visual refinement through custom typography, subtle
+    decorative elements, or enhanced whitespace
+  - 'Limited visual storytelling: while R² annotation provides interpretation, design
+    lacks special emphasis or focal points to guide viewer attention beyond standard
+    scatter conventions'
+  - 'Library mastery could be deeper: could leverage more advanced Bokeh-specific
+    features such as callbacks for dynamic degree slider, custom glyphs, or more sophisticated
+    interactive patterns beyond HoverTool'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 surface, correct theme token applied
-      Chrome: Title "scatter-regression-polynomial · bokeh · anyplot.ai" in dark text (INK #1A1A17). Axis labels "Investment (thousands $)" and "Efficiency Gain (%)" clearly readable. Tick labels in secondary dark color (INK_SOFT #4A4A44). Legend labels "Data Points" and "Polynomial Fit (degree 2)" visible in top-left. All text at appropriate sizes (title 28pt, labels 22pt, ticks 18pt, legend 18pt).
-      Data: 100 scatter points in Okabe-Ito green (#009E73) with alpha=0.65, showing good density. Regression curve in Okabe-Ito vermillion (#D55E00) with solid line (width=5), clearly distinct. Annotation box with R² = 0.9765 and polynomial equation positioned in center-right with light elevated background (#FFFDF6) and dark text.
-      Legibility verdict: PASS - All elements readable, proper contrast, theme tokens correctly applied
+      Background: Warm off-white (#FAF8F1) surface
+      Chrome: Title "scatter-regression-polynomial · bokeh · anyplot.ai" in 28pt dark text; axis labels "Investment (thousands $)" and "Efficiency Gain (%)" in 22pt dark text; tick labels in 18pt secondary gray; legend with semi-transparent background at top-left; annotation box with light background and dark text showing R² and equation
+      Data: Teal data points (#009E73) at alpha=0.65 showing 100-point scatter distribution; orange regression line (#D55E00) at line_width=5 fitting through points; subtle grid lines at 10% alpha
+      Legibility verdict: PASS - All text is clearly readable against the light background with excellent contrast; no "light on light" failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 surface, correct theme token applied
-      Chrome: Title in light text (INK #F0EFE8). Axis labels clearly readable in light color. Tick labels in light secondary color (INK_SOFT #B8B7B0). Legend visible with light text. No dark-on-dark failures - all text has sufficient contrast against dark background.
-      Data: Scatter points in identical green (#009E73) and regression line in identical vermillion (#D55E00) as light render - only chrome changed between themes. Annotation box with dark background (#242420) and light text, maintaining readability.
-      Legibility verdict: PASS - All text readable against dark background, data colors consistent with light render, no theme-adaptation failures
+      Background: Warm near-black (#1A1A17) surface
+      Chrome: Title in 28pt light text (#F0EFE8); axis labels in 22pt light text; tick labels in 18pt secondary light gray (#B8B7B0); legend with dark background; annotation box with darker fill (#242420) and light text
+      Data: Teal data points (#009E73) - identical to light render; orange regression line (#D55E00) - identical to light render; subtle grid lines at 10% opacity with light color
+      Legibility verdict: PASS - All text is clearly readable against the dark background; no "dark on dark" failures; data colors perfectly identical to light render confirming proper theme adaptation
   verdict: APPROVED
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (28pt, 22pt, 18pt, 24pt); perfectly
+          readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements; legend and annotations positioned cleanly
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Scatter (size=18, alpha=0.65) and line (width=5) optimally adapted
+          to 100-point dataset
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito palette #009E73 and #D55E00 provide excellent contrast
+          on both backgrounds; CVD-safe'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 70-80% of canvas with balanced margins; legend and title
+          properly positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units; title follows required format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect Okabe-Ito compliance; backgrounds #FAF8F1 and #1A1A17; data
+          colors identical across themes'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured defaults; professional but not exceptionally sophisticated
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (10% alpha), styled legend and annotation boxes, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: R² annotation and equation provide interpretation; visual hierarchy
+          present but limited emphasis
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter with polynomial regression (degree 2)
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: scatter, curve, R², equation, axis labels,
+          title'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned; axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels clear and appropriate
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows polynomial relationship and data density distribution clearly
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Manufacturing efficiency scenario is real-world plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values are factually correct and proportionally sound
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow with no unnecessary functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set for deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; no extraneous dependencies
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic code; no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ColumnDataSource, figure/scatter/line methods, theme tokens, HoverTool—correct
+          patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses ColumnDataSource, theme-adaptive chrome, HoverTool, Selenium;
+          could leverage more advanced features
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - annotations
   - hover-tooltips
+  - annotations
   - html-export
   patterns:
   - data-generation
   - columndatasource
   dataprep:
   - regression
-  styling: []
+  styling:
+  - alpha-blending
