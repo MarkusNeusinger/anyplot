@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 radar-multi: Multi-Series Radar Chart
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2025-05-07
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 83/100 | Updated: 2026-05-07
 """
 
 import math
