@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 horizon-basic: Horizon Chart
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-24
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-07
 """
 
+import os
 import sys
 
 import numpy as np
@@ -20,6 +21,13 @@ from pygal.style import Style  # noqa: E402
 
 # Restore path
 sys.path.insert(0, _cwd)
+
+# Theme configuration
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 
 class HorizonChart(Graph):
@@ -88,7 +96,7 @@ class HorizonChart(Graph):
                 horizon_group, "text", x=x_offset - 25, y=row_y + actual_row_height / 2 + label_font_size * 0.35
             )
             text_node.set("text-anchor", "end")
-            text_node.set("fill", "#333333")
+            text_node.set("fill", INK)
             text_node.set("style", f"font-size:{label_font_size}px;font-weight:bold;font-family:sans-serif")
             text_node.text = series_name
 
@@ -96,8 +104,8 @@ class HorizonChart(Graph):
             bg_rect = self.svg.node(
                 horizon_group, "rect", x=x_offset, y=row_y, width=available_width, height=actual_row_height
             )
-            bg_rect.set("fill", "#f8f9fa")
-            bg_rect.set("stroke", "#d0d0d0")
+            bg_rect.set("fill", PAGE_BG)
+            bg_rect.set("stroke", RULE)
             bg_rect.set("stroke-width", "2")
 
             # Draw horizon bands for each time point
@@ -149,7 +157,7 @@ class HorizonChart(Graph):
             line = self.svg.node(
                 horizon_group, "line", x1=grid_x, y1=y_offset, x2=grid_x, y2=y_offset + n_series * row_height
             )
-            line.set("stroke", "#cccccc")
+            line.set("stroke", RULE)
             line.set("stroke-width", "1")
             line.set("stroke-dasharray", "4,4")
 
@@ -163,7 +171,7 @@ class HorizonChart(Graph):
 
             text_node = self.svg.node(horizon_group, "text", x=label_x, y=label_y)
             text_node.set("text-anchor", "middle")
-            text_node.set("fill", "#333333")
+            text_node.set("fill", INK_MUTED)
             text_node.set("style", f"font-size:{x_label_font_size}px;font-family:sans-serif")
             text_node.text = self.time_labels[j]
 
@@ -173,7 +181,7 @@ class HorizonChart(Graph):
         x_title_y = y_offset + n_series * row_height + 120
         text_node = self.svg.node(horizon_group, "text", x=x_title_x, y=x_title_y)
         text_node.set("text-anchor", "middle")
-        text_node.set("fill", "#333333")
+        text_node.set("fill", INK)
         text_node.set("style", f"font-size:{x_title_font_size}px;font-weight:bold;font-family:sans-serif")
         text_node.text = "Time"
 
@@ -187,13 +195,13 @@ class HorizonChart(Graph):
             rect_x = legend_x + band_idx * 50
             rect = self.svg.node(horizon_group, "rect", x=rect_x, y=legend_y, width=45, height=25)
             rect.set("fill", self.pos_colors[band_idx])
-            rect.set("stroke", "#999")
+            rect.set("stroke", INK_MUTED)
             rect.set("stroke-width", "1")
 
         text_node = self.svg.node(
             horizon_group, "text", x=legend_x + self.n_bands * 50 + 10, y=legend_y + legend_font_size * 0.7
         )
-        text_node.set("fill", "#333333")
+        text_node.set("fill", INK)
         text_node.set("style", f"font-size:{legend_font_size}px;font-family:sans-serif")
         text_node.text = "Positive"
 
@@ -203,13 +211,13 @@ class HorizonChart(Graph):
             rect_x = legend_x + band_idx * 50
             rect = self.svg.node(horizon_group, "rect", x=rect_x, y=legend_y2, width=45, height=25)
             rect.set("fill", self.neg_colors[band_idx])
-            rect.set("stroke", "#999")
+            rect.set("stroke", INK_MUTED)
             rect.set("stroke-width", "1")
 
         text_node = self.svg.node(
             horizon_group, "text", x=legend_x + self.n_bands * 50 + 10, y=legend_y2 + legend_font_size * 0.7
         )
-        text_node.set("fill", "#333333")
+        text_node.set("fill", INK)
         text_node.set("style", f"font-size:{legend_font_size}px;font-family:sans-serif")
         text_node.text = "Negative"
 
@@ -279,11 +287,11 @@ metrics["Error Rate"] = (error_base + error_spikes).tolist()
 
 # Custom style for 4800x2700 canvas
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
     colors=("#306998",),
     title_font_size=72,
     legend_font_size=48,
@@ -303,7 +311,7 @@ chart = HorizonChart(
     width=4800,
     height=2700,
     style=custom_style,
-    title="horizon-basic · pygal · pyplots.ai",
+    title="horizon-basic · pygal · anyplot.ai",
     series_data=metrics,
     time_labels=hours,
     n_bands=3,
@@ -321,5 +329,5 @@ chart = HorizonChart(
 chart.add("", [0])
 
 # Save outputs
-chart.render_to_file("plot.html")
-chart.render_to_png("plot.png")
+chart.render_to_file(f"plot-{THEME}.html")
+chart.render_to_png(f"plot-{THEME}.png")

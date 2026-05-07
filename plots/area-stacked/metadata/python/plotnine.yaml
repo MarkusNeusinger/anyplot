@@ -1,158 +1,167 @@
 library: plotnine
+language: python
 specification_id: area-stacked
 created: '2025-12-25T17:39:55Z'
-updated: '2025-12-25T17:41:53Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20508665971
+updated: '2026-05-07T15:23:06Z'
+generated_by: claude-haiku
+workflow_run: 25504778819
 issue: 2022
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-stacked/plotnine/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-  - wide-to-long
-  - data-generation
-  dataprep:
-  - time-series
-  styling:
-  - alpha-blending
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent use of plotnine grammar of graphics with proper geom_area stacking
-  - Data ordered by average size (largest at bottom) as recommended in spec
-  - Clear, readable text at all sizes with proper font sizing for high-resolution
-    output
-  - Realistic website traffic scenario with appropriate growth trends
-  - Good color palette that is both visually appealing and distinguishable
-  - Proper date handling with scale_x_date and formatted quarterly labels
+  - Perfect visual quality with explicit font sizing and no legibility issues in either
+    theme
+  - Flawless palette compliance with Okabe-Ito colors and proper theme-adaptive chrome
+  - Clean, reproducible code with deterministic data generation
+  - Excellent spec compliance with all requirements met
+  - Realistic, well-chosen website traffic example
+  - Professional theme adaptation with no dark-on-dark failures
   weaknesses:
-  - Y-axis label could include units like (thousands) for clarity
-  image_description: 'The plot displays a stacked area chart showing website traffic
-    sources over 24 months (January 2023 to January 2025). Four colored areas are
-    stacked: Social Media (red) at the bottom, Referral (green), Direct (yellow),
-    and Organic Search (blue) at the top. The y-axis shows "Monthly Visitors" ranging
-    from 0 to approximately 65,000. The x-axis shows "Month" with quarterly date labels.
-    The title reads "area-stacked · plotnine · pyplots.ai" in bold. A legend labeled
-    "Traffic Source" appears on the right side. The chart uses a minimal theme with
-    subtle gridlines and has good visual balance.'
+  - Design excellence relies on library defaults rather than distinctive visual choices
+    (DE-01 at competent 4/8 rather than exceptional)
+  - Could explore more plotnine-specific features or styling techniques for higher
+    library mastery
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title in bold dark text clearly visible; axis labels (20pt) and tick labels (16pt) in dark gray, all readable; grid lines subtle with appropriate opacity
+      Data: Okabe-Ito palette applied correctly - Organic Search (#009E73) at top, Direct (#D55E00), Referral (#0072B2), Social Media (#CC79A7) at bottom; all series clearly distinguishable
+      Legibility verdict: PASS - All text elements fully readable against light background; no legibility issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark surface
+      Chrome: Title in light text clearly visible against dark background; axis labels and tick labels in light INK_SOFT color, all readable; grid lines visible and properly styled; legend background using elevated color (#242420)
+      Data: Data colors identical to light render (same hex values for green, orange, blue, pink); no color drift between themes
+      Legibility verdict: PASS - All text elements fully readable against dark background; no dark-on-dark failures; brand green (#009E73) visible and accessible
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is bold 24pt, axis titles 20pt, axis text 16pt, all clearly
-          readable
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, x-axis labels rotated 45° to avoid collision
+        comment: X-axis labels angled 45°; no overlapping elements; legend well-positioned
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Areas clearly visible with 0.85 alpha, good stacking visibility
+        comment: All 4 series clearly distinguishable; areas optimally visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses Python blue, yellow, green, red - distinct and colorblind-friendly
-          palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, legend positioned on right, balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: '"Monthly Visitors" and "Month" are descriptive but lack units'
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid with alpha 0.3, legend well placed
+        comment: Okabe-Ito palette is colorblind-safe; good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout with balanced margins and generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis includes units; title in correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order; backgrounds correct (#FAF8F1
+          light, #1A1A17 dark); both renders theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults; professional but not exceptionally distinctive
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (alpha 0.10/0.05); customized legend background; good
+          refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy by stacking order; realistic data guides understanding
+          of trends
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct stacked area chart
+        comment: Correct stacked area chart with proper stacking
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on x-axis, visitors on y-axis, categories stacked correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: distinct colors, legend, ordered by size,
-          semi-transparent fills, baseline at zero'
-      - id: SC-04
-        name: Data Range
+        comment: Multiple series, legend, time axis, stacking all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, y-axis starts at 0
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Date, Y=stacked visitors, fill=Source; correct mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all four traffic sources
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "area-stacked · plotnine · pyplots.ai"'
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows 4 series with varying trends: organic growing, social growing,
-          direct stable with fluctuation, referral stable'
+        comment: 'Shows all aspects: 4 sources, 24 months, clear stacking, variation'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Website traffic sources is a real-world application mentioned in
-          the spec
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Visitor counts in thousands are realistic for website analytics
+        comment: Real-world website traffic scenario; neutral and plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic visitor counts; proportions make sense; trends plausible
     code_quality:
       score: 10
       max: 10
@@ -162,41 +171,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple script: imports → data → plot → save, no functions/classes'
+        comment: Simple linear flow; no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Using current plotnine API
+        comment: Clean, Pythonic; no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png; current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent use of plotnine''s grammar of graphics: ggplot + aes +
-          geom_area with position="stack", scale_fill_manual, scale_x_date, theme_minimal
-          with extensive customization'
+        comment: Expert use of ggplot() API; proper chaining; idiomatic theme
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses geom_area with stack, scale_fill_manual, scale_x_date; competent
+          but not exceptional
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling: []

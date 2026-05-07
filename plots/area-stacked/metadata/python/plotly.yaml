@@ -1,172 +1,168 @@
 library: plotly
+language: python
 specification_id: area-stacked
 created: '2025-12-25T17:39:51Z'
-updated: '2025-12-25T17:41:59Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20508665919
+updated: '2026-05-07T15:23:17Z'
+generated_by: claude-haiku
+workflow_run: 25504426579
 issue: 2022
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-stacked/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/area-stacked/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep:
-  - time-series
-  styling:
-  - alpha-blending
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/plotly/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent implementation of stacked area chart with proper use of plotly stackgroup
-    parameter
-  - Very readable text with well-chosen font sizes for high-resolution output
-  - Realistic website traffic data with meaningful upward trends over time
-  - Clean code structure following KISS principles with proper reproducibility
-  - Good use of semi-transparent fills (0.7 alpha) for visual distinction between
-    layers
-  - Proper title format and well-positioned horizontal legend
+  - 'Perfect theme adaptation: Data colors identical across light/dark renders; chrome
+    adapts without affecting data identity'
+  - Idiomatic Plotly implementation using native stacking (stackgroup="one", fill="tonexty")
+  - Professional typography with proper scaling for high-resolution canvas (title
+    28px, axis labels 22px, ticks 18px)
+  - Realistic and plausible revenue data with meaningful trends across four product
+    categories
+  - Polished hover tooltips with currency formatting and unified legend mode for enhanced
+    interactivity
   weaknesses:
-  - Color palette includes pink and green together which may be challenging for colorblind
-    users
-  - All four series trend upward - showing at least one declining series would better
-    demonstrate compositional changes
-  - Axis labels lack units
-  - Could leverage more plotly-specific features like custom hover templates
-  image_description: 'The plot displays a stacked area chart showing website traffic
-    sources over 24 months (Jan 2023 to Dec 2024). Four distinct traffic sources are
-    stacked: Organic Search (blue, at the bottom), Direct (yellow), Social Media (green),
-    and Referral (pink, at the top). The y-axis shows "Monthly Visitors" ranging from
-    0 to approximately 85,000 using "k" notation. The x-axis shows "Month" with quarterly
-    date labels. The title reads "Website Traffic Sources · area-stacked · plotly
-    · pyplots.ai" with a horizontal legend placed above the chart. All four series
-    show upward trends over time, with Organic Search being the largest contributor.
-    The chart uses semi-transparent fills with subtle grid lines on a white background.'
+  - Legend positioned above plot (outside plot area); could integrate with interactive
+    legend for tighter composition
+  - Area line width (0.5px) is thin; could be bolder (1-2px) for visual impact at
+    large canvas size
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title "area-stacked · plotly · anyplot.ai" (28px, dark INK color), X-axis "Month" (22px, dark INK), Y-axis "Monthly Revenue (USD)" (22px, dark INK), tick labels (18px, dark INK_SOFT). Legend positioned above with elevated light background and border. All text clearly readable against light surface.
+      Data: Four stacked areas using Okabe-Ito colors in correct order: Software green (#009E73) at bottom, Services orange (#D55E00), Enterprise blue (#0072B2), Consulting pink (#CC79A7) at top. Subtle gridlines visible. All areas clearly distinguishable with no overlap or collision.
+      Legibility verdict: PASS - No legibility issues; all text elements readable; proper contrast maintained throughout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Title, axis labels, tick labels all rendered in light INK color (#F0EFE8) and INK_SOFT (#B8B7B0) for excellent contrast against dark background. Legend background darker (#242420) but borders and text remain clearly visible. Grid uses light transparent overlay (rgba(240,239,232,0.10)).
+      Data: Data area colors are identical to light render - Software green (#009E73), Services orange (#D55E00), Enterprise blue (#0072B2), Consulting pink (#CC79A7). No color drift between themes. Brand green (#009E73) remains vibrant and clearly visible.
+      Legibility verdict: PASS - No "dark-on-dark" failures; all text readable; data colors maintain perfect consistency with light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 32pt, axis labels at 24pt, tick fonts at 18pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, legend positioned cleanly above chart
+        comment: All text explicit sizes applied; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend cleanly separated; no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Areas are clearly visible with 0.7 alpha transparency, good differentiation
-          between stacked layers
+        comment: All four stacked areas clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Four distinct colors (blue, yellow, green, pink) provide reasonable
-          contrast, though pink/red and green together are not ideal for colorblind
-          users
+        comment: Okabe-Ito palette, CVD-safe
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Excellent canvas utilization, chart fills ~65% of space with balanced
-          margins
+        comment: Proper proportions; margins generous
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels "Monthly Visitors" and "Month" but no units
+        comment: Monthly Revenue (USD) and Month descriptive
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle at 0.1 alpha, legend well placed but could benefit from
-          box/border
+        comment: 'First series #009E73; order preserved; both backgrounds theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional, clean layout; Okabe-Ito palette; good typography hierarchy;
+          could use bolder area lines
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, proper whitespace, legend with border; refined but minimal
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Stacking shows composition and trend; largest at bottom aids reading;
+          legend guides viewer
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct stacked area chart using stackgroup
+        comment: Correct stacked area chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis is time (months), Y-axis is numeric values, properly stacked
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: distinct colors, legend, semi-transparent
-          fills, baseline at zero'
-      - id: SC-04
-        name: Data Range
+        comment: Stacking, legend, time axis all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis starts at zero with rangemode="tozero", all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X (months) and Y (revenue) correct; axes show full range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly identify all four traffic sources
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "Website Traffic Sources · area-stacked · plotly
-          · pyplots.ai"'
+        comment: area-stacked · plotly · anyplot.ai format correct; legend labels
+          match
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows upward trends, multiple series stacking, variation between
-          categories. Minor: all series trend upward, could show some declining series
-          for more variety'
+        comment: Shows composition changes, trend evolution, all four series
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Website traffic sources is a classic, realistic application for stacked
-          area charts
+        comment: Revenue categories and growth patterns plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values in 5k-45k range are realistic for web traffic; total reaching
-          ~85k is plausible
+        comment: Monthly revenue in $25k–$250k range sensible for B2B SaaS
     code_quality:
       score: 10
       max: 10
@@ -176,41 +172,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: No functions/classes; straightforward execution
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seeded random generation (seed=42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, and plotly.graph_objects imported, all used
+        comment: Only os, numpy, pandas, plotly.graph_objects
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotly API
+        comment: Simple, no fake UI or unnecessary complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png (4800x2700 via 1600x900 scale=3) and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses stackgroup for proper stacking, hovermode="x unified" for interactive
-          features, HTML export. Could leverage more plotly-specific features like
-          hover templates or annotations
+        comment: Uses native Plotly stacking (stackgroup, fill); go.Scatter best practice
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Interactive hover tooltips with custom format; hovermode unified
+    total_score: 85
+    total_max: 100
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

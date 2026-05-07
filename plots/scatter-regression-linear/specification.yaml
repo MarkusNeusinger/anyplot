@@ -6,7 +6,7 @@ title: Scatter Plot with Linear Regression
 
 # Specification tracking
 created: 2025-12-24T21:21:30Z
-updated: null
+updated: 2026-05-06T22:22:58Z
 issue: 1821
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - scatter
-    - regression
   data_type:
     - numeric
     - continuous

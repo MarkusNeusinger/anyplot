@@ -1,10 +1,11 @@
-""" pyplots.ai
+""" anyplot.ai
 horizon-basic: Horizon Chart
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-25
+Library: highcharts unknown | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-07
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -14,6 +15,14 @@ import numpy as np
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens (from prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Data: Server CPU metrics over 24 hours for 6 servers
 np.random.seed(42)
@@ -36,18 +45,21 @@ for i, name in enumerate(series_names):
 
 # Horizon chart parameters
 n_bands = 3
-colors_pos = ["#a6cee3", "#1f78b4", "#033860"]  # Light to dark blue
-colors_neg = ["#fb9a99", "#e31a1c", "#67000d"]  # Light to dark red
+
+# Color scheme: Okabe-Ito green shades for positive, orange shades for negative
+# Positive: from light to dark shades of #009E73 (Okabe-Ito position 1)
+colors_pos = ["#6FD8C0", "#009E73", "#004A3A"]  # Light to dark green
+# Negative: from light to dark shades of #D55E00 (Okabe-Ito position 2)
+colors_neg = ["#F4B3A0", "#D55E00", "#6B2F00"]  # Light to dark orange
 
 # Calculate global max for consistent band sizing
 all_values = np.concatenate([np.array(d["values"]) for d in data])
 band_size = float(np.max(np.abs(all_values)) / n_bands)
 
 # Build custom Highcharts configuration for horizon chart
-# Each series will be rendered as stacked area charts in its own panel
 chart_height = 2700
 chart_width = 4800
-row_height = (chart_height - 200) / n_series  # Reserve space for title and x-axis
+row_height = (chart_height - 250) / n_series  # Reserve space for title and x-axis
 
 # Build series data for all bands across all servers
 series_configs = []
@@ -64,18 +76,20 @@ for row_idx, series_data in enumerate(data):
             "top": f"{int(row_idx * row_height / chart_height * 100) + 5}%",
             "height": f"{int(row_height / chart_height * 100) - 2}%",
             "offset": 0,
-            "labels": {"enabled": False},
+            "labels": {"enabled": True, "style": {"fontSize": "16px", "color": INK_SOFT}, "align": "right", "x": -10},
             "title": {
                 "text": name,
                 "align": "high",
                 "rotation": 0,
                 "x": -10,
                 "y": 0,
-                "style": {"fontSize": "32px", "fontWeight": "bold"},
+                "style": {"fontSize": "22px", "fontWeight": "bold", "color": INK},
             },
             "min": 0,
             "max": band_size,
             "gridLineWidth": 0,
+            "lineColor": INK_SOFT,
+            "tickColor": INK_SOFT,
         }
     )
 
@@ -89,7 +103,7 @@ for row_idx, series_data in enumerate(data):
         y_pos = np.where(values > band_min, y_pos, 0)
 
         # Create data points
-        series_data_points = [[float(xv), float(yv)] for xv, yv in zip(x, y_pos, strict=True)]
+        series_data_points = [[float(xv), float(yv)] for xv, yv in zip(x, y_pos, strict=False)]
 
         series_configs.append(
             {
@@ -116,7 +130,7 @@ for row_idx, series_data in enumerate(data):
         y_neg = np.where(neg_values > band_min, y_neg, 0)
 
         # Create data points
-        series_data_points = [[float(xv), float(yv)] for xv, yv in zip(x, y_neg, strict=True)]
+        series_data_points = [[float(xv), float(yv)] for xv, yv in zip(x, y_neg, strict=False)]
 
         series_configs.append(
             {
@@ -138,29 +152,31 @@ chart_options = {
         "type": "area",
         "width": chart_width,
         "height": chart_height,
-        "backgroundColor": "#ffffff",
+        "backgroundColor": PAGE_BG,
         "marginLeft": 180,
         "marginRight": 50,
         "marginTop": 150,
         "marginBottom": 150,
     },
     "title": {
-        "text": "Server CPU Load (24h) · horizon-basic · highcharts · pyplots.ai",
-        "style": {"fontSize": "56px", "fontWeight": "bold"},
+        "text": "horizon-basic · highcharts · anyplot.ai",
+        "style": {"fontSize": "28px", "fontWeight": "bold", "color": INK},
     },
     "subtitle": {
-        "text": "<b>Positive</b>: Blue (light→dark) | <b>Negative</b>: Red (light→dark)",
-        "style": {"fontSize": "28px", "color": "#555555"},
-        "y": 100,
+        "text": "<b style='color: %s'>Positive</b> (green) ↔ <b style='color: %s'>Negative</b> (orange) | Intensity = Magnitude"
+        % (colors_pos[1], colors_neg[1]),
+        "style": {"fontSize": "18px", "color": INK_SOFT},
+        "y": 80,
     },
     "xAxis": {
         "min": 0,
         "max": 24,
         "tickInterval": 4,
-        "title": {"text": "Hour of Day", "style": {"fontSize": "40px"}},
-        "labels": {"style": {"fontSize": "32px"}},
-        "gridLineWidth": 1,
-        "gridLineColor": "rgba(0, 0, 0, 0.1)",
+        "title": {"text": "Hour of Day", "style": {"fontSize": "22px", "color": INK}},
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+        "lineColor": INK_SOFT,
+        "tickColor": INK_SOFT,
+        "gridLineWidth": 0,
     },
     "yAxis": y_axis_configs,
     "legend": {"enabled": False},
@@ -173,7 +189,7 @@ chart_options = {
 chart_js = json.dumps(chart_options)
 
 # Download Highcharts JS for inline embedding
-highcharts_url = "https://code.highcharts.com/highcharts.js"
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts.js"
 with urllib.request.urlopen(highcharts_url, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
@@ -184,7 +200,7 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0; background-color: #ffffff;">
+<body style="margin:0; background-color: {PAGE_BG};">
     <div id="container" style="width: {chart_width}px; height: {chart_height}px;"></div>
     <script>
         Highcharts.chart('container', {chart_js});
@@ -192,22 +208,9 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Save interactive HTML version
-html_interactive = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-</head>
-<body style="margin:0; background-color: #ffffff;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>
-        Highcharts.chart('container', {chart_js});
-    </script>
-</body>
-</html>"""
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_interactive)
+# Save interactive HTML version with theme suffix
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
 
 # Write temp HTML and take screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
@@ -229,7 +232,7 @@ time.sleep(5)  # Wait for chart to render
 
 # Screenshot the chart container for exact dimensions
 container = driver.find_element("id", "container")
-container.screenshot("plot.png")
+container.screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()  # Clean up temp file

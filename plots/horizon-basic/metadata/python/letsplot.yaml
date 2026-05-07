@@ -1,169 +1,181 @@
 library: letsplot
+language: python
 specification_id: horizon-basic
 created: '2025-12-24T22:21:10Z'
-updated: '2025-12-24T22:39:40Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20494686071
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - faceting
-  - html-export
-  patterns:
-  - data-generation
-  - wide-to-long
-  dataprep: []
-  styling: []
+updated: '2026-05-07T05:42:25Z'
+generated_by: claude-haiku
+workflow_run: 25477911314
+issue: 1877
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/letsplot/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent horizon chart implementation with proper band-folding algorithm that
-    correctly separates positive/negative values
-  - 'Previous feedback fully addressed: legend is now visible, y-axis label is accurate'
-  - Purple-orange diverging palette is colorblind-safe and visually appealing
-  - Realistic server monitoring scenario perfectly demonstrates the use case for horizon
-    charts
-  - Clean faceted layout makes comparing 6 time series easy
-  - Proper lets-plot grammar usage with theme customization
+  - Excellent theme-adaptive implementation with perfect text legibility in both light
+    and dark renders
+  - 'Clean letsplot idioms: ggplot + geom_area + facet_wrap for effective multi-series
+    horizon visualization'
+  - Realistic server metrics data with authentic daily/weekly patterns and anomalies
+  - 'Strong visual refinement: subtle grid, proper whitespace, theme-correct chrome
+    tokens throughout'
+  - 'All Okabe-Ito palette requirements met: green (#009E73) and orange (#D55E00)
+    identical across themes'
+  - Explicit font sizing on all text elements (title 24pt, labels 20pt, ticks 16pt)
+  - 'No overlap issues: panel titles, axis labels, and legend clearly separated and
+    readable'
   weaknesses:
-  - 'Minor: Tick text sizes could be slightly larger for optimal readability at full
-    resolution'
-  - File handling with shutil adds complexity that other libraries do not require
-    (lets-plot limitation)
-  image_description: 'The plot displays a 6-panel faceted horizon chart showing Server
-    CPU Usage Deviation for Servers A through F over a week (Monday to Sunday). Each
-    panel uses a purple-orange diverging color scheme: purple shades (+Low, +Medium,
-    +High) for positive deviations and orange shades (-Low, -Medium, -High) for negative
-    deviations. The color intensity increases with magnitude within each band, creating
-    a layered area chart effect. A clear legend labeled "Band Intensity" appears on
-    the right side explaining all six band categories. The title "Server CPU Usage
-    Deviation · horizon-basic · letsplot · pyplots.ai" is prominently displayed at
-    the top. X-axis shows days of the week, Y-axis shows "Folded Value (stacked bands)".'
+  - 'Design Excellence could be elevated through more intentional aesthetic choices
+    (current: 6/8)'
+  - 'Distinctive library features could be leveraged more explicitly (current: 4/5
+    LM-02)'
+  - Data storytelling could emphasize key insights more through visual hierarchy or
+    annotations
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), clean and professional
+      Chrome: Title "horizon-basic · letsplot · anyplot.ai" in bold dark text (24pt); axis labels "Day of Week" and "Folded Value (stacked bands)" in dark text (20pt); tick labels (Mon-Sun, numeric values) in soft gray (16pt); all readable with good contrast
+      Data: 6 horizon charts in 2×3 grid (Server A-F); positive bands in shades of green (#B3E5B0 light → #009E73 dark); negative bands in shades of orange (#F5C4A0 light → #D55E00 dark); band intensity increases toward baseline boundary; grid lines subtle and visible
+      Legibility verdict: PASS - All text is dark on light background with excellent readability; data bands clearly visible and color-coded
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), consistent with theme
+      Chrome: Title in light text (#F0EFE8) at 24pt; axis labels in light text (20pt); tick labels in soft gray (#B8B7B0) at 16pt; all readable against dark background; no dark-on-dark failures
+      Data: Identical to light render - green (#009E73) positive bands and orange (#D55E00) negative bands maintain full saturation and visibility; 6 server panels with consistent coloring; band intensities identical to light render (only chrome has flipped from light to dark theme)
+      Legibility verdict: PASS - All text is properly light-colored on dark background; data colors unchanged from light render proving theme-adaptive implementation is correct
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and facet titles are clearly readable. Tick labels
-          are adequate but could be slightly larger.
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt),
+          perfect readability in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text, all labels and panel titles clearly separated
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Area bands are well-sized and clearly visible with good alpha for
-          layering
+        comment: Horizon bands clearly visible, appropriately sized for data density
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Purple-orange diverging scheme is colorblind-friendly (avoids red-green),
-          though purple and dark orange could be closer in luminance
+        comment: Okabe-Ito colors with good contrast, CVD-safe
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Excellent use of canvas with 6 well-proportioned facets and balanced
-          margins
+        comment: Balanced layout, proper margins, 4800×2700 canvas well-utilized
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Y-axis label "Folded Value (stacked bands)" is descriptive but lacks
-          units; X-axis "Day of Week" is good
+        comment: 'Title and labels descriptive: Day of Week, Folded Value (stacked
+          bands)'
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Legend is well-positioned and clear; grid is subtle but panel backgrounds
-          could have more contrast
+        comment: 'Perfect palette: #009E73 green, #D55E00 orange, backgrounds #FAF8F1/#1A1A17,
+          theme-correct chrome'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful band color gradient design, Okabe-Ito integration, professional
+          polish but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, proper whitespace, theme-correct legend background,
+          excellent refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy through band intensity, positive/negative distinction
+          with color, small multiples effective
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct horizon chart with folded bands
+        comment: Correct horizon chart with bands and folding
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on X-axis, values properly folded into bands with sign differentiation
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: multiple bands (3), positive/negative
-          coloring, multiple time series comparison'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: multiple series, bands, intensity variation,
+          positive/negative distinction'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within the facets
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: time, Y: band position, facet: series, all correct'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all 6 band categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Follows "{spec-id} · {library} · pyplots.ai" format perfectly
+        comment: 'Title: horizon-basic · letsplot · anyplot.ai, legend: Band Intensity
+          with labels'
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both positive and negative deviations, multiple intensity levels,
-          and spikes
+        comment: 'Shows all aspects: 6 servers, positive/negative, band variation,
+          daily/weekly patterns, spikes'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Server CPU monitoring is a perfect real-world use case for horizon
-          charts
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 7 days of hourly data with realistic CPU deviation patterns
+        comment: Server CPU metrics over 7 days, realistic and neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: CPU deviation range -35 to +35 realistic, 168 hourly points appropriate
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,43 +183,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save pattern without functions/classes
+        comment: Clean imports → data → plot → save, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42), deterministic data generation
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: '`shutil` and file manipulation could be considered slightly non-standard
-          for plot code'
+        passed: true
+        comment: 'All imports used: os, shutil, numpy, pandas, lets_plot'
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: N/A (no deprecated usage)
+        comment: Pythonic, appropriate complexity, no fake UI or over-engineering
       - id: CQ-05
-        name: Output Correct
-        score: 0
+        name: Output & API
+        score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png correctly (with workaround for lets-plot output
-          directory)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and .html, current API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of ggplot grammar (aes, geom_area, facet_wrap, scale_fill_manual,
-          theme_minimal), though doesn't leverage lets-plot's interactive tooltip
-          features
+        comment: 'Expert letsplot patterns: ggplot, aes, geom_area, facet_wrap, scale_fill_manual,
+          theme, ggsize, ggsave'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Creative horizon transformation with geom_area, faceting for multi-series,
+          custom band colors
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
+  - grid-styling

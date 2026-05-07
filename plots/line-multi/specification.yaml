@@ -6,7 +6,7 @@ title: Multi-Line Comparison Plot
 
 # Specification tracking
 created: 2025-12-24T21:21:34Z
-updated: 2025-12-24T21:21:34Z
+updated: 2026-05-06T15:00:55Z
 issue: 1825
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - line
-    - timeseries
   data_type:
     - numeric
     - continuous
@@ -27,4 +26,3 @@ tags:
   features:
     - multi
     - comparison
-    - legend

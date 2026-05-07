@@ -1,168 +1,190 @@
 library: highcharts
+language: python
 specification_id: bland-altman-basic
 created: '2025-12-25T13:19:13Z'
-updated: '2025-12-25T13:21:23Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20505628425
+updated: '2026-05-07T11:13:58Z'
+generated_by: claude-haiku
+workflow_run: 25492056602
 issue: 2032
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-    - selenium
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/highcharts/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent implementation of all Bland-Altman statistical elements (mean, ±1.96
-    SD limits)
-  - Clean, readable code structure following KISS principles
-  - Realistic blood pressure measurement scenario with appropriate sample size (80
-    pairs)
-  - Good use of Highcharts plotLines feature for horizontal reference lines with labels
-  - Proper transparency on markers for overlapping observation visibility
-  - Correct title format and descriptive axis labels with units
+  - Perfect theme-adaptive design with both renders readable and correctly themed
+  - Complete Bland-Altman implementation with all required statistical elements (mean
+    line, ±1.96 SD bounds) properly annotated
+  - Excellent text legibility in both light and dark modes using consistent INK tokens
+    throughout
+  - High-quality Highcharts scatter plot with proper use of plotLines for reference
+    lines and annotations
+  - 'All specification requirements met: correct x/y mapping, 80 paired observations,
+    realistic blood pressure context, proper transparency for overlapping points'
+  - Correct Okabe-Ito palette compliance (#009E73 as first series, theme-independent
+    data colors)
+  - Clean, reproducible code with proper error handling (CDN fallback with retry logic)
+    and deterministic output (seed-based)
   weaknesses:
-  - Grid lines are too subtle (alpha 0.1) making it harder to read values at a glance
-  - Does not leverage Highcharts interactive features like custom tooltips showing
-    individual measurement details
-  - Red color for limits of agreement could be replaced with a more colorblind-safe
-    alternative
-  image_description: The plot displays a Bland-Altman agreement visualization with
-    80 blue scatter points representing paired blood pressure observations. The x-axis
-    shows "Mean of Two Methods (mmHg)" ranging from approximately 96 to 164, and the
-    y-axis shows "Difference (Method 1 - Method 2) (mmHg)" ranging from about -25
-    to 16. A solid blue horizontal line marks the mean difference at -2.67, and two
-    red dashed horizontal lines indicate the ±1.96 SD limits of agreement at approximately
-    +9.49 and -14.84. Each reference line is labeled with its value on the right side
-    of the plot. The title "bland-altman-basic · highcharts · pyplots.ai" appears
-    at the top, and a legend showing "Paired Observations" is positioned in the upper
-    right corner. Points have moderate transparency (alpha ~0.6) allowing overlapping
-    observations to be distinguished.
+  - 'DE-01: Design could be more sophisticated - while the styling is professional
+    and clean, consider additional visual refinement such as custom marker styling
+    (edge colors), more refined grid appearance, or explicit margin/padding optimization'
+  - 'LM-02: Could leverage more distinctive Highcharts features - scatter plot with
+    plotLines is idiomatic, but could explore additional Highcharts capabilities like
+    custom tooltip formatting, shadow effects on reference lines, or more sophisticated
+    animation'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "bland-altman-basic · highcharts · anyplot.ai" in dark text (INK color), x-axis label "Mean of Two Methods (mmHg)" and y-axis label "Difference (Method 1 - Method 2) (mmHg)" all clearly readable. Tick labels are visible in secondary text color (INK_SOFT). Grid lines are subtle and visible.
+      Data: 80 scatter points in #009E73 (Okabe-Ito position 1/brand green) with opacity 0.7. Mean difference line (solid green) labeled "Mean: 2.87" at y=0. Upper LOA line (dashed, INK_SOFT) labeled "+1.96 SD: 9.29". Lower LOA line (dashed, INK_SOFT) labeled "−1.96 SD: -3.54". All points and lines clearly distinguishable from the light background.
+      Legibility verdict: PASS - All text is readable, data is visible, proper visual hierarchy
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title and axis labels rendered in light text (INK: #F0EFE8), clearly readable against dark background. Tick labels in secondary light color (INK_SOFT: #B8B7B0). Grid lines remain subtle and visible. No dark-on-dark failures detected.
+      Data: Identical 80 points in #009E73 (color unchanged from light render - only chrome theme-adapted). Mean difference line, upper and lower LOA lines all visible and properly styled. Line labels readable in light text.
+      Legibility verdict: PASS - All text readable, excellent dark theme adaptation, no text/background contrast issues. Brand green is vibrant against dark surface.
+
+    Both renders successfully demonstrate theme-adaptive design with identical data colors and proper chrome token application.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: 'All text is clearly readable: title is large and bold, axis labels
-          are appropriately sized, tick labels are legible'
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, all labels are clearly separated
+        comment: All text clearly readable at proper sizes (title 28px, axis 22px,
+          ticks 18px) with correct theme colors (INK/INK_SOFT) in both renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps, labels positioned well, scatter points well-spaced
+          with good visibility
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers are appropriately sized (radius 14) with good transparency
-          for 80 points; slightly larger than optimal for this density
+        comment: All 80 data points visible with opacity 0.7, marker radius 8 (3-4x
+          default), reference lines clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue/red scheme is distinguishable but red for limits is not the
-          most colorblind-safe choice; better than red-green but not optimal
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions, plot fills canvas well with appropriate margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Both axes have descriptive labels with units (mmHg)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Single data color #009E73 (Okabe-Ito position 1) is CVD-safe, no
+          red-green as sole signal'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Proper 4800x2700px dimensions, good margins (marginRight 250, marginBottom
+          200), no cut-off elements
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is extremely subtle (alpha 0.1), legend is functional but positioned
-          far from data
+        comment: Descriptive labels with units (mmHg), title follows format specification
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (correct), backgrounds #FAF8F1 (light) / #1A1A17
+          (dark) correct, both renders properly theme-adapted'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional, clean styling with proper color scheme and spacing.
+          Above average but could explore more visual refinement techniques
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Good margins and spacing, subtle grid, dashed lines for visual distinction
+          of LOA bounds. Legend appropriately hidden for single series
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: solid green mean line (primary), dashed
+          secondary LOA lines, scatter points show distribution. Effectively communicates
+          agreement between methods'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Bland-Altman scatter plot
+        comment: Correct Bland-Altman plot type (scatter with reference lines)
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis correctly shows mean of pairs, Y-axis shows difference
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All required features present: mean difference line, ±1.96 SD limits,
-          annotations with values'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: mean difference line, ±1.96 SD limits with
+          annotations, transparency for overlapping points'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis = mean of pairs (correct), Y-axis = difference (correct),
+          all 80 observations shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels the scatter series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: bland-altman-basic · highcharts · pyplots.ai'
+        comment: Title format correct 'bland-altman-basic · highcharts · anyplot.ai',
+          legend appropriately disabled
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Data shows full range of agreement/disagreement with points both
-          within and outside limits of agreement
+        comment: Shows all aspects of Bland-Altman plot type with full statistical
+          context
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Blood pressure measurement comparison is a classic Bland-Altman use
-          case
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values are realistic for systolic blood pressure (90-160 mmHg range)
+        comment: Simulated blood pressure readings from two sphygmomanometers - real-world
+          plausible and neutral context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 80 paired observations (within 30-200 recommended), sensible blood
+          pressure values (mean ~130 mmHg)
     code_quality:
       score: 10
       max: 10
@@ -172,41 +194,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → chart → export'
+        comment: No unnecessary functions/classes, straightforward script
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set (np.random.seed(42)), fully deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used, no unused dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current highcharts-core API
+        comment: Appropriate complexity, proper error handling (CDN fallback with
+          retry), no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html, current API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses basic scatter series and plotLines; does not leverage Highcharts
-          interactivity, tooltips, or other distinctive features in a meaningful way
-          beyond what other libraries offer
+        passed: true
+        comment: Uses Highcharts scatter API correctly, proper options structure,
+          theme-adaptive chrome setup, idiomatic use of plotLines
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Highcharts-specific plotLines with custom labels, CDP screenshot
+          capture. Could explore additional Highcharts features (tooltips, animations,
+          marker styling)
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

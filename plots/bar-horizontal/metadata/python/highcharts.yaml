@@ -1,15 +1,243 @@
 library: highcharts
+language: python
 specification_id: bar-horizontal
 created: '2025-12-25T08:37:33Z'
-updated: '2025-12-25T08:46:09Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20502055565
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-07T07:48:29Z'
+generated_by: claude-haiku
+workflow_run: 25482469245
+issue: 1946
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Excellent text legibility with explicitly-set font sizes across all elements
+  - Perfect theme-adaptive chrome (backgrounds, text, gridlines flip correctly between
+    light/dark)
+  - Real-world, factually accurate renewable energy data with clear ranking narrative
+  - Clean code structure with deterministic, reproducible output
+  - Proper HTML+Selenium export pattern for Highcharts rendering
+  - Well-balanced layout with generous margins and whitespace
+  - Subtle, professional grid styling with rounded bar corners
+  weaknesses:
+  - 'Color consistency critical issue: Code sets series.color = BRAND (#009E73) but
+    ~30% of bars render in orange (#D55E00) instead, violating single-color requirement.
+    BarSeries color property appears not applied; likely needs chart.options.colors
+    = [BRAND] at chart level to override Highcharts defaults.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct per spec
+      Chrome: Title "bar-horizontal · highcharts · anyplot.ai" and subtitle in dark text (INK color). Category names (Switzerland-Iceland) on Y-axis clearly readable. Axis labels "Renewable Energy Share (%)" descriptive with units. Grid lines subtle. All text dark and clearly visible against light background.
+      Data: Horizontal bars representing 10 countries' renewable energy shares (38.5%-85%). First ~7 bars render in green (#009E73), last ~3 bars in orange (#D55E00). Data labels show percentages at bar ends. Chart sorted smallest-to-largest.
+      Legibility verdict: PASS - All text readable, but note unintended two-color pattern in data bars
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct per spec
+      Chrome: Title and labels rendered in light text (INK_SOFT). All text clearly visible against dark background. No dark-on-dark failures detected.
+      Data: Bar colors **identical to light render** (first 7 bars green #009E73, last 3 bars orange #D55E00), confirming theme adaptation for chrome only. Data labels visible. Grid subtle.
+      Legibility verdict: PASS - All text readable, proper light-on-dark contrast, no dark-on-dark issues
+
+    Both renders display identical data colors with correct theme-adaptive chrome flip. Color consistency issue (mixed green/orange) is present in both renders equally.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px),
+          perfectly readable in both light and dark renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Category labels, tick labels, and data labels all properly spaced
+          with no overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars and labels optimally sized and clearly visible at 4800x2700
+          resolution
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Both colors used (green and orange) have adequate contrast and are
+          CVD-safe from Okabe-Ito palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent layout with balanced margins (250px left, 200px right,
+          180px top/bottom) and good canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis shows category names, X-axis labeled 'Renewable Energy Share
+          (%)' with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'PARTIAL: Palette is Okabe-Ito and backgrounds theme-correct (#FAF8F1
+          light/#1A1A17 dark), but single series displays two colors (green #009E73
+          and orange #D55E00) instead of consistent brand green. Violates single-color
+          specification requirement.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured with professional appearance and intentional design
+          choices (rounded corners, subtle grid), but color inconsistency is a design
+          flaw that prevents higher score
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Subtle grid, rounded bar corners (borderRadius: 4), generous whitespace,
+          polished details throughout'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Data sorted smallest-to-largest creates clear ranking narrative;
+          real-world renewable energy context is compelling and meaningful
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal bar chart type for comparing categories
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features present: categories, values, labels, sorted
+          ranking, title, subtitle'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on Y-axis, values on X-axis with appropriate 0-100% range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format 'bar-horizontal · highcharts · anyplot.ai' correct,
+          legend disabled (appropriate for single series)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Displays all aspects of horizontal bar chart type with ranked comparison
+          across 10 countries
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real countries with factually accurate renewable energy percentages
+          (Iceland 85%, Norway 71.5%, Brazil 65.2%, etc.) - neutral and meaningful
+          context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values reflect actual global renewable energy shares with correct
+          proportions and realistic scale
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports → data → chart config → HTML generation
+          → Selenium screenshot → cleanup'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Data is deterministic with hardcoded country values, no randomization
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Only necessary imports used: highcharts_core, selenium, urllib,
+          tempfile, pathlib'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic code with appropriate complexity for visualization
+          task
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly outputs plot-{THEME}.png and plot-{THEME}.html with proper
+          naming convention
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper use of Chart, HighchartsOptions, BarSeries with correct container
+          reference and theme-adaptive token pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Selenium-based PNG export is distinctive for Highcharts; theme-token
+          pattern is library-specific, but color issue undermines demonstration of
+          mastery
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -18,190 +246,5 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - Excellent text readability with appropriately scaled font sizes for 4800×2700
-    canvas
-  - Data is sorted ascending (smallest at top) making Iceland (85%) appear at the
-    bottom as the leader - good visual hierarchy
-  - Clean, professional appearance with subtle grid lines and well-placed data labels
-  - Realistic, relatable data scenario (renewable energy by country)
-  - Proper use of Highcharts bar chart type with inline JS for headless Chrome compatibility
-  weaknesses:
-  - Y-axis title could be more prominent or positioned better
-  - X-axis tick labels every 2% create visual clutter; every 10% or 20% would be cleaner
-  image_description: The plot displays a horizontal bar chart showing "Top 10 Countries
-    by Renewable Energy Share (%)" as the subtitle. The title reads "bar-horizontal
-    · highcharts · pyplots.ai" in bold at the top. Ten blue bars (#306998) extend
-    horizontally from left to right, with country names on the y-axis (Switzerland
-    at top, Iceland at bottom - sorted ascending by value). Each bar has a data label
-    showing the percentage value (e.g., "85%" for Iceland, "38.5%" for Switzerland).
-    The x-axis shows percentage values from 0% to 100% with tick marks every 2%. The
-    background is white with subtle gray gridlines. The layout is clean with good
-    spacing between bars.
-  criteria_checklist:
-    visual_quality:
-      score: 37
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 48px, subtitle at 32px, axis labels at 28px/24px - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text, all labels fully visible
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Bars well-sized with appropriate padding and spacing
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color (#306998) is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good margins and canvas utilization, slight excess whitespace at
-          bottom
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Y-axis has descriptive label "Renewable Energy Share (%)" but no
-          x-axis category title needed
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Subtle grid (alpha 0.3 equivalent), legend disabled which is appropriate
-          for single series
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct horizontal bar chart
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on y-axis, values as bar lengths - correctly assigned
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Sorted bars, consistent bar heights, data labels, single color, adequate
-          spacing
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Y-axis shows 0-100%, all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly disabled for single series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "bar-horizontal · highcharts · pyplots.ai"
-    data_quality:
-      score: 19
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows 10 categories with varying values demonstrating ranking visualization;
-          could show more value diversity
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Renewable energy percentages by country is a realistic, relatable
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
-        max: 5
-        passed: true
-        comment: Percentages range from 38.5% to 85%, realistic for renewable energy
-          data
-    code_quality:
-      score: 7
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Linear structure: imports → data → chart setup → export'
-      - id: CQ-02
-        name: Reproducibility
-        score: 0
-        max: 3
-        passed: false
-        comment: No random seed needed (deterministic data), but data is hardcoded
-          which is fine
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Highcharts API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses Highcharts bar series with data labels, custom styling, and
-          proper chart export via Selenium; could leverage more Highcharts-specific
-          features like tooltips or animations
-  verdict: APPROVED
+  styling:
+  - publication-ready

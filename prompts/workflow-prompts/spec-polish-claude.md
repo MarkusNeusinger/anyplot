@@ -28,7 +28,9 @@ For each, decide if the spec needs work:
 1. **Wording** — descriptions concise and unambiguous? applications realistic? data fields include types/sizes? notes actionable?
 2. **Missing sections** — every section from `specification.md` template present?
 3. **Tag completeness** — all 4 dimensions (`plot_type`, `data_type`, `domain`, `features`) have ≥1 value?
-4. **Tag quality** — naming conventions enforced (lowercase, hyphens, no underscores)? values from `spec-tags-generator.md` vocabulary?
+4. **Tag quality** — naming conventions enforced (lowercase, hyphens, no underscores)? Vocabulary policy:
+   - **`plot_type` is canonical**: the table in `spec-tags-generator.md` is the allowed set. Tags outside the table must either be moved to the correct dimension (e.g. `regression` → `features`, `timeseries` → `data_type`) or dropped if they're not really plot types.
+   - **`data_type` / `domain` / `features` are advisory**: their tables list common values, but any well-formed, recognized data-viz term is allowed. **Do NOT remove** an unfamiliar but valid tag from these three dimensions just because it isn't in the table — a niche but accurate domain (`bioinformatics`, `signal-processing`), a real feature (`confidence-interval`, `clustering`, `multi-series`), or a domain-specific data shape (`ohlc`, `compositional`) is fine to keep. Only canonicalize obvious synonyms (e.g. `sequential` → `stepwise`, `labeled` → `color-mapped` when describing color encoding) or fix naming-convention violations.
 5. **Tag accuracy** — do tags actually match the spec's content?
 
 ## Step 3: Decide
@@ -66,7 +68,7 @@ Run these commands:
 
 Then open the PR. Use a HEREDOC for the body so multi-line markdown survives:
 
-    gh pr create \
+    PR_URL=$(gh pr create \
       --title "chore(spec): auto-polish {SPEC_ID}" \
       --label "auto-polish" \
       --body "$(cat <<'EOF'
@@ -85,10 +87,19 @@ Then open the PR. Use a HEREDOC for the body so multi-line markdown survives:
     - No semantic changes (data shape, plot type, requirements identical)
     - `updated` bumped to current UTC
 
-    Awaiting human review. The skip-gate in `daily-regen` will prevent
-    additional auto-polish PRs for this spec while this one is open.
+    Auto-merge enabled — will merge once required checks pass. The
+    skip-gate in `daily-regen` prevents stacking polish PRs for this spec.
     EOF
-    )"
+    )")
+
+    # Enable auto-merge so the PR squash-merges automatically once required
+    # checks (Run Linting / Tests / Frontend Tests) go green and the head
+    # is in sync with main. Auto-merge handles the strict status-check
+    # policy by updating the branch on our behalf. If auto-merge cannot be
+    # enabled (e.g. checks already complete and branch is up-to-date), this
+    # is non-fatal — the PR still exists for human follow-up.
+    gh pr merge "$PR_URL" --auto --squash --delete-branch || \
+      echo "::warning::Could not enable auto-merge for $PR_URL — leaving PR open for manual handling"
 
 Substitute the literal `{SPEC_ID}` with the actual spec id when running the commands. The block above is illustrative; the bash you actually execute should have the value already filled in.
 
@@ -100,7 +111,8 @@ Substitute the literal `{SPEC_ID}` with the actual spec id when running the comm
 
 ## What you must NOT do
 
-- Do not auto-merge the PR. Do not add the `approved` label.
+- Do not add the `approved` label (it's reserved for spec-create's merge gate, not polish).
+- Do not bypass required status checks (no `--admin`, no force-merging). Auto-merge waits for CI.
 - Do not push to `main` directly under any circumstances, even if the polish is "trivial".
 - Do not edit any spec other than `{SPEC_ID}`. Do not touch implementations under `plots/{SPEC_ID}/implementations/` — your job is the spec only.
 - Do not regenerate or re-run anything in `plots/{SPEC_ID}/metadata/`. Implementation metadata is owned by the impl-* workflows.

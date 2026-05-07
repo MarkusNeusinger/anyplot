@@ -1,173 +1,187 @@
 library: highcharts
+language: python
 specification_id: horizon-basic
 created: '2025-12-25T07:10:41Z'
-updated: '2025-12-25T07:13:11Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20500904724
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-07T05:46:10Z'
+generated_by: claude-haiku
+workflow_run: 25477853570
+issue: 1877
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/highcharts/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent implementation of horizon chart concept with 3 bands per direction
-  - Clear visual differentiation between positive (blue) and negative (red) deviations
-  - Multiple time series displayed compactly in limited vertical space
-  - Proper use of Highcharts multi-axis feature for panel layout
-  - Good title format following spec requirements
-  - Realistic server monitoring use case that aligns perfectly with spec applications
-  - Clean, reproducible code with proper random seed
+  - Perfect theme adaptation—both renders readable with zero dark-on-dark issues
+  - Excellent horizon chart implementation with 6 series, 3 bands each, and realistic
+    server metrics
+  - 'All text explicitly sized and readable at 4800×2700: title 28px, labels 22px,
+    ticks 18px'
+  - Correct Okabe-Ito palette with thoughtful green/orange gradient encoding magnitude
+  - Clean, reproducible code with deterministic data generation and proper file output
+  - Subtitle effectively explains the color scheme and visualization intent
   weaknesses:
-  - Does not use highcharts-core Python library as documented in library rules, instead
-    builds JSON manually
-  - Y-axis labels are hidden, making it harder to understand the magnitude scale
-  - Color scheme while good is not the most colorblind-safe (tritanopia)
-  - Subtitle legend could be more prominent or placed as a traditional legend
-  image_description: 'The plot displays a horizon chart showing "Server CPU Load (24h)"
-    for 6 servers (A through F). Each server has its own horizontal panel/row. The
-    chart uses a blue color scheme (light to dark: #a6cee3 → #1f78b4 → #033860) for
-    positive deviations and a red color scheme (light to dark: #fb9a99 → #e31a1c →
-    #67000d) for negative deviations. The x-axis shows "Hour of Day" from 0 to 24
-    with tick marks at 4-hour intervals. Each server''s time series is displayed as
-    stacked area bands that fold values into color-coded layers. The title follows
-    the required format with subtitle explaining the color legend. Server labels appear
-    on the left of each row. The chart effectively demonstrates the horizon chart
-    concept with multiple overlapping bands showing intensity through color saturation.'
+  - Design Excellence is modest—while correct, lacks distinctive aesthetic refinement
+    beyond defaults
+  - Minimal custom visual polish—could add more sophisticated typography or whitespace
+    variations
+  - Library Mastery is conservative—uses standard Highcharts patterns without leveraging
+    advanced features
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as required—not pure white
+      Chrome: Title "horizon-basic · highcharts · anyplot.ai" clear in bold dark text. Subtitle explains positive (green) / negative (orange) color scheme. Six server labels (Server A-F) on y-axes clearly readable in INK color. X-axis "Hour of Day" and all tick labels (0, 4, 8, 12, 16, 20, 24) readable in INK_SOFT color. All text properly sized and positioned.
+      Data: Six stacked area bands per server showing magnitude through color intensity. Positive values in green gradient (#6FD8C0 → #009E73 → #004A3A), negative in orange/red gradient (#F4B3A0 → #D55E00 → #6B2F00). First series uses Okabe-Ito brand green #009E73. Intensity clearly encodes magnitude. All bands visible and distinguishable from each other and background.
+      Legibility verdict: PASS—perfect readability in light theme
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as required—not pure black
+      Chrome: Title, subtitle, and all axis labels switched to light text (INK=#F0EFE8, INK_SOFT=#B8B7B0). Excellent contrast—all text remains clearly readable. No dark-on-dark failures. Series labels, tick labels, and axes all properly visible.
+      Data: Green and orange band colors are IDENTICAL to light render—only chrome has adapted as required. Brand green #009E73 maintains perfect visibility on dark surface. All intensity gradients preserved. Six series visible with clear color differentiation.
+      Legibility verdict: PASS—perfect readability in dark theme
+
+    Both renders pass theme-readability checks. Data colors remain constant; only theme chrome adapts correctly.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is large and clear (56px), axis labels are readable (32px),
-          server labels visible. Subtitle text explaining colors is slightly small
-          but readable.
+        comment: 'All font sizes explicitly set: title 28px, labels 22px, ticks 18px.
+          All perfectly readable in both light and dark renders'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, server panels are well separated
+        comment: No overlapping text elements. Clean, well-spaced layout with proper
+          margins
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Area bands are clearly visible, color intensity differences are distinguishable,
-          data patterns are easy to follow
+        comment: All bands clearly visible. Color transitions show magnitude effectively.
+          Elements perfectly adapted to canvas size
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Uses blue/red scheme which has good contrast but is not fully colorblind-safe
-          (red-green is avoided, but red-blue may be challenging for some tritanopia
-          cases). However, the light-to-dark intensity still provides good differentiation.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of canvas space, all 6 server panels fill the chart
-          area well with appropriate margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Hour of Day" is descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette derivatives are colorblind-safe. Excellent contrast
+          between green (positive) and orange (negative) bands
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions. Plot fills appropriate canvas area. Balanced
+          margins. Nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Subtle grid lines with alpha 0.1. Legend is integrated into subtitle
-          rather than traditional legend placement, which works but is less prominent.
+        comment: Title in correct format. 'Hour of Day' label descriptive. Series
+          labeled (Server A-F)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect Okabe-Ito compliance: #009E73 base (green), #D55E00 base
+          (orange). Both renders theme-correct: #FAF8F1 (light), #1A1A17 (dark). Data
+          colors identical across themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Thoughtful color derivation from Okabe-Ito showing intensity through
+          gradient. Subtitle explains visualization intent. Clean but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean design with good spacing and typography. Well-organized server
+          rows. Generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy through color intensity and server ordering. Shows
+          CPU patterns over time. Magnitude variation creates visual emphasis
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct horizon chart implementation with folded bands
+        comment: Correct horizon chart with band folding and magnitude encoding
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on x-axis, values folded into bands correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Multiple series (6), color-coded bands (3 bands), positive/negative
-          coloring, baseline handling
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: multiple series (6), bands (3), positive/negative
+          color coding, time axis'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 24-hour range visible, all data shown
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: X-axis (0-24 hours) and Y-axis (band magnitude) correctly assigned.
+          All data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Subtitle explains colors but could be more prominent
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "Server CPU Load (24h) · horizon-basic · highcharts
-          · pyplots.ai"'
+        comment: Title format correct. Subtitle explains visualization. No legend
+          (appropriate for this visualization)
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple series, both positive and negative deviations, varying
-          intensities with 3 bands. Could show more dramatic differences between servers
-          to better demonstrate the comparison capability.
+        comment: 'Shows all horizon chart features: multiple series, bands, positive/negative
+          folding, magnitude variation'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Server CPU metrics over 24 hours is a perfect real-world scenario
-          for horizon charts
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Values are plausible for CPU deviation metrics, but the scale/units
-          are not explicitly shown (deviation from baseline, not absolute %)
+        comment: Server CPU monitoring over 24 hours is realistic, comprehensible,
+          and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: CPU values sensible for server monitoring. Time scale (24 hours)
+          appropriate
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -175,43 +189,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple sequential structure without functions/classes
+        comment: 'Simple script: imports → data generation → chart config → HTML/screenshot'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: numpy, selenium, os, tempfile, urllib, json'
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: Uses `strict=True` in zip which is fine, but uses manual JSON building
-          instead of highcharts-core library
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic code. Appropriate complexity for horizon chart visualization
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 4
-      max: 5
+        comment: 'Correct format: plot-{THEME}.png and plot-{THEME}.html for both
+          light/dark themes'
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Good use of Highcharts multi-axis feature to create stacked panels,
-          custom area series with stacking=None for horizon effect. Does not use highcharts-core
-          Python library as recommended in library rules, instead builds JSON manually,
-          but the approach is valid and works correctly.
+        comment: 'Uses Highcharts'' recommended pattern: options object structure,
+          multiple y-axes for row visualization, Selenium export correctly'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses multi-axis feature idiomatically but fairly standard. Selenium
+          export is required, not distinctive
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling: []

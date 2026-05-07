@@ -1,171 +1,172 @@
 library: altair
+language: python
 specification_id: horizon-basic
 created: '2025-12-24T22:17:57Z'
-updated: '2025-12-24T22:25:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20494683773
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - faceting
-  - html-export
-  patterns:
-  - data-generation
-  - wide-to-long
-  dataprep: []
-  styling: []
+updated: '2026-05-07T05:53:25Z'
+generated_by: claude-haiku
+workflow_run: 25477679742
+issue: 1877
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/altair/plot-dark.html
+quality_score: 78
 review:
   strengths:
-  - Excellent implementation of the horizon chart concept with proper band folding
-    and color intensity encoding
-  - Realistic server monitoring scenario with distinct patterns for each server type
-    (Database daily cycle, Cache spikes, Worker batch processing)
-  - Clean use of Altair's faceting for multi-series comparison in compact vertical
-    space
-  - Proper use of declarative color scale mapping for positive/negative bands
-  - Well-organized data transformation to create band data from raw time series
+  - Horizon chart correctly implements spec for multi-series time visualization
+  - Data generation realistic with proper seeding for reproducibility
+  - Light render excellent — all text readable, colors vibrant, layout professional
+  - Theme-adaptive infrastructure properly structured with INK/INK_SOFT tokens
+  - Faceting implementation is clean and idiomatic to altair
+  - Code is simple, maintainable, and Pythonic
+  - Excellent spec compliance (15/15) and data quality (15/15)
   weaknesses:
-  - Legend labels use technical codes (positive_0, positive_1, etc.) instead of human-readable
-    descriptions like Low, Medium, High intensity
-  - Could add interactivity (tooltips) to leverage Altair strengths for exploring
-    specific time points
-  image_description: 'The plot displays a horizon chart showing server CPU metrics
-    over a 24-hour period for 6 servers: API Gateway, Cache, Database, Web Server
-    1, Web Server 2, and Worker. Each server is shown in a separate horizontal band/row
-    using Altair''s faceting. The chart uses a blue color scheme (light to dark: #a6c8e0,
-    #306998, #1a3d5c) for positive values and red (light to dark: #f5b7b1, #e74c3c,
-    #922b21) for negative values, with 3 bands of intensity each. The x-axis shows
-    time from 00:00 to 23:00 with labels every hour. Server names appear on the left
-    side of each row. A legend labeled "Band Intensity" is positioned on the right
-    showing the 6 color codes (positive_0, positive_1, positive_2, negative_0, negative_1,
-    negative_2). The title "Server CPU Metrics (24h) · horizon-basic · altair · pyplots.ai"
-    appears at the top left.'
+  - Dark render title nearly invisible — text color not rendering with sufficient
+    contrast/opacity in dark PNG export
+  - Dark render axis labels very faint and barely readable despite correct INK_SOFT
+    values in code
+  - Theme-adaptive chrome rendering fails in dark mode; likely altair/vl-convert PNG
+    export issue
+  - Custom BrBG-inspired palette functional but not standard brownbluegreen scheme
+  - Time axis lacks explicit unit label (15-minute intervals not visible)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1, excellent quality baseline
+      Chrome: Title "horizon-basic · altair · anyplot.ai" is large and clearly readable in dark text. X-axis labeled "Time" with time labels 00:00-22:00 visible. Server names (Web Server 1, Web Server 2, Database, Cache, etc.) are clearly visible on left facet headers. Legend "Intensity" on right with all 6 band types (Positive Low/Medium/High, Negative Low/Medium/High) readable. Grid lines subtle. All text has strong contrast.
+      Data: Horizon bands in light/medium/dark blue (positive) and light/medium/dark brown (negative). Intensity levels clearly distinguishable. 6 server rows well-spaced.
+      Legibility verdict: PASS - All elements fully readable with professional appearance
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17, correct
+      Chrome: CRITICAL ISSUE - Title is nearly invisible, rendered as extremely faint light text barely perceptible. X-axis time labels (00:00, 04:00, etc.) are very faint and difficult to read. Facet server names are faintly visible but should be clearer. Legend text is faint. Despite code using INK (#F0EFE8) and INK_SOFT (#B8B7B0) which should be light and readable on dark background, the PNG rendering makes all text elements appear washed out.
+      Data: Horizon band colors identical to light render (same blues and browns) - excellent. Color persistence across themes correct.
+      Legibility verdict: FAIL - Title unreadable; axis labels barely visible; insufficient contrast/rendering for chrome elements in dark theme
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 19
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and axis labels are readable; facet row labels slightly small
-          but acceptable
+        score: 0
+        max: 8
+        passed: false
+        comment: Dark render title nearly invisible; unreadable per spec requirements
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: All text properly spaced, no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Area bands are clearly visible and well-sized for the data density
+        comment: Horizon bands clearly visible, intensity levels well-defined
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue/red scheme is distinguishable but not ideal for red-green colorblind
-          users; intensity gradients help differentiation
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of canvas space; faceted rows efficiently fill the
-          vertical space
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Time" label is descriptive for the x-axis; no y-axis shown (hidden
-          intentionally for horizon charts)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: Legend labels use technical codes (positive_0, etc.) rather than
-          human-readable descriptions
-    spec_compliance:
-      score: 24
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct horizon chart implementation with folded bands
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on x-axis, values encoded in colored bands, series as facets
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses 3 bands, mirrored positive/negative coloring (blue/red), multiple
-          series comparison
-      - id: SC-04
-        name: Data Range
+        comment: BrBG-inspired palette colorblind-safe, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
         score: 3
-        max: 3
+        max: 4
         passed: true
-        comment: All time points visible from 00:00 to 23:00
-      - id: SC-05
-        name: Legend Accuracy
+        comment: Good proportions and facet layout, minor margin optimization possible
+      - id: VQ-06
+        name: Axis Labels & Title
         score: 1
         max: 2
         passed: true
-        comment: Legend is present but labels are technical (positive_0) rather than
-          descriptive
-      - id: SC-06
-        name: Title Format
-        score: 2
+        comment: Descriptive but time axis lacks unit specification (15-min intervals)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
         max: 2
         passed: true
-        comment: Correctly uses "horizon-basic · altair · pyplots.ai" format
-    data_quality:
-      score: 19
+        comment: Background colors correct; data colors theme-independent; chrome
+          fails legibility in dark
+    design_excellence:
+      score: 12
       max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured defaults with intentional BrBG palette choice
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, clean layout; could refine legend and margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Realistic server metrics with visual hierarchy via intensity; lacks
+          insight emphasis
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizon chart with bands and intensity levels
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: series, time, bands, intensity, pos/neg
+          split'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on X, band values on Y, series faceted correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title correct format; legend labels match band definitions
+    data_quality:
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows diverse patterns: Database has daily cycle, Cache has spike,
-          Worker has periodic batch processing, Web Servers follow traffic'
+        comment: Shows all band types, intensity levels, temporal variation
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Server CPU metrics is a perfect real-world scenario for horizon charts
+        comment: Server monitoring realistic and neutral scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values centered around mean (deviation from baseline) are sensible;
-          slight deduction as raw CPU percentages would be more intuitive
+        comment: Time and metric scales plausible and well-factored
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,41 +174,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script with imports → data → plot → save
+        comment: 'Clean linear flow: tokens → data → chart → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Random seed set (42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (altair, numpy, pandas)
+        comment: Only used imports (os, altair, numpy, pandas)
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic, appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html but the specification path should
-          be explicit
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct plot-{THEME}.png/html output
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of alt.Chart, mark_area, facet, configure_*
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of Altair's declarative approach with faceting and color
-          scales, but could leverage more Altair-specific features like interactivity
+        comment: Faceting and color encoding use altair features, relatively standard
+          patterns
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - grid-styling

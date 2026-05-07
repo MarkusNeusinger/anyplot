@@ -1,13 +1,22 @@
-""" pyplots.ai
+""" anyplot.ai
 horizon-basic: Horizon Chart
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-24
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-07
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Data: Server metrics over 24 hours for 6 servers
 np.random.seed(42)
@@ -95,7 +104,7 @@ for row_idx, series_data in enumerate(data, 1):
             col=1,
         )
 
-    # Add series label
+    # Add series label with larger font size
     fig.add_annotation(
         x=0.5,
         y=band_size * 0.7,
@@ -103,41 +112,49 @@ for row_idx, series_data in enumerate(data, 1):
         yref=f"y{row_idx}" if row_idx > 1 else "y",
         text=name,
         showarrow=False,
-        font=dict(size=18, color="#333333"),
+        font=dict(size=20, color=INK),
         xanchor="left",
     )
 
-# Update layout
+# Update layout with theme-aware colors
 fig.update_layout(
-    title=dict(
-        text="Server CPU Load (24h) · horizon-basic · plotly · pyplots.ai", font=dict(size=28), x=0.5, xanchor="center"
-    ),
-    template="plotly_white",
+    title=dict(text="horizon-basic · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font=dict(color=INK),
     showlegend=False,
     margin=dict(l=100, r=50, t=100, b=80),
 )
 
-# Update x-axes
-fig.update_xaxes(title_text="Hour of Day", title_font=dict(size=22), tickfont=dict(size=16), row=n_series, col=1)
+# Update x-axes with theme-aware colors and larger tick font
+fig.update_xaxes(
+    title_text="Hour of Day",
+    title_font=dict(size=22, color=INK),
+    tickfont=dict(size=18, color=INK_SOFT),
+    gridcolor=GRID,
+    linecolor=INK_SOFT,
+    row=n_series,
+    col=1,
+)
 
 # Update y-axes - hide tick labels but keep consistent range
 for i in range(1, n_series + 1):
-    fig.update_yaxes(range=[0, band_size], showticklabels=False, showgrid=False, zeroline=False, row=i, col=1)
+    fig.update_yaxes(
+        range=[0, band_size], showticklabels=False, showgrid=False, zeroline=False, linecolor=INK_SOFT, row=i, col=1
+    )
 
-# Add legend for color interpretation
+# Add more prominent legend for color interpretation
 fig.add_annotation(
     x=0.98,
     y=1.02,
     xref="paper",
     yref="paper",
-    text="<b>Positive</b>: Blue (light→dark) | <b>Negative</b>: Red (light→dark)",
+    text="<b>Positive:</b> Blue (light→dark) | <b>Negative:</b> Red (light→dark)",
     showarrow=False,
-    font=dict(size=14, color="#555555"),
+    font=dict(size=16, color=INK),
     xanchor="right",
 )
 
-# Save as PNG (4800x2700)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save as HTML for interactivity
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save as PNG (4800x2700) and HTML with theme-suffixed filenames
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

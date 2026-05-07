@@ -1,0 +1,253 @@
+library: matplotlib
+language: python
+specification_id: spiral-timeseries
+created: '2026-05-07T15:33:37Z'
+updated: '2026-05-07T15:39:32Z'
+generated_by: claude-sonnet
+workflow_run: 25505264383
+issue: 5243
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Expert use of LineCollection for per-segment temperature coloring — the canonical
+    matplotlib idiom for this technique
+  - cividis colormap semantically matched to temperature (cold=dark blue, warm=yellow)
+    and CVD-safe
+  - 'All spec features implemented: Archimedean spiral, month radial subdivisions,
+    year labels, colorbar, outward expansion'
+  - Realistic and neutral dataset (Berlin-like temperatures) with plausible seasonal
+    amplitude and warming trend
+  - Flat, clean code structure with vectorized spiral math and intelligent label alignment
+  weaknesses:
+  - Title fontsize 20pt below recommended 24pt minimum; colorbar label 18pt below
+    20pt; year/month labels (14-15pt) below 16pt tick recommendation
+  - Title format prepends descriptive label before spec-id — should be spiral-timeseries
+    · matplotlib · anyplot.ai only
+  - Year labels placed slightly left of 12 o-clock rather than precisely at Jan start
+    position, causing minor visual misalignment
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "Seasonal Temperature Cycles · spiral-timeseries · matplotlib · anyplot.ai" in dark #1A1A17 at 20pt — readable. Month labels (Jan-Dec) around perimeter in INK_SOFT at 15pt — readable. Year labels 2019-2023 in bold INK at 14pt inside spiral — readable. Colorbar label "Daily Temperature (°C)" in INK at 18pt — readable. Colorbar ticks in INK_SOFT at 14pt — readable.
+      Data: Five-revolution Archimedean spiral colored with cividis — cold dark blue for winter temperatures (~-10°C), bright yellow for summer peaks (~30°C+). Twelve radial gridlines at alpha=0.22. Dashed concentric year-boundary rings at alpha=0.22.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light #F0EFE8 (INK token) — clearly readable. Month labels in #B8B7B0 (INK_SOFT) — readable. Year labels in INK light token — readable. Colorbar label and ticks in INK_SOFT light tone — readable. No dark-on-dark failures detected.
+      Data: Spiral colors identical to light render — cividis cold blues and warm yellows unchanged; only chrome flipped.
+      Legibility verdict: PASS — all text readable against dark background, chrome correctly adapted
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: 'All sizes explicitly set but below minimums: title 20pt (need 24),
+          colorbar label 18pt (need 20), month labels 15pt, year labels 14pt (need
+          16)'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Month labels, year labels, colorbar all well-spaced with no overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Spiral at linewidth=2.8 clearly visible; cividis provides excellent
+          contrast across full temperature range
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: cividis is perceptually uniform and CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 12x12 figsize (3600x3600px) fills canvas well; minor wasted space
+          in corners
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Colorbar labeled Daily Temperature (°C) with units; descriptive title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous data uses cividis (approved sequential); backgrounds
+          #FAF8F1/#1A1A17 correct; chrome flips correctly in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: cividis chosen semantically (cold=dark/warm=bright),
+          intelligent angle-based label alignment, clean axis-off layout — clearly
+          above configured defaults'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: ax.axis off removes all standard chrome; radial/concentric grids
+          at 0.22 alpha are intentionally subtle; bold year labels create hierarchy;
+          year label positioning slightly off-center prevents perfect score
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: cividis makes seasonal rhythm immediately visible (blue winters,
+          yellow summers); expanding spiral communicates temporal progression; year
+          labels orient the viewer
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Archimedean spiral time series correctly implemented with constant
+          revolution spacing
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: color encoding of value magnitude, radial
+          month subdivisions, year-start labels, outward expansion, Archimedean spiral,
+          colorbar'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Angle encodes position within cycle, radius encodes time, cividis
+          encodes temperature — all correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: false
+        comment: Colorbar label correct; title prepends descriptive label before spec-id
+          — should be spiral-timeseries · matplotlib · anyplot.ai format
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows 5 complete revolutions, seasonal variation, warming trend,
+          month subdivisions, year orientation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Berlin-like daily temperatures over 5 years — real, comprehensible,
+          neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature range -10°C to ~33°C, 22°C seasonal amplitude, 0.6°C
+          warming trend over 5 years — all factually plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat structure: theme tokens → data generation → spiral math → plot
+          → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, matplotlib.pyplot, numpy, LineCollection — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Vectorized numpy spiral computation; intelligent label alignment
+          logic; no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with facecolor; correct API usage
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of LineCollection for per-segment coloring, ScalarMappable
+          + Normalize + fig.colorbar — canonical matplotlib patterns for this visualization
+          type
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: LineCollection for per-segment gradient coloring is distinctly matplotlib;
+          ScalarMappable pattern is the authoritative matplotlib approach; minor deduction
+          as spiral geometry itself is pure numpy
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - custom-colormap
+  - alpha-blending

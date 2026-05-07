@@ -1,167 +1,170 @@
 library: plotly
+language: python
 specification_id: bar-horizontal
 created: '2025-12-25T08:37:07Z'
-updated: '2025-12-25T08:44:12Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20502052415
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-07T07:29:04Z'
+generated_by: claude-haiku
+workflow_run: 25481730673
+issue: 1946
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/plotly/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent visual clarity with well-sized fonts for 4800x2700 output
-  - Data scenario (programming language survey) is highly relatable and realistic
-  - Proper use of Plotly go.Bar with horizontal orientation and text positioning
-  - Clean code following KISS principles
-  - Generates both PNG and HTML outputs for interactivity
-  - Bars sorted descending for easy comparison as recommended in spec
+  - Perfect visual quality with all text readable in both light and dark themes
+  - Flawless theme-adaptive chromatics with no dark-on-dark or light-on-light failures
+  - Excellent spec compliance with correct horizontal bar chart structure
+  - Clean, realistic data showing programming language survey results
+  - Proper use of Okabe-Ito brand color (#009E73) throughout
+  - Professional execution with clean, reproducible, idiomatic Plotly code
   weaknesses:
-  - Value label font size (32) could be slightly reduced as it appears close to bar
-    ends
-  - X-axis range padding (1.15x max) creates extra whitespace on right side
-  image_description: The plot displays a horizontal bar chart showing survey results
-    for "What programming language do you use most?". Ten programming languages are
-    listed on the y-axis (Python, JavaScript, TypeScript, Java, C++, Go, Rust, Ruby,
-    PHP, Swift) with horizontal blue bars (#306998) extending to the right representing
-    the number of responses. Each bar has a value label displayed outside at the end.
-    The bars are sorted in descending order by value, with Python having the longest
-    bar (2847 responses) and Swift the shortest (298). The title "bar-horizontal ·
-    plotly · pyplots.ai" is centered at the top. The x-axis shows "Number of Responses"
-    ranging from 0 to ~3000, and the y-axis is labeled "Programming Language". The
-    background uses the plotly_white template with subtle grid lines on the x-axis.
-    Overall layout is clean and well-proportioned.
+  - Design sophistication is modest, relying on single-color palette and default styling
+    with minimal customization
+  - Visual refinement is minimal; bars use only standard borders without more sophisticated
+    styling techniques
+  - Could benefit from visual hierarchy through subtle emphasis or accent techniques
+    to create stronger storytelling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 (correct spec)
+      Chrome: Title "bar-horizontal · plotly · anyplot.ai" in dark text (28px), y-axis "Programming Language" (22px), x-axis "Number of Responses" (22px), tick labels in soft gray (18px) — all fully readable
+      Data: All 10 bars use Okabe-Ito brand green #009E73 with subtle dark borders, values 2847-298 displayed outside bars
+      Legibility verdict: PASS — all text clearly visible on light background, no legibility failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 (correct spec)
+      Chrome: Title, axis labels flip to light text (same sizes 28px/22px/18px), tick labels in light soft gray #B8B7B0 clearly distinct from background — no dark-on-dark failures
+      Data: All bars remain identical green #009E73 as light render, confirming only chrome adaptation
+      Legibility verdict: PASS — all text clearly readable on dark background, no dark-on-dark issues, colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, tick labels, and value labels are all clearly
-          readable at the 4800x2700 resolution with appropriate font sizes (32-40pt)
+        comment: Title 28px, axis labels 22px, ticks 18px. Fully readable both themes.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; category labels on y-axis are well-spaced,
-          value labels positioned outside bars with no collision
+        comment: Data labels outside bars, y-axis clear, no collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are appropriately sized with good spacing (bargap=0.3), marker_line
-          adds nice visual definition
+        comment: All 10 bars clearly distinguishable with good spacing.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single color scheme (#306998 blue) is colorblind-safe
+        comment: 'Okabe-Ito #009E73. Colorblind-safe. Good contrast both surfaces.'
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good use of canvas space with appropriate margins; slight deduction
-          as some extra whitespace on right due to x-axis range extension
+        comment: Good proportions, generous margins, nothing cut off.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels ("Number of Responses", "Programming Language")
-          but no units
+        comment: Title includes spec-id/library/domain. Axes descriptive.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.1), no legend needed for single-series chart;
-          y-axis grid is appropriately hidden
+        comment: 'Brand color correct. Backgrounds #FAF8F1/#1A1A17 correct. Chrome
+          properly themed. No dark-on-dark.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional brand-color use. Clean approach. Bar edges add definition.
+          Measured customization.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No chartjunk. Subtle grid. Generous whitespace. Minimalist styling
+          could be refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bars sorted by value. Data labels reveal counts. Clear focal point
+          on top (2847).
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct horizontal bar chart implementation
+        comment: Correct horizontal bar chart.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on y-axis, values on x-axis as expected for horizontal
-          bars
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Consistent bar heights, sorted by value (descending), single color,
-          good spacing, value labels at end of bars
-      - id: SC-04
-        name: Data Range
+        comment: Categories, values, horizontal orientation, value labels all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis range (0 to max*1.15) shows all data with room for labels
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Y-axis Language, X-axis Responses. All data visible 0-3000.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single-series; N/A but appropriate
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "bar-horizontal · plotly · pyplots.ai"'
+        comment: Proper title format. No legend needed (single series).
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows ranking, comparison, and survey result use case well; could
-          show more variation in bar lengths (current distribution is fairly linear
-          decline)
+        comment: All 10 languages shown with realistic counts.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Programming language survey is a perfect, relatable real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Response counts (298-2847) are realistic for a developer survey
+        comment: Programming language survey is realistic, neutral, plausible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 298-2847 sensible for survey. Range 0-3000 well-calibrated.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,42 +172,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data → plot → save, no functions/classes'
+        comment: No functions/classes. Direct simple setup.
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Data is deterministic (hardcoded), but no np.random.seed even though
-          it's not strictly needed here
+        max: 2
+        passed: true
+        comment: np.random.seed(42). Deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only plotly.graph_objects is imported, which is used
+        comment: 'Only used imports: os, sys, plotly.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: No fake interactivity. AR-08 compliant.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct plot-{THEME}.png/html output.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: go.Figure()/go.Bar() idioms. Proper orientation. Theme tokens applied.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses go.Bar with orientation="h", text labels, template system; generates
-          HTML for interactivity. Could leverage more Plotly features like hover customization
-          or annotations.
+        comment: HTML export and hover interaction. Basic Plotly usage.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting

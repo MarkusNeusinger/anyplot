@@ -1,171 +1,172 @@
 library: plotnine
+language: python
 specification_id: horizon-basic
 created: '2025-12-25T07:10:03Z'
-updated: '2025-12-25T07:12:26Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20500901764
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - faceting
-  patterns:
-  - data-generation
-  - wide-to-long
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-05-07T05:40:12Z'
+generated_by: claude-haiku
+workflow_run: 25477737917
+issue: 1877
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Excellent implementation of horizon chart concept using plotnine grammar of graphics
-  - Creative use of geom_area with position=identity and facet_wrap for multi-series
-    display
-  - Blue/orange diverging color scheme is colorblind-accessible and aesthetically
-    pleasing
-  - Realistic server CPU deviation scenario with daily/weekly patterns and random
-    spikes
-  - Comprehensive theme customization with appropriate font sizes for large canvas
-  - Clean band-folding algorithm that correctly separates positive and negative values
+  - Excellent text legibility in both light and dark themes with explicit font sizing
+  - Clean, effective faceted layout for comparing 6 time series in compact space
+  - Perfect theme-adaptive implementation with data colors identical and chrome flipping
+    correctly
+  - Realistic data generation showing daily cycles, weekly patterns, noise, and extreme
+    events
+  - Proper use of plotnine's faceting for small multiples visualization
   weaknesses:
-  - Y-axis label says Folded Value (stacked bands) which is slightly misleading since
-    position=identity means bands overlay rather than stack
-  - Some band colors within the same polarity (e.g., +Low, +Medium, +High) are somewhat
-    similar and could benefit from more contrast
-  image_description: The plot displays a 6-panel faceted horizon chart showing "Server
-    CPU Usage Deviation" over 7 days (Mon-Sun) for 6 servers (A-F). Each facet panel
-    uses overlapping area bands with a blue-to-dark-blue gradient for positive deviations
-    (+Low, +Medium, +High) and an orange-to-dark-red gradient for negative deviations
-    (-Low, -Medium, -High). The title "Server CPU Usage Deviation · horizon-basic
-    · plotnine · pyplots.ai" appears at top. A "Band Intensity" legend on the right
-    shows all 6 band categories. The x-axis displays weekday labels, y-axis shows
-    "Folded Value (stacked bands)" from 0 to ~17. The layout uses a 2x3 grid of facets
-    with white backgrounds and subtle gray gridlines.
+  - 'Title contains wrong domain name: ''pyplots.ai'' instead of ''anyplot.ai'' (line
+    131)'
+  - 'Custom band colors violate Okabe-Ito hard rule: should use #009E73 as first categorical
+    series and follow canonical order (lines 112-119)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1, correct for light theme
+      Chrome: Title "Temperature Anomalies by Station · horizon-basic · plotnine · pyplots.ai" in dark text (dark error noted); axis labels "Temperature Deviation from Baseline (°C)" and "Time (hours)" in dark text; tick labels in dark gray; all clearly readable
+      Data: Orange bands for positive anomalies, blue bands for negative; displayed as stacked areas with smooth transitions; 6 stations in 2×3 faceted grid; legend on right showing anomaly ranges
+      Legibility verdict: PASS (perfect contrast, all text readable, no dark-on-light failures)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17, correct for dark theme
+      Chrome: Title in light text (domain name error same as light); axis labels in light text (#F0EFE8); tick labels in light gray (#B8B7B0); all clearly readable against dark surface
+      Data: Orange and blue bands identical to light render (data colors preserved across theme); same stacked area representation
+      Legibility verdict: PASS (perfect contrast, no dark-on-dark failures, all text readable in light gray/white against dark background, proper theme adaptation verified)
+
+    Both renders pass theme-readability checks.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt bold, axis titles 20pt, tick labels 14pt, facet strip
-          labels 18pt bold - all clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, facets are well-spaced
+        comment: All sizes explicitly set (title 24pt, labels 20pt, ticks 16pt, facets
+          18pt), readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Faceted grid layout, no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Area bands are clearly visible with good alpha (0.85), slight overlap
-          of bands as intended for horizon effect
+        comment: Bands optimally sized for data density
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/orange color scheme is colorblind-safe (not red-green), though
-          the 6 shades within same hue family may be harder to distinguish
+        comment: Good contrast, distinguishable without hue alone
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Excellent use of 16:9 canvas with facets filling most of the space,
-          legend well-positioned
+        comment: Perfect proportions, 60-70% canvas utilization
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels ("Day of Week", "Folded Value (stacked bands)")
-          but no units for y-axis (acceptable given normalized bands)
+        comment: Descriptive labels with units
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 1
         max: 2
-        passed: true
-        comment: Grid subtle (alpha 0.3), legend well placed; grid could be even more
-          subtle
+        passed: false
+        comment: Custom colors used instead of Okabe-Ito (violation of hard rule for
+          categorical palette)
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Domain-appropriate warm/cool semantics, strong design choice but
+          not publication-level exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtle grid (alpha=0.10), minimal chrome, some refinement visible
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed per spec; visual hierarchy comes from plot type itself,
+          not added interpretation
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct horizon chart implementation with folded bands
+        comment: Correct horizon chart with folded bands
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on x-axis, folded values on y-axis, series in facets
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Multiple series, color-coded bands, positive/negative differentiation,
-          folded values
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: bands, folding, multi-series, baseline'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within facet panels
-      - id: SC-05
-        name: Legend Accuracy
+        comment: Hour→X, magnitude→Y, band→color, station→facet
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly shows all 6 band intensity levels
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "{context} · horizon-basic · plotnine · pyplots.ai"
+        max: 3
+        passed: false
+        comment: 'Title format correct but domain name wrong: ''pyplots.ai'' instead
+          of ''anyplot.ai'''
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows positive and negative deviations, different patterns per server,
-          spikes visible; could show more extreme variation
+        comment: Shows daily cycles, weekly patterns, noise, extreme events
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Server CPU deviation monitoring is a perfect real-world use case
-          for horizon charts
+        comment: Real environmental monitoring scenario, neutral context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 168 data points (7 days × 24 hours) is realistic; deviation values
-          are sensible
+        comment: Temperature ranges and anomalies factually correct
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,43 +174,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data generation → transformation → plot →
-          save'
+        comment: Imports → Data → Plot → Save
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: No unused imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no over-engineering
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as "plot.png" correctly but verbose=False warning handling
-          could be cleaner
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct plot-{THEME}.png naming
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ggplot grammar (facet_wrap, geom_area, scale_fill_manual, theme
-          customization) but horizon chart is a workaround via data transformation
-          rather than native plotnine feature
+        comment: ggplot + geom_area + facet_wrap pattern, proper plotnine idioms
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: facet_wrap is plotnine-distinctive, but generic usage beyond that
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

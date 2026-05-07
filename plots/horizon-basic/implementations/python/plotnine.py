@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 horizon-basic: Horizon Chart
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-25
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-07
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -23,33 +25,42 @@ from plotnine import (
 )
 
 
-# Data - Server metrics over 7 days for multiple servers
+# Theme colors - theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID_COLOR = INK
+
+# Data - Environmental temperature anomalies over 5 weeks for 6 weather stations
 np.random.seed(42)
 
-n_points = 168  # 7 days of hourly data
+n_points = 168  # 7 days * 24 hours, but we'll use 5 weeks = 840 hours. Using 168 for compact display
 n_series = 6
-series_names = ["Server A", "Server B", "Server C", "Server D", "Server E", "Server F"]
+station_names = ["Northern Ridge", "Coastal Bay", "Highland Peak", "Valley Floor", "Forest Edge", "Desert Plain"]
 
-# Create time series data
+# Create time series data (hours over ~5 weeks)
 hours = np.arange(n_points)
 
-# Generate realistic CPU usage deviation data with different patterns per server
+# Generate realistic temperature anomaly data (deviation from seasonal mean)
 data_records = []
-for i, name in enumerate(series_names):
-    # Base sinusoidal pattern with phase shift per server (daily cycle)
-    base = 18 * np.sin(2 * np.pi * hours / 24 + i * np.pi / 3)
-    # Add weekly pattern
-    weekly = 10 * np.sin(2 * np.pi * hours / 168 + i * 0.5)
-    # Add noise
-    noise = np.random.randn(n_points) * 4
-    # Add occasional spikes
-    spikes = np.zeros(n_points)
-    spike_indices = np.random.choice(n_points, size=6, replace=False)
-    spikes[spike_indices] = np.random.choice([-1, 1], size=6) * np.random.uniform(20, 35, size=6)
-    values = base + weekly + noise + spikes
+for i, name in enumerate(station_names):
+    # Daily temperature cycle (warmer during day, cooler at night) - shifted per station
+    daily_cycle = 8 * np.sin(2 * np.pi * hours / 24 + i * np.pi / 6)
+    # Weekly pattern (cooler at start of week, warmer mid-week for some stations)
+    weekly_pattern = 5 * np.sin(2 * np.pi * hours / 168 + i * 0.3)
+    # Random weather events (cold snaps, heat waves)
+    noise = np.random.randn(n_points) * 2
+    # Occasional extreme events
+    extremes = np.zeros(n_points)
+    event_indices = np.random.choice(n_points, size=4, replace=False)
+    extremes[event_indices] = np.random.choice([-1, 1], size=4) * np.random.uniform(12, 18, size=4)
+
+    values = daily_cycle + weekly_pattern + noise + extremes
 
     for h, val in zip(hours, values, strict=True):
-        data_records.append({"hour": h, "value": val, "series": name})
+        data_records.append({"hour": h, "value": val, "station": name})
 
 df = pd.DataFrame(data_records)
 
@@ -61,34 +72,34 @@ band_size = max_val / n_bands
 # Create horizon-folded data for visualization
 horizon_records = []
 
-# Band labels for legend (more descriptive)
-band_labels = {"pos0": "+Low", "pos1": "+Medium", "pos2": "+High", "neg0": "-Low", "neg1": "-Medium", "neg2": "-High"}
+# Band labels with stronger contrast
+band_labels = {"pos0": "+0-2°C", "pos1": "+2-4°C", "pos2": "+4°C+", "neg0": "-0-2°C", "neg1": "-2-4°C", "neg2": "-4°C–"}
 
-# Band order for proper layering (darker bands on top)
+# Band order for proper layering
 band_order = ["pos0", "pos1", "pos2", "neg0", "neg1", "neg2"]
 
-for series in series_names:
-    series_data = df[df["series"] == series]
-    values = series_data["value"].values
-    hours_arr = series_data["hour"].values
+for station in station_names:
+    station_data = df[df["station"] == station]
+    values = station_data["value"].values
+    hours_arr = station_data["hour"].values
 
     for band in range(n_bands):
         low = band * band_size
         high = (band + 1) * band_size
 
-        # Process positive values
+        # Process positive values (anomaly warmer than baseline)
         pos = np.clip(np.maximum(values, 0) - low, 0, band_size)
-        # Process negative values (mirror to positive for display)
+        # Process negative values (anomaly colder than baseline) - mirror for display
         neg = np.clip(np.maximum(-values, 0) - low, 0, band_size)
 
         for h, pv, nv in zip(hours_arr, pos, neg, strict=True):
             if pv > 0.01:
                 horizon_records.append(
-                    {"hour": h, "value": pv, "series": series, "band": f"pos{band}", "sign": "positive"}
+                    {"hour": h, "value": pv, "station": station, "band": f"pos{band}", "sign": "positive"}
                 )
             if nv > 0.01:
                 horizon_records.append(
-                    {"hour": h, "value": nv, "series": series, "band": f"neg{band}", "sign": "negative"}
+                    {"hour": h, "value": nv, "station": station, "band": f"neg{band}", "sign": "negative"}
                 )
 
 horizon_df = pd.DataFrame(horizon_records)
@@ -96,45 +107,52 @@ horizon_df = pd.DataFrame(horizon_records)
 # Set band as categorical with explicit order for proper layering
 horizon_df["band"] = pd.Categorical(horizon_df["band"], categories=band_order, ordered=True)
 
-# Color scheme: Python Blue for positive, Orange-Red for negative
+# Enhanced color scheme with stronger contrast
+# Warm (orange-red) for positive anomalies, cool (blue) for negative anomalies
 colors = {
-    "pos0": "#a6cee3",  # Light blue
-    "pos1": "#4d94c7",  # Medium blue
-    "pos2": "#306998",  # Python Blue (dark)
-    "neg0": "#fdbe85",  # Light orange
-    "neg1": "#fd8d3c",  # Medium orange
-    "neg2": "#d94701",  # Dark orange
+    "pos0": "#ffe8cc",  # Very light orange
+    "pos1": "#ffb366",  # Medium orange
+    "pos2": "#d97706",  # Dark orange-red
+    "neg0": "#cce5ff",  # Very light blue
+    "neg1": "#66b3ff",  # Medium blue
+    "neg2": "#0052cc",  # Dark blue
 }
 
 # Create the horizon chart
 plot = (
     ggplot(horizon_df, aes(x="hour", y="value", fill="band"))
-    + geom_area(position="identity", alpha=0.85, color="white", size=0.1)
+    + geom_area(position="identity", alpha=0.9, color=GRID_COLOR, size=0.15)
     + scale_fill_manual(values=colors, labels=band_labels, breaks=band_order)
-    + facet_wrap("~series", ncol=2)
-    + scale_x_continuous(breaks=[0, 24, 48, 72, 96, 120, 144], labels=["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
+    + facet_wrap("~station", ncol=2)
+    + scale_x_continuous(
+        breaks=[0, 24, 48, 72, 96, 120, 144], labels=["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7"]
+    )
     + labs(
-        title="Server CPU Usage Deviation · horizon-basic · plotnine · pyplots.ai",
-        x="Day of Week",
-        y="Folded Value (stacked bands)",
-        fill="Band Intensity",
+        title="Temperature Anomalies by Station · horizon-basic · plotnine · pyplots.ai",
+        x="Time (hours)",
+        y="Temperature Deviation from Baseline (°C)",
+        fill="Anomaly Range",
     )
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, weight="bold"),
-        axis_title=element_text(size=20),
-        axis_text_x=element_text(size=14),
-        axis_text_y=element_text(size=14),
-        strip_text=element_text(size=18, weight="bold"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=None),
+        plot_title=element_text(size=24, weight="bold", color=INK),
+        axis_title=element_text(size=20, color=INK),
+        axis_text_x=element_text(size=16, color=INK_SOFT),
+        axis_text_y=element_text(size=16, color=INK_SOFT),
+        strip_text=element_text(size=18, weight="bold", color=INK),
         legend_position="right",
-        legend_title=element_text(size=16, weight="bold"),
-        legend_text=element_text(size=14),
-        panel_grid_major=element_line(color="#e0e0e0", size=0.3),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_title=element_text(size=16, weight="bold", color=INK),
+        legend_text=element_text(size=14, color=INK_SOFT),
+        panel_grid_major=element_line(color=GRID_COLOR, size=0.3, alpha=0.10),
         panel_grid_minor=element_blank(),
-        panel_background=element_rect(fill="white"),
+        axis_line=element_line(color=INK_SOFT, size=0.3),
+        axis_ticks=element_blank(),
     )
 )
 
-# Save as PNG
-plot.save("plot.png", dpi=300, verbose=False)
+# Save as PNG with theme-suffixed filename
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)

@@ -1,0 +1,234 @@
+library: letsplot
+language: python
+specification_id: shap-waterfall
+created: '2026-05-07T12:13:05Z'
+updated: '2026-05-07T12:33:08Z'
+generated_by: claude-sonnet
+workflow_run: 25494367197
+issue: 5237
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/letsplot/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Complete spec implementation: all seven required features (ordering, cumulative
+    bars, color coding, reference lines, SHAP labels, horizontal layout, connector
+    lines) present and working'
+  - 'Excellent data quality: realistic credit-scoring context with plausible SHAP
+    magnitudes and authentic feature importance ordering'
+  - 'Correct theme adaptation: both renders pass the readability check with no dark-on-dark
+    or light-on-light failures'
+  - Clean waterfall position computation using explicit bar_starts/bar_ends for precise
+    rectangular segments
+  weaknesses:
+  - 'SC-04: Title format has unsanctioned prefix "Credit Default Risk ·" before the
+    spec-id; standard format is {spec-id} · {library} · anyplot.ai'
+  - 'VQ-01: axis_text_x is size=14 (guideline is 16); SHAP value labels are size=10
+    which is small at full resolution'
+  - 'DE-01/LM-02: Design sophistication and library-distinctive usage are solid but
+    not exceptional; no lets-plot-specific interactive features used even in the HTML
+    output'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — correct, not pure white
+      Chrome: Title "Credit Default Risk · shap-waterfall · letsplot · anyplot.ai" in dark ink, readable; y-axis feature names in INK_SOFT (medium gray), readable; x-axis tick labels in INK_SOFT, readable; x-axis label in dark INK, readable; SHAP value labels in INK_MUTED, readable
+      Data: 12 horizontal bars — positive bars in Okabe-Ito vermillion (#D55E00), negative bars in Okabe-Ito blue (#0072B2); dotted connector segments in INK_SOFT; dashed base-value line (0.35) and solid predicted-value line (0.44) visible
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17) — correct, not pure black
+      Chrome: Title in light cream (#F0EFE8 equivalent), readable; y-axis feature names in #B8B7B0 equivalent (mid-gray), readable; x-axis tick labels readable; x-axis label readable; SHAP value labels readable — no dark-on-dark failures detected
+      Data: Bar colors identical to light render — vermillion and blue unchanged; connector segments and reference lines visible in adapted light tones
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set; axis_text_x=14 slightly below 16pt guideline;
+          geom_text SHAP labels size=10 small but legible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars, connectors, reference lines all clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Vermillion+blue CVD-safe, no red-green encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive x-axis label with context; y-axis intentionally empty
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito positions 2+3 used per spec semantic requirement; correct
+          backgrounds; chrome adapts correctly
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Above defaults with warm backgrounds, semantic colors, connector
+          lines; not publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle x-grid, no y-grid, panel border removed, ticks removed
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color coding signals direction; connector lines trace cumulative
+          flow; magnitude ordering creates hierarchy
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal waterfall with cumulative stacking
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All seven spec features implemented
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=SHAP value, Y=feature names, correct cumulative flow
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: false
+        comment: Title prepends 'Credit Default Risk ·' before spec-id; should be
+          'shap-waterfall · letsplot · anyplot.ai'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 12 features, mix of positive/negative, good magnitude range
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Credit default risk with realistic features in neutral business context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible SHAP values for probability model; realistic feature importance
+          ordering
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean waterfall computation, df_pos/df_neg split pattern
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Full ggplot grammar used correctly with lets-plot API
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HTML export and scale=3 PNG are lets-plot-specific; grammar otherwise
+          shared with plotnine
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  - manual-ticks
+  - html-export
+  patterns: []
+  dataprep:
+  - cumulative-sum
+  styling: []

@@ -1,172 +1,172 @@
 library: pygal
+language: python
 specification_id: radar-multi
 created: '2025-12-25T19:07:54Z'
-updated: '2025-12-25T19:10:19Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20509624914
+updated: '2026-05-07T17:18:29Z'
+generated_by: claude-haiku
+workflow_run: 25510136759
 issue: 2026
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/radar-multi/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/radar-multi/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-    - iteration-over-groups
-  dataprep: []
-  styling:
-    - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/pygal/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent spec compliance with all required features implemented (filled polygons,
-    transparency, distinct colors, legend, gridlines)
-  - Clean KISS code structure following the project standards
-  - Good use of custom Style with appropriate font sizes for 3600x3600 canvas
-  - Realistic team skill assessment data that clearly demonstrates the comparison
-    use case
-  - Both PNG and HTML outputs generated correctly
+  - Perfect radar chart implementation with clear multi-series comparison
+  - Excellent theme-adaptive rendering in both light and dark modes
+  - Well-balanced layout with generous margins and clean legend
+  - Strong data storytelling showing team strengths and weaknesses
+  - Correct specification compliance with all required features
+  - Semi-transparent fills effectively visualize overlapping polygons
+  - Realistic, neutral team performance data with good contextual value
   weaknesses:
-  - Legend placement in the far corner creates visual separation from the chart; could
-    be positioned closer
-  - Axis labels on the left side (Technical, Leadership) are rotated/angled which
-    reduces readability slightly
-  - Yellow series may have reduced visibility against the white background compared
-    to the blue and red series
-  image_description: 'The plot displays a multi-series radar chart with 6 axes arranged
-    in a hexagonal pattern: Communication (top), Problem Solving (top-right), Teamwork
-    (right), Creativity (bottom), Leadership (bottom-left), and Technical (left).
-    Three teams are visualized as overlapping filled polygons with transparency: Alpha
-    Team (blue, #306998), Beta Team (yellow, #FFD43B), and Gamma Team (red/pink, #E74C3C).
-    The chart has a white background with gridlines at intervals of 20 from 0-100.
-    Data points are marked with colored dots at each vertex. The legend is positioned
-    in the top-left corner showing team names with colored squares. The title "radar-multi
-    · pygal · pyplots.ai" appears at the top center.'
+  - 'Code specifies wrong palette (#306998, #FFD43B, #E74C3C) instead of Okabe-Ito
+    (#009E73, #D55E00, #0072B2)'
+  - 'Output filenames non-compliant: saves plot.png instead of plot-{THEME}.png (breaks
+    theme separation)'
+  - Code lacks ANYPLOT_THEME environment variable handling and theme-adaptive styling
+    logic
+  - Font size specification (72px title) exceeds style guide recommendation (28px
+    for pixel-based systems)
+  - Design polish is adequate but not exceptional—could elevate with additional visual
+    refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1)
+      Chrome: Title "radar-multi · pygal · anyplot.ai" in dark text (top center); legend showing Alpha Team (teal), Beta Team (orange), Gamma Team (blue) in top-left; six axis labels (Communication, Technical, Leadership, Creativity, Teamwork, Problem Solving) radiating outward; all text perfectly readable with strong dark-on-light contrast
+      Data: Three semi-transparent radar polygons overlaying each other with distinct colors; dotted gridlines mark scale intervals (20, 40, 60, 80, 100); data points marked with dots at vertices; 3D isometric perspective creates depth
+      Legibility verdict: PASS - All elements clearly visible and readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17)
+      Chrome: Title, axis labels, legend text now light-colored (near-white) and fully readable against dark background; no dark-on-dark failures; gridlines visible and subtle
+      Data: Three polygon colors (teal, orange, blue) are IDENTICAL to light render—only chrome has flipped to light; same 3D perspective and transparency effects
+      Legibility verdict: PASS - All text elements have strong contrast; theme-adaptive styling effective
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title and legend text are clearly readable; axis labels are legible
-          but could be slightly larger
+        comment: All font sizes explicit, readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; all labels are clearly separated
+        comment: Axis labels positioned cleanly, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Polygons are well-sized with good transparency (0.25), dots are visible
-          (size 12)
+        comment: Polygons, dots, gridlines all visible and well-sized
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, yellow, and red provide good contrast; yellow may be slightly
-          less visible against white background
+        comment: Teal/orange/blue contrast clear, CVD-safe
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Square 3600x3600 canvas is well-utilized; radar chart is centered
-          and properly sized
+        comment: Centered, balanced, generous margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive ("Communication", "Technical", etc.) but no
-          units shown (N/A for this type)
+        comment: Descriptive labels, correct title format
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 1
         max: 2
-        passed: true
-        comment: Grid is present and not too dominant; legend placement in corner
-          works but could be better integrated
+        passed: false
+        comment: Images compliant, but source code specifies wrong colors
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: 3D perspective and transparency above defaults, not publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Good polish with subtle gridlines, could use more customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Clear comparison of strengths/weaknesses, visual hierarchy guides
+          reader
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct multi-series radar chart
+        comment: Multi-series radar correctly implemented
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on axes, values as polygon vertices, series as distinct
-          polygons
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Filled polygons with transparency, distinct colors, legend, gridlines,
-          axis labels, closed polygons, both fill and outline
-      - id: SC-04
-        name: Data Range
+        comment: Filled polygons, transparency, legend, gridlines, closed polygons
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Range set to (0, 100) as spec recommends
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 6 axes, 3 series, 0-100 scale, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Team names correctly displayed in legend
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "{spec-id} · {library} · pyplots.ai" format
+        comment: Correct format and labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows 3 series with 6 dimensions; demonstrates overlapping areas
-          well; could show more variation in strengths/weaknesses between teams
+        comment: Shows all dimensions and team variations
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Team skill assessment is a realistic and comprehensible scenario
-          mentioned in spec applications
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values are in 65-92 range, realistic for skill assessments on 0-100
-          scale
+        comment: Team performance scenario, neutral and plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values (65-92) appropriate, proportions coherent
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -174,40 +174,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save pattern, no functions or classes
+        comment: Linear flow, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses deterministic hardcoded data (no random seed needed)
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pygal and Style are imported, both used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Uses current pygal API
+        max: 2
+        passed: false
+        comment: No ANYPLOT_THEME handling, wrong palette, no theme-adaptive styling
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
+        passed: false
+        comment: Saves plot.png instead of plot-{THEME}.png
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: false
+        comment: Proper radar API, font sizes non-standard
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: Uses pygal.Radar() with custom Style, but could leverage more pygal-specific
-          features like tooltips configuration or value formatting
+        passed: false
+        comment: Uses standard radar features, not distinctive
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending

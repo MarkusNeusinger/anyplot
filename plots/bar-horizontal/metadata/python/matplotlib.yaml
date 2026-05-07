@@ -1,160 +1,177 @@
 library: matplotlib
+language: python
 specification_id: bar-horizontal
 created: '2025-12-25T08:35:27Z'
-updated: '2025-12-25T08:38:12Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20502052434
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/matplotlib/plot.png
-preview_html: null
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - manual-ticks
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-05-07T07:24:51Z'
+generated_by: claude-haiku
+workflow_run: 25481558317
+issue: 1946
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent text legibility with appropriate font sizes for all elements
-  - Proper sorting of bars (largest at top) for easy visual comparison
-  - Clean, professional appearance with removed top/right spines
-  - Value labels positioned perfectly at bar ends with proper formatting
-  - Realistic data scenario that is immediately understandable
-  weaknesses:
-  - Could highlight the top 1-3 languages with a different color to draw attention
-    as suggested in spec
-  - Bar edge color adds visual complexity without clear benefit
-  image_description: The plot displays a horizontal bar chart showing "Top 10 programming
-    languages by popularity". The chart uses a blue color (#306998) for all bars with
-    a darker edge. Python is at the top with 68.2%, followed by JavaScript at 62.5%,
-    then Java, C++, TypeScript, C#, Go, Rust, PHP, and Swift at the bottom with 18.3%.
-    Bars are sorted from largest (top) to smallest (bottom). Each bar has a percentage
-    label at its end. The x-axis shows "Popularity (%)" ranging from 0 to 80, and
-    the y-axis shows "Programming Language". The title correctly uses the format "bar-horizontal
-    · matplotlib · pyplots.ai". A subtle dashed grid appears on the x-axis. Top and
-    right spines are removed for a cleaner look.
+  - Perfect theme-adaptive design with correct color mapping across light and dark
+    renders
+  - All text elements readable in both themes with no dark-on-dark or light-on-light
+    failures
+  - Excellent visual quality and clarity at large canvas size (4800×2700px)
+  - Strong visual hierarchy created through data sorting and bar length encoding
+  - 'Correct Okabe-Ito palette (brand green #009E73) and theme token implementation'
+  - Clean, minimalist design with appropriate spine removal and subtle grid
+  - Value labels positioned and sized perfectly without clutter
+  - Idiomatic matplotlib patterns and code clarity
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "bar-horizontal · matplotlib · anyplot.ai" in dark text (24pt), axis labels in dark text (20pt), tick labels in soft gray (16pt) - all clearly readable
+      Data: 10 bars in brand green (#009E73), value labels at bar ends in dark gray (16pt) - all readable and well-positioned
+      Legibility verdict: PASS - all text readable against light background, no contrast failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title, axis labels in light text, tick labels in light gray - all clearly readable and properly adapted for dark theme
+      Data: 10 bars in brand green (#009E73) - identical color to light render, confirming data colors stay constant across themes
+      Legibility verdict: PASS - all text readable against dark background, no dark-on-dark failures, proper theme-adaptive coloring throughout
+
+    Both renders successfully demonstrate theme-adaptive design with consistent data representation.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
+        comment: All font sizes explicitly set; Title 24pt, labels 20pt, ticks/values
+          16pt - all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all category labels and value labels are clearly
-          separated
+        comment: No overlapping text; 10 categories well-spaced with consistent bar
+          heights
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar heights appropriate (0.65), good spacing between bars, value
-          labels clearly visible
+        comment: All bars clearly distinguishable; grid subtle but visible; optimal
+          sizing
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color scheme, no colorblind issues, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, good proportions
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: X-axis has "Popularity (%)" with units, Y-axis has descriptive "Programming
-          Language"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Okabe-Ito brand green #009E73 is CVD-safe with excellent contrast
+          on both surfaces'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 at 300dpi = 4800x2700px; balanced margins; proper canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle (alpha=0.3), but no legend needed/present (acceptable)
+        passed: true
+        comment: X-axis 'Popularity (%)' with units; Y-axis 'Programming Language';
+          title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1 (light) / #1A1A17 (dark);
+          data colors identical between renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean, well-configured design with intentional data sorting; theme-adaptive
+          but lacks exceptional custom sophistication
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed; subtle grid (alpha=0.1, x-axis only); generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Data sorted ascending creates narrative; bar length guides comparison;
+          value labels reinforce insight
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct horizontal bar chart using ax.barh()
+        comment: Horizontal bar chart using ax.barh() with correct orientation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on Y-axis, values on X-axis as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: sorted bars, consistent bar heights,
-          value labels at bar ends, adequate spacing'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: categorical labels, numeric values, bars proportional
+          to values, sorted for comparison'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis extends to 80% (1.2x max value) showing all data clearly
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Y-axis maps categories; X-axis maps values (0-80%); all data visible
+          and scaled appropriately
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single-series chart
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "bar-horizontal · matplotlib · pyplots.ai"
+        comment: Title format correct; legend correctly omitted (single series)
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows ranking effectively with 10 categories, good variety in values,
-          but all bars same color (spec mentions "highlight specific bars" as option)
+        comment: 10 languages showing variety (68.2% to 18.3%); demonstrates full
+          chart capability
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Programming language popularity is a realistic, relatable scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Percentages are realistic and within plausible range for survey data
+        comment: Programming language popularity is real-world, comprehensible, and
+          neutral; factually plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Percentage scale is sensible; values realistic for language adoption
     code_quality:
       score: 10
       max: 10
@@ -164,41 +181,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Linear structure: imports → data → plot → save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set (though not strictly needed for hardcoded
-          data)
+        comment: Deterministic data; seed set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: 'All imports used: os, matplotlib, numpy'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions used
+        comment: Clean, Pythonic, appropriate complexity; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png' with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct DPI and settings; current
+          API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ax.barh(), text annotations, spine removal, but no advanced
-          matplotlib features like custom patches or color gradients
+        comment: 'Excellent patterns: ax.barh(), ax.text(), theme token mapping, grid/set_axisbelow'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Straightforward usage; no distinctive features unique to matplotlib
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling

@@ -1,152 +1,167 @@
 library: plotnine
+language: python
 specification_id: count-basic
 created: '2025-12-25T12:41:29Z'
-updated: '2025-12-25T12:43:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20505207223
+updated: '2026-05-07T09:27:03Z'
+generated_by: claude-haiku
+workflow_run: 25486961726
 issue: 2033
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/count-basic/plotnine/plot.png
-preview_html: null
-quality_score: 98
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Excellent use of pd.Categorical for logical ordering of response categories instead
-    of alphabetical
-  - Clean implementation of count labels using geom_text with proper positioning
-  - Custom color palette transitions well from blue (positive) to yellow (negative)
-    matching sentiment
-  - Perfect adherence to KISS code structure with clear section organization
-  - Appropriate use of theme_minimal with customized element_text sizing for high-resolution
-    output
+  - Clean theme adaptation with proper text color switching between light/dark modes
+  - 'Correct Okabe-Ito palette application; first series is exactly #009E73'
+  - Data ordering by frequency creates natural visual hierarchy
+  - Count labels enhance precision without visual clutter
+  - Readable and accessible plot in both light and dark themes
   weaknesses:
-  - 'Minor: Yellow bar color (#FFD43B) on white background has slightly reduced contrast
-    compared to blue bars'
-  image_description: 'The plot displays a vertical bar chart showing customer survey
-    responses. Five bars represent response categories from left to right: "Excellent"
-    (45, dark blue), "Good" (78, medium blue), "Average" (52, lighter blue), "Poor"
-    (23, pale blue), and "Very Poor" (12, yellow/gold). Each bar has its count value
-    displayed above it. The title "count-basic · plotnine · pyplots.ai" appears at
-    the top. The x-axis is labeled "Customer Response" and the y-axis "Number of Responses".
-    The background is clean white with subtle horizontal grid lines, using theme_minimal
-    styling.'
+  - Panel border on all four sides reduces visual refinement; style guide recommends
+    L-shaped (left/bottom only) or removal for cleaner appearance
+  - Count label implementation uses separate data frame workaround rather than native
+    stat='count' integration
+  - Design lacks intentional sophistication beyond defaults; generic styling without
+    distinctive visual choices
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface (#FAF8F1) providing high contrast for data elements
+      Chrome: Title "count-basic · plotnine · anyplot.ai" in dark primary ink (#1A1A17), clearly readable. Axis labels "Rating" and "Number of Responses" in dark ink, legible. Tick labels (0, 100, 200, 300 and "5 Stars", "4 Stars", etc.) in soft gray (#4A4A44), readable against light background. Grid lines subtle at ~10% opacity.
+      Data: Five bars in Okabe-Ito sequence: green (#009E73) for "5 Stars" (285), orange (#D55E00) for "4 Stars" (198), blue (#0072B2) for "3 Stars" (142), reddish-purple (#CC79A7) for "2 Stars" (89), yellow (#E69F00) for "1 Star" (56). Count labels positioned above each bar in dark text.
+      Legibility verdict: PASS — All text readable, no light-on-light failures, data clearly distinguished from background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface (#1A1A17) providing high contrast for text and data
+      Chrome: Title and axis labels in light text (#F0EFE8 for primary, #B8B7B0 for secondary), clearly visible against dark surface. Tick labels in soft light gray, readable. Grid lines subtle and visible without dominating.
+      Data: Bar colors identical to light render — green, orange, blue, purple, yellow maintain exact same hex values. Count labels in light text, readable above bars.
+      Legibility verdict: PASS — All text readable, no dark-on-dark failures (light text on dark background), data colors preserved from light render, theme adaptation successful
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: all text perfectly readable, appropriate font sizes
+        comment: All text readable in both themes; proper font hierarchy (24pt, 20pt,
+          16pt)
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: no overlapping text elements
+        comment: Count labels cleanly positioned; no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: bars well-sized with good spacing
+        comment: Bars fully visible; grid subtle and appropriate
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: gradient is accessible, yellow on white slightly reduced contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: excellent canvas utilization with 16:9 aspect ratio
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: descriptive labels for both axes
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette CVD-safe; adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 format well-proportioned; generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: subtle grid, legend appropriately hidden
+        comment: Labels descriptive; title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order; correct backgrounds for both
+          themes'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Uses Okabe-Ito appropriately but execution is straightforward without
+          design intent
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Grid customized; panel border on all four sides (should be L-shaped)
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Frequency order provides hierarchy; count labels guide viewer but
+          not exceptional
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: correct count plot using geom_bar
+        comment: Correct count plot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: count labels, logical ordering, adequate spacing
-      - id: SC-04
-        name: Data Range
+        comment: Frequency display and counts present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y axes correct; full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: legend correctly omitted
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'uses correct format: count-basic · plotnine · pyplots.ai'
+        comment: Title format correct; legend appropriately omitted
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: shows variation across all 5 categories
+        comment: Shows all count plot aspects
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: plausible product feedback survey scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: realistic response counts
+        comment: Netflix ratings context is real-world plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Value distribution realistic for rating scenarios
     code_quality:
       score: 10
       max: 10
@@ -156,15 +171,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: clean imports → data → plot → save
+        comment: No unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: deterministic hardcoded data
-    library_features:
+        comment: Data deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only required imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct filename format
+    library_mastery:
       score: 5
-      max: 5
-      items: []
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: false
+        comment: Uses idiomatic plotnine patterns; count_df approach slightly indirect
+          vs stat='count'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage; no advanced features leveraged
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

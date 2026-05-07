@@ -1,166 +1,180 @@
 library: pygal
+language: python
 specification_id: bar-horizontal
 created: '2025-12-25T08:38:04Z'
-updated: '2025-12-25T08:46:34Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20502055368
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-07T07:30:21Z'
+generated_by: claude-haiku
+workflow_run: 25482075769
+issue: 1946
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/pygal/plot.html
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/pygal/plot-dark.html
 quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
 review:
   strengths:
-  - Clean, professional visual design with consistent steel blue color
-  - Data sorted by value (highest to lowest) for easy comparison as recommended in
-    spec
-  - Excellent use of pygal print_values feature to display percentages on bars
-  - Realistic programming language survey data that is immediately relatable
-  - Proper 4800x2700 canvas sizing with appropriately scaled fonts
-  - Both PNG and HTML outputs generated for interactivity
+  - Perfect text legibility in both light and dark themes with explicitly set font
+    sizes
+  - Correct palette compliance and theme-adaptive colors with identical data rendering
+    across themes
+  - Well-structured margins and canvas utilization for large 4800×2700 canvas
+  - Clean, readable code following KISS principles with proper theme handling
+  - Authentic data reflecting real programming language popularity trends
+  - Excellent visual hierarchy through descending value sorting
   weaknesses:
-  - Category labels not shown directly on y-axis; users must cross-reference the legend
-    at bottom to identify each bar
-  - Legend placement at bottom separates labels from their corresponding bars, reducing
-    readability
-  - Value labels on bars (18.6%, 16.3%, 12.9%) are positioned inside bars making them
-    harder to read against the blue background
-  image_description: The plot displays a horizontal bar chart showing programming
-    language popularity survey results. There are 10 horizontal bars in a consistent
-    steel blue color (#306998), sorted from highest (Python at 68.7%) to lowest (Swift
-    at 12.9%). The title "bar-horizontal · pygal · pyplots.ai" appears at the top
-    in dark text. The x-axis shows "Popularity (%)" with tick marks from 0.0% to 60.0%.
-    Each bar has its percentage value displayed at the end. A legend at the bottom
-    shows all 10 programming languages (Python, JavaScript, Java, C++, TypeScript,
-    C#, Go, Rust, PHP, Swift) arranged in two rows of 5 columns. The background is
-    white with subtle vertical grid lines. The bars have good spacing and the overall
-    layout is clean and professional.
+  - Design Excellence could be elevated with more sophisticated visual refinements
+    (e.g., removing x-axis guides for ultra-minimal aesthetic)
+  - Data Storytelling could be enhanced with annotations or visual emphasis on specific
+    insights
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title "bar-horizontal · pygal · anyplot.ai" clearly visible in dark text. X-axis label "Popularity (%)" and y-axis category names (Python, JavaScript, Java, C++, TypeScript, C#, Go, Rust, PHP, Swift) all clearly readable against light background. Tick labels visible.
+      Data: 10 horizontal bars in brand green (#009E73), sorted descending from Python (68.7%) to Swift (12.9%). Value labels displayed at bar ends (e.g., "12.9%", "68.7%"). Subtle vertical grid lines visible.
+      Legibility verdict: PASS - All text is clearly readable in light theme
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title clearly visible in light text. X-axis and y-axis labels visible in light color. Y-axis tick labels (category names) fully readable in light color against dark background. No dark-on-dark failures detected.
+      Data: Bars are identical brand green (#009E73) as light render - confirms proper color consistency across themes. Value labels readable at bar ends.
+      Legibility verdict: PASS - All text is clearly readable in dark theme. Excellent theme adaptation with no readability issues.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title and axis labels are clearly readable; value labels on bars
-          are slightly small but legible
+        comment: Font sizes explicitly set (title=28pt, labels=22pt, major=18pt, values=16pt).
+          All text perfectly readable in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text anywhere
+        comment: No overlapping text. Labels and values properly spaced with spacing=30
+          and adequate margins.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-sized with good spacing between them
+        comment: Bars perfectly sized and clearly visible. Proper bar heights and
+          spacing adapted to 10 categories.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single color scheme (steel blue) is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space; slight issue with no y-axis category labels
-          visible on the bars themselves
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: X-axis has "Popularity (%)" with units, but no y-axis label (categories
-          shown in legend instead)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Subtle vertical grid lines; legend at bottom is functional but spreads
-          categories far from their bars
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct horizontal bar chart
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on y-axis, values on x-axis as horizontal bar lengths
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Has consistent bar heights, sorted by value, single color; missing
-          direct category labels on y-axis
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible, axis extends appropriately
-      - id: SC-05
-        name: Legend Accuracy
         score: 2
         max: 2
         passed: true
-        comment: Legend labels match data correctly
-      - id: SC-06
-        name: Title Format
-        score: 1
+        comment: Brand green (#009E73) provides excellent contrast. CVD-safe, meets
+          accessibility standards.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect canvas utilization with balanced margins. Plot fills appropriate
+          portion of canvas.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Uses correct format but uses center dot (·) separator correctly
-    data_quality:
-      score: 20
+        comment: Title format correct. X-axis label descriptive with units. Y-axis
+          shows category names.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is correct #009E73. Backgrounds are #FAF8F1 (light)
+          / #1A1A17 (dark). Data colors identical between renders.'
+    design_excellence:
+      score: 13
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
         max: 8
-        passed: true
-        comment: Shows full range of values with clear differentiation between bars
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Programming language popularity is a real, relatable survey scenario
-      - id: DQ-03
-        name: Appropriate Scale
+        passed: false
+        comment: Custom Style object with theme-aware configuration shows professional
+          polish beyond defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid lines and well-configured spacing. Could enhance by removing
+          x-guides for ultra-minimal aesthetic.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Data sorted descending creates natural ranking narrative. Could enhance
+          with annotations or visual emphasis.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Percentages are realistic for language popularity surveys
+        comment: Correct horizontal bar chart using pygal.HorizontalBar().
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features present: horizontal orientation, categorical
+          y-axis, value representation, value labels.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned. Categories on y-axis, values extend horizontally.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend appropriately hidden for single series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows full spectrum of programming language popularity with 10 diverse
+          categories.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real-world scenario with authentic data reflecting actual programming
+          language popularity trends.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values (12.9% to 68.7%) are factually plausible and match known survey
+          data distributions.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -168,42 +182,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure
+        comment: Simple, direct implementation. No unnecessary functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Data is deterministic (hardcoded), but no explicit seed needed; minor
-          deduction for not using np.random
+        comment: Uses os.getenv() with default value. No randomness. Deterministic
+          output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pygal and Style imported, both used
+        comment: Only essential imports. All imports used. No unused dependencies.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API
+        comment: Clean variable naming, logical flow, proper separation of concerns.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly outputs plot-{THEME}.png and plot-{THEME}.html with no
+          bare filenames.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses pygal's HorizontalBar, custom Style, print_values, value_formatter,
-          and SVG-based rendering with HTML export; could leverage more interactive
-          features
+        comment: 'Excellent pygal idioms: Style object for theming, HorizontalBar,
+          proper add() usage, render methods.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses value printing with custom formatter. Could explore more advanced
+          features.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns: []
+  dataprep: []
+  styling: []

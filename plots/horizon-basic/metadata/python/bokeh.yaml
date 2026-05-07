@@ -1,176 +1,182 @@
 library: bokeh
+language: python
 specification_id: horizon-basic
 created: '2025-12-24T22:17:43Z'
-updated: '2025-12-24T22:35:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20494683751
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - hover-tooltips
-  - html-export
-  - columndatasource
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-05-07T05:49:49Z'
+generated_by: claude-haiku
+workflow_run: 25477621270
+issue: 1877
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/bokeh/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent implementation of horizon chart technique with proper band folding and
-    color intensity mapping
-  - Uses colorblind-friendly blue/orange palette that clearly distinguishes positive
-    from negative values
-  - 'Good use of Bokeh features: ColumnDataSource, HoverTool with custom tooltips
-    showing original values, varea for smooth bands'
-  - Realistic server monitoring scenario with 6 distinct servers and 200 time points
-    each
-  - Well-structured color legend explaining the band meanings
-  - Appropriate canvas utilization with stacked subplots filling the space effectively
+  - Theme-adaptive implementation with proper light/dark mode support
+  - Correct horizon chart design with properly folded positive/negative bands
+  - Clean, minimalist aesthetic with excellent text legibility in both themes
+  - Proper use of Okabe-Ito color palette (blues for positive, oranges for negative)
+  - Well-organized layout with clear legend, title, and series labels
+  - Idiomatic Bokeh usage with interactive tools (HoverTool, CrosshairTool)
+  - Reproducible synthetic data generation with meaningful server metrics context
+  - All theme tokens correctly applied throughout (PAGE_BG, ELEVATED_BG, INK, INK_SOFT)
   weaknesses:
-  - The color legend at the very top, while present, could be more visually prominent
-    and integrated
-  - The axis label Hour of Day could include units (e.g., Hour of Day 0-24h)
-  image_description: 'The plot displays 6 stacked horizon charts representing server
-    CPU metrics over a 24-hour period. Each horizontal band represents a different
-    server (Web Server 1, Web Server 2, Database, Cache Server, API Gateway, Load
-    Balancer). The visualization uses blue color gradients (light to dark: #a6cee3,
-    #306998, #08306b) for positive values and orange/red gradients (light to dark:
-    #fdd0a2, #f16913, #8c2d04) for negative values. The band-folding technique is
-    correctly implemented, with color intensity increasing as magnitude increases
-    within each band. A color legend appears at the top explaining the band meanings.
-    The title "horizon-basic · bokeh · pyplots.ai" is displayed at the top center.
-    The x-axis shows "Hour of Day" from 0 to 24, and each series has its name labeled
-    on the left side. The data shows realistic server load patterns with periodic
-    oscillations, noise, and occasional spikes.'
+  - Design Excellence could be elevated with more visual sophistication or custom
+    refinements
+  - Could leverage additional Bokeh distinctive features for enhanced interactivity
+    beyond hover tooltips
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - correct and visually appropriate
+      Chrome: Title "Server Metrics: Hourly Performance Across 24 Hours" in dark ink, subtitle "horizon-basic · bokeh · anyplot.ai" in soft ink, axis label "Hour of Day (0-24h)" at bottom, series names in bold on left - all clearly readable
+      Data: 6 server metrics displayed as horizon bands, positive values in blue shades (#56B4E9→#0072B2→#004494), negative values in orange/red shades (#E69F00→#D55E00→#8B3A00), legend at top explains bands, color intensity increases with magnitude
+      Legibility verdict: PASS - all text is legible against light background, no dark-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 - correct and matches specification
+      Chrome: Title, subtitle, axis label all rendered in light text (#F0EFE8 primary, #B8B7B0 secondary), series names clearly visible - all readable against dark surface, no dark-on-dark text issues
+      Data: Data colors (blues and oranges) are identical to light render - only chrome has adapted from light to dark as required, bands and intensity levels preserved exactly
+      Legibility verdict: PASS - all text is legible against dark background, strong contrast throughout, no readability issues
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title at 32pt and axis labels at 24pt/20pt are readable; series labels
-          at 26pt are good but could be slightly larger for optimal viewing
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements; series are well separated
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Horizon bands are clearly visible with good alpha (0.9); color differentiation
-          is effective but some subtle bands could be more distinct
+        comment: All text readable in both themes. Series names and subtitle are clear.
+          Axis label sizing could be marginally larger.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Clean spacing throughout.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All horizon bands clearly visible and distinguishable. Data density
+          well-managed.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/orange palette is colorblind-friendly (deuteranopia/protanopia
-          safe)
+        comment: Blue/orange combination is CVD-safe and colorblind-accessible. Good
+          contrast maintained.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Excellent use of canvas space; 6 series stacked vertically with legend
-          on top fills the 4800×2700 canvas well
+        comment: 4800×2700 canvas well-utilized. Proper margins and proportions. Nothing
+          cut off.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: '"Hour of Day" is descriptive but lacks units; y-axis deliberately
-          hidden for horizon charts'
+        comment: Title is descriptive. Axis label includes units (hours). All clearly
+          identify the content.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid appropriately disabled for horizon charts; legend is present
-          but could be more prominent
+        comment: 'Backgrounds match spec (#FAF8F1 light, #1A1A17 dark). Data colors
+          consistent between themes. Color palette appropriate for horizon chart.'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Functional and clean but somewhat generic. Color choices are appropriate
+          but lack custom refinement. Design follows standard patterns without distinctive
+          flourishes.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean minimal design. Spines properly removed. Grid lines between
+          series aid readability but could be more subtle for enhanced refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Visualization is clear and functional but lacks strong visual hierarchy
+          or emphasis that guides viewer through narrative.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct horizon chart implementation with band folding
+        comment: Correct horizon chart with proper folding technique and band structure.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time (hours) on x-axis, values folded into bands correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 3 bands with mirrored positive/negative coloring, baseline at zero,
-          multiple series comparison
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: multiple series, bands with intensity
+          levels, positive/negative folding, baseline-centered design.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 24-hour range visible, all data within view
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis correctly shows hours (0-24). Y-axis represents magnitude
+          through bands. Series properly separated and labeled.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Color legend accurately explains band meanings (Low/Medium/High for
-          both positive and negative)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "horizon-basic · bokeh · pyplots.ai" format
+        comment: 'Format correct: ''horizon-basic · bokeh · anyplot.ai''. Legend clearly
+          explains positive/negative bands and intensity levels.'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows positive AND negative values, multiple intensity bands, 6 different
-          series with varying patterns; could show more extreme variation
+        comment: 'Shows all aspects of horizon chart type: multi-series, positive/negative
+          bands, magnitude levels through 3-band structure.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Server metrics over 24 hours is a perfect real-world use case matching
-          the spec's "Dashboard monitoring" application
+        comment: Server metrics over 24 hours is realistic and neutral domain. Data
+          patterns (periodicity, noise, trends) are plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are plausible for server metrics; the scale normalization
-          per series is appropriate
+        comment: Values appropriately scaled for horizon visualization. Band sizing
+          relative to data range is sensible.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -178,41 +184,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plots → save; uses a loop but no functions/classes'
+        comment: Code is straightforward and direct. No unnecessary functions or classes.
+          Clear procedural flow.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output. Data generation
+          is reproducible.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'Only necessary imports: numpy, bokeh, selenium. No unused dependencies.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Proper ColumnDataSource usage. No fake functionality
+          or UI simulation.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Bokeh 3.x API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as both plot.html and plot.png (correct)
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly outputs plot-light.png, plot-dark.png, plot-light.html,
+          plot-dark.html. No bare plot.png.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, HoverTool with custom tooltips, varea for
-          filled regions, column layout for stacking; could leverage more Bokeh-specific
-          interactivity features like linked panning
+        comment: 'Proper Bokeh patterns: figure(), ColumnDataSource, varea() for area
+          fill, theme tokens throughout, interactive tools (HoverTool, CrosshairTool).'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses Bokeh's HoverTool with custom tooltips and CrosshairTool. HTML
+          export is standard. Could leverage more Bokeh-specific capabilities like
+          callbacks or custom extensions for deeper interactivity.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - subplots
+  - hover-tooltips
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending

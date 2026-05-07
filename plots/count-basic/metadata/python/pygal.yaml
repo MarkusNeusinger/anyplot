@@ -1,157 +1,166 @@
 library: pygal
+language: python
 specification_id: count-basic
 created: '2025-12-25T12:42:01Z'
-updated: '2025-12-25T12:44:02Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20505207205
+updated: '2026-05-07T09:32:18Z'
+generated_by: claude-haiku
+workflow_run: 25487183804
 issue: 2033
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/count-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/count-basic/pygal/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns: []
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/pygal/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent use of logical category ordering (satisfaction scale from negative to
-    positive)
-  - Clean implementation with appropriate font sizing for 4800x2700 canvas
-  - Good use of Counter for automatic frequency counting from raw data
-  - Value labels on bars enhance readability
-  - Realistic customer satisfaction survey scenario
+  - Excellent theme adaptation with proper chrome switching in both light and dark
+    renders
+  - Clean, simple code with proper data handling using Counter aggregation
+  - Correct Okabe-Ito palette compliance with brand green throughout
+  - Proper typography hierarchy with explicitly set font sizes for large canvas
+  - Realistic, neutral, and well-distributed customer satisfaction survey data
   weaknesses:
-  - Grid lines could be more subtle (lower alpha/opacity)
-  - Axis labels could include units for clarity (e.g., Number of Responses instead
-    of Count)
-  image_description: The plot displays a vertical bar chart showing customer satisfaction
-    survey responses across 5 categories ordered logically from "Very Dissatisfied"
-    to "Very Satisfied". The bars are rendered in a consistent muted blue color (#306998)
-    with count values (1, 5, 8, 21, 15) displayed on top of each bar. The title "count-basic
-    · pygal · pyplots.ai" appears at the top center. The x-axis is labeled "Satisfaction
-    Level" and y-axis is labeled "Count". Horizontal dotted grid lines aid readability.
-    The chart uses a white background with good spacing between bars and balanced
-    margins.
+  - Design Excellence is modest with minimal visual refinement beyond requirements
+  - Library Mastery is basic — competent core usage but no advanced pygal techniques
+  - No visual hierarchy emphasis — could enhance storytelling with color contrast
+    or size variation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme color
+      Chrome: Title "count-basic · pygal · anyplot.ai", x-axis label "Satisfaction Level", y-axis label "Number of Responses" — all readable in dark text. Category labels (Very Dissatisfied, Dissatisfied, Neutral, Satisfied, Very Satisfied) well-spaced on x-axis. Y-axis tick labels 0-20+ in dark text.
+      Data: Five bars in Okabe-Ito green (#009E73) with values labeled above (1, 5, 8, 21, 15). Horizontal dashed grid lines subtle and non-intrusive.
+      Legibility verdict: PASS — all text clearly visible against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme color
+      Chrome: Title, axis labels, and tick labels all in light text colors, readable against dark surface. Category labels well-spaced. No dark-on-dark failures.
+      Data: Bars remain identical Okabe-Ito green (#009E73) — color consistency verified. Grid lines maintain subtle appearance in dark theme.
+      Legibility verdict: PASS — all text clearly visible against dark background, no contrast failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, tick labels, and value labels are all clearly
-          readable at the large canvas size
+        comment: Font sizes explicitly set (title 28px, labels 22px, ticks 18px).
+          All readable in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; all category labels and values are
-          well-spaced
+        comment: Category labels well-spaced with margin=60, spacing=80. No collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are appropriately sized with good width and spacing
+        comment: All bars clearly visible. Grid subtle and non-competing.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single color scheme with good contrast against white background
+        comment: Okabe-Ito green has excellent contrast and colorblind safety.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: 4800×2700 px landscape appropriate. Good proportions, nothing cut
+          off.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Labels are descriptive but lack units (Count could be "Number of
-          Responses")
+        passed: true
+        comment: 'Title: ''count-basic · pygal · anyplot.ai''. Labels descriptive.'
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle (dotted lines), legend correctly hidden for single-series
-          count plot; minor deduction for grid being slightly prominent
+        passed: true
+        comment: 'Brand green #009E73. Backgrounds #FAF8F1 (light) / #1A1A17 (dark).
+          Chrome-only theme flip.'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Competent styling with proper theme tokens. Minimal distinctive refinement.
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: true
+        comment: Standard grid styling with adequate whitespace. Minimal customization.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Logical ordering guides viewer progression. Clean hierarchy but no
+          emphasis techniques.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct bar chart type for count plot
+        comment: Correct vertical bar chart count plot.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on x-axis, counts on y-axis correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Automatic counting from raw data, count labels on bars, logical category
-          ordering
-      - id: SC-04
-        name: Data Range
+        comment: Counts from raw data, labels values, ordered logically.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, y-axis starts at 0
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: categories, Y: counts. All data visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend appropriately hidden for single-series count plot
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "count-basic · pygal · pyplots.ai" format
+        comment: Correct format. Legend appropriately hidden for single series.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation across all 5 satisfaction levels with different frequencies;
-          could show more extreme variation
+        comment: All 5 categories shown. Good variety.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Customer satisfaction survey is a perfect real-world scenario for
-          count plots
+        comment: Customer satisfaction survey is realistic and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 50 responses is realistic; counts are plausible for a survey
+        comment: 50 responses, range 1-21, sensible distribution.
     code_quality:
       score: 10
       max: 10
@@ -161,40 +170,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: No unnecessary functions. Direct, simple code.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Data is deterministic (hardcoded list), no random seed needed
+        comment: Hardcoded data. Deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only Counter, pygal, and Style are imported and used
+        comment: Only necessary imports. All used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API
+        comment: Clean, readable. No fake UI.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct PNG/HTML output naming. Current API.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses pygal's Style customization, print_values, and value_formatter;
-          could leverage more pygal-specific features like tooltips or custom rendering
+        passed: true
+        comment: Good use of pygal.Bar(), Style, chart.add(), x_labels. Thoughtful
+          print_values usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Competent core features. No advanced pygal-specific techniques.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns: []
+  dataprep: []
+  styling: []

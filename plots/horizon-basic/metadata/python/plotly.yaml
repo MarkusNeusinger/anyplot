@@ -1,159 +1,164 @@
 library: plotly
+language: python
 specification_id: horizon-basic
 created: '2025-12-24T22:16:35Z'
-updated: '2025-12-24T22:19:57Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20494683025
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/plotly/plot.html
+updated: '2026-05-07T05:36:28Z'
+generated_by: claude-haiku
+workflow_run: 25477564965
+issue: 1877
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/plotly/plot-dark.html
 quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - subplots
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
 review:
   strengths:
-  - Excellent horizon chart implementation with proper band folding technique showing
-    positive (blue) and negative (red) values
-  - Good use of subplots for multiple series comparison with shared x-axis
-  - Clean visual design with appropriate color intensity progression (light to dark)
-    for magnitude encoding
-  - Proper title format following pyplots.ai conventions
-  - Realistic server CPU monitoring scenario with 6 servers over 24 hours
-  - Good legend annotation explaining color interpretation
+  - Excellent horizon chart implementation with proper folded band technique and intensity
+    coloring
+  - Perfect theme adaptation with both renders fully readable and theme-correct chrome
+  - Strong visual design with intentional color gradients showing magnitude progression
+  - Expert use of plotly API (make_subplots, shared axes, annotations) with idiomatic
+    patterns
+  - Clean, reproducible code with explicit font sizing throughout all elements
+  - Complete spec compliance with all features implemented and realistic server monitoring
+    data
   weaknesses:
-  - Series labels (Server A-F) could be larger for better readability at full resolution
-  - X-axis tick font size (16) is slightly below optimal for 4800x2700 output
-  - Color legend annotation text is small and could be more prominent
-  image_description: 'The plot displays a horizon chart with 6 server CPU load time
-    series (Server A through Server F) arranged vertically as subplots over a 24-hour
-    period. Each series uses the horizon chart folding technique: positive deviations
-    from baseline are shown in blue (light to dark shades indicating increasing magnitude
-    across 3 bands), while negative deviations are shown in red (light to dark). The
-    title reads "Server CPU Load (24h) · horizon-basic · plotly · pyplots.ai" centered
-    at the top. The x-axis shows "Hour of Day" from 0 to ~24, with tick marks at 0,
-    5, 10, 15, 20. Series labels appear on the left side of each subplot. A color
-    interpretation legend is positioned in the top-right corner. The layout uses a
-    clean white background with no gridlines, and each series row has consistent height.'
+  - Data colors use custom blue/red gradient instead of Okabe-Ito palette (though
+    appropriate for domain visualization of positive/negative intensity)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct for light theme
+      Chrome: Title "horizon-basic · plotly · anyplot.ai" in dark text (INK), x-axis label "Hour of Day" readable, series labels (Server A-F) visible on left in dark text, tick labels in soft ink (#4A4A44), all clearly readable against light background
+      Data: Light-to-dark blue bands for positive values, light-to-dark red bands for negative values, color legend annotation at bottom, 6 server series with temporal patterns visible
+      Legibility verdict: PASS - All text fully readable, excellent contrast, clean layout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct for dark theme
+      Chrome: Title in light text (F0EFE8), x-axis label "Hour of Day" readable in light text, series labels on left in light text, tick labels visible, all text readable against dark background with no dark-on-dark failures
+      Data: Identical blue/red band colors to light render - only chrome adapted. Horizon chart structure preserved with clear band definitions and intensity gradients
+      Legibility verdict: PASS - All text fully readable in dark theme, no dark-on-dark conflicts, proper theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
         score: 8
-        max: 10
+        max: 8
         passed: true
-        comment: Title and axis labels readable, series labels slightly small
+        comment: All fonts explicitly set with proper sizing and theme colors throughout
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: All text elements well-spaced with no overlaps
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Fill areas clearly visible with good color intensity bands
+        comment: Horizon bands clearly visible and well-adapted to chart density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/red diverging palette is colorblind-accessible
+        comment: Good contrast between positive (blue) and negative (red) elements
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions, plot fills canvas appropriately
+        comment: Perfect layout with balanced margins and excellent canvas utilization
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: '"Hour of Day" descriptive but no units'
+        comment: Descriptive labels with correct title format
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 1
         max: 2
+        passed: false
+        comment: Backgrounds and text colors correct; data uses custom blue/red instead
+          of Okabe-Ito (spec-appropriate for positive/negative domain visualization)
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
         passed: true
-        comment: Grid hidden (appropriate), color legend present but small
+        comment: Strong design with intentional color gradients and professional polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Good refinement with hidden y-axis grid and clean details
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good visual hierarchy through color intensity and series layout
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct horizon chart with band folding
+        comment: Correct horizon chart with all variants
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on x-axis, values folded into bands
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Multi-series, color-coded bands, positive/negative mirroring
-      - id: SC-04
-        name: Data Range
+        comment: All spec features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 24-hour range visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct mapping with all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Color interpretation annotation accurate
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Follows "{spec-id} · {library} · pyplots.ai" format
+        comment: Correct title format and legend
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both positive and negative values, multiple bands, spikes
+        comment: Shows all aspects of horizon chart
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Server CPU monitoring is a classic horizon chart use case
+        comment: Real server monitoring scenario, neutral topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values represent deviation from baseline, scale is reasonable
+        comment: Factually correct and appropriately scaled
     code_quality:
       score: 10
       max: 10
@@ -163,40 +168,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, linear flow
+        comment: Clean linear structure with no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Random seed set for reproducible data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Clean and Pythonic
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct dimensions
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format with theme suffix
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses subplots with shared_xaxes, annotations; could leverage more
-          interactive features
+        comment: Expert use of plotly's recommended patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses make_subplots, shared_xaxes, fill patterns effectively
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling: []

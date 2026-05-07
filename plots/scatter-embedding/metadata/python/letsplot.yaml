@@ -1,0 +1,249 @@
+library: letsplot
+language: python
+specification_id: scatter-embedding
+created: '2026-05-07T10:33:13Z'
+updated: '2026-05-07T10:52:46Z'
+generated_by: claude-sonnet
+workflow_run: 25490179683
+issue: 5236
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/letsplot/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - 'Perfect spec compliance: all required features present including centroid labels,
+    subtitle with algorithm parameters, and hidden tick labels per spec guidance'
+  - 'Perfect data quality: real immune cell types in a biologically plausible scRNA-seq
+    scenario with realistic t-SNE structure and appropriate point count (1500)'
+  - 'Complete theme-adaptive chrome: all text, backgrounds, and legend elements flip
+    correctly between light and dark; no dark-on-dark failures'
+  - Clean, reproducible code with proper seeding for both numpy and TSNE
+  weaknesses:
+  - 'LM-02 weak: letsplot HTML output could include interactive tooltips using layer_tooltips()
+    for hover — a letsplot-distinctive feature not leveraged'
+  - 'DE-02 could improve: axis lines (left + bottom spine) could be removed entirely
+    for cleaner embedding visualization since ticks are already hidden'
+  - DE-03 could reach 6 by adding subtle size variation or alpha hierarchy to emphasize
+    cluster density differences
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — matches spec exactly, not pure white
+      Chrome: Title "scatter-embedding · letsplot · anyplot.ai" and subtitle "t-SNE (perplexity=30) · Single-cell RNA-seq Cell Type Clusters" visible in dark ink; axis labels "t-SNE 1" / "t-SNE 2" present; tick labels intentionally hidden; legend box with elevated fill #FFFDF6
+      Data: Six clusters colored in Okabe-Ito order — T-cell (#009E73 green, first ✓), Monocyte (#D55E00), NK-cell (#0072B2), Dendritic (#CC79A7), Neutrophil (#E69F00), B-cell (#56B4E9); centroid label boxes visible over each cluster; alpha=0.65 handles density
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — matches spec exactly, not pure black
+      Chrome: Title and subtitle render in light ink (#F0EFE8 / #B8B7B0), clearly readable; axis labels light-colored; legend box uses elevated #242420 with legible light text; no dark-on-dark failures observed
+      Data: All six Okabe-Ito data colors are identical to light render — green T-cell, orange Monocyte, blue NK-cell, pink Dendritic, yellow Neutrophil, sky-blue B-cell unchanged; centroid label boxes adapt with contrasting fill
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=24, subtitle=18, axis_title=20,
+          legend=16); readable in both themes; slight deduction as centroid annotation
+          text sizes not verifiable in code
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Well-separated clusters; centroid labels sit cleanly; no label collisions;
+          legend does not overlap data
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 1500 points at size=3 with alpha=0.65 is good; slight deduction as
+          markers could be marginally larger at 4800x2700px
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito is CVD-safe; 6 clusters distinguishable without relying
+          on hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Clusters fill canvas well; slight empty space on right side from
+          legend
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive embedding axis labels; subtitle documents algorithm and
+          parameter
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series T-cell=#009E73; all 6 in Okabe-Ito order; light bg
+          #FAF8F1; dark bg #1A1A17; data colors identical across themes; chrome flips
+          correctly'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic defaults: warm adaptive backgrounds, full Okabe-Ito,
+          no grid, no ticks, centroid label boxes; not at publication-ready threshold'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid removed, tick labels removed, elevated legend box; axis lines
+          still present — removing them would improve embedding aesthetics
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Centroid labels provide direct cluster identification; subtitle documents
+          method context; lacks emphatic focal point or size hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2D scatter plot of t-SNE embeddings
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Color by cluster, legend, moderate point size with alpha, subtitle
+          with algorithm and parameter, axes without tick labels, centroid annotations
+          present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: tsne_1 -> x, tsne_2 -> y, cell_type -> color; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: scatter-embedding · letsplot · anyplot.ai; legend title Cell
+          Type with correct labels'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 6 distinct well-separated clusters; 1500 points with good within-cluster
+          density variation; representative t-SNE structure
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real human immune cell types (T-cell, B-cell, NK-cell, Monocyte,
+          Dendritic, Neutrophil) in plausible scRNA-seq context; neutral scientific
+          domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1500 points across 6 equal clusters; t-SNE coordinate ranges realistic;
+          make_blobs with cluster_std=2.8 and 20 features is credible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports -> theme tokens -> data -> theme -> plot ->
+          save; no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) and TSNE random_state=42 both set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os, shutil, numpy, pandas, lets_plot, sklearn.datasets,
+          sklearn.manifold'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; no fake functionality; appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png (scale=3) and plot-{THEME}.html; cleans up
+          lets-plot-images artifact
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct ggplot grammar, aes(), geom_point(), scale_color_manual(),
+          labs(), ggsize(), full theme() customization; idiomatic; minor deduction
+          for not leveraging high-level shortcuts
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: HTML export is letsplot-specific; however no interactive features
+          (tooltips, hover) configured; usage essentially equivalent to plotnine
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - dimensionality-reduction
+  styling:
+  - alpha-blending

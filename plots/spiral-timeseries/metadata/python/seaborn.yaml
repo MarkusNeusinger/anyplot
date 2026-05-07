@@ -1,0 +1,259 @@
+library: seaborn
+language: python
+specification_id: spiral-timeseries
+created: '2026-05-07T15:35:12Z'
+updated: '2026-05-07T15:57:39Z'
+generated_by: claude-sonnet
+workflow_run: 25505264400
+issue: 5243
+python_version: 3.13.13
+library_version: 0.13.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Beautiful spiral visualization with viridis colormap, clear 5-year temperature
+    cycles, and correct color-encoding of temperature magnitude
+  - 'Perfect spec compliance — all required features present: Archimedean spiral,
+    color encoding, radial month grid, year-start labels, outward expansion, and colorbar'
+  - Correct use of viridis for continuous data; both light (#FAF8F1) and dark (#1A1A17)
+    backgrounds properly applied with adaptive INK/INK_SOFT tokens throughout
+  - Clean KISS code structure with deterministic seed (np.random.seed(42)) and explicit
+    theme adaptation for all rendered text elements
+  - Supplementary analytical panels (Annual Warming Trend + Seasonal Cycle) add strong
+    storytelling depth beyond the spec minimum
+  weaknesses:
+  - '''Apr'' month label at ~3 o''clock is partially obscured/cut off by the adjacent
+    colorbar in both renders — reduce colorbar pad or increase figure width to give
+    the right-side labels clearance'
+  - sns.set_theme uses style='white' instead of recommended style='ticks'; missing
+    rc params axes.edgecolor, axes.labelcolor, xtick.color, ytick.color — rely on
+    explicit per-element color calls instead of global chrome settings
+  - Core visualization is matplotlib's LineCollection + polar projection; seaborn
+    is used only for sns.set_theme — no seaborn plotting API (sns.scatterplot, sns.regplot,
+    etc.) used in the main spiral, reducing library mastery scores
+  - Code as committed creates a single polar panel, but rendered images show a 3-panel
+    layout (spiral + Annual Warming Trend + Seasonal Cycle) — code/image mismatch
+    suggests pipeline may have rendered a different code version
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct surface color, NOT pure white.
+      Chrome: Title "spiral-timeseries · seaborn · anyplot.ai" at top in dark ink — readable. Month labels (Jan through Dec) around the polar ring in INK_SOFT — readable at 18pt. Year labels (2020–2024) on the spiral arms in bold INK — readable at 15pt. Colorbar label "Daily Avg. Temp. (°C)" in dark ink — readable. ISSUE: the "Apr" label at the ~3 o'clock position appears partially cut off by the adjacent colorbar, showing as "Ap" in the render.
+      Data: 5-year Archimedean spiral rendered in viridis colormap. Cold winter months (Dec–Feb) appear deep purple/blue; warm summer months (Jun–Aug) show yellow-green. The spiral expands outward from center (2020) to outer edge (2024). Layout includes two supplementary panels upper-right (Annual Warming Trend scatter with regression line) and lower-right (Seasonal Cycle line chart) both using the brand green #009E73.
+      Legibility verdict: PASS with minor caveat (Apr label partially obscured)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct surface color, NOT pure black.
+      Chrome: Title and all axis labels render in light text (#F0EFE8 range) against the dark background — clearly readable. Month labels, year labels, colorbar label, and supplementary chart titles are all visible. No dark-on-dark failures detected. The brand green #009E73 in the supplementary charts is still clearly visible against the dark background. Same "Apr"-as-"Ap" label truncation visible on the right side of the spiral as in the light render.
+      Data: Viridis spiral colors are identical to the light render — purple/blue winters, yellow-green summers — only chrome (background, text, axes) flips. The supplementary panels also maintain consistent colors between themes.
+      Legibility verdict: PASS with same minor caveat (Apr label partially obscured)
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 24pt, month labels 18pt, year labels 15pt — all readable in
+          both themes; month labels slightly below 20pt axis-label guideline
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Spiral at linewidth=5 clearly visible; all 5 years distinct; viridis
+          gradient smooth
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis is CVD-safe and perceptually uniform; no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: '''Apr'' month label at ~3 o''clock partially cut off by colorbar
+          proximity — minor but real layout issue'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Colorbar labeled 'Daily Avg. Temp. (°C)' with units; title follows
+          required format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis correct for continuous temperature data; plot-light.png
+          background #FAF8F1, plot-dark.png background #1A1A17 — both correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Three-panel layout shows intentional design thinking; viridis creates
+          beautiful color gradient; custom year labels elegantly integrated on spiral
+          arms
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Concentric r-circles removed, polar spine removed, radial ticks removed
+          — only subtle spoke grid remains. Good restraint.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Three panels tell coherent narrative: spiral (cyclical pattern)
+          + warming trend (long-term) + seasonal cycle (intra-year shape). Clear focal
+          point.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Archimedean spiral time series; each revolution = one year;
+          earliest data at center
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Color encoding (viridis), radial month grid lines, year-start labels,
+          outward expansion, colorbar — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date → angular position; year/cycle → radial distance; temperature
+          → color via viridis
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''spiral-timeseries · seaborn · anyplot.ai'' — exact required
+          format; colorbar shows temperature scale'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5 full cycles shown; all spec aspects covered; supplementary panels
+          extend analytical coverage
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Northern Hemisphere daily temperatures; seasonal pattern realistic;
+          warming trend (+0.4°C/yr) plausible; neutral domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 5 years (within 2–10 cycle spec); temperature range -5 to 35°C appropriate
+          for temperate climate; 1825 data points
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (matplotlib.cm, plt, numpy, pandas, seaborn, LineCollection,
+          Normalize) are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; sys.path fix is justified (prevents seaborn.py from shadowing
+          the package); appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png correctly
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: sns.set_theme for theming is idiomatic; but core visualization uses
+          matplotlib's polar projection + LineCollection directly — no seaborn plotting
+          API (sns.lineplot, etc.) used for the spiral itself
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Supplementary panels visible in rendered images appear to use seaborn-characteristic
+          regression with confidence intervals; sns.set_theme with rc dict is seaborn-specific
+          styling
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - colorbar
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - custom-colormap
+  - alpha-blending

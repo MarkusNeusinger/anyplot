@@ -1,42 +1,70 @@
-""" pyplots.ai
+""" anyplot.ai
 count-basic: Basic Count Plot
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 98/100 | Created: 2025-12-25
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-07
 """
 
+import os
+
 import pandas as pd
-from plotnine import aes, element_text, geom_bar, geom_text, ggplot, labs, scale_fill_manual, theme, theme_minimal
+from plotnine import (
+    aes,
+    element_line,
+    element_rect,
+    element_text,
+    geom_bar,
+    geom_text,
+    ggplot,
+    labs,
+    scale_fill_manual,
+    theme,
+    theme_minimal,
+)
 
 
-# Data - Survey responses from a product feedback form
-categories = ["Excellent"] * 45 + ["Good"] * 78 + ["Average"] * 52 + ["Poor"] * 23 + ["Very Poor"] * 12
-df = pd.DataFrame({"Response": categories})
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Create ordered category for logical sorting (not alphabetical)
-response_order = ["Excellent", "Good", "Average", "Poor", "Very Poor"]
-df["Response"] = pd.Categorical(df["Response"], categories=response_order, ordered=True)
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+
+# Data - Netflix user ratings from a streaming dataset
+ratings = ["5 Stars"] * 285 + ["4 Stars"] * 198 + ["3 Stars"] * 142 + ["2 Stars"] * 89 + ["1 Star"] * 56
+df = pd.DataFrame({"Rating": ratings})
+
+# Create ordered categories (descending star rating)
+rating_order = ["5 Stars", "4 Stars", "3 Stars", "2 Stars", "1 Star"]
+df["Rating"] = pd.Categorical(df["Rating"], categories=rating_order, ordered=True)
 
 # Count data for labels
-counts = df["Response"].value_counts().reindex(response_order)
-count_df = pd.DataFrame({"Response": response_order, "Count": counts.values})
-count_df["Response"] = pd.Categorical(count_df["Response"], categories=response_order, ordered=True)
+counts = df["Rating"].value_counts().reindex(rating_order)
+count_df = pd.DataFrame({"Rating": rating_order, "Count": counts.values})
+count_df["Rating"] = pd.Categorical(count_df["Rating"], categories=rating_order, ordered=True)
 
 # Plot
 plot = (
-    ggplot(df, aes(x="Response", fill="Response"))
+    ggplot(df, aes(x="Rating", fill="Rating"))
     + geom_bar(width=0.7, show_legend=False)
-    + geom_text(aes(x="Response", y="Count", label="Count"), data=count_df, size=14, va="bottom", nudge_y=2)
-    + scale_fill_manual(values=["#306998", "#4A82A6", "#6E9DB5", "#93B8C4", "#FFD43B"])
-    + labs(x="Customer Response", y="Number of Responses", title="count-basic · plotnine · pyplots.ai")
+    + geom_text(aes(x="Rating", y="Count", label="Count"), data=count_df, size=14, va="bottom", nudge_y=8)
+    + scale_fill_manual(values=OKABE_ITO)
+    + labs(x="Rating", y="Number of Responses", title="count-basic · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+        panel_border=element_rect(color=INK_SOFT, fill=None),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT),
+        plot_title=element_text(size=24, color=INK),
         text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=300)

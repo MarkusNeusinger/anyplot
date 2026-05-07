@@ -1,0 +1,243 @@
+library: plotnine
+language: python
+specification_id: ice-basic
+created: '2026-05-07T16:49:40Z'
+updated: '2026-05-07T17:05:35Z'
+generated_by: claude-sonnet
+workflow_run: 25509381773
+issue: 5238
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Perfect spec compliance — ICE lines (alpha=0.12), PDP overlay (size=2.5), rug
+    plot, and annotation all implemented correctly from spec requirements
+  - 'Both renders are correctly theme-adapted with proper #FAF8F1/#1A1A17 backgrounds,
+    INK/INK_SOFT token usage throughout, and data colors identical across themes'
+  - Authentic ML workflow (real GradientBoostingRegressor) produces genuine non-linear
+    ICE curves with visible step discontinuity at ~1500 sq ft, making the visualization
+    pedagogically valuable
+  - Clean, idiomatic plotnine code with correct grammar of graphics layering and reproducible
+    seeded data generation
+  weaknesses:
+  - Annotation text at size=14 is slightly small for the 4800x2700px canvas — 16pt
+    would match tick label sizing and improve legibility at full resolution
+  - plot_margin=0.025 is tight; increasing to ~0.05 would give the canvas more breathing
+    room and prevent the rug ticks from feeling cramped at the bottom edge
+  - The prominent step discontinuity at ~1500 sq ft is a visually interesting non-linear
+    feature that could be annotated or highlighted to improve data storytelling without
+    complicating the code
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "ice-basic · plotnine · anyplot.ai" in bold dark (#1A1A17) text at top — clearly readable. Axis labels "House Area (sq ft)" and "Predicted Price ($000s)" in dark text — readable. Tick labels in slightly softer dark (#4A4A44) — readable. Annotation "PDP (avg effect)" in vermillion — readable.
+      Data: 120 semi-transparent green (#009E73) ICE lines form a density bundle across the plot area. Bold vermillion (#D55E00) PDP line runs through the center as a clear focal point. Rug plot ticks mark observed area values at the x-axis bottom. Subtle horizontal y-grid lines visible.
+      Legibility verdict: PASS — all text and data elements clearly readable against the warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light (#F0EFE8) text — clearly readable against dark background. Axis labels in light text — readable. Tick labels in soft light (#B8B7B0) — readable. Annotation "PDP (avg effect)" in vermillion — readable. No dark-on-dark failures detected.
+      Data: ICE lines remain the same #009E73 green (identical to light render) — data colors unchanged. PDP line is same vermillion — identical to light render. Rug ticks visible. Only chrome elements (backgrounds, text, grid) have flipped.
+      Legibility verdict: PASS — all text and data elements clearly readable against the near-black background; no dark-on-dark issues found
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 24pt, axis labels 20pt, tick labels 16pt all correct; annotation
+          at 14pt slightly small for 4800x2700px canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: ICE line overlap is intentional and managed via alpha=0.12; annotation
+          positioned cleanly
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: ICE bundle, PDP line, and rug ticks all clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green + vermillion are Okabe-Ito positions 1 and 2, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas, nothing clipped, good data area
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units; title matches required format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: true
+        comment: 'ICE #009E73 (OI-1) and PDP #D55E00 (OI-2) correct; backgrounds correct;
+          grid computed via color+alpha rather than canonical RULE token'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional visual hierarchy with semi-transparent ICE bundle + opaque
+          PDP focal line + rug; above default but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped axis, y-only subtle grid, no top/right spines; tight plot_margin=0.025
+          compresses canvas slightly
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: PDP line as clear focal point, annotation labels average effect,
+          rug shows density; step discontinuity at ~1500 sq ft not explicitly guided
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct ICE plot with one line per observation
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent ICE lines, bold PDP overlay, rug plot all present;
+          optional c-ICE and color-coding correctly omitted
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: feature_value on x, prediction on y, grouped by observation_id
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; legend suppressed, PDP identified
+          via annotation
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: ICE lines, PDP, rug covered; optional color-coding by second feature
+          absent
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: GradientBoostingRegressor on housing data — canonical ICE use case,
+          plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Area 600-4000 sq ft, prices $200k-$900k — realistic US housing market
+          values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; clean procedural flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) and random_state=42 ensure deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; sys.path patch necessary and documented
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png; uses current plotnine 0.15 API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct grammar of graphics; proper data=/mapping=/inherit_aes=False
+          for multi-dataset layers; annotate() layer idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: geom_rug is distinctively ggplot2/plotnine; layered geoms with independent
+          datasets exploit grammar composition; scale_x_continuous(breaks=...) for
+          tick control
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - alpha-blending
