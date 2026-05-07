@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 box-notched: Notched Box Plot
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 94/100 | Created: 2025-12-25
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2025-05-07
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,78 +12,88 @@ import pandas as pd
 import seaborn as sns
 
 
-# Data - Salary distributions across departments with varying characteristics
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+
+# Data - Test score distributions across student cohorts
 np.random.seed(42)
 
-departments = ["Engineering", "Marketing", "Sales", "Support", "HR"]
+cohorts = ["Cohort A", "Cohort B", "Cohort C", "Cohort D"]
 data = []
 
-# Engineering: higher salaries, moderate spread
-data.extend([{"Department": "Engineering", "Salary": val} for val in np.random.normal(95000, 15000, 80)])
+# Cohort A: strong performance, tight cluster
+data.extend([{"Cohort": "Cohort A", "Test Score": val} for val in np.random.normal(82, 8, 85)])
 
-# Marketing: medium salaries, narrow spread
-data.extend([{"Department": "Marketing", "Salary": val} for val in np.random.normal(72000, 10000, 60)])
+# Cohort B: moderate performance, some high outliers
+cohort_b_base = np.random.normal(75, 12, 75)
+cohort_b_outliers = np.array([95, 96, 98])
+data.extend([{"Cohort": "Cohort B", "Test Score": val} for val in np.concatenate([cohort_b_base, cohort_b_outliers])])
 
-# Sales: wide spread with some high outliers
-sales_base = np.random.normal(68000, 18000, 55)
-sales_outliers = np.array([130000, 145000, 155000])  # High performers
-data.extend([{"Department": "Sales", "Salary": val} for val in np.concatenate([sales_base, sales_outliers])])
+# Cohort C: wide variation in performance
+data.extend([{"Cohort": "Cohort C", "Test Score": val} for val in np.random.normal(70, 15, 80)])
 
-# Support: lower salaries, tight distribution
-data.extend([{"Department": "Support", "Salary": val} for val in np.random.normal(52000, 8000, 45)])
-
-# HR: medium salaries, overlapping with Marketing (for notch comparison)
-data.extend([{"Department": "HR", "Salary": val} for val in np.random.normal(70000, 11000, 50)])
+# Cohort D: lower performance, tight clustering
+data.extend([{"Cohort": "Cohort D", "Test Score": val} for val in np.random.normal(68, 9, 70)])
 
 df = pd.DataFrame(data)
 
+# Setup theme
+sns.set_theme(
+    style="whitegrid",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
 # Create plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 
-# Custom color palette using Python colors first, then colorblind-safe additions
-colors = ["#306998", "#FFD43B", "#4ECDC4", "#E07A5F", "#81B29A"]
-
-# Create notched box plot
+# Create notched box plot with Okabe-Ito palette
 sns.boxplot(
     data=df,
-    x="Department",
-    y="Salary",
-    hue="Department",
-    palette=colors,
+    x="Cohort",
+    y="Test Score",
+    hue="Cohort",
+    palette=OKABE_ITO[: len(cohorts)],
     notch=True,
-    width=0.6,
-    linewidth=2,
-    fliersize=8,
-    flierprops={"marker": "o", "markerfacecolor": "gray", "alpha": 0.6},
+    width=0.5,
+    linewidth=2.0,
+    fliersize=10,
+    flierprops={"marker": "o", "markerfacecolor": INK_SOFT, "markeredgecolor": INK, "alpha": 0.6},
     ax=ax,
     legend=False,
 )
 
 # Styling
-ax.set_title("box-notched · seaborn · pyplots.ai", fontsize=24, fontweight="bold")
-ax.set_xlabel("Department", fontsize=20)
-ax.set_ylabel("Annual Salary ($)", fontsize=20)
-ax.tick_params(axis="both", labelsize=16)
+ax.set_title("box-notched · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.set_xlabel("Student Cohort", fontsize=20, color=INK)
+ax.set_ylabel("Test Score (%)", fontsize=20, color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
-# Format y-axis to show dollar amounts
-ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f"${x / 1000:.0f}K"))
+# Remove top and right spines
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
 
-# Subtle grid
-ax.grid(True, axis="y", alpha=0.3, linestyle="--")
+# Grid styling
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.set_axisbelow(True)
 
-# Add annotation explaining notches
-ax.text(
-    0.98,
-    0.02,
-    "Notches show 95% CI around median\nNon-overlapping notches suggest significant difference",
-    transform=ax.transAxes,
-    fontsize=12,
-    ha="right",
-    va="bottom",
-    alpha=0.7,
-    style="italic",
-)
-
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
