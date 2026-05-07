@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: scatter-embedding
 created: '2026-05-07T10:24:14Z'
-updated: '2026-05-07T10:31:15Z'
+updated: '2026-05-07T10:42:39Z'
 generated_by: claude-sonnet
 workflow_run: 25489880356
 issue: 5236
@@ -12,115 +12,116 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-e
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 80
+quality_score: 83
 review:
   strengths:
-  - 'Perfect palette compliance: Okabe-Ito in canonical order starting with brand
-    green #009E73'
-  - 'Excellent theme adaptation: all chrome tokens correctly flip between light/dark
-    renders with no dark-on-dark failures'
-  - 'Spec adherence: correctly removes tick labels, includes algorithm subtitle, seeds
-    both make_blobs and TSNE for reproducibility'
-  - Clean minimal code structure with no extraneous complexity
+  - Perfect visual quality — all font sizes explicitly set, both themes fully legible
+  - Full spec compliance — algorithm subtitle, suppressed tick labels, alpha transparency
+    all present
+  - Excellent code quality — KISS structure, dual random seeds, pd.Categorical for
+    ordered legend
+  - 'Palette fully correct — Okabe-Ito canonical order starting with #009E73, both
+    theme chromes adapt correctly'
   weaknesses:
-  - Panel border is a full rectangular box instead of L-shaped spines — switch to
-    remove top/right spines
-  - Alpha=0.7 is too high for 1200 points; reduce to 0.4-0.5 for better density visualization
-  - No visual hierarchy or focal point; add geom_text centroid annotations or stat_ellipse
-    cluster boundaries
-  - Generic Cluster 1-6 labels with no domain context; use real-world category names
-    like cell types or NLP topics
-  - Misses plotnine-distinctive features like stat_ellipse() or geom_text() centroid
-    labels for LM-02
+  - Panel retains all 4 spines via panel_border instead of L-shaped frame — remove
+    top/right spines
+  - No visual storytelling — clusters equal-weighted with no emphasis or centroid
+    annotations
+  - Generic Cluster N labels lack real-world domain context (cell types, document
+    topics, etc.)
+  - No distinctive plotnine features — missed coord_fixed() for equal-aspect t-SNE
+    axes and stat_ellipse() for cluster boundaries
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "scatter-embedding · plotnine · anyplot.ai" dark text readable; subtitle "t-SNE (perplexity=30) · 1200 points · 6 clusters" in gray (INK_SOFT) readable; axis labels "t-SNE Dimension 1/2" dark and clear; tick labels correctly absent per spec; legend with "Cluster" title and 6 entries visible and readable
-      Data: Six clusters in Okabe-Ito order — Cluster 1 teal #009E73 (top right), Cluster 2 vermillion #D55E00 (left), Cluster 3 blue #0072B2 (lower right mixed), Cluster 4 pink #CC79A7 (right mixed), Cluster 5 orange #E69F00 (middle left), Cluster 6 sky blue #56B4E9 (bottom left); alpha=0.7, size=2.5; clusters well-separated; subtle major grid lines visible
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "scatter-embedding · plotnine · anyplot.ai" in dark ink, clearly readable. Subtitle in INK_SOFT, readable. Axis labels "t-SNE Dimension 1/2" in dark ink, readable. No tick labels (intentional per spec). Legend box with elevated background, cluster labels in INK_SOFT.
+      Data: 6 clusters in Okabe-Ito order — Cluster 1 teal-green (#009E73), Cluster 2 vermillion-orange (#D55E00), Cluster 3 blue (#0072B2), Cluster 4 reddish-purple (#CC79A7), Cluster 5 gold-orange (#E69F00), Cluster 6 sky blue (#56B4E9). Points size=2.5 alpha=0.7 across 1200 total points.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface
-      Chrome: Title appears in white/light (#F0EFE8) text — clearly readable; subtitle in light gray (#B8B7B0) readable; axis labels in light text readable; legend box has elevated dark background (#242420) with light-colored text — no dark-on-dark failures detected
-      Data: All six cluster colors identical to light render — data colors are theme-invariant as required; #009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9 all visually confirmed identical
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black
+      Chrome: Title, subtitle, and axis labels rendered in light cream/off-white text (#F0EFE8 equivalent). All clearly readable against the dark background. Legend box uses elevated dark surface #242420. No dark-on-dark failures detected.
+      Data: All 6 cluster colors identical to light render — data colors preserved across themes as required. Brand green #009E73 (Cluster 1) clearly visible against dark background.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, axis 20pt, subtitle/legend
-          16pt); all readable in both themes; subtitle at 16pt borderline for 4800x2700
-          canvas
+        comment: 'All font sizes explicitly set: title=24, axis_title=20, subtitle=16,
+          legend=16/18. Both renders fully legible.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap; data overlap expected and handled with alpha
+        comment: No tick labels by design; no legend/data collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Clusters clearly visible; alpha=0.7 slightly high for 1200 points
-          (recommended 0.3-0.5 for 300+ points)
+        comment: 1200 points at size=2.5, alpha=0.7. Well-separated clusters, points
+          clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, CVD-safe, no red-green sole signal
+        comment: Full Okabe-Ito palette, colorblind-safe. Good luminance contrast
+          between all series.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions; legend occupies noticeable strip of canvas width
+        comment: Canvas well utilized. Data ~70% width with legend alongside. Balanced
+          margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels (t-SNE Dimension 1/2), subtitle with algorithm
-          and parameters
+        comment: t-SNE Dimension 1/2 descriptive; no units needed for unitless embedding
+          coordinates.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, full Okabe-Ito canonical order; backgrounds
-          #FAF8F1/#1A1A17; chrome adapts correctly in both renders'
+        comment: 'First series #009E73, Okabe-Ito order, backgrounds #FAF8F1/#1A1A17,
+          all chrome theme-adaptive.'
     design_excellence:
       score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: false
-        comment: Correct Okabe-Ito and adaptive chrome, clean minimal layout; above
-          default but not exceptional; no cluster ellipses or centroid markers
+        passed: true
+        comment: Well-configured above defaults with proper color hierarchy. Panel
+          retains all 4 borders instead of L-shape; no centroid labels or special
+          design choices.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Minor grid removed, subtle major grid; full rectangular panel_border
-          deviates from L-shaped spine default in style guide
+        passed: true
+        comment: 'Subtle grid alpha=0.10, minor grid removed, tick marks/labels eliminated.
+          Deduction: panel_border retains all four spines.'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Six clusters displayed equally with no visual emphasis or focal point;
-          no annotations or size differentiation
+        comment: Data cleanly displayed but no focal emphasis, no centroid annotations,
+          no visual hierarchy beyond equal treatment of 6 clusters.
     spec_compliance:
       score: 15
       max: 15
@@ -130,51 +131,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct t-SNE scatter embedding
+        comment: Correct scatter plot with t-SNE embedding, 6 clusters.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cluster coloring, legend, alpha transparency, subtitle with algorithm
-          and parameter, no tick labels
+        comment: 'All required: cluster color coding, legend, alpha, subtitle with
+          algorithm+parameter, tick labels suppressed.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: tsne_1/tsne_2 mapped to x/y correctly
+        comment: tsne_1→X, tsne_2→Y, Cluster→color, full data range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend maps all 6 cluster names
+        comment: Title follows exact format scatter-embedding · plotnine · anyplot.ai.
+          Legend Cluster 1-6 correct.
     data_quality:
-      score: 12
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows cluster structure, separation, and partial overlap; 1200 points
-          with 6 clusters; cluster density is uniform (could vary more)
+        comment: 6 well-separated clusters in varied spatial positions show t-SNE
+          behavior comprehensively.
       - id: DQ-02
         name: Realistic Context
         score: 3
         max: 5
-        passed: false
-        comment: Generic Cluster 1-6 labels are standard for embedding plots but add
-          no real-world domain context; plausible but abstract
+        passed: true
+        comment: Cluster 1-6 labels are generic/abstract equivalent to Group 1-6.
+          Plausible but lacks domain grounding.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1200 points, 6 clusters, perplexity=30, cluster_std=1.2 all appropriate
-          for t-SNE embedding visualization
+        comment: 1200 points, 6 clusters, perplexity=30, cluster_std=1.2 — all appropriate
+          for t-SNE demo.
     code_quality:
       score: 10
       max: 10
@@ -184,33 +186,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear: imports to data to plot to save; no functions or classes'
+        comment: 'Clean linear flow: imports → theme tokens → data → plot → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42), random_state=42 in both make_blobs and TSNE
+        comment: np.random.seed(42), TSNE(random_state=42), make_blobs(random_state=42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sklearn data utilities are explicitly allowed
+        comment: All imports used; both sklearn.datasets and sklearn.manifold exercised.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no over-engineering, no fake functionality
+        comment: Pythonic, appropriate complexity. pd.Categorical for ordered legend
+          is a nice touch.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly
+        comment: Saves as plot-{THEME}.png at dpi=300. Current plotnine API.
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -218,17 +221,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Proper grammar of graphics: ggplot + geom_point + scale_color_manual
-          + labs + theme; correct element_blank/element_text usage; pd.Categorical
-          for ordered cluster levels'
+        comment: Correct ggplot grammar, pd.Categorical for ordered factor levels,
+          proper element_blank()/element_rect() usage. Missed coord_fixed() for equal-aspect
+          t-SNE.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Standard plotnine scatter; misses stat_ellipse() for cluster boundaries
-          or geom_text() centroid labels which are plotnine-native distinctive features
-  verdict: REJECTED
+        comment: 'Standard ggplot pattern. Missed: stat_ellipse() for cluster boundaries,
+          coord_fixed() for equal aspect, geom_label() for centroid annotations.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
