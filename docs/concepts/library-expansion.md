@@ -93,14 +93,50 @@ notable R library is a wrapper for a JS library already in scope.
 
 ## 5. Other languages — informational
 
-| Language | Best library     | Share within language | Worth adding?                                       |
-|----------|------------------|----------------------:|-----------------------------------------------------|
-| Julia    | **Makie.jl**     | ~45 %                 | Later — once JS + R + ggplot2 land.                 |
-| Julia    | Plots.jl         | ~40 %                 | Alternative to Makie; pick one.                     |
-| Kotlin   | **lets-plot**    | ~80 %                 | Already in Python; could add native Kotlin entry.   |
-| C# /.NET | ScottPlot        | ~50 %                 | Niche; defer.                                       |
-| Java     | XChart / JFreeChart | mixed             | Defer.                                              |
-| Go       | go-echarts       | n/a                   | Defer.                                              |
+After Python, R, and JavaScript, the marginal value of each additional
+language drops sharply. Most devs in other languages render web charts via
+JavaScript anyway (a Go backend ships JSON to a Chart.js frontend; a Java
+service does the same). Only one language — **Julia** — has a clear case
+for a dedicated entry; the rest are long tail.
+
+### Scope criteria for any new language
+
+A language qualifies for a dedicated entry only if it satisfies all three:
+
+1. **Code-driven** — plots are produced from a pure source-code snippet
+   (no GUI / click workflows).
+2. **Free toolchain** — a FOSS interpreter/compiler exists so CI can render
+   previews and contributors can participate without licence costs.
+3. **Public package registry** — libraries install from an open registry
+   (PyPI, npm, CRAN, `Pkg.jl`, …).
+
+### Candidate ranking
+
+| Language | Best library         | Share within language | Verdict                                             |
+|----------|----------------------|----------------------:|-----------------------------------------------------|
+| Julia    | **Makie.jl**         | ~45 %                 | **Phase 5.** Distinct scientific stack; not a wrapper.|
+| Julia    | Plots.jl             | ~40 %                 | Alternative; pick Makie unless visitor data flips.   |
+| Swift    | Swift Charts         | ~70 %                 | Optional Phase 6 if Apple-platform audience matters. |
+| Kotlin   | lets-plot (Kotlin)   | ~80 %                 | Defer; covered today via the Python lets-plot entry. |
+| C# /.NET | ScottPlot            | ~50 %                 | Defer; mostly Desktop/WinForms, weak web fit.        |
+| Java     | XChart / JFreeChart  | mixed                 | Skip; Java services use JS for web output.           |
+| Go       | go-echarts           | n/a                   | Skip; ECharts wrapper, already covered in JS.        |
+| Rust     | plotters             | n/a                   | Skip; tiny absolute volume.                          |
+| F# / Scala | XPlot / Vegas      | n/a                   | Skip; Plotly/Vega wrappers, already covered.         |
+
+### Explicitly out of scope
+
+These fail at least one of the scope criteria above and should not be
+revisited unless the criteria themselves change.
+
+| Tool / language               | Failed criterion              | Reason                                        |
+|-------------------------------|-------------------------------|-----------------------------------------------|
+| **Excel, Google Sheets, Numbers** | Code-driven                | Charts are GUI-clicked; no source-code form.  |
+| **Tableau, Power BI, Looker, Qlik** | Code-driven              | BI dashboards, not code snippets.             |
+| **MATLAB**                    | Free toolchain                | Paid licence, closed ecosystem, declining.    |
+| **SAS, SPSS, Stata**          | Free toolchain + Code-driven  | Paid + mostly GUI-driven.                     |
+| **Mathematica / Wolfram**     | Free toolchain                | Paid licence, niche.                          |
+| **Origin, SigmaPlot, Prism**  | Free toolchain + Code-driven  | Paid scientific GUIs.                         |
 
 ---
 
