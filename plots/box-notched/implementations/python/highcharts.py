@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 box-notched: Notched Box Plot
-Library: highcharts | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-25
+Library: highcharts unknown | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-07
 """
 
 import json
