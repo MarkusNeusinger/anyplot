@@ -1,7 +1,7 @@
 """ anyplot.ai
 shap-waterfall: SHAP Waterfall Plot for Feature Attribution
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 83/100 | Created: 2026-05-07
+Quality: 85/100 | Created: 2026-05-07
 """
 
 import os
