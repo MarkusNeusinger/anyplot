@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-cumulative-flow: Cumulative Flow Diagram for Workflow Analytics
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 87/100 | Created: 2026-05-07
@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    annotate,
     element_blank,
     element_line,
     element_rect,
@@ -86,6 +87,11 @@ df["stage"] = pd.Categorical(df["stage"], categories=stage_order, ordered=True)
 visual_order = ["Done", "Testing", "Development", "Analysis", "Backlog"]
 stage_colors = dict(zip(visual_order, OKABE_ITO, strict=True))
 
+# Annotation: pinpoint the Development bottleneck at day 55 (band midpoint in stacked space)
+idx = 55
+x_annot = dates[idx]
+y_annot = int((cum_testing[idx] + cum_dev[idx]) / 2)
+
 # Plot
 anyplot_theme = theme(
     figure_size=(16, 9),
@@ -97,13 +103,17 @@ anyplot_theme = theme(
     panel_border=element_blank(),
     axis_title=element_text(color=INK, size=20),
     axis_text=element_text(color=INK_SOFT, size=16),
+    # L-shaped frame: bottom x-axis line and left y-axis line only
     axis_line_x=element_line(color=INK_SOFT),
     axis_line_y=element_line(color=INK_SOFT),
     plot_title=element_text(color=INK, size=24, face="bold"),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     legend_text=element_text(color=INK_SOFT, size=16),
-    legend_title=element_text(color=INK, size=16),
+    # Larger legend title for visual hierarchy within the legend
+    legend_title=element_text(color=INK, size=18, face="bold"),
     legend_position="right",
+    # Breathing room between legend and plot area
+    legend_box_spacing=0.4,
 )
 
 plot = (
@@ -116,6 +126,18 @@ plot = (
         y="Cumulative Items",
         fill="Stage",
         title="Sprint Delivery · area-cumulative-flow · plotnine · anyplot.ai",
+    )
+    # Callout draws the viewer's eye to the Development bottleneck
+    + annotate(
+        "text",
+        x=x_annot,
+        y=y_annot,
+        label="← bottleneck",
+        color="#FFFFFF",
+        size=12,
+        ha="left",
+        va="center",
+        fontstyle="italic",
     )
     + anyplot_theme
 )
