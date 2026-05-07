@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ice-basic: Individual Conditional Expectation (ICE) Plot
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 87/100 | Created: 2026-05-07
@@ -16,6 +16,7 @@ import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 from plotnine import (  # noqa: E402
     aes,
+    annotate,
     element_blank,
     element_line,
     element_rect,
@@ -24,6 +25,7 @@ from plotnine import (  # noqa: E402
     geom_rug,
     ggplot,
     labs,
+    scale_x_continuous,
     theme,
 )
 from sklearn.ensemble import GradientBoostingRegressor  # noqa: E402
@@ -72,6 +74,11 @@ pdp_df = ice_df.groupby("feature_value")["prediction"].mean().reset_index()
 # Rug: observed area values
 rug_df = pd.DataFrame({"feature_value": area})
 
+# Annotation anchor: PDP value at ~75% of area range (past the step discontinuity)
+ann_idx = int(n_grid * 0.75)
+ann_x = float(area_grid[ann_idx])
+ann_y = float(pdp_df.iloc[ann_idx]["prediction"]) + 25
+
 # Plot
 anyplot_theme = theme(
     figure_size=(16, 9),
@@ -84,8 +91,9 @@ anyplot_theme = theme(
     axis_title=element_text(color=INK, size=20),
     axis_text=element_text(color=INK_SOFT, size=16),
     axis_line=element_line(color=INK_SOFT),
-    plot_title=element_text(color=INK, size=24),
+    plot_title=element_text(color=INK, size=24, face="bold"),
     legend_position="none",
+    plot_margin=0.025,
 )
 
 plot = (
@@ -95,11 +103,9 @@ plot = (
         data=pdp_df, mapping=aes(x="feature_value", y="prediction"), color=VERMILLION, size=2.5, inherit_aes=False
     )
     + geom_rug(data=rug_df, mapping=aes(x="feature_value"), color=INK_SOFT, alpha=0.4, sides="b", inherit_aes=False)
-    + labs(
-        x="House Area (sq ft)",
-        y="Predicted Price ($000s)",
-        title="House Price by Area · ice-basic · plotnine · anyplot.ai",
-    )
+    + annotate("text", x=ann_x, y=ann_y, label="PDP (avg effect)", color=VERMILLION, size=14)
+    + scale_x_continuous(breaks=[1000, 1500, 2000, 2500, 3000, 3500])
+    + labs(x="House Area (sq ft)", y="Predicted Price ($000s)", title="ice-basic · plotnine · anyplot.ai")
     + anyplot_theme
 )
 
