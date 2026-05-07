@@ -1,0 +1,266 @@
+library: letsplot
+language: python
+specification_id: spiral-timeseries
+created: '2026-05-07T15:44:20Z'
+updated: '2026-05-07T16:01:55Z'
+generated_by: claude-sonnet
+workflow_run: 25505769778
+issue: 5243
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/letsplot/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - 'Correct Archimedean spiral implementation with all spec-required features: radial
+    grid lines, year labels at cycle starts, colorbar, viridis color encoding for
+    temperature magnitude'
+  - Excellent palette compliance — viridis correctly used for continuous temperature
+    data; both light and dark themes fully adaptive with INK/INK_SOFT chrome tokens
+    throughout
+  - Perfect data quality — realistic northern-hemisphere daily temperature scenario
+    with proper seasonal variation, 5 complete annual cycles, and appropriate temperature
+    range (0–30°C)
+  - Perfect code quality — clean KISS linear structure, np.random.seed(42), all imports
+    used, correct plot-{THEME}.png and plot-{THEME}.html output
+  - Strong visual refinement through theme_void base and manually constructed radial
+    grid at alpha=0.25 — clean, uncluttered composition
+  weaknesses:
+  - Month labels (geom_text size=11) and year labels (size=14) are below the 16pt
+    minimum for label-equivalent text; increase both to size=16 for compliance with
+    style guide
+  - Title prepends 'Daily Temperatures 2019–2023 ·' before the required '{spec-id}
+    · {library} · anyplot.ai' format, potentially causing wrapping in the 900-unit
+    canvas; simplify to standard format or add descriptive text as a separate subtitle
+  - LM-02 is weak — interactive HTML output does not leverage lets_plot tooltips;
+    adding tooltips to geom_path would differentiate this from a plotnine implementation
+    and exploit lets_plot's distinctive capability
+  - 'Minor canvas artifact: thin dark horizontal bands at top and bottom edges of
+    both renders (likely from ggsave export framing)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — matches spec, not pure white
+      Chrome: Title "Daily Temperatures 2019–2023 · spiral-timeseries · letsplot · anyplot.ai" in dark INK at top-left (24pt, readable). Year labels 2019–2023 in dark INK near top of each spiral revolution. Month labels (Jan–Dec) in INK_SOFT around the perimeter. Colorbar title "Temp (°C)" and tick labels in dark INK/INK_SOFT — all readable.
+      Data: Spiral path colored with viridis — purple/dark blue for winter months (~0–5°C), transitioning through cyan/teal for spring/autumn (~10–18°C), to yellow-green for summer peaks (~25–30°C). Radial grid spokes at each month boundary are subtle (alpha=0.25, INK_SOFT color). Viridis colorbar on right side shows full temperature range 0–30°C.
+      Legibility verdict: PASS — all text is dark on off-white and clearly readable. Minor thin dark horizontal bands at very top and bottom edges (export artifact).
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — matches spec, not pure black
+      Chrome: Title text switches to light INK (#F0EFE8) — readable against dark surface. Year labels in light INK, month labels in INK_SOFT (#B8B7B0) — all clearly visible. Colorbar title and tick labels in light colors. No dark-on-dark text detected anywhere.
+      Data: Viridis colormap colors are IDENTICAL to light render — same purple-to-yellow-green gradient encoding temperature. Only chrome (background, text, legend box) has changed. Radial grid spokes remain subtle.
+      Legibility verdict: PASS — no dark-on-dark failures, all text readable against near-black background. Brand theme-adaptive chrome correctly applied.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 5
+        max: 8
+        passed: true
+        comment: Title 24pt and legend 16pt explicitly set. Month labels size=11 and
+          year labels size=14 are below the 16pt guideline for label-equivalent text;
+          readable but not fully compliant.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap — year labels centered with clear spacing; month labels
+          evenly distributed around perimeter.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Spiral path clearly visible with viridis coloring; radial grid lines
+          appropriately subtle at alpha=0.25.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis is perceptually uniform and colorblind-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square format appropriate for spiral; good canvas utilization. Minor
+          thin dark horizontal bands at top/bottom edges (export artifact).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Colorbar labeled 'Temp (°C)' with units; descriptive title present.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis correctly used for continuous temperature data. Backgrounds:
+          #FAF8F1 (light) / #1A1A17 (dark). Theme-adaptive INK/INK_SOFT chrome applied
+          in both renders. Data colors identical between themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Spiral form with viridis gradient is visually striking and above
+          generic defaults. Clean composition with theme_void and custom chrome. Not
+          quite publication-ready — no bespoke typography or custom palette touches.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent refinement: theme_void removes all default clutter; manual
+          radial grid spokes at month boundaries only (alpha=0.25); coord_fixed ensures
+          correct aspect ratio; generous whitespace.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Viridis gradient creates natural visual hierarchy: summer peaks
+          (yellow-green) contrast with winter troughs (purple), making seasonal cycle
+          immediately apparent. Repeating pattern across 5 years visible at a glance.'
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Archimedean spiral time series with spiral expanding outward
+          from center.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: color encoding for value magnitude (viridis),
+          radial grid lines at month boundaries, year labels at cycle starts, colorbar,
+          Archimedean spiral, earliest data at center.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Temperature data mapped correctly along spiral; chronological progression
+          from center (2019) to outer ring (2023).
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: Title includes required elements (spiral-timeseries · letsplot ·
+          anyplot.ai) but prepends 'Daily Temperatures 2019–2023 ·' as extra prefix
+          — may cause wrapping. Colorbar legend is correct.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Demonstrates all spiral chart aspects: 5 complete annual cycles,
+          full seasonal variation across temperature range, multi-year comparison.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily average temperatures over 5 years — real, neutral, scientific
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature range 0–30°C, sinusoidal seasonal cycle with realistic
+          noise (sigma=2°C), northern hemisphere peak in summer — factually plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear structure: imports → data generation → geometry → plot
+          construction → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used; no dead imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clear, Pythonic code. Spiral math is appropriately complex for the
+          chart type.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current lets_plot
+          API with ggsave(scale=4).
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper grammar of graphics composition; correct use of scale_color_viridis(),
+          coord_fixed(), theme_void() + theme(), labs(), ggsize(), ggsave(scale=4).
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses coord_fixed() and built-in scale_color_viridis(). Core spiral
+          math is numpy-based — same code structure translates to plotnine with minimal
+          changes. No lets_plot-distinctive features (interactive tooltips in HTML,
+          geom_livemap, animation) are leveraged.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - custom-colormap
