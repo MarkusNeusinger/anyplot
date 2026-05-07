@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: shap-waterfall
 created: '2026-05-07T11:56:19Z'
-updated: '2026-05-07T12:01:58Z'
+updated: '2026-05-07T12:23:48Z'
 generated_by: claude-sonnet
 workflow_run: 25493700161
 issue: 5237
@@ -12,87 +12,94 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-wate
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/pygal/plot-dark.html
-quality_score: 76
+quality_score: 78
 review:
   strengths:
-  - 'Perfect code quality: clean KISS structure, explicit font sizes, correct theme
-    tokens throughout'
-  - Both renders fully readable with no theme-adaptation failures
-  - Domain-appropriate dual-color encoding (vermillion for positive, blue for negative)
-    using Okabe-Ito colors
-  - Correct feature ordering by absolute SHAP magnitude
-  - Realistic, neutral customer churn scenario with plausible SHAP values
+  - 'Both light and dark themes render correctly: backgrounds are #FAF8F1 / #1A1A17,
+    text adapts, data colors are identical across themes'
+  - 'Per-bar color dict is idiomatic pygal and correctly maps SHAP polarity to Okabe-Ito
+    colors (#D55E00 positive, #0072B2 negative)'
+  - Realistic, neutral customer churn prediction scenario with plausible SHAP magnitudes
+  - Feature magnitude ordering (largest at top) is correct and aids immediate readability
+  - SHAP values embedded in feature label strings provide precise per-bar annotation
+  - Clean KISS code structure with proper seed and dual PNG+HTML output
   weaknesses:
-  - 'Not a true waterfall chart: bars all start at 0 instead of stacking cumulatively
-    from base_value — the defining characteristic of a SHAP waterfall'
-  - Missing numeric SHAP values on or beside each bar (spec requirement)
-  - Missing visual reference lines/annotations for base_value (0.25) and final_value
-    (0.48) on the chart
-  - 'Design Excellence is generic: no visual hierarchy to guide the viewer attention
-    (e.g., size variation for largest contributors, callout annotation for top feature)'
+  - 'Critical: Not a true waterfall chart - bars all start from zero instead of chaining
+    cumulatively from base_value. Must calculate cumulative left-edges and use stacked
+    bar trick (invisible anchor + visible SHAP bar) to create proper waterfall stacking'
+  - Missing vertical reference lines at base_value (0.25) and final_value (0.48) -
+    spec requires labeled reference lines, not just title text
+  - Missing connector markers or step-lines between bar segments showing cumulative
+    flow
+  - Axis label (x_title via label_font_size) is 18px, below the recommended 22px for
+    pixel-based libraries
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface
-      Chrome: Title "Customer Churn Prediction · shap-waterfall · pygal · anyplot.ai" + subtitle "Base value: 0.25 → Predicted probability: 0.48" in dark ink, clearly readable. Y-axis feature labels in dark ink, readable. X-axis tick values and title "SHAP Value (impact on predicted churn probability)" in dark ink, readable. Subtle dashed x-axis grid lines.
-      Data: 6 vermillion (#D55E00) bars for positive SHAP features (Monthly Charges, Contract Type, Internet Service, Num. of Services, Payment Method, Streaming TV), 4 blue (#0072B2) bars for negative SHAP features (Tenure, Online Security, Tech Support, Device Protection). Ordered by descending absolute magnitude.
-      Legibility verdict: PASS — all text clearly readable against light background
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "Customer Churn Prediction · shap-waterfall · pygal · anyplot.ai" in dark text, fully readable. Y-axis feature labels with parenthetical SHAP values readable. X-axis label readable but slightly small (18px vs recommended 22px). Tick labels readable.
+      Data: Orange (#D55E00 Okabe-Ito vermillion) for positive SHAP values, blue (#0072B2 Okabe-Ito blue) for negative. All bars originate from the same zero-line, positive extend right, negative extend left. Bars well-proportioned and clearly visible. Dashed vertical grid lines subtle.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title and all text render in light ink against dark background. Y-axis feature labels, x-axis ticks, and axis title all readable. No dark-on-dark failures detected. Subtle dashed grid lines remain visible.
-      Data: Identical bar colors to light render — same vermillion (#D55E00) for positive, same blue (#0072B2) for negative. Data color identity confirmed across themes.
-      Legibility verdict: PASS — all text clearly readable against dark background, no theme-adaptation failures
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title, y-axis feature labels, x-axis tick/title labels all rendered in light text - clearly readable against dark background. No dark-on-dark failures detected.
+      Data: Orange and blue bar colors identical to light render - only chrome (background, text) flipped as required. Grid lines remain subtle.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=28, labels=18, ticks=18, values=16);
-          all text readable in both themes; y-axis labels slightly compact for canvas
-          size
+        comment: Font sizes explicitly set (title=28, labels=18, ticks=18); all readable
+          in both themes but axis label font 18px is below recommended 22px for pixel-based
+          libraries
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements
+        comment: Feature labels well-spaced, no text collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible with appropriate sizing
+        comment: Bars clearly visible in both themes; orange and blue have strong
+          contrast against both backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito vermillion + blue are CVD-safe
+        comment: Okabe-Ito vermillion and blue are CVD-safe; polarity encoding uses
+          both hue and length
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good proportions; notable empty space on left for positive-heavy
-          dataset
+        comment: Chart occupies good portion of 4800x2700 canvas; some right-side
+          whitespace where small-value bars leave empty space
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive x-axis label with domain context
+        comment: X-axis label includes units and embeds base/prediction values; feature
+          labels include SHAP values
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Backgrounds correct; spec mandates red+blue override; both Okabe-Ito
-          colors used; identical across themes
+        comment: Spec overrides default first-series green with semantic colors; both
+          are Okabe-Ito (positions 2 & 3); backgrounds correct; chrome theme-correct
+          in both renders
     design_excellence:
       score: 10
       max: 20
@@ -101,80 +108,82 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Well-configured Style object with theme tokens; intentional dual-color
-          scheme; but overall appearance is a configured library default
+        passed: true
+        comment: Clean, well-configured look with theme-adaptive colors; professional
+          but not publication-ready
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Subtle dashed grid, hidden legend, theme-adaptive backgrounds; no
-          spine control in pygal
+        passed: true
+        comment: Grid limited to x_guides only (good choice), theme-adaptive foreground,
+          generous bar spacing; no spine removal
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Dual-color encoding communicates positive/negative; magnitude ordering
-          helps; missing numeric labels, reference lines, and visual hierarchy reduce
-          storytelling
+        passed: true
+        comment: Magnitude ordering and color encoding are meaningful storytelling
+          choices; missing waterfall cumulative flow undermines the core narrative
     spec_compliance:
-      score: 9
+      score: 10
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: HorizontalBar where all bars start at 0 — not a waterfall chart;
-          spec requires cumulative stacking from base_value
+        comment: Uses HorizontalBar (correct base type) but lacks waterfall stacking
+          - all bars originate from zero-line, not cumulatively chained from base_value
+          to final_value
       - id: SC-02
         name: Required Features
-        score: 1
+        score: 2
         max: 4
         passed: false
-        comment: 'Missing: numeric SHAP values on bars, reference lines for base/final
-          values, cumulative bar stacking'
+        comment: 'Present: horizontal layout, color coding, magnitude ordering, SHAP
+          values in labels. Missing: cumulative stacking, connector lines, explicit
+          base_value/final_value reference lines'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Features on y-axis, SHAP values on x-axis, all 10 features present
-          and ordered correctly
+        passed: false
+        comment: Feature names on y-axis, SHAP values on x-axis, polarity colors correct.
+          But bars show raw SHAP values from zero, not cumulative positions from base_value
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches spec; legend correctly hidden
+        comment: Title contains 'shap-waterfall · pygal · anyplot.ai' with contextual
+          prefix. Legend correctly omitted for single logical series
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Shows positive and negative SHAP values across 10 features; lacks
-          cumulative waterfall visual narrative
+        comment: Shows both positive and negative SHAP values with varying magnitudes,
+          10 features. Lacks demonstration of cumulative chain reaching final_value
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Customer churn prediction is a real, neutral ML use case with realistic
-          feature names
+        comment: Customer churn prediction is a real, neutral, comprehensible business
+          scenario with domain-appropriate feature names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: SHAP values in [-0.12, 0.20], base 0.25, final 0.48 — plausible for
-          a logistic churn model
+        comment: Base value 0.25 and prediction 0.48 are plausible churn probabilities;
+          SHAP values in -0.12 to +0.20 range are realistic
     code_quality:
       score: 10
       max: 10
@@ -184,7 +193,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → data → style → plot → save; no functions or classes'
+        comment: 'Clean structure: sys.path fix, imports, data, style, chart, save.
+          No functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -196,21 +206,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys.path manipulation necessary for filename
+        comment: 'All imports used: os, sys, numpy, pygal, pygal.style.Style'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic; per-bar color dict format is concise
+        comment: Clean, Pythonic. sys.path fix is necessary and commented. No over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -218,15 +228,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct Style object theming, per-bar color dict format is the proper
-          pygal idiom
+        comment: Correct use of HorizontalBar, Style object, x_labels, per-bar dict
+          for color override, show_legend=False, show_y_guides=False
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Per-bar color dict and HTML export are pygal-specific; could further
-          leverage tooltip configuration
+        passed: true
+        comment: Per-bar color via dict format is pygal-specific; dual PNG+interactive
+          HTML output is distinctive to pygal
   verdict: REJECTED
 impl_tags:
   dependencies: []

@@ -1,7 +1,7 @@
 """ anyplot.ai
 shap-waterfall: SHAP Waterfall Plot for Feature Attribution
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 76/100 | Created: 2026-05-07
+Quality: 78/100 | Created: 2026-05-07
 """
 
 import os
