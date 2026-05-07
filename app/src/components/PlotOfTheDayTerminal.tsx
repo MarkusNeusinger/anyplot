@@ -144,13 +144,11 @@ export function PlotOfTheDayTerminal({
           maxHeight: maxPlotHeight,
           borderTop: '1px dashed var(--rule)',
           borderBottom: '1px dashed var(--rule)',
-          bgcolor: 'var(--bg-elevated)',
+          bgcolor: 'var(--bg-surface)',
           aspectRatio: '16 / 10',
           position: 'relative',
           overflow: 'hidden',
           cursor: 'pointer',
-          transition: 'background 0.2s',
-          '&:hover': { bgcolor: 'var(--bg-page)' },
           '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: -2 },
         }}
       >
