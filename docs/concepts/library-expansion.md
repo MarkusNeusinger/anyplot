@@ -163,6 +163,27 @@ Framework-only libraries get tagged accordingly. **Recharts** is the only
 Tier 3 entry currently affected; everything in Tier 1 / Tier 2 is
 framework-agnostic.
 
+### Licensing policy
+
+anyplot prioritises **FOSS-licensed** libraries (MIT, BSD, Apache, ISC, GPL).
+Commercial libraries with a **free-for-private-use** tier — Highcharts,
+amCharts — are allowed in the catalogue but de-emphasised:
+
+- They must never displace a comparable FOSS alternative in a higher tier.
+- Each entry must clearly mark its license and link to the upstream license
+  page. Suggested metadata field on each library:
+
+  ```python
+  "license": "MIT" | "Apache-2.0" | "BSD-3-Clause" | "ISC" | "GPL-2.0"
+           | "Commercial (free for non-commercial use)"
+  ```
+
+- The frontend should expose a "FOSS only" filter so users who need
+  permissive licensing can exclude commercial entries with one click.
+
+Hard-paywalled libraries with no free tier (e.g. amCharts 4 Enterprise without
+the personal licence, FusionCharts) are out of scope.
+
 Applied to every cross-language library in or near scope:
 
 | Library             | Native     | Most-used variant      | Canonical entry           | Action vs current state                          |
@@ -196,12 +217,14 @@ Ranked by `reach × ease-of-integration ÷ duplication-risk`.
 
 ### Tier 2 — high value, slightly more work
 
-4. **ggplot2 (R)** — unlocks the entire R / academic audience; first
-   non-Python language so you also validate the multi-language pipeline on a
-   non-JS runtime.
-5. **Highcharts (JavaScript)** — *replaces* the current Python Highcharts
-   entry. The JS variant outweighs the Python wrapper by ~200×, so the
-   most-used rule mandates the move.
+4. **ggplot2 (R)** — MIT/GPL-2. Unlocks the entire R / academic audience;
+   first non-Python language, so it also validates the multi-language
+   pipeline on a non-JS runtime.
+5. **Highcharts (JavaScript)** — *Commercial, free for non-commercial use.*
+   Replaces the current Python Highcharts entry; the JS variant outweighs the
+   Python wrapper by ~200×, so the most-used rule mandates the move. Tag with
+   the commercial-license flag and surface the licence prominently on the
+   plot pages.
 
 ### Tier 3 — opportunistic, ecosystem-specific
 
@@ -240,14 +263,25 @@ entries.
 
 ---
 
-## 9. Open questions for the team
+## 9. Settled decisions
 
-1. **Highcharts migration.** Do we replace the existing Python entry or keep
-   both during a deprecation window? (Recommend: keep both for one release,
-   then remove the Python entry.)
-2. **Commercial licenses.** Highcharts requires a paid licence for commercial
-   use. Confirm the project's stance on showcasing it before generating
-   examples.
-3. **Refresh cadence for the 3× threshold.** Download numbers shift over time.
+- **JS / TS treated as one language**, snippets authored in plain JS (TSX
+  only when a library is realistically only used that way, e.g. Recharts).
+- **React / Vue / Svelte / Angular** are JavaScript with a `framework`
+  metadata flag, not separate languages.
+- **Cross-language libraries** appear once, under the variant with ≥ 3× more
+  weekly downloads (else native).
+- **Highcharts** moves from Python to JavaScript. Keep both entries for one
+  release as a deprecation window, then drop the Python entry.
+- **Licensing**: FOSS-first; libraries with a free-for-private-use tier
+  (Highcharts, amCharts) are allowed but tagged and never crowd out FOSS
+  alternatives at the same tier.
+
+## 10. Open questions for the team
+
+1. **Refresh cadence for the 3× threshold.** Download numbers shift over time.
    Recommend re-checking the canonical-variant decisions once a year and on
    any major release of a contender.
+2. **amCharts inclusion.** Same licence model as Highcharts. Add as a Tier 3
+   entry, or skip on the grounds that Highcharts already covers the
+   "commercial, free for private" niche?
