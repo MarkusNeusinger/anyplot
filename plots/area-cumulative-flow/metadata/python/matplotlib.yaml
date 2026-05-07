@@ -1,0 +1,255 @@
+library: matplotlib
+language: python
+specification_id: area-cumulative-flow
+created: '2026-05-07T20:58:11Z'
+updated: '2026-05-07T21:12:04Z'
+generated_by: claude-sonnet
+workflow_run: 25521305312
+issue: 5239
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Correct Okabe-Ito palette (positions 1-5 in canonical order) applied to all five
+    stages
+  - 'Full theme adaptation: background, text, grid, legend frame all flip correctly
+    between light and dark'
+  - Bottleneck storytelling via axvspan + annotation creates a clear focal point and
+    narrative
+  - Reversed legend matches visual stacking order — excellent UX detail
+  - Monotonically non-decreasing cumulative data with realistic WIP dynamics (S-curve
+    Done, widening Testing bottleneck, growing Backlog)
+  - Proper matplotlib date handling with mdates.DateFormatter and WeekdayLocator
+  - Tick length=0 and top/right spine removal provide clean, polished look
+  weaknesses:
+  - DE-01 could reach publication-ready level with more typographic hierarchy (e.g.
+    subtitle or annotation callout box styling)
+  - 'DE-02: grid alpha=0.13 is very low — slightly harder to read as a reference grid;
+    0.15-0.20 would balance subtlety with utility'
+  - 'LM-02: stackplot with axvspan is solid but does not showcase any highly distinctive
+    matplotlib capability beyond standard usage'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — not pure white, correct surface tone.
+      Chrome: Title "Sprint Kanban Board · area-cumulative-flow · matplotlib · anyplot.ai" in dark ink, clearly readable at top. Y-axis label "Cumulative Items" and X-axis label "Date" in dark ink, readable. Tick labels (Jan 08 through Mar 18, rotated 30°, and 0–200 on Y) in INK_SOFT medium-gray, fully legible. Top/right spines removed; left/bottom spines in medium gray. Subtle y-axis grid at alpha=0.13.
+      Data: Five stacked areas from bottom: Done (#009E73 green), Testing (#D55E00 orange-red), Development (#0072B2 blue), Analysis (#CC79A7 reddish-purple), Backlog (#E69F00 orange/yellow). Alpha=0.88. Stacked total rises from ~35 items on Jan 08 to ~185 items on Mar 18. Shaded region (days 15–60) highlights Testing Bottleneck with italic annotation text. Legend in upper-left, reversed to match visual order (Backlog at top, Done at bottom), with ELEVATED_BG frame.
+      Legibility verdict: PASS — all text readable, no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black consistent with #1A1A17 — not pure black, correct dark surface.
+      Chrome: Title, axis labels, and tick labels rendered in light ink (#F0EFE8 / #B8B7B0) — clearly readable against the dark background. No dark-on-dark failures detected. Grid lines subtle. Legend frame uses #242420 ELEVATED_BG with light border and light legend text.
+      Data: Identical data colors to light render — Done (#009E73), Testing (#D55E00), Development (#0072B2), Analysis (#CC79A7), Backlog (#E69F00). Shaded bottleneck region still visible as a subtle darker overlay. All five bands clearly distinguishable.
+      Legibility verdict: PASS — all text readable with light chrome on dark surface; no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, axis labels=20, ticks=16,
+          legend=16. All text readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Rotated x-axis labels (30deg, right-aligned) prevent overlap. Legend
+          in upper-left clears data area. No collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All five stacked bands clearly visible with alpha=0.88. Good color
+          contrast between adjacent layers.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe. Adjacent bands have sufficient luminance
+          contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas with tight_layout. Plot fills canvas well, balanced margins,
+          nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Cumulative Items'' and ''Date'' are descriptive. Title includes
+          spec-id, library, anyplot.ai.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Done) = #009E73. Colors follow Okabe-Ito positions
+          1-5 in canonical order. Light bg=#FAF8F1, dark bg=#1A1A17. Chrome adapts
+          correctly in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Clearly above defaults: Okabe-Ito palette with proper alpha, theme-adaptive
+          chrome, reversed legend matching visual stacking, shaded bottleneck region.
+          Strong design, not quite publication-ready.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed, tick length=0, y-axis only grid (alpha=0.13),
+          legend frame customized. Nearly perfect refinement; grid alpha slightly
+          low.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: axvspan shading + italic annotation creates a clear bottleneck focal
+          point. S-curve Done, widening Testing band, growing Backlog all tell a coherent
+          throughput story.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct CFD using ax.stackplot() with 5 workflow stages.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Stages stacked in workflow order (Backlog on top, Done on bottom),
+          monotonically non-decreasing via np.maximum.accumulate, legend present,
+          date labels at bi-weekly intervals.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on X, cumulative count on Y. xlim set to full data range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title contains 'area-cumulative-flow · matplotlib · anyplot.ai'.
+          Legend labels all 5 stages, reversed to match visual order.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows bottleneck (widening band), throughput (Done S-curve), growing
+          backlog, drain (Testing band narrowing after day 60). All CFD dynamics represented.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 90-day software Kanban board with realistic stage names (Backlog,
+          Analysis, Development, Testing, Done). Neutral business scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: ~180 items done over 90 days, WIP of 8-28 items per stage. Realistic
+          proportions for a small software team.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports -> data -> plot -> save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: sys (path fix), os, matplotlib.dates, matplotlib.pyplot,
+          numpy, pandas.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. Data generation logic is appropriately complex for
+          the CFD simulation. No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches=tight, facecolor=PAGE_BG.
+          Current API used throughout.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ax.stackplot(), mdates.DateFormatter, WeekdayLocator, ax.axvspan(),
+          ax.get_legend_handles_labels() — all idiomatic matplotlib. Uses Axes methods,
+          not pyplot.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: mdates date formatting with WeekdayLocator and axvspan are matplotlib-specific.
+          Reversed legend via get_legend_handles_labels() is a matplotlib idiom. Good
+          but not exceptional.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
