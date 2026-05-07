@@ -1,161 +1,163 @@
 library: highcharts
+language: python
 specification_id: box-notched
 created: '2025-12-25T19:55:42Z'
-updated: '2025-12-25T20:07:34Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510123478
+updated: '2026-05-07T23:04:12Z'
+generated_by: claude-haiku
+workflow_run: 25526387430
 issue: 2019
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/box-notched/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/box-notched/highcharts/plot.html
-quality_score: 90
-impl_tags:
-  dependencies:
-    - selenium
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/highcharts/plot-dark.html
+quality_score: 97
 review:
   strengths:
-  - Excellent clinical trial context with dose-response relationship clearly visible
-  - Creative use of error bars to represent notch confidence intervals
-  - Clean colorblind-safe color palette
-  - Proper outlier visualization as separate scatter series
-  - Well-structured code following KISS principles
-  - Informative subtitle explaining the 95% CI notation
-  weaknesses:
-  - Notches represented as error bars rather than actual notched box shape (Highcharts
-    limitation, acceptable workaround)
-  - Legend text slightly small relative to the 4800x2700 canvas
-  image_description: 'The plot shows a notched box plot visualization with four treatment
-    groups: Placebo, Low Dose, Medium Dose, and High Dose arranged along the x-axis.
-    Each box uses a different color (blue for Placebo, yellow for Low Dose, purple
-    for Medium Dose, cyan for High Dose). The y-axis shows "Response Score" ranging
-    from approximately 10 to 108. Each box displays the standard box plot elements
-    (median as black line, Q1/Q3 as box boundaries, whiskers). Red horizontal error
-    bars overlay each box representing the 95% CI (notch) for median comparison. Red
-    circular markers indicate outliers - visible for Placebo (at ~15 and ~85), Low
-    Dose (at ~29, ~35, ~74, ~79), and Medium Dose (at ~30 and ~95). The title reads
-    "box-notched · highcharts · pyplots.ai" with a subtitle explaining the error bars.
-    A legend in the upper right shows Response Distribution, 95% CI (Notch), and Outliers.'
+  - 'Perfect visual quality: both light and dark renders fully theme-correct and readable'
+  - Excellent use of error bars to represent the 95% CI notch—a clever application
+    of Highcharts ErrorBar series
+  - 'Strong data storytelling: the progressive dose-response effect is immediately
+    visible and invites comparison'
+  - 'Deep library mastery: idiomatic Highcharts patterns with multi-CDN resilience
+    and proper Selenium export'
+  - Theme-adaptive chrome fully applied—no legibility issues in either theme
+  - Professional typography hierarchy and generous margins enhance clarity
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title is bold and dark, axis labels are clear in dark gray, tick labels fully readable ✓
+      Data: Four colored boxes (teal, orange, blue, magenta) with error bars overlaid for notches; teal outlier circles visible; all Okabe-Ito colors correct ✓
+      Legend: Top-right on light background showing Response Distribution, 95% CI (Notch), and Outliers ✓
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: All text (title, labels, ticks) flipped to light gray/light cream; all clearly readable against dark surface ✓
+      Data: Same colors as light render (teal, orange, blue, magenta)—only chrome has changed ✓
+      Legend: Dark background with light text ✓
+      Legibility verdict: PASS - no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and labels are readable, though tick labels could be slightly
-          larger
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All text explicitly sized; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean separation; legend non-obstructive; generous margins
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Box plots and error bars clearly visible; outlier markers could be
-          slightly larger
+        comment: All box elements, error bars, outlier markers clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-safe palette used (blue, yellow, purple, cyan)
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout, though some empty space at bottom of chart
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Response Score" on y-axis, "Treatment Group" label present (shown
-          in x-axis title)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito safe; distinct colors; white edges on outliers
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 well-proportioned; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle, legend well-placed but slightly small
+        comment: Descriptive title and subtitle explaining CI concept
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; correct Okabe-Ito order; both themes theme-correct'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Intentional design with theme-adaptive chrome and subtitle context
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, legend styling, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear treatment progression; notches enable visual hypothesis testing
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct box plot with notch representation via error bars
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Categories on x-axis, values on y-axis correctly mapped
-      - id: SC-03
+        comment: Correct notched box plot
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Shows median, quartiles, whiskers, outliers, and 95% CI; notches
-          shown as error bars rather than traditional notch shape
-      - id: SC-04
-        name: Data Range
+        comment: Notches, median, quartiles, whiskers, outliers all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data including outliers visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Categories on X; values on Y; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three series
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Correct format but subtitle takes some attention from main title
+        comment: Correct format; legend matches series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows outliers, different distributions, increasing medians across
-          dose groups
+        comment: All aspects of notched box plot shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Clinical trial dose-response scenario is excellent and realistic
+        comment: Plausible clinical trial scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Response scores 10-108 are reasonable for a clinical metric
+        comment: Sensible Y-axis range and dynamic range
     code_quality:
       score: 10
       max: 10
@@ -165,13 +167,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → calculations → config → render'
+        comment: No unnecessary functions; inline calculations
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Deterministic via np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -179,26 +181,43 @@ review:
         passed: true
         comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current APIs used
+        comment: No simulated interactivity; legitimate code
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png/.html
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Highcharts boxplot with error bars and scatter overlay; good
-          use of multiple series types
+        comment: Proper Highcharts patterns; multi-CDN fallback; correct Selenium
+          export
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Native BoxPlotSeries; clever ErrorBar for notches; series composition
+          idiomatic
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready

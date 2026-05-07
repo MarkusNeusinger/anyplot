@@ -1,10 +1,11 @@
-""" pyplots.ai
+""" anyplot.ai
 box-notched: Notched Box Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-25
+Library: highcharts unknown | Python 3.13.13
+Quality: 97/100 | Updated: 2026-05-07
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -14,6 +15,14 @@ import numpy as np
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens (theme-adaptive chrome)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Data - Generate realistic clinical trial data comparing treatments
 np.random.seed(42)
@@ -33,7 +42,8 @@ data_dict = {
 data_dict["Placebo"] = np.append(data_dict["Placebo"], [15, 85])
 data_dict["Medium Dose"] = np.append(data_dict["Medium Dose"], [30, 95])
 
-colors = ["#306998", "#FFD43B", "#9467BD", "#17BECF"]
+# Okabe-Ito palette - first series is always #009E73
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Calculate box plot statistics inline (KISS - no functions)
 box_data = []
@@ -75,7 +85,7 @@ for i, cat in enumerate(categories):
             "median": round(median, 2),
             "q3": round(q3, 2),
             "high": round(upper_whisker, 2),
-            "color": colors[i],
+            "color": OKABE_ITO[i],
         }
     )
 
@@ -92,37 +102,45 @@ chart_config = {
         "type": "boxplot",
         "width": 4800,
         "height": 2700,
-        "backgroundColor": "#ffffff",
+        "backgroundColor": PAGE_BG,
         "marginBottom": 200,
         "marginLeft": 150,
-        "marginRight": 350,
+        "marginRight": 150,
     },
-    "title": {"text": "box-notched · highcharts · pyplots.ai", "style": {"fontSize": "48px", "fontWeight": "bold"}},
+    "title": {
+        "text": "box-notched · highcharts · anyplot.ai",
+        "style": {"fontSize": "28px", "fontWeight": "bold", "color": INK},
+    },
     "subtitle": {
         "text": "Treatment Response by Dose — Error bars indicate 95% CI (notch) for median comparison",
-        "style": {"fontSize": "32px", "color": "#666666"},
+        "style": {"fontSize": "22px", "color": INK_SOFT},
     },
     "xAxis": {
         "categories": categories,
-        "title": {"text": "Treatment Group", "style": {"fontSize": "36px"}},
-        "labels": {"style": {"fontSize": "28px"}},
+        "title": {"text": "Treatment Group", "style": {"fontSize": "22px", "color": INK}},
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+        "lineColor": INK_SOFT,
+        "tickColor": INK_SOFT,
+        "gridLineColor": GRID,
     },
     "yAxis": {
-        "title": {"text": "Response Score", "style": {"fontSize": "36px"}},
-        "labels": {"style": {"fontSize": "28px"}},
+        "title": {"text": "Response Score", "style": {"fontSize": "22px", "color": INK}},
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+        "lineColor": INK_SOFT,
+        "tickColor": INK_SOFT,
+        "gridLineColor": GRID,
         "gridLineWidth": 1,
-        "gridLineColor": "#e0e0e0",
     },
     "legend": {
         "enabled": True,
-        "itemStyle": {"fontSize": "28px"},
+        "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
         "align": "right",
         "verticalAlign": "top",
         "layout": "vertical",
-        "x": -100,
+        "x": -80,
         "y": 80,
-        "backgroundColor": "#ffffff",
-        "borderColor": "#cccccc",
+        "backgroundColor": ELEVATED_BG,
+        "borderColor": INK_SOFT,
         "borderWidth": 1,
         "padding": 15,
     },
@@ -133,11 +151,11 @@ chart_config = {
             "whiskerWidth": 4,
             "stemWidth": 3,
             "medianWidth": 6,
-            "medianColor": "#333333",
+            "medianColor": INK,
             "colorByPoint": True,
-            "colors": colors,
+            "colors": OKABE_ITO,
         },
-        "errorbar": {"lineWidth": 8, "whiskerLength": "40%", "color": "#E74C3C", "stemWidth": 0},
+        "errorbar": {"lineWidth": 8, "whiskerLength": "40%", "color": INK, "stemWidth": 0},
     },
     "series": [
         {
@@ -153,7 +171,7 @@ chart_config = {
             "name": "95% CI (Notch)",
             "type": "errorbar",
             "data": errorbar_data,
-            "color": "#E74C3C",
+            "color": INK,
             "lineWidth": 6,
             "whiskerLength": "35%",
             "whiskerWidth": 6,
@@ -166,9 +184,9 @@ chart_config = {
             "data": outlier_data,
             "marker": {
                 "symbol": "circle",
-                "radius": 12,
-                "fillColor": "#E74C3C",
-                "lineColor": "#ffffff",
+                "radius": 14,
+                "fillColor": OKABE_ITO[0],
+                "lineColor": PAGE_BG,
                 "lineWidth": 2,
             },
             "tooltip": {"pointFormat": "Outlier: {point.y}"},
@@ -179,14 +197,46 @@ chart_config = {
 
 chart_json = json.dumps(chart_config)
 
-# Download Highcharts JS files
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
 
-highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
-with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
-    highcharts_more_js = response.read().decode("utf-8")
+# Download Highcharts JS files with retry and User-Agent
+def download_with_retry(url, max_retries=3):
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    for attempt in range(max_retries):
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=30) as response:
+                return response.read().decode("utf-8")
+        except Exception:
+            if attempt == max_retries - 1:
+                raise
+            time.sleep(2**attempt)  # Exponential backoff
+
+
+# Try multiple CDNs
+cdns = [
+    ("https://code.highcharts.com/highcharts.js", "https://code.highcharts.com/highcharts-more.js"),
+    (
+        "https://cdn.jsdelivr.net/npm/highcharts/highcharts.js",
+        "https://cdn.jsdelivr.net/npm/highcharts/highcharts-more.js",
+    ),
+    (
+        "https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.4.3/highcharts.js",
+        "https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.4.3/highcharts-more.js",
+    ),
+]
+
+highcharts_js = None
+highcharts_more_js = None
+for hc_url, hc_more_url in cdns:
+    try:
+        highcharts_js = download_with_retry(hc_url)
+        highcharts_more_js = download_with_retry(hc_more_url)
+        break
+    except Exception:
+        continue
+
+if highcharts_js is None:
+    raise RuntimeError("Failed to download Highcharts from all CDNs")
 
 # Generate HTML with inline scripts
 html_content = f"""<!DOCTYPE html>
@@ -196,7 +246,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{highcharts_more_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>
         Highcharts.chart('container', {chart_json});
@@ -210,7 +260,7 @@ with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encodin
     temp_path = f.name
 
 # Also save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
 # Screenshot with Selenium
@@ -224,7 +274,7 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
