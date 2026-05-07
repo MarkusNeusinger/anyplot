@@ -1,169 +1,173 @@
 library: altair
+language: python
 specification_id: scatter-regression-polynomial
 created: '2025-12-25T17:12:18Z'
-updated: '2025-12-25T17:14:36Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20508355447
+updated: '2026-05-07T13:05:32Z'
+generated_by: claude-haiku
+workflow_run: 25497277770
 issue: 2028
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - layer-composition
-    - hover-tooltips
-    - html-export
-  patterns:
-    - data-generation
-  dataprep:
-    - regression
-  styling: []
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/altair/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent R² and equation annotation implementation using separate text marks
-  - Clean declarative Altair syntax with proper layering (scatter + curve + annotations)
-  - Realistic agricultural scenario (fertilizer vs crop yield) perfectly demonstrates
-    diminishing returns
-  - 'Good color choices: Python blue (#306998) for points and contrasting yellow (#FFD43B)
-    for curve'
-  - Tooltips enabled for interactivity
-  - Proper scale factor (3.0) for PNG export achieving target resolution
+  - Perfect theme adaptation in both light and dark renders with readable text
+  - Correct Okabe-Ito palette usage with good visual contrast
+  - All spec requirements met and excellently presented
+  - Clean, reproducible code with explicit font sizing
+  - Professional annotations (R² and equation) enhance data storytelling
+  - Realistic and plausible data demonstrating the quadratic relationship
   weaknesses:
-  - No grid lines present - adding subtle grid (alpha 0.3) would improve readability
-  - Some data points have negative yield values (-1 tons/ha) which is unrealistic
-    for crop yield
-  - Could use Altair built-in transform_regression() instead of manual numpy polyfit
-    for more idiomatic implementation
-  image_description: The plot displays a scatter plot with polynomial regression showing
-    the relationship between fertilizer application (kg/ha) on the x-axis and crop
-    yield (tons/ha) on the y-axis. Blue circular markers (#306998) represent 80 data
-    points with 65% opacity, distributed in a clear parabolic pattern. A bold yellow
-    polynomial curve (#FFD43B) fits through the data, demonstrating diminishing returns
-    - yield increases initially then decreases with excessive fertilizer. The R² value
-    (0.805) and polynomial equation (y = -0.75x² + 7.54x + 5.29) are prominently displayed
-    in the upper left corner. The title correctly follows the format 'scatter-regression-polynomial
-    · altair · pyplots.ai'. Axis labels include units (kg/ha and tons/ha). The overall
-    layout is clean with good use of canvas space.
+  - Design Excellence is solid but not exceptional; feels like a well-executed default
+    rather than custom aesthetic
+  - Could leverage more of Altair's interactive features (selection, cross-filtering)
+    to push Library Mastery higher
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title "scatter-regression-polynomial · altair · anyplot.ai" is clearly visible in dark text. Axis labels "Fertilizer (kg/ha)" and "Crop Yield (tons/ha)" with units are readable. Tick labels (0-30 on Y, 0-10 on X) are clearly visible. R² annotation (0.853) and equation are prominently positioned in upper left in bold and secondary text. Grid lines are subtle but visible.
+      Data: Green scatter points (#009E73) showing 80 data points with moderate transparency. Orange regression curve (#D55E00) smoothly fits through the scatter, clearly visually distinct.
+      Legibility verdict: PASS - All text is readable with good contrast against the light background. No overlap or legibility issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Title and axis labels are now in light text (#F0EFE8) with excellent contrast against the dark background. Tick labels use secondary light color (#B8B7B0). R² and equation annotations remain readable. Grid lines are subtle and visible. No dark-on-dark failures detected.
+      Data: Green scatter points (#009E73) are identical to light render. Orange regression curve (#D55E00) is identical to light render. Only the chrome has changed (background, text colors, grid colors flipped to dark theme).
+      Legibility verdict: PASS - All text is readable with proper light-colored text on dark background. No dark-on-dark contrast failures. Data colors are unchanged from light render.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All font sizes explicitly set (title=28, labels=22, ticks=18); perfectly
+          readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; R² and equation well-positioned in upper left
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers are well-sized (180) with good opacity (0.65) for 80 points;
-          curve is bold and visible
+        comment: 80 scatter points well-sized; orange regression curve clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow contrast is colorblind-safe, no red-green issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization, minor whitespace at bottom could be reduced
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: ''Fertilizer (kg/ha)'', ''Crop Yield (tons/ha)'''
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe; good luminance contrast between green
+          and orange
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 55-70% of canvas with balanced margins; well-proportioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: No grid present; while not required, subtle grid would help readability
+        passed: true
+        comment: 'Descriptive with units: Fertilizer (kg/ha), Crop Yield (tons/ha)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; second #D55E00; backgrounds correct; text
+          theme-adaptive; data colors identical across themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Well-configured Okabe-Ito palette with explicit typography. Professional
+          but feels like a strong default rather than exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (opacity 0.10), clean axis configuration, good whitespace
+          balance
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with orange curve as focal point. Annotations
+          effectively communicate relationship strength and form
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct scatter plot with polynomial regression curve
+        comment: Scatter plot with polynomial regression curve correctly implemented
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned with meaningful variable names
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: R² displayed, polynomial equation shown, curve visually distinct,
-          points have transparency
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: scatter, degree-2 curve, R², equation, transparency,
+          labels'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes accommodate full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; data fills axes appropriately
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for this plot type, annotations are accurate
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: ''scatter-regression-polynomial · altair · pyplots.ai'''
+        comment: Title format correct; no legend needed (two clearly distinguished
+          series)
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear parabolic pattern with diminishing returns; good noise
-          level; could benefit from more extreme outliers
+        comment: Complete quadratic relationship shown across full range
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Fertilizer vs crop yield is a real agricultural scenario matching
-          spec's 'diminishing returns in economics' application
+        comment: Crop yield vs. fertilizer is classic real-world agricultural example;
+          neutral scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic (0-10 kg/ha fertilizer, 0-25 tons/ha yield),
-          though some negative yield values appear unrealistic
+        comment: Values are plausible; diminishing returns pattern is realistic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,42 +175,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Linear flow: imports, data, fit, layers, configure, save. No unnecessary
+          functions'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set at beginning
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: altair, numpy, pandas'
+        comment: 'Only used imports: os, altair, numpy, pandas'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity. No fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as 'plot.png' but also 'plot.html' (minor, but spec doesn't
-          require HTML)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Current API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Altair's declarative syntax, layered charts, tooltips, and text
-          marks for annotations; could use transform_regression for built-in regression
-          instead of manual numpy calculation
+        comment: 'Excellent use of Altair''s declarative API: mark_circle, mark_line,
+          layer composition, configure_axis, theme-adaptive configuration'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Layer composition, text annotations, theme-adaptive tokens. Could
+          explore more interactive features unique to Altair
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
