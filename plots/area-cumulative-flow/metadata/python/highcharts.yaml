@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: area-cumulative-flow
 created: '2026-05-07T21:07:11Z'
-updated: '2026-05-07T21:14:38Z'
+updated: '2026-05-07T21:31:07Z'
 generated_by: claude-sonnet
 workflow_run: 25521305735
 issue: 5239
@@ -15,45 +15,48 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumu
 quality_score: 78
 review:
   strengths:
-  - Correct CFD stacking order (Done at bottom, Backlog at top) with explicit reversedStacks
-    comment explaining the reasoning
-  - 'Full theme-adaptive chrome: background, text, grid, legend box all correctly
-    switch between light and dark themes'
-  - Realistic Kanban data with 5 stages, 90 days, Poisson arrivals, and enforced monotonicity
-  - 'fillOpacity: 0.85 gives stacked areas visual depth without obscuring bands'
-  - Correct HTML + PNG artifact outputs for both themes with proper inline JS embedding
+  - 'Correct CFD stacking order: Done (green #009E73) at visual bottom, Backlog at
+    top, fully compliant with spec workflow ordering'
+  - 'Full theme-adaptive chrome: all text, grid, legend, and background tokens flip
+    correctly between light (#FAF8F1) and dark (#1A1A17) renders — no dark-on-dark
+    failures'
+  - Robust CDN download with multi-provider fallback and retry logic for headless
+    Chrome compatibility
+  - Realistic 90-day Kanban data with Poisson-based growth and monotonically-increasing
+    cumulative counts via maximum.accumulate
+  - 'Correct Highcharts stacked area configuration: stacking=''normal'', markers disabled,
+    fillOpacity=0.85, shared tooltip — idiomatic usage'
+  - Both HTML and PNG artifacts produced per library spec
   weaknesses:
-  - 'Legend is broken: configured verticalAlign=bottom but renders at top-left overlapping
-    data area; in light theme the legend box is invisible because ELEVATED_BG (#FFFDF6)
-    is nearly identical to PAGE_BG (#FAF8F1); fix by increasing marginBottom to 220+
-    and adding explicit y offset'
-  - 'Okabe-Ito canonical order reversed: first series added (Backlog) has #E69F00
-    (position 5), not #009E73 (position 1); brand green should be assigned to the
-    first series'
-  - 'Data storytelling missing: all 5 bands grow at roughly uniform rates with no
-    dramatic bottleneck period; add a 2-3 week widening of Development/Testing band
-    that then recovers to demonstrate CFD diagnostic power'
-  - 'X-axis date labels barely readable: with marginBottom=160 shared between axis
-    labels and legend, labels may be clipped; increase to 220+ to ensure visibility'
-  - download_js helper function adds unnecessary complexity with multi-CDN retry logic;
-    simplify to a flat try/except block
+  - 'Palette assignment reverses Okabe-Ito order: Backlog (first series in code/legend)
+    gets OKABE_ITO[4]=#E69F00 instead of OKABE_ITO[0]=#009E73 — the style guide requires
+    first series = #009E73 regardless of semantic meaning'
+  - Legend is very hard to confirm in both renders at any resolution — verify it's
+    fully visible and not clipped; consider moving legend inside plot or increasing
+    fontSize to 20px
+  - Y-axis missing lineColor and tickColor tokens (only labels.style.color is set),
+    potentially leaving Y-axis tick marks at Highcharts default color in dark theme
+  - download_js() helper function defined in implementation body violates KISS/no-functions
+    rule
+  - Testing band is very thin throughout and may be difficult to identify — consider
+    checking if it's clearly distinguishable from adjacent bands
+  - No visual emphasis or callout annotations to highlight CFD insights like bottleneck
+    widening
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "area-cumulative-flow · highcharts · anyplot.ai" visible in dark ink at top; y-axis label "Cumulative Items" (rotated) and "Date" x-axis label present; y-axis tick labels (10-390) readable in dark ink; x-axis date labels at bottom are extremely faint and barely readable
-      Data: 5 stacked bands from bottom: Done #009E73 (teal/green), Testing #D55E00 (orange), Development #0072B2 (blue), Analysis #CC79A7 (pink), Backlog #E69F00 (yellow); bands grow from lower-left to upper-right over 90 days; fillOpacity 0.85 gives slight transparency
-      Legend: Configured for bottom-center but legend box is invisible — ELEVATED_BG #FFFDF6 against PAGE_BG #FAF8F1 makes it indistinguishable; legend likely rendering at top-left of plot area
-      Legibility verdict: PASS for y-axis and title; FAIL for x-axis labels (too faint) and legend (invisible)
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "area-cumulative-flow · highcharts · anyplot.ai" visible in dark ink at top. Y-axis label "Cumulative Items" rotated, small but readable. X-axis label "Date" visible. Tick labels dark (#4A4A44 INK_SOFT) on light background — all readable. Subtle grid lines on Y-axis. Horizontal legend row visible at bottom of chart.
+      Data: 5 stacked bands. On the left (Jan 15): chart is nearly all yellow (Backlog dominates when total is small ~20 items). As dates progress rightward, large teal/green (Done = #009E73) grows from the bottom and becomes dominant. At right edge (Mar 30): bottom ~78% is green (Done), then thin orange (Testing), thin blue (Development), thin pink (Analysis), thin yellow strip (Backlog) at top — matching CFD workflow order per spec. First visual layer from y=0 = green Done band. Total grows from ~20 to ~375 items over 90 days.
+      Legibility verdict: PASS — all text readable against light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title visible in light cream/gray text; y-axis tick labels appear in light gray (#B8B7B0 range) against dark background — clearly readable; x-axis labels at bottom remain difficult to read; a small light-colored rectangle visible in upper-left of plot area — this is the legend box that failed to render at the configured bottom position
-      Data: All 5 Okabe-Ito colors are identical to the light render (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00) — data colors unchanged between themes as required; brand green #009E73 clearly visible as the bottom Done band
-      Legend: Misplaced at top-left of plot interior (visible as white box overlapping early-period data area); should be at bottom-center outside plot area
-      Legibility verdict: PASS for y-axis labels, title, and data bands; FAIL for legend placement (wrong position, overlaps data); borderline for x-axis labels
+      Background: Near-black #1A1A17 — correct, not pure black.
+      Chrome: Title, axis labels, tick labels all rendered in light (#F0EFE8 / #B8B7B0) against dark background — clearly readable, no dark-on-dark failures. Grid lines subtle (rgba(240,239,232,0.10)). Legend visible at bottom with elevated background (#242420) and border.
+      Data: Data colors are identical to light render — green Done, orange Testing, blue Development, pink Analysis, yellow Backlog — Okabe-Ito positions unchanged between themes (only chrome flips). Same CFD pattern visible: Backlog dominates early dates, Done (green) grows from bottom and dominates right side.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -61,72 +64,72 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 28px, axis 22px, ticks 18px) but
-          x-axis date labels barely visible at canvas edges
+        comment: Title (28px), axis labels (22px), tick labels (18px) readable in
+          both themes; Y-axis label small but legible
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 15-day tick interval gives ~770px per label; no collisions
+        comment: No text collision; x-axis tick interval 15 avoids crowding
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Stacked area bands clearly visible and distinguishable
+        comment: All 5 bands visible; Testing band is thin but distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Full Okabe-Ito palette; CVD-safe, distinct contrast between all 5
-          bands
+        comment: Okabe-Ito palette is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good margins; inherent CFD empty upper-left space is acceptable but
-          notable
+        comment: 4800x2700 landscape, good proportions; legend placement at bottom
+          with 160px margin
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Date, Cumulative Items, correct title format
+        comment: Date / Cumulative Items labels present; title correct format
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Okabe-Ito colors used but reversed canonical order: first series
-          (Backlog) gets #E69F00 not #009E73; backgrounds correct; chrome theme-adaptive'
+        comment: 'Backgrounds correct (#FAF8F1/#1A1A17); but first code/legend series
+          (Backlog) assigned OKABE_ITO[4]=#E69F00, not #009E73 — palette order reversed;
+          Done gets #009E73 for semantic reasons but violates positional rule'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Clean, correctly themed, fillOpacity adds depth; well-configured
-          defaults but no exceptional design work
+        comment: Intentional color semantics (green=Done/success), fill opacity 0.85,
+          font hierarchy established; no annotations or callouts
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle 10%-opacity grid, explicit margins, fillOpacity, theme-adaptive
-          legend box; good but not exceptional
+        comment: Subtle grid (rgba opacity), legend with elevated background and border,
+          adequate margins; markers disabled for area chart
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Data displayed correctly but all bands grow uniformly with no dramatic
-          bottleneck; no visual hierarchy
+        passed: true
+        comment: CFD band widths naturally encode WIP; narrative shows Backlog draining
+          as Done grows; no annotations highlighting bottlenecks
     spec_compliance:
       score: 13
       max: 15
@@ -136,29 +139,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area CFD; stages ordered Backlog-top to Done-bottom
-          per spec
+        comment: Correct stacked area CFD implementation
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: 5 stages, monotonic data, date x-axis; legend configured but misrendered
-          at top-left
+        comment: Correct stacking order (Done at bottom, Backlog at top), all 5 stages,
+          90-day period, monotonically increasing data; legend presence hard to fully
+          confirm at render scale
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=dates, Y=cumulative items, stacking correctly shows WIP as band
-          height
+        comment: Date on X, cumulative items on Y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
         passed: true
-        comment: Title format correct; legend labels defined but placement is broken
-          in rendered output
+        comment: Title format correct; legend configured at bottom but very small
+          in renders — hard to confirm full visibility
     data_quality:
       score: 14
       max: 15
@@ -168,37 +170,39 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 5 stages, 90 days, monotonic enforcement; lacks a dramatic bottleneck
-          period showing CFD diagnostic power
+        comment: All 5 CFD stages, correct monotonic counts, band widths encode WIP,
+          90-day period
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Kanban with real stage names; 90-day sprint; neutral business domain
+        comment: 'Realistic Kanban board scenario: Backlog/Analysis/Development/Testing/Done;
+          neutral professional context'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Poisson ~4/day, 20→380 items over 90 days; realistic for mid-size
-          software team
+        comment: Items grow ~20 to ~375 over 90 days via Poisson(4) daily arrivals;
+          realistic for small team
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 2
         max: 3
-        passed: true
-        comment: download_js helper with multi-CDN retry logic breaks flat KISS pattern
+        passed: false
+        comment: download_js() function defined in implementation body; justified
+          for CDN retry logic but technically violates no-functions rule
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -207,11 +211,11 @@ review:
         comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Acceptable but retry/CDN-fallback adds complexity beyond what is
-          needed
+        comment: Clean iteration over stages list; stacking logic correct despite
+          misleading code comment about reversedStacks
       - id: CQ-05
         name: Output & API
         score: 1
@@ -227,26 +231,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct Chart/HighchartsOptions/AreaSeries pattern; stacking=normal,
-          shared tooltip
+        comment: Proper HighchartsOptions, Chart.add_series(), to_js_literal(); correct
+          stacking='normal' and reversedStacks behavior leveraged
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Shared tooltip for stacked areas, tooltip theming, reversedStacks
-          awareness documented in comment
-  verdict: REJECTED
+        comment: HTML export for interactive web use, shared tooltip, fillOpacity,
+          marker disabled, CDN multi-provider fallback — uses Highcharts-specific
+          capabilities
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
-  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
+  - cumulative-sum
   - time-series
   styling:
   - alpha-blending
