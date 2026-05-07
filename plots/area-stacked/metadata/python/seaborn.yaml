@@ -1,165 +1,187 @@
 library: seaborn
+language: python
 specification_id: area-stacked
 created: '2025-12-25T17:39:22Z'
-updated: '2025-12-25T17:41:36Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20508665867
+updated: '2026-05-07T15:29:05Z'
+generated_by: claude-haiku
+workflow_run: 25504312034
 issue: 2022
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-stacked/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  patterns:
-  - data-generation
-  dataprep:
-  - time-series
-  styling:
-  - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 82
 review:
   strengths:
-  - Excellent visual design with harmonious color palette including Python blue as
-    primary color
-  - Clean, readable code following KISS principles with good data generation
-  - Proper title format and comprehensive axis labeling with units
-  - Realistic business scenario with seasonal patterns and growth trend
-  - Good use of date formatting with rotated labels to prevent overlap
+  - Correct plot type with proper stacked area visualization
+  - Theme-adaptive rendering works flawlessly in both light and dark modes
+  - 'Okabe-Ito palette compliance: first series is #009E73, colors follow canonical
+    order'
+  - Clear, descriptive axis labels with units (Consumption GWh)
+  - Realistic data scenario with visible seasonal trends and growth pattern
+  - Legend properly formatted and positioned with no overlap
+  - Balanced layout with appropriate margins and whitespace
   weaknesses:
-  - Does not use distinctive seaborn plot functions - stackplot is a matplotlib function,
-    only seaborn styling is applied
-  - Legend position overlaps with data area - could be moved outside or use upper
-    right
-  - Data series all follow similar sinusoidal patterns - more variety in trends would
-    better demonstrate stacked area features
-  image_description: 'The plot displays a stacked area chart showing monthly revenue
-    by product category over a 2-year period (Feb 2023 to Feb 2025). Four product
-    categories are shown: Electronics (dark blue/Python blue, #306998) at the bottom,
-    Clothing (golden yellow, #FFD43B), Home & Garden (teal/turquoise, #4ECDC4), and
-    Sports (coral/salmon, #FF6B6B) at the top. The Y-axis shows "Revenue (Million
-    $)" ranging from 0 to ~145, and the X-axis shows months with quarterly intervals.
-    A legend titled "Product Category" is positioned in the upper left. The areas
-    show seasonal fluctuations with an overall growth trend. The baseline correctly
-    starts at zero.'
+  - 'Generic aesthetic design: uses library defaults without distinctive customization
+    or design sophistication'
+  - 'Minimal visual refinement: all four spines visible, grid uses default styling
+    rather than subtle customization'
+  - No visual hierarchy or emphasis to enhance data storytelling
+  - Could remove top/right spines for cleaner L-shaped frame
+  - Grid styling is adequate but could be more subtle (e.g., y-axis only, reduced
+    opacity)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white at #FAF8F1, correct for light theme
+      Chrome: Title "area-stacked · seaborn · anyplot.ai" clearly visible in dark text. Axis labels "Month" and "Consumption (GWh)" are descriptive with units. Tick labels (dates and values) are dark and fully readable against the light background. Legend positioned at upper left with "Sector" title and category labels all readable.
+      Data: Five stacked area series in Okabe-Ito colors - green (#009E73) at bottom, followed by orange, blue, pink/reddish-purple, and lighter color at top. All series clearly distinguishable with good contrast. Seasonal trends visible throughout the 24-month period.
+      Legibility verdict: PASS - All text is clearly readable. X-axis date labels are rotated to fit but not overlapping.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black at #1A1A17, correct for dark theme
+      Chrome: Title text is now light-colored and clearly readable against dark background. Axis labels and tick labels are light-colored and readable with no "dark-on-dark" issues. Legend text is light-colored and distinct from background. All chrome elements properly theme-adapted.
+      Data: Stacked area colors are identical to light render - green, orange, blue, pink/purple in the same positions. Data colors remain consistent across themes while chrome (background, text, grid) properly flips between light and dark.
+      Legibility verdict: PASS - All text is clearly readable in dark theme. No dark-on-dark failures observed. Theme adaptation is working correctly.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all clearly
-          readable
+        comment: All text clearly readable in both themes; x-axis labels rotated but
+          not overlapping. Minor deduction because sizes appear to rely on defaults
+          rather than explicit configuration.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements, x-axis labels rotated 45° for clarity
+        comment: No significant overlap. X-axis date labels are rotated and slightly
+          tight but fully readable.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Area fills are clearly visible with good alpha (0.85), distinct boundaries
+        comment: All five stacked areas clearly visible and well-sized. Series boundaries
+          are distinct with good color separation.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Good color contrast between categories, though not a standard colorblind-safe
-          palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout, plot fills most of canvas, slight margin imbalance on
-          right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units "Revenue (Million $)", X-axis labeled "Month"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is colorblind-safe. Good contrast between adjacent
+          series.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Perfect balance: plot fills 50-70% of canvas with balanced margins
+          on all sides. No wasted space or cutoff.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid has alpha=0.3 (good), but legend partially overlaps with data
-          area
+        comment: Y-axis includes units (GWh). X-axis and title are descriptive. Meets
+          standard requirements.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 (Okabe-Ito green). Other series follow canonical
+          order. Light background #FAF8F1, dark background #1A1A17. All text colors
+          theme-correct in both renders.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Looks like a well-configured library default. Okabe-Ito colors are
+          correct but no distinctive design choices or custom palette sophistication.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Grid present but uses default styling. All spines visible (top and
+          right not removed). Adequate but could be more refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Stacked areas naturally show composition and trends over time. Visual
+          hierarchy exists through area sizes, but could be enhanced with emphasis
+          or annotations.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct stacked area chart
+        comment: Correct stacked area chart type as specified.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on X-axis, revenue values stacked on Y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has legend, distinct colors, baseline at zero, series ordered by
-          size
-      - id: SC-04
-        name: Data Range
+        comment: 'All required features present: multiple stacked series, time axis,
+          composition visualization, legend.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, Y-axis starts at 0
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis correctly shows time periods (24 months). Y-axis shows cumulative
+          values. All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels match data series accurately
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format "area-stacked · seaborn · pyplots.ai"
+        comment: 'Title format correct: ''area-stacked · seaborn · anyplot.ai''. Legend
+          labels clear and match data.'
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows seasonal variation and growth trend, but all series follow
-          similar patterns
+        comment: Shows seasonal trends, growth pattern, and varying contribution sizes
+          across sectors. Good coverage of stacked area features.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly revenue by product category is a real, comprehensible business
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Revenue values in millions are realistic for a retail business
+        comment: Energy sector consumption by source is a realistic, neutral scenario.
+          Plausible values and proportions.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: GWh scale is appropriate for energy data. Proportions are realistic
+          and factually sound.
     code_quality:
       score: 10
       max: 10
@@ -169,40 +191,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: 'Clean structure: imports → data generation → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic output across runs.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'Only necessary imports: matplotlib, numpy, pandas, seaborn.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic code with appropriate complexity. No over-engineering
+          or fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct output files generated (plot-light.png and plot-dark.png).
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses seaborn's sns.set_theme() for styling. Appropriate use of matplotlib's
+          stackplot for missing seaborn API. Correct but not leveraging advanced seaborn
+          patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
         max: 5
         passed: false
-        comment: Only uses sns.set_theme() for styling; stackplot is from matplotlib,
-          not a seaborn function
+        comment: Generic usage of seaborn styling and matplotlib plotting. Could leverage
+          more seaborn-specific features or customization.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

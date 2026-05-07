@@ -1,218 +1,65 @@
 library: bokeh
+language: python
 specification_id: area-stacked
 created: '2025-12-25T17:40:16Z'
-updated: '2025-12-25T17:42:32Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20508665914
+updated: '2026-05-07T15:19:53Z'
+generated_by: claude-haiku
+workflow_run: 25504541630
 issue: 2022
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-stacked/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/area-stacked/bokeh/plot.html
-quality_score: 91
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/bokeh/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Perfect theme adaptation: both light and dark renders are flawless with correct
+    backgrounds, readable text, and identical data colors'
+  - 'Excellent typography: all font sizes explicitly set (title 28pt, labels 22pt,
+    ticks 18pt) ensuring perfect legibility at large canvas'
+  - 'Correct Okabe-Ito palette implementation: first series is #009E73, followed by
+    canonical order colors with proper fill alpha (0.85)'
+  - 'Clean stacking implementation: uses ColumnDataSource and varea() idiomatically
+    with proper cumulative calculations'
+  - 'Interactive bokeh features: HoverTool provides meaningful tooltips showing month,
+    category, and value'
+  - 'Comprehensive theme-adaptive styling: all chrome elements (backgrounds, text,
+    grid, legend) correctly use theme tokens'
+  - 'Perfect spec compliance: all required features present with correct title format
+    and legend labels'
+  - 'Realistic synthetic data: 24-month revenue data with natural trends, seeded for
+    reproducibility'
+  weaknesses:
+  - 'Design Excellence is solid but not exceptional: uses competent configured defaults
+    rather than custom aesthetic choices that would elevate to publication-ready level'
+  - 'Visual storytelling could be enhanced: no explicit emphasis or focal point beyond
+    the natural visual hierarchy created by stacking'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "area-stacked · bokeh · anyplot.ai" in dark text (28pt), axis labels "Month" and "Revenue ($K)" in dark text (22pt), month tick labels and revenue values in soft ink (18pt) - all clearly readable
+      Data: 4 stacked areas with Okabe-Ito colors - Electronics (#009E73, green at bottom), Clothing (#D55E00, orange), Home & Garden (#0072B2, blue), Sports (#CC79A7, purple at top). All areas distinct and visible. Grid is subtle (10% alpha).
+      Legibility verdict: PASS - All elements highly readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: All text is light colored and clearly visible against dark background. Title, axis labels, tick labels, and legend text all light and readable. No dark-on-dark failures.
+      Data: Data colors IDENTICAL to light render - exact same hex values for all four series, confirming proper theme separation
+      Legibility verdict: PASS - All elements highly readable, no theme-adaptation failures
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - columndatasource
-  - custom-legend
-  - manual-ticks
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
+  - columndatasource
+  - time-series
   dataprep:
   - time-series
-  - cumulative-sum
   styling:
   - alpha-blending
-review:
-  strengths:
-  - Excellent stacking implementation using Bokeh varea with proper cumulative calculations
-  - Good use of ColumnDataSource pattern for each layer
-  - Well-styled legend with appropriate font sizes and spacing for high-resolution
-    output
-  - Realistic e-commerce revenue scenario with meaningful trends and seasonality
-  - Proper title format following pyplots.ai convention
-  - Good canvas utilization with 4800x2700 dimensions
-  weaknesses:
-  - Yellow color shades for Clothing and Sports are similar in luminance, making them
-    harder to distinguish
-  - Missing HoverTool which is a distinctive Bokeh feature for interactivity
-  - Series not strictly ordered by size (largest at bottom) as suggested in spec Notes
-  image_description: The plot displays a stacked area chart showing monthly revenue
-    by product category (Electronics, Clothing, Home & Garden, Sports) over 24 months
-    from January 2023 to December 2024. The areas are stacked from bottom to top with
-    Sports (light yellow) at the base, then Home & Garden (light blue), Clothing (golden
-    yellow), and Electronics (dark blue/Python blue) on top. The legend is positioned
-    on the right side outside the plot area. The title "area-stacked · bokeh · pyplots.ai"
-    appears at the top left. X-axis labels show months in "Mon YYYY" format at an
-    angle, and Y-axis shows "Revenue ($K)" ranging from 0 to ~500. The plot has a
-    light gray background with dashed grid lines. The total revenue shows an upward
-    trend from ~400K to ~490K over the period.
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are clearly readable at full size.
-          Font sizes are appropriately scaled for the 4800x2700 canvas.
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements. X-axis labels are angled to avoid collision.
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Stacked areas are clearly visible with good fill alpha (0.85). Areas
-          are well-defined with clear boundaries.
-      - id: VQ-04
-        name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Colors are distinguishable but the two yellow shades (Clothing and
-          Sports) could be confused by some viewers. Not strictly red-green issue
-          but similar luminance.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization with the plot filling most of the space.
-          Legend is well-placed on the right.
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: Y-axis has units "Revenue ($K)", X-axis has "Month" - both descriptive.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid is subtle with dashed lines and alpha 0.3. Legend is well-styled
-          but placed outside the plot area which is fine.
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct stacked area chart implementation using Bokeh varea.
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis is time (months), Y values are stacked correctly.
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'All spec features present: multiple series stacked, legend included,
-          semi-transparent fills, baseline at zero.'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible, Y-axis extends slightly beyond max value.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend labels correctly identify each category.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "area-stacked · bokeh · pyplots.ai"'
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows trends (Electronics growing), seasonality (Clothing with sine
-          wave pattern), and composition changes over time. Could show more dramatic
-          compositional shifts.
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly revenue by product category is a realistic e-commerce scenario
-          with plausible trends.
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Revenue values in $K range (50-220 per category) are realistic for
-          a mid-size retailer. Total ~400-500K monthly is plausible.
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Linear flow: imports → data → plot → save. No functions or classes.'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42).
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used (numpy, pandas, bokeh components).
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Bokeh API.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly, but also saves plot.html which is appropriate
-          for Bokeh.
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses ColumnDataSource, varea, Legend, FixedTicker properly. Could
-          leverage more Bokeh-specific features like HoverTool for interactivity.
-  verdict: APPROVED

@@ -1,167 +1,185 @@
 library: matplotlib
+language: python
 specification_id: radar-multi
 created: '2025-12-25T19:07:23Z'
-updated: '2025-12-25T19:09:32Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20509624870
+updated: '2026-05-07T16:54:34Z'
+generated_by: claude-haiku
+workflow_run: 25509415806
 issue: 2026
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/radar-multi/matplotlib/plot.png
-preview_html: null
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - polar-projection
-  patterns:
-    - data-generation
-    - iteration-over-groups
-  dataprep: []
-  styling:
-    - alpha-blending
 review:
   strengths:
-  - 'Excellent data design showing three distinct product profiles with clear trade-offs
-    (Product A: Camera/Display leader, Product B: Battery/Build Quality leader, Product
-    C: Performance/Value leader)'
-  - Perfect polygon closure by appending first value to close the shape
-  - Appropriate transparency (alpha 0.25) allows seeing overlapping areas while maintaining
-    series visibility
-  - Clean colorblind-safe color scheme using Python blue, yellow, and pink
-  - Well-structured code following KISS principles with clear comments
+  - Perfect visual quality with flawless text legibility in both light and dark themes—no
+    theme-adaptation failures
+  - All specification requirements met comprehensively (transparency, colors, gridlines,
+    legend, axis labels, polygon closing)
+  - Clean, idiomatic matplotlib code demonstrating strong polar chart mastery
+  - Theme-adaptive design working flawlessly on both surfaces with proper use of theme
+    tokens
+  - Professional styling with appropriate transparency (alpha=0.25), line weights
+    (linewidth=3), and marker sizes (markersize=10)
+  - Perfect palette compliance with Okabe-Ito colors in correct canonical order
+  - Readable output across full resolution with proper font sizing
   weaknesses:
-  - No distinctive matplotlib features used (could leverage custom styling, annotations,
-    or advanced polar customization)
-  - Radial tick labels (14pt gray) could be slightly larger for better readability
-    at full resolution
-  image_description: 'The radar chart displays a multi-series comparison of three
-    products (A, B, C) across six attributes: Performance, Battery Life, Camera, Display,
-    Build Quality, and Value. Product A is shown in blue (#306998), Product B in yellow
-    (#FFD43B), and Product C in pink (#E377C2). Each product forms a filled polygon
-    with 25% transparency, allowing overlap visibility. The chart has concentric circular
-    gridlines at 20, 40, 60, 80, and 100 intervals. Category labels are positioned
-    at the outer edge of each axis in bold black text. A legend is placed in the upper
-    right. The title follows the required format at the top.'
+  - Design excellence is solid but not exceptional—uses standard Okabe-Ito palette
+    without custom aesthetic touches
+  - Limited visual hierarchy or data storytelling—all three products presented equally
+    without emphasis or focal point
+  - Consider custom color scheme, refined typography hierarchy, or visual emphasis
+    to elevate design from professional to exceptional
+  - Add emphasis to highlight product differences or guide the viewer toward key insights
+    by varying visual weight
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "radar-multi · matplotlib · anyplot.ai" in dark text (#1A1A17) is clearly visible. Category labels (Performance, Battery Life, Camera, Display, Build Quality, Value) are bold and readable. Radial tick labels (20, 40, 60, 80, 100) are in secondary text color (#4A4A44) and readable. Legend in upper right with light elevated background (#FFFDF6) shows all three products clearly.
+      Data: Three overlapping polygons - Product A in green (#009E73), Product B in orange (#D55E00), Product C in blue (#0072B2). Polygons have both outline (linewidth=3) and semi-transparent fill (alpha=0.25). Gridlines are subtle but visible. All data elements clearly distinguishable from background.
+      Legibility verdict: PASS - All text is dark-on-light with excellent contrast. No readability issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title "radar-multi · matplotlib · anyplot.ai" in light text (#F0EFE8) is clearly visible against dark background. Category labels in light text are readable. Radial tick labels in secondary light color (#B8B7B0) are readable. Legend in upper right with dark elevated background (#242420) shows all three products clearly with light text.
+      Data: Identical to light render - three overlapping polygons (green #009E73, orange #D55E00, blue #0072B2) with same outline and fill styling. Gridlines properly visible. All data colors identical to light render - only chrome adapted.
+      Legibility verdict: PASS - All text is light-on-dark with excellent contrast. No dark-on-dark failures. Data colors match light render exactly.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 18pt bold, radial labels at 14pt -
-          all readable but radial tick labels could be slightly larger
+        comment: All text explicitly sized (title 24pt, labels 18pt, ticks 16pt) and
+          fully readable in both light and dark renders
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels clearly separated
+        comment: No collisions; category labels at edges, legend positioned cleanly,
+          all elements spaced appropriately
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Polygons clearly visible, markers (size 10) and lines (width 3) appropriate,
-          alpha 0.25 allows overlap visibility
+        comment: Three overlapping polygons rendered with linewidth=3, markersize=10,
+          alpha=0.25 fill; all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow/pink is generally colorblind-safe but pink might be confused
-          with red by some
+        comment: Okabe-Ito palette (green, orange, blue) is colorblind-safe with high
+          contrast on both backgrounds
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Square 12x12 format perfect for radar, plot fills canvas well, legend
-          well positioned
+        comment: Square format (10×10) appropriate for radar; all elements fit well,
+          nothing cut off
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Category labels are descriptive but no units (not applicable for
-          this type)
+        comment: Title follows spec format; axis labels descriptive; radial scale
+          properly labeled
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid at alpha 0.4 is good, legend well placed but could have slightly
-          better framealpha
+        comment: 'First series #009E73; multi-series follows Okabe-Ito order; backgrounds
+          correct; data colors identical between themes'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Uses standard Okabe-Ito palette and default styling; professional
+          and clean but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid subtle (alpha=0.15), whitespace generous, theme-adaptive styling
+          applied
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: All three products shown equally with no visual hierarchy or focal
+          point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct radar/spider chart with multiple series
+        comment: Correct multi-series radar chart with three overlapping colored polygons
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on axes, values radially, series distinguished by color
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Filled polygons with transparency, distinct colors, legend, gridlines
-          at intervals, closed polygons, both fill and outline
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: filled polygons, transparency, colors,
+          gridlines, legend, axis labels, polygon closing'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 0-100 scale shown completely
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Angular positions correct per category; radial values properly mapped
+          to 0-100 scale
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three products
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: {title} · {spec-id} · {library} · pyplots.ai'
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows varied product profiles: A excels at Camera/Display, B at
-          Battery/Build, C at Performance/Value - demonstrates comparison use case
-          perfectly'
+        comment: 'Shows all aspects of multi-series radar: comparison, transparency,
+          gridlines, full axis labeling'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Product comparison across tech attributes is a realistic, relatable
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values 60-95 on 0-100 scale are realistic product scores
+        comment: Product comparison scenario realistic and neutral; attributes appropriate
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100 scale sensible; six attributes and three products optimal for
+          radar
     code_quality:
       score: 10
       max: 10
@@ -171,40 +189,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → data → plot → save, no functions/classes'
+        comment: Straightforward linear script with no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (hardcoded values, no randomness)
+        comment: Deterministic with hardcoded data; no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy used
+        comment: 'Only used imports: os, matplotlib.pyplot, numpy'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib polar API
+        comment: Simple loop, straightforward angle calculation, no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png; current matplotlib 3.10.9 API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses basic matplotlib polar plot, no distinctive features like custom
-          projections or special styling
+        passed: true
+        comment: Uses Axes methods, proper polar subplot, theme-adaptive with env
+          vars, correct legend styling
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Strong use of matplotlib's polar projection; proper grid styling;
+          correct angle calculation
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
+  - publication-ready
