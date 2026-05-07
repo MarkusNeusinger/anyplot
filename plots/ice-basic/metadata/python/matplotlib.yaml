@@ -1,0 +1,265 @@
+library: matplotlib
+language: python
+specification_id: ice-basic
+created: '2026-05-07T16:47:13Z'
+updated: '2026-05-07T17:04:10Z'
+generated_by: claude-sonnet
+workflow_run: 25509381538
+issue: 5238
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Correct Okabe-Ito palette: #009E73 for ICE lines, #D55E00 for PDP — canonical
+    order followed'
+  - Both light (#FAF8F1) and dark (#1A1A17) themes fully implemented with all chrome
+    tokens (INK, INK_SOFT, INK_MUTED) applied to every element
+  - All font sizes explicitly set (title=24, labels=20, ticks=16) — reads well at
+    4800x2700px
+  - Rug plot adds distributional context without cluttering the visualization
+  - alpha=0.14 on 120 ICE lines creates an effective density band that intuitively
+    shows heterogeneous effects
+  - Dollar FuncFormatter on y-axis is professional and informative
+  - Custom Line2D legend handles are idiomatic matplotlib
+  - 'Spec features fully covered: individual ICE lines, PDP overlay, rug plot, realistic
+    GradientBoostingRegressor scenario'
+  - 'KISS code structure: no functions/classes, deterministic seed in both np.random.seed
+    and model random_state'
+  weaknesses:
+  - 'DE-01 (5/8): The alpha-density ICE visualization is well-executed but stops short
+    of FiveThirtyEight-level polish — no subtitle or annotation calling out the key
+    insight (e.g. spread widens past 2500 sqft)'
+  - 'DE-02 (4/6): Grid alpha=0.10 is correct but rug_y uses ax.get_ylim()[0] before
+    final layout, which could misplace the rug if tight_layout shifts limits; no explicit
+    tick removal to further reduce chrome'
+  - 'DE-03 (4/6): Visual hierarchy is clear (bold orange PDP vs subtle green ICE)
+    but no focal annotation highlights where individual curves diverge from the average
+    — viewer must discover the story themselves'
+  - 'LM-02 (3/5): FuncFormatter and Line2D handles are idiomatic matplotlib but are
+    common techniques; no use of more distinctive matplotlib features (e.g. fill_between
+    for confidence band, axline for reference)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "House Price by Square Footage · ice-basic · matplotlib · anyplot.ai" in dark ink, clearly readable. X-axis label "Square Footage (sqft)" and Y-axis label "Predicted House Price ($)" in dark ink. Tick labels formatted as dollar amounts ($100,000–$600,000) in dark soft ink. All text readable against light background.
+      Data: 120 semi-transparent teal/green (#009E73) ICE lines with alpha=0.14 creating a density band from bottom-left to top-right. Bold orange (#D55E00) PDP line overlaid prominently. Rug plot of | markers along the x-axis baseline in muted ink. Legend in upper-left with elevated background frame.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title, axis labels, and tick labels all render in light off-white colors (#F0EFE8 / #B8B7B0), clearly visible against the dark background. No dark-on-dark failures detected. Legend frame uses elevated dark background (#242420) with light text. Grid lines subtle.
+      Data: ICE lines remain #009E73 (identical to light render), PDP line remains #D55E00 — only chrome flipped, data colors unchanged. Rug plot markers render in muted light ink. All data elements clearly distinguishable from the dark background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16. Both
+          themes fully readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions. Legend in upper-left does not overlap data in
+          the main trend area.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: alpha=0.14 on 120 ICE lines creates effective density bands. PDP
+          line at linewidth=3.5 is prominently visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green (#009E73) and orange (#D55E00) Okabe-Ito pair — CVD-safe, good
+          luminance contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas well-utilized. Balanced margins, tight_layout applied.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Square Footage (sqft)'', Y: ''Predicted House Price ($)'' —
+          descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (ICE), second #D55E00 (PDP). Backgrounds #FAF8F1/#1A1A17.
+          All chrome theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured defaults: alpha-density ICE effect is professionally
+          crafted, dollar formatting adds polish, rug plot adds informational layer.
+          Not yet FiveThirtyEight-level — no callout annotation on key insight.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Top/right spines removed, grid alpha=0.10 (very subtle), dollar
+          FuncFormatter, styled legend frame. Small issue: rug_y computed pre-tight_layout
+          which could misplace it.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: bold orange PDP dominates, subtle green
+          ICE lines form contextual background. Rug plot shows feature distribution.
+          Missing: focal annotation on where heterogeneity is most pronounced.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct ICE plot with individual prediction curves per observation.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Individual semi-transparent lines (alpha=0.14), PDP overlay (bold
+          opaque), rug plot — all spec features present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: sqft_grid (feature_value), Y: ice_matrix rows (prediction), observation
+          loop (observation_id). Correct.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title includes spec-id/library/anyplot.ai watermark. Legend labels:
+          ''Individual ICE lines (n=120)'' and ''Partial dependence (average)''.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Full ICE coverage: heterogeneous individual effects, average PDP
+          trend, feature distribution via rug. 120 obs × 70 grid points.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: GradientBoostingRegressor on synthetic housing data — real-world
+          ML interpretability scenario, neutral topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: House prices $100K–$650K, sqft 800–3500, price per sqft ~$180 — all
+          realistic proportions.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports → tokens → data → model → ICE → plot → save. No
+          functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) and model random_state=42 both set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All 5 imports (os, matplotlib.pyplot, numpy, Line2D, GradientBoostingRegressor)
+          are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code. Loop for ICE matrix is appropriate. No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png with dpi=300 and facecolor. Current matplotlib
+          API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ax. methods throughout, FuncFormatter, Line2D custom legend, plt.setp()
+          for text styling — idiomatic but misses fill_between or axline for extra
+          sophistication.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: FuncFormatter for dollar formatting and Line2D custom handles are
+          matplotlib-specific. Recognized techniques but not exceptionally distinctive.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - custom-legend
+  - rug-plot
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
