@@ -29,7 +29,8 @@ docs/
 ├── contributing.md       # How to contribute
 ├── development.md        # Local development setup
 ├── concepts/             # Philosophy and design
-│   └── vision.md         # Product vision and mission
+│   ├── vision.md         # Product vision and mission
+│   └── library-expansion.md  # Roadmap for multi-language gallery expansion
 ├── workflows/            # Process documentation
 │   └── overview.md       # GitHub Actions automation
 └── reference/            # Technical details
@@ -51,6 +52,7 @@ docs/
 High-level understanding of why things work the way they do.
 
 - **[Vision](concepts/vision.md)** - Product mission, the problem we solve, and how we're different
+- **[Library Expansion Roadmap](concepts/library-expansion.md)** - Multi-language gallery expansion plan and licensing policy
 
 ---
 
