@@ -1,0 +1,246 @@
+library: plotnine
+language: python
+specification_id: spiral-timeseries
+created: '2026-05-07T15:37:23Z'
+updated: '2026-05-07T15:49:51Z'
+generated_by: claude-sonnet
+workflow_run: 25505263150
+issue: 5243
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - Archimedean spiral implemented correctly with outward expansion, earliest data
+    at center
+  - 'Full spec compliance: viridis colormap, radial month grid lines, year labels,
+    colorbar'
+  - Perfect theme adaptation — both light (#FAF8F1) and dark (#1A1A17) renders pass
+    readability checks
+  - All default chart chrome removed; only custom radial grid lines remain — very
+    clean look
+  - Correct continuous colormap (viridis) for temperature encoding
+  - Reproducible with np.random.seed(42); realistic Northern Hemisphere temperature
+    dataset
+  weaknesses:
+  - Month and year label sizes (5.5pt / 5pt) are slightly small for a 3600×3600px
+    canvas — could be 7-8pt for better legibility at full resolution
+  - Uses geom_point (dots) rather than a connected geom_path/geom_line, resulting
+    in a dotted spiral instead of a smooth curve
+  - Spiral is visually off-center (shifted left) because year labels are placed at
+    x=-0.35 without compensating the plot margin
+  - Design Excellence is competent but not exceptional — no focal point emphasis or
+    trend annotation beyond the basic spiral form
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "spiral-timeseries · plotnine · anyplot.ai" dark-on-light, clearly readable (24pt). Month labels (Jan–Dec) in muted gray around perimeter, readable. Year labels (2019–2023) in lighter gray left of 12 o'clock, readable. Legend "Temp (°C)" with INK title and INK_SOFT values — readable.
+      Data: Five concentric spiral rings expanding outward, colored with viridis (dark purple = cold ~0°C winters, yellow-green = hot ~28°C summers). First data series 2019 at center, 2023 at outermost ring. Radial month grid lines at 12 positions, subtle gray alpha=0.35.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title light-colored on dark background, readable. Month labels render in lighter gray (INK_SOFT = #B8B7B0 in dark theme), clearly visible. Year labels in medium gray (INK_MUTED = #A8A79F), readable. Legend background slightly elevated (#242420), text in correct light tones.
+      Data: Identical viridis colors to light render — data colors unchanged between themes, only chrome adapts. Same spiral pattern, same colorbar range 0–30°C.
+      Legibility verdict: PASS — no dark-on-dark failures. All text uses INK/INK_SOFT/INK_MUTED tokens correctly.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title 24pt readable; month/year labels at 5.5pt/5pt slightly small
+          for 3600x3600px canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean layout; minor crowding near Jan/Dec at top where spiral and
+          labels approach each other
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Data points at size=2.8 clearly visible; innermost 2019 spiral slightly
+          small but distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis is CVD-safe perceptually uniform; no red-green sole-signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 12x12in @300dpi = 3600x3600px (correct square format); spiral slightly
+          left of center due to year labels
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches required format; axis labels correctly hidden for polar
+          spiral
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis for continuous temperature data (correct); backgrounds #FAF8F1/#1A1A17
+          correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Elegant spiral form with viridis; clean, professional execution above
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All standard chrome removed; custom radial grid; elevated legend
+          background
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Spiral form itself is the storytelling device; seasonal cycles clearly
+          visible; year alignment is the insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Archimedean spiral time series
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: color encoding, radial grid, cycle labels,
+          outward expansion, colorbar'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 5 years daily temperature, correct cycle mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; Temp (°C) colorbar present
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows seasonality, multi-year trend, periodic alignment — all key
+          spiral-timeseries features
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Northern Hemisphere daily temperatures ~0-30°C with seasonal sinusoidal
+          pattern, realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1825 data points (5 years × 365 days), temperature 0-30°C range,
+          plausible warming trend
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; linear flat structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, systematic data generation; proper sys.path guard
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png correctly
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Idiomatic ggplot grammar: coord_fixed, scale_color_cmap, inherit_aes=False
+          for auxiliary data'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: coord_fixed, scale_color_cmap, multi-dataset geom layers with inherit_aes=False
+          are plotnine-specific patterns
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - custom-colormap
+  - alpha-blending
