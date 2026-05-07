@@ -6,7 +6,7 @@ title: Horizontal Bar Chart
 
 # Specification tracking
 created: 2025-12-25T08:20:11Z
-updated: null
+updated: 2026-05-07T07:10:05Z
 issue: 1946
 suggested: MarkusNeusinger
 
@@ -22,6 +22,7 @@ tags:
     - general
     - business
   features:
+    - basic
     - horizontal
     - comparison
     - ranking
