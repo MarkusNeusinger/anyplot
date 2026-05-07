@@ -1,0 +1,251 @@
+library: bokeh
+language: python
+specification_id: area-cumulative-flow
+created: '2026-05-07T21:00:07Z'
+updated: '2026-05-07T21:24:35Z'
+generated_by: claude-sonnet
+workflow_run: 25521305394
+issue: 5239
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/bokeh/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Realistic Kanban simulation with Poisson arrivals, stage delays, and throughput
+    rates — data tells a plausible and instructive story
+  - 'Perfect spec compliance: correct stage ordering (Done at bottom, Backlog on top),
+    cumulative monotonic data, DatetimeTickFormatter, styled legend'
+  - 'Idiomatic Bokeh: varea_stack for stacked areas, ColumnDataSource, DatetimeTickFormatter,
+    Legend/LegendItem for fine-grained legend control'
+  - Full theme-adaptive chrome — INK/INK_SOFT tokens applied to title, axis labels,
+    tick labels, grid, legend, and outline in both renders
+  - Subtle boundary lines (1.5 px, alpha=0.40) between stage bands add depth without
+    visual noise
+  weaknesses:
+  - Design lacks storytelling — no annotations marking bottlenecks or throughput milestones,
+    no visual emphasis guiding the viewer to an insight (DE-03=2)
+  - Aesthetic is a well-configured default — no distinctive typographic hierarchy,
+    no deliberate focal point or color emphasis beyond palette compliance (DE-01=4)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) correctly applied to both plot area and border fill — not pure white.
+      Chrome: Title "area-cumulative-flow · bokeh · anyplot.ai" visible at top-left in dark ink (28pt). Y-axis label "Cumulative Items" rotated on left in dark ink (22pt). Y-axis tick labels (0, 50, 100, 150, 200, 250) readable in INK_SOFT. X-axis label "Date" set (22pt) with DatetimeTickFormatter; date tick labels are small but present along the bottom axis. Subtle horizontal grid lines visible at low alpha.
+      Data: Five stacked bands using Okabe-Ito colors. "Done" (#009E73 teal) forms the growing base layer, "Testing" (#D55E00 orange) stacks above, "Development" (#0072B2 blue) above that, "Analysis" (#CC79A7 pink) next, and "Backlog" (#E69F00 gold) at the top. Alpha=0.82 gives depth; 1.5px boundary lines (INK_SOFT, alpha=0.40) delineate each stage transition. CFD diagonal growth pattern correct — early period dominated by Backlog (gold), late period dominated by Done (teal base).
+      Legend: Top-left box with dark elevated background (#FFFDF6), border in INK_SOFT. Items ordered Backlog→Done to match visual stack top-to-bottom. Text readable in INK_SOFT at 18pt.
+      Legibility verdict: PASS — all text readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) applied to plot area and border — not pure black.
+      Chrome: Title in near-white (#F0EFE8), clearly readable on dark background. Y-axis label and tick labels in INK_SOFT (#B8B7B0), providing good contrast against #1A1A17. Legend box uses elevated dark background (#242420) with INK_SOFT border and label text. Subtle grid lines rendered as near-white at alpha=0.10 — appropriately subtle. No dark-on-dark failures observed; all text elements use the correct light-theme tokens.
+      Data: Identical Okabe-Ito data colors as the light render (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00) — only chrome flips between themes. All five bands clearly distinguishable.
+      Legibility verdict: PASS — all text readable against the warm near-black background; no dark-on-dark failure detected.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Sizes explicitly set (28pt title, 22pt axis labels, 18pt ticks, 18pt
+          legend); y-axis labels clearly readable in both themes; x-axis date labels
+          present but small at this canvas scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element overlap; legend positioned without obscuring data
+          bands
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All five stacked bands clearly visible with alpha=0.82; boundary
+          lines subtle but present
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; alpha=0.82 provides good contrast
+          between adjacent bands
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills canvas appropriately for CFD type; diagonal growth shape
+          with empty upper-left is inherent to the chart type, not a layout defect
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: ''Date'', Y-axis: ''Cumulative Items'' — descriptive and
+          appropriate for count data'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First stacker (Done) = #009E73; Okabe-Ito order maintained; backgrounds
+          #FAF8F1/#1A1A17 correct; theme chrome fully adaptive'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured library default with correct palette and alpha; no
+          distinctive typographic hierarchy or bold design statement
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (alpha=0.10), styled legend with padding/spacing, boundary
+          lines add depth; Bokeh outline kept (no spine removal equivalent)
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed without interpretation; no annotations marking bottlenecks,
+          throughput milestones, or insights; viewer must find the story themselves
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct CFD using varea_stack with 5 workflow stages
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Stage ordering correct (Done bottom, Backlog top), cumulative monotonic
+          data, DatetimeTickFormatter, legend, boundary lines
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X-axis: datetime dates; Y-axis: cumulative item counts; stacking
+          correct'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'area-cumulative-flow · bokeh · anyplot.ai' correct; legend
+          shows all 5 stage labels in correct visual order
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 90-day period with 5 stages; shows widening/narrowing bands; Poisson
+          arrivals with stage delays show realistic flow dynamics
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Software delivery Kanban board (Backlog→Analysis→Development→Testing→Done)
+          — neutral, realistic, comprehensible scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: ~3 items/day Poisson rate; stage delays (4-7 days); throughput rates
+          88-97% per stage; ~255 total items over 90 days — all realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports → data generation → plot → save; no classes
+          or functions'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (numpy, pandas, bokeh models, selenium) are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic; varea_stack is the correct idiomatic approach;
+          appropriate complexity for the visualization
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Bokeh API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: varea_stack (native Bokeh stacked area), ColumnDataSource, DatetimeTickFormatter,
+          Legend/LegendItem — all idiomatic Bokeh patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: varea_stack is Bokeh-specific; DatetimeTickFormatter with format
+          strings; custom Legend ordering with LegendItem; interactive HTML output
+          — genuinely Bokeh-distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - cumulative-sum
+  - time-series
+  styling:
+  - alpha-blending
