@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-regression-polynomial: Scatter Plot with Polynomial Regression
-Library: pygal | Python 3.13
-Quality: pending | Created: 2025-12-25
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-07
 """
 
 import os
