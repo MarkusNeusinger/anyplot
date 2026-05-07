@@ -22,7 +22,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read       # required for actions/checkout (not strictly needed here, but cheap)
+  contents: write      # update-branch creates a merge commit on the head ref
   pull-requests: write # required to call PUT /pulls/:num/update-branch
 
 concurrency:
@@ -33,50 +33,59 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - name: Update behind PRs with auto-merge enabled
+      - name: Wait for PR mergeable state to settle
+        # GitHub recomputes `mergeStateStatus` asynchronously after a
+        # push to main. If we list PRs immediately the field can still
+        # be "UNKNOWN" — and the cached head SHA on the PR can lag
+        # behind the actual ref, so update-branch returns "expected
+        # head sha didn't match current head ref." Give GitHub a
+        # moment to settle.
+        run: sleep 30
+
+      - name: Update PRs with auto-merge enabled
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: |
           set -eo pipefail
 
-          # Pull every open PR targeting main that has auto-merge enabled.
-          # `mergeStateStatus` is the field that surfaces "BEHIND" — the
-          # exact state we want to fix. Skip everything else (CLEAN,
-          # BLOCKED for missing reviews, DIRTY for conflicts, etc.).
+          # After a push to main, every open PR with auto-merge is by
+          # definition behind. Don't filter on `mergeStateStatus`:
+          # right after the push it can still be UNKNOWN, and we'd
+          # skip valid candidates. Just iterate every open
+          # auto-merge PR — update-branch is a no-op when the head
+          # is already up-to-date.
           PRS=$(gh pr list \
             --repo "$GH_REPO" \
             --state open \
             --base main \
             --limit 200 \
-            --json number,title,headRefName,mergeStateStatus,autoMergeRequest)
+            --json number,title,headRefName,autoMergeRequest)
 
-          BEHIND=$(echo "$PRS" | jq -c '
-            [ .[] | select(.autoMergeRequest != null and .mergeStateStatus == "BEHIND") ]
+          CANDIDATES=$(echo "$PRS" | jq -c '
+            [ .[] | select(.autoMergeRequest != null) ]
           ')
 
-          COUNT=$(echo "$BEHIND" | jq 'length')
-          echo "::notice::Found $COUNT PR(s) BEHIND with auto-merge enabled"
+          COUNT=$(echo "$CANDIDATES" | jq 'length')
+          echo "::notice::Found $COUNT open PR(s) with auto-merge enabled"
 
           if [[ "$COUNT" -eq 0 ]]; then
             exit 0
           fi
 
-          echo "$BEHIND" | jq -c '.[]' | while read -r pr; do
+          echo "$CANDIDATES" | jq -c '.[]' | while read -r pr; do
             NUM=$(echo "$pr" | jq -r '.number')
             TITLE=$(echo "$pr" | jq -r '.title')
             BRANCH=$(echo "$pr" | jq -r '.headRefName')
             echo "::notice::Updating PR #${NUM} (${BRANCH}): ${TITLE}"
 
-            # update-branch merges the base ref into the head ref; this
-            # is what the "Update branch" button does in the UI.
-            # Failures here (e.g. merge conflict, branch deleted) are
-            # logged as a warning but don't fail the whole workflow —
+            # Capture stderr so the actual GitHub error (conflict,
+            # SHA mismatch, etc.) lands in the workflow log instead
+            # of being swallowed. Failures here don't fail the job —
             # one stuck PR shouldn't block the others.
-            if ! gh api -X PUT \
+            if ! OUT=$(gh api -X PUT \
                 "repos/${GH_REPO}/pulls/${NUM}/update-branch" \
-                -H "Accept: application/vnd.github+json" \
-                --silent 2>&1; then
-              echo "::warning::Could not update PR #${NUM} (likely conflict or stale ref)"
+                -H "Accept: application/vnd.github+json" 2>&1); then
+              echo "::warning::Could not update PR #${NUM}: ${OUT}"
             fi
           done
