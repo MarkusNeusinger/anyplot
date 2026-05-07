@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 shap-waterfall: SHAP Waterfall Plot for Feature Attribution
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 86/100 | Created: 2026-05-07
@@ -16,6 +16,7 @@ if _script_dir in sys.path:
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 
@@ -85,15 +86,31 @@ y_pos = np.arange(n)
 fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-ax.barh(y_pos, bar_widths, left=bar_lefts, color=bar_colors, height=0.55, zorder=3, edgecolor=PAGE_BG, linewidth=0.5)
+# Waterfall bars — dominant feature (top bar, y=n-1) gets thicker edge for focal emphasis
+for i, (yi, left, width, color) in enumerate(zip(y_pos, bar_lefts, bar_widths, bar_colors, strict=False)):
+    is_dominant = i == n - 1
+    ax.barh(
+        yi,
+        width,
+        left=left,
+        color=color,
+        height=0.55,
+        zorder=3,
+        edgecolor=INK_SOFT if is_dominant else PAGE_BG,
+        linewidth=1.5 if is_dominant else 0.5,
+    )
 
-# Dotted connector lines at cumulative junctions between adjacent bars
+# Vertical dotted connector lines at cumulative junctions between adjacent bars
 for j in range(n - 1):
     cx = ends_btt[j]
     ax.plot([cx, cx], [j + 0.30, j + 0.70], color=INK_SOFT, linewidth=1.0, linestyle=":", zorder=2, alpha=0.65)
 
+# Connector dots using seaborn scatterplot — mark the running cumulative total at each junction
+connector_df = pd.DataFrame({"x": ends_btt[:-1], "y": np.arange(n - 1) + 0.5})
+sns.scatterplot(data=connector_df, x="x", y="y", ax=ax, color=INK_SOFT, s=50, zorder=5, alpha=0.75)
+
 # SHAP value labels beside bars
-for yi, left, width, shap in zip(y_pos, bar_lefts, bar_widths, shap_btt):
+for yi, left, width, shap in zip(y_pos, bar_lefts, bar_widths, shap_btt, strict=False):
     label = f"+{shap:.2f}" if shap >= 0 else f"{shap:.2f}"
     if shap >= 0:
         ax.text(
@@ -116,22 +133,26 @@ for yi, left, width, shap in zip(y_pos, bar_lefts, bar_widths, shap_btt):
 ax.axvline(base_value, color=INK_SOFT, linewidth=1.5, linestyle="--", zorder=1, alpha=0.85)
 ax.axvline(final_value, color=INK, linewidth=2.0, linestyle="-", zorder=1, alpha=0.90)
 
-# Annotations for reference lines
-ax.text(base_value, -0.75, f"E[f(x)] = {base_value:.2f}", ha="center", va="center", fontsize=13, color=INK_SOFT)
+# Annotations for reference lines — 15pt for adequate secondary text legibility
+ax.text(base_value, -0.75, f"E[f(x)] = {base_value:.2f}", ha="center", va="center", fontsize=15, color=INK_SOFT)
 ax.text(
     final_value,
     n - 0.5,
     f"f(x) = {final_value:.2f}",
     ha="center",
     va="center",
-    fontsize=13,
+    fontsize=15,
     color=INK,
     fontweight="bold",
 )
 
-# Axes
+# Axes — dominant feature label is bold to create visual focal point
 ax.set_yticks(y_pos)
 ax.set_yticklabels(features_btt, fontsize=16)
+for label_obj in ax.get_yticklabels():
+    if label_obj.get_text() == "Late Payment Count":
+        label_obj.set_fontweight("bold")
+
 ax.tick_params(axis="y", length=0)
 ax.tick_params(axis="x", labelsize=16, colors=INK_SOFT)
 ax.set_xlabel("Model Output  (Default Probability)", fontsize=20, color=INK)
@@ -140,10 +161,8 @@ ax.set_xlabel("Model Output  (Default Probability)", fontsize=20, color=INK)
 ax.xaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK, zorder=0)
 ax.set_axisbelow(True)
 
-# Spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["left"].set_visible(False)
+# Spine removal using seaborn's despine — idiomatic seaborn API
+sns.despine(ax=ax, left=True, top=True, right=True)
 ax.spines["bottom"].set_color(INK_SOFT)
 
 # Legend
