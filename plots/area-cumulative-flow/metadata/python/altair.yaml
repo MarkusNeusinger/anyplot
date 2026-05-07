@@ -1,0 +1,249 @@
+library: altair
+language: python
+specification_id: area-cumulative-flow
+created: '2026-05-07T21:03:30Z'
+updated: '2026-05-07T21:21:48Z'
+generated_by: claude-sonnet
+workflow_run: 25521681842
+issue: 5239
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/altair/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Perfect visual quality: all font sizes explicitly set, clean readable output
+    in both themes with correct theme-adaptive chrome'
+  - 'Exemplary altair usage: alt.Order() for stack control is the idiomatic pattern
+    for CFD stage ordering'
+  - Subtitle explicitly identifies the development bottleneck and quantifies it, elevating
+    storytelling beyond defaults
+  - Data generation models a realistic bottleneck scenario with monotonically non-decreasing
+    cumulative counts and a genuinely widening Development band
+  weaknesses:
+  - View stroke creates a full bounding border (all 4 sides) rather than the preferred
+    L-frame or frameless; boxed legend could be lighter
+  - Development bottleneck band widens but has no visual emphasis distinguishing it
+    from other bands; the story relies entirely on the subtitle rather than visual
+    hierarchy
+  - 'LM-02 opportunity missed: no use of altair''s interactive params, selection filtering,
+    or layered annotations'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "area-cumulative-flow · altair · anyplot.ai" in dark ink (28px), subtitle in smaller dark text, Y-axis label "Cumulative Items" and X-axis label "Date" readable, tick labels (Feb 2024, Mar 2024 on x; 0-110 on y) clearly readable
+      Data: Five stacked area bands bottom-to-top: Done=#009E73 (green), Testing=#D55E00 (orange), Development=#0072B2 (blue), Analysis=#CC79A7 (pink), Backlog=#E69F00 (amber); monotone curves; widening Development band visible
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and subtitle in near-white light ink, Y-axis and X-axis labels in light text, all tick labels light-colored and readable against dark surface; legend box fills with #242420 elevated dark background; no dark-on-dark failures
+      Data: Identical Okabe-Ito colors to light render — Done=#009E73, Testing=#D55E00, Development=#0072B2, Analysis=#CC79A7, Backlog=#E69F00; data colors unchanged between themes
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title 28px, axis labels 22px, tick labels 18px, legend 16px; all
+          explicitly set and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: X-axis has only 2 date labels, Y-axis ticks well-spaced, legend does
+          not overlap data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All five area bands clearly distinguishable, monotone interpolation
+          produces clean curves
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; adjacent bands have sufficient luminance
+          contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills canvas well, balanced margins, legend well-positioned
+          top-left
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Cumulative Items and Date are descriptive labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Done=#009E73; canonical Okabe-Ito order; backgrounds
+          #FAF8F1/#1A1A17; data colors identical in both renders; theme chrome correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured implementation using correct palette and clean typography;
+          polished but not publication-exceptional; no creative focal-point emphasis
+          on bottleneck band
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid at 10% opacity is subtle; view stroke adds full border around
+          plot (not preferred L-frame); boxed legend is slightly heavy
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle explicitly identifies development bottleneck and quantifies
+          it; data designed to show widening Development band; no visual emphasis
+          directly on Development stage
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stacked area chart / cumulative flow diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Five workflow stages in correct order, legend present, date axis
+          labels, monotonically non-decreasing values
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=date, Y=cumulative items, all stages visible across full 90-day
+          range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title area-cumulative-flow · altair · anyplot.ai matches required
+          format; legend labeled Workflow Stage with all 5 stages
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows widening Development band (bottleneck), varying stage widths,
+          all 5 Kanban stages, monotonic growth; fully illustrates CFD dynamics
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Software delivery Kanban board with standard stage names, 90-day
+          sprint, realistic throughput
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Poisson-distributed daily completions lambda=0.75, cumulative totals
+          reaching ~110 items over 90 days, WIP per stage 4-18 items
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports -> theme tokens -> data generation -> plot -> save;
+          no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, sys, altair, numpy, pandas all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; cumulative array construction appropriately
+          detailed for the CFD domain
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with scale_factor=3.0;
+          current altair 6.x API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Exemplary grammar of graphics: mark_area with full encoding, alt.Order()
+          for stack control, alt.Axis with format and tickCount, configure_* chain
+          for theme adaptation'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: alt.Order for explicit stack ordering is distinctively altair; interpolate=monotone
+          in mark_area; temporal encoding with date formatting — solid but not exceptional
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  - time-series
+  styling:
+  - grid-styling

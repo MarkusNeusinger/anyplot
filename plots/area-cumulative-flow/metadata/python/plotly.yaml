@@ -1,0 +1,230 @@
+library: plotly
+language: python
+specification_id: area-cumulative-flow
+created: '2026-05-07T20:55:24Z'
+updated: '2026-05-07T21:12:31Z'
+generated_by: claude-sonnet
+workflow_run: 25521305323
+issue: 5239
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/plotly/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Perfect spec compliance — correct CFD implementation with workflow order (Backlog
+    top, Done bottom), monotonic data, and all required features
+  - All font sizes explicitly set per style guide; both themes render correctly with
+    theme-adaptive chrome
+  - Realistic, neutral Kanban board data with plausible proportions and lag between
+    stages
+  - Plotly-native stackgroup with rich hovertemplate and hovermode=x unified for excellent
+    interactivity
+  weaknesses:
+  - 'DE-03 is below potential: bands grow uniformly without highlighting interesting
+    dynamics like widening bottleneck stages — the spec notes this is a key CFD insight'
+  - DE-01 limited by standard Plotly typography; no distinctive visual punch to elevate
+    beyond a well-styled default
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "area-cumulative-flow · plotly · anyplot.ai" in large dark ink, clearly readable. Y-axis label "Cumulative Items" and X-axis label "Date" in dark ink, readable. Tick labels (bi-weekly dates + y-axis counts) in dark secondary ink, readable.
+      Data: Five stacked area fills — Done (#009E73 green, bottom), Testing (#D55E00 orange), Development (#0072B2 blue), Analysis (#CC79A7 pink), Backlog (#E69F00 orange-yellow, top). All fills at 0.80 alpha. Subtle y-axis horizontal grid lines. Legend in upper-left with ELEVATED_BG frame.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light ink (#F0EFE8), clearly readable. Axis labels and tick labels in light secondary ink (#B8B7B0), readable. No dark-on-dark text failures observed. Legend background switches to #242420 (elevated dark), text readable.
+      Data: Colors are identical to light render — Done green, Testing orange, Development blue, Analysis pink, Backlog yellow-orange. Alpha fills consistent.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All sizes explicitly set: title 28px, axis labels 22px, ticks 18px,
+          legend 16px'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Bi-weekly ticks well-spaced, no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Stacked area fills clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito with 0.80 alpha, colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills canvas well, diagonal CFD shape is inherent
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Cumulative Items and Date labels descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order, correct backgrounds both
+          themes'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above configured-default baseline: alpha fills, warm backgrounds,
+          ELEVATED_BG legend, left-aligned title'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis-only subtle grid, legend with border, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Realistic scenario but bands grow uniformly — no visual emphasis
+          on bottleneck dynamics
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct cumulative flow diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: stacking, monotonic data, date axis, legend'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date x-axis, cumulative counts y-axis, workflow order correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match stages
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All CFD aspects shown: monotonic growth, 5 stages, varying band
+          widths, stage lag'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Software team Kanban board, 90 days, neutral business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: ~1.5 items/day, ~145 total, downstream stages lag correctly
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports, tokens, data, plot, save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: go.Scatter with stackgroup, hovertemplate, hovermode=x unified
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: stackgroup stacking, unified hover mode, HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  - time-series
+  styling:
+  - alpha-blending
