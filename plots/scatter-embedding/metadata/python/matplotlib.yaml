@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: scatter-embedding
 created: '2026-05-07T10:25:22Z'
-updated: '2026-05-07T10:31:38Z'
+updated: '2026-05-07T10:40:59Z'
 generated_by: claude-sonnet
 workflow_run: 25489879919
 issue: 5236
@@ -12,44 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-e
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - 'Correct Okabe-Ito palette starting with #009E73 for Finance cluster (first series)'
-  - 'Full theme-adaptive chrome — both light and dark renders pass legibility checks
-    with correct backgrounds (#FAF8F1 / #1A1A17)'
-  - 'Excellent spec compliance: all required features present including centroid annotations,
-    algorithm subtitle in footer, and tick-free axes'
-  - Clean, reproducible code with np.random.seed(42) and TSNE random_state=42
-  - Good use of t-SNE via sklearn.manifold.TSNE with realistic 50-dim data — actual
-    dimensionality reduction rather than fake scatter
-  - Marker edge color set to PAGE_BG for subtle definition without clutter
-  - Footer text with algorithm parameters and data description provides meaningful
-    context
+  - Full Okabe-Ito palette applied correctly in canonical order with Finance first
+    (#009E73)
+  - t-SNE computation is real (sklearn TSNE), not faked — full 50D→2D dimensionality
+    reduction in the plot itself
+  - Centroid annotations with themed ELEVATED_BG boxes greatly aid cluster identification
+  - Theme-adaptive chrome is correct in both renders — INK, INK_SOFT, INK_MUTED tokens
+    used consistently for text, spines, and legend
+  - Algorithm subtitle at bottom ('t-SNE (perplexity=30) · 50-dimensional document
+    embeddings · 7 topic clusters') fulfills spec requirement elegantly
+  - Edge highlighting on scatter markers (edgecolors=PAGE_BG) adds visual separation
+    between overlapping points
   weaknesses:
-  - Centroid annotation font size is 13pt — below the 16pt minimum recommended for
-    4800x2700px canvas; increase to at least 16pt
-  - Legend font size is 15pt — slightly below the 16pt recommendation; increase to
-    16pt
-  - 'Design sophistication (DE-01: 5/8) is solid but not exceptional — could push
-    further with more distinctive typographic choices or visual emphasis on a focal
-    cluster'
-  - No grid lines at all — a very subtle dual-axis grid (alpha=0.08-0.10) would help
-    readers contextualize spatial positions in the embedding
-  - Library Mastery could be elevated by using more distinctively matplotlib capabilities
-    such as PathEffects for annotation halos or mplcursors-style styling
+  - Legend fontsize is 15pt instead of the recommended 16pt for 4800x2700px output
+  - Centroid annotation fontsize 13pt is slightly small — 14-15pt would render better
+    at full resolution
+  - No subtle grid lines — the style guide recommends both-axis grid at low opacity
+    for scatter plots; absence makes the plot feel slightly sparse
+  - 'DE-03: All 7 clusters are treated with equal visual weight; a subtle emphasis
+    technique (slight size boost or annotation callout for one cluster) would strengthen
+    the data story'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "Document Topic Embeddings · scatter-embedding · matplotlib · anyplot.ai" in dark ink at 24pt — fully readable. Axis labels "t-SNE 1" / "t-SNE 2" in dark ink at 20pt — readable. No tick labels (intentionally hidden per spec). Footer text in muted ink at 15pt — readable. Legend with "Topic" title and 7 cluster labels — readable.
-      Data: 7 distinct clusters colored with full Okabe-Ito sequence — Finance (#009E73, teal-green), Healthcare (#D55E00, vermillion-orange), Technology (#0072B2, blue), Sports (#CC79A7, pink), Politics (#E69F00, amber), Science (#56B4E9, sky blue), Entertainment (#F0E442, yellow). Rounded centroid annotation boxes at 13pt — visible but slightly small. Clusters are well-separated with clear boundaries.
-      Legibility verdict: PASS — all text elements are readable against the light background. Minor note: centroid labels at 13pt and legend at 15pt are slightly below the 16pt recommendation for this canvas size.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Document Topic Embeddings · scatter-embedding · matplotlib · anyplot.ai" in dark ink, clearly readable. Axis labels "t-SNE 1" and "t-SNE 2" in dark ink at 20pt, readable. No tick labels (correctly omitted per spec). Left and bottom spines visible in INK_SOFT. Algorithm subtitle at bottom in muted ink, readable.
+      Data: 7 clusters rendered in canonical Okabe-Ito order — Finance (#009E73 green), Healthcare (#D55E00 orange), Technology (#0072B2 blue), Sports (#CC79A7 pink), Politics (#E69F00 yellow-orange), Science (#56B4E9 sky blue), Entertainment (#F0E442 yellow). Markers s=90 with alpha=0.65 and PAGE_BG edge color. Centroid annotation boxes with ELEVATED_BG fill and rounded corners. Legend in lower right with "Topic" title.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title and axis labels render in light ink (#F0EFE8) — fully readable against dark background. Footer text in muted light ink — readable. Legend text in secondary light ink (#B8B7B0) — readable. No dark-on-dark failures detected. Annotation boxes use elevated dark background (#242420) with light border — contrast is correct.
-      Data: All 7 cluster colors are identical to the light render — Okabe-Ito positions 1-7 unchanged as required. Cluster separation and visual structure identical.
-      Legibility verdict: PASS — both title and axis text are light-colored against the dark background. No dark-on-dark failures. Legend text is correctly light-themed.
+      Background: Near-black warm (#1A1A17) — correct, not pure black
+      Chrome: Title renders in light near-white (INK=#F0EFE8), clearly readable against the dark surface. Axis labels in same light ink, readable. Subtitle text in muted light gray (INK_MUTED=#A8A79F), readable. Left and bottom spines in INK_SOFT (#B8B7B0). Legend frame uses ELEVATED_BG (#242420) fill with INK_SOFT border; legend text in INK_SOFT — readable. Centroid annotation boxes use ELEVATED_BG (#242420) with INK text — light text on very dark background, readable.
+      Data: Identical Okabe-Ito data colors to light render — same green Finance, orange Healthcare, blue Technology, pink Sports, yellow-orange Politics, sky-blue Science, yellow Entertainment. Cluster structure matches exactly.
+      Legibility verdict: PASS — no dark-on-dark failures detected; all chrome adapts correctly; brand green #009E73 remains visible
   criteria_checklist:
     visual_quality:
       score: 28
@@ -57,58 +54,55 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title 24pt and axis labels 20pt are explicitly set and readable.
-          Centroid annotations at 13pt and legend at 15pt are slightly below the 16pt
-          recommendation for 4800x2700px canvas.
+        comment: Title 24pt, axes 20pt correct; legend 15pt slightly below recommended
+          16pt; centroid annotations 13pt slightly small for full-res; both themes
+          readable
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All 7 cluster annotations are well-separated. Legend placed in lower
-          right does not overlap any cluster.
+        comment: Clusters well-separated; minor crowding potential in center between
+          Finance and Healthcare but no severe overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 1050 points with s=90, alpha=0.65. Per-cluster density is ~150 points,
-          placing effective density in the 100-300 range. Clusters are clearly visible
-          and distinct in both renders.
+        comment: All 7 clusters clearly visible; Okabe-Ito colors provide strong differentiation;
+          s=90 alpha=0.65 appropriate for density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Full Okabe-Ito palette — peer-reviewed CVD-safe. Good contrast between
-          all 7 cluster colors.
+        comment: Full Okabe-Ito palette is CVD-safe by design; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well. tight_layout(rect=[0, 0.04, 1, 1]) correctly
-          reserves space for footer. No content cut off.
+        comment: 16:9 canvas, tight_layout with rect=[0,0.04,1,1] accommodates subtitle,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: t-SNE 1 / t-SNE 2 are the correct labels for embedding dimensions.
-          No units applicable per spec.
+        comment: t-SNE 1 / t-SNE 2 appropriate for embedding; title descriptive with
+          all required elements
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Finance = #009E73 correct. Full Okabe-Ito sequence
-          maintained. Backgrounds #FAF8F1 (light) / #1A1A17 (dark). All chrome tokens
-          theme-adaptive in both renders.'
+        comment: 'First series Finance=#009E73; canonical Okabe-Ito order; backgrounds
+          #FAF8F1 light and #1A1A17 dark; both renders theme-correct'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -116,26 +110,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean, polished design with rounded annotation boxes and footer.
-          Uses correct palette with intentional marker transparency. Clearly above
-          defaults but not publication-ready FiveThirtyEight level.
+        comment: 'Above default: centroid annotations with styled boxes, font hierarchy
+          across 4 size levels, edge-highlighted markers, algorithm subtitle adds
+          polish'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed. Tick marks fully hidden (appropriate for
-          embedding). Markers have background-colored edges for subtle definition.
-          No grid — works for this plot type but a subtle dual-axis grid could improve
-          spatial orientation.
+        comment: Top/right spines removed, remaining spines colored with INK_SOFT,
+          edge highlighting on markers, appropriate whitespace with tight_layout rect
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Centroid annotations tell the viewer directly what each cluster represents.
-          Color-coded clusters with algorithm context in footer. Good visual hierarchy
-          but no focal point or emphasis on a particularly interesting cluster relationship.
+        comment: Centroid annotations guide viewer to cluster centers; algorithm subtitle
+          provides methodological context; but all clusters treated equally — no focal
+          hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -145,30 +137,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with actual t-SNE dimensionality reduction.
-          Points colored by cluster assignment.
+        comment: Correct scatter plot with real t-SNE dimensionality reduction
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: distinct colorblind-safe colors, legend, centroid
-          annotations, algorithm subtitle (t-SNE perplexity=30), tick-free axes, moderate
-          point size with alpha transparency.'
+        comment: Color by cluster, legend, centroid annotations, no tick labels, algorithm
+          subtitle — all spec requirements met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = t-SNE 1, Y = t-SNE 2. All 7 clusters visible. 1050 points (500-5000
-          range).
+        comment: X=t-SNE 1, Y=t-SNE 2, 7 clusters, 1050 points (150 per topic)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title contains spec-id, library, and anyplot.ai in correct order
-          with descriptive prefix. Legend maps all 7 cluster colors to labels correctly.
+        comment: Title format 'Document Topic Embeddings · scatter-embedding · matplotlib
+          · anyplot.ai' correct; legend labels match 7 cluster names
     data_quality:
       score: 15
       max: 15
@@ -178,24 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 7 distinct clusters with realistic separation. Uses actual t-SNE
-          transformation on 50-dim data. Covers all aspects of embedding visualization.
+        comment: 'Shows all embedding visualization aspects: clusters, separation,
+          centroid labels, appropriate point density'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Document topic clustering (NLP) is a canonical use case for t-SNE.
-          Topics Finance/Healthcare/Technology/Sports/Politics/Science/Entertainment
-          represent a standard news categorization benchmark. Neutral ML demonstration
-          context.
+        comment: Document topic clustering (Finance, Healthcare, Technology, Sports,
+          Politics, Science, Entertainment) — realistic neutral NLP use case
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1050 points (in 500-5000 range), 7 clusters of 150 each, 50-dimensional
-          source data, perplexity=30 — all realistic for document embedding visualization.
+        comment: 1050 points within spec range (500-5000); 50D source space realistic
+          for NLP embeddings
     code_quality:
       score: 10
       max: 10
@@ -205,34 +192,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports → theme tokens → data → plot → save. No
-          functions or classes.'
+        comment: Flat linear code, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) and TSNE(random_state=42) both set.
+        comment: np.random.seed(42) and random_state=42 in both make_blobs and TSNE
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
         comment: 'All imports used: os, sys, matplotlib.pyplot, numpy, sklearn.datasets.make_blobs,
-          sklearn.manifold.TSNE.'
+          sklearn.manifold.TSNE'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. zip(..., strict=False) is modern. sys.path.pop(0)
-          is pipeline-specific path handling. No over-engineering.
+        comment: Clean zip iteration over groups; no fake UI; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches=tight, facecolor=PAGE_BG.
+        comment: Saves as plot-{THEME}.png; current matplotlib API
     library_mastery:
       score: 7
       max: 10
@@ -242,31 +227,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses Axes methods (ax.scatter, ax.text, ax.legend), fig.text for
-          figure-level positioning, tight_layout(rect=[...]) for precise space reservation.
-          Legend frame customization with get_frame(). plt.setp() for batch text color
-          setting. Strong but not fully leveraging the library's best patterns.
+        comment: Axes methods used correctly; fig.text for figure-level subtitle;
+          tick_params for tick removal; tight_layout with rect
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: fig.text() with exact normalized coordinates for footer, tight_layout(rect=[0,
-          0.04, 1, 1]) for footer space, bbox dict with boxstyle for rounded annotations.
-          These are matplotlib-specific but standard; doesn't use truly distinctive
-          features like PathEffects, custom transforms, or advanced artists.
-  verdict: REJECTED
+        comment: ax.text with bbox dict for annotation boxes; legend frame customization
+          (facecolor, edgecolor, setp); fig.text with va/ha for subtitle positioning
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - annotations
-  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
-  - dimensionality-reduction
+  - tsne
   styling:
   - alpha-blending
   - edge-highlighting
