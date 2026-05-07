@@ -1,215 +1,227 @@
 library: altair
+language: python
 specification_id: box-notched
 created: '2025-12-25T19:53:11Z'
-updated: '2025-12-25T19:55:29Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510123450
+updated: '2026-05-07T22:57:44Z'
+generated_by: claude-haiku
+workflow_run: 25525940108
 issue: 2019
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/box-notched/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/box-notched/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - layer-composition
-    - html-export
-  patterns:
-    - data-generation
-    - iteration-over-groups
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/altair/plot-dark.html
+quality_score: 82
 review:
   strengths:
-  - Excellent manual implementation of notched box plots since Altair lacks native
-    support
-  - Clean layered construction using mark_bar, mark_tick, mark_rule, and mark_point
-  - Correct notch calculation formula (±1.57 × IQR / √n)
-  - Good use of color scale with Python-branded colors
-  - Proper whisker calculation and outlier detection
-  - Both PNG and HTML outputs generated
+  - Perfect spec compliance with all notched box plot features correctly implemented
+  - Excellent visual quality in both light and dark themes with proper theme-adaptive
+    rendering
+  - Correct Okabe-Ito palette with accurate statistical calculations
+  - Clean, readable layout at large canvas size with no text legibility issues
+  - Realistic, well-chosen synthetic data effectively demonstrating the visualization
   weaknesses:
-  - Sales data contains a value (~110) that exceeds typical 100-point performance
-    score scale
-  - Y-axis extends beyond necessary range (0-120 when data maxes at ~110)
-  image_description: 'The plot displays four notched box plots representing employee
-    performance scores across four departments: Engineering (Python blue #306998),
-    Marketing (yellow #FFD43B), Operations (orange/red #E85C41), and Sales (light
-    blue #4B8BBE). Each box shows the characteristic notched shape around the median,
-    with white median lines visible inside the narrowed notch sections. Whiskers extend
-    from Q1/Q3 to the furthest non-outlier values with horizontal caps. Outliers are
-    displayed as colored circular points matching their department colors - Engineering
-    has one low outlier (~57), Marketing has outliers at both extremes (~35 and ~97-98),
-    Operations has one low outlier (~30), and Sales has one high outlier (~110). The
-    title "box-notched · altair · pyplots.ai" is centered at the top. The Y-axis is
-    labeled "Performance Score" (range 0-120) and the X-axis is labeled "Department".
-    A subtle gray grid with low opacity aids readability.'
+  - Code doesn't read ANYPLOT_THEME environment variable or generate theme-specific
+    output file names (CQ-05 violation)
+  - Code lacks theme-adaptive chrome configuration (background, axis colors, grid
+    colors) in configure methods
+  - Generic styling with no design refinement beyond default colors (DE-01, DE-02
+    low scores)
+  - No use of distinctive Altair features or advanced visualization patterns (LM-02
+    low score)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "box-notched · altair · anyplot.ai", x-axis label "Department", y-axis label "Performance Score" with tick labels 0, 5, ..., 120 all clearly visible in dark text
+      Data: Four departments with Okabe-Ito colors - Engineering (green #009E73), Marketing (orange #D55E00), Operations (purple #CC79A7), Sales (blue #0072B2). All notched boxes, whiskers, and outlier points clearly visible and distinguishable.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Same title and axis labels clearly visible in light text against dark background. No dark-on-dark failures.
+      Data: Data colors identical to light render. Boxes, whiskers, and outliers all clearly distinguishable. Grid remains subtle.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at large
-          font sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, department labels well-spaced
+        comment: All text readable in both themes, font sizes appropriate (title 28px,
+          axes 22px, ticks 18px)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements, clean layout
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Boxes, notches, whiskers, and outliers all clearly visible; slight
-          deduction as some outlier points could be slightly larger
+        comment: All marks clearly visible (boxes, notches, whiskers, outliers)
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, yellow, orange, light blue palette is colorblind-safe with
-          good contrast
+        comment: Okabe-Ito palette is colorblind-safe
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good use of canvas space, though y-axis extends to 120 when data
-          maxes around 110
+        comment: Good proportions, nothing cut off, generous margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no units (Performance Score could have context
-          like "points" or "%" but acceptable for this metric)
+        comment: Descriptive labels for Department and Performance Score
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle and appropriate; no legend but colors differentiate
-          categories adequately
+        comment: 'First series green #009E73, Okabe-Ito order maintained, backgrounds
+          #FAF8F1/#1A1A17'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Generic styling, correct palette but no custom design thought
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization, grid present but spines not removed
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Notches show statistical significance, colors distinguish categories
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct notched box plot implementation
+        comment: Correct notched box plot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Category on X-axis, numeric values on Y-axis as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Notches at 95% CI, median, quartiles, whiskers at 1.5×IQR, outliers
-          shown, different colors per category
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: notches, box, median, whiskers, outliers,
+          colors'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible including outliers
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct x-axis (departments) and y-axis (scores)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed; colors self-explanatory with axis labels
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "box-notched · altair · pyplots.ai"'
+        comment: Title correct, no legend needed (axis labels identify categories)
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows outliers (multiple departments), different medians, varying
-          spreads, non-overlapping notches (Engineering vs Operations)
+        comment: 'All aspects shown: quartiles, median, notches, whiskers, outliers'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Employee performance scores across departments is plausible; slight
-          deduction as Sales has value >100 which is unusual for a score typically
-          capped at 100
+        comment: Employee performance scores, neutral and realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Most values realistic (50-100 range); Sales outlier at ~110 exceeds
-          typical 100-point scale
+        comment: 0-120 scale appropriate for performance metric
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Linear flow but uses loops for data preparation; acceptable given
-          Altair lacks native notched box support
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: No functions/classes, straightforward flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: altair, numpy, pandas'
+        comment: Only altair, numpy, pandas imported
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Correct statistical calculations, no fake UI
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        passed: false
+        comment: Saves to plot.png instead of f'plot-{THEME}.png', doesn't read ANYPLOT_THEME
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Good use of layered marks and declarative encoding, but since Altair
-          lacks native notched box plots, the implementation manually calculates statistics
-          rather than leveraging Altair's built-in statistical transforms
-  verdict: APPROVED
+        comment: Altair layering used appropriately, manual calculation necessary
+          for notches
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: No advanced Altair features, basic layering only
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling: []
