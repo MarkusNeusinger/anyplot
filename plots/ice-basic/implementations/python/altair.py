@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ice-basic: Individual Conditional Expectation (ICE) Plot
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 85/100 | Created: 2026-05-07
@@ -51,26 +51,44 @@ for obs_id in range(n_obs):
     X_ice = np.column_stack([sqft_grid, np.full(grid_size, bedrooms[obs_id]), np.full(grid_size, house_age[obs_id])])
     preds = model.predict(X_ice)
     for sq, pred in zip(sqft_grid, preds, strict=False):
-        records.append({"obs_id": obs_id, "sqft": sq, "price_k": pred / 1000})
+        records.append({"obs_id": obs_id, "sqft": sq, "price_k": pred / 1000, "series": "ICE Curves"})
 
 ice_df = pd.DataFrame(records)
 
 # PDP: mean prediction at each sqft grid point
 pdp_df = ice_df.groupby("sqft", as_index=False)["price_k"].mean()
+pdp_df["series"] = "Partial Dependence"
+
+# Shared color scale for legend
+color_scale = alt.Scale(domain=["ICE Curves", "Partial Dependence"], range=[BRAND, PDP_COLOR])
+color_legend = alt.Legend(title="", labelFontSize=16, symbolSize=250, symbolStrokeWidth=3, orient="top-right")
 
 # ICE individual curves — semi-transparent to show density
 ice_layer = (
     alt.Chart(ice_df)
-    .mark_line(opacity=0.10, strokeWidth=1.5, color=BRAND)
+    .mark_line(opacity=0.10, strokeWidth=1.5)
     .encode(
         x=alt.X("sqft:Q", title="Square Footage (sq ft)"),
         y=alt.Y("price_k:Q", title="Predicted Price ($K)"),
         detail="obs_id:N",
+        color=alt.Color("series:N", scale=color_scale, legend=color_legend),
     )
 )
 
 # PDP overlay — bold opaque curve showing average marginal effect
-pdp_layer = alt.Chart(pdp_df).mark_line(strokeWidth=5, color=PDP_COLOR).encode(x="sqft:Q", y="price_k:Q")
+pdp_layer = (
+    alt.Chart(pdp_df)
+    .mark_line(strokeWidth=5)
+    .encode(x="sqft:Q", y="price_k:Q", color=alt.Color("series:N", scale=color_scale, legend=color_legend))
+)
+
+# PDP annotation — label near the right end of the curve
+pdp_annotation_df = pdp_df.nlargest(15, "sqft").nsmallest(1, "sqft").copy()
+pdp_annotation = (
+    alt.Chart(pdp_annotation_df)
+    .mark_text(align="right", dx=-6, dy=-18, fontSize=16, color=PDP_COLOR, fontWeight="bold")
+    .encode(x="sqft:Q", y="price_k:Q", text=alt.value("Partial Dependence"))
+)
 
 # Rug plot — actual observed sqft values along the x-axis
 rug_df = pd.DataFrame({"sqft": sqft})
@@ -81,14 +99,11 @@ rug_layer = (
 )
 
 chart = (
-    alt.layer(ice_layer, pdp_layer, rug_layer)
+    alt.layer(ice_layer, pdp_layer, pdp_annotation, rug_layer)
     .properties(
-        width=1600,
-        height=900,
-        background=PAGE_BG,
-        title=alt.Title("House Price Predictions · ice-basic · altair · anyplot.ai", fontSize=28),
+        width=1600, height=900, background=PAGE_BG, title=alt.Title("ice-basic · altair · anyplot.ai", fontSize=28)
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_axis(
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
