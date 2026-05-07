@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 box-notched: Notched Box Plot
-Library: matplotlib | Python 3.13
-Quality: pending | Created: 2025-12-21
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-07
 """
 
 import os
