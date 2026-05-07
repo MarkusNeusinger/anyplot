@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-stacked: Stacked Area Chart
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-07
@@ -52,6 +52,7 @@ fig.add_trace(
         fill="tozeroy",
         fillcolor=OKABE_ITO[0],
         stackgroup="one",
+        hovertemplate="<b>Software</b><br>%{x|%b %Y}<br>Revenue: $%{y:,.0f}<extra></extra>",
     )
 )
 
@@ -65,6 +66,7 @@ fig.add_trace(
         fill="tonexty",
         fillcolor=OKABE_ITO[1],
         stackgroup="one",
+        hovertemplate="<b>Services</b><br>%{x|%b %Y}<br>Revenue: $%{y:,.0f}<extra></extra>",
     )
 )
 
@@ -78,6 +80,7 @@ fig.add_trace(
         fill="tonexty",
         fillcolor=OKABE_ITO[2],
         stackgroup="one",
+        hovertemplate="<b>Enterprise</b><br>%{x|%b %Y}<br>Revenue: $%{y:,.0f}<extra></extra>",
     )
 )
 
@@ -91,6 +94,7 @@ fig.add_trace(
         fill="tonexty",
         fillcolor=OKABE_ITO[3],
         stackgroup="one",
+        hovertemplate="<b>Consulting</b><br>%{x|%b %Y}<br>Revenue: $%{y:,.0f}<extra></extra>",
     )
 )
 
@@ -102,7 +106,8 @@ fig.update_layout(
         tickfont=dict(size=18, color=INK_SOFT),
         gridcolor=GRID,
         showgrid=True,
-        linecolor=INK_SOFT,
+        showline=False,
+        zeroline=False,
     ),
     yaxis=dict(
         title=dict(text="Monthly Revenue (USD)", font=dict(size=22, color=INK)),
@@ -110,7 +115,8 @@ fig.update_layout(
         gridcolor=GRID,
         showgrid=True,
         rangemode="tozero",
-        linecolor=INK_SOFT,
+        showline=False,
+        zeroline=False,
     ),
     legend=dict(
         font=dict(size=16, color=INK_SOFT),
