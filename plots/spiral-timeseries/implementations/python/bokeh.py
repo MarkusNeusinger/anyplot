@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spiral-timeseries: Spiral Time Series Chart
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 87/100 | Created: 2026-05-07
@@ -11,15 +11,15 @@ from pathlib import Path
 
 
 # Remove current directory from sys.path to avoid shadowing bokeh module
-if "" in sys.path:
-    sys.path.remove("")
-if "." in sys.path:
-    sys.path.remove(".")
+_impl_dir = str(Path(__file__).parent.resolve())
+for _p in ("", ".", _impl_dir):
+    while _p in sys.path:
+        sys.path.remove(_p)
 
 import numpy as np
 import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColorBar, ColumnDataSource, Label, LinearColorMapper
+from bokeh.models import ColorBar, ColumnDataSource, HoverTool, Label, LinearColorMapper
 from bokeh.palettes import Viridis256
 from bokeh.plotting import figure
 from selenium import webdriver
@@ -63,7 +63,8 @@ y = r * np.sin(phi0 - theta)
 # Segment endpoints + midpoint temperatures for color mapping
 x0, y0, x1, y1 = x[:-1], y[:-1], x[1:], y[1:]
 seg_temp = (temperature[:-1] + temperature[1:]) / 2
-source = ColumnDataSource({"x0": x0, "y0": y0, "x1": x1, "y1": y1, "temp": seg_temp})
+date_strs = dates[:-1].strftime("%Y-%m-%d").tolist()
+source = ColumnDataSource({"x0": x0, "y0": y0, "x1": x1, "y1": y1, "temp": seg_temp, "date": date_strs})
 
 # Color mapper (Viridis for continuous temperature values)
 t_min, t_max = float(temperature.min()), float(temperature.max())
@@ -73,7 +74,7 @@ mapper = LinearColorMapper(palette=Viridis256, low=t_min, high=t_max)
 p = figure(
     width=3600,
     height=3600,
-    title="Daily Temperatures 2019–2023 · spiral-timeseries · bokeh · anyplot.ai",
+    title="spiral-timeseries · bokeh · anyplot.ai",
     toolbar_location=None,
     x_range=(-1200, 1200),
     y_range=(-1200, 1200),
@@ -126,9 +127,14 @@ for yi in range(5):
     )
 
 # Spiral segments colored by temperature
-p.segment(
+seg_renderer = p.segment(
     x0="x0", y0="y0", x1="x1", y1="y1", line_color={"field": "temp", "transform": mapper}, line_width=6, source=source
 )
+
+hover = HoverTool(
+    renderers=[seg_renderer], tooltips=[("Date", "@date"), ("Temperature", "@temp{0.1f} °C")], line_policy="interp"
+)
+p.add_tools(hover)
 
 # Color bar
 color_bar = ColorBar(
@@ -153,6 +159,7 @@ p.outline_line_color = None
 p.title.text_color = INK
 p.title.text_font_size = "28pt"
 p.title.text_font_style = "normal"
+p.title.align = "center"
 p.xaxis.visible = False
 p.yaxis.visible = False
 p.xgrid.grid_line_color = None
@@ -163,7 +170,7 @@ output_file(f"plot-{THEME}.html")
 save(p)
 
 # Screenshot with headless Chrome via Selenium
-W, H = 4000, 3700
+W, H = 3800, 3800
 opts = Options()
 for arg in (
     "--headless=new",
