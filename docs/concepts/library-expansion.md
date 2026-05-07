@@ -16,21 +16,21 @@ priority order.
 
 anyplot currently ships **9 Python libraries** and zero non-Python libraries.
 
-| # | Library    | Native language | In anyplot as | Notes                                            |
-|---|------------|-----------------|---------------|--------------------------------------------------|
-| 1 | Matplotlib | Python          | Python        | True native.                                     |
-| 2 | Seaborn    | Python          | Python        | Built on matplotlib.                             |
-| 3 | Plotly     | JavaScript      | Python        | Python is a wrapper around `plotly.js`.          |
-| 4 | Bokeh      | Python          | Python        | True native.                                     |
-| 5 | Altair     | Python          | Python        | Python interface to Vega-Lite (JSON spec).       |
-| 6 | plotnine   | Python          | Python        | Python port of R's `ggplot2`.                    |
-| 7 | Pygal      | Python          | Python        | True native.                                     |
-| 8 | Highcharts | JavaScript      | Python        | Python is a paid wrapper; native is JS.          |
-| 9 | lets-plot  | Kotlin          | Python        | Kotlin/JVM core; Python is one of the front-ends.|
+| # | Library    | Native     | In anyplot as | Most-used variant | Notes                                       |
+|---|------------|------------|---------------|-------------------|---------------------------------------------|
+| 1 | Matplotlib | Python     | Python        | Python            | Native = most-used.                         |
+| 2 | Seaborn    | Python     | Python        | Python            | Built on matplotlib.                        |
+| 3 | Plotly     | JavaScript | Python        | **Python**        | PyPI ~18 M / wk vs `plotly.js` ~0.8 M / wk. |
+| 4 | Bokeh      | Python     | Python        | Python            | Native = most-used.                         |
+| 5 | Altair     | Python     | Python        | Python            | Python interface to Vega-Lite (JSON spec).  |
+| 6 | plotnine   | Python     | Python        | Python            | Sister library to ggplot2, not a wrapper.   |
+| 7 | Pygal      | Python     | Python        | Python            | Native = most-used.                         |
+| 8 | Highcharts | JavaScript | Python        | **JavaScript**    | npm ~1 M / wk vs `highcharts-core` ~5 k / wk.|
+| 9 | lets-plot  | Kotlin     | Python        | Python            | Python front-end has the most users today.  |
 
-**Implication:** three of the nine entries (Plotly, Highcharts, lets-plot) are
-already non-native bindings. Following the "native / most-used variant only"
-rule strictly would move them to their native languages once those land.
+**Implication:** under the most-used rule (see §6), only **Highcharts** is
+filed under the wrong language and should move to JavaScript. Plotly and
+lets-plot are correctly filed as Python despite not being native.
 
 ---
 
@@ -106,22 +106,30 @@ notable R library is a wrapper for a JS library already in scope.
 
 ## 6. The "cross-language library" rule
 
-Your stated rule: a library that exists in many languages should appear once,
-in its **native or most-used** variant. Apply it concretely:
+A library that exists in many languages appears **exactly once**, under the
+**most-used variant**. "Most-used" is decided quantitatively:
 
-| Library             | Native     | Most-used variant   | Recommended single entry            | Action vs current state                          |
-|---------------------|------------|---------------------|-------------------------------------|--------------------------------------------------|
-| Plotly              | JavaScript | Python (by volume)  | **Both** — JS for web, Python for DS| Keep Python; add `plotly.js` as new JS entry.    |
-| Highcharts          | JavaScript | JavaScript          | **JavaScript only**                 | Replace current Python entry with JS native.     |
-| Vega-Lite           | JSON spec  | Python (Altair)     | **Altair (Python)**                 | Keep as is. Skip a separate Vega entry.          |
-| ggplot2 / plotnine  | R          | R                   | **ggplot2 (R)**, keep plotnine      | plotnine is a port, not a wrapper — both fine.   |
-| lets-plot           | Kotlin     | Python              | **Python** (or add Kotlin later)    | Keep Python; consider Kotlin once JVM matters.   |
-| ECharts             | JavaScript | JavaScript          | **JavaScript only**                 | Add as new JS entry.                             |
-| Chart.js, D3, etc.  | JavaScript | JavaScript          | **JavaScript only**                 | Add as new JS entries.                           |
+> A binding qualifies as the canonical entry if it has **≥ 3× more weekly
+> downloads** than every other variant. Otherwise default to the native
+> implementation.
 
-The two clear "fix the existing entry" decisions: **Highcharts** should move to
-JS, and **Plotly** should *also* gain a JS entry (the Python entry is justified
-by sheer Python-side usage, but the native target is `plotly.js`).
+This avoids subjective per-library debates and makes future calls reproducible.
+
+Applied to every cross-language library in or near scope:
+
+| Library             | Native     | Most-used variant      | Canonical entry           | Action vs current state                          |
+|---------------------|------------|------------------------|---------------------------|--------------------------------------------------|
+| Plotly              | JavaScript | Python (~22× JS)       | **Python**                | Keep as is. No separate JS entry.                |
+| Highcharts          | JavaScript | JavaScript (~200× Py)  | **JavaScript**            | Replace current Python entry with JS.            |
+| Vega-Lite           | JSON spec  | Python (Altair)        | **Altair (Python)**       | Keep as is. Skip a separate Vega entry.          |
+| ggplot2 vs plotnine | R / Python | R for ggplot2          | **Both** (sister libs)    | Add ggplot2 as R entry; keep plotnine in Python. |
+| lets-plot           | Kotlin     | Python                 | **Python**                | Keep as is.                                      |
+| ECharts             | JavaScript | JavaScript             | **JavaScript**            | Add as new JS entry.                             |
+| Chart.js, D3, etc.  | JavaScript | JavaScript             | **JavaScript**            | Add as new JS entries.                           |
+
+Net effect on the existing catalogue: **only Highcharts moves.** Plotly and
+lets-plot stay where they are because their Python variants outweigh the
+native versions by more than the 3× threshold.
 
 ---
 
@@ -143,26 +151,26 @@ Ranked by `reach × ease-of-integration ÷ duplication-risk`.
 4. **ggplot2 (R)** — unlocks the entire R / academic audience; first
    non-Python language so you also validate the multi-language pipeline on a
    non-JS runtime.
-5. **Plotly.js (JavaScript)** — native sibling of the existing Python entry;
-   reuses spec knowledge.
-6. **Highcharts (JavaScript)** — *replaces* the current Python Highcharts
-   entry. Keeps the brand, fixes the "native variant" rule, and the JS API is
-   the canonical one developers search for.
+5. **Highcharts (JavaScript)** — *replaces* the current Python Highcharts
+   entry. The JS variant outweighs the Python wrapper by ~200×, so the
+   most-used rule mandates the move.
 
 ### Tier 3 — opportunistic, ecosystem-specific
 
-7. **Recharts (TypeScript / React)** — captures the React niche, which is
+6. **Recharts (TypeScript / React)** — captures the React niche, which is
    large but framework-locked.
-8. **Observable Plot (JavaScript)** — small but trendy; cheap once D3 is in.
-9. **Makie.jl (Julia)** — first Julia entry once the multi-language pipeline
+7. **Observable Plot (JavaScript)** — small but trendy; cheap once D3 is in.
+8. **Makie.jl (Julia)** — first Julia entry once the multi-language pipeline
    is mature.
-10. **ApexCharts (JavaScript)** — fills the "admin-template / dashboard" SEO
-    long tail.
+9. **ApexCharts (JavaScript)** — fills the "admin-template / dashboard" SEO
+   long tail.
 
 ### Defer / skip
 
-- **plotly (R)**, **highcharter (R)**, **plotly (Julia)** — wrappers; already
-  covered by the JS native entries.
+- **plotly.js (JavaScript)** — Python is the most-used Plotly variant by ~22×,
+  so the rule says one entry only, in Python.
+- **plotly (R)**, **highcharter (R)**, **plotly (Julia)** — wrappers around
+  libraries already covered under their most-used variant.
 - **MATLAB**, **Java/Swing**, **C# WinForms** — declining or niche.
 - **Vega / Vega-Lite as a separate entry** — already covered via Altair.
 
@@ -174,12 +182,12 @@ Ranked by `reach × ease-of-integration ÷ duplication-risk`.
 |-------|-------------------------------------|---------------|--------------------------|
 | 0 (today) | —                               | Python        |  9                       |
 | 1     | Chart.js, D3.js, ECharts            | + JavaScript  | 12                       |
-| 2     | Plotly.js, Highcharts (replaces py) | —             | 13                       |
-| 3     | ggplot2                             | + R           | 14                       |
-| 4     | Recharts, Observable Plot           | —             | 16                       |
-| 5     | Makie.jl, ApexCharts                | + Julia       | 18                       |
+| 2     | Highcharts (replaces Python entry)  | —             | 12                       |
+| 3     | ggplot2                             | + R           | 13                       |
+| 4     | Recharts, Observable Plot           | —             | 15                       |
+| 5     | Makie.jl, ApexCharts                | + Julia       | 17                       |
 
-After Phase 3 anyplot covers ~95 % of global charting-library demand with 14
+After Phase 3 anyplot covers ~95 % of global charting-library demand with 13
 entries.
 
 ---
@@ -199,3 +207,6 @@ entries.
 4. **Commercial licenses.** Highcharts requires a paid licence for commercial
    use. Confirm the project's stance on showcasing it before generating
    examples.
+5. **Refresh cadence for the 3× threshold.** Download numbers shift over time.
+   Recommend re-checking the canonical-variant decisions once a year and on
+   any major release of a contender.
