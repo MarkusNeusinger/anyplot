@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: box-notched
 created: '2025-12-25T19:53:11Z'
-updated: '2026-05-07T22:45:18Z'
+updated: '2026-05-07T22:51:25Z'
 generated_by: claude-haiku
 workflow_run: 25525940108
 issue: 2019
@@ -12,107 +12,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-notch
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/altair/plot-dark.html
-quality_score: 81
+quality_score: 51
 review:
   strengths:
-  - Correct notched box plot visualization with properly calculated statistical elements
-  - Clear visual representation of confidence intervals through notches
-  - Appropriate outlier detection and display
-  - Well-spaced layout with readable text in light mode
-  - Effective use of Altair's layer composition for complex visualization
-  - Realistic, neutral example data
+  - Mathematically correct notch calculation (±1.57 × IQR / √n for 95% CI)
+  - Clear visual comparison of distributions across departments showing statistical
+    significance
+  - Proper outlier detection and display
+  - Realistic and well-structured data example
+  - Clean, reproducible code with proper seeding
   weaknesses:
-  - 'Palette violation: Custom colors instead of Okabe-Ito; first color must be #009E73'
-  - 'Output filenames: Saves as plot.png/plot.html instead of theme-prefixed variants'
-  - 'Theme handling: No ANYPLOT_THEME environment variable support; no light/dark
-    rendering'
-  - 'Dark background: Appears to be pure black, not warm near-black #1A1A17'
-  - 'Missing theme-adaptive chrome: No PAGE_BG, INK, INK_SOFT, ELEVATED_BG configuration'
-  - 'Title text: pyplots.ai should be anyplot.ai'
+  - 'CRITICAL: Dark theme rendering failure - black strokes on #1A1A17 background
+    are nearly invisible'
+  - 'CRITICAL: Color palette violation - code uses Python Blue (#306998, #FFD43B,
+    #4B8BBE, #E85C41) instead of Okabe-Ito (#009E73, #D55E00, #0072B2, #CC79A7)'
+  - 'CRITICAL: Output files saved as ''plot.png'' instead of ''plot-light.png'' and
+    ''plot-dark.png'''
+  - No theme environment variable (ANYPLOT_THEME) implementation
+  - No use of theme-aware color tokens (PAGE_BG, INK, INK_SOFT) for chrome elements
+  - Black strokes hardcoded on all structural elements (mark_bar, mark_tick) fail
+    dark theme adaptation
+  - Text colors not adapted to dark background - dark text renders against dark background
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white around #FAF8F1 ✓
-      Chrome: Title "box-notched · altair · pyplots.ai", axis labels "Department" and "Performance Score", tick marks 0-100 all clearly readable in dark text on light background
-      Data: Four departments with notched boxes in custom colors (green, orange, blue, pink); notches visible as narrower waist around median; whiskers and outlier points clearly shown
-      Legibility verdict: PASS - all text readable, but custom palette violates Okabe-Ito requirement
+      Background: Warm off-white (#FAF8F1) - CORRECT
+      Chrome: Title "box-notched · altair · anyplot.ai" (dark text), axis labels "Department" and "Performance Score" (dark text), tick labels (dark text) - all clearly readable on light background - PASS
+      Data: Four box plots with green (Engineering), orange (Marketing), pink/purple (Operations), blue (Sales) fill colors. Boxes show quartiles, notches around medians, whiskers, outliers as points. Colors are distinct and distinguishable. Green, orange, and blue match Okabe-Ito palette positions 1, 2, 3.
+      Legibility verdict: PASS - All elements readable in light theme
 
     Dark render (plot-dark.png):
-      Background: Very dark, appears to be pure black or near-black (SHOULD be warm #1A1A17) - ISSUE: background looks too dark/harsh
-      Chrome: Title and axis labels in light/white text, readable but may not be exact theme tokens (should be #F0EFE8 for INK on dark)
-      Data: Colors identical to light render (green, orange, blue, pink) ✓; notches and outliers visible but narrow notch sections show some dark-on-dark blending
-      Legibility verdict: PARTIAL FAIL - background color appears wrong (pure black instead of warm #1A1A17); narrow notch areas lack sufficient contrast in some cases
+      Background: Warm near-black (#1A1A17) - CORRECT
+      Chrome: Title, axis labels, tick labels appear to use dark text colors rather than light text - FAIL for text color adaptation. Box borders use black strokes that are nearly invisible against #1A1A17 background - FAIL for stroke color adaptation
+      Data: Four box plots with same green, orange, pink, blue fills as light render - data colors are correctly identical between renders. However, the structural definition of the boxes (black strokes/borders) has poor contrast against the dark background.
+      Legibility verdict: FAIL - Dark-on-dark issue with strokes; text colors not adapted to dark theme
+
+    CRITICAL ISSUES:
+    - Black strokes (color="black" hardcoded) on near-black background create invisible box borders
+    - Text elements use dark colors instead of light colors adapted for dark theme
+    - Chrome elements (gridlines, axes, legend) not using theme-aware color tokens
+    - Data fill colors correctly preserved between renders, but surrounding chrome adaptation failed
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 15
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 2
         max: 8
-        passed: true
-        comment: Title and labels readable in both themes, but colors not theme-adapted
+        passed: false
+        comment: Light render readable, dark render has poor contrast for black strokes
+          and text not adapted to dark background
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Excellent spacing, no overlapping elements
+        comment: No overlapping text elements, all text fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All boxes, whiskers, notches, and outliers clearly visible
+        comment: Elements visible and appropriately sized, but dark render stroke
+          contrast poor
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Custom palette instead of CVD-safe Okabe-Ito
+        passed: true
+        comment: Data colors are CVD-safe (Okabe-Ito), good contrast in light theme
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, generous margins, nothing cut off
+        comment: Well-balanced layout with appropriate margins and white space
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Title text is pyplots.ai not anyplot.ai
+        passed: true
+        comment: Descriptive labels with proper title format
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'Custom colors not Okabe-Ito; first color #306998 not #009E73; background
-          pure black not #1A1A17'
+        comment: Code uses Python Blue colors, not Okabe-Ito. No theme-adaptive chrome.
+          Black strokes fail on dark background.
     design_excellence:
-      score: 11
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 2
         max: 8
         passed: false
-        comment: Generic defaults; custom palette doesn't match brand
+        comment: Generic styling with non-standard color palette, no design refinement
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Some refinement in notch representation but lacks intentional polish
+        comment: Minimal customization, hardcoded black strokes, no special polish
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear visual hierarchy in median/quartile representation
+        comment: Effectively compares departments through notch overlap, shows statistical
+          significance
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -120,7 +133,7 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct notched box plot
+        comment: Correct notched box plot with all components
       - id: SC-02
         name: Required Features
         score: 4
@@ -132,13 +145,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: X=Department, Y=Performance Score correct
+        comment: X/Y correctly assigned, all data visible
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title text is pyplots.ai not anyplot.ai
+        passed: true
+        comment: Title format correct, no legend needed for labeled x-axis
     data_quality:
       score: 15
       max: 15
@@ -148,21 +161,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All box plot aspects shown
+        comment: 'Shows all features: quartiles, median, notches, whiskers, outliers'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee performance by department is realistic
+        comment: Employee performance scenario is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100 performance scale is sensible
+        comment: 0-100 scale appropriate for performance metrics
     code_quality:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: CQ-01
@@ -170,7 +183,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple procedural code
+        comment: 'Linear flow: imports, data, statistics, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -182,19 +195,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only needed imports
+        comment: Only necessary imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Manual notch calculation is justified workaround
+        comment: Appropriate complexity for notched box plot via layering
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as plot.png/plot.html instead of plot-{THEME}.png/html
+        comment: Saves as 'plot.png' instead of 'plot-{THEME}.png'. Missing ANYPLOT_THEME
+          implementation.
     library_mastery:
       score: 7
       max: 10
@@ -204,19 +218,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper layer composition; missing theme-adaptive config
+        comment: Correct use of alt.Chart(), layer(), and encoding, but should use
+          Okabe-Ito palette
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Layer composition creative but lacks polish
+        passed: true
+        comment: Uses layering technique for notched effect, but misses theme-aware
+          styling capabilities
+    total_score: 51
+    max_score: 100
+    score_caps_applied:
+    - DE-01 ≤ 2 AND DE-02 ≤ 2 → max 75
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - custom-legend
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling: []
