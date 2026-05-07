@@ -5,10 +5,10 @@ gallery. This document estimates the global market for charting libraries,
 ranks candidates by reach and integration cost, and recommends a concrete
 priority order.
 
-> **Note on numbers.** The percentages below are *estimates* synthesised from
+> **Note on numbers.** The percentages below are *estimates* synthesized from
 > public signals (Stack Overflow Developer Survey, PyPI/npm download counts,
 > GitHub stars, Google Trends, JS Rising Stars). They are good enough to
-> prioritise — they are not authoritative market shares.
+> prioritize — they are not authoritative market shares.
 
 ---
 
@@ -26,7 +26,7 @@ anyplot currently ships **9 Python libraries** and zero non-Python libraries.
 | 6 | plotnine   | Python     | Python        | Python            | Sister library to ggplot2, not a wrapper.   |
 | 7 | Pygal      | Python     | Python        | Python            | Native = most-used.                         |
 | 8 | Highcharts | JavaScript | Python        | **JavaScript**    | npm ~1 M / wk vs `highcharts-core` ~5 k / wk.|
-| 9 | lets-plot  | Kotlin     | Python        | Python            | Python front-end has the most users today.  |
+| 9 | lets-plot  | Kotlin     | Python        | Python            | Python frontend has the most users today.   |
 
 **Implication:** under the most-used rule (see §6), only **Highcharts** is
 filed under the wrong language and should move to JavaScript. Plotly and
@@ -80,7 +80,7 @@ Estimated share *within* JS charting demand. (npm downloads + GitHub stars +
 
 | Library         | Share within R | Notes                                                       |
 |-----------------|---------------:|-------------------------------------------------------------|
-| **ggplot2**     |          ~70 % | The de-facto standard. R-native target #1.                  |
+| **ggplot2**     |          ~70 % | The de facto standard. R-native target #1.                  |
 | plotly (R)      |          ~10 % | Wrapper around plotly.js — covered by JS Plotly.            |
 | lattice         |           ~8 % | Older base-R style; declining.                              |
 | highcharter     |           ~3 % | Wrapper around Highcharts — covered by JS Highcharts.       |
@@ -106,7 +106,7 @@ A language qualifies for a dedicated entry only if it satisfies all three:
 1. **Code-driven** — plots are produced from a pure source-code snippet
    (no GUI / click workflows).
 2. **Free toolchain** — a FOSS interpreter/compiler exists so CI can render
-   previews and contributors can participate without licence costs.
+   previews and contributors can participate without license costs.
 3. **Public package registry** — libraries install from an open registry
    (PyPI, npm, CRAN, `Pkg.jl`, …).
 
@@ -133,23 +133,29 @@ revisited unless the criteria themselves change.
 |-------------------------------|-------------------------------|-----------------------------------------------|
 | **Excel, Google Sheets, Numbers** | Code-driven                | Charts are GUI-clicked; no source-code form.  |
 | **Tableau, Power BI, Looker, Qlik** | Code-driven              | BI dashboards, not code snippets.             |
-| **MATLAB**                    | Free toolchain                | Paid licence, closed ecosystem, declining.    |
+| **MATLAB**                    | Free toolchain                | Paid license, closed ecosystem, declining.    |
 | **SAS, SPSS, Stata**          | Free toolchain + Code-driven  | Paid + mostly GUI-driven.                     |
-| **Mathematica / Wolfram**     | Free toolchain                | Paid licence, niche.                          |
+| **Mathematica / Wolfram**     | Free toolchain                | Paid license, niche.                          |
 | **Origin, SigmaPlot, Prism**  | Free toolchain + Code-driven  | Paid scientific GUIs.                         |
 
 ---
 
 ## 6. The "cross-language library" rule
 
-A library that exists in many languages appears **exactly once**, under the
-**most-used variant**. "Most-used" is decided quantitatively:
+In steady state, a library that exists in many languages appears **exactly
+once**, under the **most-used variant**. "Most-used" is decided
+quantitatively:
 
 > A binding qualifies as the canonical entry if it has **≥ 3× more weekly
 > downloads** than every other variant. Otherwise default to the native
 > implementation.
 
 This avoids subjective per-library debates and makes future calls reproducible.
+
+**Exception — deprecation window.** When a library moves from one language
+to another (see Highcharts in §9), both entries may co-exist for one release
+cycle so existing links don't break. After that release the superseded entry
+is removed and the steady-state "exactly once" rule applies again.
 
 ### JavaScript and TypeScript count as one language
 
@@ -201,24 +207,29 @@ framework-agnostic.
 
 ### Licensing policy
 
-anyplot prioritises **FOSS-licensed** libraries (MIT, BSD, Apache, ISC, GPL).
+anyplot prioritizes **FOSS-licensed** libraries (MIT, BSD, Apache, ISC, GPL).
 Commercial libraries with a **free-for-private-use** tier — Highcharts,
-amCharts — are allowed in the catalogue but de-emphasised:
+amCharts — are allowed in the catalogue but de-emphasized:
 
 - They must never displace a comparable FOSS alternative in a higher tier.
 - Each entry must clearly mark its license and link to the upstream license
-  page. Suggested metadata field on each library:
+  page. Use **valid SPDX identifiers** so the field stays machine-readable;
+  add a free-text note for non-SPDX cases:
 
   ```python
-  "license": "MIT" | "Apache-2.0" | "BSD-3-Clause" | "ISC" | "GPL-2.0"
-           | "Commercial (free for non-commercial use)"
+  # SPDX identifiers (preferred):
+  "license": "MIT" | "Apache-2.0" | "BSD-3-Clause" | "ISC"
+           | "GPL-2.0-only" | "GPL-2.0-or-later" | "GPL-3.0-or-later"
+
+  # Non-SPDX (commercial with free private-use tier):
+  "license": "LicenseRef-Commercial-Free-NonCommercial"
   ```
 
 - The frontend should expose a "FOSS only" filter so users who need
   permissive licensing can exclude commercial entries with one click.
 
 Hard-paywalled libraries with no free tier (e.g. amCharts 4 Enterprise without
-the personal licence, FusionCharts) are out of scope.
+the personal license, FusionCharts) are out of scope.
 
 Applied to every cross-language library in or near scope:
 
@@ -253,13 +264,13 @@ Ranked by `reach × ease-of-integration ÷ duplication-risk`.
 
 ### Tier 2 — high value, slightly more work
 
-4. **ggplot2 (R)** — MIT/GPL-2. Unlocks the entire R / academic audience;
-   first non-Python language, so it also validates the multi-language
-   pipeline on a non-JS runtime.
+4. **ggplot2 (R)** — MIT (per current CRAN DESCRIPTION). Unlocks the entire
+   R / academic audience; first non-Python language, so it also validates the
+   multi-language pipeline on a non-JS runtime.
 5. **Highcharts (JavaScript)** — *Commercial, free for non-commercial use.*
    Replaces the current Python Highcharts entry; the JS variant outweighs the
    Python wrapper by ~200×, so the most-used rule mandates the move. Tag with
-   the commercial-license flag and surface the licence prominently on the
+   the commercial-license flag and surface the license prominently on the
    plot pages.
 
 ### Tier 3 — opportunistic, ecosystem-specific
@@ -293,6 +304,13 @@ Ranked by `reach × ease-of-integration ÷ duplication-risk`.
 | 3     | ggplot2                             | + R           | 13                       |
 | 4     | Recharts, Observable Plot           | —             | 15                       |
 | 5     | Makie.jl, ApexCharts                | + Julia       | 17                       |
+
+> **Why Phase 2 ≠ Tier 2 #4 from §7.** §7 ranks ggplot2 (Tier 2 #4) above
+> Highcharts (Tier 2 #5) by reach; §8 still ships Highcharts first because
+> it reuses the JavaScript pipeline stood up in Phase 1, whereas ggplot2
+> requires a brand-new R runtime in CI. Pipeline cost dominates here, so
+> Highcharts is cheaper to ship next even though it ranks lower on raw
+> reach.
 
 After Phase 3 anyplot covers ~95 % of global charting-library demand with 13
 entries.
