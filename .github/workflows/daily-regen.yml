@@ -222,7 +222,7 @@ jobs:
             echo "skip_polish=0" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Spec polish (autonomous, opens PR — no auto-merge)
+      - name: Spec polish (autonomous, opens PR with auto-merge)
         if: ${{ steps.gate.outputs.skip_polish == '0' && !inputs.dry_run }}
         # Optional quality pass: a transient action failure here must not
         # block the main regeneration pipeline. Skip cleanly and continue.
