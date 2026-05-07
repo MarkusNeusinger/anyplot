@@ -1,46 +1,56 @@
-""" pyplots.ai
+"""anyplot.ai
 area-stacked: Stacked Area Chart
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-25
+Library: plotly | Python 3.13
+Quality: pending | Created: 2026-05-07
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
 
-# Data - Monthly website traffic sources over 2 years
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (first series is always brand green)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
+# Data - Monthly revenue by product category over 2 years
 np.random.seed(42)
 months = pd.date_range(start="2023-01", periods=24, freq="ME")
 
-# Generate realistic traffic data with trends
-base_direct = 15000 + np.linspace(0, 5000, 24) + np.random.randn(24) * 1000
-base_organic = 25000 + np.linspace(0, 15000, 24) + np.random.randn(24) * 2000
-base_referral = 8000 + np.linspace(0, 3000, 24) + np.random.randn(24) * 800
-base_social = 5000 + np.linspace(0, 8000, 24) + np.random.randn(24) * 1200
+# Generate realistic revenue data with varied trends
+software = 80000 + np.linspace(0, 20000, 24) + np.random.randn(24) * 3000
+services = 60000 + np.linspace(0, 15000, 24) + np.random.randn(24) * 2500
+enterprise = 40000 + np.linspace(-5000, 10000, 24) + np.random.randn(24) * 2000
+consulting = 25000 + np.linspace(0, -8000, 24) + np.random.randn(24) * 1500
 
 # Ensure positive values
-direct = np.maximum(base_direct, 1000).astype(int)
-organic = np.maximum(base_organic, 1000).astype(int)
-referral = np.maximum(base_referral, 500).astype(int)
-social = np.maximum(base_social, 500).astype(int)
-
-# Colors - Python Blue first, then harmonious colors
-colors = ["#306998", "#FFD43B", "#4CAF50", "#E91E63"]
+software = np.maximum(software, 10000).astype(int)
+services = np.maximum(services, 5000).astype(int)
+enterprise = np.maximum(enterprise, 5000).astype(int)
+consulting = np.maximum(consulting, 3000).astype(int)
 
 # Create figure
 fig = go.Figure()
 
-# Add traces in order (largest at bottom for stacked area)
+# Add traces in order (largest at bottom)
 fig.add_trace(
     go.Scatter(
         x=months,
-        y=organic,
-        name="Organic Search",
+        y=software,
+        name="Software",
         mode="lines",
-        line=dict(width=0.5, color=colors[0]),
+        line=dict(width=0.5, color=OKABE_ITO[0]),
         fill="tozeroy",
-        fillcolor="rgba(48, 105, 152, 0.7)",
+        fillcolor=OKABE_ITO[0],
         stackgroup="one",
     )
 )
@@ -48,12 +58,12 @@ fig.add_trace(
 fig.add_trace(
     go.Scatter(
         x=months,
-        y=direct,
-        name="Direct",
+        y=services,
+        name="Services",
         mode="lines",
-        line=dict(width=0.5, color=colors[1]),
+        line=dict(width=0.5, color=OKABE_ITO[1]),
         fill="tonexty",
-        fillcolor="rgba(255, 212, 59, 0.7)",
+        fillcolor=OKABE_ITO[1],
         stackgroup="one",
     )
 )
@@ -61,12 +71,12 @@ fig.add_trace(
 fig.add_trace(
     go.Scatter(
         x=months,
-        y=social,
-        name="Social Media",
+        y=enterprise,
+        name="Enterprise",
         mode="lines",
-        line=dict(width=0.5, color=colors[2]),
+        line=dict(width=0.5, color=OKABE_ITO[2]),
         fill="tonexty",
-        fillcolor="rgba(76, 175, 80, 0.7)",
+        fillcolor=OKABE_ITO[2],
         stackgroup="one",
     )
 )
@@ -74,42 +84,51 @@ fig.add_trace(
 fig.add_trace(
     go.Scatter(
         x=months,
-        y=referral,
-        name="Referral",
+        y=consulting,
+        name="Consulting",
         mode="lines",
-        line=dict(width=0.5, color=colors[3]),
+        line=dict(width=0.5, color=OKABE_ITO[3]),
         fill="tonexty",
-        fillcolor="rgba(233, 30, 99, 0.7)",
+        fillcolor=OKABE_ITO[3],
         stackgroup="one",
     )
 )
 
 # Layout
 fig.update_layout(
-    title=dict(
-        text="Website Traffic Sources · area-stacked · plotly · pyplots.ai", font=dict(size=32), x=0.5, xanchor="center"
-    ),
+    title=dict(text="area-stacked · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
     xaxis=dict(
-        title=dict(text="Month", font=dict(size=24)),
-        tickfont=dict(size=18),
-        gridcolor="rgba(0, 0, 0, 0.1)",
+        title=dict(text="Month", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
+        gridcolor=GRID,
         showgrid=True,
+        linecolor=INK_SOFT,
     ),
     yaxis=dict(
-        title=dict(text="Monthly Visitors", font=dict(size=24)),
-        tickfont=dict(size=18),
-        gridcolor="rgba(0, 0, 0, 0.1)",
+        title=dict(text="Monthly Revenue (USD)", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
+        gridcolor=GRID,
         showgrid=True,
         rangemode="tozero",
+        linecolor=INK_SOFT,
     ),
-    legend=dict(font=dict(size=18), orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
-    template="plotly_white",
-    margin=dict(l=80, r=40, t=120, b=80),
+    legend=dict(
+        font=dict(size=16, color=INK_SOFT),
+        bgcolor=ELEVATED_BG,
+        bordercolor=INK_SOFT,
+        borderwidth=1,
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="center",
+        x=0.5,
+    ),
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    margin=dict(l=100, r=50, t=120, b=100),
     hovermode="x unified",
 )
 
-# Save as PNG (4800 x 2700 px)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save as HTML for interactivity
-fig.write_html("plot.html", include_plotlyjs=True, full_html=True)
+# Save as PNG and HTML
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
