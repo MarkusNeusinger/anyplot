@@ -1,7 +1,7 @@
 """ anyplot.ai
 area-stacked: Stacked Area Chart
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-07
+Quality: 93/100 | Updated: 2026-05-07
 """
 
 import os

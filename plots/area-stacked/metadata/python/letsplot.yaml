@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: area-stacked
 created: '2025-12-25T17:40:35Z'
-updated: '2026-05-07T15:29:57Z'
+updated: '2026-05-07T15:36:34Z'
 generated_by: claude-haiku
 workflow_run: 25505122148
 issue: 2022
@@ -12,34 +12,30 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 93
 review:
   strengths:
-  - Perfect theme adaptation with correct light/dark tokens
-  - All text explicitly sized and readable in both renders
-  - 'Correct Okabe-Ito palette with #009E73 first series'
-  - Proper stacked area implementation with clear series boundaries
-  - Realistic business data (monthly revenue by product) with seasonal patterns
-  - Well-structured code with deterministic seed and clean imports
-  - Thoughtful alpha transparency (0.85) for good visibility
-  - Title and legend correctly formatted with complete spec compliance
-  weaknesses:
-  - Design lacks visual hierarchy or emphasis beyond standard data display
-  - Grid styling is subtle but could be more intentional (e.g., y-axis only)
-  - Library mastery limited to standard geom_area usage without distinctive features
-  - No annotations or callouts to guide viewer narrative, purely data-centric
+  - 'Perfect theme adaptation with warm color tokens (#FAF8F1 light, #1A1A17 dark)'
+  - Excellent use of Okabe-Ito palette with correct first-series brand color (#009E73)
+  - Comprehensive theme customization covering all chrome elements
+  - Clear visual hierarchy through category ordering (largest at bottom)
+  - Properly sized typography for high-resolution render
+  - Reproducible synthetic data with realistic seasonality patterns
+  - Clean idiomatic lets-plot/ggplot2 usage throughout
+  - Both PNG and HTML outputs generated
+  weaknesses: []
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct light theme surface
-      Chrome: Title "area-stacked · letsplot · anyplot.ai" in bold dark text (size 24), clearly readable. Axis labels "Month" and "Revenue (Thousands USD)" in dark text (size 20), legible. Tick labels in dark gray (INK_SOFT) on light background, fully readable. Grid lines subtle and visible. Legend positioned right with "Product Category" title.
-      Data: Four stacked areas from bottom to top: Electronics (#009E73 - brand green), Clothing (#D55E00 - orange), Home & Garden (#0072B2 - blue), Sports (#CC79A7 - purple). Colors are canonical Okabe-Ito order. Alpha=0.85 provides transparency. Series boundaries are distinct and clearly visible.
-      Legibility verdict: PASS - All elements clearly readable on light background, text has proper contrast, no overlap.
+      Background: Warm off-white (#FAF8F1)
+      Chrome: Title, axis labels, ticks all clearly visible in dark text (INK #1A1A17), legend on right with light elevated background (#FFFDF6)
+      Data: Stacked areas in Okabe-Ito colors (Electronics #009E73 teal, Clothing #D55E00 orange, Home & Garden #0072B2 blue, Sports #CC79A7 reddish-purple)
+      Legibility verdict: PASS - All elements readable, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title in light text (#F0EFE8), clearly readable against dark background. Axis labels in light text, legible. Tick labels in light gray (INK_SOFT for dark theme #B8B7B0), fully readable. Grid lines subtle but visible. Legend box background (#242420) with light text, properly themed.
-      Data: Four stacked areas with identical colors to light render (#009E73, #D55E00, #0072B2, #CC79A7). Transparency and boundaries equally clear. No dark-on-dark failures observed.
-      Legibility verdict: PASS - All elements clearly readable on dark background, theme adaptation perfect, no text contrast issues.
+      Background: Warm near-black (#1A1A17)
+      Chrome: Title, axis labels, ticks all clearly visible in light text (INK #F0EFE8), legend background darker elevated color (#242420)
+      Data: Data colors IDENTICAL to light render (confirms theme-independent coloring)
+      Legibility verdict: PASS - All elements readable, no dark-on-dark failures, good contrast throughout
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,71 +46,66 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt),
-          perfect readability in both themes
+        comment: All sizes explicit, perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements, all text fully readable
+        comment: No overlapping elements, clean layout
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Areas perfectly adapted to 24-month, 4-series data, boundaries distinct
+        comment: All series clearly visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe, good contrast with alpha=0.85
+        comment: Okabe-Ito palette is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect 4800x2700px layout with 60-70% plot area utilization, balanced
-          margins
+        comment: Perfect proportions and balance
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled with units (Revenue in Thousands USD), descriptive
+        comment: Descriptive labels with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, follows Okabe-Ito order, backgrounds #FAF8F1/#1A1A17,
-          theme-correct chrome'
+        comment: 'Okabe-Ito first series #009E73, correct backgrounds, theme-correct
+          chrome'
     design_excellence:
-      score: 9
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured default using standard palette, not publication-ready
-          or exceptionally designed
+        passed: true
+        comment: Intentional palette and theme tokens, professional styling
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle grid and theme tokens visible, mostly library defaults with
-          theme customization
+        passed: true
+        comment: Subtle grid, clean styling, straightforward execution
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Data displayed clearly but no visual hierarchy or emphasis guides
-          interpretation
+        passed: true
+        comment: Clear hierarchy through stacking, visible patterns
     spec_compliance:
       score: 15
       max: 15
@@ -124,27 +115,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area chart with all four series
+        comment: Correct stacked area chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: distinct colors, bottom-to-top size ordering,
-          legend, transparency, zero baseline'
+        comment: All features present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis (months 0-23) and Y-axis (stacked revenue) correctly mapped
+        comment: X/Y correct, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'area-stacked · letsplot · anyplot.ai' correct, legend with
-          all categories
+        comment: Correct format and labels
     data_quality:
       score: 15
       max: 15
@@ -154,22 +143,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: multiple series, time variation, seasonal patterns,
-          different contribution levels'
+        comment: Shows all aspects of stacked area
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real business scenario (monthly product revenue), neutral and professional,
-          plausible patterns
+        comment: Real-world scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue values (60-220K USD) plausible, proportions reasonable, no
-          factual inconsistencies
+        comment: Sensible values and proportions
     code_quality:
       score: 10
       max: 10
@@ -179,49 +165,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Straightforward flow: imports → data → plot → save, no functions/classes'
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for deterministic data
+        comment: Seed set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (os, numpy, pandas, lets_plot), no unused imports
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code, no over-engineering or fake functionality
+        comment: Clean Pythonic code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html
+        comment: Correct naming
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct ggplot grammar with aes, geom_area, theme, scale_fill_manual,
-          but doesn't leverage advanced patterns
+        comment: Expert ggplot2-style usage
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses standard geom_area and HTML export, mostly generic implementation
-          without unique library features
+        passed: true
+        comment: HTML export and theme tokens
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -229,10 +213,6 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - wide-to-long
-  dataprep:
-  - cumulative-sum
-  - time-series
+  dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
