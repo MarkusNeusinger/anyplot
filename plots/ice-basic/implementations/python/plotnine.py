@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 ice-basic: Individual Conditional Expectation (ICE) Plot
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 87/100 | Created: 2026-05-07
