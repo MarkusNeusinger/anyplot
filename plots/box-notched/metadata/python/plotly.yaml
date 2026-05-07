@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: box-notched
 created: '2025-12-25T19:52:57Z'
-updated: '2026-05-07T22:41:32Z'
+updated: '2026-05-07T22:47:07Z'
 generated_by: claude-haiku
 workflow_run: 25525790280
 issue: 2019
@@ -12,39 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-notch
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/plotly/plot-dark.html
-quality_score: 82
+quality_score: 83
 review:
   strengths:
-  - 'Perfect visual quality: all text readable, no overlap, proper element sizing
-    at 4800×2700px'
-  - 'Complete spec compliance: notches, outliers, standard box elements, and category
-    differentiation all present'
-  - Excellent data quality with realistic salary distributions showing variation and
-    statistical insight
-  - Clean, reproducible code with proper theme-adaptive tokens for light/dark rendering
-  - 'Okabe-Ito palette correctly implemented with #009E73 as first series'
+  - Perfect theme implementation with flawless readability in both light and dark
+    renders
+  - 'Exact Okabe-Ito palette compliance with first series as #009E73 and correct multi-series
+    order'
+  - All notched box plot specification features correctly implemented (notches at
+    95% CI, quartiles, whiskers, outliers)
+  - High visual quality across all metrics with no text overlap and excellent layout
+    balance
+  - Realistic and neutral salary distribution data with appropriate company department
+    context
+  - Clean, reproducible code with proper random seeding and minimal complexity
   weaknesses:
-  - Generic design aesthetic relying on plotly defaults rather than intentional custom
-    choices
-  - No visual storytelling or data hierarchy to guide viewer focus toward insights
-  - Minimal visual refinement beyond library defaults—grid, whitespace, and styling
-    could be more sophisticated
-  - Limited leverage of plotly's distinctive features (custom hover tooltips, interactive
-    enhancements, animations)
+  - 'Design Excellence underdeveloped: lacks aesthetic sophistication beyond default
+    styling'
+  - 'Visual Refinement minimal: mostly library defaults for grid and spacing'
+  - No visual storytelling or emphasis to guide viewer to insights about median differences
+  - 'Library Mastery generic: implementation doesn''t leverage Plotly''s unique interactive
+    features or distinctive capabilities'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle grid lines (rgba(26,26,23,0.10))
-      Chrome: Title "box-notched · plotly · anyplot.ai" (28px, dark ink), axis labels "Department" and "Annual Salary (USD)" (22px), Y-axis currency ticks (18px) formatted as $20,000–$140,000, X-axis department names (18px). All text is dark and fully readable against light background. No legibility issues.
-      Data: Five notched box plots with Okabe-Ito palette—green (#009E73) for Engineering, orange (#D55E00) for Marketing, blue (#0072B2) for Sales, purple (#CC79A7) for HR, gold (#E69F00) for Finance. Notches visible around medians showing 95% confidence intervals. Outlier points clearly marked. Whiskers and box elements clearly visible. Engineering shows highest median (~$95k), HR lowest (~$65k). Multiple outliers visible (high earners at $140k+, low earners at $25k–$45k).
-      Legibility verdict: PASS—all elements readable, no overlap, good contrast, proper sizing.
+      Background: Warm off-white (#FAF8F1) - correct surface color
+      Chrome: Title "box-notched · plotly · anyplot.ai" (28px, dark text), axis labels "Department" and "Annual Salary (USD)" (22px, dark text), tick labels all in dark text (18px) - all perfectly readable
+      Data: Five notched box plots in Okabe-Ito colors: Engineering green (#009E73), Marketing orange (#D55E00), Sales blue (#0072B2), HR reddish-purple (#CC79A7), Finance yellow (#E69F00). Notches clearly visible around median, whiskers, quartile boxes, and outlier points all clearly distinguishable.
+      Legibility verdict: PASS - All text readable against light background, no dark-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with subtle grid lines (rgba(240,239,232,0.10))
-      Chrome: Title "box-notched · plotly · anyplot.ai" now in light text (F0EFE8), axis labels in light text (F0EFE8), Y-axis ticks in secondary light text (B8B7B0), X-axis department names in secondary light text (B8B7B0). All text is light and fully readable against dark background. No dark-on-dark failures.
-      Data: Identical data colors to light render—green, orange, blue, purple, gold remain unchanged (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00). Same notches, outliers, and box structure. Notches are distinct on dark surface. All visual elements properly contrast against the dark background.
-      Legibility verdict: PASS—theme-adaptive chrome correctly applied, no dark-text-on-dark-background failures, all data colors identical to light render, proper contrast throughout.
-
-    Both renders pass theme-readability: light text on dark, dark text on light, only chrome adapts between themes, data colors constant.
+      Background: Warm near-black (#1A1A17) - correct dark surface color
+      Chrome: Title and axis labels rendered in light text (INK #F0EFE8), tick labels in INK_SOFT (#B8B7B0) - all perfectly readable on dark background with good contrast, no dark-on-dark failures
+      Data: Data colors IDENTICAL to light render (first series exactly #009E73, confirming theme-independence). Notches, whiskers, and outlier markers all clearly visible. Grid lines subtle but present.
+      Legibility verdict: PASS - All text readable against dark background, no dark-on-dark issues, brand green clearly visible
   criteria_checklist:
     visual_quality:
       score: 30
@@ -55,50 +55,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
-          perfectly readable in both themes
+        comment: Title 28px, labels 22px, ticks 18px—all explicitly set, perfect readability
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text well-spaced; no collisions between elements; department
-          names clearly separated
+        comment: All text properly spaced, no collisions or overlapping elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers, boxes, whiskers, notches clearly visible; optimal sizing
-          for data density
+        comment: Box plots and outliers optimally sized and clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe; good contrast; no red-green-only
-          signal
+        comment: Okabe-Ito palette is colorblind-safe with good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 70-80% of canvas; balanced margins; generous whitespace
+        comment: Good canvas utilization with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Department, Annual Salary (USD)'
+        comment: 'Descriptive labels with units: ''Annual Salary (USD)'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; multi-series follows Okabe-Ito order; backgrounds
-          #FAF8F1 light/#1A1A17 dark; text theme-adaptive; both renders correct'
+        comment: 'First series #009E73, multi-series follows Okabe-Ito, correct backgrounds
+          and theme-correct chrome'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -106,22 +103,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Clean and professional, but relies on plotly defaults; lacks custom
-          aesthetic choices or intentional design thought
+        comment: Well-configured defaults but lacks custom design touches
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Minimal customization beyond library defaults; grid and layout adequate
-          but not refined
+        comment: Minimal customization, mostly library defaults
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displays variation and enables statistical comparison; lacks
-          visual hierarchy or emphasis to guide insight
+        comment: Data displayed but no visual hierarchy or emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -131,26 +125,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct notched box plot with all required subtypes
+        comment: Correct notched box plot with all subtypes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Notches at 95% CI, standard box elements, outliers, different colors
-          per category
+        comment: Notches, quartiles, whiskers, outliers all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=departments, Y=salary values; all data visible
+        comment: Categories on X, salary on Y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correctly formatted; no legend needed
+        comment: Correct title format; legend appropriately omitted
     data_quality:
       score: 15
       max: 15
@@ -160,22 +153,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All box-plot features shown: different medians, varying spreads,
-          outliers, confidence interval notches'
+        comment: Shows variation in distributions, spreads, and outliers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real, neutral, comprehensible business scenario: employee salary
-          distributions across departments'
+        comment: Real, neutral business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic salary ranges and outliers for modern organization (medians
-          $65k–$95k, outliers $25k–$150k)
+        comment: Salaries plausible for tech company departments
     code_quality:
       score: 10
       max: 10
@@ -185,32 +175,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → tokens → data → plot → styling
-          → save'
+        comment: Clean linear flow, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Seed set to 42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, numpy, plotly.graph_objects'
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code; no over-engineering or fake functionality
+        comment: Pythonic, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Correct output format
     library_mastery:
       score: 4
       max: 10
@@ -219,21 +208,22 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Correct go.Figure(), go.Box(), notched=True parameter; theme tokens
-          applied cleanly
+        passed: false
+        comment: Correct high-level API but straightforward usage
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic plotly usage; limited leverage of distinctive plotly features
-          like custom tooltips or interactive enhancements
+        comment: Generic usage without distinctive features
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - publication-ready
