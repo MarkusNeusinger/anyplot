@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: shap-waterfall
 created: '2026-05-07T11:43:31Z'
-updated: '2026-05-07T11:49:34Z'
+updated: '2026-05-07T12:00:13Z'
 generated_by: claude-sonnet
 workflow_run: 25493326436
 issue: 5237
@@ -12,89 +12,102 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-wate
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/altair/plot-dark.html
-quality_score: 88
+quality_score: 85
 review:
   strengths:
-  - Correct cumulative waterfall stacking using Altair x2 encoding — the most idiomatic
-    approach for this chart type
-  - 'Full theme-adaptive chrome: both renders pass readability checks with no dark-on-dark
-    failures'
-  - 'Complete spec feature coverage: reference lines, annotations, SHAP labels, semantic
-    coloring, magnitude ordering'
-  - 'Excellent data quality: realistic credit default scenario with appropriate probability
-    scale'
-  - 'Perfect code quality: reproducible, clean, linear structure'
+  - Well-structured SHAP waterfall with correct cumulative stacking from base to final
+    prediction
+  - 'Full spec compliance: all required features present (base/prediction reference
+    lines, SHAP value labels, magnitude ordering, semantic colors)'
+  - Excellent data quality with realistic credit-default scenario and plausible SHAP
+    values
+  - 'Perfect code quality: clean KISS structure, explicit font sizing across all elements,
+    reproducible with seed'
+  - Good Altair layer composition using alt.layer() for multi-mark chart
+  - Theme-adaptive chrome correctly implemented in both renders
   weaknesses:
-  - 'SC-04: Title format should be shap-waterfall · altair · anyplot.ai (drop the
-    Credit Default Risk prefix to match required format)'
-  - 'DE-01: Needs more aesthetic elevation — remove outer axis domain/tick lines for
-    a cleaner look'
-  - 'DE-02: gridColor uses raw INK token instead of the adaptive RULE token (rgba(26,26,23,0.10)
-    light / rgba(240,239,232,0.10) dark)'
-  - 'VQ-07: Semantic coloring is spec-justified but first series is not #009E73 —
-    partial Okabe-Ito compliance'
+  - 'VQ-07: First categorical series uses #D55E00 (Okabe-Ito position 2) instead of
+    #009E73 (position 1); for a semantic 2-color SHAP chart the spec requested red
+    for positive, but Okabe-Ito requires starting from position 1'
+  - 'DE-01: Design is professional but not yet publication-ready; could benefit from
+    slightly bolder contrast on the prediction line or additional visual emphasis
+    on the largest contributor'
+  - 'DE-02: No explicit spine suppression in configure_axis (Altair handles this via
+    configure_view but axisX/axisY domain lines could be hidden for extra polish)'
+  - 'LM-02: Altair-distinctive features like selection-driven highlighting or parameter-based
+    interactivity not used'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "Credit Default Risk · shap-waterfall · altair · anyplot.ai" in dark ink, readable. Axis title "Probability of Default" in dark ink. Feature names and tick labels in INK_SOFT (#4A4A44). All chrome clearly readable.
-      Data: Orange bars (#D55E00) for positive SHAP, blue bars (#0072B2) for negative. Dashed base value line at 0.32 with "Base = 0.32" annotation. Solid final prediction line at 0.61 with "Prediction = 0.61" annotation. SHAP value labels in matching colors beside each bar.
-      Legibility verdict: PASS
+      Background: warm off-white #FAF8F1 — correct, not pure white
+      Chrome: title "shap-waterfall · altair · anyplot.ai" in dark ink at 28px (readable); x-axis label "Probability of Default" at 22px (readable); y-axis feature names at 18px with labelLimit=260 (all readable, no truncation); tick labels at 18px in INK_SOFT gray (readable); legend "SHAP Direction" with positive/negative labels at 16px (readable)
+      Data: positive SHAP bars in orange/vermillion (#D55E00, Okabe-Ito position 2), negative bars in blue (#0072B2, Okabe-Ito position 3); bars have opacity 0.88; SHAP labels (+0.21 to -0.01) in matching bar colors beside each segment; dashed base line at 0.32 with italic annotation; solid prediction line at 0.61 with bold annotation
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title in light #F0EFE8, axis labels and tick labels in #B8B7B0. Legend with #242420 elevated fill. All chrome elements flip correctly to light-on-dark. No dark-on-dark failures.
-      Data: Orange and blue bars are identical to light render — data colors unchanged as required. Reference lines and SHAP labels visible.
-      Legibility verdict: PASS
+      Background: warm near-black #1A1A17 — correct, not pure black
+      Chrome: title in INK (#F0EFE8) light text — clearly readable; axis labels and tick labels in INK_SOFT (#B8B7B0) — clearly readable against dark background; legend fills ELEVATED_BG (#242420) with light text — readable; no dark-on-dark failures observed
+      Data: bar colors are identical to light render (vermillion for positive, blue for negative) — data colors unchanged between themes, only chrome flips
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=28px, axis=22px, ticks=18px,
-          legend=16px, bar labels=16px bold'
+        comment: 'All sizes explicitly set: title 28px, axis labels 22px, tick labels
+          18px, legend 16px, SHAP labels 16px bold. All readable in both themes. Minor:
+          SHAP annotation text at 15px slightly below tick label guideline.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping elements; labelLimit=260 prevents y-axis clipping
+        comment: No significant overlap. Base and prediction annotations at dy=-20
+          above first feature row are slightly crowded but distinct.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All bars clearly visible; even small magnitude bars readable via
-          labels
+        comment: All bars visible at opacity 0.88. Reference lines visible. SHAP labels
+          visible including for small bars. Very small bottom bars (0.01, 0.02) could
+          be slightly more prominent.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito vermillion and blue are CVD-safe with good contrast
+        comment: Vermillion (#D55E00) and blue (#0072B2) are both Okabe-Ito colors
+          and CVD-safe. Good luminance contrast between positive and negative categories.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Well-proportioned; features readable; appropriate x-axis range
+        comment: Good proportions for horizontal bar chart. Necessary whitespace on
+          left side (0.24-0.32 range) for base value line. Legend positioned bottom-right,
+          not overlapping data.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: Probability of Default (descriptive, domain-appropriate)'
+        comment: 'X-axis: ''Probability of Default'' descriptive and contextually
+          appropriate. Title contains spec-id and library per format.'
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Okabe-Ito colors used (#D55E00, #0072B2) but first series is not
-          #009E73; semantic coloring is spec-justified but partial compliance'
+        comment: 'First categorical series (''positive'') mapped to #D55E00 (Okabe-Ito
+          position 2) instead of #009E73 (position 1). The spec requests semantic
+          red/blue coloring which conflicts with the first-series rule. Backgrounds
+          are correct (#FAF8F1 light, #1A1A17 dark). Chrome is theme-adaptive in both
+          renders. Deduct 1 for first-series violation.'
     design_excellence:
       score: 13
       max: 20
@@ -103,25 +116,27 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Intentional semantic coloring, calibrated typography, reference lines
-          add polish; no spine removal limits score
+        passed: true
+        comment: Professional SHAP waterfall design with semantic color mapping, clear
+          typography hierarchy, and well-chosen reference lines. Above library defaults
+          but not FiveThirtyEight publication-ready level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Very subtle grid (gridOpacity=0.10), view border removed, elevated
-          legend; gridColor uses raw INK not adaptive RULE token
+        passed: true
+        comment: Subtle grid (opacity 0.10), bar opacity 0.88, configure_view stroke=None
+          removes border. Good refinement above defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Magnitude ordering guides eye; color semantics clear; base/final
-          anchors narrative. No focal emphasis on top driver.
+        passed: true
+        comment: Narrative flows from base to final prediction. Feature ordering by
+          magnitude creates visual hierarchy. Dashed vs solid reference lines distinguish
+          base from prediction. Color contrast guides attention.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -129,28 +144,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct SHAP waterfall: horizontal cumulative bars stacking from
-          base to final value'
+        comment: Correct SHAP waterfall with horizontal cumulative bars stacking from
+          base to final prediction.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: magnitude ordering, cumulative stacking, semantic
-          colors, reference lines, SHAP labels, horizontal layout'
+        comment: 'All spec features present: magnitude ordering, cumulative stacking,
+          semantic colors, base/prediction reference lines, SHAP value labels, horizontal
+          layout.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x_start/x_end correct; features on y-axis; probability on x-axis
+        comment: Feature names on Y-axis, cumulative SHAP probability on X-axis, correct
+          bar segments for each feature.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title has extra 'Credit Default Risk' prefix before required shap-waterfall
-          · altair · anyplot.ai format; legend labels correct
+        passed: true
+        comment: Title 'Credit Default Risk · shap-waterfall · altair · anyplot.ai'
+          contains all required parts. Legend 'SHAP Direction' with positive/negative
+          labels.
     data_quality:
       score: 15
       max: 15
@@ -160,22 +178,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both positive and negative contributions, varied magnitudes, full
-          waterfall from base 0.32 to final 0.61
+        comment: 12 features with both positive and negative SHAP values across a
+          range of magnitudes (0.01 to 0.21). Shows full waterfall pattern.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Loan credit default prediction with 12 realistic financial features;
-          neutral business domain
+        comment: Credit default/loan application is a canonical SHAP use case. Feature
+          names (Debt-to-Income Ratio, Credit Score, etc.) are realistic. Neutral,
+          non-controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Base 0.32, final 0.61, SHAP values in [-0.14, +0.21] range — realistic
-          for calibrated ML model
+        comment: Base probability 0.32, final prediction 0.61, SHAP values ±0.01 to
+          ±0.21. All values plausible for credit default probability.
     code_quality:
       score: 10
       max: 10
@@ -185,34 +204,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → tokens → data → chart layers → save; no functions
-          or classes'
+        comment: 'Linear structure: theme tokens → data → charts → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, numpy, pandas — all used
+        comment: os, altair, numpy, pandas — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Altair layer composition; separate pos/neg DataFrames slightly
-          verbose but clear
+        comment: Clean Pythonic code with appropriate complexity for a multi-layer
+          waterfall chart.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly; current Altair
-          API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair 6.x
+          API.
     library_mastery:
       score: 7
       max: 10
@@ -222,22 +241,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: alt.layer(), x2 encoding, proper :Q/:N types, configure_* pattern;
-          slightly verbose pos/neg separation
+        comment: Proper use of alt.layer() for multi-mark composition, x2 encoding
+          for bar spans, alt.Scale with domain/range, configure_* methods for theming.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: x2 encoding for bar spans is distinctly Altair; HTML interactive
-          export; tooltip encoding
-  verdict: REJECTED
+        comment: Uses Altair-distinctive layer composition and interactive HTML output.
+          Tooltips with multiple fields. Could leverage selections/parameter-based
+          interactivity for more distinctiveness.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - annotations
   - hover-tooltips
+  - annotations
   - html-export
   patterns:
   - data-generation
