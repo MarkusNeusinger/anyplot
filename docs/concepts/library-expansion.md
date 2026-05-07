@@ -325,9 +325,12 @@ entries.
 
   An off-cycle review is also triggered by a major release of an in-scope
   library or a clear emerging contender.
+- **amCharts: skipped.** Duplicates the Highcharts slot (same
+  commercial-with-free-tier model) at ~18× lower download volume, and a
+  second commercial entry would weaken the FOSS-first stance. Revisit only
+  if Plausible data shows unmet demand for amCharts-specific examples.
 
 ## 10. Open questions for the team
 
-1. **amCharts inclusion.** Same licence model as Highcharts. Add as a Tier 3
-   entry, or skip on the grounds that Highcharts already covers the
-   "commercial, free for private" niche?
+None — all design decisions are recorded in §9. New questions surface
+through the annual review described above.
