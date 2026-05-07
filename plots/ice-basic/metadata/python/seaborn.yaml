@@ -1,0 +1,260 @@
+library: seaborn
+language: python
+specification_id: ice-basic
+created: '2026-05-07T16:50:11Z'
+updated: '2026-05-07T17:03:58Z'
+generated_by: claude-sonnet
+workflow_run: 25509381504
+issue: 5238
+python_version: 3.13.13
+library_version: 0.13.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Excellent visual hierarchy: semi-transparent ICE lines (alpha=0.15) contrast
+    effectively with bold PDP overlay (linewidth=4), immediately guiding viewer to
+    the average effect'
+  - Idiomatic seaborn usage of sns.lineplot with units+estimator=None parameters to
+    draw individual observation lines — avoids manual matplotlib loop and is distinctly
+    seaborn
+  - 'Complete theme-adaptive chrome: both renders are fully legible with correct PAGE_BG,
+    INK, INK_SOFT tokens applied to spines, ticks, labels, and legend'
+  - Rug plot along x-axis adds data distribution context without visual clutter
+  - All font sizes explicitly set (title=24, labels=20, ticks=16) for high-resolution
+    canvas
+  - Realistic housing price scenario with GradientBoostingRegressor showing genuine
+    non-linear step behavior typical of tree ensemble models
+  weaknesses:
+  - Title 'House Price Predictions · ice-basic · seaborn · anyplot.ai' does not match
+    the required format '{spec-id} · {library} · anyplot.ai' — the required title
+    is 'ice-basic · seaborn · anyplot.ai' (no prefix)
+  - 'Design sophistication stops short of publication-ready: tick marks still visible
+    (minor), no annotation callout highlighting the PDP line, visual hierarchy is
+    functional but not exceptional'
+  - 'LM-02: sns.lineplot with units is clever but the broader implementation relies
+    heavily on matplotlib primitives (ax.plot for PDP, plt.Line2D for legend handles)
+    rather than pure seaborn patterns'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface, no pure white
+      Chrome: Title "House Price Predictions · ice-basic · seaborn · anyplot.ai" in dark ink, clearly readable. X-axis label "Square Footage (sq ft)" and Y-axis label "Predicted House Price ($K)" in dark ink at appropriate size. Tick labels at 16pt, dark text on light background — all fully legible. Subtle y-axis grid lines at alpha=0.10. Top and right spines removed (L-frame). Legend in elevated background (#FFFDF6) with dark text — readable.
+      Data: 100 ICE lines in #009E73 (brand green) at alpha=0.15 and linewidth=0.8, creating a teal "ribbon" bundle showing individual prediction curves. Bold PDP line in #D55E00 (Okabe-Ito orange, position 2) at linewidth=4 prominently overlaid. Rug plot ticks along bottom x-axis in INK_SOFT color.
+      Legibility verdict: PASS — all text readable, no light-on-light issues, strong contrast throughout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title and axis labels render in light (#F0EFE8) text against the dark background — clearly visible. Tick labels in INK_SOFT (#B8B7B0) — readable against dark background. Legend in elevated dark background (#242420) with light text. No dark-on-dark failures detected. Grid lines barely perceptible (correct for dark theme). Left and bottom spines in INK_SOFT.
+      Data: ICE lines are identical #009E73 green (same as light render). PDP line is identical #D55E00 orange. The bundle of ICE lines reads as dark teal on the near-black background — clearly visible. Rug ticks visible at bottom.
+      Legibility verdict: PASS — all text readable in light colors on dark background, no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All sizes explicitly set: title=24, labels=20, ticks=16. Fully readable
+          in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element overlap. Legend in upper-left does not overlap
+          main data area.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: ICE lines at alpha=0.15 linewidth=0.8 appropriate for 100 lines.
+          PDP at linewidth=4 dominant and visible. Rug ticks clear.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito #009E73 and #D55E00 are CVD-safe with good luminance contrast.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas well-utilized. Balanced margins. Plot fills ~70% of canvas
+          area.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Both axes have units: ''Square Footage (sq ft)'' and ''Predicted
+          House Price ($K)''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00. Backgrounds #FAF8F1 light
+          / #1A1A17 dark. Full theme-adaptive chrome.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Strong design: intentional alpha contrast between ICE lines and
+          bold PDP, clean layout, above library defaults. Not quite publication-ready
+          (no typography refinement, no annotation callout).'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed, subtle grid at alpha=0.10, generous whitespace.
+          Very clean. Tick marks still visible (minor unpolished detail).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good visual hierarchy: thin transparent ICE bundle vs. bold opaque
+          PDP creates a clear story. Viewer immediately sees average vs. individual
+          variation. No annotation to explain the insight explicitly.'
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct ICE plot: individual observation lines with PDP overlay.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required: semi-transparent ICE lines (alpha=0.15), bold PDP
+          overlay, rug plot. Optional c-ICE and color-coding by second feature not
+          required.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=feature_value (sqft), Y=prediction (price), one line per observation_id.
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: false
+        comment: Title is 'House Price Predictions · ice-basic · seaborn · anyplot.ai'
+          — required format is '{spec-id} · {library} · anyplot.ai' (i.e., 'ice-basic
+          · seaborn · anyplot.ai'). Extra prefix before spec-id. Legend labels correct.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all ICE aspects: heterogeneous individual responses, average
+          trend (PDP), data distribution (rug), non-linear behavior from GBM.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Housing price prediction with GradientBoostingRegressor — real-world,
+          plausible, neutral topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sqft range 800-3500 realistic for residential. Prices 100-600K appropriate.
+          GBM step behavior authentic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports → Data synthesis → Model fit → ICE computation → Plot → Save.
+          No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) and random_state=42 in GradientBoostingRegressor.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used. sys.path manipulation necessary for pipeline
+          isolation.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI. Post-hoc alpha setting by tracking line count is idiomatic
+          workaround for seaborn lineplot API.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png. Uses current seaborn 0.13+ API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: sns.lineplot with units+estimator=None is the canonical seaborn pattern
+          for individual-observation lines. sns.rugplot used appropriately. sns.set_theme
+          for theming.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: The units parameter in sns.lineplot is distinctly seaborn — avoids
+          matplotlib loop. Also sns.rugplot. However, PDP line and legend handles
+          use raw matplotlib, reducing distinctiveness.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
