@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: ice-basic
 created: '2026-05-07T16:49:49Z'
-updated: '2026-05-07T17:06:36Z'
+updated: '2026-05-07T17:22:46Z'
 generated_by: claude-sonnet
 workflow_run: 25509382077
 issue: 5238
@@ -12,40 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/pygal/plot-dark.html
-quality_score: 76
+quality_score: 79
 review:
   strengths:
-  - 'Proper Okabe-Ito palette with #009E73 ICE lines and #D55E00 PDP line'
-  - Semi-transparent ICE lines (opacity 0.3) with bold PDP overlay (stroke width 10)
-    creates clear visual hierarchy
-  - 'Theme-adaptive styling with correct #FAF8F1 / #1A1A17 backgrounds in both renders'
-  - Realistic housing price prediction data with GradientBoostingRegressor, deterministic
-    seed
-  - Clean KISS structure with clever sys.path workaround for file naming conflict
-  - 'Correct output: both plot-{THEME}.png and plot-{THEME}.html saved'
+  - Correct Okabe-Ito two-color design (green ICE + orange PDP) with proper theme-adaptive
+    chrome for both light and dark renders
+  - Semi-transparent ICE lines (opacity=0.3) elegantly show density and heterogeneous
+    effects — the stepped GBM response pattern is immediately visible
+  - Real ML model (GradientBoostingRegressor with 3 features) creates a genuinely
+    realistic and informative ICE demo
+  - 'Perfect code quality: reproducible seeds, clean imports, correct HTML + PNG output
+    for interactive pygal library'
+  - Cubic interpolation (pygal-distinctive) creates smooth ICE curves; per-series
+    stroke_style used effectively
   weaknesses:
-  - Legend at bottom appears absent or too small to confirm — empty string ICE labels
-    may suppress the PDP legend entry entirely
-  - Grid points (40) fall just below spec recommended range of 50-100
-  - Axis label font size (18px) is below style-guide recommendation of 22px for pixel-based
-    libraries, making labels appear small on the 4800x2700 canvas
-  - PDP line could be more visually dominant — at large canvas size it competes with
-    the 50 semi-transparent ICE lines despite higher stroke width
+  - 'Oversized legend at bottom: pygal renders legend dots for all 51 series even
+    when labels are empty strings, consuming ~40% of canvas height and compressing
+    the actual chart area'
+  - 'PDP line color (orange #D55E00, width=14) is visually hard to distinguish from
+    the 50 overlapping semi-transparent green ICE lines — needs stronger visual contrast
+    or a different approach (e.g., different marker, annotation, or much larger stroke
+    width)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "ice-basic · pygal · anyplot.ai" is visible at top (28px, small but legible); x-axis label "Square Footage" and y-axis label "Predicted Price ($ thousands)" are readable; tick labels visible in dark ink
-      Data: 50 semi-transparent green (#009E73) ICE curves flowing left-to-right as square footage increases from ~700 to 3600; lines show characteristic step-up pattern with heterogeneous trajectories; a bold vermillion (#D55E00) PDP line is distinguishable among the bundle — most clearly visible in the right half where lines fan out; subtle horizontal grid lines present
-      Legibility verdict: PASS — all text readable against off-white background; no light-on-light issues
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "ice-basic · pygal · anyplot.ai" in small dark text at top center; x-axis label "Square Footage" and y-axis label "Predicted Price ($ thousands)" readable; tick labels visible
+      Data: ~50 semi-transparent green (#009E73) ICE curves with cubic-interpolated smooth stepped shape from 700-3600 sqft; PDP overlay (intended #D55E00 orange, stroke width 14) is visibly bolder but orange color is hard to confirm amid dense green bundle; large legend area below chart with small green dots for all 51 series
+      Legibility verdict: PASS — all text readable against light background; no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title, axis labels, and tick labels all render in light/off-white text and are clearly readable against the dark background; no dark-on-dark text failures observed; horizontal grid lines subtle on dark surface
-      Data: ICE line colors identical to light render — same #009E73 green ICE lines and #D55E00 PDP line; the green brand color reads well on the dark background; the PDP vermillion is distinguishable in the right portion of the chart
-      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark failures
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and axis labels rendered in light cream (#F0EFE8); tick labels in lighter muted tone — all clearly readable against dark background; no dark-on-dark text failures detected
+      Data: Colors identical to light render — green ICE lines (#009E73) clearly visible against dark background; PDP line (orange/vermillion) appears as a bolder/thicker line through the ICE bundle but orange hue is again hard to confirm at this density
+      Legibility verdict: PASS — all text light-colored and readable on dark surface; chrome correctly flipped
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 23
       max: 30
       items:
       - id: VQ-01
@@ -53,72 +55,76 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Text readable in both themes; axis labels (18px) and tick labels
-          (16px) slightly below style-guide recommendations of 22px/18px for pixel-based
-          libraries, appearing small on 4800x2700 canvas
+        comment: Font sizes explicitly set per style guide (title=28, label=22, major_label=18);
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: ICE line overlap is intentional and expected; no text collisions
+        comment: x-axis labels sparse and rotated 30 degrees; no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: ICE lines visible in both themes; PDP line distinguishable by color
-          and stroke width but competes with dense bundle in left portion
+        comment: ICE lines visible with good density representation; PDP bold line
+          (width=14) is thicker but orange color is hard to distinguish visually amid
+          50 overlapping semi-transparent green lines
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1 (#009E73) and 2 (#D55E00) are CVD-safe
+        comment: Okabe-Ito green+orange is CVD-safe; transparency aids density reading
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
         passed: true
-        comment: Correct 4800x2700 landscape; nothing cut off; margins reasonable
+        comment: Large legend at bottom (49 unnamed series create pygal legend entries
+          even with empty labels) consumes ~40% of canvas height, compressing the
+          plot area
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; y-axis has units ($K); x-axis descriptive
+        comment: Square Footage and Predicted Price ($ thousands) are descriptive
+          with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, PDP #D55E00; backgrounds #FAF8F1/#1A1A17;
-          both renders theme-correct'
+        comment: 'First series #009E73, PDP #D55E00 (Okabe-Ito position 2), backgrounds
+          #FAF8F1/#1A1A17, chrome tokens theme-adaptive in both renders'
     design_excellence:
-      score: 9
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: 'Default: thoughtful use of opacity+stroke contrast for ICE vs PDP
-          hierarchy but pygal''s default frame/border remains; no exceptional polish'
+        passed: true
+        comment: Intentional two-color design (ICE green + PDP orange), semi-transparency
+          for density — well-configured library default, not publication-ready
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: 'Default: pygal lacks spine removal; y-axis-only grid is correct;
-          minimal customization possible'
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Semi-transparent ICE lines with bold PDP creates clear focal point
-          and visual hierarchy for an ICE plot; slightly above default
+        passed: true
+        comment: y-only grid is a good choice; however the massive legend area at
+          the bottom dominates the layout and overwhelms the chart
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: bold opaque PDP versus semi-transparent
+          ICE bundle; heterogeneous responses (stepped curves diverging at different
+          price levels) tell a meaningful ML story'
     spec_compliance:
       score: 14
       max: 15
@@ -128,29 +134,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ICE line chart with PDP overlay
+        comment: 'Correct ICE plot: one line per observation, feature grid on x-axis'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Individual lines with low alpha (0.3); PDP overlay bold and opaque;
-          50 observations over grid
+        comment: ICE lines with low alpha and PDP bold overlay implemented; orange
+          PDP color differentiation is harder to confirm visually at this density
+          and resolution
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=square footage, Y=predicted price; each line=one observation
+        comment: Square footage on x, predicted price ($K) on y, 50 observations x
+          75 grid points correctly mapped
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title correct; legend_at_bottom=True but PDP legend entry may not
-          render — not clearly visible in images
+        passed: true
+        comment: Title format 'ice-basic · pygal · anyplot.ai' correct; legend labels
+          'ICE Curves' and 'Partial Dependence (PDP)' correct
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -158,21 +166,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows ICE curves, heterogeneous effects, and PDP average; optional
-          rug/c-ICE not implemented
+        comment: Shows ICE curves with visible heterogeneity (different price levels,
+          different steepness), plus PDP overlay; strong coverage of ICE plot purpose
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Housing price prediction with GradientBoostingRegressor; realistic
-          sqft range 700-3600, prices $200K-$580K
+        comment: Real-estate ML scenario (GradientBoostingRegressor predicting house
+          prices from sqft, bedrooms, location_score) — neutral, plausible, comprehensible
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 40 grid points is below spec's recommended 50-100 range
+        passed: true
+        comment: Price range ~$280K-580K for houses 700-3600 sqft is realistic; model
+          response correctly shows positive monotonic trend
     code_quality:
       score: 10
       max: 10
@@ -182,51 +191,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clean linear script
+        comment: Imports → data/model → plot → save; sys.path workaround is documented
+          and necessary
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) and random_state=42
+        comment: np.random.seed(42) + GBR random_state=42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; importlib workaround necessary for file naming
-          conflict
+        comment: All imports used; no unused packages
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: sys.path workaround well-handled; ICE computation clear
+        comment: Clean, Pythonic; ICE matrix construction and iteration are clear
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png + plot-{THEME}.html (pygal is interactive)
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses pygal.Line with Style, x_labels, legend_at_bottom — correct
+          idiomatic patterns
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Correct pygal.Line() with Style theming and x_labels; standard pygal
-          patterns
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Uses per-series stroke_style (width + opacity), interactive HTML
-          export alongside PNG, and legend_at_bottom — real pygal-specific features
-          but modest depth
+        comment: Uses pygal's interpolate=cubic for smooth curves and per-series stroke_style
+          — both are distinctive pygal features
   verdict: APPROVED
 impl_tags:
   dependencies:
