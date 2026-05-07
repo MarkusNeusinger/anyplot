@@ -1,16 +1,23 @@
-""" pyplots.ai
+"""anyplot.ai
 radar-multi: Multi-Series Radar Chart
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-25
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2025-05-07
 """
 
 import math
+import os
+import sys
 
-import numpy as np
-import pandas as pd
-from plotnine import (
+
+# Ensure we import plotnine module, not this file
+sys.path = [p for p in sys.path if p != os.path.dirname(__file__)]
+
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from plotnine import (  # noqa: E402
     aes,
     element_blank,
+    element_rect,
     element_text,
     geom_line,
     geom_point,
@@ -26,6 +33,11 @@ from plotnine import (
 )
 
 
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
 # Data - Product comparison across key attributes
 categories = ["Price", "Quality", "Durability", "Support", "Features", "Design"]
 n = len(categories)
@@ -37,6 +49,9 @@ products = {
     "Product C": [95, 60, 70, 90, 75, 60],
     "Product D": [60, 80, 85, 75, 90, 80],
 }
+
+# Okabe-Ito palette - first series is always #009E73
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Create angles for each category (evenly spaced around circle)
 angles = [i * 2 * math.pi / n for i in range(n)]
@@ -88,18 +103,15 @@ for cat, angle in zip(categories, angles, strict=True):
 
 label_df = pd.DataFrame(label_rows)
 
-# Define colors: Python Blue, Python Yellow, plus two more distinct colors
-colors = ["#306998", "#FFD43B", "#E74C3C", "#2ECC71"]
-
 # Plot
 plot = (
     ggplot()
     # Gridlines (circles)
     + geom_line(
-        aes(x="x", y="y", group="radius"), data=grid_df, color="#CCCCCC", size=0.5, alpha=0.7, linetype="dashed"
+        aes(x="x", y="y", group="radius"), data=grid_df, color=INK_SOFT, size=0.5, alpha=0.15, linetype="dashed"
     )
     # Spokes
-    + geom_line(aes(x="x", y="y", group="angle_group"), data=spoke_df, color="#CCCCCC", size=0.5, alpha=0.7)
+    + geom_line(aes(x="x", y="y", group="angle_group"), data=spoke_df, color=INK_SOFT, size=0.5, alpha=0.15)
     # Filled polygons for each series (with transparency for overlap visibility)
     + geom_polygon(aes(x="x", y="y", fill="series", group="series"), data=df, alpha=0.2)
     # Lines connecting points
@@ -107,30 +119,32 @@ plot = (
     # Points at each vertex (exclude closing points)
     + geom_point(aes(x="x", y="y", color="series"), data=df[df["order"] < n], size=5)
     # Category labels
-    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=14, color="#333333")
-    # Apply custom colors
-    + scale_fill_manual(values=colors)
-    + scale_color_manual(values=colors)
+    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=5, color=INK)
+    # Apply Okabe-Ito colors
+    + scale_fill_manual(values=OKABE_ITO)
+    + scale_color_manual(values=OKABE_ITO)
     # Axis scaling
     + scale_x_continuous(limits=(-150, 150))
     + scale_y_continuous(limits=(-150, 150))
     # Labels and title
-    + labs(title="radar-multi · plotnine · pyplots.ai", fill="Product", color="Product")
-    # Theme for clean radar appearance
+    + labs(title="radar-multi · plotnine · anyplot.ai", fill="Product", color="Product")
+    # Theme for clean radar appearance with theme-adaptive colors
     + theme(
         figure_size=(12, 12),
-        plot_title=element_text(size=24),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(size=24, color=INK),
+        legend_background=element_rect(fill=PAGE_BG, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=16, color=INK_SOFT),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         axis_line=element_blank(),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_background=element_blank(),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=300)
