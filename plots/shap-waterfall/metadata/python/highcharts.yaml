@@ -1,0 +1,250 @@
+library: highcharts
+language: python
+specification_id: shap-waterfall
+created: '2026-05-07T11:47:19Z'
+updated: '2026-05-07T12:06:19Z'
+generated_by: claude-sonnet
+workflow_run: 25493326647
+issue: 5237
+python_version: 3.13.13
+library_version: unknown
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/highcharts/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - Native Highcharts waterfall chart type with isSum flag correctly models the cumulative
+    SHAP attribution chain from baseline to final prediction
+  - Semantic Okabe-Ito color assignment (orange = positive/risk-up, blue = negative/risk-down,
+    green = anchors) creates an immediate, intuitive visual narrative that needs no
+    legend
+  - 'Complete theme-adaptive chrome: all INK, INK_SOFT, GRID, and PAGE_BG tokens applied
+    to every axis, label, and background element in both renders'
+  - Multi-CDN fallback download logic with retry ensures robust CI execution even
+    when a CDN is unreachable
+  - Dual plotLines (baseline dashed, prediction dotted) with branded label styling
+    fulfil the spec's labeled reference lines requirement
+  weaknesses:
+  - Title prefix 'Credit Default Risk · ' is non-standard; must be exactly 'shap-waterfall
+    · highcharts · anyplot.ai'
+  - 'yAxis.max: 0.50 wastes ~30% of canvas width to the right of the Baseline 0.35
+    line; trim to ~0.40-0.42'
+  - Data label fontSize 18px is slightly small for a 4800x2700 canvas; 20-22px would
+    improve legibility
+  - download_js() helper function violates KISS; inline the CDN logic or simplify
+    to a single URL
+  - Raw JSON construction bypasses highcharts_core Python API; LM-01 capped at 3/5
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title visible as dark ink at top-left; y-axis feature labels (Credit Score, Debt-to-Income, etc.) readable as dark text; x-axis tick labels (0.00, 0.05, ... 0.45) readable; axis titles ("Probability of Default", "Feature") clear; reference line labels ("Baseline 0.35", "Prediction 0.20") legible
+      Data: Baseline bar in brand green #009E73 spanning ~0 to 0.35; feature bars in orange #D55E00 (positive SHAP) and blue #0072B2 (negative SHAP); prediction bar in green #009E73 spanning ~0 to 0.20; SHAP value labels (+0.150, -0.180, etc.) shown beside each bar
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title appears as light-colored text against dark background; y-axis feature labels readable as light gray #B8B7B0; x-axis tick labels visible as light gray; axis titles in light #F0EFE8; grid lines very subtle; reference line labels legible ("Prediction 0.20" in green, "Baseline 0.35" in soft gray); no dark-on-dark text failures detected
+      Data: Bar colors identical to light render — green #009E73 for baseline/prediction, orange #D55E00 for positive SHAP, blue #0072B2 for negative SHAP; all bars clearly distinguishable against dark background
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28px, axis 22px, ticks 18-20px,
+          data labels 18px); data labels slightly small, 20-22px would be better
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All bars sized and padded well, clearly distinct in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Orange/blue are high-contrast and CVD-safe; green reference bars
+          unambiguous
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Chart fills canvas well but yAxis.max: 0.50 extends 15+ points beyond
+          Baseline 0.35, wasting right-side canvas'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Probability of Default (x-axis) and Feature (y-axis) are descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito positions 1-3 used correctly; backgrounds #FAF8F1/#1A1A17;
+          chrome tokens applied to all elements'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: semantic color coding for direction, brand green
+          for reference bars, clean typography; not yet publication-level'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'borderWidth: 0 removes bar outlines, legend/tooltip disabled, subtle
+          grid; top/right axes still present'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color instantly signals contribution direction; magnitude-ordered
+          features guide the eye; clear flow from baseline to prediction
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Native Highcharts waterfall type with inverted: true — correct horizontal
+          waterfall'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Cumulative bars, positive/negative color coding, base value bar,
+          prediction bar, numeric SHAP labels, horizontal layout, reference lines,
+          magnitude-sorted features, native connector lines
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Features on y-axis, probability of default on x-axis, all 10 features
+          shown
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: false
+        comment: Title has non-standard prefix 'Credit Default Risk · '; required
+          format is 'shap-waterfall · highcharts · anyplot.ai'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both positive and negative contributors shown; baseline and prediction
+          bookend bars complete the picture
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Credit default risk model for single loan application; all feature
+          names domain-appropriate; neutral business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Base value 0.35, final prediction 0.20, SHAP values ±0.18 are all
+          realistic for probability-scale credit model
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: download_js() helper function defined; KISS requires flat script
+          with no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded; fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All 9 imports are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: JS formatter injection via string-replace is pragmatic; multi-CDN
+          fallback justified; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses native Highcharts waterfall type correctly but bypasses highcharts_core
+          Python API in favour of raw JSON construction
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'isSum: true for prediction total bar, inverted: true for horizontal
+          orientation, plotLines with styled labels, CDP-based full-resolution screenshot
+          — all Highcharts-distinctive'
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling: []
