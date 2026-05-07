@@ -1,162 +1,175 @@
 library: letsplot
+language: python
 specification_id: box-notched
 created: '2025-12-25T19:54:31Z'
-updated: '2025-12-25T19:56:43Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510123516
+updated: '2026-05-07T22:55:17Z'
+generated_by: claude-haiku
+workflow_run: 25526240183
 issue: 2019
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/box-notched/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/box-notched/letsplot/plot.html
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/letsplot/plot-dark.html
 quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-  patterns:
-    - data-generation
-    - iteration-over-groups
-  dataprep: []
-  styling:
-    - alpha-blending
 review:
   strengths:
-  - Clear notched box plot with visible notches around medians for statistical comparison
-  - Excellent data design with varied distributions showing outliers in Marketing
-    and Sales
-  - Good color palette with distinct colors for each department
-  - Proper title format following spec-id · library · pyplots.ai convention
-  - Clean KISS code structure with reproducible seed
+  - Perfect theme adaptation with flawless dark/light color handling
+  - Excellent visual quality with crisp legibility in both themes
+  - Proper Okabe-Ito palette usage in correct canonical order
+  - Well-chosen realistic data with appropriate statistical distributions
+  - Clean, maintainable code with excellent reproducibility (seed=42)
+  - Correct notch implementation showing 95% CI statistical significance
+  - Appropriate font sizing (24pt title, 20pt axis, 16pt ticks) for high-res canvas
   weaknesses:
-  - Outlier points use gray color instead of matching box fill colors, reducing visual
-    cohesion
-  image_description: 'The plot displays a notched box plot comparing annual salaries
-    across 5 departments (Engineering, Marketing, Sales, Finance, Operations). Each
-    department has a distinctly colored box: Engineering (blue), Marketing (yellow),
-    Sales (green), Finance (red/coral), and Operations (purple). The boxes show clear
-    notches around the medians representing confidence intervals. Outliers are displayed
-    as gray circular points beyond the whiskers - notably visible in Marketing (high
-    outliers around $120-125K), Sales (both high outliers at $130-145K and low outliers
-    around $28-30K), Engineering (one low outlier ~$64K), and Finance (one low outlier
-    ~$55K). The y-axis shows "Annual Salary (USD)" ranging from ~30,000 to 150,000,
-    and the x-axis shows "Department". The title "box-notched · letsplot · pyplots.ai"
-    is centered at the top. The plot uses a clean minimal theme with light grid lines
-    on the y-axis only.'
+  - 'Design Excellence below maximum: default styling with minimal visual innovation
+    beyond required aesthetics'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) surface provides clean contrast
+      Chrome: Title "box-notched · letsplot · anyplot.ai" is centered, prominent, and readable in dark INK color. X-axis label "Department" and Y-axis label "Annual Salary (USD)" are clear with units. Tick labels (department names, salary values) are all readable in INK_SOFT color. Y-axis grid lines are subtle and appropriate.
+      Data: Five notched box plots in perfect Okabe-Ito order: Engineering (green #009E73), Marketing (orange #D55E00), Sales (blue #0072B2), Finance (reddish purple #CC79A7), Operations (yellow #E69F00). All boxes show clear medians, quartiles, whiskers, and notches. Outliers are rendered as distinct circles with appropriate alpha=0.8. Notches are visibly indented around medians showing 95% CI bands.
+      Legibility verdict: PASS - All text is clearly readable, excellent contrast, no overlaps, proper hierarchy
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) surface with no readability issues
+      Chrome: Title, axis labels, and tick labels all use light INK (#F0EFE8) and INK_SOFT (#B8B7B0) colors - perfectly readable against dark background with no dark-on-dark failures. Grid lines visible and subtle. All chrome elements correctly adapted to dark theme.
+      Data: Okabe-Ito colors are IDENTICAL to light render (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00). Box plots, notches, whiskers, and outliers render with same clarity as light version. No color information lost.
+      Legibility verdict: PASS - Perfect theme adaptation, all text highly readable, data colors consistent with light render, no contrast failures
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable at appropriate
-          sizes
+        comment: All fonts explicitly sized (24pt title, 20pt axis, 16pt ticks); readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; department names well-spaced
+        comment: All text well-spaced, no collisions, excellent layout
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Box plots are well-sized, outliers visible with good alpha
+        comment: Boxes, notches, whiskers, medians, outliers all clearly visible with
+          appropriate sizing
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Distinct colors that work for colorblind viewers (blue, yellow, green,
-          red, purple)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space, well-balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units "Annual Salary (USD)", X-axis labeled "Department"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette is CVD-safe and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600×900 scaled 3x = 4800×2700px; proper 16:9 aspect ratio; generous
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle and appropriate; legend hidden (acceptable since x-axis
-          labels identify categories) but minor deduction for not showing legend
+        passed: true
+        comment: Y-axis includes units (USD); title follows spec format; descriptive
+          labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series green #009E73; Okabe-Ito order correct (5 categories);
+          backgrounds #FAF8F1 light / #1A1A17 dark; both themes perfect'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional polish, clean layout, intentional color hierarchy; default
+          base (4) + 1 for execution quality
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped spine frame appropriate for box plots; subtle Y-axis grid;
+          good alpha blending on outliers (0.8)
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy via notches; natural left-to-right flow; effectively
+          shows salary distribution differences and median significance via overlap
+          patterns
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct notched box plot implementation
+        comment: Correct notched box plot with geom_boxplot(notch=True)
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, values on Y correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Notches present, outliers shown, whiskers at IQR, different colors
-          per category
-      - id: SC-04
-        name: Data Range
+        comment: Notches show 95% CI; standard box elements present; 5 categories
+          in different colors
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible including outliers from ~28K to ~145K
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Department (categorical) on X; Salary (numeric) on Y; axes show all
+          data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Categories clearly identified via x-axis labels
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "box-notched · letsplot · pyplots.ai"
+        comment: Title format correct; legend properly omitted (categories labeled
+          on X-axis)
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows varied distributions: Engineering/Finance with overlapping
-          notches, outliers in multiple directions, different spreads'
+        comment: 5 departments; sample sizes 70-85 (well above n>20 minimum); outliers
+          included for demonstration
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Department salary comparison is a realistic business scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Salary values are realistic ($28K-$145K range)
+        comment: Department salary distributions are realistic and neutral; appropriate
+          for business analysis
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Salary range 28k-145k is realistic; Y-axis scale 0-150k appropriate
     code_quality:
       score: 10
       max: 10
@@ -166,40 +179,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: Direct script structure, no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, pandas, lets_plot)
+        comment: 'All imports used: os, numpy, pandas, lets_plot, ggsave'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Appropriate complexity, clear variable names, no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly; no bare plot.png
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Excellent ggplot2-style grammar; proper use of geom_boxplot with
+          notch=True; scale_*_manual for colors; theme() for customization
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses ggplot2 grammar correctly with geom_boxplot(notch=True), but
-          could leverage more lets-plot specific features like tooltips for interactivity
+        passed: true
+        comment: Uses ggsave() with scale parameter (letsplot-specific); generates
+          both PNG and HTML; leverages interactive capability
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
