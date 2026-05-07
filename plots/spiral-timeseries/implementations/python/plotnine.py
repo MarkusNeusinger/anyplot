@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 spiral-timeseries: Spiral Time Series Chart
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-05-07
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 84/100 | Created: 2026-05-07
 """
 
 import os
