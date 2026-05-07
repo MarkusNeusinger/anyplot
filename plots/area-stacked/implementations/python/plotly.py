@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 area-stacked: Stacked Area Chart
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-07
+Quality: 85/100 | Updated: 2026-05-07
 """
 
 import os
