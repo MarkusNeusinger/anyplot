@@ -1,160 +1,169 @@
 library: plotnine
+language: python
 specification_id: box-notched
 created: '2025-12-25T19:52:44Z'
-updated: '2025-12-25T19:54:59Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510123507
+updated: '2026-05-07T22:52:28Z'
+generated_by: claude-haiku
+workflow_run: 25526014099
 issue: 2019
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/box-notched/plotnine/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-    - data-generation
-    - iteration-over-groups
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent use of plotnine grammar of graphics with proper layering
-  - Clear notches visible on all boxes enabling median comparison
-  - Thoughtful data generation with different distributions per department (bimodal
-    Sales, tight Support, outliers in HR)
-  - Professional color palette starting with Python blue
-  - Appropriate text sizing for 4800x2700 output
+  - Perfect visual quality with theme-correct chrome on both light and dark renders
+  - All Okabe-Ito palette colors applied correctly; data colors identical across themes
+  - Excellent data quality with realistic clinical trial scenario showing varied outcomes
+  - Proper implementation of all spec requirements including notches
+  - Clean, reproducible code with proper seed and theme token architecture
+  - Font sizes explicitly set and readable at 4800×2700px
   weaknesses:
-  - Legend disabled - consider keeping for accessibility if plot is viewed without
-    context
-  image_description: 'The plot displays a notched box plot showing Productivity Score
-    (points) across 5 departments: Engineering, Marketing, Sales, Support, and HR.
-    Each department has a distinct color: Engineering (Python blue #306998), Marketing
-    (yellow #FFD43B), Sales (teal #4A90A4), Support (purple #8B5A8C), and HR (muted
-    green #6B8E6B). The notches around medians are clearly visible on all boxes, with
-    varying IQR widths showing different distributions. Outliers are displayed as
-    individual points - Engineering has outliers at both high (~102) and low (~51)
-    ends, while HR shows a low outlier (~40). The title "box-notched · plotnine ·
-    pyplots.ai" appears at the top. Axis labels are "Department" (x-axis) and "Productivity
-    Score (points)" (y-axis). The plot uses a minimal theme with subtle gridlines.'
+  - Design Excellence could be elevated with more distinctive visual refinement (e.g.,
+    custom spine styling, enhanced grid subtlety)
+  - Library Mastery could leverage more plotnine-specific patterns or techniques
+  - Visual storytelling, while good, could benefit from enhanced color or size emphasis
+    on key comparisons
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct and readable
+      Chrome: Title "box-notched · plotnine · anyplot.ai" in dark text (24pt), axis labels "Treatment Group" and "Clinical Score" in dark text (20pt), tick labels in softer dark text (16pt) - all clearly readable
+      Data: Five notched box plots in Okabe-Ito order (green #009E73, orange #D55E00, blue #0072B2, purple #CC79A7, yellow #E69F00); notches visible on each box; outliers shown as individual points; whiskers and quartiles clear
+      Legibility verdict: PASS - All elements readable with excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct and appropriate for dark theme
+      Chrome: Title in light text (#F0EFE8), axis labels in light text, tick labels in softer light text (#B8B7B0) - all clearly readable against dark background, no dark-on-dark failures
+      Data: Identical data colors to light render (green, orange, blue, purple, yellow) confirming proper theme adaptation; notches, boxes, whiskers all visible on dark surface; outlier points visible
+      Legibility verdict: PASS - All elements readable; theme adaptation perfect
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title ~24pt, axis labels ~20pt, tick labels ~16pt - all perfectly
-          readable
+        comment: 'All font sizes explicitly set: Title 24pt, Labels 20pt, Ticks 16pt;
+          perfectly readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, department labels well-spaced
+        comment: No overlapping text; all elements fully separated
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Box widths appropriate, notches clearly visible, outliers well-sized
-          with alpha
+        comment: Notches, boxes, whiskers, outliers optimally visible and sized
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Colors distinguishable, though yellow/teal could be closer for some
-          colorblind types
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units "(points)", X-axis "Department" is descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette with strong colorblind-safe contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect balance with proper margins and space utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No legend shown (legend_position="none"), but for this plot legend
-          is redundant since x-axis labels identify categories
+        comment: 'Descriptive labels: Treatment Group, Clinical Score'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect: first series #009E73, all colors follow Okabe-Ito order,
+          backgrounds correct (#FAF8F1 light / #1A1A17 dark), theme-adaptive chrome
+          perfect'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Well-configured with intentional theme tokens; polished but not extraordinary
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (alpha 0.10/0.05), clean minimal base, good attention
+          to detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear treatment progression story; varied distributions and outliers
+          guide viewer
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct notched box plot
+        comment: Correct notched box plot with all required elements
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, values on Y correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Notches present, median/quartiles/whiskers at 1.5*IQR, outliers shown,
-          different colors per category
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: notches, quartiles, whiskers, outliers'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible including outliers
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A (colors mapped directly to x-axis categories)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Follows "{spec-id} · {library} · pyplots.ai" format exactly
+        comment: Title format correct; legend appropriately omitted
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows outliers (Engineering, HR), varying distributions (Support
-          tight, Marketing wide), different medians for comparison
+        comment: 'Shows all aspects: varied medians, different spreads, outliers,
+          bimodality'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Employee productivity scores across departments is a relatable, real-world
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Scores in 40-100 range are realistic for performance metrics
+        comment: Authentic clinical trial scenario (Control + treatments + long-term)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible clinical score values (65-88) and SDs
     code_quality:
       score: 10
       max: 10
@@ -164,40 +173,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save'
+        comment: 'Clean structure: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Seed set to 42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Pythonic and appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Correct output format
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Proper ggplot2 grammar with aes(), geom_boxplot(notch=True), scale_fill_manual,
-          theme_minimal, layered composition
+        comment: Proper ggplot2 grammar, correct aes(), theme tokens, categorical
+          ordering
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses native notch=True, element_*() functions, proper theme adaptation
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
