@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: shap-waterfall
 created: '2026-05-07T12:13:05Z'
-updated: '2026-05-07T12:19:17Z'
+updated: '2026-05-07T12:33:08Z'
 generated_by: claude-sonnet
 workflow_run: 25494367197
 issue: 5237
@@ -12,55 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-wate
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - Perfect data quality with realistic credit default risk scenario and plausible
-    SHAP values ordered by magnitude
-  - 'Full spec compliance: all required features implemented (cumulative bars, reference
-    lines, connectors, value labels, color coding)'
-  - 'Perfect code quality: clean, deterministic, idiomatic structure with no functions
-    or classes'
-  - Theme-adaptive chrome works correctly in both light and dark renders with no dark-on-dark
-    failures
-  - Smart use of geom_rect with manual waterfall geometry is idiomatic for grammar-of-graphics
-    style
+  - 'Complete spec implementation: all seven required features (ordering, cumulative
+    bars, color coding, reference lines, SHAP labels, horizontal layout, connector
+    lines) present and working'
+  - 'Excellent data quality: realistic credit-scoring context with plausible SHAP
+    magnitudes and authentic feature importance ordering'
+  - 'Correct theme adaptation: both renders pass the readability check with no dark-on-dark
+    or light-on-light failures'
+  - Clean waterfall position computation using explicit bar_starts/bar_ends for precise
+    rectangular segments
   weaknesses:
-  - 'VQ-01: x-axis tick labels are size=14 (should be 16 per guidelines); SHAP value
-    annotations at size 10-11 are borderline small at 4800x2700'
-  - 'DE-01: Design is clean but not exceptional - needs more visual polish to reach
-    publication quality'
-  - 'DE-02: Bottom half of chart (small bars) feels dense with labels; geom_text offset
-    or size for small bars could be improved'
-  - 'SC-04: Title format is Credit Default Risk cdot shap-waterfall cdot letsplot
-    cdot anyplot.ai - should be exactly shap-waterfall cdot letsplot cdot anyplot.ai;
-    color legend missing for positive/negative direction'
-  - 'LM-02: Does not leverage HTML interactivity (tooltip aesthetics) for the HTML
-    export'
+  - 'SC-04: Title format has unsanctioned prefix "Credit Default Risk ·" before the
+    spec-id; standard format is {spec-id} · {library} · anyplot.ai'
+  - 'VQ-01: axis_text_x is size=14 (guideline is 16); SHAP value labels are size=10
+    which is small at full resolution'
+  - 'DE-01/LM-02: Design sophistication and library-distinctive usage are solid but
+    not exceptional; no lets-plot-specific interactive features used even in the HTML
+    output'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) - correct theme surface
-      Chrome: Title "Credit Default Risk · shap-waterfall · letsplot · anyplot.ai" in dark ink - readable; y-axis feature labels in dark secondary ink - readable; x-axis tick labels in dark secondary ink - readable; x-axis label "SHAP Value · Impact on Predicted Default Probability" - readable; "Base = 0.35" and "Predicted = 0.44" reference annotations in dark ink - readable
-      Data: Positive SHAP bars in Okabe-Ito vermillion (#D55E00); negative bars in Okabe-Ito blue (#0072B2); dashed baseline at 0.35, solid predicted line at 0.44; +/- SHAP value labels beside bars; dotted connector segments between bars
-      Legibility verdict: PASS
+      Background: Warm off-white (~#FAF8F1) — correct, not pure white
+      Chrome: Title "Credit Default Risk · shap-waterfall · letsplot · anyplot.ai" in dark ink, readable; y-axis feature names in INK_SOFT (medium gray), readable; x-axis tick labels in INK_SOFT, readable; x-axis label in dark INK, readable; SHAP value labels in INK_MUTED, readable
+      Data: 12 horizontal bars — positive bars in Okabe-Ito vermillion (#D55E00), negative bars in Okabe-Ito blue (#0072B2); dotted connector segments in INK_SOFT; dashed base-value line (0.35) and solid predicted-value line (0.44) visible
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) - correct theme surface
-      Chrome: Title in light text (~#F0EFE8) - readable; y-axis feature labels in light secondary ink (~#B8B7B0) - readable; x-axis tick labels in light secondary ink - readable; axis title in light ink - readable; reference annotations in light ink - readable; no dark-on-dark failures detected
-      Data: Bar colors (vermillion and blue) are IDENTICAL to light render - only chrome flipped; solid predicted line now in light color; dashed baseline also adapts to light color
-      Legibility verdict: PASS
+      Background: Warm near-black (~#1A1A17) — correct, not pure black
+      Chrome: Title in light cream (#F0EFE8 equivalent), readable; y-axis feature names in #B8B7B0 equivalent (mid-gray), readable; x-axis tick labels readable; x-axis label readable; SHAP value labels readable — no dark-on-dark failures detected
+      Data: Bar colors identical to light render — vermillion and blue unchanged; connector segments and reference lines visible in adapted light tones
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title 24pt, axis title 20pt, y-ticks 16pt all explicitly set; x-axis
-          ticks at 14pt (below 16 guideline); SHAP value labels at size 10-11 (small)
+        comment: All sizes explicitly set; axis_text_x=14 slightly below 16pt guideline;
+          geom_text SHAP labels size=10 small but legible
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -69,63 +64,59 @@ review:
         comment: No overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible; smallest bars (0.01-0.02 range) are thin but
-          visible
+        comment: Bars, connectors, reference lines all clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito vermillion and blue are CVD-safe and distinguishable
+        comment: Vermillion+blue CVD-safe, no red-green encoding
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Plot fills ~65% of canvas; slight empty left-side space from 0.28
-          to 0.34
+        comment: Good canvas utilization, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''SHAP Value · Impact on Predicted Default Probability''
-          is descriptive'
+        comment: Descriptive x-axis label with context; y-axis intentionally empty
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito colors used semantically; backgrounds correct (#FAF8F1
-          light, #1A1A17 dark); both renders theme-correct'
+        comment: Okabe-Ito positions 2+3 used per spec semantic requirement; correct
+          backgrounds; chrome adapts correctly
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above well-configured default: custom semantic colors, explicit
-          sizing, clean minimal layout; not yet at publication quality'
+        comment: Above defaults with warm backgrounds, semantic colors, connector
+          lines; not publication-ready
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-only grid, no y-axis line, no ticks, legend removed; genuinely
-          refined
+        comment: Subtle x-grid, no y-grid, panel border removed, ticks removed
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Features ordered by magnitude; color coding creates direction hierarchy;
-          missing: no color legend for readers unfamiliar with SHAP'
+        comment: Color coding signals direction; connector lines trace cumulative
+          flow; magnitude ordering creates hierarchy
     spec_compliance:
       score: 14
       max: 15
@@ -135,27 +126,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal waterfall chart with cumulative segments
+        comment: Correct horizontal waterfall with cumulative stacking
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: sorted by magnitude, cumulative bars, color-coded,
-          reference lines, numeric labels, horizontal layout, connector segments'
+        comment: All seven spec features implemented
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=SHAP value (cumulative), y=feature names, correct ordering
+        comment: X=SHAP value, Y=feature names, correct cumulative flow
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
         passed: false
-        comment: Title adds 'Credit Default Risk ·' prefix deviating from required
-          format; no color legend for positive/negative direction
+        comment: Title prepends 'Credit Default Risk ·' before spec-id; should be
+          'shap-waterfall · letsplot · anyplot.ai'
     data_quality:
       score: 15
       max: 15
@@ -165,22 +155,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 12 features with both positive and negative contributions; cumulative
-          stacking; base/predicted anchors
+        comment: 12 features, mix of positive/negative, good magnitude range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Credit default risk model with realistic financial features - neutral,
-          real-world scenario
+        comment: Credit default risk with realistic features in neutral business context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Probability scale (0.35 base, 0.44 predicted); SHAP magnitudes decrease
-          plausibly from 0.18 to 0.01
+        comment: Plausible SHAP values for probability model; realistic feature importance
+          ordering
     code_quality:
       score: 10
       max: 10
@@ -190,61 +178,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: imports → data → cumulative calc → dataframes → plot layers → save;
-          no functions or classes
+        comment: Linear flow, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic (hardcoded arrays)
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, lets_plot - all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity for custom waterfall chart
+        comment: Clean waterfall computation, df_pos/df_neg split pattern
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Uses grammar of graphics correctly: ggplot + geom_rect + geom_vline
-          + geom_segment + geom_text + scale_fill_manual + scale_y_continuous'
+        comment: Full ggplot grammar used correctly with lets-plot API
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: geom_rect with manual xmin/xmax/ymin/ymax for waterfall is distinctive
-          grammar-of-graphics approach; scale_y_continuous with breaks/labels is clever;
-          could leverage tooltip aesthetics for HTML export
-  verdict: REJECTED
+        comment: HTML export and scale=3 PNG are lets-plot-specific; grammar otherwise
+          shared with plotnine
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - annotations
   - manual-ticks
-  - layer-composition
-  patterns:
-  - data-generation
+  - html-export
+  patterns: []
   dataprep:
   - cumulative-sum
-  styling:
-  - minimal-chrome
+  styling: []
