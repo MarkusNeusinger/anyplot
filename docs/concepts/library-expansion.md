@@ -276,12 +276,22 @@ entries.
 - **Licensing**: FOSS-first; libraries with a free-for-private-use tier
   (Highcharts, amCharts) are allowed but tagged and never crowd out FOSS
   alternatives at the same tier.
+- **Annual review cadence.** Once a year, revisit this document and check:
+  1. **Downloads**: re-run the 3× test on every cross-language library; flip
+     canonical variants where the gap has reversed.
+  2. **Visitor data** (Plausible): which libraries / plot pages drew the most
+     traffic? Promote rising entries in the recommendation tiers; demote ones
+     nobody visits.
+  3. **Trend scan**: JS Rising Stars, PyPI top-movers, GitHub Trending in
+     `data-visualization`. Add anything that has clearly broken into the
+     mainstream and isn't already covered.
+  4. **Tier reshuffle**: update §7 priority order accordingly.
+
+  An off-cycle review is also triggered by a major release of an in-scope
+  library or a clear emerging contender.
 
 ## 10. Open questions for the team
 
-1. **Refresh cadence for the 3× threshold.** Download numbers shift over time.
-   Recommend re-checking the canonical-variant decisions once a year and on
-   any major release of a contender.
-2. **amCharts inclusion.** Same licence model as Highcharts. Add as a Tier 3
+1. **amCharts inclusion.** Same licence model as Highcharts. Add as a Tier 3
    entry, or skip on the grounds that Highcharts already covers the
    "commercial, free for private" niche?
