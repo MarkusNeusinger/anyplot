@@ -1,12 +1,25 @@
-""" pyplots.ai
+"""anyplot.ai
 box-notched: Notched Box Plot
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 93/100 | Created: 2025-12-25
+Library: plotly | Python 3.13
+Quality: pending | Created: 2025-05-07
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
 
 # Data - Employee salary distributions across departments
 np.random.seed(42)
@@ -15,20 +28,17 @@ departments = ["Engineering", "Marketing", "Sales", "HR", "Finance"]
 salary_data = {
     "Engineering": np.random.normal(95000, 15000, 80),
     "Marketing": np.random.normal(72000, 12000, 65),
-    "Sales": np.random.normal(68000, 18000, 90),  # Higher variance
+    "Sales": np.random.normal(68000, 18000, 90),
     "HR": np.random.normal(65000, 10000, 50),
     "Finance": np.random.normal(85000, 14000, 70),
 }
 
-# Add some outliers
+# Add outliers
 salary_data["Engineering"] = np.append(salary_data["Engineering"], [145000, 150000, 42000])
 salary_data["Sales"] = np.append(salary_data["Sales"], [135000, 28000, 25000])
 salary_data["Finance"] = np.append(salary_data["Finance"], [140000, 45000])
 
-# Colors for each department (Python Blue first, then accessible colors)
-colors = ["#306998", "#FFD43B", "#2CA02C", "#9467BD", "#E377C2"]
-
-# Create figure
+# Plot
 fig = go.Figure()
 
 for i, (dept, values) in enumerate(salary_data.items()):
@@ -38,29 +48,37 @@ for i, (dept, values) in enumerate(salary_data.items()):
             name=dept,
             boxpoints="outliers",
             notched=True,
-            marker={"color": colors[i], "size": 10, "opacity": 0.7},
+            marker={"color": OKABE_ITO[i], "size": 10, "opacity": 0.7},
             line={"width": 2},
-            fillcolor=colors[i],
+            fillcolor=OKABE_ITO[i],
             opacity=0.7,
         )
     )
 
-# Layout for 4800x2700 px
+# Style
 fig.update_layout(
-    title={"text": "box-notched · plotly · pyplots.ai", "font": {"size": 32}, "x": 0.5, "xanchor": "center"},
-    xaxis={"title": {"text": "Department", "font": {"size": 24}}, "tickfont": {"size": 20}},
-    yaxis={
-        "title": {"text": "Annual Salary (USD)", "font": {"size": 24}},
-        "tickfont": {"size": 20},
-        "tickformat": "$,.0f",
-        "gridcolor": "rgba(128, 128, 128, 0.3)",
-        "gridwidth": 1,
+    title={"text": "box-notched · plotly · anyplot.ai", "font": {"size": 28, "color": INK}, "x": 0.5, "xanchor": "center"},
+    xaxis={
+        "title": {"text": "Department", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
     },
-    template="plotly_white",
+    yaxis={
+        "title": {"text": "Annual Salary (USD)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "tickformat": "$,.0f",
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+    },
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
     showlegend=False,
     margin={"l": 100, "r": 60, "t": 100, "b": 80},
 )
 
-# Save as PNG and HTML
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html")
+# Save
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
