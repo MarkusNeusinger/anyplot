@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 scatter-regression-polynomial: Scatter Plot with Polynomial Regression
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-25
+Library: letsplot | Python 3.13
+Quality: pending | Created: 2025-12-21
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,6 +12,17 @@ from lets_plot import *
 
 
 LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+BRAND = "#009E73"  # Okabe-Ito position 1 - first categorical series
+ACCENT = "#D55E00"  # Okabe-Ito position 2 - for regression line
 
 # Data - Simulating diminishing returns pattern (economics example)
 np.random.seed(42)
@@ -46,54 +59,57 @@ y_lower = y_smooth - 1.96 * std_error
 df_points = pd.DataFrame({"x": x, "y": y})
 df_curve = pd.DataFrame({"x": x_smooth, "y": y_smooth, "y_upper": y_upper, "y_lower": y_lower})
 
-# Get polynomial equation (coefficients are [a, b, c] for ax² + bx + c)
+# Get polynomial equation
 a, b, c = coefficients
 equation = f"y = {a:.3f}x² + {b:.3f}x + {c:.2f}"
 
 # Create plot
 plot = (
     ggplot()
-    # Confidence band
-    + geom_ribbon(aes(x="x", ymin="y_lower", ymax="y_upper"), data=df_curve, fill="#306998", alpha=0.2)
+    # Confidence band with no border
+    + geom_ribbon(aes(x="x", ymin="y_lower", ymax="y_upper"), data=df_curve, fill=BRAND, alpha=0.15, color=None)
     # Scatter points
-    + geom_point(aes(x="x", y="y"), data=df_points, color="#306998", size=5, alpha=0.65)
+    + geom_point(aes(x="x", y="y"), data=df_points, color=BRAND, size=5, alpha=0.65)
     # Polynomial regression line
-    + geom_line(aes(x="x", y="y"), data=df_curve, color="#FFD43B", size=2.5)
+    + geom_line(aes(x="x", y="y"), data=df_curve, color=ACCENT, size=2.5)
     # Labels and title
     + labs(
         x="Advertising Spend (thousands $)",
         y="Sales Revenue (thousands $)",
-        title="scatter-regression-polynomial · letsplot · pyplots.ai",
+        title="scatter-regression-polynomial · letsplot · anyplot.ai",
     )
     # Annotations for R² and equation
     + geom_text(
         aes(x="x", y="y", label="label"),
         data=pd.DataFrame({"x": [x.max() - 5], "y": [y.max() + 5], "label": [f"R² = {r2:.3f}"]}),
         size=18,
-        color="#333333",
+        color=INK,
         hjust=1,
     )
     + geom_text(
         aes(x="x", y="y", label="label"),
         data=pd.DataFrame({"x": [x.max() - 5], "y": [y.max() - 2], "label": [equation]}),
         size=14,
-        color="#555555",
+        color=INK_SOFT,
         hjust=1,
     )
     # Theme
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24, face="bold"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        panel_grid_major=element_line(color="#CCCCCC", size=0.5),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=RULE, size=0.3),
         panel_grid_minor=element_blank(),
+        plot_title=element_text(size=24, face="bold", color=INK),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT),
     )
     + ggsize(1600, 900)
 )
 
 # Save as PNG (scale 3x for 4800x2700)
-ggsave(plot, "plot.png", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
 
 # Save as HTML for interactive viewing
-ggsave(plot, "plot.html")
+ggsave(plot, f"plot-{THEME}.html", path=".")
