@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: area-cumulative-flow
 created: '2026-05-07T21:04:58Z'
-updated: '2026-05-07T21:11:04Z'
+updated: '2026-05-07T21:24:24Z'
 generated_by: claude-sonnet
 workflow_run: 25521305570
 issue: 5239
@@ -12,135 +12,126 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-cumu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - Correct stacked area CFD with proper workflow stage ordering (Done at bottom,
-    Backlog at top)
-  - 'Perfect Okabe-Ito palette in correct order with brand green #009E73 assigned
-    to Done (first series)'
+  - Correct stacked area (CFD) with stages in proper workflow order (Done at bottom,
+    Backlog at top) using pd.Categorical for controlled ordering
+  - Okabe-Ito palette applied correctly — Done=#009E73 at the visual base, subsequent
+    stages following canonical order
+  - Bottleneck annotation with white italic text creates a clear focal point and elevates
+    the plot from display to storytelling
+  - L-shaped spine (panel_border removed, axis lines kept) with y-only subtle grid
+    is polished and uncluttered
   - Theme-adaptive chrome fully implemented — both light (#FAF8F1) and dark (#1A1A17)
-    renders pass legibility check with zero dark-on-dark issues
-  - 'Realistic Kanban data: Development modeled as bottleneck (widest band), Backlog
-    gradually draining, throughput ramping over 90 days'
-  - Font sizes correctly scaled for 4800×2700px canvas (title=24, axis=20, ticks=16)
-  - 'Perfect code quality: reproducible seed, clean imports, no functions/classes,
-    saves as plot-{THEME}.png'
-  - Area border color set to PAGE_BG for subtle inter-band definition without harsh
-    outlines
+    renders are legible with correct INK/INK_SOFT tokens throughout
+  - 'Perfect data quality: 90-day realistic Kanban workflow, monotonically non-decreasing
+    counts, visible bottleneck and throughput ramp patterns'
+  - All font sizes explicitly set (title=24, axis_title=20, axis_text=16, legend=16)
+    satisfying VQ-01 requirements
   weaknesses:
-  - 'Design excellence is moderate (12/20): no explicit de-emphasis of top/right spines
-    via axis line removal, no intentional focal point or visual hierarchy emphasis
-    (e.g., highlighting the Development bottleneck band with a slightly higher alpha
-    or annotation)'
-  - 'DE-01 below ceiling: the layout is clean but no creative design choices beyond
-    mandatory Okabe-Ito palette — consider refining typography weight variation or
-    adding a subtle annotation calling out the bottleneck'
-  - 'DE-03 data storytelling is passive: the Development bottleneck is visible from
-    the data shape but not actively drawn to the viewer''s attention — adding a small
-    annotation or callout would elevate storytelling'
-  - 'VQ-05 minor: legend positioned at the far right edge of the 16:9 canvas; no layout_adjust
-    or margins set to ensure comfortable breathing room around the legend box'
-  - Legend title and legend text are both size=16 — the legend title could be slightly
-    larger (18pt) to provide stronger visual hierarchy within the legend itself
+  - Title 'Sprint Delivery · area-cumulative-flow · plotnine · anyplot.ai' includes
+    a non-standard prefix and appears visually clipped on the left edge in both renders
+    — 'Sprint' is not visible in the output image; use the canonical '{spec-id} ·
+    {library} · anyplot.ai' title format without extra prefix text
+  - The right side of the canvas has excess whitespace (legend is positioned with
+    a large gap between chart area and canvas edge); consider reducing legend_box_spacing
+    or adjusting margins to better fill the 16:9 canvas
+  - 'LM-02: plot uses grammar-of-graphics idioms well but no plotnine-specific distinctive
+    feature beyond standard geom_area stacking; a faceted inset, stat_function layer,
+    or explicit theme function would demonstrate deeper library mastery'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "Sprint Delivery · area-cumulative-flow · plotnine · anyplot.ai" in bold dark (#1A1A17) at 24pt — fully readable. Axis label "Cumulative Items" (left) and "Date" (bottom) in dark text at 20pt — readable. Tick labels (Dec 29, Jan 12, Jan 26, Feb 09, Feb 23, Mar 08, Mar 22) in muted dark (#4A4A44) at 16pt — readable. Legend box with warm elevated fill (#FFFDF6), "Stage" title and 5 colored swatches (Backlog, Analysis, Development, Testing, Done) — all readable.
-      Data: 5 stacked areas from bottom to top: Done (teal #009E73), Testing (vermillion #D55E00), Development (blue #0072B2), Analysis (pink #CC79A7), Backlog (orange/yellow #E69F00). All bands clearly distinguishable. Development band is visibly the widest (bottleneck). Alpha=0.88 gives semi-transparent fills. Subtle horizontal grid lines only.
-      Legibility verdict: PASS — all text is readable against the warm off-white background.
+      Background: Warm off-white matching #FAF8F1 — correct, not pure white.
+      Chrome: Title reads "[Sprint ]Delivery · area-cumulative-flow · plotnine · anyplot.ai" — 'Sprint' prefix appears clipped at the left edge; remaining text is dark and readable. Y-axis label "Cumulative Items" and x-axis label "Date" are clear dark text. Tick labels (Dec 29 through Mar 22 on x; 0–125 on y) are readable in dark ink. Legend "Stage" has readable dark title and INK_SOFT labels for each stage.
+      Data: Five stacked bands from bottom to top — Done (#009E73, teal-green), Testing (#D55E00, orange-red), Development (#0072B2, blue), Analysis (#CC79A7, pink), Backlog (#E69F00, gold-yellow). White italic "← bottleneck" annotation sits in the Development band around day 55. Subtle horizontal y-grid lines; no x-grid; L-shaped spine (no panel border, axis lines only). Canvas well-utilized; right side has a moderate gap between chart and legend.
+      Legibility verdict: PASS (all text readable; minor title clipping on left edge is the only issue)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title in bold light (#F0EFE8) — fully readable against dark background. Axis labels in light text — readable. Tick labels in muted light (#B8B7B0) — readable. Legend box with dark elevated fill (#242420), stage labels in light text — readable. No dark-on-dark failures observed.
-      Data: Identical Okabe-Ito colors to light render — Done (teal #009E73), Testing (vermillion #D55E00), Development (blue #0072B2), Analysis (pink #CC79A7), Backlog (orange/yellow #E69F00). Only the chrome (background, text, grid, legend frame) has flipped; data colors are unchanged.
-      Legibility verdict: PASS — all text is readable against the dark background, no dark-on-dark issues detected.
+      Background: Warm near-black matching #1A1A17 — correct, not pure black.
+      Chrome: Title, axis labels, and tick labels all render in light (#F0EFE8 / #B8B7B0) ink — clearly visible against the dark surface. Legend title "Stage" and legend item labels (Backlog, Analysis, Development, Testing, Done) are light-colored and readable. No dark-on-dark failures detected.
+      Data: All five Okabe-Ito band colors are identical to the light render — Done (#009E73), Testing (#D55E00), Development (#0072B2), Analysis (#CC79A7), Backlog (#E69F00). The white "← bottleneck" annotation remains visible against the Development band. Subtle y-grid lines visible against dark background.
+      Legibility verdict: PASS (full readability in dark theme; no dark-on-dark failures)
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Font sizes correctly scaled (title=24, axis=20, ticks=16). Both themes
-          pass legibility. Legend title and text both at size=16 — title could be
-          slightly larger for hierarchy.
+        comment: All sizes explicitly set (title=24, axis_title=20, axis_text=16,
+          legend=16); minor title clip at left edge reduces from 8
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Date ticks at 2-week intervals, no overlap. Legend outside plot area.
-          All text readable.
+        comment: No overlapping elements; date labels spaced cleanly at 2-week intervals
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 5 bands clearly visible and distinguishable. Alpha=0.88 gives
-          good fill. Area borders match PAGE_BG for subtle separation.
+        comment: All five bands clearly visible; alpha=0.88 and distinct Okabe-Ito
+          colors provide excellent differentiation
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe. No red-green as sole signal — position
-          encodes stage identity.
+        comment: Okabe-Ito is CVD-safe; five bands are distinguishable without relying
+          on hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 16:9 canvas appropriate for timeline chart. Legend at right edge;
-          no explicit margin adjustment to ensure breathing room.
+        comment: Acceptable layout; chart fills ~55% width with legend to right, but
+          some excess right-side whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y: ''Cumulative Items'' descriptive. X: ''Date''. Title includes
-          spec-id, library, anyplot.ai.'
+        comment: Y-axis 'Cumulative Items' and x-axis 'Date' are descriptive for the
+          domain
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Done (first/bottom series) = #009E73. Stages follow Okabe-Ito positions
-          1-5. Backgrounds: #FAF8F1 light, #1A1A17 dark. Data colors identical across
-          both renders.'
+        comment: 'First series (Done) = #009E73; full Okabe-Ito order; light bg=#FAF8F1,
+          dark bg=#1A1A17; chrome tokens correct in both renders'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default (4): clean professional look, mandatory Okabe-Ito
-          correctly applied, area borders match PAGE_BG for subtle inter-band definition.
-          No creative typographic choices or intentional focal point design.'
+        comment: 'Intentional design choices: L-shaped spine, bg-matching band borders,
+          bold title, bottleneck annotation — clearly above configured defaults'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Y-only grid (subtle, alpha=0.20), no x-axis grid, panel_border=element_blank,
-          axis lines set for L-shaped frame. Good refinement but top/right axis lines
-          not explicitly removed via spine trimming.
+        comment: Panel border removed, y-only subtle grid, generous whitespace, area
+          borders blend with background; near-perfect refinement
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Bottleneck is organically visible from band widths (Development widest).
-          No explicit annotation or emphasis technique to guide the viewer's eye to
-          the insight.
+        comment: Bottleneck annotation creates strong focal point; data shows realistic
+          throughput ramp and narrowing backlog; viewer guided to the bottleneck
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -148,28 +139,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area CFD chart using geom_area(position='stack').
+        comment: Correct stacked area CFD with proper workflow stage ordering (Done
+          bottom, Backlog top)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 5 stages present, correct stacking order (Done bottom, Backlog top),
-          legend included, date axis with 2-week breaks.
+        comment: Legend present, date x-axis at reasonable intervals, 5 stages, monotonically
+          non-decreasing counts, widening Dev band visible
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=cumulative items, fill=stage. All data visible. Monotonically
-          non-decreasing counts enforced via np.maximum.accumulate.
+        comment: X=date, Y=cumulative items (stacked WIP per stage), fill=stage —
+          all correct
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Title: ''Sprint Delivery · area-cumulative-flow · plotnine · anyplot.ai''.
-          Legend labels match spec stages.'
+        comment: Title includes spec-id, library, anyplot.ai but has non-standard
+          'Sprint Delivery · ' prefix and appears visually clipped; legend labels
+          correct
     data_quality:
       score: 15
       max: 15
@@ -179,23 +172,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 5 workflow stages shown, WIP visible per band, Development as
-          bottleneck (widest), Backlog draining over time, cumulative Done growing
-          monotonically.
+        comment: Shows widening (bottleneck), narrowing (drain), throughput ramp,
+          decreasing backlog — all key CFD diagnostic patterns
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Kanban board Agile workflow context. Realistic stage names, throughput
-          ramping, WIP variability, 90-day sprint range. Neutral domain.
+        comment: Software Kanban workflow with realistic stage names (Backlog, Analysis,
+          Development, Testing, Done) — neutral business domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: '90 days, ~90 completed items, WIP: backlog~20, dev~13, testing~7,
-          analysis~5 — plausible for a small software team.'
+        comment: 90 days, ~120 items completed, realistic WIP counts per stage, monotonically
+          non-decreasing boundaries
     code_quality:
       score: 10
       max: 10
@@ -205,57 +197,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Linear script structure.
+        comment: Linear Imports→Data→Plot→Save structure, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random operations.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. No unused imports.
+        comment: All imports used; sys.path cleanup is environment-specific but appropriate
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, clear variable names, comments explain non-obvious
-          WHY (stacking order, bottleneck). No fake UI.
+        comment: Clean Pythonic code; zip(strict=True) is elegant; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. Current plotnine API. dpi=300, width=16,
-          height=9.
+        comment: Saves as plot-{THEME}.png with correct dpi and dimensions
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct grammar-of-graphics pattern (ggplot + geom + scale + theme).
-          Proper use of pd.Categorical for ordered stages controlling stack order.
-          sys.path workaround for plotnine shadowing issue.
+        comment: 'Full grammar of graphics idiom: ggplot+geom_area+scale_fill_manual+scale_x_datetime+annotate+theme;
+          pd.Categorical for ordered factor stacking'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: geom_area(position='stack'), scale_x_datetime(date_labels, date_breaks),
-          pd.Categorical(ordered=True) for stacking control, visual_order dict for
-          explicit color-to-stage mapping.
-  verdict: REJECTED
+        comment: scale_x_datetime for datetime handling and pd.Categorical for stage
+          ordering are plotnine-specific; but no unique features beyond standard geom_area
+          stacking
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep:
@@ -263,4 +254,3 @@ impl_tags:
   - time-series
   styling:
   - alpha-blending
-  - edge-highlighting
