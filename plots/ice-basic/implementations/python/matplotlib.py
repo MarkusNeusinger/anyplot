@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ice-basic: Individual Conditional Expectation (ICE) Plot
-Library: matplotlib | Python 3.13
-Quality: pending | Created: 2026-05-07
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 89/100 | Created: 2026-05-07
 """
 
 import os
