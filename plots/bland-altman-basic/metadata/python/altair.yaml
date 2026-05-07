@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: bland-altman-basic
 created: '2025-12-25T13:17:25Z'
-updated: '2026-05-07T11:08:15Z'
+updated: '2026-05-07T11:15:55Z'
 generated_by: claude-haiku
 workflow_run: 25491783551
 issue: 2032
@@ -15,33 +15,38 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bland-alt
 quality_score: 88
 review:
   strengths:
-  - 'Perfect visual quality: all text readable in both themes, excellent layout, proper
-    canvas utilization'
+  - 'Perfect visual quality: all text readable in both light and dark themes, excellent
+    layout, proper canvas utilization'
   - Correct Bland-Altman implementation with all required statistical lines and annotations
-  - Realistic, scientifically appropriate example data (blood pressure comparison)
+  - Realistic and scientifically appropriate example data (blood pressure comparison
+    between two sphygmomanometers)
   - 'Proper theme adaptation: warm off-white and warm near-black backgrounds with
-    theme-correct text colors'
-  - 'Proper Okabe-Ito color palette: green for data, orange for LOA lines'
-  - Clean, reproducible code with KISS structure
+    theme-correct text colors using INK/INK_SOFT tokens'
+  - 'Correct Okabe-Ito palette: green (#009E73) for data points, orange (#D55E00)
+    for LOA lines, both CVD-safe'
+  - Clean, reproducible code with KISS structure, deterministic data generation using
+    np.random.seed(42), and minimal dependencies
   weaknesses:
-  - 'Design Excellence is generic: follows configured defaults rather than demonstrating
-    distinctive aesthetic choices. Lacks custom palette tuning, advanced visual hierarchy
-    techniques, or design sophistication beyond well-configured baseline.'
-  - 'Library Mastery is basic: uses Altair idiomatically but doesn''t leverage distinctive
-    features. Could use selections for hover emphasis, transforms for data aggregation,
-    or conditional styling to showcase what makes Altair unique.'
+  - 'Design Excellence generic: well-executed defaults without distinctive aesthetic
+    choices; follows style guide competently but lacks design thinking beyond specifications'
+  - 'Library Mastery basic: uses Altair idiomatically but doesn''t showcase library-specific
+    capabilities like interactivity, transforms, or conditional encoding'
+  - 'Visual refinement plateau: annotation styling could be polished with background
+    boxes; top/right spines could be removed per style-guide defaults'
+  - 'No interactive features: despite Altair''s strength in interactivity, implementation
+    is entirely static'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct and aesthetically appropriate
-      Chrome: Title "bland-altman-basic · altair · anyplot.ai" in dark text, axis labels "Mean of Two Methods (mmHg)" and "Difference (Method 1 - Method 2) (mmHg)" with units, tick labels clearly visible — all readable
-      Data: Scatter points in Okabe-Ito green (#009E73) with 70% opacity, solid green mean bias line at y≈-2.44, dashed orange (#D55E00) LOA lines at y≈6.55 and y≈-11.44, three annotations on right margin labeling values
-      Legibility verdict: PASS — all text has excellent contrast against light background, no light-on-light failures
+      Background: Warm off-white (#FAF8F1) - correct per style guide
+      Chrome: Title centered at top in dark text (28px), axis labels with units (22px), tick labels (18px) - all clearly readable against light background
+      Data: 80 scatter points in Okabe-Ito green (#009E73) with 0.7 opacity; solid green horizontal line at y≈-2.44 (mean bias); dashed orange lines (#D55E00) at ±1.96 SD (y≈+6.55 and y≈-11.44); annotations on right side clearly label values
+      Legibility verdict: PASS - excellent contrast, no readability issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct and aesthetically appropriate
-      Chrome: Same title and axis labels rendered in light text (INK tokens), tick labels clearly visible — all readable with excellent contrast against dark background
-      Data: Scatter points remain identical green (#009E73), confirming data colors unchanged between themes. Solid green mean bias line at same position. Dashed orange LOA lines at same positions. Annotations visible and readable.
-      Legibility verdict: PASS — no dark-on-dark failures, all text has sufficient luminance contrast, grid lines visible at same opacity as light render
+      Background: Warm near-black (#1A1A17) - correct per style guide
+      Chrome: Title and axis labels in light colors (INK=#F0EFE8, INK_SOFT=#B8B7B0) - all clearly readable against dark background; no dark-on-dark failures
+      Data: Identical colors to light render - green points remain #009E73, orange LOA lines remain #D55E00 (data colors theme-independent as required); grid lines visible at same opacity
+      Legibility verdict: PASS - proper theme adaptation, all text readable, no contrast issues
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,49 +57,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px),
-          perfectly readable in both themes
+        comment: All font sizes explicitly set (title 28px, axis labels 22px, ticks
+          18px, annotations 16px); perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping text elements; annotations positioned clearly on
-          right margin
+        comment: Zero overlapping text; annotations clearly positioned on right without
+          collision
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Scatter points (size=200, opacity=0.7) optimally adapted to 80 data
-          points; lines clearly visible
+        comment: 80 scatter points (size=200, opacity=0.7) well-adapted to density;
+          lines clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green vs orange provide excellent contrast and CVD-safe
-          distinction
+        comment: Okabe-Ito green vs. orange provide excellent CVD-safe contrast; no
+          red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout; plot fills 50-70% of canvas with balanced margins;
-          1600×900 → 4800×2700px
+        comment: Perfect layout at 1600×900 (→4800×2700px); balanced margins, proper
+          whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All labels include units; descriptive axis titles
+        comment: All labels include units (mmHg); descriptive and appropriate
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, LOA lines #D55E00; backgrounds #FAF8F1 light
-          / #1A1A17 dark; text colors theme-adaptive'
+        comment: 'First series #009E73 (Okabe-Ito), LOA lines #D55E00, backgrounds
+          theme-correct, text colors adapted (INK tokens)'
     design_excellence:
       score: 12
       max: 20
@@ -104,22 +109,23 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults but lacks distinctive design polish or custom
-          palette tuning
+        comment: Well-configured defaults but lacks distinctive design polish beyond
+          style-guide defaults; no custom aesthetic touches like annotation backgrounds
+          or conditional highlighting
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Clear customization visible (grid opacity, colors); could refine
-          further (spines, annotation backgrounds)
+        comment: 'Good customization (strokeDash, opacity, sizing) but could be polished:
+          remove top/right spines, add annotation frames, improve visual hierarchy'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: false
-        comment: Good visual hierarchy through reference lines and annotations; effective
-          but not exceptional
+        comment: Good visual hierarchy and color distinction; could be more compelling
+          with highlighting of outliers or size variation for emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -129,14 +135,13 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Bland-Altman scatter with mean vs paired observations
+        comment: Correct Bland-Altman scatter plot with horizontal reference lines
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: scatter with transparency, mean line, ±1.96 SD lines,
-          annotations'
+        comment: 'All features present: scatter, mean line, ±1.96 SD lines, annotations'
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -148,7 +153,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title correct format; no legend needed
+        comment: Title correct format; no legend needed for single-series
     data_quality:
       score: 15
       max: 15
@@ -164,15 +169,14 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Real medical scenario (sphygmomanometer comparison), plausible and
+        comment: Blood pressure comparison; realistic, scientifically appropriate,
           neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Blood pressure ranges, differences, and LOA values all factually
-          plausible
+        comment: Blood pressure ranges (≈90-155 mmHg, ±15 mmHg) factually plausible
     code_quality:
       score: 10
       max: 10
@@ -182,31 +186,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → stats → chart → save'
+        comment: 'Linear flow: imports → tokens → data → stats → chart → save; no
+          unnecessary functions'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Uses np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports; sys path cleanup is good practice
+        comment: Only necessary imports; sys.path cleanup is good practice
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: 'Clean, Pythonic code; no fake UI (AR-08 check: PASS)'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html correctly
+        comment: Saves plot-{THEME}.png with scale_factor=3.0 and .html correctly
     library_mastery:
       score: 6
       max: 10
@@ -215,26 +220,24 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Proper high-level API usage; doesn't leverage advanced patterns (selections,
-          transforms)
+        passed: true
+        comment: Proper high-level API (alt.Chart → mark_* → encode()); uses layer
+          composition correctly; doesn't leverage advanced patterns
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses mark_rule and mark_text (Altair-specific) but in basic way;
-          could add interactive selections
+        comment: Uses mark_rule/mark_text in basic way; lacks Altair-specific interactivity,
+          transforms, or conditional encoding
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
-  - hover-tooltips
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
