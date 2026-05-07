@@ -1,162 +1,170 @@
 library: seaborn
+language: python
 specification_id: bar-horizontal
 created: '2025-12-25T08:35:54Z'
-updated: '2025-12-25T08:42:50Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20502052617
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-07T07:27:23Z'
+generated_by: claude-haiku
+workflow_run: 25481643932
+issue: 1946
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/seaborn/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Excellent visual clarity with well-sized text and properly sorted bars
-  - Clean code structure following KISS principles
-  - Realistic programming language survey data that resonates with developers
-  - Value labels positioned at bar ends enhance readability
-  - Proper use of seaborn 0.14+ API with hue parameter to avoid warnings
+  - Flawless theme-aware rendering in both light and dark with zero chrome issues
+  - Perfect typography hierarchy with all font sizes explicitly set and readable at
+    full resolution
+  - 'Excellent palette compliance with correct Okabe-Ito #009E73 and properly themed
+    backgrounds'
+  - Complete spec compliance with all required features and well-chosen real-world
+    data
+  - Professional polish with subtle grid styling, edge-highlighted bars, and balanced
+    layout
   weaknesses:
-  - Could highlight a specific bar (e.g., Python) to demonstrate the specification
-    suggestion for drawing attention to specific categories
-  - Uses seaborn primarily as a styling layer over matplotlib rather than leveraging
-    seaborn statistical features
-  image_description: The plot displays a horizontal bar chart showing programming
-    language popularity survey results. There are 10 horizontal bars in a consistent
-    steel blue color (#306998), sorted from lowest (Kotlin at 12%) at the top to highest
-    (Python at 68%) at the bottom. Each bar has a percentage label at its end. The
-    y-axis shows "Programming Language" with language names (Kotlin, Swift, Rust,
-    Go, TypeScript, C#, C++, Java, JavaScript, Python), and the x-axis shows "Percentage
-    of Respondents (%)" with values from 0 to 70. The title reads "bar-horizontal
-    · seaborn · pyplots.ai". A subtle dashed grid is visible on the x-axis. Top and
-    right spines are removed for a cleaner look.
+  - Generic styling with library defaults rather than intentional custom design choices
+  - Limited seaborn-specific features—implementation could be replicated in plain
+    matplotlib
+  - Minimal visual emphasis techniques—could add color gradients, size variation,
+    or focal point emphasis to improve storytelling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), proper theme surface
+      Chrome: Title "bar-horizontal · seaborn · anyplot.ai" bold and clear; axis labels "Country" and "Population (Millions)" descriptive with units; all tick labels dark and highly readable
+      Data: Bars in Okabe-Ito green (#009E73) with subtle gray edges; value labels at bar ends (e.g., "1417M"); subtle vertical grid (alpha=0.15) aids readability
+      Legibility verdict: PASS - All text perfectly readable against light background; no contrast issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), proper theme surface
+      Chrome: Title and all labels now light-colored (#F0EFE8 / #B8B7B0); perfectly readable against dark background with no dark-on-dark failures; grid and spines properly inverted
+      Data: Bars remain identical green (#009E73) as light render; value labels light-colored and readable; grid subtle and appropriate
+      Legibility verdict: PASS - All text perfectly readable against dark background; theme adaptation flawless
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'All text is perfectly readable: title at 24pt, axis labels at 20pt,
-          tick labels at 16pt'
+        comment: All font sizes explicitly set; perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels clearly separated
+        comment: No overlapping elements; all text fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-sized with consistent height, good spacing between
-          categories
+        comment: Bars optimally sized for 10 categories; all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single color scheme avoids colorblind issues entirely
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, good use of space
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: X-axis has units "(%)", Y-axis label "Programming Language" is descriptive
-          but no unit needed for categorical
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle dashed grid at alpha 0.3, no legend needed (single color)
+        comment: Okabe-Ito green excellent contrast on both backgrounds; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 aspect; plot fills 60-70% with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive with units; title provides context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correct Okabe-Ito #009E73; backgrounds properly themed; chrome correct
+          in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults; not exceptional custom design
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed; subtle grid; generous whitespace; bar edges defined
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sorting reveals ranking; value labels emphasize values; good visual
+          hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct horizontal bar chart
+        comment: Correct horizontal bar chart using ax.barh()
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on Y-axis, values on X-axis as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: sorted bars, value labels, consistent
-          bar heights, adequate spacing'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: labels, proportional bars, value labels, ranking'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis extended to 78 to accommodate labels, all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single-color chart
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "bar-horizontal · seaborn · pyplots.ai"
+        comment: Title format correct; legend correctly omitted for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows ranking/comparison well, sorted from low to high; could have
-          highlighted a specific bar to show that feature
+        comment: Shows all core features; real-world plausible
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Programming language popularity survey is a real, relatable scenario
+        comment: Real country data (2024); neutral and comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are percentages 12-68%, realistic but total exceeds 100% (multi-select
-          survey implied)
+        comment: All values factually correct/plausible
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -164,42 +172,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: Clean linear flow; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Data is deterministic but no random seed comment since data is hardcoded
-          (acceptable, but could document)
+        max: 2
+        passed: true
+        comment: Static hardcoded data; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: matplotlib.pyplot, pandas, seaborn'
+        comment: Only necessary imports; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses modern seaborn API with hue parameter correctly
+        comment: Clean, Pythonic, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct plot-{THEME}.png output format
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
+        passed: true
+        comment: Uses high-level API correctly; doesn't leverage seaborn-specific
+          features
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
         passed: false
-        comment: Uses seaborn's barplot correctly with hue for palette, but doesn't
-          leverage seaborn-specific statistical features like confidence intervals
-          or other advanced capabilities
+        comment: Generic usage; could use seaborn-specific capabilities
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - explicit-figure
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
+  - edge-highlighting
+  - publication-ready

@@ -1,155 +1,175 @@
 library: seaborn
+language: python
 specification_id: count-basic
 created: '2025-12-25T12:41:49Z'
-updated: '2025-12-25T12:43:46Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20505207153
+updated: '2026-05-07T09:12:35Z'
+generated_by: claude-haiku
+workflow_run: 25486574149
 issue: 2033
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/count-basic/seaborn/plot.png
-preview_html: null
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-    - data-generation
-    - explicit-figure
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
 review:
   strengths:
-  - Excellent use of sns.countplot with proper ordering by frequency
-  - Clean, professional appearance with removed spines and subtle grid
-  - Count labels above bars improve readability
-  - Realistic survey data scenario with believable distribution weights
-  - Proper font sizing for large canvas output (4800x2700 px target)
+  - Excellent theme adaptation with perfect light/dark chrome flipping while data
+    colors remain constant
+  - Perfect text legibility in both renders with all font sizes explicitly set and
+    readable at full resolution
+  - Professional aesthetic using seaborn best practices (ticks style, subtle grid,
+    removed spines, thoughtful color use)
+  - Strong data storytelling through frequency-sorted bars and count labels enabling
+    both overview and precise reading
+  - Clean, maintainable code with KISS structure and deterministic data generation
   weaknesses:
-  - Does not leverage seaborn distinctive features like hue parameter or palette customization
-  - Y-axis label could be more specific (e.g., Response Count or Frequency)
-  image_description: 'The plot displays a count plot (bar chart) showing survey responses
-    for preferred programming languages. Eight vertical bars are displayed in descending
-    order by frequency: Python (140), JavaScript (101), Java (86), Go (43), C++ (42),
-    Rust (33), TypeScript (31), and Ruby (24). The bars are a consistent blue color
-    (#306998). Each bar has a count label positioned above it. The x-axis is labeled
-    "Programming Language" and the y-axis is labeled "Number of Responses". The title
-    follows the required format "count-basic · seaborn · pyplots.ai". A subtle horizontal
-    dashed grid is visible behind the bars, and the top and right spines have been
-    removed for a cleaner appearance. The layout is well-balanced with good use of
-    canvas space.'
+  - Design sophistication limited to seaborn defaults with single-color approach (could
+    explore multi-series variants or custom palette)
+  - Visual storytelling straightforward but not exceptional—bar height and labels
+    guide clearly but lack dramatic emphasis
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white ✓
+      Chrome: Title "count-basic · seaborn · anyplot.ai" in dark text; x-axis "Programming Language", y-axis "Response Count" in dark text; all tick labels readable; subtle gray gridlines ✓
+      Data: Eight bars in brand green (#009E73), heights showing frequency distribution (140, 101, 86, 43, 42, 33, 31, 24); count labels in dark text above each bar ✓
+      Legibility verdict: PASS — all text clearly readable against light background, no overlap
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black ✓
+      Chrome: Title in light text (#F0EFE8); axis labels and tick labels in light text (#B8B7B0); gridlines visible but subtle ✓
+      Data: Bar colors identical to light render (#009E73); count labels in light text above bars ✓
+      Legibility verdict: PASS — no dark-on-dark failures, all text light-colored and readable, chrome properly theme-adapted
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all perfectly readable
+        comment: All font sizes explicitly set (24pt title, 20pt labels, 16pt ticks);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all category labels clearly visible
+        comment: Count labels positioned above bars with proper padding; no overlapping
+          elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-sized, count labels clearly visible above each bar
+        comment: All bars and labels clearly visible; element sizing well-adapted
+          to 8 categories
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single blue color, no colorblind issues
+        comment: Brand green (#009E73) has excellent contrast; Okabe-Ito palette is
+          colorblind-safe
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions, plot fills canvas appropriately
+        comment: Perfect proportions at 16:9 (4800×2700 px); balanced margins; nothing
+          cut off
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no units (counts don't need units, but could
-          specify "count" or "frequency")
+        comment: Descriptive labels with correct title format
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Subtle grid with alpha 0.3, dashed style; no legend needed for single-color
-          plot
+        comment: 'First series #009E73 ✓; backgrounds #FAF8F1 (light) and #1A1A17
+          (dark) ✓; theme chrome properly adapted'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional, well-polished design; uses seaborn defaults thoughtfully;
+          above generic but not exceptionally custom
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed; subtle grid (alpha=0.15); generous whitespace;
+          secondary elements use INK_SOFT
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars sorted by frequency; count labels enable precise reading; bar
+          height creates visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct count plot using sns.countplot
+        comment: Correct sns.countplot() implementation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories correctly mapped to x-axis, counts to y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Sorted by frequency (descending), count labels on bars as spec suggests
-      - id: SC-04
-        name: Data Range
+        comment: Bars sorted by frequency descending; count labels added
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, y-axis starts at 0
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis mapped to language categories; Y-axis to count; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed, N/A
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "count-basic · seaborn · pyplots.ai"
+        comment: Correct title format; legend omitted appropriately for single-series
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varying frequencies across 8 categories with good distribution
-          from high to low
+        comment: Complete distribution across 8 categories with varying frequencies
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Programming language survey is a relatable, real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 500 responses distributed across 8 languages with realistic weights
+        comment: Real-world programming language survey; neutral, comprehensible scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sample size 500 sensible; frequency distribution realistic and aligns
+          with real-world language popularity
     code_quality:
       score: 10
       max: 10
@@ -159,41 +179,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save'
+        comment: Imports → Data → Plot → Save; no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib, numpy, pandas, seaborn)
+        comment: All imports used; no waste
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API correctly
+        comment: Pythonic, no over-engineering, no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct dpi
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses sns.countplot which is the appropriate seaborn function, but
-          this is basic usage without leveraging seaborn's distinctive features like
-          hue for grouping, statistical estimation, or palette customization
+        passed: true
+        comment: sns.countplot() and sns.set_theme() are idiomatic high-level patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: sns.countplot() for automatic counting; bar_label() for annotations;
+          sns.set_theme() with rc dict
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

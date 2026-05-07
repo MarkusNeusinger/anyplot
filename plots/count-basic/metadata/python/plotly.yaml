@@ -1,155 +1,193 @@
 library: plotly
+language: python
 specification_id: count-basic
 created: '2025-12-25T12:42:33Z'
-updated: '2025-12-25T12:44:40Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20505207163
+updated: '2026-05-07T09:21:36Z'
+generated_by: claude-haiku
+workflow_run: 25486670363
 issue: 2033
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/count-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/count-basic/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-    - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/plotly/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Clean, professional appearance with well-balanced layout and proportions
-  - Correct implementation of count plot with automatic counting from raw data
-  - Excellent text legibility with appropriately sized fonts for 4800x2700 output
-  - Realistic survey response scenario that clearly demonstrates the plot type
-  - Count labels positioned outside bars for easy reading
+  - Flawless theme adaptation with correct color tokens for both light and dark renders
+  - 'Perfect palette compliance: brand green (#009E73) correctly applied with proper
+    theme-aware chrome'
+  - 'Excellent code quality: clean imports, reproducible with seed, straightforward
+    KISS structure'
+  - 'Comprehensive visual legibility: all text elements (title, labels, ticks, data
+    values) clearly readable in both themes'
+  - 'Specification fully met: correct plot type, required features (count bars, frequency
+    sort, labels), proper axis labels with units'
+  - 'Strong data presentation: realistic product category scenario with sensible frequency
+    distribution, descending sort creates natural visual hierarchy'
+  - 'Proper Plotly patterns: uses graph_objects idiomatically, generates both PNG
+    and HTML outputs with correct naming'
   weaknesses:
-  - Could enhance Plotly interactivity with custom hover templates showing percentages
-  - Y-axis label could include units (e.g., Count (n) or Frequency)
-  - Bar colors could use a gradient or vary by value to better showcase Plotly capabilities
-  image_description: 'The plot displays a vertical bar chart showing survey response
-    counts. Five blue bars (#306998 with darker outlines) are arranged from highest
-    to lowest frequency: Agree (66), Strongly Agree (56), Neutral (36), Disagree (27),
-    and Strongly Disagree (15). Each bar has its count value displayed above it in
-    large text. The title "count-basic · plotly · pyplots.ai" is centered at the top.
-    The x-axis is labeled "Survey Response" and y-axis is labeled "Count". The background
-    uses the plotly_white template with subtle horizontal gridlines. The layout is
-    clean and well-proportioned.'
+  - 'Design Excellence lacks sophistication: relies on default styling without custom
+    visual enhancements beyond required theme adaptation'
+  - 'Bar styling is minimal: only color and border defined, no alpha-blending or gradient
+    effects to add visual interest'
+  - 'Library features underutilized: hover tooltips show basic count/percentage but
+    could display more contextual information'
+  - 'No visual refinement details: could benefit from spine customization, grid styling
+    enhancements, or intentional whitespace tweaks'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct for light theme, not pure white.
+      Chrome: Title "count-basic · plotly · anyplot.ai" in dark text (INK, #1A1A17), x-axis "Product Category" and y-axis "Count (n)" labels in same dark tone, tick labels in secondary dark (#4A4A44) — all clearly readable against light background.
+      Data: Seven bars in brand green (#009E73) representing product categories sorted by frequency (Electronics 110, Clothing 55, Home & Garden 32, Sports 27, Books 14, Toys 10, Beauty 2). Count values displayed above bars in dark text (size 20px), highly legible.
+      Grid: Y-axis gridlines subtle and visible, appropriate opacity. Bar edges have INK_SOFT (#4A4A44) borders for definition.
+      Legibility verdict: PASS — all text and data elements are clearly readable in full resolution. No contrast issues. No light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct for dark theme, not pure black.
+      Chrome: Title in light text (INK for dark, #F0EFE8), axis labels in same light tone, tick labels in secondary light (#B8B7B0) — all clearly visible against dark background. No dark-on-dark text failures.
+      Data: Identical bar colors (#009E73 brand green) as light render, proving data colors are theme-independent. Count values above bars in light text, matching tick label color, fully readable.
+      Grid: Y-axis gridlines visible at appropriate subtle opacity. Bar edges maintain INK_SOFT borders.
+      Legibility verdict: PASS — all text and data elements are clearly readable in dark theme. No dark-on-dark issues. Brand green maintains excellent visibility. Chrome properly flips between themes while data stays constant.
+
+    Both renders pass complete theme-readability checks. Light render shows correct light-theme chrome with dark text. Dark render shows correct dark-theme chrome with light text. Data colors are identical between renders, confirming proper theme adaptation implementation.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, tick labels, and count annotations are all clearly
-          readable at appropriate sizes
+        comment: All text explicitly sized (title 28px, labels 22px, ticks 18px, data
+          20px) and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; category labels are well-spaced
+        comment: No overlapping elements; count labels sit above bars with clear spacing
+          (bargap=0.3)
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are appropriately sized with good spacing (bargap=0.3)
+        comment: Seven categories with appropriate bar sizing and spacing; all bars
+          clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single color scheme with good contrast; no colorblind issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space, balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Labels are descriptive but lack units (e.g., "Count (n)" would be
-          better)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid (alpha=0.1), no legend needed for single series
+        comment: Okabe-Ito green (#009E73) is CVD-safe; good contrast in both themes;
+          no red-green dependence
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape 4800x2700px with generous margins (t=120, b=100, l=100,
+          r=60); nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title includes spec format; axes descriptive with units (Count (n)
+          on y-axis)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is brand green #009E73; backgrounds correct (#FAF8F1
+          light, #1A1A17 dark); both renders theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional execution with theme-aware color tokens and intentional
+          hierarchy; lacks custom visual enhancements
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Proper L-shaped spine (top/right removed); subtle y-axis grid; generous
+          whitespace; basic styling without extra polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Frequency-sorted bars create natural visual hierarchy and focal point
+          (Electronics dominates); guides viewer from high to low
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct count plot using vertical bars
+        comment: Correct bar chart for counting categorical frequencies
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X-axis, counts on Y-axis correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Sorted by frequency descending, count labels on bars as spec suggests
-      - id: SC-04
-        name: Data Range
+        comment: Frequency bars ✓, sorted descending ✓, count labels ✓, all spec features
+          present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full range from 0 to above max count
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X = Product Category (categorical), Y = Count (numeric); all 7 categories
+          visible; axes correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for single series, appropriately omitted
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "count-basic · plotly · pyplots.ai"'
+        comment: 'Title format correct: ''count-basic · plotly · anyplot.ai''; single-series
+          plot appropriately omits legend'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varying frequencies across 5 categories; could show more extreme
-          variation
+        comment: Shows categorical counting, frequency distribution, and sorted order;
+          covers count-plot essence
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Survey responses (Likert scale) is a realistic, commonly understood
-          scenario
+        comment: Product category purchases are realistic; neutral content; no controversial
+          signals
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 200 total responses is reasonable; distribution probabilities are
-          realistic
+        comment: 250 observations across 7 categories with sensible probability distribution
+          [0.40, 0.25, 0.15, 0.10, 0.05, 0.03, 0.02]
     code_quality:
       score: 10
       max: 10
@@ -159,40 +197,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save'
+        comment: Straight-line code; no functions or classes; appropriately simple
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility
+        comment: Uses np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects used
+        comment: os, numpy, plotly.graph_objects — all used, no redundancy
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Simple, appropriate complexity; no fake UI or unnecessary patterns
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
+        comment: Saves plot-light.png, plot-dark.png, plot-light.html, plot-dark.html
+          with correct naming; current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses go.Figure and go.Bar idiomatically; update_layout for customization
+          is standard pattern; could use px.bar for simplicity but go.Bar chosen for
+          theme control
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Uses go.Bar correctly but doesn't leverage Plotly's interactive features
-          like hover templates or animations
+        passed: true
+        comment: Hover tooltips with count/percentage, HTML export for interactivity;
+          nice touches but not advanced plotly features
+    score_caps:
+      applied: false
+      notes: No score caps triggered. All VQ scores > 0, SC-01 = 5, DQ-02 = 5, DE
+        scores allow full total.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - grid-styling

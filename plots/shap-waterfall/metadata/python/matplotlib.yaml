@@ -1,0 +1,280 @@
+library: matplotlib
+language: python
+specification_id: shap-waterfall
+created: '2026-05-07T11:43:22Z'
+updated: '2026-05-07T11:52:11Z'
+generated_by: claude-sonnet
+workflow_run: 25493326384
+issue: 5237
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Complete spec compliance — all required features implemented: cumulative bars,
+    semantic color coding, reference lines, value labels, connector lines, horizontal
+    layout'
+  - Excellent theme adaptation — both light and dark renders fully readable with correct
+    chrome tokens; no dark-on-dark failures
+  - Realistic, neutral credit approval domain with plausible SHAP magnitudes and a
+    correct probability scale (0.42 base → 0.68 final)
+  - 'Strong visual refinement: 3 of 4 spines removed, y-tick length=0, subtle x-axis
+    grid at alpha=0.10, bar edges use PAGE_BG for clean visual separation'
+  - Dotted connector lines between bars effectively trace the cumulative contribution
+    flow from base to final prediction
+  weaknesses:
+  - 'VQ-07 partial: positive/negative colors use Okabe-Ito positions 2 (#D55E00) and
+    3 (#0072B2) — the brand green #009E73 is absent; the spec requires warm/cool semantics
+    but the design could incorporate #009E73 as a neutral annotation or connector
+    color to maintain brand presence'
+  - 'DE-01 at 5/8: design is clean and professional but not yet publication-grade;
+    typography hierarchy and spacing around annotation boxes could be more refined,
+    and the final prediction annotation could be made more visually prominent as the
+    key focal point'
+  - 'LM-02 at 3/5: connector lines between bars use basic ax.plot calls; using FancyArrowPatch
+    or matplotlib Path/patches for the connectors would demonstrate deeper matplotlib
+    mastery'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), clearly NOT pure white — correct.
+      Chrome: Title "Credit Approval · shap-waterfall · matplotlib · anyplot.ai" is rendered in dark ink, clearly visible. X-axis label "Loan Approval Probability" is dark and readable. Y-axis feature names (Monthly Income, Debt-to-Income Ratio, etc.) are in a slightly muted dark gray, all legible. X-axis tick labels (0.3–0.7) are visible in muted dark. Legend in lower-right with light off-white frame, dark-gray text — readable.
+      Data: 10 horizontal bars — 6 orange (#D55E00, positive contributions) and 4 blue (#0072B2, negative contributions). Bars are wide enough to hold white bold SHAP value labels inside (e.g., "+0.24", "-0.18"). Small bars (Age +0.06, Open Credit Lines +0.04, Savings Balance +0.03, Recent Inquiries -0.02) show values outside the bar in the bar's own color. Dotted vertical connector lines link the end of each bar to the start of the next. Two dashed reference lines at 0.42 and 0.68 have annotation boxes labeled "E[f(x)] = 0.42" and "f(x) = 0.68". Features are ordered top-to-bottom by absolute SHAP magnitude (Monthly Income +0.24 at top, Recent Inquiries -0.02 at bottom).
+      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), clearly NOT pure black — correct.
+      Chrome: Title appears in near-white light text, clearly readable. X-axis label in light color, visible. Y-axis feature names in light gray (#B8B7B0 range), clearly readable against the dark background. X-axis tick labels in matching light gray, readable. Legend background is dark (#242420 elevated dark), with light gray text — readable. NO dark-on-dark failures observed.
+      Data: Orange and blue bar colors are IDENTICAL to the light render — #D55E00 and #0072B2 unchanged. White inside-bar labels remain white (visible on colored bars in both themes). Outside bar labels use orange/blue colors, which remain visible on the dark background. Annotation boxes have dark elevated backgrounds (#242420) with light-colored text: "E[f(x)] = 0.42" in muted light gray, "f(x) = 0.68" in near-white — both readable. Dotted connector lines visible in light gray. Dashed reference lines visible in muted light.
+      Legibility verdict: PASS — all text elements are clearly readable against the warm near-black background; no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All main text explicitly sized: title 24pt, x-label 20pt, ticks
+          16pt, all readable in both themes. Bar labels (14pt) and annotation text
+          (13pt) fall under tertiary text per style guide — readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps; feature names well-spaced; outside bar labels clear
+          of adjacent elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All bars clearly visible in both themes; connector lines and reference
+          lines visible; bar height=0.55 is optimal for 10 features.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Orange (#D55E00) vs blue (#0072B2) is CVD-safe (Okabe-Ito positions
+          2 and 3); sufficient luminance contrast between bar colors and background.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 landscape, chart fills canvas well, legend placed in lower-right
+          without overlapping data, annotation boxes at top are within bounds.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: ''Loan Approval Probability'' (descriptive, probability
+          is dimensionless). Y-axis: feature names on ticks (appropriate for waterfall).
+          Title includes spec context.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Backgrounds correct (#FAF8F1 light / #1A1A17 dark), chrome fully
+          theme-adaptive. Data colors use Okabe-Ito positions 2 (#D55E00) and 3 (#0072B2)
+          but skip position 1 (#009E73) — spec requires warm/cool semantic distinction
+          which justifies the choice, but strict compliance requires first series
+          = #009E73.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Clean and professional above defaults: semantic color choice, themed
+          annotation boxes with rounded corners, deliberate bar edge coloring (PAGE_BG)
+          for visual separation. Not yet FiveThirtyEight-level (annotation box size/spacing
+          could be more refined, final prediction could be more visually prominent).'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: 3 of 4 spines removed (only bottom retained), y-tick
+          length=0, x-axis grid only at alpha=0.10, bar edge coloring using PAGE_BG
+          for subtle gaps, set_axisbelow for grid below data.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Visual hierarchy clear: features ordered by absolute magnitude,
+          cumulative flow traced via connector lines, base and final value annotated
+          at top. Viewer can immediately identify the top drivers and follow the path
+          to the prediction.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct SHAP waterfall: horizontal bars starting from cumulative
+          running totals, flowing from base_value to final_value.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: ordering by |SHAP|, cumulative bars,
+          warm/cool color coding, base/final reference lines with annotations, value
+          labels inside/beside bars, horizontal layout, connector lines.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis shows cumulative probability (correct), y-axis shows feature
+          names, bar widths encode |SHAP value|, bar position encodes cumulative contribution.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''Credit Approval · shap-waterfall · matplotlib · anyplot.ai''
+          — correct format. Legend: ''Positive contribution'' / ''Negative contribution''
+          with matching colors.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: mix of positive and negative contributions, range
+          of magnitudes (0.02 to 0.24), base value clearly below final prediction,
+          both dominant and minor feature effects present.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Credit loan approval model — realistic, neutral business scenario.
+          Feature names (Monthly Income, Debt-to-Income Ratio, Credit Score, Prior
+          Defaults, etc.) are standard lending variables. No controversial content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Probability scale (0.42 base, 0.68 final) is realistic for a credit
+          approval classifier. SHAP values ranging from -0.18 to +0.24 sum correctly
+          to 0.26, matching the base→final delta.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear structure: imports → theme tokens → data → cumulative computation
+          → plot → style → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: all data is hardcoded, no random number generation.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imports: os, matplotlib.patches, matplotlib.pyplot, numpy — all
+          actively used.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; loop with zip() for bar computation; no over-engineering
+          or fake UI elements; strict=False is appropriate for zip on same-length
+          arrays.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches='tight', facecolor=PAGE_BG.
+          No deprecated API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert idiomatic usage: ax.barh() for horizontal bars, ax.axvline()
+          for reference lines, tick_params with colors for theme adaptation, plt.setp()
+          for legend text, tight_layout + bbox_inches=''tight'' for output.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses matplotlib-specific features: mpatches.Patch for custom legend
+          handles (non-trivial), ax.set_axisbelow(True) to layer grid beneath bars,
+          bar edgecolor=PAGE_BG for visual gap effect (creative matplotlib technique).
+          Connector lines use basic ax.plot rather than FancyArrowPatch or custom
+          Path objects, which limits distinctiveness.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - explicit-figure
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

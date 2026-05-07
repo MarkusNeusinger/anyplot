@@ -1,14 +1,23 @@
-""" pyplots.ai
+""" anyplot.ai
 bar-horizontal: Horizontal Bar Chart
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 94/100 | Created: 2025-12-25
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-07
 """
+
+import os
 
 import altair as alt
 import pandas as pd
 
 
-# Data: Top 10 programming languages by popularity (realistic scenario)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"
+
+# Data: Top 10 programming languages by popularity
 data = pd.DataFrame(
     {
         "language": ["Python", "JavaScript", "Java", "C++", "C#", "TypeScript", "Go", "Rust", "Swift", "Kotlin"],
@@ -22,17 +31,11 @@ data = data.sort_values("popularity", ascending=True)
 # Create horizontal bar chart
 chart = (
     alt.Chart(data)
-    .mark_bar(
-        color="#306998",  # Python Blue
-        cornerRadiusEnd=4,
-    )
+    .mark_bar(color=BRAND, cornerRadiusEnd=4)
     .encode(
         x=alt.X("popularity:Q", title="Popularity (%)", axis=alt.Axis(labelFontSize=18, titleFontSize=22)),
         y=alt.Y(
-            "language:N",
-            title="Programming Language",
-            sort="-x",  # Sort by x value descending
-            axis=alt.Axis(labelFontSize=18, titleFontSize=22),
+            "language:N", title="Programming Language", sort="-x", axis=alt.Axis(labelFontSize=18, titleFontSize=22)
         ),
         tooltip=[
             alt.Tooltip("language:N", title="Language"),
@@ -40,14 +43,19 @@ chart = (
         ],
     )
     .properties(
-        width=1400, height=850, title=alt.Title("bar-horizontal · altair · pyplots.ai", fontSize=28, anchor="middle")
+        width=1600,
+        height=900,
+        background=PAGE_BG,
+        title=alt.Title("bar-horizontal · altair · anyplot.ai", fontSize=28, anchor="middle"),
     )
-    .configure_axis(grid=True, gridOpacity=0.3, gridDash=[3, 3])
-    .configure_view(strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK
+    )
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_title(color=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT)
 )
 
-# Save as PNG (1400 × 3 = 4200, ~4800 with margins; 850 × 3 = 2550, ~2700 with margins)
-chart.save("plot.png", scale_factor=3.0)
-
-# Save as interactive HTML
-chart.save("plot.html")
+# Save PNG and HTML
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")

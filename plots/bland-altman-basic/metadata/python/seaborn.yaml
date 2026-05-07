@@ -1,15 +1,227 @@
 library: seaborn
+language: python
 specification_id: bland-altman-basic
 created: '2025-12-25T13:16:16Z'
-updated: '2025-12-25T13:18:22Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20505628285
+updated: '2026-05-07T11:04:32Z'
+generated_by: claude-haiku
+workflow_run: 25491640512
 issue: 2032
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/seaborn/plot.png
-preview_html: null
-quality_score: 93
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Excellent visual quality across both light and dark themes with no legibility
+    failures
+  - 'Perfect theme-adaptive chrome: data colors stay identical while background/text/grid
+    flip correctly'
+  - Clean professional aesthetic with intentional design choices (spine removal, subtle
+    grid, theme tokens)
+  - Realistic well-chosen example data demonstrating Bland-Altman plot type
+  - Perfect spec compliance with all required features
+  - Clean reproducible code with explicit font sizing
+  weaknesses:
+  - Limited distinctive use of seaborn-specific features; relies on matplotlib layer
+    for annotations and spine handling
+  - Visual storytelling is clear but lacks exceptional emphasis found in publication-ready
+    designs
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct for light theme
+      Chrome: Title, axis labels, tick labels all readable (dark INK/INK_SOFT tokens on light background)
+      Data: 80 green scatter points (#009E73), solid green mean line at -1.91 mmHg, dashed orange LoA lines at ±7.10/-10.91 mmHg, dotted gray reference at 0
+      Annotations: Right-side value labels in green (mean) and orange (LoA) clearly visible
+      Legibility verdict: PASS - All elements perfectly readable, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct for dark theme
+      Chrome: All text rendered in light colors (INK_SOFT becomes #B8B7B0), readable against dark background
+      Data: Scatter points, mean line, and LoA lines IDENTICAL to light render (#009E73 and #D55E00 - data colors unchanged)
+      Legend: Adapted to dark theme with light text on dark background box
+      Legibility verdict: PASS - All elements readable, no dark-on-dark failures, data colors confirm perfect theme-independence
+
+    Both renders display identical data colors with correctly flipped chrome - a model implementation of theme-adaptive design.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (24pt title, 20pt labels, 16pt ticks);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; all content fully readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 80 points with s=150 and alpha=0.7 perfectly adapted to density;
+          all markers clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette with good contrast; colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~70% of canvas with balanced margins; no cut-off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: X=''Mean of Two Methods (mmHg)'',
+          Y=''Difference (Method 1 - Method 2) (mmHg)'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, LoA #D55E00, backgrounds #FAF8F1/#1A1A17,
+          theme-adaptive text, both renders perfect'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with intentional colors and typography; above defaults
+          but not FiveThirtyEight-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Perfect: spines removed, subtle grid, generous whitespace, polished
+          annotations'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good visual hierarchy guides reader; clear story but not exceptional
+          emphasis
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Bland-Altman with all subtypes
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: scatter, mean, LoA, annotations'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: scatter, mean, LoA, reference'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible medical scenario (BP measurements)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Mean ~120, SD ~15, bias ~2, LoA ±7-11 all realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear flow; no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seed set; deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only necessary imports; all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png correctly
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct but doesn't leverage seaborn's figure-level API
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage; could easily transfer to matplotlib
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -20,192 +232,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-review:
-  strengths:
-  - Excellent implementation of Bland-Altman statistics with correct mean difference
-    and LoA calculations
-  - Clear visual hierarchy with distinct colors for bias line (yellow) vs limits of
-    agreement (red)
-  - Appropriate use of transparency and marker sizing for 80 data points
-  - Annotations on the right side provide quick reference to exact values
-  - Realistic blood pressure measurement scenario with appropriate units throughout
-  - Zero reference line helps contextualize whether differences are clinically significant
-  weaknesses:
-  - 'Grid and legend styling could be refined (VQ-07: grid alpha could be lower, legend
-    framealpha competes with data region)'
-  - 'Library features (LF-01): Could leverage more seaborn-specific features like
-    rugplot for marginal distributions or confidence intervals'
-  image_description: 'The plot displays a Bland-Altman agreement plot comparing two
-    blood pressure measurement methods. Blue circular markers (n=80) with white edges
-    and moderate transparency show individual paired observations. The x-axis displays
-    "Mean of Two Methods (mmHg)" ranging from approximately 80-150 mmHg, and the y-axis
-    shows "Difference (Method 1 - Method 2) (mmHg)" ranging from about -15 to +7 mmHg.
-    A solid yellow horizontal line indicates the mean difference (bias) at -1.9 mmHg.
-    Two red dashed horizontal lines mark the 95% limits of agreement at +7.1 and -10.9
-    mmHg. A subtle gray dotted zero reference line is included. Numeric annotations
-    appear on the right edge of the plot showing the exact values. The legend in the
-    upper left displays the mean and LoA values with units. The title follows the
-    required format: "bland-altman-basic · seaborn · pyplots.ai". The layout is well-balanced
-    with a subtle gray dashed grid.'
-  criteria_checklist:
-    visual_quality:
-      score: 37
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt - all clearly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Markers well-sized (s=150) with good alpha (0.7) for 80 points; slight
-          deduction for some edge crowding
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/red color scheme is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: Descriptive labels with units (mmHg)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: Grid alpha at 0.3 is acceptable, but zero reference line could be
-          more visible
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Bland-Altman plot with differences vs means
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis shows mean of pair, Y-axis shows difference
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Mean line, LoA lines, annotations all present
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data points visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend labels correctly describe lines with values
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: bland-altman-basic · seaborn · pyplots.ai'
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows variation in differences across the measurement range; slight
-          proportional error visible; one minor deduction for not showing more extreme
-          outliers outside LoA
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Blood pressure measurements from two sphygmomanometers is a classic
-          real-world application
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Values realistic (80-150 mmHg systolic BP range), though distribution
-          could be slightly tighter
-    code_quality:
-      score: 10
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Linear structure: imports → data → plot → save'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: np.random.seed(42) used
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: Only matplotlib, numpy, seaborn imported and used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current seaborn API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
-        max: 5
-        passed: false
-        comment: Uses sns.scatterplot correctly, but the horizontal reference lines
-          use matplotlib's axhline rather than seaborn-specific statistical annotation
-          features
-  verdict: APPROVED
+  - grid-styling

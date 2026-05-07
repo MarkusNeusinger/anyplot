@@ -1,0 +1,250 @@
+library: seaborn
+language: python
+specification_id: shap-waterfall
+created: '2026-05-07T11:46:46Z'
+updated: '2026-05-07T12:06:38Z'
+generated_by: claude-sonnet
+workflow_run: 25493326358
+issue: 5237
+python_version: 3.13.13
+library_version: 0.13.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 84
+review:
+  strengths:
+  - 'Complete spec implementation: all waterfall requirements present (cumulative
+    flow, color coding, reference lines, value labels, connector lines)'
+  - 'Strong theme-adaptive chrome: all INK tokens threaded through consistently; both
+    renders fully readable'
+  - 'Intentional visual hierarchy: dominant feature bold, color-matched SHAP labels,
+    focal point annotation at f(x)'
+  - Realistic neutral credit-scoring domain with plausible SHAP magnitudes
+  weaknesses:
+  - 'Spurious y y-axis label: sns.scatterplot(data=connector_df, x=x, y=y, ax=ax)
+    injects y as ylabel from column name; fix by renaming column to ypos or adding
+    ax.set_ylabel() after the scatterplot'
+  - SHAP value labels at fontsize=14, slightly below the 16pt minimum for secondary
+    text at this canvas resolution
+  - 'Limited seaborn surface area: most rendering is raw matplotlib; library mainly
+    used for theming and despine'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — correct theme surface
+      Chrome: title "Credit Default Prediction · shap-waterfall · seaborn · anyplot.ai" at 24pt in dark ink (#1A1A17) — readable; x-axis label "Model Output (Default Probability)" at 20pt — readable; feature name tick labels at 16pt — readable; SHAP value labels at 14pt — readable but slightly below 16pt guideline; spurious "y" y-axis label (from sns.scatterplot column name) — visible as generic label
+      Data: orange (#D55E00) bars for positive SHAP, blue (#0072B2) for negative — both Okabe-Ito positions 2 and 3; connector dots in INK_SOFT grey; dashed base value line and solid final value line
+      Legibility verdict: PASS (minor issue: spurious y ylabel and 14pt SHAP labels slightly small)
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 — correct theme surface
+      Chrome: title in light #F0EFE8 ink — readable; feature labels in light ink — readable; x-axis tick labels in light ink — readable; f(x) annotation bold and readable; legend box uses elevated dark surface #242420; spurious "y" label persists but in light color
+      Data: colors identical to light render — same #D55E00 orange and #0072B2 blue; connector dots visible in lighter grey; reference lines visible
+      Legibility verdict: PASS — no dark-on-dark failures; all text clearly readable against the dark background
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 24pt, x-label 20pt, tick labels 16pt explicitly set; SHAP value
+          labels at 14pt slightly below 16pt guideline but readable
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No data collisions; spurious y ylabel from sns.scatterplot creates
+          minor visual noise
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars, connector dots, and reference lines clearly visible in both
+          themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Orange/blue Okabe-Ito pair is CVD-safe with good luminance contrast
+          on both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions, chart fills canvas well, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: X-axis descriptive with units; y-axis has spurious generic 'y' label
+          from sns.scatterplot column name auto-labeling
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: D55E00 and 0072B2 are Okabe-Ito pos 2 and 3; spec mandates red/positive
+          + blue/negative semantics; backgrounds correct; theme chrome fully adaptive
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful design with bold dominant feature, color-matched SHAP
+          labels, semantic color coding; above defaults but not publication-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: sns.despine removes top/right/left spines; x-grid at alpha=0.10;
+          y-tick marks removed; generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Late Payment Count boldly identified as dominant driver; cumulative
+          flow visible; reference values placed meaningfully; clear risk narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal waterfall chart with cumulative SHAP bars
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: ordered by |SHAP|, cumulative flow, color coding,
+          reference lines, value labels, connector lines'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Model output on x-axis, feature names on y-axis, bars sized by SHAP
+          magnitude
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes spec-id, library, anyplot.ai; legend labels Positive/Negative
+          SHAP with direction arrows
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows positive and negative contributions, cumulative flow, baseline,
+          final prediction, dominant vs minor features
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Credit default probability prediction with plausible credit bureau
+          feature names; neutral business domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: SHAP values in ±0.04-0.24 range realistic; probabilities 0.32 to
+          0.48 sensible
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; clean imports-data-plot-save structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Bug: connector_df uses column name ''y'' in sns.scatterplot causing
+          seaborn to auto-set ylabel to ''y''; fix by renaming column to ''ypos'''
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png at dpi=300 with facecolor set
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses sns.set_theme() with RC dict, sns.despine(), sns.scatterplot()
+          for connector markers; waterfall bars require raw matplotlib since seaborn
+          has no native waterfall API
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Seaborn usage confined to set_theme and despine; scatterplot for
+          connector dots is creative but minor; most visual logic is matplotlib primitives
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - patches
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - explicit-figure
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

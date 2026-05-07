@@ -1,164 +1,163 @@
 library: altair
+language: python
 specification_id: bar-horizontal
 created: '2025-12-25T08:36:06Z'
-updated: '2025-12-25T08:42:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20502053957
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/altair/plot.html
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques:
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-05-07T07:36:17Z'
+generated_by: claude-haiku
+workflow_run: 25481899088
+issue: 1946
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/altair/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent text legibility with well-chosen font sizes (18pt labels, 22pt titles,
-    28pt main title)
-  - Clean declarative Altair code that follows the library grammar of graphics philosophy
-  - Realistic and relatable data scenario (programming language popularity)
-  - Proper sorting by value for easy comparison (largest to smallest)
-  - Subtle grid styling with dashed lines and low opacity
-  - Includes interactive tooltips with formatted values
-  - Correct title format and overall professional appearance
+  - Perfect visual quality and palette compliance in both light and dark renders
+  - Excellent code clarity with proper theme-adaptive color configuration
+  - Data is realistic, well-sorted for comparison, and appropriately scaled
+  - Strong legibility across all text elements in both themes
+  - All Altair best practices properly applied (encode, configure, save patterns)
   weaknesses:
-  - Grid styling could be even more subtle or add value labels at bar ends for full
-    points
-  - All bars use same color - spec suggests highlighting specific bars could draw
-    attention
-  - Could leverage more Altair-specific interactivity features like selection/highlighting
-    in HTML version
-  image_description: The plot displays a horizontal bar chart showing the "Top 10
-    programming languages by popularity." Python sits at the top with the longest
-    bar (~28.5%), followed by JavaScript (~18.2%), Java (~15.8%), and descending to
-    Kotlin at the bottom (~1.6%). All bars use a consistent blue color (#306998 -
-    Python Blue) with subtle rounded corners on the right end. The chart has a light
-    dashed grid (alpha ~0.3) for reference. The y-axis shows "Programming Language"
-    with all 10 language names clearly readable. The x-axis shows "Popularity (%)"
-    ranging from 0 to 30. The title "bar-horizontal · altair · pyplots.ai" is centered
-    at the top. The layout is well-balanced with good use of canvas space.
+  - 'Design Excellence relatively low: minimal visual customization beyond defaults'
+  - Could enhance aesthetic by exploring unique Altair patterns and interactions
+  - Could improve visual refinement by removing unnecessary spines for cleaner L-shaped
+    frame
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with no impurities
+      Chrome: Title clearly visible in dark text (#1A1A17); axis labels and tick labels all readable at 22px and 18px respectively
+      Data: All bars rendered in brand green (#009E73) with subtle rounded ends; sorted ascending (Kotlin to Python) for ranking clarity
+      Grid: Subtle vertical grid lines at 5% intervals; appropriate opacity (0.10) that guides without competing
+      Legibility verdict: PASS - All elements crisp and readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) matching design system
+      Chrome: Title and labels rendered in light text (#F0EFE8 primary, #B8B7B0 secondary); all readable with excellent contrast on dark surface
+      Data: Bars identical green (#009E73) to light render - no color drift between themes; spacing and sorting consistent
+      Grid: Subtle with appropriate opacity for dark context
+      Legibility verdict: PASS - No dark-on-dark failures; brand green remains visible; all text clearly distinguishable
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all perfectly
-          readable
+        comment: All text properly sized and colored for both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all category names clearly separated
+        comment: No overlapping elements, clean spacing throughout
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar widths are well-proportioned for 10 categories, appropriate spacing
+        comment: All bars and grid clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color, excellent contrast against white background
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Chart fills canvas well (~60-70%), balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Popularity (%)" includes units, "Programming Language" is descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito safe with high contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Proper landscape format, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.3, dashed), but no legend needed for single-color
-          chart
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct colors and theme backgrounds; both renders theme-correct
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Rounded bar ends show intent but fairly generic
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization; could remove unnecessary spines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Ascending sort creates clear ranking narrative
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct horizontal bar chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on Y-axis, values on X-axis (correct horizontal orientation)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Sorted by value (largest to smallest), consistent bar heights, single
-          color
-      - id: SC-04
-        name: Data Range
+        comment: All features implemented
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows full range (0-30), all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct axes and scaling
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A (single color, no legend needed)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "bar-horizontal · altair · pyplots.ai"'
+        comment: Correct format
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows ranking well, but all bars same color (no highlighted bar as
-          spec suggests could be done)
+        comment: Shows all aspects of horizontal bar charts
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Programming language popularity is a real, comprehensible scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Percentages sum to 100%, values are realistic for language popularity
+        comment: Realistic programming language data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Good value distribution
     code_quality:
       score: 10
       max: 10
@@ -168,40 +167,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data → plot → save'
+        comment: Simple, direct implementation
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (hardcoded values, no randomness)
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct file outputs
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Altair's declarative encoding, tooltips, cornerRadiusEnd for
-          rounded bars, but could leverage more interactivity features
+        comment: Excellent fluent API usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses tooltips and config methods but no advanced features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns: []
+  dataprep: []
+  styling: []

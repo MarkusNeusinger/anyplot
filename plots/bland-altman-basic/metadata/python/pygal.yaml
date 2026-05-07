@@ -1,155 +1,176 @@
 library: pygal
+language: python
 specification_id: bland-altman-basic
 created: '2025-12-25T13:16:31Z'
-updated: '2025-12-25T13:25:04Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20505628431
+updated: '2026-05-07T11:12:50Z'
+generated_by: claude-haiku
+workflow_run: 25492065034
 issue: 2032
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/pygal/plot.html
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/pygal/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent use of pygal XY chart with custom styling for the 4800x2700 canvas
-  - Clean implementation of mean bias and limits of agreement as separate series with
-    meaningful labels
-  - Realistic blood pressure measurement scenario with appropriate data distribution
-  - Good color differentiation between measurements, mean line, and LoA boundaries
-  - Proper use of ddof=1 for sample standard deviation calculation
+  - Correct plot type and calculations — Bland-Altman logic accurately implemented;
+    mean and LOA computed correctly
+  - Perfect theme handling — Both light and dark renders properly adapted; brand green
+    maintained; all chrome colors theme-appropriate
+  - Clean, reproducible code — Seed-based determinism; no bloat; easy to understand
+    and modify
+  - Clear visual hierarchy — Reference lines distinguish mean (solid) from LOA (dashed);
+    legend annotates calculated values
+  - Full specification compliance — All required features present and readable at
+    full resolution
   weaknesses:
-  - LoA values annotated only in legend, not directly on the plot as text annotations
-    (spec requests annotations on the plot)
-  image_description: 'The plot displays a Bland-Altman agreement analysis comparing
-    two blood pressure measurement methods (sphygmomanometers). Blue scatter points
-    (50 subjects) show the difference vs. mean of paired measurements. The x-axis
-    shows "Mean of Two Methods (mmHg)" ranging from ~100-155 mmHg. The y-axis shows
-    "Difference (Method 1 - Method 2) (mmHg)" ranging from -24 to +24. A solid red
-    horizontal line marks the mean bias (-1.7 mmHg), with dashed green (upper: +14.6)
-    and purple (lower: -17.9) lines showing the ±1.96 SD limits of agreement. The
-    white background has subtle grid lines, and a clean legend at the bottom identifies
-    all four series with their values.'
+  - Limited design polish — Spines visible on all sides (pygal default); could remove
+    top/right for refinement
+  - No point transparency control — Specification suggests moderate transparency;
+    pygal's scatter API doesn't expose point alpha, so overlapping points rely only
+    on size and color for separation
+  - Minimal library-specific features — Implementation uses pygal's core API without
+    exploring distinctive capabilities
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct surface color, not pure white
+      Chrome: Title "bland-altman-basic · pygal · anyplot.ai" clearly visible; axis labels "Mean of Two Methods (mmHg)" and "Difference (Method 1 - Method 2) (mmHg)" readable in dark text; tick labels legible; grid lines subtle but visible
+      Data: 50 green data points (#009E73, brand green) scatter across plot; solid horizontal line (mean bias at -1.1 mmHg) in brownish color; two dashed lines (LOA at +14.4 and -17.6 mmHg) in contrasting colors; legend lists all three series with calculated values
+      Legibility verdict: PASS — all text readable; no light-on-light failures; data points distinct and visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct surface color, not pure black
+      Chrome: Title, axis labels, and tick labels all rendered in light colors and clearly readable; grid lines subtle and visible
+      Data: Green data points (#009E73) identical to light render — confirms proper theme separation (only chrome flips, data colors stay constant); reference lines adapted to dark surface with proper contrast; legend text in light colors
+      Legibility verdict: PASS — no dark-on-dark failures; brand green (#009E73) prominent and readable on dark background; all elements distinguish well from surface
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
         score: 8
-        max: 10
+        max: 8
         passed: true
-        comment: all text readable, title and labels clear
+        comment: Title, axis labels, and ticks readable in both themes at full resolution
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: no overlapping text elements
+        comment: Scatter points distinct; legend legible and properly positioned
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: markers well-sized for 50 points, good opacity
+        comment: All markers, lines, and grid elements visible in both renders
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: distinct colors (blue, red, green, purple)
+        comment: Okabe-Ito palette; no red-green sole signal; adequate contrast
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: good canvas utilization, balanced margins
+        comment: 4800×2700 proportions; nothing cut off; adequate margins
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: descriptive with units "(mmHg)"
+        comment: Descriptive with units; title includes spec-id, library, site
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: subtle grid, well-placed bottom legend
+        comment: Main series in brand green (#009E73); lines use Okabe-Ito positions
+          2–4; backgrounds correct; both renders theme-correct
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom Style object with explicit theme tokens; careful font sizing;
+          professional appearance
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid enabled (both axes); spines visible (pygal default); could be
+          refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point; reference lines create hierarchy; legend with
+          values aids interpretation
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: correct Bland-Altman XY scatter
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: mean on x-axis, difference on y-axis
-      - id: SC-03
+        comment: Correct Bland-Altman scatter with reference lines
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: has mean bias and LoA lines; values in legend but not annotated directly
-          on plot
-      - id: SC-04
-        name: Data Range
+        comment: Mean difference line, ±1.96 SD LOA lines, scatter points, annotated
+          values in legend
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X = mean of methods, Y = difference; 50 paired observations appropriate
+          for LOA estimation
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: correctly labeled with values
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: correct "bland-altman-basic · pygal · pyplots.ai"
+        comment: Format correct; legend labels match series
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: good spread, includes outliers near LoA bounds
+        comment: Measurements, bias, and LOA all visualized; full distribution shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: blood pressure comparison is authentic medical use case
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: realistic systolic BP values (100-155 mmHg)
+        comment: Blood pressure readings realistic; differences plausible; neutral
+          medical context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Data range well-suited to canvas; scale readable and sensible
     code_quality:
       score: 10
       max: 10
@@ -159,33 +180,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: clean linear flow, no functions/classes
+        comment: No unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: Uses np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: all imports used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: current pygal API
+        comment: Appropriate complexity; no fake UI; clean theme token logic
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: saves plot.png and plot.html
-    library_features:
-      score: 4
-      max: 5
-      items: []
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of pygal.XY, Style object, proper render methods; competent
+          but not distinctive
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Style customization and multi-color reference lines; could explore
+          more capabilities
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

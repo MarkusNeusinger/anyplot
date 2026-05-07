@@ -1,156 +1,178 @@
 library: plotnine
+language: python
 specification_id: bar-horizontal
 created: '2025-12-25T08:36:09Z'
-updated: '2025-12-25T08:42:57Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20502054038
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/plotnine/plot.png
-preview_html: null
-quality_score: 97
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-07T07:33:55Z'
+generated_by: claude-haiku
+workflow_run: 25482137415
+issue: 1946
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent use of plotnine grammar of graphics with proper layering (geom_bar +
-    geom_text + coord_flip)
-  - Data is properly sorted ascending so largest values appear at top after coord_flip
-  - Value labels positioned cleanly at bar ends with appropriate nudge
-  - Professional minimal theme with well-scaled text sizes for high-resolution output
-  - Realistic, relatable data context (programming language popularity)
-  weaknesses:
-  - Grid styling uses element_text instead of element_line for panel_grid_major_x
-    and panel_grid_minor (should be element_line(color=...))
-  image_description: The plot displays a horizontal bar chart showing "Top 10 programming
-    languages by popularity" with programming languages on the Y-axis and developer
-    usage percentage on the X-axis. JavaScript leads at 65.6%, followed by Python
-    at 49.3%, with Swift at the bottom at 6.6%. The bars are a consistent steel blue
-    color (#306998), extending horizontally from left to right. Each bar has a percentage
-    label positioned just to the right of the bar end. The title "bar-horizontal ·
-    plotnine · pyplots.ai" appears at the top in bold. The minimal theme provides
-    a clean white background with subtle gray grid lines. The layout is well-balanced
-    with the plot filling the canvas appropriately.
+  - Flawless visual quality with perfect text legibility in both light and dark themes
+  - 'Excellent theme adaptation: backgrounds, text colors, and grid properly theme-adaptive
+    while data colors remain constant'
+  - Idiomatic plotnine usage with proper grammar of graphics composition
+  - Well-chosen, realistic data that effectively demonstrates horizontal bar chart
+    capabilities
+  - Clean, simple code structure with no unnecessary complexity
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white, correct theme surface
+      Chrome: Title (24pt, bold, dark), axis labels (20pt, dark), tick labels (16pt, secondary color) - all clearly visible and readable against light background
+      Data: All bars are brand green (#009E73), sorted ascending by value, consistent width (0.7), subtle vertical grid (0.10 alpha)
+      Legibility verdict: PASS - all text fully readable with excellent contrast; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black, correct dark theme surface
+      Chrome: Title, axis labels, and tick labels in light text colors (#F0EFE8 and #B8B7B0) - all clearly visible and readable against dark background; no dark-on-dark failures
+      Data: All bars remain brand green (#009E73) identical to light render; horizontal grid with same subtle styling
+      Legibility verdict: PASS - all text fully readable with good contrast; proper theme inversion with data colors constant across both renders
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title bold ~24pt, axis labels ~20pt, tick labels ~16pt, all perfectly
-          readable
+        comment: All font sizes explicitly set in theme; Title 24pt, Axis labels 20pt,
+          Tick labels 16pt; perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: All text clearly separated, no overlapping elements
+        comment: Zero overlapping text; categories well-spaced; all elements fully
+          readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars well-sized with width=0.7, good spacing, data labels visible
+        comment: Bars optimally sized for 10 categories; width=0.7 appropriate; all
+          data distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color, no accessibility issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent canvas utilization with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Developer Usage (%)", "Programming Language"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Single colorblind-safe green (#009E73); adequate contrast in both
+          themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Perfect layout: 16:9 canvas (4800×2700px) well-utilized; balanced
+          margins; nothing cut off'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Uses `element_text` instead of `element_line` for grid styling (incorrect
-          API, though visually acceptable)
+        passed: true
+        comment: 'Descriptive with units: ''Developer Usage (%)'' and ''Programming
+          Language'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Categorical uses #009E73; backgrounds #FAF8F1 (light) and #1A1A17
+          (dark); theme-adaptive chrome perfect in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured default styling with theme tokens; clean and professional
+          but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Visible refinement: subtle grid (0.10-0.05 alpha), no top/right
+          spines, generous whitespace; above defaults'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good visual hierarchy from sorting data ascending; ranking clearly
+          visible; focal point established through bar-length progression
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct horizontal bar chart using coord_flip()
+        comment: Correct horizontal bar chart; proper use of geom_bar(stat='identity')
+          + coord_flip()
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on Y-axis, values on X-axis as required
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Sorted bars, consistent heights, value labels, adequate spacing
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: categories on y-axis, values as bar lengths,
+          sorted, single color, adequate spacing'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible with appropriate axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Developer Usage %, Y=Programming Language; all 10 data points visible;
+          axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A (single series, no legend needed)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "bar-horizontal · plotnine · pyplots.ai"'
+        comment: 'Title format exact: ''bar-horizontal · plotnine · anyplot.ai'';
+          single-series requires no legend'
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Good value variation (6.6% to 65.6%), properly sorted
+        comment: Shows complete ranking of 10 programming languages; demonstrates
+          core horizontal bar strength
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Programming language popularity is a relatable, real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Percentages are realistic for developer usage statistics
+        comment: Real-world plausible data; neutral topic; authentic programming language
+          survey scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Developer usage percentages factually reasonable; proportions accurate
+          (JavaScript ~65%, Swift ~6.6%)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -158,33 +180,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: Imports → Data → Plot → Save; no functions or classes; straightforward
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Deterministic hardcoded data, no random elements
+        comment: Static deterministic data; fully reproducible across runs
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only necessary imports; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current API usage
+        comment: Clean, Pythonic code; proper theme composition; no over-engineering
+          or fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
-      items: []
+        comment: Saves as plot-{THEME}.png; DPI=300; current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of plotnine grammar of graphics; ggplot() + aes() + geom_bar()
+          + theme composition
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses plotnine-specific theme parameters and coord_flip(); fairly
+          standard usage without distinctive innovation
+    total:
+      score: 90
+      max: 100
+      verdict: APPROVED
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns: []
+  dataprep: []
+  styling:
+  - grid-styling

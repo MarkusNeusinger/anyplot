@@ -1,154 +1,176 @@
 library: letsplot
+language: python
 specification_id: bar-horizontal
 created: '2025-12-25T08:36:18Z'
-updated: '2025-12-25T08:42:56Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20502056183
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/letsplot/plot.html
-quality_score: 98
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-05-07T07:47:03Z'
+generated_by: claude-haiku
+workflow_run: 25482247782
+issue: 1946
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-horizontal/python/letsplot/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent use of lets-plot ggplot2 grammar with coord_flip for horizontal bars
-  - Clean professional appearance with theme_minimal and customized theme elements
-  - Real-world programming language survey data with realistic values
-  - Proper sorting (ascending) so largest bars appear at top when displayed
-  - Correct high-resolution export with scale=3 for 4800x2700 px output
-  - Good use of pd.Categorical to preserve sort order
+  - Excellent theme implementation with proper light/dark adaptation - all text readable
+    in both renders with no legibility issues
+  - Clean, professional presentation with intentional data sorting (ascending by value)
+    for easy comparison
+  - Correct palette usage (#009E73 brand green) with proper theme-adaptive chrome
+    (title, labels, gridlines)
+  - Proper output format (PNG + HTML) with correct scaling (1600x900 base scaled 3x
+    = 4800x2700 px)
+  - Deterministic, reproducible data with realistic programming language popularity
+    context
   weaknesses:
-  - Grid customization could be slightly more refined with lower alpha for vertical
-    grid lines
-  image_description: 'The plot displays a horizontal bar chart showing programming
-    language popularity among developers. Ten programming languages are listed on
-    the y-axis (from bottom to top: Rust, Go, C, PHP, C++, C#, TypeScript, Java, Python,
-    JavaScript), sorted by popularity in ascending order. The x-axis shows "Developers
-    (%)" ranging from 0 to 65. All bars use a consistent steel blue color (#306998).
-    JavaScript leads at ~65%, followed by Python at ~49%. The title "bar-horizontal
-    · letsplot · pyplots.ai" appears at the top in bold. The chart uses a minimal
-    theme with light gray vertical grid lines and no horizontal grid lines, providing
-    a clean, professional appearance.'
+  - Design Excellence is functional but not particularly sophisticated - uses default
+    styling without custom color palette or advanced visual hierarchy
+  - Limited use of letsplot distinctive features - implementation uses standard geom_bar
+    and theme without exploring more advanced capabilities
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct surface color
+      Chrome: Title "bar-horizontal · letsplot · anyplot.ai" clearly visible in dark text; axis labels "Programming Language" and "Developers (%)" readable in dark INK color; tick labels (JavaScript, Python, Java, etc.) all readable with dark INK_SOFT
+      Data: 10 bars in ascending order (Rust to JavaScript) filled with #009E73 brand green; bar lengths proportional to values; x-axis gridlines subtle and helpful
+      Legibility verdict: PASS - All text readable against light background, proper color contrast, no dark-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct surface color
+      Chrome: Title clearly visible in light INK color; axis labels readable in light text; all tick labels readable with light INK_SOFT - no dark-on-dark failures
+      Data: Bars identical in #009E73 green color (confirming theme-independent data colors); bar lengths match light render; gridlines maintain subtle appearance
+      Legibility verdict: PASS - All text readable against dark background, proper light-text-on-dark-background contrast, theme adaptation is correct
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title bold ~24pt, axis labels ~20pt, tick labels ~16pt, all perfectly
-          readable
+        comment: All text readable in both themes with proper font sizes (title 24,
+          axis_title 20, axis_text 16)
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text anywhere
+        comment: No overlapping elements; bars clearly separated; labels non-overlapping
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars well-sized with width=0.7 and alpha=0.9
+        comment: All 10 bars visible and clearly distinguishable; bar heights proportional
+          to data values
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single color (#306998), colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent canvas utilization, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Programming Language" and "Developers (%)" with units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Uses #009E73 (Okabe-Ito position 1, brand green); colorblind-safe;
+          good contrast'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions; adequate margins; nothing cut off; 1600x900 scaled
+          3x = 4800x2700 correct
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Vertical grid subtle, no legend needed for single-color bars
+        comment: Title follows format; axis labels descriptive with units (Developers
+          %)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds correct (#FAF8F1 light, #1A1A17
+          dark); chrome properly theme-adaptive'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Professional but uses default styling; no custom palette or advanced
+          design elements
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed (L-shaped); subtle grid; good whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear ranking with ascending sort; visual hierarchy guides viewer
+          to compare values
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct horizontal bar chart
+        comment: Correct horizontal bar chart with categories on y-axis
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on y-axis, values on x-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Sorted by value, single color, consistent bar heights, adequate spacing
-      - id: SC-04
-        name: Data Range
+        comment: Shows category and value data; single color; sorted by value as recommended
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped; all data points represented; scale appropriate
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for single-color bars
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses "bar-horizontal · letsplot · pyplots.ai"
+        comment: Title format correct; no legend needed for single series
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 10 categories with good value variation (11.76 to 65.36)
+        comment: Demonstrates core horizontal bar chart features effectively
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Real programming language survey data
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Realistic percentages matching real-world surveys
+        comment: Programming language popularity data is realistic, from plausible
+          surveys, neutral topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Scale 0-70% sensible for developer percentage data; proportional
+          representation
     code_quality:
       score: 10
       max: 10
@@ -158,39 +180,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: imports → data → plot → save
+        comment: No functions or classes; direct data manipulation and plotting
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random values)
+        comment: Deterministic data; consistent output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pandas and lets_plot
+        comment: Only os, pandas, lets_plot imported; all are used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current API usage
+        comment: Appropriate complexity; uses idiomatic pandas (sort_values, categorical)
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png correctly
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with correct scale
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: ggplot2 grammar, coord_flip, theme_minimal, ggsize, scale parameter
+        comment: Uses ggplot(), geom_bar(stat='identity'), proper theme() customization,
+          correct API
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses HTML export and scale parameter but doesn't showcase more distinctive
+          letsplot features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns: []
+  dataprep: []
+  styling:
+  - grid-styling

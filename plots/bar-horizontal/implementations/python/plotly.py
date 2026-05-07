@@ -1,15 +1,31 @@
-""" pyplots.ai
+""" anyplot.ai
 bar-horizontal: Horizontal Bar Chart
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-25
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-07
 """
+
+import os
+import sys
+
+
+sys.path = [p for p in sys.path if not p.endswith(os.path.dirname(__file__))]
 
 import plotly.graph_objects as go
 
 
+np = __import__("numpy")
+np.random.seed(42)
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"
+
 # Data - Survey results: "What programming language do you use most?"
 categories = ["Python", "JavaScript", "TypeScript", "Java", "C++", "Go", "Rust", "Ruby", "PHP", "Swift"]
-# Response counts (sorted descending for visual clarity)
 values = [2847, 2156, 1823, 1542, 987, 756, 623, 412, 389, 298]
 
 # Create horizontal bar chart
@@ -20,37 +36,41 @@ fig.add_trace(
         y=categories,
         x=values,
         orientation="h",
-        marker_color="#306998",
-        marker_line={"color": "#1e4266", "width": 1},
+        marker=dict(color=BRAND, line=dict(color=INK_SOFT, width=1)),
         text=values,
         textposition="outside",
-        textfont={"size": 32},
+        textfont=dict(size=24, color=INK_SOFT),
     )
 )
 
 # Layout for 4800x2700 px
 fig.update_layout(
-    title={"text": "bar-horizontal · plotly · pyplots.ai", "font": {"size": 40}, "x": 0.5, "xanchor": "center"},
-    xaxis={
-        "title": {"text": "Number of Responses", "font": {"size": 40}},
-        "tickfont": {"size": 32},
-        "showgrid": True,
-        "gridcolor": "rgba(0,0,0,0.1)",
-        "range": [0, max(values) * 1.15],
-    },
-    yaxis={
-        "title": {"text": "Programming Language", "font": {"size": 40}},
-        "tickfont": {"size": 32},
-        "autorange": "reversed",
-        "showgrid": False,
-    },
-    template="plotly_white",
-    margin={"l": 200, "r": 120, "t": 120, "b": 100},
+    title=dict(text="bar-horizontal · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
+    xaxis=dict(
+        title=dict(text="Number of Responses", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
+        showgrid=True,
+        gridcolor=GRID,
+        linecolor=INK_SOFT,
+        zerolinecolor=INK_SOFT,
+        range=[0, max(values) * 1.08],
+    ),
+    yaxis=dict(
+        title=dict(text="Programming Language", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
+        autorange="reversed",
+        showgrid=False,
+        linecolor=INK_SOFT,
+    ),
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font=dict(color=INK),
+    margin=dict(l=200, r=120, t=120, b=100),
     bargap=0.3,
+    hovermode="closest",
 )
 
-# Save as PNG (4800x2700)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save as HTML for interactivity
-fig.write_html("plot.html")
+# Save as PNG and HTML to the script's directory
+script_dir = os.path.dirname(os.path.abspath(__file__))
+fig.write_image(os.path.join(script_dir, f"plot-{THEME}.png"), width=1600, height=900, scale=3)
+fig.write_html(os.path.join(script_dir, f"plot-{THEME}.html"), include_plotlyjs="cdn")
