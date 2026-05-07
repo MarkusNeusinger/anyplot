@@ -1,85 +1,100 @@
-""" pyplots.ai
+"""anyplot.ai
 box-notched: Notched Box Plot
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 93/100 | Created: 2025-12-25
+Library: matplotlib | Python 3.13
+Quality: pending | Created: 2025-12-21
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 
-# Data - Employee performance scores across departments
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette - first series is always brand green
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+
+# Data - Test success rates across different test suites
 np.random.seed(42)
 
-# Create realistic data with different distributions to showcase notch comparison
-# Engineering: Higher scores, tight distribution
-engineering = np.random.normal(loc=82, scale=8, size=60)
-engineering = np.clip(engineering, 50, 100)
+# Unit Tests: High success rate, tight distribution
+unit_tests = np.random.normal(loc=97, scale=2, size=65)
+unit_tests = np.clip(unit_tests, 90, 100)
 
-# Sales: Medium scores, wider spread
-sales = np.random.normal(loc=75, scale=12, size=55)
-sales = np.clip(sales, 40, 100)
+# Integration Tests: Medium-high success rate, wider spread
+integration_tests = np.random.normal(loc=87, scale=8, size=60)
+integration_tests = np.clip(integration_tests, 70, 100)
 
-# Marketing: Similar to sales (overlapping notches expected)
-marketing = np.random.normal(loc=73, scale=10, size=50)
-marketing = np.clip(marketing, 45, 100)
+# System Tests: Medium success rate, similar to integration (overlapping notches expected)
+system_tests = np.random.normal(loc=85, scale=9, size=55)
+system_tests = np.clip(system_tests, 65, 100)
 
-# Support: Lower scores with some outliers
-support_base = np.random.normal(loc=68, scale=9, size=45)
-support_outliers = np.array([95, 98, 35, 32])  # Add explicit outliers
-support = np.concatenate([support_base, support_outliers])
-support = np.clip(support, 25, 100)
+# E2E Tests: Lower success rate with some outliers
+e2e_base = np.random.normal(loc=78, scale=10, size=50)
+e2e_outliers = np.array([98, 99, 45, 42])
+e2e_tests = np.concatenate([e2e_base, e2e_outliers])
+e2e_tests = np.clip(e2e_tests, 30, 100)
 
-# HR: Moderate scores
-hr = np.random.normal(loc=78, scale=7, size=40)
-hr = np.clip(hr, 55, 100)
+# Load Tests: Variable success rate due to infrastructure variance
+load_tests = np.random.normal(loc=75, scale=12, size=45)
+load_tests = np.clip(load_tests, 40, 100)
 
-data = [engineering, sales, marketing, support, hr]
-departments = ["Engineering", "Sales", "Marketing", "Support", "HR"]
-
-# Colors - Python Blue as primary, then colorblind-safe palette
-colors = ["#306998", "#FFD43B", "#4ECDC4", "#FF6B6B", "#95E1A3"]
+data = [unit_tests, integration_tests, system_tests, e2e_tests, load_tests]
+test_suites = ["Unit Tests", "Integration Tests", "System Tests", "E2E Tests", "Load Tests"]
 
 # Create plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Create notched boxplot
 bp = ax.boxplot(
     data,
-    notch=True,  # Enable notches for median confidence interval
-    patch_artist=True,  # Enable filling boxes with color
-    tick_labels=departments,
+    notch=True,
+    patch_artist=True,
+    tick_labels=test_suites,
     widths=0.6,
-    showfliers=True,  # Show outliers
-    flierprops={"marker": "o", "markerfacecolor": "#666666", "markersize": 10, "alpha": 0.7},
-    medianprops={"color": "#333333", "linewidth": 2.5},
-    whiskerprops={"color": "#666666", "linewidth": 2},
-    capprops={"color": "#666666", "linewidth": 2},
+    showfliers=True,
+    flierprops={"marker": "o", "markerfacecolor": INK_SOFT, "markersize": 10, "alpha": 0.6},
+    medianprops={"color": INK, "linewidth": 2.5},
+    whiskerprops={"color": INK_SOFT, "linewidth": 2},
+    capprops={"color": INK_SOFT, "linewidth": 2},
+    boxprops={"color": INK_SOFT, "linewidth": 1.5},
 )
 
 # Apply colors to boxes
-for patch, color in zip(bp["boxes"], colors, strict=True):
+for patch, color in zip(bp["boxes"], OKABE_ITO, strict=True):
     patch.set_facecolor(color)
     patch.set_alpha(0.75)
-    patch.set_edgecolor("#333333")
-    patch.set_linewidth(2)
+    patch.set_edgecolor(INK_SOFT)
+    patch.set_linewidth(1.5)
 
 # Labels and styling
-ax.set_xlabel("Department", fontsize=20)
-ax.set_ylabel("Performance Score", fontsize=20)
-ax.set_title("box-notched · matplotlib · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-ax.grid(True, axis="y", alpha=0.3, linestyle="--")
+ax.set_xlabel("Test Suite", fontsize=20, color=INK)
+ax.set_ylabel("Success Rate (%)", fontsize=20, color=INK)
+ax.set_title("box-notched · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT, labelcolor=INK_SOFT)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
+ax.yaxis.grid(True, alpha=0.1, linewidth=0.8, color=INK)
 
 # Add annotation explaining notches
 ax.annotate(
-    "Non-overlapping notches suggest\nsignificant difference in medians",
-    xy=(1, 82),
-    xytext=(1.5, 92),
+    "Non-overlapping notches suggest\nsignificant median difference",
+    xy=(1, 97),
+    xytext=(1.5, 105),
     fontsize=14,
-    arrowprops={"arrowstyle": "->", "color": "#666666", "lw": 1.5},
-    bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "#cccccc", "alpha": 0.9},
+    color=INK,
+    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.5},
+    bbox={"boxstyle": "round,pad=0.5", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.9},
 )
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
