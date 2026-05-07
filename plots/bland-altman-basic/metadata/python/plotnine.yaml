@@ -1,0 +1,242 @@
+library: plotnine
+language: python
+specification_id: bland-altman-basic
+created: '2026-05-07T11:05:16Z'
+updated: '2026-05-07T11:08:11Z'
+generated_by: claude-haiku
+workflow_run: 25491874816
+issue: 2032
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - 'Perfect visual quality: all text legible, no overlap, optimal element sizing,
+    correct palette and theme adaptation'
+  - 'Flawless spec compliance: all requirements met, correct plot type, proper data
+    mapping'
+  - 'Excellent data quality: realistic medical scenario, full feature coverage, factually
+    sound values'
+  - Clean, reproducible code with no defects
+  - 'Proper theme-adaptive implementation: data colors constant (#009E73), chrome
+    correctly flips between light and dark'
+  weaknesses:
+  - 'Design Excellence could be elevated: design follows library defaults rather than
+    introducing exceptional custom aesthetics'
+  - 'Visual Refinement: panel border is visible (acceptable, but minimal-chrome approach
+    in some refinements could be pushed further)'
+  - 'Data Storytelling: storytelling is good but could emphasize outliers or specific
+    regions of interest more strongly'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white, correct theme surface
+      Chrome: Title, axis labels ("Mean of Two Methods (mmHg)", "Difference (Method 1 - Method 2, mmHg)"), and tick labels all clearly visible in dark text; subtle grid lines and border visible
+      Data: 100 scatter points in brand green (#009E73); solid horizontal line at mean difference (y=-2.18); dashed lines at ±1.96 SD (y=12.78, y=-17.13); text annotations showing key statistics
+      Legibility verdict: PASS - All text is fully readable, no light-on-light failures, grid is subtle but visible, data points clearly distinguishable from background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black, correct theme surface
+      Chrome: Title, axis labels, and tick labels all clearly visible in light text (appears to be light color as expected); subtle grid and border adapted to dark
+      Data: Scatter points are identical green (#009E73) to light render; reference lines and annotations maintain prominence and readability in dark theme
+      Legibility verdict: PASS - No dark-on-dark failures detected; all text is light-colored and readable; data colors are identical to light render confirming proper theme separation
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text fully readable, no collisions or overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 100 data points with optimal marker sizing (size=3) and alpha (0.6);
+          reference lines and annotations clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Primary data color #009E73 is Okabe-Ito position 1 (colorblind-safe);
+          adequate contrast throughout'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout with balanced margins; plot fills appropriate area;
+          all elements visible
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes have descriptive labels with units (mmHg)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correct Okabe-Ito palette; backgrounds #FAF8F1 (light) and #1A1A17
+          (dark); data colors identical across themes; text properly theme-adaptive'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with Okabe-Ito palette and theme tokens; professional
+          polish. Rated 6 rather than 8 because design follows library defaults rather
+          than exceptional custom aesthetics
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Subtle grid (alpha 0.10/0.05), subtle panel border, generous whitespace.
+          Minor: panel border visible but acceptable choice'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good storytelling through reference lines and annotations; visual
+          hierarchy created through text emphasis. Could emphasize outliers more
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Bland-Altman plot with proper axes (mean vs. difference)
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements: scatter points, mean line, ±1.96 SD dashed
+          lines, annotations'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis correctly shows mean; Y-axis correctly shows difference; proper
+          scaling
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct (spec-id · library · anyplot.ai); legend correctly
+          omitted for single-series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full range of differences, means across spectrum, points outside
+          agreement limits
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Medical context (blood pressure, mmHg) is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Blood pressure values (90-160 mmHg) realistic; differences and SD
+          appropriate
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean structure: imports → seed → data → plot → save; no unnecessary
+          functions'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set; deterministic data generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports (numpy, pandas, plotnine, path utilities)
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, no over-engineering or fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct format (plot-{THEME}.png) with proper ggsave API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ggplot() + geom_*, aes(), labs(), theme() with element_*
+          styling; follows best practices
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses plotnine theming system well; but doesn't leverage more distinctive
+          library features beyond standard plotting
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
