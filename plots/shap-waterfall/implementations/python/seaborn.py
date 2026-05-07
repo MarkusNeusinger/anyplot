@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 shap-waterfall: SHAP Waterfall Plot for Feature Attribution
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 86/100 | Created: 2026-05-07
+Quality: 84/100 | Created: 2026-05-07
 """
 
 import os
