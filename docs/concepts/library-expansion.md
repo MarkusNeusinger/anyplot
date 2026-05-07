@@ -115,6 +115,22 @@ A library that exists in many languages appears **exactly once**, under the
 
 This avoids subjective per-library debates and makes future calls reproducible.
 
+### JavaScript and TypeScript count as one language
+
+JS and TS are not treated as separate "languages" in the registry. Reasoning:
+
+- TypeScript is a strict superset of JavaScript at the syntax level — every
+  valid JS snippet is valid TS.
+- The library APIs are identical; types live in separate `.d.ts` files
+  shipped alongside the library.
+- Charting snippets rarely use TS-only features (generics on D3 selections,
+  `satisfies` on option objects, typed React props). The same snippet covers
+  both audiences.
+
+**Authoring convention:** ship snippets as plain JavaScript (lowest common
+denominator). Exception: libraries that are only meaningfully shown in a
+typed/JSX form in the wild (e.g. **Recharts**) are written as TSX.
+
 Applied to every cross-language library in or near scope:
 
 | Library             | Native     | Most-used variant      | Canonical entry           | Action vs current state                          |
@@ -200,13 +216,9 @@ entries.
 2. **React-specific libraries.** Recharts, Visx, Nivo only make sense if
    anyplot intends to support framework-specific entries. If we keep entries
    framework-agnostic, drop them and lean on Chart.js / ECharts.
-3. **TypeScript vs JavaScript.** Treat as one language with TS as the default
-   source form, or as two separate "languages" in the registry? (Recommend:
-   one — the file extension and tooling differ, but the library identity does
-   not.)
-4. **Commercial licenses.** Highcharts requires a paid licence for commercial
+3. **Commercial licenses.** Highcharts requires a paid licence for commercial
    use. Confirm the project's stance on showcasing it before generating
    examples.
-5. **Refresh cadence for the 3× threshold.** Download numbers shift over time.
+4. **Refresh cadence for the 3× threshold.** Download numbers shift over time.
    Recommend re-checking the canonical-variant decisions once a year and on
    any major release of a contender.
