@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 radar-multi: Multi-Series Radar Chart
-Library: matplotlib | Python 3.13
-Quality: pending | Created: 2026-05-07
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-07
 """
 
 import os
