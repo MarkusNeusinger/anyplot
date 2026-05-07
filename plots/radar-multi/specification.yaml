@@ -6,7 +6,7 @@ title: Multi-Series Radar Chart
 
 # Specification tracking
 created: 2025-12-25T09:02:10Z
-updated: null
+updated: 2026-05-07T16:41:00Z
 issue: 2026
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - radar
-    - spider
   data_type:
     - numeric
     - categorical
@@ -25,4 +24,4 @@ tags:
   features:
     - multi
     - comparison
-    - overlapping
+    - overlay
