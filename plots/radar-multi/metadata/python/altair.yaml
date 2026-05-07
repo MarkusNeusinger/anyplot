@@ -1,172 +1,164 @@
 library: altair
+language: python
 specification_id: radar-multi
 created: '2025-12-25T19:10:03Z'
-updated: '2025-12-25T19:12:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20509624904
+updated: '2026-05-07T17:05:45Z'
+generated_by: claude-haiku
+workflow_run: 25509820457
 issue: 2026
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/radar-multi/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/radar-multi/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - layer-composition
-    - html-export
-    - hover-tooltips
-  patterns:
-    - data-generation
-    - wide-to-long
-    - iteration-over-groups
-  dataprep: []
-  styling:
-    - alpha-blending
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/altair/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent implementation of radar chart using Altair layered approach with manual
-    polar-to-cartesian coordinate transformation
-  - Well-chosen colorblind-safe color palette (blue/yellow/green)
-  - Proper polygon closure by adding first point at end
-  - Good use of Altair declarative features including tooltips, custom scales, and
-    legend configuration
-  - Clean hexagonal gridlines that match the 6-axis structure
-  - Square canvas (1:1 aspect ratio) is appropriate for radar charts
+  - Title corrected to proper anyplot.ai format
+  - Proper polar-to-cartesian coordinate transformation with accurate geometry
+  - Excellent Okabe-Ito palette use with green brand color first
+  - Clean theme adaptation with both light and dark renders readable
+  - Correct transparency blending shows overlapping polygons clearly
+  - All spec-required features present and functional
+  - Professional visual quality with zero legibility failures
   weaknesses:
-  - Grid value labels (20, 40, 60, 80, 100) only appear on one spoke; could be clearer
-    if they were more prominent or on a dedicated axis
-  - The filled polygons use mark_line with filled=True which may not render as proper
-    filled areas in all renderers - consider using mark_area or geoshape for more
-    reliable polygon fills
-  image_description: 'The plot displays a multi-series radar chart comparing three
-    products (A, B, C) across six dimensions: Price, Quality, Durability, Support,
-    Features, and Design. The chart uses a hexagonal grid structure with concentric
-    gridlines at intervals of 20, 40, 60, 80, and 100. Product A is rendered in Python
-    blue (#306998), Product B in yellow (#FFD43B), and Product C in green (#4CAF50).
-    Each series is shown as a filled polygon with ~20% opacity and solid colored outlines
-    with circular markers at each vertex. The legend is positioned in the top-right
-    corner with a bordered box. Axis labels are bold and positioned outside the outermost
-    gridline. Grid value labels (20, 40, 60, 80, 100) appear along the vertical spoke.
-    The title "radar-multi · altair · pyplots.ai" is centered at the top.'
+  - 'Design Excellence moderate: limited aesthetic sophistication beyond spec compliance'
+  - 'Library Mastery moderate: altair interactive features not demonstrated distinctively'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 as specified
+      Chrome: Title "radar-multi · altair · anyplot.ai" readable in dark text (28px bold); axis labels (Price, Quality, Durability, Support, Features, Design) clearly visible in dark text (22px); tick value labels (20, 40, 60, 80, 100) visible in secondary text color (14px); legend on right with "Series" title and product names readable
+      Data: Three polygons in Okabe-Ito colors - green (#009E73) for Product A, orange (#D55E00) for Product B, blue (#0072B2) for Product C; semi-transparent fills (0.25 opacity) show overlaps; solid stroke outlines define series; circle markers at vertices visible
+      Legibility verdict: PASS - All text elements readable against light background, no light-on-light failures, gridlines subtle but visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 as specified
+      Chrome: Title "radar-multi · altair · anyplot.ai" readable in light text (#F0EFE8); axis labels readable in light text; tick value labels readable in secondary light text (#B8B7B0); legend readable with light text on elevated background (#242420); gridlines and spokes visible at appropriate opacity
+      Data: Three polygons identical in color to light render - green, orange, blue data colors unchanged (only chrome adapted); fills and strokes clearly visible; circle markers at vertices visible
+      Legibility verdict: PASS - All text readable against dark background, no dark-on-dark failures, consistent data colors between renders
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 22pt bold, legend at 18-20pt, all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, all labels well-spaced
+        comment: All text properly sized and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Axis labels at 125-unit radius, value labels offset
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers visible at size 200, outlines at strokeWidth 3, good polygon
-          fills with transparency
+        comment: Polygons with 0.25 opacity show overlaps; all elements visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow/green palette is colorblind-safe (avoids red-green)
+        comment: Okabe-Ito palette proven CVD-safe
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good use of square canvas, plot well-centered, but slightly more
-          whitespace at bottom than top
+        comment: Square format 1600x1600 appropriate for radar
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels (Price, Quality, etc.) but no units
+        comment: Descriptive labels with clear meaning
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (opacity 0.6), legend well-placed but could be closer
-          to the chart
+        comment: 'First series #009E73, Okabe-Ito order correct, backgrounds correct,
+          both renders theme-correct'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Solid but conventional styling without distinctive flourishes
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Good transparency use but minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear comparison hierarchy, easy product comparison
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct multi-series radar chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories correctly mapped to axes, values to radial distance
-      - id: SC-03
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Filled polygons with transparency, distinct colors, legend, gridlines,
-          axis labels, closed polygons all present; however spec suggests alpha ~0.2-0.3,
-          implementation uses 0.2 which is correct
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: polygons, colors, legend, gridlines, labels'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within 0-100 scale
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct coordinate transformation and scaling
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "radar-multi · altair · pyplots.ai"
+        comment: Title fixed to anyplot.ai, legend correctly identifies series
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation across products with different strengths (A=Durability,
-          B=Support/Quality, C=Features/Design), but could show more extreme differences
+        comment: Multiple series, six dimensions, gridlines, legend
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Product comparison is a realistic scenario matching spec applications
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values 60-95 on 0-100 scale are realistic for product ratings
+        comment: Product comparison realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100 scale standard, 6 axes within spec range
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,44 +166,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → transformations → chart layers → save'
+        comment: No unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 1
-        max: 3
-        passed: false
-        comment: Data is deterministic (hardcoded), but no np.random.seed needed since
-          no random data used; however the code imports numpy but only uses it for
-          angle calculations which is fine
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded data fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas used and all necessary
+        comment: Only necessary imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: No fake interactivity, readable
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
+        comment: Correct output format and API
+    library_mastery:
       score: 5
-      max: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
-        passed: true
-        comment: Excellent use of Altair's declarative layering system, proper use
-          of mark_line with filled=True for polygon fills, tooltips for interactivity,
-          alt.Scale for custom color domains, proper encoding types (Q, N), HTML export
-          for interactivity
+        passed: false
+        comment: Standard patterns, proper layering and encoding
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Functional but not distinctive to altair
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending

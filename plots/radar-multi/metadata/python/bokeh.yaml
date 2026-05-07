@@ -1,173 +1,186 @@
 library: bokeh
+language: python
 specification_id: radar-multi
 created: '2025-12-25T19:09:27Z'
-updated: '2025-12-25T19:11:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20509624868
+updated: '2026-05-07T16:57:23Z'
+generated_by: claude-haiku
+workflow_run: 25509719487
 issue: 2026
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/radar-multi/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/radar-multi/bokeh/plot.html
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/bokeh/plot-dark.html
 quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - patches
-    - manual-ticks
-    - html-export
-  patterns:
-    - data-generation
-    - iteration-over-groups
-    - columndatasource
-  dataprep: []
-  styling:
-    - alpha-blending
 review:
   strengths:
-  - Excellent implementation of the radar chart geometry using manual polygon construction
-    with patch()
-  - Clean, well-organized code following KISS principles
-  - Proper use of transparency (alpha=0.25) allowing overlapping areas to be visible
-  - Good color choices with distinct colors for each series
-  - Correct title format and professional appearance
-  - Both PNG and HTML output provided, leveraging Bokeh interactive capabilities
+  - Perfect visual quality with fully readable text in both light and dark themes
+  - All required features correctly implemented with proper gridlines, axis labels,
+    legend, and transparency
+  - Proper theme adaptation using token-based color system (PAGE_BG, INK, INK_SOFT)
+  - Idiomatic Bokeh usage with ColumnDataSource and LabelSet for flexible positioning
+  - Clean, reproducible code with no unnecessary complexity
+  - Correct Okabe-Ito palette with brand green (#009E73) as first series
+  - Well-proportioned square layout with appropriate spacing and margins
   weaknesses:
-  - Legend is positioned outside the main plot area with some visual separation
-  - Color palette could be more colorblind-friendly (blue-yellow combination)
-  - Grid value labels are slightly small relative to axis labels
-  image_description: 'The plot shows a multi-series radar chart comparing three products
-    (Product A, B, C) across 6 attributes: Performance, Ease of Use, Price Value,
-    Support, Features, and Reliability. The chart uses a square 1:1 aspect ratio with
-    circular gridlines at intervals of 20, 40, 60, 80, 100. Product A is shown in
-    blue (#306998), Product B in yellow (#FFD43B), and Product C in a coral/red color
-    (#E57373). Each series is rendered as a filled polygon with transparency (~0.25
-    alpha) and distinct colored outlines. The polygons overlap visually, showing different
-    strengths for each product. Axis labels are positioned at the outer edges, and
-    a legend is placed on the right side identifying each product. The title "radar-multi
-    · bokeh · pyplots.ai" appears at the top center.'
+  - Design is functional but relies on standard radar chart styling without distinctive
+    visual touches
+  - Limited exploration of Bokeh's interactive features (though not required by spec)
+  - Could enhance data storytelling with visual emphasis, hierarchy, or selective
+    annotation of key comparisons
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct page surface color
+      Chrome: Title "radar-multi · bokeh · anyplot.ai" (32pt, dark text), six axis labels in dark text at outer edge (24pt), grid value labels (20pt) all clearly visible and readable. Legend in top right with product labels (22pt) is clear.
+      Data: Three polygons in Okabe-Ito colors (green #009E73, orange #D55E00, blue #0072B2) with alpha=0.25 fill and alpha=0.9 outlines. Vertex markers with white edges clearly distinguish each series. Circular gridlines (20, 40, 60, 80, 100) and radial lines visible but subtle.
+      Legibility verdict: PASS — All text readable against light background; no dark-on-dark or light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct page surface color
+      Chrome: Title and all axis labels rendered in light text, fully readable against dark surface. Grid value labels readable. Legend in top right maintains visibility.
+      Data: Three polygons display identical Okabe-Ito colors to light render (green, orange, blue) — only chrome has changed theme. Gridlines and radial lines maintain visibility. Vertex markers clearly visible.
+      Legibility verdict: PASS — No dark-on-dark failures; all text clearly visible; brand green #009E73 remains readable and maintains identity across both renders.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and grid values are clearly readable. Font sizes
-          are appropriate for the canvas size.
+        comment: Title (32pt), axis labels (24pt), grid values (20pt), legend (22pt)
+          all explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; all labels are well-spaced around the
-          perimeter.
+        comment: No overlapping text; legend and title well-separated; grid labels
+          shifted; polygons overlap intentionally with transparency
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Polygons are well-sized with appropriate alpha transparency allowing
-          overlapping regions to be distinguished. Vertex markers are visible.
+        comment: All elements visible — grid circles (0.4 alpha), radial lines (0.3
+          alpha), polygons (0.25 fill, 0.9 line), vertices (size 22, alpha 0.9)
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, yellow, and coral provide reasonable contrast, though blue-yellow
-          could be challenging for some colorblind users.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas with the radar chart centered. Legend is appropriately
-          placed on the right side, though slightly separated from the main chart.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive category labels (Performance, Reliability, Features,
-          Support, Price Value, Ease of Use).
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: 'Okabe-Ito palette (positions 1–3: green, orange, blue); colorblind-safe;
+          no single-signal red-green'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format (3600×3600) appropriate for radar; margins adequate;
+          ranges (-145 to 145) provide good spacing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Gridlines are visible and subtle. Legend is functional but placed
-          outside the plot area with some separation.
+        comment: Title format correct; axis labels descriptive (Performance, Reliability,
+          Features, Support, Price Value, Ease of Use)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order (1, 2, 3); backgrounds #FAF8F1
+          (light) / #1A1A17 (dark); data colors identical between renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Professional execution with standard styling; no custom visual flourishes
+          or special design thinking beyond typical approach
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Filled polygons with transparency, outlines, and white-edged vertices
+          provide good refinement; grid is subtle; presentation clean but relatively
+          standard
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Radar structure enables clear comparison across dimensions; distinct
+          colors aid identification; no special visual hierarchy or emphasis on particular
+          insights
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct multi-series radar/spider chart.
+        comment: Correctly implements multi-series radar chart with radial axes and
+          overlaid polygons
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories correctly mapped to radial axes, values mapped to distance
-          from center.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: filled polygons with transparency, distinct
-          colors, legend, gridlines, axis labels, closed polygons with fill and outline.'
-      - id: SC-04
-        name: Data Range
+        comment: All features present — transparent fills (alpha 0.25), distinct colors,
+          legend, gridlines (20, 40, 60, 80, 100), axis labels, closed polygons, fill
+          + outline
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within 0-100 scale.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Angles correctly calculated; values mapped to distance (x = value
+          × cos(angle), y = value × sin(angle)); all data shown; 0–100 scale
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies each product.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "radar-multi · bokeh · pyplots.ai".
+        comment: Title format correct; legend labels match series; all text readable
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows differentiation across products with varying strengths/weaknesses.
-          Each product excels in different areas.
+        comment: Six distinct dimensions; three products (optimal for comparison);
+          values 65–95 showing realistic variation
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Product comparison is a realistic and common use case for radar charts.
+        comment: Product comparison is realistic, neutral, and plausible; attributes
+          are genuine product characteristics
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are reasonable (65-95 range), though somewhat clustered. Could
-          show more range variation.
+        comment: 0–100 scale sensible for product ratings; grid intervals (20, 40,
+          60, 80, 100) appropriate
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -175,41 +188,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear script: imports → data → plot → save.'
+        comment: No functions or classes; straightforward data → figure → drawing
+          → save flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random generation requiring seed).
+        comment: Data hardcoded; no randomness; fully reproducible
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports used (os, time, Path, numpy, bokeh modules, selenium)
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity; code is clean and appropriate
+          complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No deprecated functions.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Outputs both plot.png and plot.html which is correct for bokeh.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.html and plot-{THEME}.png; uses current Bokeh
+          API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Bokeh's figure, ColumnDataSource for labels, LabelSet, Legend
-          with customization, and export_png/save for HTML output. Could leverage
-          more interactive features.
+        comment: Uses figure(), ColumnDataSource, LabelSet, Legend, patch(), scatter(),
+          p.line() idomatically; theme tokens properly applied
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses distinctive Bokeh features (LabelSet, ColumnDataSource, theme
+          tokens) competently; implementation is straightforward without showcasing
+          unique interactive capabilities
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
