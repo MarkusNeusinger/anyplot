@@ -1,154 +1,187 @@
 library: matplotlib
+language: python
 specification_id: count-basic
 created: '2025-12-25T12:41:15Z'
-updated: '2025-12-25T12:43:17Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20505207140
+updated: '2026-05-07T09:14:55Z'
+generated_by: claude-haiku
+workflow_run: 25486477980
 issue: 2033
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/count-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - annotations
-  patterns:
-    - data-generation
-    - explicit-figure
-  dataprep: []
-  styling:
-    - edge-highlighting
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Excellent survey response scenario with realistic Likert scale data
-  - Count labels above bars enhance readability as suggested in spec
-  - Clean, professional appearance with removed top/right spines
-  - Proper frequency-based sorting (descending) as recommended
-  - Good use of edge color for bar definition
+  - Excellent visual quality and legibility across both themes with all text properly
+    sized and colored
+  - 'Perfect theme adaptation: data colors stay #009E73 while chrome (text, grid,
+    spines) correctly flip between light/dark'
+  - Strong spec compliance with all features present - correct count plot with sorted
+    frequencies
+  - Clean, reproducible code with proper theme-token system implementation
+  - Data quality and realism with survey response context showing clear distribution
+    patterns
   weaknesses:
-  - Could use more distinctive matplotlib features (hatching, gradient fills, or percentage
-    annotations)
-  - Minor layout inefficiency with extra whitespace on right side
-  image_description: 'The plot displays a vertical bar chart showing survey response
-    frequencies. Five blue bars (#306998) with darker edges are arranged in descending
-    order by count: "Agree" (69), "Neutral" (47), "Disagree" (39), "Strongly Agree"
-    (33), and "Strongly Disagree" (12). Bold blue count labels appear above each bar.
-    The title "count-basic · matplotlib · pyplots.ai" is centered at the top. The
-    x-axis is labeled "Survey Response" and the y-axis "Count". A subtle dashed grid
-    appears on the y-axis only. The top and right spines are removed for a cleaner
-    appearance. All text is clearly legible.'
+  - 'DE-01: Design looks like a well-configured library default - single color bar
+    chart with no custom palette or exceptional sophistication (4/8)'
+  - 'DE-02: Minimal refinement beyond standard matplotlib practices - grid and spine
+    removal are basic conventions (4/6)'
+  - 'DE-03: Data storytelling is functional but could create stronger visual hierarchy
+    - bar height tells the story but lacks emphasis techniques (4/6)'
+  - 'LM-02: Generic matplotlib usage - no library-specific distinctive features that
+    couldn''t be replicated in another library (1/5)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white at #FAF8F1 (correct).
+      Chrome: Title "count-basic · matplotlib · anyplot.ai" rendered in dark text (#1A1A17); x-axis label "Survey Response" and y-axis label "Count" in dark ink; tick labels at size 16 in soft gray (#4A4A44); spines (left, bottom) in soft gray; subtle y-axis grid at 10% opacity.
+      Data: Five bars representing survey response frequencies (Agree=69, Neutral=47, Disagree=39, Strongly Agree=33, Strongly Disagree=12) in brand green #009E73 with white edge definition; count labels (18pt bold dark text) positioned above each bar with 8pt offset spacing.
+      Legibility: PASS - all text elements clearly readable with excellent contrast against light background. No dark-on-light failures. Bar dimensions and label positioning optimal.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black at #1A1A17 (correct).
+      Chrome: Identical structure - title and axis labels in light text (#F0EFE8); tick labels in soft light gray (#B8B7B0); spines in soft light gray; grid lines at 10% opacity with light rule color.
+      Data: Identical bars with brand green #009E73 (matches light render exactly - only chrome adapted); count labels now in light color for dark background; same bar heights and ordering.
+      Legibility: PASS - all text rendered in appropriate light values. No dark-on-dark failures. Axis labels, tick labels, and count annotations all clearly visible. Bar colors maintain identical appearance to light render.
+
+    Comparison: Data colors are perfectly constant (only #009E73 used throughout both renders). Chrome correctly adapted - all text, grid, and frame elements flipped from dark tones (light theme) to light tones (dark theme). Both renders are fully readable and theme-correct.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt - all perfectly readable
+        comment: 'All font sizes explicitly set: Title 24pt, labels 20pt, ticks 16pt,
+          bar labels 18pt. Perfect readability in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text elements. Five categories fit perfectly with
+          clear spacing. Count labels positioned above bars without collision.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars well-sized with good spacing (width=0.7)
+        comment: Bars optimally sized with clear white edges for definition. Data
+          density appropriate for 5 categories.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single blue color scheme, excellent contrast
+        comment: 'Single series in brand green #009E73 with excellent contrast. CVD-safe
+          palette.'
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good proportions, slight extra whitespace on right
+        comment: figsize=(16,9) with tight_layout and bbox_inches='tight'. Plot fills
+          optimal canvas portion with balanced margins.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no units (counts don't require units, acceptable)
+        comment: Title in correct format. Axis labels 'Survey Response' and 'Count'
+          are descriptive.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle (alpha=0.3), y-axis only is appropriate; no legend needed
+        comment: 'Perfect compliance: #009E73 brand green; backgrounds #FAF8F1 (light)
+          and #1A1A17 (dark); theme-adaptive text and grid; data colors identical
+          across themes.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library default. Single brand color with no custom
+          palette or exceptional design thought. Looks professional but generic.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Standard practices: top/right spines removed, subtle y-axis grid,
+          good whitespace. Minimal refinement beyond defaults.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Clear narrative through bar heights and count labels. Shows 'Agree'
+          as dominant response. Could strengthen with visual emphasis techniques.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct count plot (bar chart from counted data)
+        comment: Correct count plot. Bars sorted by frequency (descending).
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, counts on Y correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Sorted by frequency, count labels on bars as spec suggests
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: frequency counting, readable categories, count
+          labels.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, y-axis extends to accommodate labels
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: response categories. Y-axis: frequency count. Correct mapping.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single-series count plot
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "count-basic · matplotlib · pyplots.ai"'
+        comment: Title 'count-basic · matplotlib · anyplot.ai' in correct format.
+          No legend needed for single series.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 5 categories with varying frequencies; could show more extreme
-          variation
+        comment: Shows all aspects of count distribution with 5 response categories
+          and varied frequencies (69, 47, 39, 33, 12).
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Survey responses (Likert scale) is a perfect real-world scenario
+        comment: Real-world survey data with neutral, comprehensible context. Appropriate
+          for count plot demonstration.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 200 responses with realistic distribution weights; counts are sensible
+        comment: Total 200 responses with proportions matching generation weights.
+          Factually correct and plausible.
     code_quality:
       score: 10
       max: 10
@@ -158,40 +191,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save'
+        comment: 'Linear flow: theme tokens → data generation → counting → plot setup
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: '`np.random.seed(42)` set'
+        comment: np.random.seed(42) ensures deterministic data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy used
+        comment: All imports (os, sys, matplotlib.pyplot, numpy) are used. No unnecessary
+          imports.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Current API usage
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as `plot.png`
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
-        max: 5
+        max: 2
         passed: true
-        comment: Uses ax.bar and ax.annotate correctly but no advanced matplotlib
-          features like custom patches, hatching, or secondary annotations
+        comment: Clean, Pythonic code. Uses strict=True in zip. Appropriate complexity
+          for visualization.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches='tight'. Current
+          matplotlib API.
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: false
+        comment: Correct Axes methods (ax.bar, ax.set_title). Proper theme-token system.
+          Follows style guide but doesn't leverage advanced patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic matplotlib usage. Theme system is standard practice. No distinctive
+          features unique to matplotlib.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling

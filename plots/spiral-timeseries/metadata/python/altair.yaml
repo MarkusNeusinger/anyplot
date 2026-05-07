@@ -1,0 +1,241 @@
+library: altair
+language: python
+specification_id: spiral-timeseries
+created: '2026-05-07T15:50:22Z'
+updated: '2026-05-07T16:04:55Z'
+generated_by: claude-sonnet
+workflow_run: 25505819153
+issue: 5243
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/altair/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Perfect spec compliance — all required spiral features implemented correctly (Archimedean
+    spiral, month grid, year labels, viridis color encoding, colorbar)
+  - Flawless code quality — seed set, clean imports, idiomatic Altair patterns including
+    detail encoding for segmented lines
+  - Both themes correctly adapted — all chrome tokens threaded through all layers;
+    no dark-on-dark or light-on-light failures
+  - Appropriate canvas format (square 3600x3600) with well-proportioned spiral composition
+  - Realistic temperature data with plausible seasonal variation and multi-year scope
+  weaknesses:
+  - Title font size is 24px; the style guide specifies 28px for pixel-based libraries
+    — bump to 28
+  - Radial grid line opacity of 0.20 is slightly above the 0.10–0.15 recommended range;
+    reduce to 0.12–0.15
+  - mark_circle size=18 is adequate but the innermost rings look slightly thin; consider
+    size=22 for better density perception
+  - No visual focal point or storytelling annotation to elevate design storytelling
+    beyond raw spiral structure
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "Daily Temperatures 2019–2023 · spiral-timeseries · altair · anyplot.ai" in dark text (#1A1A17), clearly readable. Month labels (Jul–Jun) around outer rim in INK_SOFT dark-gray, readable. Year labels (2019–2023) bold dark inside spiral, readable. Colorbar title "Temp (°C)" and tick labels visible.
+      Data: Five spiral rings encoded with viridis colormap (dark purple ~0°C to yellow ~30°C). Twelve radial grid lines at month boundaries, subtle at 20% opacity. mark_circle data points dense and clearly distinguishable.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title in light off-white (#F0EFE8), clearly readable. Month labels in light muted tone (#B8B7B0), readable. Year labels in light (#F0EFE8), readable. Colorbar legend background elevated dark (#242420) with light text. No dark-on-dark failures detected.
+      Data: Viridis colormap colors identical to light render — only chrome elements flipped. Data points clearly distinguishable against dark background. Grid lines subtle but visible.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; title 24px vs 28px recommended
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Month labels clean; year labels slightly cramped in inner rings but
+          readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: mark_circle size=18 adequate; slightly small for densest inner rings
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis is perceptually uniform and CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3600x3600 square format correct for spiral; proportions excellent
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title; month/year labels serve as axis surrogates
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis for continuous data correct; backgrounds #FAF8F1/#1A1A17
+          confirmed in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean spiral with professional viridis mapping; above default but
+          not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes hidden correctly; grid opacity 0.20 slightly above recommended
+          0.10-0.15
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Spiral format communicates seasonal rhythm; no annotations/focal
+          points to guide viewer further
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Archimedean spiral time series
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Color encoding, radial month grid, year labels, expanding spiral,
+          colorbar all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: doy->angle, year_idx+fractional_doy->radius, temperature->viridis
+          color
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows required pattern; colorbar labeled Temp (°C)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All spiral aspects shown: multi-year structure, color encoding,
+          month grid, year orientation'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily temperatures 2019-2023 Celsius; realistic seasonal amplitude;
+          slight warming trend; neutral domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: ~-2 to 30°C temperate range; 5 cycles; ~1826 data points within spec
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: List comprehensions, zip(strict=True); no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper encoding types; alt.TitleParams; configure_* chaining; detail=seg:N
+          for segmented lines
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: alt.layer() composition; tooltip encoding; HTML export; alt.Legend
+          with gradient customization
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - minimal-chrome
+  - alpha-blending

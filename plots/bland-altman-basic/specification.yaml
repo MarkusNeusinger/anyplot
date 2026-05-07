@@ -6,7 +6,7 @@ title: Bland-Altman Agreement Plot
 
 # Specification tracking
 created: 2025-12-25T09:03:03Z
-updated: null
+updated: 2026-05-07T10:49:51Z
 issue: 2032
 suggested: MarkusNeusinger
 
@@ -16,7 +16,6 @@ tags:
   plot_type:
     - bland-altman
     - scatter
-    - agreement
   data_type:
     - numeric
     - continuous

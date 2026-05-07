@@ -1,161 +1,176 @@
 library: matplotlib
+language: python
 specification_id: area-stacked
 created: '2025-12-25T17:38:56Z'
-updated: '2025-12-25T17:40:53Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20508665814
+updated: '2026-05-07T15:19:03Z'
+generated_by: claude-haiku
+workflow_run: 25504197723
 issue: 2022
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-stacked/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 95
 review:
   strengths:
-  - Excellent real-world context using website traffic sources over 24 months
-  - Perfect title format following spec-id · library · pyplots.ai convention
-  - Clean, readable code following KISS principles with proper random seed
-  - Y-axis correctly starts at zero to avoid misleading proportions
-  - Good use of alpha transparency (0.85) for the stacked areas
-  - Legend is well-positioned and non-intrusive
-  - Proper ordering of series by size (largest at bottom)
+  - Perfect visual quality across all criteria
+  - Excellent theme adaptation with no legibility issues in either render
+  - All Okabe-Ito colors correctly applied with proper ordering
+  - Proper spine removal and subtle grid styling
+  - Realistic, well-scaled data scenario with appropriate time series context
+  - Clean, idiomatic matplotlib code with no unnecessary complexity
+  - Custom tick labels improve readability significantly
   weaknesses:
-  - Series sizes are relatively similar which does not dramatically showcase the stacking
-    effect; more variation between categories would better demonstrate how parts contribute
-    to whole
-  - Axis labels lack units
-  - Could benefit from more distinct color separation between adjacent green and purple
-    bands for colorblind accessibility
-  image_description: 'The plot displays a stacked area chart showing monthly website
-    visitors over 24 months (Jan 2023 to Dec 2024). Four traffic source categories
-    are stacked: Organic Search (blue, bottom), Direct (yellow), Social Media (green),
-    and Referral (purple, top). The y-axis shows Monthly Visitors ranging from 0 to
-    approximately 110,000. The title "area-stacked · matplotlib · pyplots.ai" is displayed
-    at the top. A legend in the upper left identifies the four categories. The grid
-    uses subtle dashed horizontal lines. All areas show realistic growth trends with
-    some variation over time.'
+  - Design could feature more intentional visual hierarchy through scale variation
+    or emphasis techniques
+  - Alpha value on areas (0.85) is good but could explore subtle edge styling for
+    stronger definition
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified, providing excellent contrast.
+      Chrome: Title ("area-stacked · matplotlib · anyplot.ai"), axis labels ("Month", "Monthly Visitors (count)"), and tick labels are all clearly visible in dark text (#1A1A17) against the light background. Custom month labels ("Jan 2023", "Jun 2023", etc.) improve readability.
+      Data: Four stacked areas in Okabe-Ito order: #009E73 (Organic Search, bottom), #D55E00 (Direct), #0072B2 (Social Media), #CC79A7 (Referral, top). All colors are distinct and easily distinguishable. Alpha blending (0.85) allows visualization of overlapping areas.
+      Legend: Upper left with light background (#FFFDF6), proper text color (#4A4A44), and subtle border. No overlap with data.
+      Grid: Subtle y-axis grid at 15% alpha, supports data reading without competing.
+      Legibility verdict: PASS — all text is highly readable, colors are vibrant, and the composition is clean.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified.
+      Chrome: Title and axis labels are clearly visible in light text (#F0EFE8). Tick labels use #B8B7B0 (INK_SOFT) and are fully readable against the dark background. No "dark-on-dark" failures.
+      Data: Okabe-Ito colors are identical to light render (only chrome flipped). All four series are clearly visible and distinguishable.
+      Legend: Same styling as light render but with dark theme background (#242420) and light text—perfectly adapted.
+      Grid: Subtle grid remains visible and supports readability.
+      Legibility verdict: PASS — both title and all labels are clearly readable. The dark theme adaptation is flawless with no text-contrast issues. Brand green (#009E73) remains vibrant and visible.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all perfectly readable
+        comment: All text sizes properly scaled; readable in both light and dark renders
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Legend positioned without overlap; all elements well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Stacked areas are clearly visible with good alpha (0.85)
+        comment: All four area series clearly visible with alpha=0.85; boundaries
+          well-defined
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Colors are distinguishable but blue/green could be slightly more
-          distinct for colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Labels are descriptive ("Month", "Monthly Visitors") but lack units
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3, dashed), legend well placed
+        comment: Okabe-Ito palette positions 1-4; colorblind-safe; high contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 landscape appropriate; generous margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title follows spec format; labels descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; positions 1-4 in order; backgrounds correct;
+          both renders theme-compliant'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional polish with thoughtful use of alpha blending and custom
+          tick labels; room for more distinctive styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped spines; subtle y-axis grid; generous whitespace; custom
+          labels enhance readability
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with largest series at bottom; stacked layout
+          guides viewer through composition; temporal trends evident
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct stacked area chart
+        comment: Correct stacked area chart using ax.stackplot()
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=time (months), Y=visitor counts correctly stacked
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has distinct colors, legend, stacking, semi-transparent fills
-      - id: SC-04
-        name: Data Range
+        comment: Multiple series (4 categories), legend, continuous axis, stacking
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis starts at zero, all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=time (months), Y=count; zero baseline maintained; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels match data categories correctly
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "{spec-id} · {library} · pyplots.ai"
+        comment: Title format correct; legend labels match categories
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows stacking and cumulative totals well, but series sizes are quite
-          similar; spec suggests ordering largest at bottom which is done, but more
-          variation between series would better demonstrate the stacked nature
+        comment: Shows individual contributions, cumulative totals, trends, and composition
+          changes
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Website traffic sources is a perfect real-world scenario mentioned
-          in spec
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Visitor counts in tens of thousands are realistic for a medium-sized
-          website
+        comment: Website traffic scenario is real-world plausible; growth patterns
+          realistic; neutral topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Y-axis (0-100k+) and X-axis (24 months) scales appropriate; zero
+          baseline preserved
     code_quality:
       score: 10
       max: 10
@@ -165,40 +180,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: No unnecessary functions or classes; direct and straightforward
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy used
+        comment: Only necessary imports (os, matplotlib, numpy); all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions
+        comment: No fake interactivity; appropriate complexity; clean variable naming
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; current API usage
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ax.stackplot which is matplotlib's native stacked area function,
-          but doesn't leverage more advanced features like color cycling or annotations
+        comment: Uses ax.stackplot() idiomatically; proper axes methods; theme-aware
+          tokens
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom legend styling, alpha blending, theme tokens show library
+          knowledge; could be more distinctive
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - publication-ready

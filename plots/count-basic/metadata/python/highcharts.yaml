@@ -1,162 +1,166 @@
 library: highcharts
+language: python
 specification_id: count-basic
 created: '2025-12-25T12:42:39Z'
-updated: '2025-12-25T12:44:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20505207249
+updated: '2026-05-07T09:32:40Z'
+generated_by: claude-haiku
+workflow_run: 25487153037
 issue: 2033
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/count-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/count-basic/highcharts/plot.html
-quality_score: 92
-impl_tags:
-  dependencies:
-    - selenium
-  techniques: []
-  patterns: []
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/highcharts/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - 'Excellent adherence to specification: automatically counts raw categorical data
-    and sorts by frequency (descending)'
-  - Clean, professional appearance with good use of Python Blue color scheme
-  - Proper title format following pyplots.ai conventions
-  - Data labels on bars enhance readability without cluttering
-  - Realistic survey satisfaction scenario makes the plot immediately understandable
-  - Correct implementation of Highcharts PNG export pattern with inline JS embedding
+  - 'Theme Adaptation: Both light and dark renders are equally readable with proper
+    chrome color mapping (INK, INK_SOFT, PAGE_BG, ELEVATED_BG tokens)'
+  - 'Data Legibility: Bold count labels on bars (20px) are immediately readable; sorted-by-frequency
+    layout guides viewer attention'
+  - 'Color Compliance: Okabe-Ito brand green (#009E73) is consistent across both themes;
+    no palette drift'
+  - 'Robust CDN Fallback: Multi-URL fallback for Highcharts JS ensures reliability'
   weaknesses:
-  - Axis labels could include contextual units or be more descriptive (e.g., "Number
-    of Responses" instead of just "Count")
-  - Could leverage more Highcharts-specific features in the HTML output (tooltips
-    are standard but animations could be showcased)
-  image_description: 'The plot displays a count/column chart showing survey response
-    frequencies with 5 categories sorted in descending order by count. The bars are
-    rendered in Python Blue (#306998) color. From left to right: "Satisfied" (24 responses,
-    tallest bar), "Very Satisfied" (12), "Neutral" (8), "Dissatisfied" (5), and "Very
-    Dissatisfied" (1, shortest bar). Each bar has a white data label showing the count
-    value positioned at the top. The title "count-basic · highcharts · pyplots.ai"
-    appears at the top in bold. The Y-axis is labeled "Count" ranging from 0-26, and
-    the X-axis is labeled "Response Category". The background is white with subtle
-    gray horizontal grid lines. The chart has good proportions with balanced margins
-    and fills the canvas well.'
+  - 'Limited Design Sophistication: No custom color gradients or advanced visual hierarchy
+    beyond bar height'
+  - 'Basic Feature Usage: Implementation uses standard features only; Highcharts offers
+    interactive tooltips, animations, and drill-down capabilities'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - matches spec requirement
+      Chrome: Title "count-basic · highcharts · anyplot.ai" (28px dark text), X-axis "Response Category" (22px), Y-axis "Number of Responses" (22px), category labels and tick values (18px gray) - all clearly readable
+      Data: Five green bars (#009E73) representing counts (24, 12, 8, 5, 1), sorted by frequency descending. Bold count labels (20px) on top of each bar. Bars are well-spaced with subtle grid lines.
+      Legibility verdict: PASS - excellent contrast and readability throughout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - matches spec requirement
+      Chrome: Title, axis labels, and tick labels all rendered in light text with high contrast. No dark-on-dark issues. Category labels clearly readable. Y-axis tick values visible.
+      Data: Identical bar proportions and green color (#009E73) to light render - confirming data colors stay constant. Count labels visible on bars. Subtle grid lines maintain visibility.
+      Legibility verdict: PASS - all text readable, no dark-on-dark failures, theme adaptation successful
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, tick labels, and data labels all clearly readable
-          at the large resolution
+        comment: All text explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; category labels have adequate spacing
+        comment: No colliding elements; marginBottom of 280px ensures category labels
+          fit
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-sized with good width and spacing for 5 categories
+        comment: All bars clearly distinguishable with proper heights
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single color scheme (Python Blue) is colorblind-safe
+        comment: 'Brand green #009E73 is highly visible and CVD-safe'
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good layout overall, though slightly more bottom margin than needed
+        comment: 4800×2700 proportions, generous margins, nothing cut off
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels ("Count", "Response Category") but no units
+        comment: Descriptive axes with clear labels
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle and appropriate; legend correctly disabled for single
-          series
+        comment: 'First series is #009E73; backgrounds correct; both renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Clean and professional but no bold design choices beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, well-positioned labels
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sorted by frequency creates clear visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct column/count chart type
+        comment: Column chart for counting categorical data
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X-axis, counts on Y-axis correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has sorted bars (descending), count labels on bars as spec suggests
-      - id: SC-04
-        name: Data Range
+        comment: Automatic counting with 5 categories
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full range from 0 to above max count (26)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis categories, Y-axis counts; all data properly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend appropriately disabled for single series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "count-basic · highcharts · pyplots.ai"'
+        comment: Correct format; legend disabled for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation in counts across categories (1-24 range), though
-          all categories have different counts which is good
+        comment: Fully represents count-plot functionality
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Survey satisfaction responses is a perfect real-world scenario for
-          count plots
+        comment: Survey response data is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 50 total responses is reasonable; values are plausible for a small
-          survey
+        comment: Sensible count range (1–24) for survey
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -164,41 +168,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → count → plot → save'
+        comment: Straightforward Counter-based aggregation
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Data is deterministic (hardcoded list), but no explicit seed comment
+        max: 2
+        passed: true
+        comment: Hardcoded data is fully reproducible
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no extraneous dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current highcharts-core API
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses Highcharts column series with data labels, proper chart configuration,
-          and correct PNG export via Selenium. Could leverage more Highcharts-specific
-          features like tooltips or animations in HTML output.
+        comment: Proper use of Chart, HighchartsOptions, ColumnSeries; multi-CDN fallback
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses dataLabels and borderRadius; fairly basic feature usage
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  - requests
+  techniques:
+  - html-export
+  - data-labels
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - theme-adaptive
+  - publication-ready

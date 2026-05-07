@@ -1,13 +1,22 @@
-""" pyplots.ai
+""" anyplot.ai
 area-stacked: Stacked Area Chart
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-25
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-07
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data: Monthly revenue by product category over two years
 np.random.seed(42)
@@ -40,8 +49,8 @@ category_order = ["Software", "Hardware", "Services", "Support"]
 stack_order = {"Software": 1, "Hardware": 2, "Services": 3, "Support": 4}
 df["StackOrder"] = df["Category"].map(stack_order)
 
-# Color palette: Python Blue, Python Yellow, and colorblind-safe colors
-colors = ["#306998", "#FFD43B", "#5D9B9B", "#A85C5C"]
+# Okabe-Ito palette: first series ALWAYS #009E73
+colors = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Create stacked area chart
 chart = (
@@ -49,10 +58,17 @@ chart = (
     .mark_area(opacity=0.85, line=alt.MarkConfig(strokeWidth=2))
     .encode(
         x=alt.X(
-            "Month:T", title="Month", axis=alt.Axis(labelFontSize=18, titleFontSize=22, format="%b %Y", labelAngle=-45)
+            "Month:T",
+            title="Month",
+            axis=alt.Axis(
+                labelFontSize=18, titleFontSize=22, format="%b %Y", labelAngle=-45, labelColor=INK_SOFT, titleColor=INK
+            ),
         ),
         y=alt.Y(
-            "Revenue:Q", title="Revenue ($ thousands)", stack="zero", axis=alt.Axis(labelFontSize=18, titleFontSize=22)
+            "Revenue:Q",
+            title="Revenue ($ thousands)",
+            stack="zero",
+            axis=alt.Axis(labelFontSize=18, titleFontSize=22, labelColor=INK_SOFT, titleColor=INK),
         ),
         color=alt.Color(
             "Category:N",
@@ -64,6 +80,10 @@ chart = (
                 orient="right",
                 symbolSize=300,
                 symbolStrokeWidth=0,
+                labelColor=INK_SOFT,
+                titleColor=INK,
+                fillColor=ELEVATED_BG,
+                strokeColor=INK_SOFT,
             ),
         ),
         order=alt.Order("StackOrder:Q", sort="ascending"),
@@ -74,14 +94,17 @@ chart = (
         ],
     )
     .properties(
-        width=1400, height=800, title=alt.Title("area-stacked · altair · pyplots.ai", fontSize=28, anchor="middle")
+        width=1600,
+        height=900,
+        background=PAGE_BG,
+        title=alt.Title("area-stacked · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
     )
-    .configure_axis(grid=True, gridOpacity=0.3, gridDash=[4, 4])
-    .configure_view(strokeWidth=0)
+    .configure_axis(domainColor=INK_SOFT, tickColor=INK_SOFT, grid=True, gridColor=INK, gridOpacity=0.10)
+    .configure_view(stroke=None, fill=PAGE_BG)
 )
 
-# Save as PNG (1400 * 3 = 4200, 800 * 3 = 2400 ≈ target size)
-chart.save("plot.png", scale_factor=3.0)
+# Save as PNG (1600 * 3 = 4800, 900 * 3 = 2700)
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
 
 # Save as HTML for interactivity
-chart.interactive().save("plot.html")
+chart.interactive().save(f"plot-{THEME}.html")

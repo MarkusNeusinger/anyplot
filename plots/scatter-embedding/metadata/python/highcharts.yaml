@@ -1,0 +1,247 @@
+library: highcharts
+language: python
+specification_id: scatter-embedding
+created: '2026-05-07T10:30:43Z'
+updated: '2026-05-07T10:50:12Z'
+generated_by: claude-sonnet
+workflow_run: 25490150838
+issue: 5236
+python_version: 3.13.13
+library_version: unknown
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/highcharts/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - Complete theme adaptation with all chrome elements correctly adapting between
+    light and dark via token system
+  - 'Okabe-Ito palette correctly applied with #009E73 as the first series; all 6 positions
+    in canonical order'
+  - Font sizes well-scaled for 4800x2700 canvas; tick labels correctly suppressed
+    as required for embedding axes
+  - Realistic scRNA-seq bioinformatics context with meaningful cell type labels (T
+    CD4+, T CD8+, B cells, NK cells, Monocytes, Dendritic)
+  - Clean Selenium export using container.screenshot() for exact chart-area capture
+  weaknesses:
+  - No centroid annotations despite spec listing them as an option — compute cluster
+    means and add annotation labels for each cell type to improve data storytelling
+  - No visual focal point or hierarchy technique to guide the viewer through the embedding
+    structure
+  - Highcharts boost module not enabled for 1200+ point dataset — add highcharts-boost.js
+    inline and set boostThreshold
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Cell-type Atlas · scatter-embedding · highcharts · anyplot.ai" in dark ink at top-left; subtitle readable; axis labels "t-SNE Dimension 1" and "t-SNE Dimension 2" clear and dark; tick labels suppressed as required; legend text in INK_SOFT dark gray
+      Data: Six Okabe-Ito clusters — #009E73 (T CD4+, first series), #D55E00 (T CD8+), #0072B2 (B cells), #CC79A7 (NK cells), #E69F00 (Monocytes), #56B4E9 (Dendritic). Markers at radius=12, fillOpacity=0.65, PAGE_BG-colored edges. All clusters well-separated.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and subtitle in light cream ink (#F0EFE8) on dark background — fully readable. Axis labels in same light tone. Legend text in INK_SOFT (#B8B7B0). No dark-on-dark failures detected. Legend frame uses elevated dark background (#242420).
+      Data: Colors identical to light render — Okabe-Ito positions 1–6 unchanged. Clusters equally distinguishable on dark surface.
+      Legibility verdict: PASS — all text clearly readable against near-black background; no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Font sizes well-scaled: 56px title, 36px axis labels, 28px legend
+          for 4800x2700. Readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Clusters well-separated; within-cluster overlap handled by opacity.
+          Legend cleanly positioned.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: radius=12, fillOpacity=0.65, PAGE_BG-colored edges provide good visibility
+          in dense areas.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; no red-green sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 4800x2700 landscape. spacingRight=320 accommodates legend well. Minor
+          vertical breathing room could improve.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels. Title contains spec-id, library, and anyplot.ai.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, remaining Okabe-Ito order. Light #FAF8F1,
+          dark #1A1A17 backgrounds correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom theme tokens, elevated legend with borderRadius, marker edge
+          highlighting. Lacks focal emphasis technique.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Tick labels suppressed, subtle 10% opacity grid, clean axis lines,
+          legend padding and borderRadius add polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Clusters are visible and colored; subtitle provides algorithm context.
+          No centroid annotations or emphasis technique to guide viewer.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter plot rendering a 2D embedding.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct colorblind-safe colors, legend, moderate size with transparency,
+          subtitle with algorithm+perplexity, no tick labels.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped to t-SNE dimensions 1 and 2; 1200 points across
+          6 clusters.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title contains scatter-embedding, highcharts, and anyplot.ai. Legend
+          labels match cell type names.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows multiple classes, cluster structure, density variation, meaningful
+          bioinformatics domain.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: scRNA-seq immune cell types is realistic, neutral, and domain-appropriate.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1200 points (200 per cluster x 6) within 500-5000 typical range.
+          t-SNE coordinate ranges appropriate.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; clean sequential script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) and random_state=42 in TSNE and make_blobs.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses strict=True in zip, clean series loop, appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png. No bare plot.png.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct Chart(container), HighchartsOptions, ScatterSeries.add_series
+          pattern. Selenium export with inline JS. Uses container.screenshot() for
+          element-level capture.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses hover states with halo, custom marker fillOpacity/lineColor,
+          plotOptions.scatter, tooltip headerFormat/pointFormat. Boost module and
+          accessibility features not used.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  - selenium
+  techniques:
+  - html-export
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - t-sne
+  styling:
+  - alpha-blending
+  - edge-highlighting

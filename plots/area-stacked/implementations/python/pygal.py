@@ -1,12 +1,23 @@
-""" pyplots.ai
+""" anyplot.ai
 area-stacked: Stacked Area Chart
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-25
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-07
 """
+
+import os
 
 import pygal
 from pygal.style import Style
 
+
+# Theme tokens (see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette (first series is always #009E73)
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
 
 # Data - Monthly revenue by product category over 2 years (2023-2024)
 months = [
@@ -36,7 +47,7 @@ months = [
     "Dec'24",
 ]
 
-# Revenue in thousands ($K) - ordered from largest to smallest at bottom
+# Revenue in thousands ($K) - ordered from largest at bottom
 electronics = [
     120,
     115,
@@ -94,21 +105,20 @@ books = [30, 35, 32, 28, 25, 22, 20, 35, 45, 40, 55, 70, 32, 38, 35, 30, 27, 24,
 
 # Custom style for large canvas (4800x2700)
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
     opacity=".85",
     opacity_hover=".95",
-    colors=("#306998", "#FFD43B", "#2ECC71", "#E74C3C"),
-    title_font_size=60,
-    label_font_size=36,
-    major_label_font_size=32,
-    legend_font_size=40,
-    value_font_size=28,
-    stroke_width=2,
-    font_family="sans-serif",
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=3,
 )
 
 # Create stacked area chart
@@ -116,14 +126,14 @@ chart = pygal.StackedLine(
     width=4800,
     height=2700,
     style=custom_style,
-    title="area-stacked · pygal · pyplots.ai",
+    title="area-stacked · pygal · anyplot.ai",
     x_title="Month",
     y_title="Revenue ($K)",
     fill=True,
     show_y_guides=True,
     show_x_guides=False,
     x_label_rotation=45,
-    legend_at_bottom=False,
+    legend_at_bottom=True,
     legend_box_size=30,
     truncate_legend=-1,
     show_dots=False,
@@ -142,6 +152,7 @@ chart.add("Clothing", clothing)
 chart.add("Home & Garden", home_garden)
 chart.add("Books", books)
 
-# Save as PNG and HTML
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Save as PNG and HTML with theme-suffixed names
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())

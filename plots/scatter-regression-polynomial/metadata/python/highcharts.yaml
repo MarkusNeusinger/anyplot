@@ -1,15 +1,227 @@
 library: highcharts
+language: python
 specification_id: scatter-regression-polynomial
 created: '2025-12-25T17:14:17Z'
-updated: '2025-12-25T17:16:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20508355551
+updated: '2026-05-07T13:11:56Z'
+generated_by: claude-haiku
+workflow_run: 25497596219
 issue: 2028
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/highcharts/plot.html
-quality_score: 93
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Perfect theme adaptation with data colors identical across light/dark renders
+  - Comprehensive spec compliance with all required features present
+  - Strong typography and explicit sizing ensures readability at 4800×2700px
+  - Realistic and interpretable data showing diminishing returns pattern
+  - Robust implementation with CDN fallback logic and clean code structure
+  - Excellent Okabe-Ito palette usage with brand green as primary color
+  weaknesses:
+  - Design Excellence could be elevated beyond library defaults
+  - Library Mastery incomplete—could leverage more of Highcharts' advanced capabilities
+    like datalabels or confidence bands
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - perfectly rendered
+      Chrome: Title (28px), axis labels (22px), tick labels (18px) all in dark text, clearly visible with excellent contrast
+      Data: Teal/cyan scatter points (#009E73) with 0.65 opacity, orange regression curve (#D55E00)
+      Grid: Subtle gray gridlines, do not compete with data
+      Legend: Top-right floating box with light background (#FFFDF6), labeled "Data Points" and "Polynomial Fit (R² = 0.866)"
+      Legibility verdict: PASS - all text readable, no overlap, excellent layout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - perfectly rendered
+      Chrome: Title, axis labels, and tick labels all in light text colors (#F0EFE8, #B8B7B0), clearly visible against dark background
+      Data: Identical colors to light render - teal (#009E73) and orange (#D55E00) maintain consistency
+      Grid: Subtle light gridlines appropriately adapted to dark surface
+      Legend: Dark elevated background (#242420), text in light colors, same layout as light render
+      Legibility verdict: PASS - no dark-on-dark issues, all text highly readable, perfect theme adaptation
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (28/22/18px). Perfectly readable in
+          both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. Legend floats cleanly. All text fully readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers (radius=8) and curve (lineWidth=3) perfectly adapted to 80-point
+          dataset.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito colors ensure CVD-safe design with excellent contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent 4800×2700 utilization with balanced 80px spacing.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive with units: Advertising Spend ($k) and Revenue ($k).'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, regression #D55E00. Correct backgrounds and
+          theme-correct text in both renders.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured with proper colors and typography but follows defaults
+          rather than exceptional design.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Good refinement: subtle grid, clean spacing, styled legend, generous
+          whitespace.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Clear diminishing returns narrative with realistic context and analytical
+          depth.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter plot with polynomial regression curve.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: scatter points, polynomial fit, R² value,
+          equation, axis labels, legend.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned. Axes show all data without truncation.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend labels informative and accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Complete polynomial pattern with clear diminishing returns. 80 points
+          sufficient.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Real-world plausible: advertising spend vs revenue with diminishing
+          returns.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Spend (1-20k) and revenue proportions factually sensible and realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear flow. No unnecessary functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used appropriately.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic with robust CDN fallback logic. No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html using current
+          API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of Highcharts API with proper configuration patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses SplineSeries and theme tokens but could leverage more advanced
+          Highcharts capabilities.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -19,195 +231,5 @@ impl_tags:
   - data-generation
   dataprep:
   - regression
-  styling: []
-review:
-  strengths:
-  - Excellent implementation of polynomial regression with R² and equation display
-    in subtitle
-  - Perfect title format following spec-id · library · pyplots.ai convention
-  - Realistic diminishing returns scenario (advertising spend vs revenue) perfectly
-    demonstrates polynomial relationships
-  - 'Clean colorblind-safe color palette (blue #306998 and yellow #FFD43B)'
-  - Appropriate marker sizing (radius 12) and transparency (0.65) for 80 data points
-  - SplineSeries creates a smooth, visually distinct regression curve
-  - Both PNG and HTML outputs generated for static and interactive viewing
-  weaknesses:
-  - Legend text styling could be more prominent at current font sizes
-  - Could leverage Highcharts-specific features like tooltip formatters or data labels
-    for enhanced interactivity
-  - Missing optional confidence band mentioned in spec (though marked as optional)
-  image_description: The plot displays a scatter chart with 80 blue data points (semi-transparent
-    with darker blue outlines) showing a quadratic relationship between Advertising
-    Spend ($k) on the x-axis (1-20) and Revenue ($k) on the y-axis (~10-100). A smooth
-    yellow/gold polynomial regression curve (degree 2) fits through the data, clearly
-    demonstrating diminishing returns. The title "scatter-regression-polynomial ·
-    highcharts · pyplots.ai" appears at the top in bold. The subtitle displays the
-    fitted equation "y = -0.277x² + 9.550x + 5.917 | R² = 0.9563". A legend in the
-    top-right corner shows "Data Points" and "Polynomial Fit (R² = 0.956)". The background
-    is white with subtle gray grid lines. The layout is well-balanced with good use
-    of the canvas space.
-  criteria_checklist:
-    visual_quality:
-      score: 38
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 48px, axis labels at 36px, tick labels at 28px - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, clean spacing throughout
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Markers visible with good alpha, though slightly dense in middle
-          region
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue points and yellow curve are colorblind-safe, excellent contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, legend positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Descriptive labels with units: "Advertising Spend ($k)", "Revenue
-          ($k)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: false
-        comment: Grid subtle at alpha 0.1, legend well-placed but could be slightly
-          more prominent
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct scatter plot with polynomial regression curve
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned (independent/dependent variables)
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: R² displayed, polynomial equation shown, curve visually distinct,
-          moderate transparency on points
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Axes show all data points with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly identifies "Data Points" and "Polynomial Fit (R²
-          = 0.956)"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "scatter-regression-polynomial · highcharts · pyplots.ai"
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows clear polynomial trend with noise, demonstrates diminishing
-          returns well; could show more variance at extremes
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Advertising spend vs revenue is a perfect real-world diminishing
-          returns scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Values are plausible ($1k-$20k spend, $10k-$95k revenue), though
-          revenue ratios might be slightly high
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Clean linear flow: imports → data → fit → chart → export'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: Only necessary imports present
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Highcharts Python API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses ScatterSeries and SplineSeries appropriately, Highcharts interactive
-          features via HTML export, but doesn't leverage advanced Highcharts-specific
-          features like zones or annotations
-  verdict: APPROVED
+  styling:
+  - alpha-blending

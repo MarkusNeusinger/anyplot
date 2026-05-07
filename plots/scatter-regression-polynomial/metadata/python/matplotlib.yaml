@@ -1,167 +1,183 @@
 library: matplotlib
+language: python
 specification_id: scatter-regression-polynomial
 created: '2025-12-25T17:11:57Z'
-updated: '2025-12-25T17:14:02Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20508355426
+updated: '2026-05-07T12:56:59Z'
+generated_by: claude-haiku
+workflow_run: 25496860231
 issue: 2028
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/matplotlib/plot.png
-preview_html: null
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - custom-legend
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep:
-  - regression
-  styling:
-  - alpha-blending
-  - grid-styling
 review:
   strengths:
-  - Excellent implementation of polynomial regression with R² calculation using numpy
-  - Clear visualization of diminishing returns economic concept
-  - 95% confidence band adds statistical depth
-  - Polynomial equation prominently displayed with proper formatting
-  - Color scheme (Python blue/gold) is distinctive and accessible
-  - All text elements properly sized for 4800x2700 output
+  - Perfect visual quality with readable text in both light and dark themes
+  - 'All spec requirements met: R² value, polynomial equation, confidence band, appropriate
+    transparency (0.7 alpha)'
+  - Excellent theme adaptation - both renders equally readable with proper contrast
+    and theme-correct colors
+  - Clean, idiomatic matplotlib code following library best practices and style guide
+    patterns
+  - Professional design with appropriate spine removal, subtle grid (alpha=0.1), and
+    well-positioned legend/annotation
   weaknesses:
-  - Legend position in lower right overlaps slightly with data region; could be placed
-    outside or in an empty corner
-  - Uses only basic matplotlib/numpy; scipy.stats or sklearn could provide more sophisticated
-    polynomial fitting
-  - Generic axis units (units) rather than more specific economic terms
-  image_description: 'The plot displays a scatter plot with polynomial regression
-    on a 16:9 canvas. The scatter points are blue (#306998) with white edges and moderate
-    transparency (alpha ~0.6), showing 80 data points. A prominent yellow/gold (#FFD43B)
-    quadratic curve fits through the data, surrounded by a light yellow semi-transparent
-    95% confidence band. The title reads "scatter-regression-polynomial · matplotlib
-    · pyplots.ai" at the top. The x-axis is labeled "Investment (units)" and y-axis
-    "Return (units)". A white annotation box in the upper left shows the polynomial
-    equation (y = -0.47x² + 5.69x + 5.20) and R² = 0.859. A legend in the lower right
-    shows three items: Data points, 95% confidence band, and Polynomial fit (degree
-    2). Grid lines are subtle with dashed style. The parabolic curve peaks around
-    x=6, demonstrating diminishing returns.'
+  - Design excellence could be elevated with additional visual sophistication beyond
+    standard styling
+  - Could explore additional advanced matplotlib techniques beyond current implementation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct, not pure white
+      Chrome: Title, axis labels ("Investment (units)", "Return (units)"), and tick labels all clearly visible in dark text (#1A1A17) with strong contrast. Annotation box properly styled with elevated background (#FFFDF6). Legend positioned outside plot area with clear readable text.
+      Data: Green scatter points (#009E73, alpha=0.7) showing 80 data points clearly without crowding. Vermillion regression line (#D55E00, linewidth=3.5) is visually distinct and prominent. Semi-transparent confidence band in vermillion (alpha=0.15) is visible but subtle. Equation and R² value displayed in annotation box.
+      Grid: Subtle grid with alpha=0.1 and linewidth=0.8, not intrusive
+      Legibility verdict: PASS - All text is crisp and readable against the light background. The plot is professional and clear.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct, not pure black
+      Chrome: Title, axis labels, and tick labels all clearly visible in light text (#F0EFE8) with strong contrast against dark background. No "dark-on-dark" failures. Annotation box properly styled with dark theme background (#242420) and light border.
+      Data: Green scatter points (#009E73) are identical to light render - good visibility on dark surface. Vermillion regression line (#D55E00) maintains visibility and distinctness. Confidence band semi-transparent shading is visible.
+      Grid: Subtle grid visible against dark background, not competing with data
+      Legibility verdict: PASS - All text is crisp and readable. The plot adapts well to dark theme with no accessibility issues. Data colors remain identical to light render as required.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt, axis labels 20pt, ticks 16pt, all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: Font sizes (24pt title, 20pt labels, 16pt ticks) explicitly set and
+          readable in both themes with strong contrast
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend outside plot area, annotation in corner, no text collisions,
+          all elements clearly separated
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers s=150 appropriate for 80 points, alpha=0.6 good; slightly
-          large but acceptable
+        comment: Scatter s=150 with alpha=0.7, regression linewidth=3.5, confidence
+          band alpha=0.15 - all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow contrast is colorblind-safe, no red-green issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Investment (units)", "Return (units)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: 'Okabe-Ito palette (#009E73, #D55E00) - colorblind-safe, adequate
+          contrast throughout'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: figsize=(16,9) with dpi=300 produces 4800x2700px, nothing cut off,
+          generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid subtle (alpha=0.3), legend placed well but could be positioned
-          away from data area
+        passed: true
+        comment: Title format correct (spec-id · library · anyplot.ai), axis labels
+          descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green), backgrounds #FAF8F1/#1A1A17
+          correct, data colors identical in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Okabe-Ito colors intentionally applied, annotation box with rounded
+          corners and theme colors, confidence band styling shows refinement - raised
+          from default 4/8
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, grid subtle (alpha=0.1), generous whitespace,
+          legend positioned outside - raised from default 2/6
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with regression curve as focal point, annotation
+          guides interpretation, viewer naturally follows polynomial trend - raised
+          from default 2/6
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct scatter plot with polynomial regression
+        comment: Correct scatter plot with quadratic polynomial regression using numpy.polyfit
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned (Investment vs Return)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All features present: R² displayed, polynomial curve distinct, confidence
-          band, equation annotated'
-      - id: SC-04
-        name: Data Range
+        comment: R² prominent, polynomial equation shown, confidence band included,
+          points have alpha=0.7 transparency
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data properly
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X and Y axes correctly map data, axes show full range without clipping
+          (0-10 investment, ~5-25 return)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels accurate for all three elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "scatter-regression-polynomial · matplotlib · pyplots.ai"'
+        comment: Title follows spec format, legend labels clear and descriptive
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows parabolic curve clearly with peak demonstrating diminishing
-          returns; could show more variation at extremes
+        comment: 'Comprehensive coverage: scatter points, regression curve, confidence
+          band, equation, R² value'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Economics diminishing returns example is real and comprehensible
+        comment: Economics diminishing returns example is realistic and plausible,
+          neutral framing with appropriate axis labels
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values reasonable (0-10 investment, 5-25 return); units generic but
-          acceptable
+        comment: Investment range 0-10 and return range ~5-25 are sensible, R²=0.985
+          demonstrates excellent fit
     code_quality:
       score: 10
       max: 10
@@ -171,40 +187,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save structure, no functions/classes
+        comment: Linear code without unnecessary functions, straightforward and easy
+          to follow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Uses np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported
+        comment: 'Only necessary imports: os, matplotlib.pyplot, numpy - all used'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current matplotlib API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI, clean variable naming, no AR-08
+          violations
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png, uses current matplotlib API correctly
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses standard matplotlib; could leverage annotate better or use scipy
-          for more sophisticated fitting
+        passed: true
+        comment: Uses axes methods, theme-token pattern, numpy polyfit, tight_layout(),
+          proper DPI - all idiomatic practices - raised from default 3/5
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Confidence band with fill_between, annotated box styling, polynomial
+          fitting - goes beyond basic scatter - raised from default 1/5
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - confidence-band
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - theme-adaptive-chrome

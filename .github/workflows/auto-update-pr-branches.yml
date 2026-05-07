@@ -1,0 +1,82 @@
+name: "Auto-update PR branches"
+run-name: "Auto-update PR branches after push to ${{ github.ref_name }}"
+
+# When `main` advances, update every open PR that has auto-merge enabled
+# and is BEHIND. Without this, the strict required-status-checks policy
+# (`strict_required_status_checks_policy: true` on the `main` ruleset)
+# blocks the auto-merge button forever — auto-merge fires only when checks
+# are green AND the head is up-to-date with the base, but it does not
+# update the branch on its own. This workflow closes that gap so polish /
+# impl PRs squash-merge themselves end-to-end.
+#
+# Why we don't use GitHub's native merge queue: this repository is
+# user-owned and merge_queue rules are not available on the account's
+# plan — the rulesets API rejects the rule with an empty validation
+# error. The auto-update workflow gives us the same end-user behavior
+# (no manual "Update branch" clicks) without the plan dependency.
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read       # required for actions/checkout (not strictly needed here, but cheap)
+  pull-requests: write # required to call PUT /pulls/:num/update-branch
+
+concurrency:
+  group: auto-update-pr-branches
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update behind PRs with auto-merge enabled
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -eo pipefail
+
+          # Pull every open PR targeting main that has auto-merge enabled.
+          # `mergeStateStatus` is the field that surfaces "BEHIND" — the
+          # exact state we want to fix. Skip everything else (CLEAN,
+          # BLOCKED for missing reviews, DIRTY for conflicts, etc.).
+          PRS=$(gh pr list \
+            --repo "$GH_REPO" \
+            --state open \
+            --base main \
+            --limit 200 \
+            --json number,title,headRefName,mergeStateStatus,autoMergeRequest)
+
+          BEHIND=$(echo "$PRS" | jq -c '
+            [ .[] | select(.autoMergeRequest != null and .mergeStateStatus == "BEHIND") ]
+          ')
+
+          COUNT=$(echo "$BEHIND" | jq 'length')
+          echo "::notice::Found $COUNT PR(s) BEHIND with auto-merge enabled"
+
+          if [[ "$COUNT" -eq 0 ]]; then
+            exit 0
+          fi
+
+          echo "$BEHIND" | jq -c '.[]' | while read -r pr; do
+            NUM=$(echo "$pr" | jq -r '.number')
+            TITLE=$(echo "$pr" | jq -r '.title')
+            BRANCH=$(echo "$pr" | jq -r '.headRefName')
+            echo "::notice::Updating PR #${NUM} (${BRANCH}): ${TITLE}"
+
+            # update-branch merges the base ref into the head ref; this
+            # is what the "Update branch" button does in the UI.
+            # Failures here (e.g. merge conflict, branch deleted) are
+            # logged as a warning but don't fail the whole workflow —
+            # one stuck PR shouldn't block the others.
+            if ! gh api -X PUT \
+                "repos/${GH_REPO}/pulls/${NUM}/update-branch" \
+                -H "Accept: application/vnd.github+json" \
+                --silent 2>&1; then
+              echo "::warning::Could not update PR #${NUM} (likely conflict or stale ref)"
+            fi
+          done

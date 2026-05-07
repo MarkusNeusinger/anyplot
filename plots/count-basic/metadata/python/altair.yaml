@@ -1,158 +1,176 @@
 library: altair
+language: python
 specification_id: count-basic
 created: '2025-12-25T12:41:48Z'
-updated: '2025-12-25T12:43:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20505207179
+updated: '2026-05-07T09:24:41Z'
+generated_by: claude-haiku
+workflow_run: 25486866782
 issue: 2033
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/count-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/count-basic/altair/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-    - data-generation
-    - long-to-wide
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/altair/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent visual presentation with clear, readable text at all sizes
-  - Proper use of sorted bars (descending by frequency) as recommended in spec
-  - Count labels above bars enhance readability
-  - Good use of Altair declarative syntax for styling (cornerRadius, configure_axis)
-  - Clean, KISS-compliant code structure
-  - Appropriate color choice and grid styling
+  - Perfect theme adaptation with correct text colors and backgrounds in both light
+    and dark renders
+  - Clean code using Altair's native count() aggregation and idiomatic layer composition
+  - All spec requirements met with realistic, neutral survey response data
+  - Excellent text legibility across both themes with properly sized typography
+  - Good data presentation through count labels and frequency sorting that guides
+    the viewer
+  - Proper canvas sizing (1600×900) with good proportions and adequate whitespace
   weaknesses:
-  - Pre-aggregates data manually instead of using Altair native count() aggregation
-    - the implementation creates a bar chart from pre-computed values rather than
-    demonstrating Altair automatic counting capability
-  - Y-axis tick marks are too granular (every 2 units) creating visual clutter
-  image_description: 'The plot displays a vertical bar chart showing survey response
-    frequencies. Five blue bars (#306998) with rounded top corners are arranged in
-    descending order by count: Good (66), Excellent (56), Average (36), Poor (27),
-    and Very Poor (15). Count labels appear above each bar in bold black text. The
-    title "count-basic · altair · pyplots.ai" is centered at the top. The X-axis is
-    labeled "Survey Response" and Y-axis "Number of Responses" with a subtle dashed
-    grid (alpha 0.3). The layout is well-balanced with good use of the canvas space.'
+  - 'Design Excellence is low: generic styling with minimal visual customization beyond
+    rounded corners'
+  - Limited visual hierarchy or design sophistication — relies heavily on functional
+    defaults
+  - Grid styling could be more refined; spines not explicitly handled for visual impact
+  - No distinctive Altair features beyond basic layer composition and native count
+    aggregation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct warm tone, not pure white
+      Chrome: Title "count-basic · altair · anyplot.ai" in dark text (#1A1A17), axis labels "Survey Response" (X) and "Number of Responses" (Y) in dark gray (#4A4A44), tick labels for all categories and values clearly visible in dark text
+      Data: Five bars in brand green (#009E73) sorted by descending frequency, with count labels (66, 56, 36, 27, 15) in white bold text above each bar. Subtle horizontal grid lines visible.
+      Legibility verdict: PASS - all text elements are clearly readable against light background with appropriate contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct warm tone, not pure black
+      Chrome: Title in light text (#F0EFE8), axis labels in light gray (#B8B7B0), tick labels all clearly visible in light text with excellent contrast against dark background. No dark-on-dark failures. Grid lines visible as subtle lighter strokes.
+      Data: Identical to light render - all bars remain brand green (#009E73), confirming data colors stay constant between themes. Count labels in white remain readable on green bars.
+      Legibility verdict: PASS - all text is readable in dark theme; zero dark-on-dark issues; chrome adaptation is flawless with only text/background changing, data colors preserved
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and count annotations are all clearly readable
-          at appropriate font sizes (18-28pt)
+        comment: Title (28px), axis labels (22px), tick labels (18px) all sized correctly;
+          readable in both themes with proper theme token colors
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; category labels are well-spaced
+        comment: Bars well-spaced; count labels positioned with dy=-8 centered; no
+          collisions or overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are appropriately sized and clearly visible
+        comment: All bars and count labels clearly visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single color scheme (Python blue) is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: "Survey Response" and "Number of Responses"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Brand green is CVD-safe; white text on green provides strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape 1600×900 (4800×2700 at 3x scale); good proportions, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Title format correct; axes labeled descriptively
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series uses #009E73; backgrounds #FAF8F1 (light) and #1A1A17
+          (dark) correct; both renders theme-correct'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is present but Y-axis has excessive tick marks (every 2 units
-          from 0-70), making it cluttered
+        comment: Rounded corners add polish but otherwise generic defaults; minimal
+          design sophistication
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization; standard grid and spine treatment without
+          refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Frequency sorting creates visual hierarchy; count labels guide viewer;
+          clear focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct count plot (vertical bars showing category frequencies)
+        comment: Correct count plot using native count() aggregation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X-axis, counts on Y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Bars sorted by frequency descending, count labels on bars as suggested
-          in spec
-      - id: SC-04
-        name: Data Range
+        comment: Count aggregation, categorical variable, frequency sorting all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: Survey Response (nominal); Y: count() (quantitative); all data
+          shown'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single-series plot
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "count-basic · altair · pyplots.ai"'
+        comment: Title format correct; legend N/A for single series
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varying frequencies across 5 categories demonstrating count
-          plot capabilities
+        comment: Complete frequency distribution shown; all count plot aspects represented
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Survey responses with realistic distribution (skewed positive) is
-          plausible
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 200 total responses with realistic proportions (25%, 35%, 20%, 12%,
-          8%)
+        comment: Survey responses realistic; distribution plausible for 200 samples;
+          neutral data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Y-axis 0-70 sensible for 200 total responses
     code_quality:
       score: 10
       max: 10
@@ -162,41 +180,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → chart → save'
+        comment: No functions or classes; simple linear implementation
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Uses np.random.seed(42); fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (altair, numpy, pandas)
+        comment: All imports (os, sys, altair, numpy, pandas) are used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: No fake interactivity; straightforward implementation
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html; current API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses count() aggregation, layer composition, proper encodings, configure_*
+          methods
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
         max: 5
         passed: false
-        comment: Pre-aggregates data instead of using Altair's declarative `count()`
-          aggregation. A true Altair count plot would use `alt.Chart(df).mark_bar().encode(x='Response:N',
-          y='count()')` to let Altair handle the counting automatically.
+        comment: Layer composition is nice but limited use of distinctive Altair features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

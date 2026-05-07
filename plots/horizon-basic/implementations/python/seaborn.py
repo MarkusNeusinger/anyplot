@@ -1,154 +1,149 @@
-""" pyplots.ai
+""" anyplot.ai
 horizon-basic: Horizon Chart
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-24
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 78/100 | Updated: 2026-05-07
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 
 
-# Set seaborn style
-sns.set_style("whitegrid")
-sns.set_context("talk", font_scale=1.0)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - Server metrics over 24 hours (5 servers)
+# Data - Stock price deviations from 20-day moving average (5 stocks over 90 trading days)
 np.random.seed(42)
+trading_days = 90
+stocks = ["TECH", "FINANCE", "ENERGY", "HEALTHCARE", "RETAIL"]
 
-hours = pd.date_range("2024-01-15 00:00", periods=96, freq="15min")  # 24 hours, 15-min intervals
-servers = ["Web Server", "Database", "Cache", "API Gateway", "Auth Service"]
-
-# Generate realistic CPU usage patterns with deviations from baseline (positive and negative)
-# Baseline is 50% CPU, deviations show above/below normal operation
+# Generate realistic stock deviation patterns with seasonality
 data = []
-for server in servers:
-    if server == "Web Server":
-        # High during day, low at night - deviation from 50% baseline
-        base = 30 * np.sin(np.linspace(0, 2 * np.pi, 96)) - 5
-        noise = np.random.randn(96) * 8
+for stock_idx, stock in enumerate(stocks):
+    np.random.seed(42 + stock_idx)
+    if stock == "TECH":
+        base = 8 * np.sin(np.linspace(0, 4 * np.pi, trading_days)) + 3
+        noise = np.random.randn(trading_days) * 5
         values = base + noise
-    elif server == "Database":
-        # Steady with occasional positive and negative spikes
-        base = np.zeros(96)
-        noise = np.random.randn(96) * 15
-        spikes = np.random.choice([-35, 0, 35], 96, p=[0.08, 0.84, 0.08])
-        values = base + noise + spikes
-    elif server == "Cache":
-        # Alternating positive/negative pattern with periodic flushes
-        base = -20 * np.ones(96)
-        flush_pattern = 50 * (np.arange(96) % 24 < 3).astype(float)
-        noise = np.random.randn(96) * 6
-        values = base + flush_pattern + noise
-    elif server == "API Gateway":
-        # Follows web server pattern but smoother, shifted negative
-        base = 25 * np.sin(np.linspace(0, 2 * np.pi, 96)) - 10
-        noise = np.random.randn(96) * 7
+    elif stock == "FINANCE":
+        base = np.zeros(trading_days)
+        noise = np.random.randn(trading_days) * 6
+        volatility_spikes = np.random.choice([-8, 0, 8], trading_days, p=[0.15, 0.7, 0.15])
+        values = base + noise + volatility_spikes
+    elif stock == "ENERGY":
+        base = -5 * np.ones(trading_days)
+        trend = np.linspace(-5, 5, trading_days)
+        noise = np.random.randn(trading_days) * 4
+        values = base + trend + noise
+    elif stock == "HEALTHCARE":
+        base = 6 * np.cos(np.linspace(0, 3 * np.pi, trading_days))
+        noise = np.random.randn(trading_days) * 4
         values = base + noise
-    else:  # Auth Service
-        # Mostly negative with login spikes in morning and evening
-        base = np.ones(96) * -25
-        morning_spike = 55 * np.exp(-((np.arange(96) - 32) ** 2) / 40)
-        evening_spike = 45 * np.exp(-((np.arange(96) - 72) ** 2) / 40)
-        noise = np.random.randn(96) * 5
-        values = base + morning_spike + evening_spike + noise
+    else:
+        base = np.zeros(trading_days)
+        drift = np.linspace(-8, 8, trading_days)
+        noise = np.random.randn(trading_days) * 3
+        values = base + drift + noise
 
-    values = np.clip(values, -50, 50)  # Deviation from baseline: -50% to +50%
-    for t, v in zip(hours, values, strict=True):
-        data.append({"time": t, "server": server, "deviation": v})
+    values = np.clip(values, -15, 15)
+    for day, v in enumerate(values):
+        data.append({"day": day, "stock": stock, "deviation": v})
 
 df = pd.DataFrame(data)
 
 # Horizon chart parameters
 n_bands = 3
-band_height = 50 / n_bands  # Each band covers ~16.7% of the range (0-50 for each direction)
+band_height = 15 / n_bands
 
 # Create figure
-fig, axes = plt.subplots(len(servers), 1, figsize=(16, 9), sharex=True)
-fig.subplots_adjust(hspace=0.08)
+fig, axes = plt.subplots(len(stocks), 1, figsize=(16, 9), sharex=True)
+fig.patch.set_facecolor(PAGE_BG)
+fig.subplots_adjust(hspace=0.06)
 
-# Get seaborn color palettes (consistent across all subplots)
-blue_palette = sns.color_palette("Blues", n_colors=n_bands + 2)[2:]  # Skip lightest colors
-red_palette = sns.color_palette("Reds", n_colors=n_bands + 2)[2:]  # Skip lightest colors
+# Color palettes for positive (green) and negative (red)
+positive_colors = ["#E8F5E9", "#66BB6A", "#2E7D32"]
+negative_colors = ["#FFEBEE", "#EF5350", "#C62828"]
 
-for idx, server in enumerate(servers):
+for idx, stock in enumerate(stocks):
     ax = axes[idx]
-    server_data = df[df["server"] == server]
-    x = np.arange(len(server_data))
-    values = server_data["deviation"].values
+    ax.set_facecolor(PAGE_BG)
+    stock_data = df[df["stock"] == stock]
+    x = np.arange(len(stock_data))
+    values = stock_data["deviation"].values
 
-    # Clear axis
     ax.set_xlim(0, len(x))
     ax.set_ylim(0, band_height)
 
-    # Separate positive and negative values
     positive_vals = np.maximum(values, 0)
     negative_vals = np.abs(np.minimum(values, 0))
 
-    # Draw horizon bands - first draw all negative (red), then all positive (blue)
-    # This ensures both colors are visible where they occur
-    # Draw from lowest band to highest for proper layering
-
-    # Draw all negative bands first (red)
+    # Draw negative bands (red)
     for band_idx in range(n_bands):
         band_min = band_idx * band_height
         neg_folded = np.clip(negative_vals - band_min, 0, band_height)
         neg_mask = (negative_vals > band_min) & (values < 0)
         neg_y = np.where(neg_mask, neg_folded, np.nan)
-        ax.fill_between(x, 0, neg_y, color=red_palette[band_idx], alpha=0.9, linewidth=0)
+        ax.fill_between(x, 0, neg_y, color=negative_colors[band_idx], alpha=0.85, linewidth=0)
 
-    # Draw all positive bands on top (blue)
+    # Draw positive bands (green)
     for band_idx in range(n_bands):
         band_min = band_idx * band_height
         pos_folded = np.clip(positive_vals - band_min, 0, band_height)
         pos_mask = (positive_vals > band_min) & (values > 0)
         pos_y = np.where(pos_mask, pos_folded, np.nan)
-        ax.fill_between(x, 0, pos_y, color=blue_palette[band_idx], alpha=0.9, linewidth=0)
+        ax.fill_between(x, 0, pos_y, color=positive_colors[band_idx], alpha=0.85, linewidth=0)
 
-    # Style each row - use seaborn's despine for cleaner look
-    ax.set_ylabel(server, fontsize=16, rotation=0, ha="right", va="center", labelpad=15)
+    ax.set_ylabel(stock, fontsize=16, rotation=0, ha="right", va="center", labelpad=15, color=INK)
     ax.set_yticks([])
 
-    # Add subtle grid lines for tracking
-    ax.grid(True, axis="x", alpha=0.3, linewidth=0.5, color="#cccccc")
+    # Enhanced grid for better time tracking
+    ax.grid(True, axis="x", alpha=0.2, linewidth=0.8, color=INK_SOFT)
     ax.set_axisbelow(True)
 
-    sns.despine(ax=ax, left=True, right=True, top=True, bottom=(idx < len(servers) - 1))
-    if idx < len(servers) - 1:
-        ax.tick_params(bottom=False)
+    # Style spines
+    for spine in ["top", "right", "left"]:
+        ax.spines[spine].set_visible(False)
+    ax.spines["bottom"].set_color(INK_SOFT)
+    ax.spines["bottom"].set_visible(idx == len(stocks) - 1)
+    ax.tick_params(axis="x", colors=INK_SOFT, labelsize=16, bottom=(idx == len(stocks) - 1))
 
-# X-axis formatting for bottom plot
-time_labels = server_data["time"].dt.strftime("%H:%M")
-tick_positions = np.arange(0, len(x), 16)  # Every 4 hours
+# X-axis formatting
+tick_positions = np.arange(0, trading_days, 15)
+tick_labels = [f"Day {i}" for i in tick_positions]
 axes[-1].set_xticks(tick_positions)
-axes[-1].set_xticklabels([time_labels.iloc[i] for i in tick_positions], fontsize=16)
-axes[-1].set_xlabel("Time (24-hour period)", fontsize=20)
-axes[-1].tick_params(axis="x", labelsize=16)
+axes[-1].set_xticklabels(tick_labels, fontsize=16, color=INK_SOFT)
+axes[-1].set_xlabel("Trading Days (90-day period)", fontsize=20, color=INK)
 
-# Title - correct format per SC-06
-fig.suptitle("horizon-basic · seaborn · pyplots.ai", fontsize=24, y=0.98, fontweight="bold")
+# Title
+fig.suptitle("horizon-basic · seaborn · anyplot.ai", fontsize=24, y=0.98, fontweight="medium", color=INK)
 
-# Legend with both positive and negative indicators
+# Legend
 legend_patches = [
-    mpatches.Patch(color=blue_palette[0], label="Low positive"),
-    mpatches.Patch(color=blue_palette[1], label="Medium positive"),
-    mpatches.Patch(color=blue_palette[2], label="High positive"),
-    mpatches.Patch(color=red_palette[0], label="Low negative"),
-    mpatches.Patch(color=red_palette[1], label="Medium negative"),
-    mpatches.Patch(color=red_palette[2], label="High negative"),
+    mpatches.Patch(color=positive_colors[0], label="Low positive (0–5 pp)"),
+    mpatches.Patch(color=positive_colors[1], label="Medium positive (5–10 pp)"),
+    mpatches.Patch(color=positive_colors[2], label="High positive (10–15 pp)"),
+    mpatches.Patch(color=negative_colors[0], label="Low negative (0–5 pp)"),
+    mpatches.Patch(color=negative_colors[1], label="Medium negative (5–10 pp)"),
+    mpatches.Patch(color=negative_colors[2], label="High negative (10–15 pp)"),
 ]
 fig.legend(
     handles=legend_patches,
     loc="upper right",
     bbox_to_anchor=(0.98, 0.92),
     fontsize=14,
-    title="Deviation from Baseline",
+    title="Deviation from 20-day MA (percentage points)",
     title_fontsize=14,
-    framealpha=0.9,
+    framealpha=0.95,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
     ncol=2,
 )
 
 plt.tight_layout(rect=[0, 0, 1, 0.95])
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)

@@ -1,163 +1,162 @@
 library: plotly
+language: python
 specification_id: bland-altman-basic
 created: '2025-12-25T13:17:12Z'
-updated: '2025-12-25T13:19:27Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20505628304
+updated: '2026-05-07T11:10:34Z'
+generated_by: claude-haiku
+workflow_run: 25491601976
 issue: 2032
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - hover-tooltips
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - alpha-blending
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/plotly/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent use of Plotly add_hline with annotation positioning for the reference
-    lines
-  - Interactive hover template provides detailed information for each observation
-  - Clean visual design with appropriate color contrast between data points and reference
-    lines
-  - Proper statistical calculations for Bland-Altman analysis (mean ± 1.96 SD)
-  - Realistic medical measurement context that aligns perfectly with spec blood pressure
-    example
+  - Excellent visual legibility in both light and dark themes with no contrast issues
+  - Proper use of Okabe-Ito palette and theme-adaptive chrome throughout
+  - Well-positioned annotations that do not interfere with data visibility
+  - Clean, reproducible code with appropriate data representation for medical device
+    validation
+  - All specification requirements met with correct Bland-Altman plot structure
   weaknesses:
-  - Data could include a few clear outliers beyond the limits of agreement to demonstrate
-    how such cases appear on the plot
-  image_description: 'The plot displays a Bland-Altman agreement plot on a white background
-    with the title "bland-altman-basic · plotly · pyplots.ai" at the top center. The
-    x-axis shows "Mean of Two Methods (mmHg)" ranging from approximately 85 to 155,
-    and the y-axis shows "Difference (Method 1 − Method 2) (mmHg)" ranging from -15
-    to about 8. There are 80 blue circular markers (color #306998) with white edges
-    and moderate transparency scattered across the plot. A solid blue horizontal line
-    indicates the mean difference at -2.44, and two dashed gold/yellow horizontal
-    lines mark the limits of agreement at +1.96 SD (6.55) and -1.96 SD (-11.44). Annotations
-    on the right side clearly label these reference lines with their values. The grid
-    is subtle with light gray lines.'
+  - Design excellence held back by conventional styling rather than distinctive aesthetic
+    choices
+  - Library mastery limited to standard plotly features without advanced capabilities
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correctly themed
+      Chrome: Title in dark ink (28px), axis labels (22px), tick labels (18px) - all clearly readable with dark text on light background
+      Data: Green markers (#009E73) with 0.65 opacity showing 95 paired glucose measurements; green mean line at 4.29; orange dashed LoA lines at ±19.10/-10.51
+      Legibility verdict: PASS - all text and elements have strong contrast and are fully readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correctly themed
+      Chrome: Title in light text, axis labels, tick labels all in light ink (#F0EFE8) or soft gray (#B8B7B0) - all clearly readable with light text on dark background
+      Data: Green markers (#009E73) identical to light render; green mean line; orange dashed LoA lines
+      Legibility verdict: PASS - no dark-on-dark legibility issues; all text is readable and properly theme-adapted
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 32pt, axis labels at 24pt, tick labels at 18pt - all perfectly
-          readable
+        comment: All text explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; annotations positioned cleanly on the
-          right
+        comment: No text collisions; annotations positioned on right margin
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Marker size 14 with 0.7 opacity is appropriate for 80 data points
+        comment: Marker size 14px with 0.65 opacity; lines clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and gold/yellow color scheme is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good margins, plot fills canvas appropriately
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (mmHg)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette; colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions; right margin accommodates annotations
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive labels with units; correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds correct; both renders theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: false
-        comment: Grid at 0.1 alpha is appropriate, but legend is hidden when it could
-          help identify the observations trace
+        comment: Professional design but follows conventions; lacks distinctive aesthetic
+          choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Minimal chrome, subtle grid, good margins; could refine further
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Clear hierarchy and focal point; effectively communicates agreement
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Bland-Altman difference plot
+        comment: Correct Bland-Altman scatter plot with reference lines
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X = mean of pairs, Y = difference - exactly per spec
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Mean line, ±1.96 SD limits, annotations all present
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: scatter, mean line, LoA limits with annotations'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data points without clipping
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis and Y-axis correctly mapped per specification
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for this plot type (legend disabled appropriately)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "bland-altman-basic · plotly · pyplots.ai"
+        comment: Title format correct; legend appropriately hidden
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows bias and spread well, but data is relatively symmetric around
-          mean without clear outliers beyond LOA to demonstrate boundary cases
+        comment: All Bland-Altman aspects shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Blood pressure measurement comparison between sphygmomanometers is
-          a classic Bland-Altman use case
+        comment: Real-world glucose meter validation scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: BP values 85-155 mmHg are realistic systolic readings; bias of ~2.5
-          mmHg is clinically plausible
+        comment: Scales appropriate for domain
     code_quality:
       score: 10
       max: 10
@@ -167,40 +166,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save, no functions/classes'
+        comment: Simple straightforward code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) used
+        comment: Seeded RNG for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: No fake UI or unnecessary complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Correct output format and API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Good use of `add_hline` with annotations, hover templates for interactivity,
-          and HTML export for interactive viewing
+        comment: Proper use of plotly API and conventions
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Standard plotly features; no advanced capabilities
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

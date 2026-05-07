@@ -1,168 +1,186 @@
 library: letsplot
+language: python
 specification_id: scatter-regression-polynomial
 created: '2025-12-25T17:13:02Z'
-updated: '2025-12-25T17:15:20Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20508355597
+updated: '2026-05-07T13:15:12Z'
+generated_by: claude-haiku
+workflow_run: 25497703927
 issue: 2028
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  dataprep:
-  - regression
-  styling:
-  - grid-styling
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/letsplot/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent real-world economics example (advertising diminishing returns) that
-    naturally demonstrates polynomial regression
-  - R² value (0.936) and polynomial equation prominently displayed as spec requires
-  - Confidence band adds statistical context beyond minimum requirements
-  - Strong color contrast between blue points (#306998) and yellow curve (#FFD43B)
-  - 'Proper lets-plot idioms: ggplot grammar, ggsize(1600,900) with scale=3, theme
-    customization'
+  - All specification requirements correctly implemented (scatter, polynomial curve,
+    R², equation, confidence band)
+  - Perfect theme-adaptive execution—both light and dark renders properly adapted
+    with zero legibility failures
+  - All text elements readable at 4800×2700px resolution; zero contrast or accessibility
+    issues
+  - 'Visual clarity: scatter points, regression line, and confidence band all distinctly
+    visible with no overlaps'
+  - Realistic and neutral data context (economics diminishing returns); polynomial
+    model accurately represents relationship
+  - Okabe-Ito color palette ensures colorblind accessibility; professional color choices
+  - Clean, reproducible, idiomatic letsplot code with proper environment-variable
+    theme handling
   weaknesses:
-  - The geom_ribbon confidence band renders with dark border lines at the edges, which
-    appears as two additional gray curves surrounding the yellow polynomial line -
-    this is visually distracting
-  image_description: The plot displays a scatter plot with polynomial regression showing
-    the relationship between advertising spend (x-axis, in thousands $) and sales
-    revenue (y-axis, in thousands $). Blue scatter points (#306998) are distributed
-    following a curved pattern showing diminishing returns. A bright yellow polynomial
-    regression curve fits through the data. A light blue confidence band surrounds
-    the curve. The R² value (0.936) is prominently displayed in the upper right, along
-    with the polynomial equation (y = -0.046x² + 3.789x + 21.45). The title "scatter-regression-polynomial
-    · letsplot · pyplots.ai" appears at the top. The plot uses a minimal theme with
-    subtle gray gridlines.
+  - Top/right spines present; could remove for L-shaped frame to increase visual refinement
+    and align with anyplot minimalism
+  - Interactive features not explored; confidence band and regression line could use
+    hover tooltips to showcase letsplot's distinctive interactive capabilities
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color, not pure white
+      Chrome: Title "scatter-regression-polynomial · letsplot · anyplot.ai" in dark bold text (size 24pt) - clearly readable. Axis labels "Advertising Spend (thousands $)" and "Sales Revenue (thousands $)" in dark text (size 20pt) - clearly readable with descriptive units. Tick labels in gray (INK_SOFT, size 16pt) - readable. R² value "R² = 0.936" in dark text (size 18pt) - prominent and readable. Polynomial equation "y = -0.046x² + 3.789x + 21.45" in gray text (size 14pt) - readable. Grid lines subtle (10% opacity, size 0.3) - visible but non-intrusive.
+      Data: 80 scatter points in brand green (#009E73) with alpha 0.65 - clearly visible against light background with no obscuring. Orange regression line (#D55E00, size 2.5) - bold, distinct, visually separates from scatter. Semi-transparent green confidence band (alpha 0.15) - subtle but visible, frames the trend elegantly.
+      Legibility verdict: PASS - All elements readable, no contrast failures, proper visual hierarchy
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color, not pure black
+      Chrome: Title in light text (#F0EFE8, size 24pt) - clearly readable against dark background. Axis labels in light text (#F0EFE8, size 20pt) - clearly readable. Tick labels in light gray (#B8B7B0, size 16pt) - readable, no dark-on-dark issues. R² and equation in light text colors - all readable. Grid lines in rgba(240,239,232,0.10) - subtle, visible.
+      Data: Scatter points identical green (#009E73) from light render - confirmed color consistency. Regression line identical orange (#D55E00) - confirmed data colors unchanged. Confidence band identical semi-transparent green - confirmed.
+      Legibility verdict: PASS - Zero dark-on-dark failures, all text readable, data colors identical to light render (only chrome adapted)
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is bold and large, axis labels clearly readable at 20pt, tick
-          marks at 16pt, R² and equation annotations easily visible
+        comment: All text (title 24pt, labels 20pt, ticks 16pt, annotations) theme-adapted
+          and readable in both light/dark at full 4800×2700px resolution
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, equation text and R² well positioned
+        comment: Title, annotations, axis labels, ticks positioned without collision;
+          R² and equation in top-right outside data area
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points sized appropriately (size=5) for 80 data points, alpha=0.65
-          shows density well
+        comment: 80 scatter points (alpha 0.65) clearly distinguishable; orange line
+          (size 2.5) stands out; confidence band (alpha 0.15) visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue points and yellow curve provide excellent contrast, colorblind-safe
-          combination
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, good margins, balanced layout
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes have descriptive labels with units: "Advertising Spend
-          (thousands $)" and "Sales Revenue (thousands $)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito positions 1 & 2 ensure colorblind safety; excellent contrast
+          on light/dark
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard landscape 1600×900 (→4800×2700px); excellent proportions,
+          generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: The confidence band border (dark gray line at edges of ribbon) is
-          visually distracting; appears as additional curves rather than subtle shading
-          boundary. No legend needed for this plot type
+        passed: true
+        comment: Descriptive labels with units; title format exact (spec-id · library
+          · anyplot.ai)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green); line #D55E00 (Okabe-Ito 2);
+          backgrounds #FAF8F1/#1A1A17; both renders theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional theme-adaptive tokens; intentional color/alpha choices;
+          polished execution beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal() base with refined grid (10% opacity, size 0.3); good
+          whitespace; could improve by removing top/right spines (L-shaped frame)
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear hierarchy: green points → orange trend → confidence band.
+          R² and equation support interpretation. Focal point (curved relationship)
+          unambiguous'
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct scatter plot with polynomial regression curve
+        comment: Correct scatter plot with quadratic polynomial regression; visually
+          distinct line (orange solid) from points (green)
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=independent variable, Y=dependent variable correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: R² displayed, polynomial curve distinct
-          from points, confidence band included, polynomial equation shown, appropriate
-          alpha on points'
-      - id: SC-04
-        name: Data Range
+        comment: R² displayed; equation shown; confidence band with semi-transparent
+          shading; point transparency (alpha 0.65) as spec
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible within axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 0
-        max: 2
-        passed: false
-        comment: N/A for this plot (no legend needed/present)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
+        comment: 'X/Y axes map variables correctly; all data visible; axes span full
+          range (x: 4–52, y: 30–115)'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Uses correct format "scatter-regression-polynomial · letsplot · pyplots.ai"
+        comment: Title format exact; legend correctly omitted (single series)
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear diminishing returns pattern - initial steep growth flattening
-          at higher x values, scatter demonstrates variance around the curve
+        comment: 'Demonstrates all key plot aspects: scatter, polynomial curve, confidence
+          band, R², equation'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Economics example of advertising spend vs sales revenue is a real,
-          comprehensible scenario that naturally exhibits diminishing returns
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 'Values are realistic: advertising $5-50K, sales $40-105K, appropriate
-          business context'
+        comment: Economics example (advertising → revenue with diminishing returns)
+          plausible, neutral, and realistic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Marketing budget scale reasonable; revenue proportional; 80 points
+          adequate for curve; no overfitting
     code_quality:
       score: 10
       max: 10
@@ -172,41 +190,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save pattern, no functions/classes
+        comment: No functions/classes; straightforward linear flow (seed → data →
+          polyfit → plot)
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, lets_plot used - all necessary
+        comment: os, numpy, pandas, lets_plot all used; no unused imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: No fake UI; polyfit/poly1d idiomatic; theme handling elegant with
+          environment variable pattern
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png (and plot.html)
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API; scale=3
+          for 4800×2700px
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Uses lets-plot''s ggplot2-style grammar effectively: geom_ribbon
-          for confidence band, geom_point, geom_line, geom_text for annotations, theme_minimal
-          with customization, proper ggsize and ggsave with scale=3'
+        comment: ggplot() + geom_*() composition; proper aes(); geom_ribbon for confidence
+          band; geom_text for annotations; theme_minimal() + theme(); ggsize() + ggsave()
+          with scale—all canonical patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses geom_ribbon for layer-composition beyond basic scatter+line;
+          HTML export leveraged; could explore interactive callbacks/hover tooltips
+          for higher utilization of letsplot's distinctive capabilities
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - grid-styling

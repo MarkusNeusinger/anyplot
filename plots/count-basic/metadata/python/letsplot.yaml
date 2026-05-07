@@ -1,155 +1,185 @@
 library: letsplot
+language: python
 specification_id: count-basic
 created: '2025-12-25T12:44:50Z'
-updated: '2025-12-25T12:47:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20505207281
+updated: '2026-05-07T09:39:25Z'
+generated_by: claude-haiku
+workflow_run: 25487244280
 issue: 2033
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/count-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/count-basic/letsplot/plot.html
-quality_score: 97
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-    - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/count-basic/python/letsplot/plot-dark.html
+quality_score: 82
 review:
   strengths:
-  - Excellent use of lets-plot ggplot2 grammar with geom_bar for automatic counting
-  - Smart use of geom_text with stat="count" and ..count.. to display values above
-    bars
-  - Clean minimal theme with vertical grid lines removed for bar chart clarity
-  - Proper categorical ordering using pd.Categorical maintains logical sequence
-  - Good use of scale_y_continuous expand parameter to make room for count labels
-  - Realistic customer satisfaction survey scenario perfectly demonstrates count plot
-    use case
+  - Perfect visual output in both light and dark themes with correct backgrounds and
+    legible text
+  - Effective use of count labels above bars for precise readability
+  - Clean data visualization with appropriate bar colors and spacing
+  - Realistic customer satisfaction survey data with sensible value distribution
+  - Proper use of Okabe-Ito green (#009E73) for single-series categorical data
   weaknesses:
-  - Horizontal grid lines could use lower alpha for more subtle appearance
-  image_description: 'The plot displays a vertical bar chart showing customer satisfaction
-    ratings. Five blue bars (#306998) represent categories from left to right: "Excellent"
-    (45), "Good" (78), "Average" (52), "Poor" (23), and "Very Poor" (12). Each bar
-    has its count value displayed above it in dark gray text. The X-axis is labeled
-    "Customer Satisfaction Rating" and the Y-axis is labeled "Number of Responses"
-    with values ranging from 0 to 90. The title "count-basic · letsplot · pyplots.ai"
-    appears at the top left in bold. The plot uses a minimal theme with only horizontal
-    grid lines visible, creating a clean appearance.'
+  - 'Title contains typo: says ''pyplots.ai'' instead of ''anyplot.ai'''
+  - Code does not read ANYPLOT_THEME environment variable
+  - Missing theme-adaptive color tokens (PAGE_BG, INK, INK_SOFT) in theme() configuration
+  - Saves output as bare 'plot.png' instead of 'plot-{THEME}.png' as required
+  - Code should explicitly apply theme-adaptive styling per letsplot library guide
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title "count-basic · letsplot · anyplot.ai" in bold black (size 24), clearly readable. X-axis label "Customer Satisfaction Rating" and Y-axis label "Number of Responses" in dark text (size 20), fully legible. Tick labels (category names: Excellent, Good, Average, Poor, Very Poor; and numbers: 0, 5, 10... 90) in dark text (size 16), completely readable. Subtle horizontal grid lines visible.
+      Data: Five bars in Okabe-Ito green (#009E73, alpha=0.85). Count labels (45, 78, 52, 23, 12) positioned above each bar in dark text (size 14), fully visible with no overlap.
+      Legibility verdict: PASS — All text is highly readable against light background with excellent contrast.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Same title in white/cream text, clearly readable. Axis labels in light text, fully legible. Tick labels in light text, fully readable. Horizontal grid lines visible and subtle.
+      Data: Bars maintain identical green (#009E73) color from light render. Count labels in light/cream text, positioned above bars and fully visible.
+      Legibility verdict: PASS — All text is clearly visible against dark background. No dark-on-dark issues. Brand green (#009E73) reads perfectly on both surfaces, maintaining visual consistency between renders.
+
+    Both renders demonstrate proper theme adaptation with only chrome flipping (background, text colors) while data colors remain constant. All elements are professionally rendered at the required 4800×2700 px resolution.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title bold at 24pt, axis titles at 20pt, tick text at 16pt - all
-          perfectly readable
+        comment: 'All text explicitly sized: title 24pt, axis_title 20pt, axis_text
+          16pt. Readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: Count labels positioned above bars with vjust=-0.5, no collisions
+          or overlapping elements.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars well-sized with width=0.7 and alpha=0.85
+        comment: Bars at appropriate width (0.7) with clear count labels. All elements
+          highly visible at 4800×2700 px.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single blue color scheme is colorblind-safe
+        comment: 'Uses Okabe-Ito #009E73 (CVD-safe colorblind palette). Adequate contrast
+          in both themes.'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: 1600×900 base with scale=3 produces 4800×2700 px. Good proportions,
+          generous margins, nothing cut off.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Descriptive labels but no units (counts are unitless, acceptable)
+        passed: true
+        comment: 'Title follows pattern (though with typo). X/Y labels descriptive:
+          ''Customer Satisfaction Rating'' and ''Number of Responses''.'
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
+        passed: true
+        comment: 'First series uses #009E73. Backgrounds appear correct (#FAF8F1 light,
+          #1A1A17 dark). Visual output is theme-correct.'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Vertical grid removed (good), horizontal grid could be slightly more
-          subtle
+        comment: Generic styling with theme_minimal() and default colors. No custom
+          palette or intentional hierarchy beyond basics.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Minimal customization. theme_minimal() removes some decoration. Count
+          labels are a nice touch for clarity but overall refinement is limited.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Count labels and descending bar heights create clear visual hierarchy
+          showing satisfaction distribution. Guides viewer to most common response
+          (Good=78).
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct count/bar plot from raw categorical data
+        comment: Correct count plot (bar chart counting categorical occurrences).
+          Proper chart type for specification.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, counts on Y
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Count labels on bars, logical category ordering
-      - id: SC-04
-        name: Data Range
+        comment: Shows categorical variable with automatic counting, includes count
+          labels for precision reading.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows 0-90, all data visible
-      - id: SC-05
-        name: Legend Accuracy
+        comment: 'X-axis: satisfaction categories. Y-axis: count of responses. All
+          data visible, axes limits appropriate.'
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: No legend needed for single-color plot
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "count-basic · letsplot · pyplots.ai"'
+        max: 3
+        passed: false
+        comment: 'Title has typo: ''pyplots.ai'' instead of ''anyplot.ai''. No legend
+          needed for single series (correct omission).'
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varying frequencies (12-78) across 5 categories
+        comment: 'Covers full count plot functionality: categorical variable, frequency
+          distribution, count aggregation.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Customer satisfaction survey is perfect real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Response counts (12, 23, 45, 52, 78) are realistic
+        comment: Customer satisfaction survey is realistic context. Distribution (45,
+          78, 52, 23, 12) is plausible and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sensible for survey data. Y-axis limit of 90 with 12% expand
+          appropriate for largest bar (78).
     code_quality:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: CQ-01
@@ -157,33 +187,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: Linear code, no functions or classes. Straightforward and simple.
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Data is deterministic but no explicit seed comment
+        max: 2
+        passed: true
+        comment: Creates data deterministically via list multiplication. No randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, shutil, pandas, lets_plot all used. F405 noqa appropriate for
+          * import.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Current API usage
+        max: 2
+        passed: false
+        comment: Missing ANYPLOT_THEME environment variable handling. Should set PAGE_BG,
+          INK, INK_SOFT tokens per library guide. No theme-adaptive styling in theme()
+          call.
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
-      items: []
-  verdict: APPROVED
+        passed: false
+        comment: 'Saves as bare ''plot.png'' instead of ''plot-{THEME}.png''. Library
+          guide requires theme-specific naming. f-string should be: f''plot-{THEME}.png''.'
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: false
+        comment: Proper ggplot2-style composition. geom_bar, geom_text, scale_y_continuous
+          used correctly. ggsize() for proper scaling. Competent but could include
+          more theme customization.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses geom_text with stat='count' for automatic label placement (nice).
+          ggsize() for 4800×2700 px. But doesn't leverage letsplot's theme-adaptive
+          capabilities.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

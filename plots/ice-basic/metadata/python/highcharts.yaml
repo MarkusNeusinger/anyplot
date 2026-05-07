@@ -1,0 +1,242 @@
+library: highcharts
+language: python
+specification_id: ice-basic
+created: '2026-05-07T16:55:55Z'
+updated: '2026-05-07T17:13:30Z'
+generated_by: claude-sonnet
+workflow_run: 25509382285
+issue: 5238
+python_version: 3.13.13
+library_version: unknown
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/highcharts/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - 'Clean visual hierarchy: 20%-opacity ICE fan clearly distinguishes individual
+    effects from the bold PDP average'
+  - Full theme adaptation with all chrome tokens applied correctly to all chart elements
+    in both renders
+  - Realistic data generation using GradientBoostingRegressor with location×sqft interaction
+    producing genuinely interesting heterogeneous fan-out
+  - Complete spec compliance including subtitle for context, correct series count
+    and grid resolution
+  - 'Flawless code quality: seed set, flat structure, clean imports, both HTML and
+    PNG outputs'
+  weaknesses:
+  - LineSeries imported from highcharts_core.options.series.area instead of canonical
+    .line module — works but semantically incorrect
+  - No rug plot along the x-axis (optional per spec) — would improve visualization
+    by showing feature value density distribution
+  - Data storytelling could be elevated with a brief annotation identifying the location-driven
+    subgroup divergence visible in the top cluster of ICE lines
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — correct, not pure white.
+      Chrome: Title "ice-basic · highcharts · anyplot.ai" at 28px in dark ink — readable. Subtitle in INK_SOFT — readable. Y-axis label "Predicted Price ($k)" rotated left — readable. X-axis "Square Footage (sq ft)" at bottom — readable. Tick labels in INK_SOFT — readable. Legend top-right with elevated background and border — readable.
+      Data: 80 semi-transparent teal/green ICE curves (#009E73 at 20% opacity) fan out from lower-left to upper-right. Bold orange PDP line (#D55E00, lineWidth=6) sits prominently through the center of the fan. First series is brand green #009E73.
+      Legibility verdict: PASS — all text elements are dark on warm off-white, no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black consistent with #1A1A17 — correct, not pure black.
+      Chrome: All text shifts to light colors (#F0EFE8 / #B8B7B0). Title, subtitle, axis labels, tick labels, and legend text all clearly readable. No dark-on-dark failures observed. Legend uses elevated dark background (#242420).
+      Data: ICE curves maintain green-tinted transparency — slightly more visible against dark background which is acceptable. PDP orange line remains prominent. Data colors identical to light render — only chrome flipped.
+      Legibility verdict: PASS — all text elements are light on warm near-black, no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (28px title, 22px axis, 18px ticks). All
+          text readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: ICE line overlap is intentional. No text collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: ICE at 20% opacity creates clear density pattern. PDP at lineWidth=6
+          highly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito positions 1 and 2 used. Colorblind-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 4800x2700 landscape with generous margins. Good canvas use.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Square Footage (sq ft) and Predicted Price ($k) — descriptive with
+          units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 for ICE, #D55E00 PDP. Backgrounds #FAF8F1/#1A1A17.
+          Both renders correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Intentional hierarchy: transparent ICE vs bold PDP. Professional
+          subtitle. Theme-adaptive chrome throughout.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Axis lines removed (lineWidth: 0). Grid at 0.10 opacity. Legend
+          with border radius. No distracting spines.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Fan-out communicates heterogeneity. Bold PDP creates focal point.
+          Missing annotation to identify key subgroup.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct ICE plot with individual observation curves and PDP overlay.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Low-alpha ICE lines, bold PDP, 80 observations x 60 grid points,
+          GradientBoostingRegressor.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: sqft on X, predicted price on Y. All observations shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows spec-id format. Legend labels ICE Curves (n=80) and
+          Partial Dependence (PDP).
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Individual ICE curves, PDP overlay, heterogeneous effects visible.
+          No rug plot (optional).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: House price with GBR and sqft feature. Realistic and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'X: 800-3500 sq ft. Y: in $k. Location interaction creates realistic
+          heterogeneity.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used. LineSeries from .area rather than .line but functional.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean separation of data gen, model, ICE calculation, and plotting.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Chart(container=container), LineSeries, add_series(), to_js_literal()
+          — correct patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: z_index for layering, enable_mouse_tracking=False, show_in_legend
+          per series, inline JS embedding.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
