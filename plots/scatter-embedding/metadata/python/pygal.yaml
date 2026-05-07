@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: scatter-embedding
 created: '2026-05-07T10:21:54Z'
-updated: '2026-05-07T10:30:24Z'
+updated: '2026-05-07T10:43:30Z'
 generated_by: claude-sonnet
 workflow_run: 25489879971
 issue: 5236
@@ -12,113 +12,119 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-e
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/pygal/plot-dark.html
-quality_score: 76
+quality_score: 80
 review:
   strengths:
-  - 'Perfect code quality: seed, clean imports, KISS structure, sys.path workaround
-    documented'
-  - Correct Okabe-Ito colors with alpha blending — thoughtful for overlapping embedding
-    scatter
-  - Theme tokens applied correctly; both renders pass legibility checks
-  - Correct t-SNE parameters (perplexity=30, max_iter=500, random_state) for reproducible
-    embeddings
-  - Generates both PNG and interactive HTML outputs
+  - 'Perfect code quality: deterministic (seed=42), clean imports, KISS structure,
+    necessary sys.path workaround documented, correct output file naming'
+  - 'Proper Okabe-Ito implementation with 65% alpha for density — first series correctly
+    maps to brand green #009E73'
+  - 'Full theme-adaptive chrome: both renders pass legibility checks with correct
+    warm backgrounds (#FAF8F1 light / #1A1A17 dark)'
+  - No tick labels on embedding axes (correct per spec — embedding coordinates are
+    not interpretable)
+  - Realistic bioinformatics context with cell-type cluster labels (T-cells, B-cells,
+    NK cells, Monocytes, Dendritic cells, Neutrophils) and centroid markers for spatial
+    anchoring
+  - Saves both PNG and HTML, leveraging pygal as an interactive library
   weaknesses:
-  - Legend is isolated in the top-left corner, visually disconnected from the data
-    clusters
-  - No visual hierarchy or emphasis — raw data dump without storytelling; no centroid
-    annotations or size variation
-  - Generic abstract labels (Cluster A-F) miss domain-realistic context (e.g., cell
-    types, document topics)
-  - Canvas has significant empty space in bottom-left quadrant reducing layout quality
-  - 'LM-02 low: interactive HTML generated but pygal tooltip/interactive API not leveraged'
+  - No dedicated subtitle for algorithm parameters — perplexity buried in x-axis label
+    instead of a separate subtitle line (spec requires subtitle noting algorithm and
+    key parameter)
+  - dots_size=5 produces small markers for a 4800x2700 canvas; increase to 7-8 for
+    better point visibility at full resolution
+  - Legend font size (16px) is at the minimum for the canvas; consider 18-20px
+  - Interactive HTML output not utilized beyond basic render — pygal tooltip customization
+    or value_formatter would strengthen LM-02
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "scatter-embedding · pygal · anyplot.ai" at top center — readable dark text. Axis labels "t-SNE Dimension 1 (perplexity=30)" and "t-SNE Dimension 2" are visible. No tick labels (correctly suppressed). Legend in top-left corner with small but readable entries.
-      Data: 6 distinct clusters visible. Cluster A (teal #009E73, bottom-right), Cluster B (orange #D55E00, center), Cluster C (blue #0072B2, left), Cluster D (reddish-purple #CC79A7, top-center), Cluster E (yellow-orange #E69F00, top-right), Cluster F (sky blue #56B4E9, bottom-center). All at 65% alpha.
-      Legibility verdict: PASS (minor concern: legend text is small relative to canvas size)
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "scatter-embedding · pygal · anyplot.ai" in dark text at top — readable. X-axis label "t-SNE Dimension 1 (perplexity=30)" and y-axis "t-SNE Dimension 2" clearly visible. No tick labels (intentional, per spec for embedding axes). Legend with 7 entries (T-cells, B-cells, NK cells, Monocytes, Dendritic cells, Neutrophils, Cluster centroids) at bottom — small but readable.
+      Data: Six well-separated clusters — teal-green (first series, #009E73), orange-brown (#D55E00), blue (#0072B2), pink/reddish-purple (#CC79A7), yellow-gold (#E69F00), sky-blue (#56B4E9). All with 65% alpha. Black centroid markers at center of each cluster. Okabe-Ito order confirmed, first series is brand green.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface
-      Chrome: Title and axis labels rendered in light/white text — clearly readable against dark background. Legend entries appear white on dark — no dark-on-dark failures. Axis labels visible.
-      Data: Data colors are identical to light render — Okabe-Ito positions 1-6 unchanged. Only chrome (background, text) flipped. All clusters in same positions with same colors.
-      Legibility verdict: PASS — no dark-on-dark failures observed
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and axis labels rendered in light text against dark background — clearly readable. Legend text appears in light tone — readable. No dark-on-dark failures observed. Centroid markers appear as small light dots on dark background.
+      Data: All six cluster colors identical to light render — data colors unchanged (only chrome flips). Teal-green, orange-brown, blue, pink, yellow-gold, sky-blue clusters all clearly distinguishable against dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=28, label=22, major_label=18, legend=16).
-          Title and axis labels readable. Legend text small relative to canvas.
+        comment: Title (28px) and axis labels (22px) clearly readable in both themes.
+          Legend (16px) at spec minimum, small but within guidelines.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Clusters well-separated; no text collisions.
+        comment: Within-cluster overlap expected for 600-point embedding. No label
+          collisions.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 600 points at dots_size=5 with 0.65 alpha. Clusters clearly visible.
+        comment: All clusters visible with 65% alpha. Centroid markers add visual
+          anchors. dots_size=5 slightly small for 4800x2700 canvas.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe. Alpha-blended colors maintain contrast.
+        comment: Okabe-Ito palette is colorblind-safe.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Empty space in bottom-left quadrant. Legend isolated in top-left
-          corner away from data.
+        passed: true
+        comment: 4800x2700 landscape. Clusters use canvas. Some empty space in lower-left
+          quadrant, acceptable for t-SNE spatial distribution.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels including perplexity parameter. Title format correct.
+        comment: Title format correct. X-axis includes perplexity parameter.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series rgba(0,158,115,0.65)=#009E73. Okabe-Ito canonical order.
-          #FAF8F1/#1A1A17 backgrounds. Theme-adaptive chrome.'
+        comment: 'First series = teal-green #009E73 brand green. Okabe-Ito order followed.
+          Backgrounds #FAF8F1 light / #1A1A17 dark correct.'
     design_excellence:
-      score: 9
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Alpha-blended Okabe-Ito is a nice touch. Well-configured default
-          but no intentional visual hierarchy or emphasis.
+        passed: true
+        comment: 'Above default (4): intentional 65% alpha blending, correct Okabe-Ito
+          colors, clean composition, centroid markers. Limited by pygal API constraints.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Tick labels suppressed (appropriate). Theme tokens applied. Limited
-          pygal spine/grid control. Relatively clean.
+        passed: true
+        comment: 'Above default (2): no tick labels, clean warm backgrounds, minimal
+          chrome. Pygal limits spine removal and grid alpha control.'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Raw data display without visual hierarchy. No centroid annotations
-          or size variation to guide the viewer.
+        passed: true
+        comment: 'Above default (2): centroid markers provide spatial anchors, cell-type
+          labels create bioinformatics narrative, perplexity in axis label adds context.'
     spec_compliance:
       score: 14
       max: 15
@@ -128,29 +134,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: pygal.XY() scatter is correct for embedding visualization.
+        comment: pygal.XY() with stroke=False is correct scatter type.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
-        passed: false
-        comment: Colors by label, legend, transparency, no tick labels all present.
-          Subtitle with algorithm/parameter is in x-axis title rather than a dedicated
-          subtitle.
+        passed: true
+        comment: 'Colorblind-safe colors, legend, transparency, no tick labels, centroid
+          annotations all present. Missing: dedicated subtitle for algorithm (perplexity
+          in x-axis label is a workaround; pygal has no native subtitle field).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: t-SNE Dim1->X, Dim2->Y, label->color. All 600 points visible.
+        comment: x/y correctly map to t-SNE dimensions. All 600 points rendered.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels Cluster A-F match series.
+        comment: Title format matches spec. Legend maps all 6 clusters plus centroid
+          marker.
     data_quality:
-      score: 12
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -158,21 +165,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 6 separated clusters demonstrate embedding visualization. Could show
-          more variation in cluster density/size.
+        comment: Cluster coloring, transparency, centroid annotations, multiple groups,
+          real t-SNE reduction (15D to 2D).
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Plausible t-SNE scenario but generic Cluster A-F labels. Should use
-          domain-specific names.
+        passed: true
+        comment: Cell-type labels (T-cells, B-cells, NK cells, Monocytes, Dendritic
+          cells, Neutrophils) provide authentic single-cell RNA-seq context. Synthetic
+          blobs are reasonable proxy.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 600 points, 6 clusters, 15 features, perplexity=30. Appropriate parameters.
+        comment: 600 samples, 15 features, 6 clusters, perplexity=30 — all within
+          spec range (500-5000 points).
     code_quality:
       score: 10
       max: 10
@@ -182,32 +191,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports -> tokens -> data -> plot -> save. No functions
-          or classes.'
+        comment: Linear script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42), random_state=42 in make_blobs and TSNE.
+        comment: np.random.seed(42), make_blobs(random_state=42), TSNE(random_state=42).
+          Fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. sys.path.pop(0) workaround documented and necessary.
+        comment: 'All imports used: os, sys, numpy, pygal, pygal.style.Style, sklearn.datasets.make_blobs,
+          sklearn.manifold.TSNE.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. sys.path workaround acceptable with comment.
+        comment: sys.path.pop(0) is correct and necessary workaround for filename
+          collision, with explanatory comment.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct for pygal as
+          interactive library.
     library_mastery:
       score: 6
       max: 10
@@ -217,15 +229,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: pygal.XY with Style object, stroke=False, proper theme token plumbing.
+        comment: pygal.XY() correct type, Style object carries theme tokens, stroke=False,
+          dots_size, series added via chart.add() in loop. All idiomatic.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Generates HTML (pygal's key distinction). But pygal interactive tooltip
-          API not leveraged. Generic usage.
-  verdict: REJECTED
+        comment: HTML export demonstrates pygal's interactive capability but tooltip
+          customization, value_formatter, or other interactive features not leveraged.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
@@ -235,6 +248,6 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   dataprep:
-  - tsne
+  - dimensionality-reduction
   styling:
   - alpha-blending
