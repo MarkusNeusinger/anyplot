@@ -1,0 +1,270 @@
+library: bokeh
+language: python
+specification_id: scatter-embedding
+created: '2026-05-07T10:23:41Z'
+updated: '2026-05-07T10:44:03Z'
+generated_by: claude-sonnet
+workflow_run: 25489879871
+issue: 5236
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/bokeh/plot-dark.html
+quality_score: 83
+review:
+  strengths:
+  - 'Clean Okabe-Ito palette in canonical order with #009E73 as first series (Machine
+    Learning)'
+  - Centroid annotations with cluster-colored borders are a thoughtful design touch
+    that aids storytelling
+  - 'Expert Bokeh usage: ColumnDataSource, Range1d tight fit, Label with styled background,
+    interactive click_policy=hide, hover tooltips'
+  - Tick labels correctly hidden — embedding coordinates are not interpretable, per
+    spec
+  - 'Both themes correct: #FAF8F1 light / #1A1A17 dark backgrounds, all chrome tokens
+    properly applied'
+  - 'Complete spec compliance: subtitle, axis labels, legend, centroid annotations,
+    alpha-blended markers'
+  - 'Clean reproducible code: np.random.seed(42) + TSNE random_state=42'
+  weaknesses:
+  - 'VQ-05: Bottom half of canvas is visually sparse — Computer Vision cluster sits
+    isolated with large empty space below and Machine Learning at top-right leaves
+    top margin large; tightening the y-range or redistributing data centers would
+    improve canvas utilization'
+  - 'DE-01: Title text font style is plain — a bolder or slightly larger title with
+    a divider or visual weight would elevate the aesthetic to publication level'
+  - 'DE-02: The axis lines (INK_SOFT) are visible but top/right spines are not removed
+    (only outline_line_color=None removes the frame box, not individual spines) —
+    removing p.xaxis.axis_line_alpha on top/right would refine the layout'
+  - Legend text at 20pt is on the small side relative to the 4800x2700 canvas — 24pt
+    would be more comfortable
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface, closely matching #FAF8F1 — not pure white.
+      Chrome: Title "NLP Document Clusters · scatter-embedding · bokeh · anyplot.ai" in dark ink at top; italic subtitle "t-SNE (perplexity=30)" directly below in lighter INK_SOFT tone. Axis labels "t-SNE 1" (x) and "t-SNE 2" (y) visible in dark text. Tick labels are intentionally hidden — correct for embedding axes. Legend box in upper-right with warm off-white #FFFDF6 background and INK_SOFT border.
+      Data: Six clusters well-separated across the canvas. Machine Learning (green #009E73) in upper-right; Data Engineering (vermillion #D55E00) in lower-left; Natural Language Processing (blue #0072B2) in upper-center; Computer Vision (pink #CC79A7) in lower-center; Distributed Systems (gold #E69F00) in center; Bioinformatics (sky blue #56B4E9) in upper-left. Alpha=0.40 with PAGE_BG edge color creates semi-transparent markers. Centroid labels show cluster names on ELEVATED_BG backgrounds with cluster-color borders.
+      Legibility verdict: PASS — all chrome text is readable on the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Near-black surface, closely matching #1A1A17 — not pure black.
+      Chrome: Title and subtitle render in light #F0EFE8 (INK in dark mode) — clearly readable against the dark surface. Axis labels are light-colored and legible. No dark-on-dark text failures observed. Legend box uses #242420 elevated background with INK_SOFT (#B8B7B0) border and text. Centroid labels use #F0EFE8 text on #242420 backgrounds — readable.
+      Data: All six cluster colors are identical to the light render — #009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9 — confirming only chrome flips between themes, data colors stay constant.
+      Legibility verdict: PASS — all text is readable on the near-black background. No dark-on-dark failures detected.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All text sizes explicitly set: title 28pt, axis labels 22pt, subtitle
+          24pt, centroid labels 18pt, legend 20pt. Both themes readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collision — centroid labels centered in each cluster, legend
+          in corner, tick labels hidden.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: size=22 with alpha=0.40 for 900 points is within the 20-50 / 0.3-0.5
+          guideline. Clusters clearly identifiable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe by design. Good luminance contrast
+          between clusters.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Range1d tight fitting with 12% padding is good. Slight deduction:
+          bottom area below Computer Vision cluster appears sparse, and top margin
+          above NLP cluster leaves visual gaps.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: t-SNE 1 / t-SNE 2 are appropriate descriptive labels for embedding
+          dimensions; no units needed.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct. Okabe-Ito canonical order. #FAF8F1
+          light / #1A1A17 dark backgrounds. All chrome tokens adapt correctly in both
+          renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: centroid annotations with cluster-colored borders,
+          italic subtitle, alpha-blended markers, styled legend. Clearly above library
+          defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Very subtle grid (alpha=0.08), no outline frame, hidden tick marks.
+          Axis lines still present but at INK_SOFT — appropriate. Not quite 'every
+          detail polished'.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Centroid labels immediately orient the viewer to each domain. Color
+          coding creates clear visual hierarchy. Hover tooltips add interactive storytelling.
+          Good but not exceptional.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter embedding visualization with t-SNE projection.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: per-cluster coloring, legend, centroid
+          annotations, subtitle with algorithm/parameter, hidden tick labels.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: t-SNE dimension 1 on X, dimension 2 on Y. Labels correctly mapped
+          to colors.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes spec-id (scatter-embedding), library (bokeh), and
+          anyplot.ai. Legend labels match cluster names.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Six clusters with varied sizes and densities demonstrate full embedding
+          scatter capabilities.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: NLP/ML document clustering is a real and neutral scientific scenario.
+          Domain labels (Machine Learning, NLP, Computer Vision, etc.) are professionally
+          relevant.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 900 points within the 500-5000 spec range. t-SNE perplexity=30 is
+          standard. make_blobs with 20 features and cluster_std=2.5 is plausible for
+          document embeddings.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear structure: tokens → data → figure → chrome → scatter loop
+          → centroid loop → legend → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) + TSNE random_state=42 ensure deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (os, sys, time, Path, numpy, bokeh models, selenium,
+          sklearn) are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean zip loop for multi-series scatter and centroid annotations.
+          No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via HTML export + Selenium
+          screenshot.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Bokeh patterns: ColumnDataSource per group, Range1d for explicit
+          axis bounds, Title via add_layout, Label with full styling, legend per scatter
+          call.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses Bokeh-specific features: click_policy=''hide'' on legend, hover
+          tooltips via tooltips parameter, HTML export as primary artifact, Label
+          with background_fill and border_line styling.'
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  - selenium
+  techniques:
+  - hover-tooltips
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - columndatasource
+  dataprep: []
+  styling:
+  - alpha-blending

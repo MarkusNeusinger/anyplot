@@ -1,0 +1,266 @@
+library: seaborn
+language: python
+specification_id: scatter-embedding
+created: '2026-05-07T10:24:04Z'
+updated: '2026-05-07T10:45:44Z'
+generated_by: claude-sonnet
+workflow_run: 25489880616
+issue: 5236
+python_version: 3.13.13
+library_version: 0.13.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-embedding/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Full INK/INK_SOFT token hierarchy applied consistently across all text elements
+    in both light and dark themes
+  - 'Correct Okabe-Ito palette in canonical order with #009E73 as the first series'
+  - Cluster centroid annotations with colored border boxes add both readability and
+    aesthetic polish
+  - 'Perfect spec compliance: no tick labels on embedding axes, algorithm subtitle
+    with parameters, legend mapping clusters to colors'
+  - Actual t-SNE via sklearn on 30-dimensional synthetic data — genuine dimensionality
+    reduction, not fake 2D layout
+  weaknesses:
+  - Centroid annotation text at fontsize=14 and subtitle/legend text at fontsize=15
+    are both below the 16pt minimum — raise annotation fontsize to 16, subtitle and
+    legend text to 16
+  - 'Marker size s=120 with alpha=0.65 exceeds the density guideline for 1500 points
+    (guideline: s=20-50, alpha=0.3-0.5) — reduce to s=60-80 and alpha=0.5 for better
+    density rendering'
+  - 'Code/image discrepancy: the current seaborn.py uses abstract cluster names (Alpha,
+    Beta, Gamma, Delta, Epsilon, Zeta) while the rendered images show biology-themed
+    cluster names (T-cell, B-cell, NK cell, etc.) from a prior run — the code should
+    use contextually meaningful names aligned with the scRNA-seq application context
+    described in the spec'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "scatter-embedding · seaborn · anyplot.ai" in dark ink, clearly readable. Subtitle "t-SNE (perplexity=30) · 1500 cells · 6 cell types · scRNA-seq simulation" in muted dark ink. Axes labeled "t-SNE 1" and "t-SNE 2" in dark ink. No tick numbers on either axis (correct per spec). Legend "Cell Type" with all 6 labels, light-background box.
+      Data: Six well-separated clusters in Okabe-Ito order — T-cell in #009E73 (brand green, first), B-cell in #D55E00 (vermillion), NK cell in #0072B2 (blue), Monocyte in #CC79A7 (pink), Dendritic cell in #E69F00 (orange), Plasma cell in #56B4E9 (sky blue). Centroid annotation boxes with colored borders over each cluster center. Points have background-matching edges for visual definition. L-shaped spines (top/right removed).
+      Legibility verdict: PASS — all text readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Near-black surface (#1A1A17) — correct dark theme, not pure black.
+      Chrome: Title and subtitle rendered in light ink (#F0EFE8 range), clearly readable. Axis labels in light ink. Legend "Cell Type" with dark elevated-background box (#242420) and light text. No dark-on-dark issues observed — all chrome elements successfully flip to light tokens.
+      Data: Cluster colors are identical to light render — T-cell #009E73, B-cell #D55E00, NK cell #0072B2, Monocyte #CC79A7, Dendritic cell #E69F00, Plasma cell #56B4E9. Only background, text, and legend box flip between themes. Centroid annotation boxes use elevated dark background (#242420) with colored borders, readable.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures.
+
+    Note: There is a discrepancy between the rendered images (showing biology-themed cluster names: T-cell, B-cell, NK cell, Monocyte, Dendritic cell, Plasma cell) and the current seaborn.py code (which defines cluster_names = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta"]). The images appear to be from a prior code version with richer biological context. The current code would produce different labels if re-executed.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title 24pt and axis labels 20pt explicitly set and correct. Centroid
+          annotation fontsize=14 and subtitle/legend text fontsize=15 are below the
+          16pt minimum guideline.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clusters well-separated by t-SNE; centroid labels inside clusters
+          with no text collisions; legend positioned in empty top-right space.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: s=120 with alpha=0.65 for 1500 points exceeds density guideline (s=20-50,
+          alpha=0.3-0.5). Visually acceptable due to t-SNE cluster separation but
+          not optimal.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe. No red-green as sole distinguishing
+          signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas well-utilized. Title block above axes, legend in top-right
+          corner near data. Balanced whitespace.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes labeled 't-SNE 1' and 't-SNE 2'. Title follows correct 'spec-id
+          · library · anyplot.ai' format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (T-cell/first cluster). Multi-series follows
+          Okabe-Ito canonical order. Backgrounds #FAF8F1 light / #1A1A17 dark. Data
+          colors identical across themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default 4: Okabe-Ito palette correctly applied, centroid annotation
+          boxes with per-cluster colored borders, consistent INK/INK_SOFT hierarchy.
+          Not at FiveThirtyEight/6+ level but clearly thoughtful.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-spines (top/right removed), no tick labels on embedding axes, PAGE_BG
+          marker edges for visual separation. Clearly above default 2.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Centroid labels create immediate focal points for each cluster. Algorithm
+          subtitle provides context. Color coding + centroids guide viewer directly
+          to cluster structure.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2D scatter embedding via t-SNE. Points colored by cluster
+          label.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorblind-safe cluster coloring, legend, centroid annotations, algorithm
+          subtitle, no tick labels on embedding axes, moderate alpha.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=tsne_1, y=tsne_2, hue=cluster. 1500 points within 500-5000 spec
+          range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''scatter-embedding · seaborn · anyplot.ai''. Legend maps
+          colors to cluster/cell-type labels.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all embedding features: cluster separation, color coding,
+          centroid identification, appropriate point density.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Images show excellent scRNA-seq biological context (T-cell, B-cell,
+          NK cell, Monocyte, Dendritic cell, Plasma cell) aligned with spec Applications.
+          Note: current code uses abstract names — see weaknesses.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1500 points in 30 dimensions, 6 clusters, perplexity=30 — all standard
+          and appropriate for t-SNE demonstration.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat imperative structure: theme tokens → data → plot → annotations
+          → styling → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42), make_blobs random_state=42, TSNE random_state=42.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os, matplotlib, numpy, pandas, seaborn, sklearn.datasets,
+          sklearn.manifold.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code. No fake UI elements. Centroid annotation loop
+          is clean.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches='tight', facecolor=PAGE_BG.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct axes-level sns.scatterplot (preferred over figure-level).
+          Uses hue+hue_order+palette pattern idiomatically. sns.set_theme for global
+          styling.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Seaborn's hue grouping with automatic legend generation and palette
+          mapping is distinctive. Post-legend customization via get_legend() leverages
+          seaborn's integration.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - explicit-figure
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
