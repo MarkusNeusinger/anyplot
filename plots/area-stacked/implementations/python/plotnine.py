@@ -1,14 +1,17 @@
-""" pyplots.ai
+"""anyplot.ai
 area-stacked: Stacked Area Chart
 Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-25
+Quality: 92 | Updated: 2025-01-14
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
     element_line,
+    element_rect,
     element_text,
     geom_area,
     ggplot,
@@ -19,6 +22,13 @@ from plotnine import (
     theme_minimal,
 )
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data: Website traffic sources over 24 months
 np.random.seed(42)
@@ -50,8 +60,24 @@ df = pd.DataFrame(
 source_order = ["Organic Search", "Direct", "Referral", "Social Media"]
 df["Source"] = pd.Categorical(df["Source"], categories=source_order, ordered=True)
 
-# Colors: Python Blue first, then complementary colorblind-safe colors
-colors = ["#306998", "#FFD43B", "#4DAF4A", "#E41A1C"]
+# Okabe-Ito palette
+colors = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
+# Theme
+anyplot_theme = theme(
+    figure_size=(16, 9),
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+    panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
+    plot_title=element_text(size=24, weight="bold", color=INK),
+    axis_title=element_text(size=20, color=INK),
+    axis_text=element_text(size=16, color=INK_SOFT),
+    axis_text_x=element_text(angle=45, hjust=1),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_text=element_text(size=16, color=INK_SOFT),
+    legend_title=element_text(size=18, color=INK),
+)
 
 # Create stacked area chart
 plot = (
@@ -59,21 +85,12 @@ plot = (
     + geom_area(alpha=0.85, position="stack")
     + scale_fill_manual(values=colors)
     + scale_x_date(date_labels="%b %Y", date_breaks="3 months")
-    + labs(title="area-stacked · plotnine · pyplots.ai", x="Month", y="Monthly Visitors", fill="Traffic Source")
-    + theme_minimal()
-    + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=24, weight="bold"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        axis_text_x=element_text(angle=45, hjust=1),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
-        legend_position="right",
-        panel_grid_major=element_line(color="#CCCCCC", size=0.5, alpha=0.3),
-        panel_grid_minor=element_line(color="#EEEEEE", size=0.25, alpha=0.2),
+    + labs(
+        title="area-stacked · plotnine · anyplot.ai", x="Month", y="Monthly Visitors (thousands)", fill="Traffic Source"
     )
+    + theme_minimal()
+    + anyplot_theme
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
