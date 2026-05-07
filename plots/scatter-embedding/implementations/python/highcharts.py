@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-embedding: t-SNE and UMAP Embedding Visualization
 Library: highcharts unknown | Python 3.13.13
-Quality: 89/100 | Created: 2026-05-07
+Quality: 85/100 | Created: 2026-05-07
 """
 
 import os
