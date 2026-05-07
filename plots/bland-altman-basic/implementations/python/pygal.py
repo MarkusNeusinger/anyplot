@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bland-altman-basic: Bland-Altman Agreement Plot
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-05-07
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-07
 """
 
 import os
