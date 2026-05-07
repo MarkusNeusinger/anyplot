@@ -1,11 +1,24 @@
-""" pyplots.ai
+"""anyplot.ai
 radar-multi: Multi-Series Radar Chart
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-25
+Library: plotly | Python 3.13
+Quality: pending | Created: 2026-05-07
 """
+
+import os
 
 import plotly.graph_objects as go
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data - Product comparison across multiple attributes
 categories = ["Performance", "Reliability", "Price Value", "Support", "Ease of Use", "Features"]
@@ -24,76 +37,82 @@ product_c_closed = product_c + [product_c[0]]
 # Create radar chart
 fig = go.Figure()
 
-# Product A - Python Blue
+# Product A - Okabe-Ito green
 fig.add_trace(
     go.Scatterpolar(
         r=product_a_closed,
         theta=categories_closed,
         fill="toself",
-        fillcolor="rgba(48, 105, 152, 0.25)",
-        line={"color": "#306998", "width": 3},
+        fillcolor="rgba(0, 158, 115, 0.25)",
+        line={"color": OKABE_ITO[0], "width": 3},
         name="Product A (Premium)",
         marker={"size": 10},
     )
 )
 
-# Product B - Python Yellow
+# Product B - Okabe-Ito vermillion
 fig.add_trace(
     go.Scatterpolar(
         r=product_b_closed,
         theta=categories_closed,
         fill="toself",
-        fillcolor="rgba(255, 212, 59, 0.25)",
-        line={"color": "#FFD43B", "width": 3},
+        fillcolor="rgba(213, 94, 0, 0.25)",
+        line={"color": OKABE_ITO[1], "width": 3},
         name="Product B (Budget)",
         marker={"size": 10},
     )
 )
 
-# Product C - Teal
+# Product C - Okabe-Ito blue
 fig.add_trace(
     go.Scatterpolar(
         r=product_c_closed,
         theta=categories_closed,
         fill="toself",
-        fillcolor="rgba(38, 166, 154, 0.25)",
-        line={"color": "#26A69A", "width": 3},
+        fillcolor="rgba(0, 114, 178, 0.25)",
+        line={"color": OKABE_ITO[2], "width": 3},
         name="Product C (Pro)",
         marker={"size": 10},
     )
 )
 
-# Layout
+# Layout with theme-adaptive styling
 fig.update_layout(
-    title={"text": "radar-multi · plotly · pyplots.ai", "font": {"size": 32}, "x": 0.5, "xanchor": "center"},
+    title={
+        "text": "radar-multi · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
     polar={
         "radialaxis": {
             "visible": True,
             "range": [0, 100],
-            "tickfont": {"size": 16},
+            "tickfont": {"size": 18, "color": INK_SOFT},
             "tickvals": [20, 40, 60, 80, 100],
-            "gridcolor": "rgba(0, 0, 0, 0.2)",
-            "linecolor": "rgba(0, 0, 0, 0.3)",
+            "gridcolor": GRID,
+            "linecolor": INK_SOFT,
         },
-        "angularaxis": {"tickfont": {"size": 20}, "linecolor": "rgba(0, 0, 0, 0.3)", "gridcolor": "rgba(0, 0, 0, 0.2)"},
-        "bgcolor": "white",
+        "angularaxis": {"tickfont": {"size": 20, "color": INK_SOFT}, "linecolor": INK_SOFT, "gridcolor": GRID},
+        "bgcolor": PAGE_BG,
     },
     legend={
-        "font": {"size": 18},
-        "x": 1.05,
+        "font": {"size": 18, "color": INK_SOFT},
+        "x": 1.02,
         "y": 0.5,
         "xanchor": "left",
         "yanchor": "middle",
-        "bgcolor": "rgba(255, 255, 255, 0.9)",
-        "bordercolor": "rgba(0, 0, 0, 0.2)",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
     template="plotly_white",
-    margin={"l": 100, "r": 200, "t": 100, "b": 100},
-    paper_bgcolor="white",
-    plot_bgcolor="white",
+    margin={"l": 100, "r": 120, "t": 100, "b": 100},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
 )
 
 # Save as PNG and HTML
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
