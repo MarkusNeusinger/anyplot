@@ -6,7 +6,7 @@ title: Stacked Area Chart
 
 # Specification tracking
 created: 2025-12-25T09:01:39Z
-updated: null
+updated: 2026-05-07T15:02:53Z
 issue: 2022
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - area
-    - stacked
   data_type:
     - numeric
     - timeseries
@@ -26,6 +25,6 @@ tags:
     - finance
   features:
     - stacked
-    - multi-series
+    - multi
     - cumulative
     - comparison
