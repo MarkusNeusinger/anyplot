@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 shap-waterfall: SHAP Waterfall Plot for Feature Attribution
-Library: plotly | Python 3.13
-Quality: pending | Created: 2026-05-07
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 90/100 | Created: 2026-05-07
 """
 
 import os
