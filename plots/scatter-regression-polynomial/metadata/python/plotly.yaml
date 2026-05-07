@@ -1,171 +1,169 @@
 library: plotly
+language: python
 specification_id: scatter-regression-polynomial
 created: '2025-12-25T17:13:20Z'
-updated: '2025-12-25T17:15:34Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20508355467
+updated: '2026-05-07T13:01:54Z'
+generated_by: claude-haiku
+workflow_run: 25497070686
 issue: 2028
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/plotly/plot.html
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  dataprep:
-  - regression
-  styling: []
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-polynomial/python/plotly/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent real-world example of diminishing returns in advertising economics
-  - R² value and polynomial equation prominently displayed with clean annotation styling
-  - Professional color scheme with good contrast between scatter points and regression
-    curve
-  - Proper use of plotly_white template for clean, publication-quality appearance
-  - Outputs both static PNG and interactive HTML for maximum utility
-  - All text elements are appropriately sized and readable
-  weaknesses:
-  - Marker size (14) is slightly small for 80 data points - could be increased to
-    18-20 for better visibility
-  - Does not use plotly native trendline functionality (px.scatter with trendline
-    parameter)
-  - No confidence band around the regression curve (optional per spec but would enhance
-    visualization)
-  image_description: The plot displays a scatter plot with 80 data points in blue
-    (#306998) with a polynomial regression curve (quadratic, degree 2) in yellow/gold
-    (#FFD43B). The title "Ad Spend vs Revenue · scatter-regression-polynomial · plotly
-    · pyplots.ai" is centered at the top. The x-axis is labeled "Ad Spend ($K)" ranging
-    from 0-50, and the y-axis is labeled "Revenue ($K)" ranging from approximately
-    10-100. The legend in the top-left corner shows "Data Points" and "Polynomial
-    Fit (degree 2)". An annotation box in the bottom-right corner displays "R² = 0.8817"
-    and the polynomial equation "y = -0.075x² + 4.75x + 10.8". The background is white
-    (plotly_white template) with subtle gray gridlines. The scatter points show a
-    clear diminishing returns pattern - revenue increases with ad spend but eventually
-    plateaus and decreases.
+  - Flawless theme implementation with both light and dark renders perfectly legible
+  - Excellent Okabe-Ito palette compliance with correct color tokens
+  - 'Well-balanced visual design with clear hierarchy: scatter points → regression
+    curve → annotation'
+  - Clean, reproducible code with seed-based randomness
+  - Comprehensive annotation with R², equation, and legend
+  - Perfect color adaptation between themes with identical data colors
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correctly rendered
+      Chrome: Title, axis labels (with units), tick labels all dark (#1A1A17), clearly readable on light surface
+      Data: Green scatter points (#009E73, alpha 0.65) with white edges, orange polynomial curve (#D55E00, 4px width)
+      Legend: Upper left, clearly identifies "Measured Data" and "Polynomial Fit (degree 2)"
+      Annotation: R² = 0.9633 and equation (y = 0.1215x² + 3.63x + 56.3) in lower right with semi-transparent box
+      Grid: Subtle, visible but not dominant
+      Legibility verdict: PASS — all text readable, strong contrast, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correctly rendered
+      Chrome: Title in light (#F0EFE8), axis labels and ticks in secondary light (#B8B7B0), all clearly readable on dark surface
+      Data: Green scatter points (#009E73, identical to light), orange polynomial curve (#D55E00, identical to light)
+      Legend: Dark background (#242420), light text, clearly readable
+      Annotation: Same R² and equation in dark-themed box
+      Grid: Subtle, visible but not dominant
+      Legibility verdict: PASS — no dark-on-dark failures; all text has appropriate contrast
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at size 28, axis labels at 22, ticks at 18 - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, legend and annotation are well-placed
+        comment: All text properly sized and theme-adapted; fully readable in both
+          renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend, annotation box, and all elements well-positioned
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers at size 14 with 0.65 opacity work well for 80 points, though
-          slightly smaller than optimal for the data density (should be closer to
-          100-200 per guidelines)
+        comment: Scatter points clearly visible with transparency; regression curve
+          prominent
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow provide excellent contrast, colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins with proper spacing
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Ad Spend ($K)" and "Revenue ($K)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette with strong contrast; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent proportions, generous margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid alpha is 0.3 which is acceptable, but legend at top-left could
-          overlap with data in denser scenarios
+        comment: Descriptive labels with units; proper title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito (#009E73, #D55E00), correct backgrounds, theme-adaptive
+          chrome'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional polish with intentional color hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, clean layout
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy; regression curve guides viewer; math context
+          provided
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct scatter plot with polynomial regression curve
+        comment: Correct scatter plot with polynomial regression
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X (independent) and Y (dependent) correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: R² value displayed, polynomial equation
-          shown, curve visually distinct (yellow vs blue), appropriate transparency
-          (0.65)'
-      - id: SC-04
-        name: Data Range
+        comment: R² displayed, curve distinct, transparency applied, units included
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data points, nothing clipped
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y axes correctly map; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels both traces
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Follows "{context} · {spec-id} · {library} · pyplots.ai" format
+        comment: Title format correct; legend clearly labeled
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows diminishing returns pattern clearly, demonstrates curve inflection
-          point. Minor: could benefit from confidence band as mentioned as optional
-          in spec'
+        comment: 100 points adequately demonstrate U-shaped relationship
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Ad spend vs revenue is a perfect real-world example of diminishing
-          returns economics
+        comment: Temperature vs consumption is plausible real-world scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic ($0-50K spend, $10-100K revenue), though the
-          rapid decline after ~32K might be slightly aggressive
+        comment: Temperature and consumption ranges are sensible
     code_quality:
       score: 10
       max: 10
@@ -175,41 +173,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → fitting → figure → save'
+        comment: No unnecessary functions; straightforward code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Uses np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects used
+        comment: Only necessary imports; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: All APIs are current
+        comment: Appropriate complexity; no fake interactivity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png (4800x2700 via 1600x900 scale 3) and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses plotly_white template and annotations well, produces interactive
-          HTML output, but doesn't leverage plotly's native trendline capabilities
-          (px.scatter with trendline parameter) or hover customization
+        comment: Excellent use of go.Figure(), add_trace(), update_layout()
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Interactive HTML and PNG with scaling; solid Plotly usage
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - edge-highlighting
