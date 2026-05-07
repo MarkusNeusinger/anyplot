@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-regression-polynomial: Scatter Plot with Polynomial Regression
-Library: highcharts | Python 3.13
-Quality: 93/100 | Updated: 2025-05-07
+Library: highcharts unknown | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-07
 """
 
 import os
