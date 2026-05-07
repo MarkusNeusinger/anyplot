@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: ice-basic
 created: '2026-05-07T16:53:20Z'
-updated: '2026-05-07T16:59:39Z'
+updated: '2026-05-07T17:11:05Z'
 generated_by: claude-sonnet
 workflow_run: 25509381729
 issue: 5238
@@ -12,43 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/altair/plot-dark.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - 'Correct Okabe-Ito palette: #009E73 for ICE lines and #D55E00 for PDP line follows
-    canonical Okabe-Ito order'
-  - All font sizes explicitly set at correct pixel values (28/22/18/16px) for the
-    large canvas
-  - Theme-adaptive chrome correctly implemented — all ink tokens flip between light
-    and dark renders
-  - 'Excellent data context: real GradientBoostingRegressor trained on synthetic house
-    data, ICE curves are genuinely computed from the model'
-  - Three-layer composition (ICE + PDP + rug) with thoughtful opacity (0.10 for 100
-    semi-transparent lines) and strokeWidth=5 for the PDP stands out clearly
-  - 'Idiomatic Altair: uses `detail` encoding for individual lines without coloring
-    them, and `alt.value()` for fixed rug-plot position'
+  - 'Perfect spec compliance: ICE lines with low alpha, bold PDP overlay, and rug
+    plot all implemented correctly'
+  - 'Correct Okabe-Ito 2-color scheme (#009E73 for ICE, #D55E00 for PDP) with shared
+    legend scale across layers'
+  - Full theme-adaptive chrome using correct token values (PAGE_BG, ELEVATED_BG, INK,
+    INK_SOFT) for both light and dark
+  - All font sizes explicitly set to spec-correct values (title=28px, axis=22px, ticks=18px,
+    legend=16px)
+  - 'Idiomatic Altair: detail channel for per-observation lines, alt.layer() composition,
+    shared color scale across chart layers'
+  - Realistic house price GBR model scenario with sensible feature ranges and plausible
+    price values
+  - Clean KISS code structure with deterministic seed and all imports used
   weaknesses:
-  - 'No legend: the plot has no label distinguishing the green ICE lines from the
-    orange PDP line — a first-time viewer cannot understand which curve is which'
-  - 'SC-04: Title format includes extra ''House Price Predictions · '' prefix before
-    ''ice-basic · altair · anyplot.ai'', though all required elements are present'
-  - 'DE-03: No visual hierarchy annotation — the PDP line being the key insight has
-    no label, callout, or annotation pointing to it'
-  - 'DE-02: configure_view stroke=INK_SOFT creates a visible rectangular border around
-    the chart area (all four sides), which reduces visual refinement — top/right borders
-    should be suppressed'
+  - PDP annotation placed at ~2400 sqft (middle of chart) where ICE density is highest
+    — text partially overlaps dense line region; placement near right edge would reduce
+    visual clutter
+  - Design excellence is solid but not exceptional — no additional storytelling elements
+    like highlighting outlier observations or showing heterogeneous subgroups
+  - Library mastery could be stronger — could use Altair selection/brushing or parameter-based
+    interactivity to highlight individual ICE curves on hover
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "House Price Predictions · ice-basic · altair · anyplot.ai" in dark ink, clearly readable. X-axis label "Square Footage (sq ft)" and Y-axis "Predicted Price ($K)" both dark and legible. Tick labels dark grey, all readable.
-      Data: 100 semi-transparent green (#009E73) ICE lines forming a dense band that fans out from ~$100–200K at 800 sq ft to ~$400–620K at 3500 sq ft. Bold orange (#D55E00) PDP line runs through the center of the band and stands out prominently. Small grey rug tick marks visible along the x-axis bottom edge showing sqft distribution.
-      Legibility verdict: PASS — all text is dark on light background, no contrast issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white
+      Chrome: Title "ice-basic · altair · anyplot.ai" centered at top, clearly readable in dark ink. Axis labels "Square Footage (sq ft)" and "Predicted Price ($K)" in dark INK_SOFT. Tick labels visible and readable at 18px. Legend in top-right corner with "ICE Curves" and "Partial Dependence" entries — small but legible.
+      Data: ICE curves rendered in #009E73 (brand green) at 10% opacity, creating a semi-transparent density band from ~$40K to ~$620K. Bold orange-vermillion (#D55E00) PDP line clearly overlaid. Rug plot visible along x-axis bottom. "Partial Dependence" annotation in orange placed at ~2400 sqft mid-chart, slightly overlapping the dense ICE region but still readable.
+      Legibility verdict: PASS — all text readable against the light background. Subtle grid at 10% opacity does not interfere.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title in light cream text, clearly readable against the dark surface. Axis labels and tick labels rendered in light grey (#B8B7B0 / #F0EFE8), all legible. No dark-on-dark failures observed.
-      Data: ICE lines render in the identical #009E73 green as the light render — confirmed theme-invariance. Orange PDP line identical to light render. Rug ticks visible in muted grey. The semi-transparent ICE band looks richer on the dark surface.
-      Legibility verdict: PASS — all text is light on dark background, theme adaptation is correct throughout.
+      Background: Near-black warm surface, consistent with #1A1A17 — not pure black
+      Chrome: Title and axis labels rendered in light INK (#F0EFE8), clearly readable against dark background. Tick labels in INK_SOFT (#B8B7B0) — visible and readable. Legend box uses ELEVATED_BG (#242420) with soft stroke. No dark-on-dark failures observed.
+      Data: ICE curve color identical to light render (#009E73 green band) — data colors unchanged. PDP line in same #D55E00 orange. The contrast of the teal density band and orange PDP line is effectively maintained on the dark surface.
+      Legibility verdict: PASS — all text readable against the dark background. Brand green #009E73 remains clearly visible on the dark surface.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -59,37 +58,36 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis 22px, ticks 18px,
-          legend 16px. Readable in both themes.'
+        comment: 'All font sizes explicitly set: title=28px, axis=22px, ticks=18px,
+          legend=16px. Readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No text overlaps. Tick labels well-spaced. Rug plot below x-axis
-          causes no interference.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: PDP line (strokeWidth=5) is highly visible. ICE lines at opacity=0.10
-          are individually faint but the aggregate band is readable. Slight deduction
-          for the faintest tails.
+        comment: Annotation placed mid-chart at ~2400 sqft where ICE density is highest,
+          creating slight visual clutter. Main content readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 10% opacity appropriate for 100 ICE lines, bold PDP line (strokeWidth=5)
+          clearly visible. Rug ticks visible at bottom.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 and #D55E00 are CVD-safe Okabe-Ito colors with strong contrast
-          between each other.'
+        comment: Okabe-Ito CVD-safe colors. ICE vs PDP distinguished by color + stroke
+          weight + opacity — not hue alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600x900 @ scale_factor=3.0 = 4800x2700px. Chart fills canvas well,
-          balanced margins.
+        comment: Plot fills canvas well (1600x900). Legend in top-right does not isolate.
+          Good margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -102,10 +100,10 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'ICE lines #009E73 (Okabe-Ito #1), PDP #D55E00 (Okabe-Ito #2). Backgrounds
-          #FAF8F1/#1A1A17 correct. Data colors identical across themes.'
+        comment: 'First series #009E73, second #D55E00 (Okabe-Ito order). Backgrounds
+          correct (#FAF8F1 / #1A1A17). Chrome correctly adapts to theme in both renders.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -113,27 +111,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above configured default: thoughtful multi-layer composition, appropriate
-          opacity for 100 lines, correct Okabe-Ito pairing. Not exceptional though
-          — no annotations, no legend, no visual callout for the PDP insight.'
+        comment: Thoughtful Okabe-Ito 2-color scheme, intentional semi-transparency
+          for density visualization. Above well-configured defaults but not FiveThirtyEight
+          level.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Grid subtle (opacity=0.10). Background correct. But configure_view
-          stroke=INK_SOFT creates a visible four-sided border frame — top and right
-          borders should be suppressed for cleaner look.
+        comment: Subtle grid (10% opacity), view border removed (strokeWidth=0), refined
+          INK_SOFT axis colors, legend with ELEVATED_BG fill. Good refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: ICE + PDP + rug creates visual hierarchy. Bold PDP stands out from
-          the green band. However, no legend labels the orange line, no annotation
-          highlights the spread insight — viewer must know ICE plots to read it.
+        comment: Visual hierarchy through bold+opaque PDP vs. transparent ICE. Rug
+          plot adds distribution context. Annotation labels PDP. Good storytelling
+          but no emphasis on specific subgroup behavior.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -141,54 +138,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ICE plot with individual per-observation lines. PDP overlay correct.
+        comment: Correct ICE plot with individual lines per observation.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent ICE lines, bold PDP overlay, rug plot — all three
-          spec features present. Optional color-coding by second feature not required.
+        comment: Low-alpha individual lines, bold PDP overlay, rug plot — all spec
+          notes implemented.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=sqft (feature value), Y=price_k (prediction), detail=obs_id (one
-          line per observation).
+        comment: sqft on x, price_k on y, detail=obs_id:N creates individual ICE lines
+          correctly.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title contains spec-id, library, anyplot.ai. No legend present —
-          ICE vs PDP lines unlabeled.
+        comment: Title 'ice-basic · altair · anyplot.ai' correct. Legend labels 'ICE
+          Curves' and 'Partial Dependence' are descriptive.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows ICE spread, PDP, and data distribution. Missing color-coding
-          by second feature (bedrooms) that would show interaction effects — the most
-          revealing ICE technique.
+        comment: 100 observations, 60 grid points, GBR model showing non-linear ICE
+          curves with heterogeneous spread.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: GradientBoostingRegressor on house price data — a canonical ML interpretability
-          use case. Neutral, non-controversial.
+        comment: House price prediction with GradientBoostingRegressor — realistic,
+          neutral, comprehensible scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price $60K–$620K, sqft 800–3500, age 0–50 years — all realistic.
-          Model captures plausible non-linear sqft effect.
+        comment: 800-3500 sqft range and $40K-$620K predicted prices are plausible
+          for residential housing.
     code_quality:
       score: 10
       max: 10
@@ -198,34 +194,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: theme tokens → data → model → ICE computation →
-          chart layers → save.'
+        comment: 'Linear: imports → data → model → ICE computation → plot → save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) and GradientBoostingRegressor(random_state=42).
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. sys/os for path handling, sklearn for the model.
+        comment: All imports (os, sys, altair, numpy, pandas, sklearn) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. sys.path manipulation is legitimate pattern. ICE
-          loop is concise.
+        comment: Clean Pythonic code, appropriate complexity for the visualization.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct for interactive
-          altair.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair 6.1.0
+          API.
     library_mastery:
       score: 7
       max: 10
@@ -235,29 +230,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses alt.layer(), detail encoding for multi-line, alt.value() for
-          rug position, configure_* for theme. Idiomatic but not using selection or
-          advanced encoding.
+        comment: 'Good Altair usage: detail channel for grouped lines, alt.layer()
+          composition, shared color scale across layers, configure_* for global theme.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: detail encoding (Altair-specific for individual lines without coloring),
-          alt.value() for fixed pixel position, HTML interactive export. Above default
-          1.
-  verdict: REJECTED
+        comment: detail:N channel for per-observation line grouping (Vega-Lite grammar
+          feature), mark_tick for rug plot, shared color scale with legend across
+          layered charts.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - layer-composition
+  - annotations
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   - groupby-aggregation
-  dataprep:
-  - regression
+  dataprep: []
   styling:
   - alpha-blending
