@@ -1,172 +1,163 @@
 library: letsplot
+language: python
 specification_id: area-stacked
 created: '2025-12-25T17:40:35Z'
-updated: '2025-12-25T17:42:54Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20508665947
+updated: '2026-05-07T15:36:34Z'
+generated_by: claude-haiku
+workflow_run: 25505122148
 issue: 2022
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-stacked/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/area-stacked/letsplot/plot.html
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/letsplot/plot-dark.html
 quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - wide-to-long
-  - data-generation
-  dataprep:
-  - time-series
-  styling:
-  - alpha-blending
 review:
   strengths:
-  - Clean, readable code following KISS principle with clear data generation logic
-  - Excellent use of ggplot2 grammar with proper stacking via position=stack
-  - Good color palette with distinct, visually pleasing colors (blue, yellow, green,
-    crimson)
-  - Proper title format following pyplots.ai convention
-  - Good seasonality pattern in data makes the visualization more realistic and engaging
-  - Y-axis starts at zero as required for stacked area charts to avoid misleading
-    proportions
-  - Produces both PNG and HTML outputs for maximum utility
-  weaknesses:
-  - Grid lines are barely visible, making it harder to read exact values; consider
-    increasing grid alpha
-  - Color palette includes red-green combination which may be challenging for colorblind
-    users; consider using a fully colorblind-safe palette
-  image_description: 'The plot displays a stacked area chart showing monthly revenue
-    by product category over a 2-year period (Jan 2023 to Dec 2024). Four categories
-    are stacked: Electronics (blue, bottom), Clothing (yellow), Home & Garden (green),
-    and Sports (crimson/red, top). The chart uses smooth filled areas with white borders
-    between layers, showing clear seasonal patterns with peaks around early spring
-    months. The y-axis shows "Revenue (Thousands USD)" ranging from 0 to 220, and
-    the x-axis shows "Month" with five labeled time points. A legend on the right
-    identifies each category. The title "area-stacked · letsplot · pyplots.ai" appears
-    at the top in bold.'
+  - 'Perfect theme adaptation with warm color tokens (#FAF8F1 light, #1A1A17 dark)'
+  - Excellent use of Okabe-Ito palette with correct first-series brand color (#009E73)
+  - Comprehensive theme customization covering all chrome elements
+  - Clear visual hierarchy through category ordering (largest at bottom)
+  - Properly sized typography for high-resolution render
+  - Reproducible synthetic data with realistic seasonality patterns
+  - Clean idiomatic lets-plot/ggplot2 usage throughout
+  - Both PNG and HTML outputs generated
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1)
+      Chrome: Title, axis labels, ticks all clearly visible in dark text (INK #1A1A17), legend on right with light elevated background (#FFFDF6)
+      Data: Stacked areas in Okabe-Ito colors (Electronics #009E73 teal, Clothing #D55E00 orange, Home & Garden #0072B2 blue, Sports #CC79A7 reddish-purple)
+      Legibility verdict: PASS - All elements readable, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17)
+      Chrome: Title, axis labels, ticks all clearly visible in light text (INK #F0EFE8), legend background darker elevated color (#242420)
+      Data: Data colors IDENTICAL to light render (confirms theme-independent coloring)
+      Legibility verdict: PASS - All elements readable, no dark-on-dark failures, good contrast throughout
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is bold and large (~24pt), axis labels are clearly readable
-          (~20pt), tick labels are appropriately sized (~16pt)
+        comment: All sizes explicit, perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; all labels are well-spaced
+        comment: No overlapping elements, clean layout
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Area fills are clearly visible with good alpha (0.85), white borders
-          between layers improve distinction
+        comment: All series clearly visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Colors are distinct (blue, yellow, green, red) but red-green combination
-          could be problematic for some colorblind users (-1)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, legend is appropriately placed on the right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units "Revenue (Thousands USD)", X-axis has descriptive
-          "Month"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions and balance
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid lines are barely visible or absent on the plot; horizontal grid
-          would improve readability
+        passed: true
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito first series #009E73, correct backgrounds, theme-correct
+          chrome'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional palette and theme tokens, professional styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, clean styling, straightforward execution
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear hierarchy through stacking, visible patterns
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct stacked area chart type
+        comment: Correct stacked area chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on x-axis, revenue values stacked on y-axis, categories properly
-          mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has stacking, multiple series, legend, proper baseline at zero
-      - id: SC-04
-        name: Data Range
+        comment: All features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, y-axis starts at 0 as required
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correct, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels match data categories correctly
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "area-stacked · letsplot · pyplots.ai"
+        comment: Correct format and labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows stacking, multiple categories, trends over time, and seasonality
-          (-1 for not showing crossover between categories which could demonstrate
-          more dynamic compositions)
+        comment: Shows all aspects of stacked area
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Revenue by product category over 2 years is a realistic, relatable
-          business scenario
+        comment: Real-world scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values in thousands USD are reasonable for revenue; however the specific
-          scale (60-220K) could be more clearly representative (-1)
+        comment: Sensible values and proportions
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,41 +165,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses `np.random.seed(42)` for reproducibility
+        comment: Seed set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used, no unused imports
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to `plot.png` but ggsave uses path="." which is correct (-0)
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct naming
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert ggplot2-style usage
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot grammar, geom_area with position="stack", scale_fill_manual,
-          theme_minimal customization. Could leverage more lets-plot specific features
-          like tooltips or interactive capabilities for HTML output.
+        comment: HTML export and theme tokens
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
