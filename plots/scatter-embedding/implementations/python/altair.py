@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-embedding: t-SNE and UMAP Embedding Visualization
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 88/100 | Created: 2026-05-07
@@ -25,28 +25,38 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
-# Data
+# Single-cell RNA-seq scenario with domain-specific cell type labels
+CELL_TYPES = ["T cells", "B cells", "NK cells", "Monocytes", "Dendritic cells", "Macrophages", "Plasma cells"]
+
+# Data — varying cluster_std for realistic compactness differences across cell types
 np.random.seed(42)
 n_clusters = 7
-X_high, y_labels = make_blobs(n_samples=700, n_features=20, centers=n_clusters, cluster_std=1.8, random_state=42)
+cluster_stds = [1.2, 2.0, 1.5, 1.8, 1.0, 2.2, 1.6]
+X_high, y_labels = make_blobs(
+    n_samples=700, n_features=20, centers=n_clusters, cluster_std=cluster_stds, random_state=42
+)
 X_2d = TSNE(n_components=2, perplexity=30, random_state=42).fit_transform(X_high)
 
-cluster_names = [f"Cluster {i + 1}" for i in range(n_clusters)]
-df = pd.DataFrame({"tsne_1": X_2d[:, 0], "tsne_2": X_2d[:, 1], "cluster": [cluster_names[idx] for idx in y_labels]})
+df = pd.DataFrame({"tsne_1": X_2d[:, 0], "tsne_2": X_2d[:, 1], "cluster": [CELL_TYPES[idx] for idx in y_labels]})
 
-centroids = df.groupby("cluster")[["tsne_1", "tsne_2"]].mean().sort_index().reset_index()
+centroids = df.groupby("cluster")[["tsne_1", "tsne_2"]].mean()
+centroids = centroids.loc[CELL_TYPES].reset_index()
 centroids["num"] = [str(i + 1) for i in range(n_clusters)]
+
+# Interactive selection bound to legend — clicking a cell type highlights its cluster
+selection = alt.selection_point(fields=["cluster"], bind="legend")
 
 # Plot
 scatter = (
     alt.Chart(df)
-    .mark_circle(size=100, opacity=0.70, strokeWidth=0.8)
+    .mark_circle(size=100, strokeWidth=0.8)
     .encode(
         x=alt.X("tsne_1:Q", axis=alt.Axis(labels=False, ticks=False, title="t-SNE Dimension 1")),
         y=alt.Y("tsne_2:Q", axis=alt.Axis(labels=False, ticks=False, title="t-SNE Dimension 2")),
         color=alt.Color(
-            "cluster:N", scale=alt.Scale(domain=cluster_names, range=OKABE_ITO), legend=alt.Legend(title="Cluster")
+            "cluster:N", scale=alt.Scale(domain=CELL_TYPES, range=OKABE_ITO), legend=alt.Legend(title="Cell Type")
         ),
+        opacity=alt.condition(selection, alt.value(0.70), alt.value(0.15)),
         stroke=alt.value(PAGE_BG),
         tooltip=[
             "cluster:N",
@@ -54,6 +64,7 @@ scatter = (
             alt.Tooltip("tsne_2:Q", title="t-SNE 2", format=".2f"),
         ],
     )
+    .add_params(selection)
 )
 
 centroid_marks = (
@@ -64,7 +75,7 @@ centroid_marks = (
 
 title_params = alt.TitleParams(
     text="scatter-embedding · altair · anyplot.ai",
-    subtitle="t-SNE (perplexity=30) · 20-dimensional synthetic data · 7 clusters, 700 points",
+    subtitle="t-SNE (perplexity=30) · 20-dimensional synthetic scRNA-seq · 7 cell types, 700 cells",
     fontSize=28,
     subtitleFontSize=18,
     color=INK,
@@ -76,7 +87,7 @@ chart = (
     alt.layer(scatter, centroid_marks)
     .properties(width=1600, height=900, title=title_params, background=PAGE_BG)
     .interactive()
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_view(fill=PAGE_BG, stroke="transparent")
     .configure_axis(
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
