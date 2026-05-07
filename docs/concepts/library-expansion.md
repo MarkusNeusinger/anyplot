@@ -131,6 +131,38 @@ JS and TS are not treated as separate "languages" in the registry. Reasoning:
 denominator). Exception: libraries that are only meaningfully shown in a
 typed/JSX form in the wild (e.g. **Recharts**) are written as TSX.
 
+### React and other UI frameworks count as JavaScript too
+
+React is a JavaScript library, not a language. JSX/TSX compiles to plain JS
+function calls. Same applies to Vue (`vue-chartjs`), Svelte (`layercake`),
+Angular (`ngx-charts`).
+
+The framework requirement is a **runtime constraint**, not a language. Model
+it on the library metadata, not on `language_id`:
+
+```python
+# Suggested addition to LIBRARIES_METADATA
+{
+    "id": "recharts",
+    "language_id": "javascript",
+    "framework": "react",   # one of: none, react, vue, svelte, angular
+    ...
+}
+```
+
+Benefits:
+- One language entry (JavaScript) covers Chart.js *and* Recharts.
+- Frontend can offer dual filters: "all JavaScript libs" and "React-compatible".
+- SEO indexes Recharts under both *"javascript chart library"* and
+  *"react chart library"* without duplicating the registry.
+- The same field generalises later to Vue/Svelte/Angular if those become
+  relevant — no schema change needed.
+
+Framework-agnostic libraries set `framework: "none"` (the default).
+Framework-only libraries get tagged accordingly. **Recharts** is the only
+Tier 3 entry currently affected; everything in Tier 1 / Tier 2 is
+framework-agnostic.
+
 Applied to every cross-language library in or near scope:
 
 | Library             | Native     | Most-used variant      | Canonical entry           | Action vs current state                          |
@@ -213,12 +245,9 @@ entries.
 1. **Highcharts migration.** Do we replace the existing Python entry or keep
    both during a deprecation window? (Recommend: keep both for one release,
    then remove the Python entry.)
-2. **React-specific libraries.** Recharts, Visx, Nivo only make sense if
-   anyplot intends to support framework-specific entries. If we keep entries
-   framework-agnostic, drop them and lean on Chart.js / ECharts.
-3. **Commercial licenses.** Highcharts requires a paid licence for commercial
+2. **Commercial licenses.** Highcharts requires a paid licence for commercial
    use. Confirm the project's stance on showcasing it before generating
    examples.
-4. **Refresh cadence for the 3× threshold.** Download numbers shift over time.
+3. **Refresh cadence for the 3× threshold.** Download numbers shift over time.
    Recommend re-checking the canonical-variant decisions once a year and on
    any major release of a contender.
