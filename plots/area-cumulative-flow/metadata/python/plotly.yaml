@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: area-cumulative-flow
 created: '2026-05-07T20:55:24Z'
-updated: '2026-05-07T21:01:15Z'
+updated: '2026-05-07T21:12:31Z'
 generated_by: claude-sonnet
 workflow_run: 25521305323
 issue: 5239
@@ -12,54 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-cumu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/plotly/plot-dark.html
-quality_score: 89
+quality_score: 87
 review:
   strengths:
-  - All font sizes explicitly set at correct pixel values (title 28px, axis labels
-    22px, ticks 18px, legend 16px) — fully readable in both themes
-  - 'Okabe-Ito palette applied correctly in canonical order with 80% alpha blending;
-    Done (brand green #009E73) correctly placed at the bottom of the stack'
-  - 'Theme tokens fully wired: PAGE_BG, ELEVATED_BG, INK, INK_SOFT, GRID all adapt
-    cleanly between light and dark — no dark-on-dark or light-on-light failures'
-  - 'Authentic CFD dynamics: monotonically non-decreasing cumulative counts, WIP computed
-    as stage differences, stages stacked in correct workflow order (Done→bottom, Backlog→top)'
-  - 'Idiomatic plotly usage: stackgroup=''one'', hovermode=''x unified'', rich hovertemplate
-    with date+WIP formatting, traceorder=''reversed'' for correct legend ordering,
-    HTML export'
-  - Realistic Kanban data (90-day software team, 5 stages) with believable intake
-    rate (~1.5 items/day) and authentic pipeline lag between stages
-  - Y-axis-only grid at 10% opacity — subtle and non-competing; x-axis grid off; bi-weekly
-    tick intervals intelligently chosen for 90-day range
+  - Perfect spec compliance — correct CFD implementation with workflow order (Backlog
+    top, Done bottom), monotonic data, and all required features
+  - All font sizes explicitly set per style guide; both themes render correctly with
+    theme-adaptive chrome
+  - Realistic, neutral Kanban board data with plausible proportions and lag between
+    stages
+  - Plotly-native stackgroup with rich hovertemplate and hovermode=x unified for excellent
+    interactivity
   weaknesses:
-  - 'DE-01 (4/8): Design reads as ''well-configured plotly default'' — consider removing
-    axis line borders (linecolor), using a slightly bolder title weight or subtitle,
-    and adding a hairline separator between legend entries to achieve a more distinctive
-    visual identity'
-  - 'DE-02 (4/6): Visual refinement is good but not exceptional — showline could be
-    set to False on both axes to fully remove frame lines, and the legend border could
-    be softened (borderwidth=0.5) for a more polished look'
-  - 'DE-03 (3/6): Data tells a natural CFD story but no visual hierarchy guides the
-    viewer — consider using a slightly higher alpha for the ''Done'' band (the key
-    delivery metric) to draw attention to throughput, or add a subtle annotation marking
-    a visible widening/narrowing event'
-  - 'LM-02 (3/5): Uses standard plotly patterns (stackgroup, hovertemplate, unified
-    hover) but misses opportunities for distinctively plotly features such as range
-    slider, custom modebar buttons, or a shapes/annotations layer for reference lines'
+  - 'DE-03 is below potential: bands grow uniformly without highlighting interesting
+    dynamics like widening bottleneck stages — the spec notes this is a key CFD insight'
+  - DE-01 limited by standard Plotly typography; no distinctive visual punch to elevate
+    beyond a well-styled default
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "area-cumulative-flow · plotly · anyplot.ai" in dark ink, left-aligned, clearly readable. X-axis label "Date" and Y-axis label "Cumulative Items" in dark ink, both readable. Tick labels (Jan 15 through Apr 08 bi-weekly on X; 0–140 on Y) in dark secondary ink (#4A4A44), all readable. Legend in top-left with elevated off-white background (#FFFDF6), dark border, 5 colored swatches (Backlog, Analysis, Development, Testing, Done) with dark text — all readable.
-      Data: Five stacked areas covering the full plot area. Bottom: teal/green (#009E73 at 80% alpha) = Done, growing to ~72 items. Above it: orange (#D55E00) = Testing, blue (#0072B2) = Development, pink (#CC79A7) = Analysis, orange-yellow (#E69F00) = Backlog on top. Bands widen naturally showing CFD dynamics with growing WIP in all stages.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background
+      Chrome: Title "area-cumulative-flow · plotly · anyplot.ai" in large dark ink, clearly readable. Y-axis label "Cumulative Items" and X-axis label "Date" in dark ink, readable. Tick labels (bi-weekly dates + y-axis counts) in dark secondary ink, readable.
+      Data: Five stacked area fills — Done (#009E73 green, bottom), Testing (#D55E00 orange), Development (#0072B2 blue), Analysis (#CC79A7 pink), Backlog (#E69F00 orange-yellow, top). All fills at 0.80 alpha. Subtle y-axis horizontal grid lines. Legend in upper-left with ELEVATED_BG frame.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title in light text (#F0EFE8), clearly readable against dark surface. Axis labels in light ink, readable. Tick labels in light secondary ink (#B8B7B0), readable. Legend with dark elevated background (#242420) and light text — no dark-on-dark issues. Grid lines subtle (10% opacity) on dark surface.
-      Data: Identical Okabe-Ito colors to light render — green Done (bottom), orange Testing, blue Development, pink Analysis, yellow-orange Backlog (top). Colors unchanged between themes as required.
-      Legibility verdict: PASS — no dark-on-dark failures; all chrome adapts correctly to dark surface
+      Chrome: Title in light ink (#F0EFE8), clearly readable. Axis labels and tick labels in light secondary ink (#B8B7B0), readable. No dark-on-dark text failures observed. Legend background switches to #242420 (elevated dark), text readable.
+      Data: Colors are identical to light render — Done green, Testing orange, Development blue, Analysis pink, Backlog yellow-orange. Alpha fills consistent.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -67,79 +50,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, ticks
-          18px, legend 16px. Fully readable in both themes.'
+        comment: 'All sizes explicitly set: title 28px, axis labels 22px, ticks 18px,
+          legend 16px'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Bi-weekly tick labels well-spaced, no overlap. Legend positioned
-          top-left without obscuring significant data area.
+        comment: Bi-weekly ticks well-spaced, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All five stacked bands clearly distinguishable at 80% alpha. Areas
-          fill canvas naturally from bottom-left to top-right.
+        comment: Stacked area fills clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe. 80% alpha maintains adequate luminance
-          contrast between adjacent bands.
+        comment: Okabe-Ito with 0.80 alpha, colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Data fills canvas well. Growing trend from bottom-left to top-right
-          uses the full plot area. Explicit margins set.
+        comment: Chart fills canvas well, diagonal CFD shape is inherent
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Date'', Y: ''Cumulative Items'' — both descriptive. No units
-          needed for counts/dates.'
+        comment: Cumulative Items and Date labels descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Done) = #009E73. All 5 series follow Okabe-Ito canonical
-          order. Backgrounds #FAF8F1 (light) / #1A1A17 (dark). Chrome fully theme-adaptive
-          in both renders.'
+        comment: 'First series #009E73, Okabe-Ito order, correct backgrounds both
+          themes'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: 'Well-configured plotly default: correct Okabe-Ito, alpha blending,
-          custom legend positioning. Lacks distinctive visual identity or design choices
-          beyond the guidelines.'
+        passed: true
+        comment: 'Above configured-default baseline: alpha fills, warm backgrounds,
+          ELEVATED_BG legend, left-aligned title'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-axis-only grid at 10% opacity, zeroline hidden, bi-weekly ticks,
-          explicit margins. Good refinement but axis frame lines still visible (linecolor
-          set rather than removed).
+        comment: Y-axis-only subtle grid, legend with border, generous margins
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Authentic CFD dynamics with natural widening/narrowing bands telling
-          a Kanban throughput story. Above default due to data quality but no explicit
-          visual emphasis or hierarchy guiding the viewer to key insights.
+        comment: Realistic scenario but bands grow uniformly — no visual emphasis
+          on bottleneck dynamics
     spec_compliance:
       score: 15
       max: 15
@@ -149,30 +122,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cumulative flow diagram using stacked areas via stackgroup='one'.
+        comment: Correct cumulative flow diagram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: workflow stage ordering (Done bottom, Backlog
-          top), WIP bands, date x-axis with intervals, legend, monotonically non-decreasing
-          data with np.maximum.accumulate.'
+        comment: 'All features present: stacking, monotonic data, date axis, legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=dates, Y=cumulative WIP per stage stacked correctly. All 5 stages
-          visible across the full 90-day range.
+        comment: Date x-axis, cumulative counts y-axis, workflow order correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'area-cumulative-flow · plotly · anyplot.ai' matches required
-          format. Legend shows Backlog, Analysis, Development, Testing, Done with
-          traceorder='reversed' for correct visual alignment.
+        comment: Title format correct, legend labels match stages
     data_quality:
       score: 15
       max: 15
@@ -182,24 +150,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all CFD features: widening bands (growing WIP), narrowing
-          bands (stages draining), pipeline lag between stages, 5 distinct workflow
-          stages with realistic relative sizes.'
+        comment: 'All CFD aspects shown: monotonic growth, 5 stages, varying band
+          widths, stage lag'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Kanban board for a software development team, 90-day period, stages
-          Backlog/Analysis/Development/Testing/Done — neutral, real-world, comprehensible.
+        comment: Software team Kanban board, 90 days, neutral business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: ~1.5 items/day intake rate, starting at 20 items, growing to ~145
-          over 90 days. Stage lags (3-7 days) and efficiency factors (0.85-0.94) are
-          realistic for a small software team.
+        comment: ~1.5 items/day, ~145 total, downstream stages lag correctly
     code_quality:
       score: 10
       max: 10
@@ -209,59 +173,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports → Data → Plot → Save structure. No functions or classes.
+        comment: 'Linear: imports, tokens, data, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random operations.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, plotly.graph_objects — all four used throughout.
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. zip with strict=False is intentional. pd.Series
-          wrapping for shift() is appropriate. No over-engineering.
+        comment: Clean and Pythonic
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct kaleido-based
-          write_image API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: stackgroup='one' is the canonical plotly pattern for stacked areas.
-          hovertemplate, update_layout, write_image, write_html all used idiomatically.
+        comment: go.Scatter with stackgroup, hovertemplate, hovermode=x unified
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: 'Uses several plotly-specific features: stackgroup, hovermode=''x
-          unified'', rich hovertemplate with date formatting, traceorder=''reversed'',
-          HTML export. Standard patterns, not creative use of unique plotly capabilities.'
-  verdict: REJECTED
+        passed: true
+        comment: stackgroup stacking, unified hover mode, HTML export
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
   - html-export
-  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
