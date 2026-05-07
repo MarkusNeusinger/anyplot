@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: scatter-embedding
 created: '2026-05-07T10:23:14Z'
-updated: '2026-05-07T10:29:59Z'
+updated: '2026-05-07T10:40:14Z'
 generated_by: claude-sonnet
 workflow_run: 25489879891
 issue: 5236
@@ -15,43 +15,48 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-e
 quality_score: 88
 review:
   strengths:
-  - 'Perfect theme-adaptive chrome: all chrome tokens (PAGE_BG, ELEVATED_BG, INK,
-    INK_SOFT) correctly threaded through configure_axis, configure_legend, configure_view,
-    and TitleParams'
-  - 'Correct Okabe-Ito palette with explicit domain mapping ensuring Cluster 1 = #009E73'
-  - Centroid annotations with bold cluster numbers add spatial navigation without
-    cluttering
-  - No tick labels on embedding axes is the right call — dimensionless coordinates
-    should not have tick values
-  - 'Fully reproducible: triple-seeded (numpy seed, make_blobs random_state, TSNE
-    random_state)'
-  - Subtitle 't-SNE (perplexity=30) · 20-dimensional synthetic data · 7 clusters,
-    700 points' is exactly what the spec requested
+  - Interactive legend-bound selection (alt.selection_point) allows clicking a cell
+    type to highlight its cluster — a distinctive Altair feature used idiomatically
+  - Real sklearn t-SNE dimensionality reduction on synthetic high-dimensional data
+    — not fake/random 2D blobs, actual non-linear embedding
+  - Bioinformatics single-cell RNA-seq context with specific domain-appropriate cell
+    type labels (T cells, B cells, NK cells, etc.)
+  - Centroid number annotations (1–7) positioned with dy offset provide orientation
+    without cluttering the scatter
+  - 'Perfect spec compliance: tick labels disabled, subtitle with algorithm and parameters,
+    Okabe-Ito palette in correct order, theme-adaptive chrome throughout'
+  - Interactive zoom/pan + tooltips with formatted t-SNE coordinates reinforce Altair's
+    interactive strengths
+  - Background stroke on circles (alt.value(PAGE_BG)) provides edge separation on
+    overlapping points without explicit edge color
   weaknesses:
-  - 'Full rectangular view border present: configure_view(stroke=INK_SOFT) draws a
-    box around the entire plot — change to strokeWidth=0 or stroke=''transparent''
-    to match the style guide''s L-shaped / no-frame preference'
-  - Generic 'Cluster 1–7' labels reduce DQ-02; replace with domain-specific cell-type
-    names (e.g., T cells, B cells, NK cells, Monocytes, Dendritic cells, Macrophages,
-    Plasma cells) for a real-world single-cell RNA-seq scenario
-  - LM-02 limited by generic scatter usage — add altair point selection (alt.selection_point
-    with condition encoding) to enable interactive cluster highlighting, a feature
-    unique to altair's grammar
+  - 'Marker size (100) and opacity (0.70) are above the density guidelines for 700
+    points (guidelines: size 20-50, alpha 0.3-0.5 for 300+ points) — within each cluster
+    points overlap noticeably; reduce size to ~50-60 and opacity to ~0.55 for better
+    within-cluster density handling'
+  - Both X and Y grid lines are shown; for scatter plots a Y-only grid (or no grid)
+    reduces visual noise and gives a cleaner feel
+  - Axis domain lines (spines) are still visible via domainColor=INK_SOFT — removing
+    them with domain=False would produce a cleaner look aligned with the style guide's
+    'L-shaped or no-spine' recommendation
+  - Centroid annotations use plain numbers (1–7) that require cross-referencing with
+    the legend to identify cluster names; labeling directly with abbreviated cell
+    type names (e.g., 'T', 'B', 'NK') would be more immediately readable
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "scatter-embedding · altair · anyplot.ai" in dark ink, clearly readable. Subtitle in softer dark ink, readable. Axis titles "t-SNE Dimension 1" / "t-SNE Dimension 2" in dark ink, readable. No tick labels (intentional for embeddings). Legend "Cluster" with Cluster 1–7 labels in dark text.
-      Data: 7 clusters in Okabe-Ito canonical order — Cluster 1 teal #009E73 (upper-right), Cluster 2 vermillion #D55E00 (left), Cluster 3 blue #0072B2 (upper-center), Cluster 4 pink #CC79A7 (lower-center-left), Cluster 5 gold #E69F00 (lower-right), Cluster 6 sky-blue #56B4E9 (center), Cluster 7 yellow #F0E442 (bottom). Bold centroid numbers (1–7) annotated above each cluster. Markers have subtle background-colored hairline stroke for definition.
-      Legibility verdict: PASS — all text readable, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "scatter-embedding · altair · anyplot.ai" in dark ink, clearly readable. Subtitle "t-SNE (perplexity=30) · 20-dimensional synthetic scRNA-seq · 7 cell types, 700 cells" in muted ink, readable. Axis labels "t-SNE Dimension 1" and "t-SNE Dimension 2" in dark ink, clearly readable. No tick labels shown (correct per spec). Subtle 10%-opacity grid on both axes. Legend box with elevated (#FFFDF6) fill, all seven cell type labels readable.
+      Data: Seven well-separated clusters colored in Okabe-Ito order — T cells (#009E73 teal-green, upper right), B cells (#D55E00 vermillion-orange, far left), NK cells (#0072B2 blue, top center), Monocytes (#CC79A7 pink, lower center-left), Dendritic cells (#E69F00 amber-gold, bottom right), Macrophages (#56B4E9 sky-blue, center), Plasma cells (#F0E442 yellow, bottom center). Numbered centroid annotations 1–7 in dark ink positioned above each cluster centroid. Circles have thin background-colored stroke for visual separation.
+      Legibility verdict: PASS — all chrome elements clearly readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title and subtitle rendered in light #F0EFE8 / #B8B7B0 — clearly readable. Axis titles in light ink. Legend uses elevated dark surface #242420 with light label text. Centroid numbers rendered in light text — readable against dark background. No dark-on-dark failures.
-      Data: All 7 cluster colors are identical to the light render (Okabe-Ito positions 1–7 unchanged). Brand green #009E73 (Cluster 1) is clearly visible on dark surface.
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures detected
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title and subtitle in light ink (#F0EFE8), clearly readable against dark background. Axis labels in light ink, readable. No tick labels. Grid lines faint (light ink at 10% opacity). Legend box with elevated (#242420) fill, labels in muted light ink (#B8B7B0), readable. No dark-on-dark failures detected.
+      Data: Same seven clusters with identical Okabe-Ito data colors as the light render — T cells green, B cells orange, NK cells blue, Monocytes pink, Dendritic cells amber, Macrophages sky-blue, Plasma cells yellow. Data colors correctly unchanged between themes. Centroid numbers rendered in light ink (#F0EFE8) against the dark background, readable.
+      Legibility verdict: PASS — all chrome elements correctly adapt to the dark surface; no dark-on-dark issues observed.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -60,51 +65,53 @@ review:
         max: 8
         passed: true
         comment: 'All font sizes explicitly set: title 28px, subtitle 18px, axis titles
-          22px, legend 16px. Readable in both themes.'
+          22px, legend 16-18px, centroid numbers 18px. Readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Centroid numbers well-positioned above centroids; clusters sufficiently
-          separated in 2D space.
+        comment: Good cluster separation. Centroid numbers offset with dy=-14. Minor
+          risk of number overlap with dense cluster points, but visually clean overall.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: size=100 with opacity=0.70 and background-colored stroke creates
-          well-defined markers at appropriate density for 700 points.
+        comment: '700 points: size=100, opacity=0.70. Density guidelines recommend
+          20-50/0.3-0.5 for 300+ points. Slightly over-sized/over-opaque but visually
+          acceptable given cluster separation.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; per-point stroke PAGE_BG hairline
-          adds definition.
+        comment: Okabe-Ito palette is CVD-safe. Background-colored stroke on circles
+          adds luminance separation.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Data fills ~65% of canvas with balanced whitespace; legend within
-          chart frame.
+        comment: 1600x900 canvas (16:9). Clusters spread across canvas naturally from
+          t-SNE; some empty center space typical of this plot type. Balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: t-SNE Dimension 1 / t-SNE Dimension 2 are descriptive; units not
-          applicable for dimensionless embedding coordinates.
+        comment: Descriptive axis labels (t-SNE Dimension 1/2). Correct title format.
+          Subtitle provides algorithm context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct; Okabe-Ito canonical order; correct
-          backgrounds #FAF8F1/#1A1A17; theme-adaptive chrome in both renders.'
+        comment: 'T cells first = #009E73 (brand green). All 7 Okabe-Ito positions
+          used in canonical order. Backgrounds #FAF8F1/#1A1A17 correct. Both renders
+          theme-correct.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -112,23 +119,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above-default design with theme-adaptive chrome, custom palette domain
-          mapping, centroid annotations, subtitle. Not publication-level but clearly
-          thoughtful.
+        comment: Interactive legend selection and professional bioinformatics context
+          elevate the design above generic defaults. Well-configured but not exceptional.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle 10% opacity grid and no tick labels are nice touches. Full
-          rectangular view border (stroke=INK_SOFT) remains — should be removed.
+        comment: Grid at 10% opacity, tick marks disabled. Axis domain lines still
+          visible. Both X and Y grids shown (Y-only would be cleaner). Some refinement
+          but spines not removed.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Centroid number annotations guide viewer to each cluster center.
-          Generic Cluster 1-7 labels communicate no domain meaning.
+        comment: Legend-bound selection for cluster focusing is effective storytelling.
+          Centroid labels orient the viewer. Subtitle provides algorithmic context.
+          Guides exploration by cell type.
     spec_compliance:
       score: 15
       max: 15
@@ -138,52 +146,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct t-SNE embedding scatter plot with dimensionality reduction.
+        comment: Correct scatter plot with real t-SNE embedding from sklearn.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorblind-safe coloring, legend, transparency, algorithm subtitle,
-          no tick labels, centroid annotations all present.
+        comment: Legend with cluster colors, centroid annotations, transparency (opacity
+          0.70), subtitle with algorithm and parameters, axes without tick labels
+          — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: tsne_1 -> X, tsne_2 -> Y; all 700 points and 7 clusters visible.
+        comment: X=tsne_1 (t-SNE Dimension 1), Y=tsne_2 (t-SNE Dimension 2), color=cluster.
+          Correct mapping.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: scatter-embedding · altair · anyplot.ai; Legend Cluster with
-          Cluster 1-7 labels.'
+        comment: 'Title: ''scatter-embedding · altair · anyplot.ai''. Legend titled
+          ''Cell Type'' with all 7 cell type labels.'
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: '7 well-separated clusters; varying densities and spatial arrangement.
-          Minor gap: uniform cluster_std reduces compactness variation.'
+        comment: 7 distinct clusters with varying compactness (cluster_stds differ).
+          Shows cluster separation, density variation, and real t-SNE structure.
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Cluster 1 through Cluster 7 are abstract generic labels. Domain-specific
-          names (e.g., cell types) would make it feel like a real ML workflow.
+        passed: true
+        comment: scRNA-seq single-cell data with domain-specific cell type labels
+          (T cells, B cells, NK cells, Monocytes, etc.). Highly realistic and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 700 points, 7 clusters, 20-dimensional inputs, perplexity=30 — all
-          standard and plausible for t-SNE.
+        comment: 700 cells, 7 types, 20-dimensional input, perplexity=30 — all standard
+          for scRNA-seq t-SNE visualization.
     code_quality:
       score: 10
       max: 10
@@ -193,37 +203,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports -> data -> TSNE -> plot layers -> title ->
-          chart assembly -> save.'
+        comment: 'Flat script: imports -> data -> plot -> save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42), make_blobs random_state=42, TSNE random_state=42
-          — fully deterministic.
+        comment: np.random.seed(42) and random_state=42 on both make_blobs and TSNE.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, altair, numpy, pandas, make_blobs, TSNE.'
+        comment: 'All imports used: os, sys, altair, numpy, pandas, sklearn.datasets,
+          sklearn.manifold.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean altair chaining; layer composition concise; centroid aggregation
-          via groupby().mean() idiomatic.
+        comment: Clean, Pythonic. No fake UI elements. Interactive features are genuine
+          Altair capabilities.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale_factor=3.0) and plot-{THEME}.html;
-          current altair API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. scale_factor=3.0 for
+          correct resolution.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -231,23 +240,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expertly uses altair''s grammar: encoding type suffixes, alt.Scale
-          domain/range, alt.TitleParams with subtitle, configure_* cascade, .interactive().'
+        comment: 'Expert declarative Altair: encoding type suffixes (:Q, :N), alt.condition,
+          alt.TitleParams, configure_* pattern, alt.layer composition — all idiomatic.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Layer composition and stroke encoding are altair-specific. No interactive
-          selection/condition encoding which would be more distinctively altair.
-  verdict: REJECTED
+        comment: Legend-bound interactive selection (alt.selection_point + bind='legend')
+          is a distinctive Altair feature. Combined with layer composition and zoom/pan.
+          Strong Altair-specific usage.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
   techniques:
-  - layer-composition
   - hover-tooltips
   - html-export
+  - layer-composition
   - annotations
   patterns:
   - data-generation
