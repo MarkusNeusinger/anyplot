@@ -1,12 +1,13 @@
-""" pyplots.ai
+""" anyplot.ai
 area-stacked: Stacked Area Chart
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-25
+Library: highcharts unknown | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-07
 """
 
+import os
+import subprocess
 import tempfile
 import time
-import urllib.request
 from pathlib import Path
 
 from highcharts_core.chart import Chart
@@ -15,6 +16,17 @@ from highcharts_core.options.series.area import AreaSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette: first series always #009E73
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Data: Monthly revenue by product category (in thousands $) over 2 years
 months = [
@@ -44,7 +56,7 @@ months = [
     "Dec 2024",
 ]
 
-# Revenue data by category (stacked from bottom to top: largest first)
+# Revenue data by category (ordered by average size)
 electronics = [
     120,
     135,
@@ -109,48 +121,57 @@ chart.options.chart = {
     "type": "area",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginBottom": 250,
     "spacingBottom": 100,
-    "style": {"fontFamily": "Arial, sans-serif"},
+    "style": {"fontFamily": "Arial, sans-serif", "color": INK},
 }
 
 # Title
 chart.options.title = {
-    "text": "area-stacked · highcharts · pyplots.ai",
-    "style": {"fontSize": "56px", "fontWeight": "bold"},
+    "text": "area-stacked · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "fontWeight": "bold", "color": INK},
 }
 
-chart.options.subtitle = {"text": "Monthly Revenue by Product Category (2023-2024)", "style": {"fontSize": "36px"}}
+chart.options.subtitle = {
+    "text": "Monthly Revenue by Product Category (2023-2024)",
+    "style": {"fontSize": "22px", "color": INK_SOFT},
+}
 
 # X-axis
 chart.options.x_axis = {
     "categories": months,
-    "title": {"text": "Month", "style": {"fontSize": "36px"}, "y": 50},
-    "labels": {"style": {"fontSize": "26px"}, "y": 35},
+    "title": {"text": "Month", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": GRID,
+    "gridLineWidth": 1,
     "tickmarkPlacement": "on",
 }
 
 # Y-axis
 chart.options.y_axis = {
-    "title": {"text": "Revenue ($ thousands)", "style": {"fontSize": "36px"}},
-    "labels": {"style": {"fontSize": "28px"}},
-    "gridLineColor": "#e0e0e0",
+    "title": {"text": "Revenue ($ thousands)", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": GRID,
     "gridLineWidth": 1,
 }
 
-# Legend - positioned at top right for better visibility
+# Legend with theme-adaptive background
 chart.options.legend = {
     "enabled": True,
     "align": "right",
     "verticalAlign": "top",
     "layout": "vertical",
-    "itemStyle": {"fontSize": "32px"},
+    "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
     "x": -50,
     "y": 100,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
     "borderWidth": 1,
-    "borderColor": "#cccccc",
     "padding": 15,
 }
 
@@ -158,7 +179,7 @@ chart.options.legend = {
 chart.options.plot_options = {
     "area": {
         "stacking": "normal",
-        "lineWidth": 2,
+        "lineWidth": 3,
         "marker": {"enabled": False, "radius": 6, "states": {"hover": {"enabled": True}}},
         "fillOpacity": 0.75,
     }
@@ -167,33 +188,38 @@ chart.options.plot_options = {
 # Tooltip
 chart.options.tooltip = {
     "shared": True,
-    "style": {"fontSize": "24px"},
-    "headerFormat": '<span style="font-size: 28px">{point.key}</span><br/>',
-    "pointFormat": '<span style="color:{series.color}">\u25cf</span> {series.name}: <b>${point.y}K</b><br/>',
+    "style": {"fontSize": "18px", "color": INK},
+    "headerFormat": '<span style="font-size: 20px; color: {0}">{point.key}</span><br/>',
+    "pointFormat": '<span style="color:{series.color}">●</span> {series.name}: <b>${point.y}K</b><br/>',
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
 }
 
-# Colorblind-safe palette (Python Blue, Yellow, Purple, Cyan)
-colors = ["#306998", "#FFD43B", "#9467BD", "#17BECF"]
+# Set Okabe-Ito colors
+chart.options.colors = OKABE_ITO
 
-# Add series (ordered from bottom to top by average size)
+# Add series (ordered by average size, largest first per spec)
 series_data = [
-    ("Electronics", electronics, colors[0]),
-    ("Software", software, colors[1]),
-    ("Services", services, colors[2]),
-    ("Accessories", accessories, colors[3]),
+    ("Electronics", electronics),
+    ("Software", software),
+    ("Services", services),
+    ("Accessories", accessories),
 ]
 
-for name, data, color in series_data:
+for name, data in series_data:
     series = AreaSeries()
     series.name = name
     series.data = data
-    series.color = color
     chart.add_series(series)
 
-# Download Highcharts JS for headless Chrome
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Get Highcharts JS from npm package
+# Install highcharts globally if needed
+subprocess.run(["npm", "install", "--location=global", "--silent", "highcharts"], capture_output=True)
+
+# Read highcharts.js from node_modules
+highcharts_path = "/usr/local/lib/node_modules/highcharts/highcharts.js"
+with open(highcharts_path, "r", encoding="utf-8") as f:
+    highcharts_js = f.read()
 
 # Generate HTML with inline scripts
 html_str = chart.to_js_literal()
@@ -203,11 +229,15 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0; padding:0;">
+<body style="margin:0; padding:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
+
+# Save HTML artifact for the site (both themes)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
 
 # Write temp HTML and take screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
@@ -224,11 +254,8 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
-
-# Save HTML for interactive version
-Path("plot.html").write_text(html_content, encoding="utf-8")
 
 # Clean up temp file
 Path(temp_path).unlink()
