@@ -6,7 +6,7 @@ title: Basic Count Plot
 
 # Specification tracking
 created: 2025-12-25T09:03:31Z
-updated: null
+updated: 2026-05-07T19:36:42Z
 issue: 2033
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - bar
-    - count
   data_type:
     - categorical
     - frequency
