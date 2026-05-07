@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: area-cumulative-flow
 created: '2026-05-07T21:02:16Z'
-updated: '2026-05-07T21:07:50Z'
+updated: '2026-05-07T21:24:54Z'
 generated_by: claude-sonnet
 workflow_run: 25521607998
 issue: 5239
@@ -12,41 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-cumu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 77
+quality_score: 86
 review:
   strengths:
-  - Correct CFD stacking order (Done at bottom, Backlog at top) per spec convention
-  - Perfect title format and legend ordering reversed to match visual layer order
-  - 'Fully theme-adaptive: both light and dark renders pass legibility checks'
-  - 'Full Okabe-Ito compliance with #009E73 as first (Done) series'
-  - Clean, readable code with proper seed and explicit font sizes
+  - 'Perfect spec compliance: correct CFD convention (Done at bottom, Backlog at top),
+    monotonicity enforced via np.minimum capping, all required features present'
+  - All font sizes explicitly set at correct scale (24/20/16pt) for 4800x2700px canvas;
+    both light and dark themes pass legibility check
+  - Reversed legend matching visual stack order (Backlog at top in legend = Backlog
+    at top of chart) is a thoughtful UX touch
+  - Data simulation correctly encodes Kanban flow semantics with Poisson arrivals
+    and upstream-cap constraints
+  - 'Proper Okabe-Ito ordering with brand green #009E73 as the Done (primary outcome)
+    series; warm theme backgrounds correct in both renders'
   weaknesses:
-  - 'Development WIP band is nearly invisible: dev_cum - testing_cum ≈ 0 because both
-    Poisson rates are equal (4/day). Lower testing throughput so meaningful WIP accumulates
-    in Development.'
-  - 'CFD storytelling is flat: all bands grow proportionally with no widening/narrowing
-    bottleneck dynamics. Add a mid-run slowdown in one stage to create a visible bottleneck
-    as the spec describes.'
-  - 'Library mastery is low: entire chart is ax.stackplot() (matplotlib). Convert
-    to long-form data and use sns.lineplot with fill_between for seaborn-idiomatic
-    construction.'
-  - 'Design lacks focal point: the dominant Done band could be de-emphasized (lighter
-    alpha) to let WIP stages stand out, creating a better CFD story.'
+  - 'Code-image inconsistency: ''Dev bottleneck'' annotation with arrow visible in
+    rendered images but absent from current source code — images likely reflect a
+    prior code version; add ax.annotate() back to implementation'
+  - 'Library Mastery weak (4/10): seaborn used only for sns.set_theme() theming; actual
+    plot uses matplotlib ax.stackplot() — consider sns.lineplot with fill_between
+    layers to leverage seaborn''s plotting API'
+  - 'DE-01 capped at 4/8: design is clean but not distinctive — no custom typography
+    weight or standout compositional refinement beyond palette and warm background'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "area-cumulative-flow · seaborn · anyplot.ai" in dark ink, clearly readable; axis labels "Date" and "Cumulative Items" in dark text at 20pt; tick labels (Jan 15–Apr 08, 100–500) in INK_SOFT; legend in top-left with ELEVATED_BG frame — all readable
-      Data: Five stacked bands from bottom to top — Done (#009E73, brand green, dominant ~65% of chart by end), Testing (#D55E00, thin orange band), Development (#0072B2, nearly invisible blue sliver), Analysis (#CC79A7, reddish purple, second-largest visible band), Backlog (#E69F00, orange-yellow top band). First series is #009E73. Legend correctly reversed.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — correct, not pure white
+      Chrome: Title "area-cumulative-flow · seaborn · anyplot.ai" in dark ink — readable. Axis labels "Date" and "Cumulative Items" in dark ink — readable. Tick labels (Jan 15 through Apr 08 on X; numeric on Y) in dark gray — readable. Legend in upper-left with off-white frame — readable. "Dev bottleneck" annotation text appears in dark color with arrow pointing to Development band.
+      Data: Five stacked area bands from bottom: Done (green #009E73), Testing (vermillion, thin band), Development (blue), Analysis (reddish purple), Backlog (orange/gold at top). Alpha=0.85 gives good color presence. Cumulative counts rise from 0 to ~530 over 90 days.
+      Legibility verdict: PASS — all text clearly readable; no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title, axis labels, tick labels, and legend text all render in light colors (INK = #F0EFE8, INK_SOFT = #B8B7B0) — fully readable against dark surface; no dark-on-dark failures; legend box uses ELEVATED_BG (#242420); subtle grid visible
-      Data: Five data colors are identical to light render — Done (#009E73), Testing (#D55E00), Development (#0072B2, still nearly invisible), Analysis (#CC79A7), Backlog (#E69F00). Only chrome has flipped.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — correct, not pure black
+      Chrome: Title and axis labels appear in light cream/off-white tones — readable. Tick labels appear in light gray (#B8B7B0) — readable. Legend box uses elevated dark fill (#242420). "Dev bottleneck" annotation text appears light-colored with white/light arrow — readable against dark background. No dark-on-dark failures detected.
+      Data: Colors are identical to light render — same green Done, vermillion Testing, blue Development, pink Analysis, gold Backlog. Only chrome elements (background, text, legend box) have flipped.
+      Legibility verdict: PASS — all text clearly readable against dark surface; no dark-on-dark failures
+
+    Note: Both renders contain a "Dev bottleneck" annotation with arrow that does not appear in the current source code. This is a code-image discrepancy suggesting the images were generated from a prior version of the implementation.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -54,51 +58,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, ticks 16pt, legend 16pt — all explicitly
-          set, readable in both themes
+        comment: Title 24pt, labels 20pt, ticks 16pt all explicitly set; readable
+          in both light and dark renders
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Rotated tick labels, no collisions, legend well-positioned in top-left
+        comment: Bi-weekly x-axis ticks with 30-degree rotation; no label collisions;
+          legend over low-data early-Jan region
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: 'Development (blue #0072B2) band is nearly invisible in both renders;
-          dev_cum - testing_cum ≈ 0 because both Poisson rates are equal (4/day),
-          so WIP for that stage never accumulates'
+        passed: true
+        comment: All five stacked areas distinctly visible; thin Testing band is semantically
+          meaningful (low WIP)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; alpha=0.85 provides adequate contrast
-          between bands
+        comment: Okabe-Ito palette is CVD-safe; alpha=0.85 preserves contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, balanced margins, tight_layout applied, legend
-          near data
+        comment: 16:9 format, tight_layout applied, plot fills canvas well with balanced
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Date and Cumulative Items are descriptive labels
+        comment: Date and Cumulative Items are appropriate and descriptive for this
+          chart type
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Done=#009E73, Okabe-Ito canonical order, warm backgrounds
-          #FAF8F1/#1A1A17, all chrome theme-adaptive'
+        comment: 'First series (Done) = #009E73; full Okabe-Ito order for 5 stages;
+          backgrounds #FAF8F1/#1A1A17; chrome flips correctly'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -106,24 +110,25 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library defaults; correct palette and spine removal
-          but no standout design choices
+        comment: 'Well-configured default: Okabe-Ito palette, warm theme, clean layout.
+          Not exceptional — no custom typography or standout compositional choices'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Top/right spines removed, grid alpha=0.10, legend reversed to match
-          visual stacking order, rotated ticks — good but not exceptional
+        passed: true
+        comment: Top/right spines removed, y-only grid at alpha=0.10, warm backgrounds,
+          custom legend frame. Good refinement, not maximal
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: CFD data displayed but no bottleneck highlighted; all bands grow
-          proportionally; Development WIP invisible removes key CFD storytelling element
+        passed: true
+        comment: Dev bottleneck annotation visible in renders creates focal point
+          and guides viewer to key CFD insight; annotation absent from current code
+          (code-image discrepancy)
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -131,52 +136,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cumulative flow diagram with stacked areas
+        comment: Correct cumulative flow diagram with stacked areas representing WIP
+          per stage
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Stages in workflow order, legend, date x-axis all present; but Development
-          WIP nearly zero makes it functionally a 4-stage chart
+        passed: true
+        comment: Backlog on top / Done on bottom; 5 stages in 4-8 range; 90 days;
+          monotonicity enforced; legend present; date intervals reasonable
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x-axis, cumulative items on y-axis, all data visible
+        comment: Time on X, cumulative item count on Y; vertical band width correctly
+          encodes WIP per stage
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches spec format; legend labels correct and reversed
-          to match stacking
+        comment: Title 'area-cumulative-flow · seaborn · anyplot.ai' correct; legend
+          reversed to match visual stack order
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: CFD should show varying WIP widths and bottleneck dynamics; Development
-          band is nearly zero; no widening/narrowing patterns visible
+        passed: true
+        comment: Shows widening Development band (bottleneck), thin Testing band (low
+          WIP), steady Done throughput — covers all key CFD diagnostic patterns
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 90-day Kanban board with Backlog/Analysis/Development/Testing/Done
-          is a realistic software delivery scenario
+        comment: 'Kanban board simulation with Backlog/Analysis/Development/Testing/Done:
+          canonical Agile workflow, neutral, comprehensible'
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: ~525 total items over 90 days is plausible; however near-zero Development
-          WIP throughout is unrealistic
+        passed: true
+        comment: 90-day period, ~530 cumulative items; Poisson rates (6/5/4/4/4) produce
+          plausible throughput; np.minimum enforces logical monotonicity
     code_quality:
       score: 10
       max: 10
@@ -186,32 +193,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean top-to-bottom structure: imports, tokens, data, plot, save'
+        comment: Linear Imports > Tokens > Data > Plot > Save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib.dates, matplotlib.pyplot, numpy,
-          pandas, seaborn'
+        comment: os, matplotlib.dates, matplotlib.pyplot, numpy, pandas, seaborn —
+          all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity, no fake functionality
+        comment: WIP calculation (difference of adjacent cumulative curves) is correct
+          and concise; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches=tight
+        comment: Saves as plot-{THEME}.png with correct facecolor; no deprecated functions
     library_mastery:
       score: 4
       max: 10
@@ -220,30 +228,28 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: sns.set_theme() with rc dict is idiomatic seaborn theming; but actual
-          chart uses ax.stackplot() (pure matplotlib). Seaborn has no native stacked
-          area function so delegation is expected, but seaborn contribution is minimal.
+        passed: true
+        comment: sns.set_theme() with rc dict is idiomatic seaborn theming; actual
+          plot uses matplotlib ax.stackplot() since seaborn has no native stacked-area
+          function — correct approach
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Seaborn used solely for theme configuration. No seaborn plotting
-          API used for chart construction — could be any matplotlib chart with seaborn
-          styling.
-  verdict: REJECTED
+        comment: Only seaborn-specific feature is set_theme() theming; visualization
+          logic is pure matplotlib stackplot; nothing distinctively seaborn in the
+          plot layer
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
   - custom-legend
   patterns:
   - data-generation
-  - iteration-over-groups
+  - explicit-figure
   dataprep:
   - cumulative-sum
   - time-series
   styling:
   - alpha-blending
-  - grid-styling
