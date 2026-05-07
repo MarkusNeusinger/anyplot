@@ -1,12 +1,24 @@
-""" pyplots.ai
+"""anyplot.ai
 radar-multi: Multi-Series Radar Chart
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-25
+Library: matplotlib | Python 3.13
+Quality: pending | Created: 2026-05-07
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first three series)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data: Product comparison across key attributes
 categories = ["Performance", "Battery Life", "Camera", "Display", "Build Quality", "Value"]
@@ -23,36 +35,39 @@ n_categories = len(categories)
 angles = np.linspace(0, 2 * np.pi, n_categories, endpoint=False).tolist()
 angles += angles[:1]  # Close the polygon
 
-# Colors: Python Blue, Python Yellow, then additional colorblind-safe
-colors = ["#306998", "#FFD43B", "#E377C2"]
-
 # Create figure (square format for radar)
-fig, ax = plt.subplots(figsize=(12, 12), subplot_kw={"polar": True})
+fig, ax = plt.subplots(figsize=(10, 10), subplot_kw={"polar": True}, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Plot each product
 for idx, (product, values) in enumerate(products.items()):
     values_closed = values + values[:1]  # Close the polygon
-    ax.plot(angles, values_closed, "o-", linewidth=3, label=product, color=colors[idx], markersize=10)
-    ax.fill(angles, values_closed, alpha=0.25, color=colors[idx])
+    ax.plot(angles, values_closed, "o-", linewidth=3, label=product, color=OKABE_ITO[idx], markersize=10)
+    ax.fill(angles, values_closed, alpha=0.25, color=OKABE_ITO[idx])
 
 # Set category labels at each axis
 ax.set_xticks(angles[:-1])
-ax.set_xticklabels(categories, fontsize=18, fontweight="bold")
+ax.set_xticklabels(categories, fontsize=18, fontweight="bold", color=INK)
 
 # Set radial grid
 ax.set_ylim(0, 100)
 ax.set_yticks([20, 40, 60, 80, 100])
-ax.set_yticklabels(["20", "40", "60", "80", "100"], fontsize=14, color="gray")
+ax.set_yticklabels(["20", "40", "60", "80", "100"], fontsize=16, color=INK_SOFT)
 
 # Grid styling
-ax.yaxis.grid(True, linestyle="--", alpha=0.4, linewidth=1.5)
-ax.xaxis.grid(True, linestyle="-", alpha=0.3, linewidth=1.5)
+ax.yaxis.grid(True, linestyle="-", alpha=0.15, linewidth=0.8, color=INK_SOFT)
+ax.xaxis.grid(True, linestyle="-", alpha=0.15, linewidth=0.8, color=INK_SOFT)
 
 # Title
-ax.set_title("Product Comparison · radar-multi · matplotlib · pyplots.ai", fontsize=24, fontweight="bold", pad=40)
+ax.set_title("radar-multi · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=40)
 
 # Legend
-ax.legend(loc="upper right", bbox_to_anchor=(1.3, 1.05), fontsize=16, framealpha=0.9)
+leg = ax.legend(loc="upper left", bbox_to_anchor=(1.05, 1.0), fontsize=16, framealpha=1.0)
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+leg.get_frame().set_linewidth(0.8)
+for text in leg.get_texts():
+    text.set_color(INK)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
