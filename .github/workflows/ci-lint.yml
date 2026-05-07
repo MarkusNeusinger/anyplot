@@ -13,6 +13,7 @@ on:
       - develop
       - 'specification/**'
       - 'implementation/**'
+  merge_group:
 
 concurrency:
   group: ci-lint-${{ github.ref }}
@@ -36,6 +37,10 @@ jobs:
         if [[ "${{ github.event_name }}" == "pull_request" ]]; then
           BASE_SHA="${{ github.event.pull_request.base.sha }}"
           HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          CHANGED_FILES=$(git diff --name-only $BASE_SHA $HEAD_SHA)
+        elif [[ "${{ github.event_name }}" == "merge_group" ]]; then
+          BASE_SHA="${{ github.event.merge_group.base_sha }}"
+          HEAD_SHA="${{ github.event.merge_group.head_sha }}"
           CHANGED_FILES=$(git diff --name-only $BASE_SHA $HEAD_SHA)
         else
           CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
