@@ -1,163 +1,172 @@
 library: altair
+language: python
 specification_id: area-stacked
 created: '2025-12-25T17:39:41Z'
-updated: '2025-12-25T17:41:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20508665892
+updated: '2026-05-07T15:21:46Z'
+generated_by: claude-haiku
+workflow_run: 25504654596
 issue: 2022
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-stacked/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/area-stacked/altair/plot.html
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/python/altair/plot-dark.html
 quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - hover-tooltips
-  patterns:
-  - wide-to-long
-  - data-generation
-  dataprep:
-  - time-series
-  styling:
-  - alpha-blending
 review:
   strengths:
-  - Excellent use of Altair declarative encoding with proper type annotations (T,
-    Q, N)
-  - Proper stack ordering using Order encoding to control layer sequence (largest
-    at bottom)
-  - Interactive tooltips with formatted values enhance usability
-  - Colorblind-safe palette with distinct colors for all four categories
-  - Both PNG and HTML outputs leverage Altair dual static/interactive capability
-  - Clean long-form data structure idiomatic to Altair/Vega-Lite
+  - Perfect visual quality with no text legibility issues in either theme
+  - Excellent theme adaptation with correct palette colors identical across light
+    and dark renders
+  - Clean, reproducible code with proper KISS structure
+  - Expert use of Altair's encoding and configuration system
+  - Realistic, well-structured example data showing product revenue composition
+  - Proper stacking order (largest at bottom) aids readability
+  - All spec requirements met with no omissions
   weaknesses:
-  - Legend symbols lack visible stroke, making color patches slightly harder to distinguish
-    at a glance
-  image_description: 'The plot displays a stacked area chart showing monthly revenue
-    by product category over two years (Jan 2023 - Nov 2024). Four distinct areas
-    are stacked from bottom to top: Software (Python blue #306998), Hardware (Python
-    yellow #FFD43B), Services (teal #5D9B9B), and Support (mauve #A85C5C). The title
-    "area-stacked · altair · pyplots.ai" is centered at the top. The X-axis shows
-    "Month" with rotated date labels (e.g., "Jan 2023", "Mar 2023"), and the Y-axis
-    shows "Revenue ($ thousands)" ranging from 0 to ~300. A legend titled "Product
-    Category" appears on the right side. The chart has subtle dashed grid lines and
-    shows realistic revenue trends with variation over time.'
+  - Design Excellence could be enhanced with additional visual refinement (e.g., per-series
+    opacity variation, gradient fills, or more sophisticated styling)
+  - Data storytelling could be more pronounced through additional visual emphasis
+    or narrative choice
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "area-stacked · altair · anyplot.ai" in dark text, X-axis "Month" and Y-axis "Revenue ($ thousands)" labels clearly visible in dark text, all tick labels readable, legend with "Product Category" title and category labels all readable
+      Data: Four stacked areas in Okabe-Ito colors - Software (#009E73, green) at bottom, Hardware (#D55E00, orange), Services (#0072B2, blue), Support (#CC79A7, reddish-purple) at top; first series is correct green; all boundaries distinct with 0.85 opacity
+      Legibility verdict: PASS - all text readable, no overlap, grid subtle and appropriate
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title in light text, axis labels in light colors, all tick labels visible and readable in light tones, legend readable with light text on dark background
+      Data: All four area colors identical to light render (#009E73, #D55E00, #0072B2, #CC79A7) - confirms proper theme-independent data colors; boundaries distinct
+      Legibility verdict: PASS - no dark-on-dark issues, all text light-colored and readable, grid maintains visibility, perfect theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all clearly
-          readable
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, rotated x-axis labels prevent collision
+        comment: No overlapping text; x-axis labels well-spaced with -45° angle
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Areas are well-sized with good opacity (0.85) and visible stroke
-          lines
+        comment: All four stacked areas clearly visible with appropriate opacity (0.85);
+          distinct boundaries
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Four distinct colors (blue, yellow, teal, mauve) are colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout, chart fills canvas well, legend positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Revenue ($ thousands)", "Month"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette CVD-safe; good contrast between adjacent areas
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Perfect layout: 60-70% canvas utilization; well-balanced margins;
+          legend appropriately positioned'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.3, dashed), but legend has no stroke on symbols
-          making color identification slightly harder
+        comment: Descriptive with units; title in correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order; correct backgrounds and theme-adaptive
+          chrome in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Professional appearance with good color harmony; lacks additional
+          refinement like gradient fills or per-series opacity variation
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid (gridOpacity=0.10); clean design; could benefit from
+          explicit spine removal or additional styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Clear visual hierarchy through color; stacking order aids readability;
+          could be more pronounced
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct stacked area chart
+        comment: Correct stacked area chart with stack="zero"
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on X-axis, revenue values on Y-axis, stacking correct
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Multiple series, stacking, legend, time-based x-axis all present
-      - id: SC-04
-        name: Data Range
+        comment: Multiple series, proper stacking, legend with tooltips all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, baseline starts at zero
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis time, Y-axis stacked revenue, color by category; all correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels match data categories correctly
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "area-stacked · altair · pyplots.ai"'
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 4 series with trends, but all series follow similar patterns
-          (general decline in 2024)
+        comment: 'Shows all aspects: 4 categories with varying contributions across
+          24 months'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Monthly revenue by product category is a realistic business scenario
+        comment: Real-world scenario (tech company revenue); neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values in tens to hundreds of thousands are reasonable, though cumulative
-          totals ~280k could use more variation
+        comment: Realistic ranges; proper proportions; all positive values
     code_quality:
       score: 10
       max: 10
@@ -167,40 +176,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script structure: imports → data → plot → save'
+        comment: 'Simple linear: imports → data → chart → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42); fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Pythonic, clean, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves correctly as plot-{THEME}.png/html; current API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Declarative encoding, tooltips, interactive HTML export, proper Vega-Lite
-          stack ordering
+        comment: Expert use of alt.Chart(), encoding, mark_area(), stack, Order encoding,
+          configurations
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Uses .interactive(), tooltip formatting, Legend configuration, configure_axis/view
+          for themes, alt.Order()
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - wide-to-long
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - grid-styling
