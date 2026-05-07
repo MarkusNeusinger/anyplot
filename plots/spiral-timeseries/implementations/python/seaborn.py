@@ -1,7 +1,7 @@
 """ anyplot.ai
 spiral-timeseries: Spiral Time Series Chart
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 84/100 | Created: 2026-05-07
+Quality: 87/100 | Created: 2026-05-07
 """
 
 import os
