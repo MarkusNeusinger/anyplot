@@ -1,13 +1,31 @@
-""" pyplots.ai
+"""anyplot.ai
 bland-altman-basic: Bland-Altman Agreement Plot
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-25
+Library: altair | Python 3.13
+Quality: pending | Created: 2025-12-25
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import os
+import sys
 
+
+# Remove script directory from path to avoid importing self instead of altair package
+script_dir = os.path.dirname(os.path.abspath(__file__))
+while script_dir in sys.path:
+    sys.path.remove(script_dir)
+
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"
+SECONDARY = "#D55E00"
 
 # Data: Simulated blood pressure measurements from two sphygmomanometers
 np.random.seed(42)
@@ -36,10 +54,10 @@ x_max = df["Mean"].max() + 5
 y_min = min(df["Difference"].min(), lower_loa) - 2
 y_max = max(df["Difference"].max(), upper_loa) + 2
 
-# Create scatter points
+# Create scatter points with Okabe-Ito green
 scatter = (
     alt.Chart(df)
-    .mark_point(size=200, filled=True, opacity=0.7, color="#306998")
+    .mark_point(size=200, filled=True, opacity=0.7, color=BRAND)
     .encode(
         x=alt.X("Mean:Q", title="Mean of Two Methods (mmHg)", scale=alt.Scale(domain=[x_min, x_max])),
         y=alt.Y(
@@ -52,22 +70,13 @@ scatter = (
     )
 )
 
-# Create DataFrames for horizontal lines
-lines_df = pd.DataFrame(
-    {
-        "y": [mean_diff, upper_loa, lower_loa],
-        "label": [f"Mean: {mean_diff:.2f}", f"+1.96 SD: {upper_loa:.2f}", f"-1.96 SD: {lower_loa:.2f}"],
-        "line_type": ["mean", "loa", "loa"],
-    }
-)
-
 # Mean bias line (solid)
-mean_line = alt.Chart(pd.DataFrame({"y": [mean_diff]})).mark_rule(strokeWidth=3, color="#306998").encode(y="y:Q")
+mean_line = alt.Chart(pd.DataFrame({"y": [mean_diff]})).mark_rule(strokeWidth=3, color=BRAND).encode(y="y:Q")
 
-# Limits of agreement lines (dashed)
+# Limits of agreement lines (dashed, using secondary color)
 loa_lines = (
     alt.Chart(pd.DataFrame({"y": [upper_loa, lower_loa]}))
-    .mark_rule(strokeWidth=2, strokeDash=[8, 4], color="#FFD43B")
+    .mark_rule(strokeWidth=2, strokeDash=[8, 4], color=SECONDARY)
     .encode(y="y:Q")
 )
 
@@ -82,7 +91,7 @@ annotation_df = pd.DataFrame(
 
 annotations = (
     alt.Chart(annotation_df)
-    .mark_text(align="right", fontSize=16, fontWeight="bold", color="#333333")
+    .mark_text(align="right", fontSize=16, fontWeight="bold", color=INK)
     .encode(x="x:Q", y="y:Q", text="text:N")
 )
 
@@ -92,12 +101,23 @@ chart = (
     .properties(
         width=1600,
         height=900,
-        title=alt.Title("bland-altman-basic · altair · pyplots.ai", fontSize=28, anchor="middle"),
+        background=PAGE_BG,
+        title=alt.Title("bland-altman-basic · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
     )
-    .configure_axis(labelFontSize=18, titleFontSize=22, gridColor="#cccccc", gridOpacity=0.3)
-    .configure_view(strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.10,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=18,
+        titleFontSize=22,
+    )
+    .configure_title(color=INK, fontSize=28)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=1)
 )
 
-# Save as PNG and HTML
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save as PNG and HTML with theme suffix
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
