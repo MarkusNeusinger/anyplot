@@ -1,0 +1,246 @@
+library: highcharts
+language: python
+specification_id: spiral-timeseries
+created: '2026-05-07T15:39:27Z'
+updated: '2026-05-07T16:01:43Z'
+generated_by: claude-sonnet
+workflow_run: 25505263343
+issue: 5243
+python_version: 3.13.13
+library_version: unknown
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/highcharts/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - Archimedean spiral math correctly implemented with expanding radii, phase-offset
+    for Jan-1 at 12 o'clock, and correct angle-to-date mapping
+  - Viridis colormap correctly chosen for continuous temperature data with vectorized
+    per-point color interpolation
+  - 'Full theme adaptation: INK, INK_SOFT, GRID, PAGE_BG tokens applied to all chrome
+    elements in both renders'
+  - 'All spec requirements satisfied: color encoding, radial grid lines, year-cycle
+    labels, colorbar, outward-expanding spiral'
+  - Clean reproducible code with np.random.seed(42); inline Highcharts JS embedding
+    correctly handled for headless Chrome
+  weaknesses:
+  - Canvas is 2700x2700 instead of standard 3600x3600; text elements (title 30px,
+    month labels 20px) are slightly undersized — use 3600x3600 with title 32px, month
+    labels 22-26px
+  - Scatter marker radius=5 is small for the canvas size; increase to radius 7-8 for
+    better dot visibility
+  - LineSeries imported from highcharts_core.options.series.area instead of canonical
+    highcharts_core.options.series.line
+  - No data storytelling annotation to highlight the visible warming trend across
+    5 years — a subtle callout near the 2024 ring would elevate design
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "5-Year Daily Temperatures · spiral-timeseries · highcharts · anyplot.ai" in dark INK (#1A1A17), readable. Subtitle in INK_SOFT. Month labels (Jan-Dec) around outer edge in muted dark-grey text, readable. Year labels (2020-2024) inside spiral rings in bold dark text, readable. Colorbar ticks on right in dark text, readable.
+      Data: Viridis colormap from deep purple (cold winter ~2C) through teal-green (spring/autumn ~12C) to bright yellow-green (peak summer ~24C). 1825 scatter dots form 5 clear concentric rings. Radial grid lines extend from center to outer edge for each month.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and subtitle in light INK (#F0EFE8), clearly visible against dark background. Month labels and year labels in light/muted text (#B8B7B0), readable. Colorbar ticks in light text. No dark-on-dark failures observed. No near-black text on near-black background.
+      Data: Viridis data colors are visually identical to light render — purple/teal/yellow sequence unchanged. Spiral rings and radial grid lines clearly distinguishable from dark background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All text readable in both themes; slightly undersized for 2700x2700
+          canvas (vs recommended 3600x3600)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Month labels, year labels, and colorbar well-spaced with no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Scatter marker radius=5 forms clear spiral rings but dots are small;
+          radius 7-8 would be better
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis is perceptually uniform and CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square layout appropriate; canvas 2700x2700 rather than standard
+          3600x3600
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title descriptive and includes spec-id, library, anyplot.ai; axes
+          correctly hidden
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis for continuous data; #FAF8F1 light bg / #1A1A17 dark bg;
+          theme tokens applied'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Visually striking spiral with beautiful viridis encoding; no further
+          typographic or compositional refinement
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Axes hidden, radial grid subtle, generous whitespace; no extraneous
+          chrome
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Spiral reveals seasonal patterns clearly but no annotation guiding
+          viewer to warming trend
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Archimedean spiral time series
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Color encoding, radial grid, cycle labels, colorbar, outward expansion
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 5 years x 365 days = 1825 points; each revolution = one year
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes spec-id, library, anyplot.ai
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All spiral aspects demonstrated
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Northern-hemisphere temperatures with seasonal cycle and warming
+          trend; realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1825 points within 100-3000 spec range; 5 cycles within 2-10 spec
+          range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no unnecessary functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imported symbols used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Vectorized viridis interpolation; concise spiral math
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Creative multi-series approach; minor: LineSeries imported from
+          series.area instead of series.line'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Per-point color on scatter data, LineSeries with data_labels for
+          annotation, HTML export
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - minimal-chrome
