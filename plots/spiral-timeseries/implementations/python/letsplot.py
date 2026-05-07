@@ -1,7 +1,7 @@
 """ anyplot.ai
 spiral-timeseries: Spiral Time Series Chart
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 87/100 | Created: 2026-05-07
+Quality: 85/100 | Created: 2026-05-07
 """
 
 import os
