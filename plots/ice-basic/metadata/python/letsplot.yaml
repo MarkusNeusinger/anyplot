@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: ice-basic
 created: '2026-05-07T17:04:26Z'
-updated: '2026-05-07T17:11:46Z'
+updated: '2026-05-07T17:26:35Z'
 generated_by: claude-sonnet
 workflow_run: 25509780273
 issue: 5238
@@ -12,96 +12,93 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/letsplot/plot-dark.html
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - 'Excellent theme adaptation: PDP line uses INK token that elegantly flips black/white
-    across themes, creating a visually striking dark render'
-  - 'Full code quality: reproducible (dual seeds), clean structure, all imports used,
-    correct output files with scale=3'
-  - Real ML model (GradientBoostingRegressor) with realistic house-price data elevates
-    data quality above abstract examples
-  - 'Correct Okabe-Ito palette with #009E73 as first series and full theme-adaptive
-    chrome in both renders'
+  - Color-coded ICE lines by neighborhood (Suburban=green, Urban=orange) reveal meaningful
+    interaction effects between square footage and location
+  - PDP overlay uses adaptive INK token for excellent contrast in both light and dark
+    renders
+  - 'Perfect spec compliance: semi-transparent ICE lines (alpha=0.15), bold PDP overlay,
+    color-coding by second feature all implemented correctly'
+  - Clean procedural code with reproducible seed and proper 4800x2700 canvas via scale=3
+  - Y-axis-only grid is a good aesthetic choice for an ICE line plot
   weaknesses:
-  - PDP line is bold and visible but completely unlabeled — no legend entry and no
-    annotation — leaving its meaning opaque to viewers. Add a legend key for the PDP
-    line using Okabe-Ito position 8 neutral color, or add a direct text annotation
-    at the right edge of the PDP curve.
-  - 'Design Excellence (13/20): visual hierarchy is good but the overall aesthetic
-    lacks final polish. Consider adding a subtitle explaining the ML context, and
-    bold plot title via element_text(face=''bold'').'
-  - 'LM-02: No lets-plot-exclusive feature used beyond sizing and HTML export. Could
-    use geom_rug() for x-axis distribution (mentioned in spec) or layer_tooltips()
-    for PDP hover.'
+  - Top and right spines not explicitly removed — default lets-plot renders a 4-sided
+    panel box; add element_blank() for panel_border or use theme_minimal() to achieve
+    the L-shaped spine style
+  - 'Design Excellence is functional but not elevated: no annotations to highlight
+    the Urban/Suburban divergence at high square footage, no subtle emphasis on the
+    stepped GBR prediction pattern'
+  - 'LM-02 low: HTML export is the only distinctive lets-plot feature used; could
+    leverage lets-plot''s interactive geom_text tooltips or scale_color_gradient for
+    richer library showcase'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "ice-basic · letsplot · anyplot.ai" in dark ink at top left; axis labels "Square Footage (sq ft)" and "Predicted Price ($K)" with units; tick labels in INK_SOFT (#4A4A44) — all readable
-      Data: Two bundles of ICE lines — teal/green (#009E73, Suburban) and orange (#D55E00, Urban) — semi-transparent at alpha=0.15; bold black PDP line (INK = #1A1A17) overlaid centrally; y-axis-only subtle grid in #D0CEC7
-      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues
+      Background: Warm off-white #FAF8F1 — matches the required light surface. Panel background blends with outer plot background giving a unified appearance.
+      Chrome: Title "ice-basic · letsplot · anyplot.ai" in dark ink (size 24) is clearly readable. Subtitle in smaller text below. Axis labels "Square Footage (sq ft)" and "Predicted Price ($K)" are visible (size 20). Tick labels readable in INK_SOFT (size 16). Legend on the right with "Series" heading and three entries (Suburban, Urban, Avg. Trend (PDP)) all readable.
+      Data: ~50 Suburban ICE lines in #009E73 (brand green) at alpha=0.15, ~50 Urban ICE lines in #D55E00 (vermillion) at alpha=0.15, and one bold black PDP line (size=2.5) showing the average. Lines show a clear positive monotonic trend with steps typical of gradient boosting. Urban curves cluster noticeably higher, revealing the neighborhood interaction effect.
+      Legibility verdict: PASS — all text elements clearly readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in near-white (#F0EFE8); axis labels and tick labels in light tones (INK and INK_SOFT flipped correctly); legend background uses elevated dark (#242420); legend text light-colored — all readable
-      Data: ICE line colors identical to light render — #009E73 green (Suburban) and #D55E00 orange (Urban); PDP line now renders in near-white (#F0EFE8) which is visually striking against the dark background and colored ICE bundles
-      Legibility verdict: PASS — no dark-on-dark failures; all chrome correctly adapted to dark theme
+      Background: Near-black #1A1A17 — matches the required dark surface. Consistent warm-dark tone, not pure black.
+      Chrome: Title and labels appear in #F0EFE8 (light ink) and #B8B7B0 (soft ink) — clearly readable against the dark background. No dark-on-dark failures observed. The PDP overlay line has switched to white/near-white (INK token in dark theme), creating strong contrast. Legend text and title are legible.
+      Data: ICE line colors are identical to the light render — Suburban green (#009E73) and Urban orange (#D55E00) are unchanged, only chrome flipped. The PDP overlay becomes white/light in the dark theme, which is the correct adaptive behavior (INK token). The ICE density and pattern are clearly visible with good contrast against the dark background.
+      Legibility verdict: PASS — all text elements readable against the near-black background; no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All sizes explicitly set: title 24pt, axis titles 20pt, axis/tick
-          text 16pt, legend 16pt. Readable in both themes.'
+        comment: Title 24pt, axis labels 20pt, ticks/legend 16pt — all properly sized.
+          Both themes readable. Minor deduction for very small subtitle text.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; ICE line overlap is intentional and expected
-          for this plot type.
+        comment: No label or element collisions; ICE line overlap is intentional by
+          design.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: ICE lines at alpha=0.15 create visible density bands as intended
-          by spec; bold PDP line (size=2.5) is clearly prominent.
+        comment: PDP overlay bold and visible; ICE lines at alpha=0.15 appropriate
+          for 100-obs density. Minor deduction as individual lines are quite faint.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1 and 2 are colorblind-safe; adequate contrast
-          between groups.
+        comment: 'Okabe-Ito positions 1 and 2 (#009E73, #D55E00) — CVD-safe pair.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~75-80% of canvas with legend in appropriate right-side
-          placement; balanced margins.
+        comment: 4800x2700 via scale=3 correct; legend placement right; no clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Square Footage (sq ft) and Predicted Price ($K) both descriptive
-          with units.
+        comment: 'X: ''Square Footage (sq ft)'', Y: ''Predicted Price ($K)'' — descriptive
+          with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Suburban) = #009E73; second (Urban) = #D55E00; light
-          bg #FAF8F1; dark bg #1A1A17; full theme-adaptive chrome in both renders.'
+        comment: 'First series Suburban=#009E73 (brand). Urban=#D55E00. PDP uses adaptive
+          INK. Backgrounds #FAF8F1/#1A1A17 correct.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -109,28 +106,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional visual hierarchy (semi-transparent ICE lines + bold PDP)
-          is above a basic default. Theme-adaptive PDP line (black in light, white
-          in dark) creates elegant dual-render design. Does not yet reach publication-quality
-          polish — PDP overlay goes unlabeled.
+        comment: Meaningful neighborhood color split; semi-transparent density with
+          bold PDP shows intentional hierarchy. Above default but not exceptional
+          — no unusual typography or custom emphasis.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Y-axis-only grid with minor grid removed; custom subtle GRID_COLOR
-          is refined. Could further improve by explicitly blanking panel border or
-          adding more whitespace via margins.
+        passed: false
+        comment: Y-only grid is good. Minor grid removed. But top/right spines not
+          explicitly removed — default lets-plot likely renders a 4-sided panel border.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Two-group separation (Urban > Suburban) and bold PDP overlay provide
-          genuine visual hierarchy. Loses 2 points because the bold PDP line is unlabeled
-          — a viewer unfamiliar with ICE plots cannot tell what it represents.
+        comment: Neighborhood color split clearly reveals the Urban/Suburban interaction
+          story. PDP guides the eye. No annotations to highlight the divergence point,
+          limiting impact.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -138,30 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ICE plot with individual observation-level lines and PDP
-          overlay.
+        comment: Correct ICE plot with one geom_line per observation (group=obs_id).
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Individual low-alpha lines, bold opaque PDP line, color-coding by
-          neighborhood all present. Deduction: PDP line has no legend entry or annotation,
-          making its meaning ambiguous.'
+        comment: Semi-transparent ICE lines, PDP overlay, color-coding by neighborhood
+          all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = square footage (feature value), Y = predicted price ($K); 100
-          observations x 60 grid points.
+        comment: X=feature_value (sqft), Y=prediction (price/$K), group=obs_id.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'ice-basic · letsplot · anyplot.ai'; legend 'Location' with
-          Suburban/Urban.
+        comment: Title 'ice-basic · letsplot · anyplot.ai'. Legend shows Suburban/Urban/Avg.
+          Trend (PDP).
     data_quality:
       score: 15
       max: 15
@@ -171,23 +163,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows ICE lines with varying slopes, clear group separation (Suburban/Urban),
-          average PDP trend, and heterogeneous individual effects. All key aspects
-          of an ICE plot demonstrated.
+        comment: ICE lines + PDP overlay + neighborhood color-coding covers all key
+          ICE plot aspects.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: GradientBoostingRegressor predicting house prices from sqft, bedrooms,
-          age, neighborhood. Real-world plausible and neutral.
+        comment: GBR house price prediction — realistic domain, neutral subject matter.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Prices ~150-650K for 800-3500 sq ft houses is factually plausible
-          for US real estate.
+        comment: Sqft 800-3500, price ~150-650k USD — plausible for real estate domain.
     code_quality:
       score: 10
       max: 10
@@ -197,38 +186,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> data generation -> model fitting -> ICE/PDP computation
-          -> plot -> save. No functions or classes.'
+        comment: No functions or classes; clean procedural flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) and GradientBoostingRegressor(random_state=42)
-          ensure full reproducibility.
+        comment: np.random.seed(42) and random_state=42 in GBR.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sklearn imported and actively used for model fitting;
-          no stale imports.
+        comment: All imports used; sklearn is imported and applied.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic iteration patterns; appropriate complexity for the
-          ML-driven ICE computation.
+        comment: Loops for ICE generation are appropriate; no over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=3 -> 4800x2700) and plot-{THEME}.html.
-          Correct API usage.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -236,18 +220,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Expert grammar-of-graphics usage: ggplot() without global data (multi-source
-          pattern), per-geom data= arguments, scale_color_manual(), comprehensive
-          theme() with all element types, ggsize().'
+        comment: Grammar of graphics correctly applied; group= aes for multi-line,
+          two geom_line layers with separate data, scale_color_manual with dict values.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses ggsize() (lets-plot specific) and HTML export alongside PNG.
-          No lets-plot-exclusive interactive or rendering feature leveraged beyond
-          basic line charts.
-  verdict: REJECTED
+        passed: true
+        comment: HTML export via ggsave is lets-plot-distinctive. Dict-based scale_color_manual
+          mapping is expressive. Could go further with lets-plot's interactive capabilities.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
@@ -257,6 +239,7 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - regression
   styling:
   - alpha-blending
