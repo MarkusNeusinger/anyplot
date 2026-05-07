@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ice-basic: Individual Conditional Expectation (ICE) Plot
 Library: highcharts unknown | Python 3.13.13
 Quality: 84/100 | Created: 2026-05-07
@@ -88,13 +88,16 @@ chart.options.chart = {
 }
 
 chart.options.title = {
-    "text": "House Price Predictions · ice-basic · highcharts · anyplot.ai",
+    "text": "ice-basic · highcharts · anyplot.ai",
     "style": {"fontSize": "28px", "color": INK, "fontWeight": "600"},
     "margin": 30,
 }
 
 chart.options.subtitle = {
-    "text": (f"GradientBoostingRegressor · {n_ice} observations · How predicted price varies with square footage"),
+    "text": (
+        f"House Price Predictions — GradientBoostingRegressor · {n_ice} observations · "
+        "How predicted price varies with square footage"
+    ),
     "style": {"fontSize": "20px", "color": INK_SOFT},
     "margin": 20,
 }
@@ -102,7 +105,7 @@ chart.options.subtitle = {
 chart.options.x_axis = {
     "title": {"text": "Square Footage (sq ft)", "style": {"fontSize": "22px", "color": INK}, "margin": 20},
     "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
-    "lineColor": INK_SOFT,
+    "lineWidth": 0,
     "tickColor": INK_SOFT,
     "gridLineColor": GRID,
     "gridLineWidth": 1,
@@ -111,7 +114,7 @@ chart.options.x_axis = {
 chart.options.y_axis = {
     "title": {"text": "Predicted Price ($k)", "style": {"fontSize": "22px", "color": INK}, "margin": 20},
     "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
-    "lineColor": INK_SOFT,
+    "lineWidth": 0,
     "tickColor": INK_SOFT,
     "gridLineColor": GRID,
     "gridLineWidth": 1,
@@ -146,7 +149,7 @@ for i in range(n_ice):
     s = LineSeries()
     s.data = [[grid_x[j], float(ice_matrix[i, j])] for j in range(n_grid)]
     s.color = ICE_COLOR
-    s.line_width = 1
+    s.line_width = 2
     s.show_in_legend = i == 0
     s.name = f"ICE Curves (n={n_ice})" if i == 0 else "ice"
     s.enable_mouse_tracking = False
