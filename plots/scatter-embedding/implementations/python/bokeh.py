@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-embedding: t-SNE and UMAP Embedding Visualization
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 81/100 | Created: 2026-05-07
@@ -14,7 +14,7 @@ sys.path = [p for p in sys.path if "implementations" not in p]  # noqa: E402
 
 import numpy as np  # noqa: E402
 from bokeh.io import output_file, save  # noqa: E402
-from bokeh.models import ColumnDataSource, Title  # noqa: E402
+from bokeh.models import ColumnDataSource, Label, Range1d, Title  # noqa: E402
 from bokeh.plotting import figure  # noqa: E402
 from selenium import webdriver  # noqa: E402
 from selenium.webdriver.chrome.options import Options  # noqa: E402
@@ -45,17 +45,25 @@ X, labels = make_blobs(n_samples=900, n_features=20, centers=6, cluster_std=2.5)
 tsne = TSNE(n_components=2, perplexity=30, random_state=42, max_iter=1000)
 embedding = tsne.fit_transform(X)
 
+# Fit axes tightly to the data so the canvas is fully utilised
+x_min, x_max = embedding[:, 0].min(), embedding[:, 0].max()
+y_min, y_max = embedding[:, 1].min(), embedding[:, 1].max()
+x_pad = (x_max - x_min) * 0.12
+y_pad = (y_max - y_min) * 0.12
+
 # Plot
 p = figure(
     width=4800,
     height=2700,
     title="NLP Document Clusters · scatter-embedding · bokeh · anyplot.ai",
+    x_range=Range1d(x_min - x_pad, x_max + x_pad),
+    y_range=Range1d(y_min - y_pad, y_max + y_pad),
     tools="pan,wheel_zoom,box_zoom,reset,hover",
     tooltips=[("Cluster", "@cluster")],
 )
 
 p.add_layout(
-    Title(text="t-SNE (perplexity=30)", text_font_size="20pt", text_color=INK_SOFT, text_font_style="italic"), "above"
+    Title(text="t-SNE (perplexity=30)", text_font_size="24pt", text_color=INK_SOFT, text_font_style="italic"), "above"
 )
 
 # Chrome
@@ -87,8 +95,8 @@ p.yaxis.axis_line_color = INK_SOFT
 
 p.xgrid.grid_line_color = INK
 p.ygrid.grid_line_color = INK
-p.xgrid.grid_line_alpha = 0.10
-p.ygrid.grid_line_alpha = 0.10
+p.xgrid.grid_line_alpha = 0.08
+p.ygrid.grid_line_alpha = 0.08
 
 # One scatter call per cluster so Bokeh assigns legend entries
 for i, (name, color) in enumerate(zip(CLUSTER_NAMES, OKABE_ITO, strict=False)):
@@ -101,18 +109,42 @@ for i, (name, color) in enumerate(zip(CLUSTER_NAMES, OKABE_ITO, strict=False)):
         y="y",
         source=source,
         color=color,
-        size=14,
-        alpha=0.75,
+        size=22,
+        alpha=0.40,
         line_color=PAGE_BG,
-        line_width=0.5,
+        line_width=0.8,
         legend_label=name,
     )
+
+# Centroid annotations — label each cluster at its centre for storytelling
+for i, (name, color) in enumerate(zip(CLUSTER_NAMES, OKABE_ITO, strict=False)):
+    mask = labels == i
+    cx = float(embedding[mask, 0].mean())
+    cy = float(embedding[mask, 1].mean())
+    centroid_label = Label(
+        x=cx,
+        y=cy,
+        text=name,
+        text_font_size="18pt",
+        text_color=INK,
+        text_align="center",
+        text_baseline="middle",
+        background_fill_color=ELEVATED_BG,
+        background_fill_alpha=0.80,
+        border_line_color=color,
+        border_line_width=2,
+        border_line_alpha=0.7,
+        padding=8,
+    )
+    p.add_layout(centroid_label)
 
 # Style legend
 p.legend.background_fill_color = ELEVATED_BG
 p.legend.border_line_color = INK_SOFT
 p.legend.label_text_color = INK_SOFT
-p.legend.label_text_font_size = "16pt"
+p.legend.label_text_font_size = "20pt"
+p.legend.glyph_height = 28
+p.legend.glyph_width = 28
 p.legend.location = "top_right"
 p.legend.click_policy = "hide"
 
