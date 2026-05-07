@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: bland-altman-basic
 created: '2025-12-25T13:18:27Z'
-updated: '2026-05-07T11:14:01Z'
+updated: '2026-05-07T11:21:37Z'
 generated_by: claude-haiku
 workflow_run: 25492147690
 issue: 2032
@@ -12,37 +12,35 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bland-alt
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bland-altman-basic/python/letsplot/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - Perfect theme adaptation with all tokens applied correctly (PAGE_BG, ELEVATED_BG,
-    INK, INK_SOFT) in both light and dark renders
-  - 'All Bland-Altman plot requirements implemented: bias line, limits of agreement,
-    annotations, data transparency'
-  - Clean, idiomatic letsplot code with reproducible random seed and proper file naming
-    (plot-{THEME}.png/html)
-  - 'Correct palette compliance: brand color (#009E73) for data, Okabe-Ito position
-    2 (#D55E00) for limits'
-  - Realistic, properly-scaled blood pressure data with 80 observations in recommended
-    range
+  - Excellent theme-adaptive implementation with proper color tokens threaded through
+    all elements
+  - Perfect legibility in both light and dark renders with no contrast failures
+  - Correct Bland-Altman implementation with all required statistical features (bias
+    line, LOA limits, annotations)
+  - Realistic medical device validation scenario with plausible blood pressure data
+  - Clean, reproducible code with clear calculations and proper transparency handling
+  - Strong visual hierarchy through intentional color choices (green for primary findings,
+    orange for secondary bounds)
   weaknesses:
-  - Design Excellence is above-default but not exceptional; could benefit from more
-    sophisticated visual refinement (e.g., custom spine removal, grid optimization,
-    annotation positioning refinement)
-  - Library-specific features beyond HTML export not heavily showcased (LM-02 at 2/5
-    - could explore more distinctive letsplot capabilities)
+  - 'Design Excellence below potential: annotation styling could be more refined with
+    margin-aligned labels or distinct background treatment'
+  - 'Library usage somewhat generic: demonstrates idiomatic letsplot but does not
+    showcase unique features beyond standard ggplot2 patterns'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified.
-      Chrome: Title "bland-altman-basic · letsplot · anyplot.ai" in dark text (#1A1A17), X-axis label "Mean of Two Methods (mmHg)" and Y-axis label "Difference (Method 1 - Method 2) (mmHg)" both clearly readable in dark text. Tick labels in soft ink (#4A4A44). Grid lines are subtle, light gray.
-      Data: 80 teal data points (#009E73, Okabe-Ito position 1 - brand) with alpha=0.7 transparency. Solid teal line at mean bias (-2.55 mmHg). Dashed orange lines (#D55E00, Okabe-Ito position 2) at ±1.96 SD limits (+7.84 and -12.93 mmHg). Annotations in orange text on elevated background boxes.
-      Legibility verdict: PASS - All text clearly readable against light background.
+      Background: Warm off-white (#FAF8F1), not pure white — excellent choice
+      Chrome: Title "bland-altman-basic · letsplot · anyplot.ai" in dark ink (#1A1A17), clearly readable. Axis labels "Mean of Two Methods (mmHg)" and "Difference (Method 1 - Method 2) (mmHg)" in INK color, readable. Tick labels in INK_SOFT (#4A4A44), gray-ish, adequately visible. Grid in subtle light gray.
+      Data: Eighty scatter points in brand green (#009E73) with alpha=0.7 show overlapping observations. Mean bias line solid teal at -2.55 mmHg. Upper LOA dashed orange (#D55E00) at +7.84 mmHg. Lower LOA dashed orange at -12.93 mmHg. Annotation labels with elevated background boxes positioned on left margin, values clearly visible.
+      Legibility verdict: PASS — all elements readable, no text conflicts, excellent contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified.
-      Chrome: Title in light text (#F0EFE8) on dark background, clearly readable. Axis labels in light text. Tick labels in soft light text (#B8B7B0). Grid lines in light gray, subtle.
-      Data: Data points and lines are IDENTICAL teal (#009E73) and orange (#D55E00) colors to light render - chrome is the only difference (background and text colors). Annotations in orange text on elevated dark background (#242420).
-      Legibility verdict: PASS - All text clearly visible against dark background. No dark-on-dark failures. Theme adaptation is correct and complete.
+      Background: Warm near-black (#1A1A17), not pure black — perfect theme adaptation
+      Chrome: Title in light ink (#F0EFE8), clearly visible against dark surface. Axis labels in same light ink, readable. Tick labels in lighter gray (#B8B7B0), adequately visible. Grid subtle but present.
+      Data: Scatter points identical teal (#009E73) as light render — no color shift. Mean bias line solid teal, prominent. LOA lines dashed orange (#D55E00), same colors as light render (chromatic elements only flip, not data colors). Annotation boxes with elevated dark background (#242420) for contrast.
+      Legibility verdict: PASS — no dark-on-dark failures, all text readable, data colors preserved from light render, brand green visible and distinguishable
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,72 +51,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both light and dark themes; font sizes appropriately
-          set (title=24, axis_title=20, axis_text=16)
+        comment: All text properly sized (title 24, labels 20, ticks 16, annotations
+          12) and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; annotations well-positioned with offset
+        comment: No collisions; annotations positioned with y_offset=0.8 on left margin
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers, lines, and annotations clearly visible; transparency
-          handled well
+        comment: Points size=6 with alpha=0.7 reveal overlaps; lines clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; colorblind-safe; good contrast
+        comment: 'Okabe-Ito palette (#009E73, #D55E00) is CVD-safe'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600x900 with scale=3 = 4800x2700px; good proportions; nothing cut
-          off
+        comment: 1600×900 scaled 3× with generous whitespace, no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (mmHg)
+        comment: Labels include units (mmHg); title follows spec format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand), secondary #D55E00 (Okabe-Ito 2), backgrounds
-          correct, both renders theme-correct'
+        comment: 'Brand #009E73 for data; LOA #D55E00; backgrounds #FAF8F1/#1A1A17
+          correct'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Professional polish with proper theme tokens; clean color usage;
-          above default but not exceptional
+        comment: Professional polish with intentional color hierarchy; annotation
+          styling refined
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal base; subtle grid; good whitespace; label positioning
-          thoughtful
+        comment: Uses theme_minimal(); subtle grid; stroke=0.5 on points
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear focal point; visual hierarchy (solid bias vs dashed LOA); color
-          coding helps guide interpretation
+        comment: Clear visual hierarchy through color; annotations guide interpretation
     spec_compliance:
       score: 15
       max: 15
@@ -128,26 +122,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Bland-Altman chart type
+        comment: Correct Bland-Altman scatter plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: bias line, limits of agreement, annotations,
-          data transparency'
+        comment: Scatter, bias line, ±1.96 SD limits, annotations all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=mean of methods, Y=difference; all data shown
+        comment: X=mean, Y=difference; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; no legend needed for single series
+        comment: Title correct format; descriptive axes with units
     data_quality:
       score: 15
       max: 15
@@ -157,20 +150,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects of plot type: data points, bias, limits, annotations'
+        comment: Complete Bland-Altman plot with all aspects
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Blood pressure readings (100-160 mmHg realistic range); neutral medical
-          context
+        comment: Blood pressure device validation; realistic data with appropriate
+          noise
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 80 observations within recommended 30-200 range; sensible values
+        comment: BP values (100-160 mmHg) realistic; method differences plausible
     code_quality:
       score: 10
       max: 10
@@ -180,57 +173,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; straightforward script
+        comment: Simple linear script, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random seed set (np.random.seed(42))
+        comment: Seed set (np.random.seed(42))
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports; proper organization
+        comment: Only used imports (os, numpy, pandas, lets_plot)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity
+        comment: No fake interactivity; clear Bland-Altman calculations
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html; current API
+        comment: Saves as plot-{THEME}.png and .html
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: High-level API; grammar of graphics properly structured; theme tokens
-          applied idiomatically
+        comment: Canonical ggplot2-style grammar with proper layer composition
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: HTML export used, but limited exploration of other letsplot-specific
-          capabilities
+        comment: Uses letsplot basics (ggsize, ggsave, theme elements) but generic
+          beyond ggplot2
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - html-export
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
