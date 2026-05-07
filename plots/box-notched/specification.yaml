@@ -6,7 +6,7 @@ title: Notched Box Plot
 
 # Specification tracking
 created: 2025-12-25T09:01:18Z
-updated: null
+updated: 2026-05-07T22:28:33Z
 issue: 2019
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - box
-    - distribution
   data_type:
     - numeric
     - categorical
@@ -26,4 +25,5 @@ tags:
   features:
     - notched
     - comparison
+    - distribution
     - confidence-interval
