@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bland-altman-basic: Bland-Altman Agreement Plot
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2025-12-25
+Library: highcharts unknown | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-07
 """
 
 import base64
