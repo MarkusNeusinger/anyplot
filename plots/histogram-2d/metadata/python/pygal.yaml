@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: histogram-2d
 created: '2025-12-25T20:12:43Z'
-updated: '2026-05-08T05:28:39Z'
+updated: '2026-05-08T05:36:02Z'
 generated_by: claude-haiku
 workflow_run: 25538441862
 issue: 2012
@@ -12,31 +12,33 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/pygal/plot-dark.html
-quality_score: 85
+quality_score: 91
 review:
   strengths:
-  - Perfect visual quality with excellent legibility in both light and dark themes
-  - Complete spec compliance including optional marginal histograms
-  - Realistic financial data with clear correlation structure visible in heatmap
-  - Clean code with good reproducibility and deterministic seeding
-  - Proper theme-adaptive chrome with all text readable in both renders
+  - Excellent theme adaptation with perfect light/dark rendering
+  - High visual quality with explicit typography and no readability issues
+  - Complete feature set including marginal histograms and colorbar
+  - Realistic financial data with proper correlation structure
+  - Clean professional design with subtle borders and generous whitespace
   weaknesses:
-  - Code completely bypasses pygal API and manually constructs SVG instead—doesn't
-    demonstrate idiomatic pygal usage or library mastery
-  - Design excellence is adequate but not sophisticated—uses standard viridis without
-    customization or visual refinement
+  - 'Library mastery: Does not use pygal Chart classes; relies on manual SVG construction
+    instead of recommended API (potential AR-05 violation)'
+  - 'Design Excellence modest: While refined, not at publication-level; could increase
+    visual sophistication through typography variations and enhanced color harmony'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1)—correct, NOT pure white
-      Chrome: Title (56px bold dark text), axis labels (40px bold, "Stock Market Daily Returns (%)" and "Bond Market Daily Returns (%)"), tick labels (32px dark), colorbar label (36px bold "Count")—all clearly readable against light surface
-      Data: Heatmap uses viridis gradient (purple→yellow) showing joint distribution; marginal histograms use #009E73 green bars; correlation structure clear with bright focal point in center
-      Legibility verdict: PASS—all text highly readable; no light-on-light issues
+      Background: Warm off-white #FAF8F1 - correct color, not pure white
+      Chrome: Title, x-axis label, y-axis label, tick labels all in dark text (#1A1A17, #4A4A44, #6B6A63) - fully readable against light surface
+      Data: Viridis colormap from dark purple (low density) to yellow (high density); marginal histograms use Okabe-Ito #1 (#009E73) green; colorbar shows count scale 0-49
+      Legibility verdict: PASS - all text clearly visible, no overlap, excellent contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17)—correct, NOT pure black
-      Chrome: Title, axis labels, and tick labels rendered in light INK color (#F0EFE8) against dark background—all clearly readable; no dark-on-dark text issues detected
-      Data: Heatmap colors identical to light render (viridis gradient preserved); marginal histograms same #009E73 green (distinctly visible on dark surface); colorbar gradient identical—proving data colors stay constant across themes, only chrome adapts
-      Legibility verdict: PASS—all text highly readable; strong contrast; green bars clearly visible on dark surface
+      Background: Warm near-black #1A1A17 - correct color, not pure black
+      Chrome: Title and labels in light text (#F0EFE8, #B8B7B0, #A8A79F) - fully readable against dark surface, no dark-on-dark issues
+      Data: Viridis gradient IDENTICAL to light render (only chrome flipped); marginal green bars (#009E73) properly visible on dark background
+      Legibility verdict: PASS - all text readable, proper theme adaptation, marginals visible
+
+    Both renders PASS legibility check. Data colors constant between themes. Chrome correctly theme-adaptive. No text readability failures in either render.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -47,74 +49,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 56px bold, axis labels 40px bold, ticks 32px—all explicitly
-          sized and readable in both themes
+        comment: All font sizes explicitly set (56px title, 40px labels, 32px ticks);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions; title centered; tick labels clear; marginal histograms
-          well-placed
+        comment: All text well-spaced with no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Clear gradient from purple (low density) to yellow (high density);
-          marginal bars visible
+        comment: Heatmap cells, marginal bars, colorbar all clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is CVD-safe and perceptually uniform; high contrast; no red-green-only
-          signaling
+        comment: Viridis is CVD-safe; good contrast throughout
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins; all elements fit; marginal histograms frame main
-          plot nicely
+        comment: Plot fills ~65% of canvas with balanced, generous margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axes labeled with units (%); colorbar labeled
-          "Count"
+        comment: Both descriptive with units (Stock/Bond Market Daily Returns %)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Marginal bars #009E73 (Okabe-Ito #1); viridis for continuous heatmap;
-          both renders theme-correct'
+        comment: 'Viridis for heatmap; marginals use #009E73; backgrounds #FAF8F1/#1A1A17;
+          theme chrome perfect'
     design_excellence:
-      score: 12
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
         passed: false
-        comment: Clean but generic; uses standard viridis without customization
+        comment: Refined layout with marginals and sophisticated typography; clearly
+          above defaults but not publication-level
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Subtle muted borders; generous whitespace; marginal histograms add
-          refinement
+        comment: 'Perfect: subtle borders (muted colors, 2.5px), generous whitespace,
+          polished throughout'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: Clear focal point (bright center); marginal histograms guide viewer;
-          correlation visible
+        passed: false
+        comment: Visual hierarchy clear (yellow highlights high density); marginals
+          provide context; correlation evident
     spec_compliance:
       score: 15
       max: 15
@@ -124,26 +122,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D histogram heatmap
+        comment: Correct 2D histogram heatmap with all subtypes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorbar present, viridis used, 20 bins set, optional marginal histograms
-          included
+        comment: Colorbar, viridis colormap, marginal histograms (top & right) all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correctly labeled and span full data range
+        comment: X=stock returns, Y=bond returns; axes show full range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; colorbar labeled appropriately
+        comment: Title format correct; colorbar label 'Count'
     data_quality:
       score: 15
       max: 15
@@ -153,20 +151,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows bivariate distribution, density gradient, marginal distributions,
-          correlation
+        comment: Shows joint distribution, density variation, correlation structure,
+          marginals
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Financial data realistic and neutral; seed set for reproducibility
+        comment: Real financial scenario (stock vs bond returns); neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Daily return scales sensible for financial domain
+        comment: Stock (-5% to 5%), bonds (-2% to 2%); factually correct with proper
+          correlation
     code_quality:
       score: 10
       max: 10
@@ -176,13 +175,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear code with one helper function; not over-engineered
+        comment: 'Clean: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42) set; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -194,15 +193,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: SVG construction appropriate; no fake UI
+        comment: Clean, Pythonic, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.svg/.png/.html correctly
+        comment: 'Correct: plot-{THEME}.png and plot-{THEME}.html'
     library_mastery:
-      score: 3
+      score: 4
       max: 10
       items:
       - id: LM-01
@@ -210,24 +209,22 @@ review:
         score: 1
         max: 5
         passed: false
-        comment: Code doesn't import pygal or use its API—manually constructs SVG.
-          While pragmatic given pygal lacks heatmap support, doesn't demonstrate idiomatic
-          usage
+        comment: Does not use pygal Chart classes; relies on manual SVG construction
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Manual viridis interpolation shows color-mapping skill, but no pygal-specific
-          features
+        comment: Custom viridis interpolation and marginal histograms are creative
+          but not library-specific
   verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
   - colorbar
-  - annotations
   - manual-ticks
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
@@ -235,3 +232,4 @@ impl_tags:
   - binning
   styling:
   - custom-colormap
+  - alpha-blending
