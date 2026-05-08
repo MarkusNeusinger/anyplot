@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: heatmap-adjacency
 created: '2026-05-08T07:19:21Z'
-updated: '2026-05-08T07:25:10Z'
+updated: '2026-05-08T07:40:51Z'
 generated_by: claude-sonnet
 workflow_run: 25542295641
 issue: 5240
@@ -12,40 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 85
 review:
   strengths:
-  - 'Perfect spec compliance: symmetric matrix, viridis colormap, colorbar, node ordering,
-    both triangles filled'
-  - 'Excellent data quality: realistic academic co-authorship scenario with clear
-    three-cluster structure'
-  - Clean, idiomatic Altair code with full theme-adaptive chrome correctly applied
-    in both light and dark renders
-  - Block-diagonal structure immediately readable; strong data storytelling through
-    node ordering
+  - 'Perfect spec compliance: all required features (symmetric fill, colorbar, node-name
+    tick labels, cluster-ordered nodes) correctly implemented'
+  - Fully theme-adaptive chrome with all six tokens correctly applied to every element
+    in both renders
+  - Correct viridis colormap for continuous edge-weight data — no forbidden palettes
+  - Clean, reproducible code with seed; flat KISS structure
+  - Both renders pass legibility check — no dark-on-dark failures
   weaknesses:
-  - Tick label font size is 16px; should be 18px for pixel-based libraries at this
-    canvas size
-  - 'Aesthetic sophistication is library-default level: no department separator lines,
-    no visual accent on brightest clusters, no design detail that elevates it beyond
-    a correctly-parameterized heatmap'
-  - Altair distinctive interactive/layering features (e.g., alt.condition() for conditional
-    color, linked selection) are unused
+  - Tick label font size is 16px; style guide specifies 18px for pixel-based libraries
+    — raise labelFontSize to 18
+  - Canvas is 3300×3300 px (1100 × 3.0); target for square symmetric plots is 3600×3600
+    — raise width/height to 1200
+  - No group-boundary annotations or per-department axis labels — adding text labels
+    alongside axis separators would lift DE-03 significantly
+  - LM-02 underused — Altair supports layering rules for group boundary lines or alt.condition
+    to suppress diagonal cells
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "heatmap-adjacency · altair · anyplot.ai" in dark ink, clearly readable. Axis labels "Researcher" on both axes in dark ink. X-axis tick labels rotated -45° in dark gray (INK_SOFT #4A4A44), Y-axis tick labels straight, both fully readable. Legend box has light elevated background (#FFFDF6) with subtle border.
-      Data: Viridis colormap from dark purple (weight=0) through blue/teal/green to bright yellow (weight=1.0). Three block-diagonal clusters clearly visible (Ph01-Ph08, Bi01-Bi08, Ch01-Ch08). First series: N/A (continuous colormap, not categorical). Absent edges appear dark purple, strong within-dept ties appear bright yellow.
-      Legibility verdict: PASS
+      Background: warm off-white (#FAF8F1) — correct
+      Chrome: title "heatmap-adjacency · altair · anyplot.ai" in dark ink; both axis labels "Researcher" clearly dark; 24 tick labels rotated -45° on x-axis and horizontal on y-axis in INK_SOFT color; colorbar legend with "Collab. Strength" title on elevated off-white (#FFFDF6) background
+      Data: viridis colormap (dark purple = 0/absent edges, yellow-green = strong ~1.0 connections); 24×24 matrix with clear block-diagonal structure; 3 department clusters (Ph, Bi, Ch) with strong within-group connections and sparse cross-group connections; dashed separator lines at group boundaries
+      Legibility verdict: PASS — all text clearly readable on warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light cream (#F0EFE8), axis labels and tick labels in light gray (#B8B7B0), all clearly readable against dark surface. No dark-on-dark failures detected. Legend box uses elevated dark fill (#242420) with subtle border. All tick labels, axis titles, and chart title render in appropriate light tones.
-      Data: Viridis data colors are identical to light render — same purple-to-yellow scale. Block structure equally visible. Only chrome (background, text, legend box) has flipped.
-      Legibility verdict: PASS
+      Background: near-black (#1A1A17) — correct
+      Chrome: title in light (#F0EFE8) text clearly visible; axis labels and tick labels in lighter (#B8B7B0) color clearly readable against dark background; colorbar legend on elevated dark (#242420) background with light text; no dark-on-dark failures detected
+      Data: viridis colormap colors IDENTICAL to light render — only chrome flips between themes; same block-diagonal structure visible with identical yellow-green clusters and dark purple absent edges
+      Legibility verdict: PASS — all text readable on near-black background; no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -53,74 +53,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 28px, axis labels 22px, legend 16px all explicit and correct.
-          Tick labels 16px vs recommended 18px for pixel-based libraries.
+        comment: Title 28px, axis labels 22px correct; tick labels at 16px slightly
+          below recommended 18px for pixel-based libraries
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: -45 degree rotation prevents overlap for all 24 node labels. No overlap
-          visible.
+        comment: x-axis labels rotated -45 degrees; no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap cells clearly visible and well-sized for 24x24 matrix with
-          viridis colormap.
+        comment: All 576 matrix cells clearly visible; viridis range distinguishes
+          absent from strong connections
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and CVD-safe.
+        comment: Viridis is perceptually uniform and CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 1100x1100 at scale_factor=3.0 yields ~3300x3300 square canvas. Plot
-          fills canvas well with balanced margins.
+        comment: Canvas 3300x3300 (1100x3.0); target is 3600x3600 for square plots
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes labeled Researcher. Title follows required format.
+        comment: Title matches spec-id format; axes labeled Researcher; colorbar titled
+          Collab. Strength
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous data uses viridis (correct). Light bg #FAF8F1, dark bg
-          #1A1A17. All chrome tokens correctly applied.'
+        comment: 'Viridis correct for continuous edge-weight data; backgrounds #FAF8F1/#1A1A17
+          correct'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library default. Correct viridis, gradient sizing
-          shows intent, but no distinctive design voice, no department boundary markers,
-          no creative emphasis.
+        passed: true
+        comment: Professional viridis with custom colorbar dimensions; full theme-adaptive
+          chrome. Missing group annotations.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Grid removed (gridOpacity=0.0), explicit font sizes, subtle view
-          stroke. Good refinement but not exceptional.
+        comment: Grid hidden; INK_SOFT tokens on domain/ticks; dashed block separators
+          are helpful. Limited beyond basics.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Nodes ordered by department to surface block-diagonal clusters. Viewer
-          immediately reads three-group structure.
+        comment: Block-diagonal structure tells community story; no group-label annotations
+          or focal-point emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -130,28 +128,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct adjacency matrix heatmap using mark_rect().
+        comment: Correct matrix-based adjacency heatmap using mark_rect()
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Symmetric matrix (both triangles), weight-mapped colors, colorbar
-          legend, node names as tick labels, nodes ordered by department.
+        comment: Cluster-ordered nodes; symmetric fill; weight-to-color encoding;
+          colorbar; node-name tick labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: from:O -> X, to:O -> Y, weight:Q -> color. All 24 nodes visible on
-          both axes.
+        comment: Source on x, target on y, weight on color; all 24 nodes visible on
+          both axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title heatmap-adjacency · altair · anyplot.ai correct. Colorbar titled
-          Collab. Strength.
+        comment: 'Title: heatmap-adjacency · altair · anyplot.ai; colorbar: Collab.
+          Strength'
     data_quality:
       score: 15
       max: 15
@@ -161,22 +159,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates absent edges, weak cross-dept ties, strong within-dept
-          ties, symmetric structure, three distinct cluster densities.
+        comment: Full adjacency matrix; within-group density vs cross-group sparsity
+          both represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Academic co-authorship network across Physics, Biology, Chemistry
-          departments — neutral, real-world.
+        comment: Academic co-authorship network with Physics/Biology/Chemistry departments;
+          neutral and realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 24 nodes (within spec 20-200 range), weights in [0,1], realistic
-          within-dept density ~82%, cross-dept ~26%.
+        comment: 24 nodes (3x8) within 20-200 target range; weight [0,1] appropriate
     code_quality:
       score: 10
       max: 10
@@ -186,53 +183,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> theme tokens -> data -> chart -> save. No functions
-          or classes.'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random calls.
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, numpy, pandas — all used, no spurious imports.
+        comment: os, altair, numpy, pandas — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic list comprehension for long-format, appropriate complexity,
-          no fake functionality.
+        comment: Clean chained Altair calls; readable matrix construction loop
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: mark_rect() with proper O/Q encoding types, full configure_* theming
-          chain, alt.Legend with gradient customization — expert Altair heatmap pattern.
+        comment: mark_rect() with :O ordinal encoding and sort=node_names; configure_axisX
+          separate for angle; alt.Scale(scheme='viridis')
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Tooltip encoding, HTML export, configure_axisX(labelAngle=-45) are
-          Altair-specific, but no alt.condition(), linked selections, or layer composition
-          that strongly differentiates Altair.
-  verdict: REJECTED
+        comment: Tooltips with format and HTML export are useful but not deeply distinctive;
+          no alt.condition, layered annotations, or selection interactions
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
