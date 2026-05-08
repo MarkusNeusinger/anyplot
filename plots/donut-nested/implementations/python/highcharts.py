@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 donut-nested: Nested Donut Chart
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-25
+Library: highcharts unknown | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-08
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -17,34 +18,42 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+# Theme-adaptive tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette - first series is always #009E73 (brand green)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
 # Data - Budget allocation: departments (inner) and expense categories (outer)
-# Inner ring: Department totals
 departments = ["Engineering", "Marketing", "Operations", "Sales"]
 dept_values = [4500000, 2800000, 1900000, 2200000]
-dept_colors = ["#306998", "#FFD43B", "#9467BD", "#17BECF"]
+dept_colors = OKABE_ITO
 
-# Outer ring: Expense categories within each department
-# Using color variants (lighter shades) for each department's children
+# Outer ring: Expense categories with color variants per department
 expenses = [
-    # Engineering (blue family)
-    {"name": "Salaries", "y": 2800000, "color": "#306998"},
-    {"name": "Equipment", "y": 900000, "color": "#4A8BB3"},
-    {"name": "Training", "y": 450000, "color": "#6BA5C9"},
-    {"name": "Software", "y": 350000, "color": "#8CBFDF"},
-    # Marketing (yellow family)
-    {"name": "Advertising", "y": 1400000, "color": "#FFD43B"},
-    {"name": "Events", "y": 700000, "color": "#FFE066"},
-    {"name": "Content", "y": 400000, "color": "#FFEB99"},
-    {"name": "Research", "y": 300000, "color": "#FFF5CC"},
-    # Operations (purple family)
-    {"name": "Facilities", "y": 800000, "color": "#9467BD"},
-    {"name": "IT Support", "y": 600000, "color": "#A982CA"},
-    {"name": "Logistics", "y": 500000, "color": "#BE9DD7"},
-    # Sales (cyan family)
-    {"name": "Commissions", "y": 1100000, "color": "#17BECF"},
-    {"name": "Travel", "y": 600000, "color": "#4DCEE0"},
-    {"name": "Client Entertainment", "y": 300000, "color": "#83DEF0"},
-    {"name": "CRM Tools", "y": 200000, "color": "#B0EEF8"},
+    # Engineering (green family - Okabe-Ito position 1 variants)
+    {"name": "Salaries", "y": 2800000, "color": "#009E73"},
+    {"name": "Equipment", "y": 900000, "color": "#20B894"},
+    {"name": "Training", "y": 450000, "color": "#38D4A3"},
+    {"name": "Software", "y": 350000, "color": "#50EEB2"},
+    # Marketing (vermillion family - Okabe-Ito position 2 variants)
+    {"name": "Advertising", "y": 1400000, "color": "#D55E00"},
+    {"name": "Events", "y": 700000, "color": "#E1791D"},
+    {"name": "Content", "y": 400000, "color": "#ED9439"},
+    {"name": "Research", "y": 300000, "color": "#F9AF56"},
+    # Operations (blue family - Okabe-Ito position 3 variants)
+    {"name": "Facilities", "y": 800000, "color": "#0072B2"},
+    {"name": "IT Support", "y": 600000, "color": "#2287CC"},
+    {"name": "Logistics", "y": 500000, "color": "#449CE6"},
+    # Sales (reddish purple family - Okabe-Ito position 4 variants)
+    {"name": "Commissions", "y": 1100000, "color": "#CC79A7"},
+    {"name": "Travel", "y": 600000, "color": "#DB8FBB"},
+    {"name": "Client Entertainment", "y": 300000, "color": "#EAA5CF"},
+    {"name": "CRM Tools", "y": 200000, "color": "#F9BBE3"},
 ]
 
 # Create chart
@@ -52,26 +61,26 @@ chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
 # Chart configuration - using square 3600x3600 format for pie charts
-chart.options.chart = {"type": "pie", "width": 3600, "height": 3600, "backgroundColor": "#ffffff"}
+chart.options.chart = {"type": "pie", "width": 3600, "height": 3600, "backgroundColor": PAGE_BG}
 
 # Title
 chart.options.title = {
-    "text": "Annual Budget Allocation by Department · donut-nested · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
+    "text": "donut-nested: Budget Allocation Hierarchy",
+    "style": {"fontSize": "48px", "fontWeight": "bold", "color": INK},
     "y": 50,
 }
 
 # Subtitle
 chart.options.subtitle = {
-    "text": "Inner: Departments | Outer: Expense Categories",
-    "style": {"fontSize": "32px"},
+    "text": "Departments (inner) and expense categories (outer)",
+    "style": {"fontSize": "32px", "color": INK_SOFT},
     "y": 100,
 }
 
 # Tooltip
 chart.options.tooltip = {
     "pointFormat": "<b>{point.name}</b>: ${point.y:,.0f} ({point.percentage:.1f}%)",
-    "style": {"fontSize": "24px"},
+    "style": {"fontSize": "24px", "color": INK},
 }
 
 # Legend disabled for cleaner nested donut
@@ -89,8 +98,8 @@ inner_series.data_labels = {
     "enabled": True,
     "format": "<b>{point.name}</b><br>${point.y:,.0f}",
     "distance": -70,
-    "style": {"fontSize": "26px", "fontWeight": "bold", "textOutline": "2px white"},
-    "color": "#333333",
+    "style": {"fontSize": "26px", "fontWeight": "bold", "textOutline": "2px " + PAGE_BG},
+    "color": INK,
 }
 
 # Outer ring (expenses) - larger, surrounding inner
@@ -103,17 +112,27 @@ outer_series.data_labels = {
     "enabled": True,
     "format": "{point.name}",
     "distance": 25,
-    "style": {"fontSize": "20px", "fontWeight": "normal"},
+    "style": {"fontSize": "20px", "fontWeight": "normal", "color": INK},
     "connectorWidth": 2,
 }
 
 chart.add_series(inner_series)
 chart.add_series(outer_series)
 
-# Download Highcharts JS for inline embedding
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Download Highcharts JS for inline embedding (try multiple CDNs)
+cdn_urls = ["https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts.js", "https://code.highcharts.com/highcharts.js"]
+highcharts_js = None
+for url in cdn_urls:
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=30) as response:
+            highcharts_js = response.read().decode("utf-8")
+            break
+    except Exception:
+        continue
+
+if not highcharts_js:
+    raise RuntimeError("Failed to download Highcharts JS from all CDN sources")
 
 # Generate HTML with inline scripts
 html_str = chart.to_js_literal()
@@ -123,20 +142,20 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 3600px; height: 3600px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
+# Save HTML for interactive version (theme-specific)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
 # Write temp HTML and take screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
-
-# Also save the HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
 
 chrome_options = Options()
 chrome_options.add_argument("--headless")
@@ -154,7 +173,7 @@ driver.quit()
 # Crop to exact 3600x3600 dimensions
 img = Image.open("plot_raw.png")
 img_cropped = img.crop((0, 0, 3600, 3600))
-img_cropped.save("plot.png")
+img_cropped.save(f"plot-{THEME}.png")
 Path("plot_raw.png").unlink()
 
 Path(temp_path).unlink()

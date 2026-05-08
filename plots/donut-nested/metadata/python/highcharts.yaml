@@ -1,165 +1,177 @@
 library: highcharts
+language: python
 specification_id: donut-nested
 created: '2025-12-25T20:05:51Z'
-updated: '2025-12-25T20:10:11Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510190085
+updated: '2026-05-08T01:23:50Z'
+generated_by: claude-haiku
+workflow_run: 25530890360
 issue: 2015
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/donut-nested/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/donut-nested/highcharts/plot.html
-quality_score: 92
-impl_tags:
-  dependencies:
-  - selenium
-  - pillow
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/highcharts/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent color scheme using consistent hue families (blue gradients for Engineering,
-    yellow for Marketing, etc.) that clearly show parent-child relationships
-  - Clean separation between inner and outer rings with appropriate sizing (inner
-    20-45%, outer 55-85%)
-  - Professional title format with informative subtitle explaining the ring hierarchy
-  - Realistic budget allocation scenario with plausible department/expense values
-  - Good use of Highcharts PieSeries configuration for nested donut effect
-  - HTML output also generated for interactive viewing
+  - Full palette compliance with Okabe-Ito colors and brand green as first series
+  - Perfect theme-adaptive rendering with proper tokens in both light and dark modes
+  - Clear visual hierarchy through nested structure and color family grouping
+  - All text explicitly sized and perfectly readable at high resolution in both themes
+  - Professional code with linear KISS structure and robust error handling
+  - Expert use of Highcharts library features including nested pie series and custom
+    data labels
   weaknesses:
-  - Some outer ring labels (especially smaller segments like Software, CRM Tools)
-    could benefit from larger font sizes for better readability at full resolution
-  - Spec suggests using a legend for smaller segments, but legend is disabled; this
-    is a minor deviation from spec guidance
-  image_description: 'The plot displays a nested donut chart for annual budget allocation.
-    The **inner ring** shows 4 department segments: Engineering (dark blue, $4,500,000),
-    Marketing (yellow, $2,800,000), Operations (purple, $1,900,000), and Sales (cyan,
-    $2,200,000). Each department segment has bold white text labels with the department
-    name and dollar value positioned inside the segment. The **outer ring** contains
-    15 expense category segments, each colored with lighter shades matching their
-    parent department''s hue family (e.g., Engineering''s children use progressively
-    lighter blues for Salaries, Equipment, Training, Software). Outer ring labels
-    (expense names) are positioned outside the chart with connector lines. The chart
-    uses a square 3600×3600 format with a white background. The title at the top reads
-    "Annual Budget Allocation by Department · donut-nested · highcharts · pyplots.ai"
-    with a subtitle "Inner: Departments | Outer: Expense Categories".'
+  - Title format should be 'donut-nested · highcharts · anyplot.ai' but uses descriptive
+    text instead
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) per style guide
+      Chrome: Title (48px), subtitle (32px), labels (26px/20px) all explicitly set and perfectly readable against light background
+      Data: Okabe-Ito palette with first series #009E73 (brand green), color variants per department showing intentional design; inner ring departments, outer ring expense categories with leader lines avoiding overlap
+      Legibility verdict: PASS - all text highly readable with perfect contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) per style guide
+      Chrome: Title and subtitle visible (light text #F0EFE8), labels in theme-adaptive color (#B8B7B0); text outline using PAGE_BG ensures contrast; all text perfectly readable
+      Data: Data colors identical to light render (#009E73, #D55E00, #0072B2, #CC79A7); only chrome has flipped to dark theme
+      Legibility verdict: PASS - all text highly readable, no dark-on-dark failures, perfect theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 48px, subtitle 32px, inner labels 26px, outer labels 20px -
-          all readable, though some outer labels (Software, CRM Tools) are slightly
-          small for their segment size
+        comment: All sizes explicitly set (title 48px, subtitle 32px, labels 26px/20px);
+          perfectly readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; labels well-positioned inside (inner) and outside
-          (outer) the rings
+        comment: Leader lines position outer labels cleanly; no text collision anywhere
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Both rings clearly visible with good sizing (inner 20-45%, outer
-          55-85%), white gap between rings provides excellent separation
+        comment: All segments clearly visible and distinguishable in both light and
+          dark renders
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-safe palette (blue, yellow, purple, cyan families); no
-          red-green conflicts
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Chart fills ~60% of canvas, good proportions, though slight top-heaviness
-          with title/subtitle
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend disabled for cleaner look; subtitle explains the ring hierarchy
+        comment: Okabe-Ito palette is colorblind-safe; color variants maintain hue
+          families with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format appropriate for symmetric donut; centered with balanced
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title and subtitle clearly explaining the hierarchy
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order (positions 2-4: #D55E00, #0072B2,
+          #CC79A7); backgrounds #FAF8F1/#1A1A17; theme-adaptive chrome perfect in
+          both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom color variants per department create intentional visual hierarchy;
+          strong design beyond library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean ring separation, subtle leader lines, text outline effects
+          for contrast; professional polish evident
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Nested structure clearly tells hierarchy; color families guide viewer;
+          budget allocation narrative is clear and compelling
     spec_compliance:
-      score: 23
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct nested donut chart with two concentric rings
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Inner ring = departments (level_1), outer ring = expenses (level_2),
-          values correctly mapped
-      - id: SC-03
+        comment: Correct nested donut chart with parent categories in inner ring and
+          children in outer ring
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Has consistent color families per parent, child segments align with
-          parent boundaries, includes labels; missing: no legend for smaller segments
-          as spec suggests'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: hierarchy, color families, labels, ring
+          spacing'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, values aggregate correctly (Engineering children
-          sum to $4.5M)
-      - id: SC-06
-        name: Title Format
+        comment: Inner/outer mapping correct; hierarchy properly aligned; values accurate
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: 'Correctly formatted: "{description} · donut-nested · highcharts
-          · pyplots.ai"'
+        max: 3
+        passed: false
+        comment: Title should follow 'donut-nested · highcharts · anyplot.ai' format
+          but uses descriptive title; legend appropriately disabled
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 4 parent categories with 3-4 children each, demonstrates varying
-          sizes within each family
+        comment: Full hierarchical demonstration with multiple departments and expense
+          categories showing variation
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Budget allocation is a perfect real-world scenario; department names
-          and expense categories are plausible
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values range from $200K (CRM Tools) to $2.8M (Salaries) - realistic
-          corporate budget figures
+        comment: Budget allocation scenario is realistic, neutral, and comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values are plausible; proportions factually correct; inner ring totals
+          match outer groupings
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -167,36 +179,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → chart config → series → HTML generation
-          → screenshot'
+        comment: 'Linear flow: imports → theme tokens → data → chart config → export'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Data is deterministic (hardcoded), but no random seed needed; however
-          the structure could be cleaner
+        comment: Deterministic hardcoded data; fully reproducible
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: highcharts_core, PIL, selenium, tempfile, urllib,
-          etc.'
+        comment: 'Only used imports: urllib/PIL/selenium for export, highcharts_core
+          for plotting'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current highcharts_core API
+        comment: Clean Pythonic code; robust CDN fallback; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 4
-      max: 5
-      items: []
+        comment: 'Correct output naming: plot-{THEME}.png and plot-{THEME}.html; current
+          API'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert idiomatic usage: proper Chart constructor with container,
+          HighchartsOptions, theme-adaptive rendering, robust Selenium export'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses nested pie series, custom data labels with connector lines,
+          text outline styling, multi-variant color approach; distinctly Highcharts
+          features
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pillow
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
