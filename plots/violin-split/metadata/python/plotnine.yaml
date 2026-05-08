@@ -1,162 +1,164 @@
 library: plotnine
+language: python
 specification_id: violin-split
 created: '2025-12-26T10:03:11Z'
-updated: '2025-12-26T10:06:58Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520452211
+updated: '2026-05-08T17:02:26Z'
+generated_by: claude-haiku
+workflow_run: 25567982471
 issue: 1949
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-split/plotnine/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent use of plotnine style=left-right parameter for true split violins
-  - Inner boxplots add valuable statistical detail (quartiles and outliers visible)
-  - Clear color contrast between blue and yellow for accessibility
-  - Realistic employee training scenario with meaningful before/after comparison
-  - Clean code structure following KISS principles
-  - Proper font sizing for all text elements
+  - 'Excellent theme compliance: backgrounds, text colors, and grid styling perfectly
+    adapted to both light and dark renders'
+  - Clean code structure with proper use of theme tokens (PAGE_BG, INK, INK_SOFT)
+  - Correct Okabe-Ito palette usage with appropriate color positions
+  - 'Strong spec compliance: all required features implemented'
+  - Data choice effectively demonstrates the visualization's purpose
+  - Proper font sizing and readability across both renders
   weaknesses:
-  - Legend entry order (After Training first) does not match intuitive temporal order
-    (Before should come first)
-  - Boxplots are slightly narrow and could be more prominent
-  - Distribution shapes are somewhat similar across departments - more varied shapes
-    would better demonstrate the plot type capabilities
-  image_description: The plot displays split violin plots for four departments (Engineering,
-    Marketing, Sales, Support) comparing employee satisfaction scores before and after
-    training. Blue violin halves on the left represent "After Training" scores, while
-    yellow/gold violin halves on the right represent "Before Training" scores. Each
-    violin contains an inner boxplot showing quartiles and outliers (small gray dots).
-    The title "violin-split · plotnine · pyplots.ai" is centered at the top. The y-axis
-    shows "Satisfaction Score (0-100)" ranging from about 25 to 100, and the x-axis
-    shows "Department". A legend labeled "Period" appears on the right with "After
-    Training" and "Before Training" entries. The grid lines are subtle and dashed.
+  - Design Excellence could be elevated through more sophisticated aesthetic choices
+    (e.g., custom theme refinements, intentional whitespace adjustments)
+  - Boxplot overlay is functionally readable but could be slightly larger for improved
+    quartile visibility
+  - Library-specific features are well-used but somewhat standard
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "violin-split · plotnine · anyplot.ai" centered and clearly visible in dark ink; axis labels "Department" and "Satisfaction Score (0-100)" with units shown; tick labels (0-100 on y-axis, department names on x-axis) all readable; legend on right clearly visible
+      Data: Green (#009E73) on left half, orange (#D55E00) on right half for each department; overlaid boxplots in matching colors show quartiles
+      Legibility verdict: PASS - all text fully readable against light background; no contrast issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title in light gray, clearly visible; axis labels and tick labels in light ink with excellent contrast against dark background; legend clearly visible with proper theme adaptation
+      Data: Green (#009E73) and orange (#D55E00) identical to light render - only chrome elements adapted; boxplots clearly visible
+      Legibility verdict: PASS - all text readable against dark background; no dark-on-dark failures; proper contrast throughout
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: 'All text is clearly readable: title ~24pt, axis labels ~20pt, tick
-          labels ~16pt'
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All font sizes explicitly set; fully readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text elements cleanly separated
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Violins are well-sized and visible; boxplots provide good detail
-          (-1 for boxplots being slightly small)
+        comment: Violins well-sized; boxplots slightly compact but readable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow are highly distinguishable and colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good proportions, though slight imbalance with legend area (-1)
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Satisfaction Score (0-100)", "Department"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette with strong CVD-safe contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect balance and sizing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive with units; correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito correct; backgrounds and chrome theme-adaptive
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is subtle but legend order is reversed from visual (After Training
-          shown first in legend but appears on left side of violins, which is correct
-          but "Before Training" comes after in legend despite being on right)
+        comment: Well-configured defaults but not publication-exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid and clean borders; minimal custom refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Clear before/after narrative through color hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct split violin plot with left-right halves
+        comment: Correct split violin with left-right style
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Category on x-axis, values on y-axis, split_group for colors
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Split violins meeting at center, distinct colors, legend, inner boxplots
-          as suggested
-      - id: SC-04
-        name: Data Range
+        comment: 'All features: split groups, boxplot overlay, legend'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within 0-100 range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Proper X/Y mapping and split group assignment
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies "After Training" and "Before Training"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "violin-split · plotnine · pyplots.ai"'
+        comment: Title format and legend labels correct
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation between departments and before/after differences;
-          different distribution shapes visible (-1 for similar spread patterns)
+        comment: Shows all plot type aspects
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Employee satisfaction training program is a realistic, comprehensible
-          scenario
+        comment: Authentic business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Satisfaction scores 0-100 is appropriate; values are realistic (-1
-          for some values clustering near ceiling)
+        comment: Realistic satisfaction ranges
     code_quality:
       score: 10
       max: 10
@@ -166,41 +168,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure
+        comment: Clean sequence
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Pythonic and clean
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct format
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: false
+        comment: Proper plotnine patterns
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses plotnine's grammar of graphics with geom_violin(style="left-right"),
-          geom_boxplot, scale_fill_manual, and theme customization. Could leverage
-          more plotnine-specific features.
+        passed: false
+        comment: Uses split violin style and layer composition
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
