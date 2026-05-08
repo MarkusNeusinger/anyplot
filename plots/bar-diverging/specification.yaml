@@ -6,7 +6,7 @@ title: Diverging Bar Chart
 
 # Specification tracking
 created: 2025-12-25T08:59:26Z
-updated: null
+updated: 2026-05-08T08:40:23Z
 issue: 2009
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - bar
-    - diverging
   data_type:
     - numeric
     - categorical

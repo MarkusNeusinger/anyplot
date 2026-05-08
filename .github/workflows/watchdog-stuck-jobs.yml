@@ -1,0 +1,233 @@
+name: "Watchdog: Stuck Jobs"
+run-name: "Watchdog: scan ${{ github.event_name == 'workflow_dispatch' && '(manual)' || '(cron)' }}"
+
+# Periodic safety net for the impl pipeline. Catches three failure modes
+# the regular workflows miss:
+#   1. PRs labeled `ai-review-failed` without `ai-review-rescued`
+#      (impl-review-retry.yml normally handles these; watchdog covers
+#      the case where that listener missed the labeled event).
+#   2. PRs with `ai-attempt-N` + `quality:*` but no decision label
+#      (review handed off to repair, repair crashed, nothing else fired).
+#   3. spec-ready issues with `generate:<lib>` or `impl:<lib>:failed` and
+#      no open PR for that (spec, lib) pair after the staleness window.
+#
+# Retries are bounded per-cause via marker labels:
+#   - `ai-review-rescued`            (review failures)
+#   - `watchdog:repair-rescued-<N>`  (repair failures, one per attempt#)
+#   - `watchdog:retried-<lib>`       (per-library generation failures)
+# When a marker is already present, the watchdog skips and emits a
+# warning so a human can pick the case up.
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      stale_hours:
+        description: "Hours of inactivity before a job is considered stuck"
+        required: false
+        default: '4'
+      dry_run:
+        description: "Log decisions without dispatching workflows"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  actions: write
+
+concurrency:
+  group: watchdog-stuck-jobs
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+        with:
+          fetch-depth: 1
+
+      - name: Scan and dispatch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          STALE_HOURS: ${{ inputs.stale_hours || '4' }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+        run: |
+          set -euo pipefail
+          STALE_SEC=$(( STALE_HOURS * 3600 ))
+          NOW=$(date -u +%s)
+
+          dispatch() {
+            local label="$1"; shift
+            if [[ "$DRY_RUN" == "true" ]]; then
+              echo "::notice::[dry-run] $label → gh workflow run $*"
+            else
+              echo "::notice::$label → dispatching"
+              gh workflow run "$@"
+            fi
+          }
+
+          ensure_label() {
+            if [[ "$DRY_RUN" == "true" ]]; then
+              echo "::notice::[dry-run] would ensure label: $1"
+              return 0
+            fi
+            gh label create "$1" --color "$2" --description "$3" 2>/dev/null || true
+          }
+
+          # Resolve issue number → spec_id by parsing the issue title prefix
+          # `[spec-id] ...` (set by spec-create.yml when the spec lands).
+          spec_id_for_issue() {
+            local issue_num="$1"
+            gh issue view "$issue_num" --json title --jq '.title' \
+              | grep -oP '^\[\K[^]]+' || true
+          }
+
+          ##### A) Scan open implementation PRs ##############################
+          # `gh pr list --search "head:..."` does not support prefix matching,
+          # so list all open PRs and filter client-side by branch name.
+          PRS_JSON=$(gh pr list --state open --limit 200 \
+            --json number,labels,headRefName,updatedAt \
+            --jq '[.[] | select(.headRefName | startswith("implementation/"))]')
+
+          echo "Scanning $(jq 'length' <<<"$PRS_JSON") open implementation PR(s)"
+
+          while IFS= read -r row; do
+            num=$(jq -r '.number'       <<<"$row")
+            branch=$(jq -r '.headRefName'  <<<"$row")
+            updated=$(jq -r '.updatedAt'   <<<"$row")
+            labels=$(jq -r '[.labels[].name] | join(" ")' <<<"$row")
+            updated_sec=$(date -u -d "$updated" +%s)
+            age=$(( NOW - updated_sec ))
+
+            spec_id=$(echo "$branch" | cut -d'/' -f2)
+            library=$(echo "$branch" | cut -d'/' -f3)
+
+            # Case 1: review failed, not yet rescued → re-dispatch review
+            if echo " $labels " | grep -q " ai-review-failed "; then
+              if echo " $labels " | grep -q " ai-review-rescued "; then
+                echo "::warning::PR #$num: ai-review-failed persists after rescue — needs manual attention"
+              else
+                ensure_label "ai-review-rescued" "5319e7" "Review re-dispatched once after ai-review-failed"
+                if [[ "$DRY_RUN" != "true" ]]; then
+                  gh pr edit "$num" --add-label "ai-review-rescued" --remove-label "ai-review-failed" 2>/dev/null || true
+                fi
+                dispatch "PR #$num: review (failed)" impl-review.yml -f pr_number="$num"
+              fi
+              continue
+            fi
+
+            # Case 2: stalled repair handoff
+            #   has ai-attempt-N + quality:M, no ai-approved/ai-rejected,
+            #   PR untouched for stale_hours → re-dispatch impl-repair
+            if echo " $labels " | grep -qE " ai-attempt-[0-9]+ " \
+               && echo " $labels " | grep -qE " quality:[0-9]+ " \
+               && ! echo " $labels " | grep -qE " (ai-approved|ai-rejected) " \
+               && (( age > STALE_SEC )); then
+              attempt=$(echo " $labels " | grep -oP "ai-attempt-\K[0-9]+" | sort -nr | head -1)
+              marker="watchdog:repair-rescued-$attempt"
+              if echo " $labels " | grep -q " $marker "; then
+                echo "::warning::PR #$num: repair attempt $attempt already rescued — needs manual attention"
+                continue
+              fi
+              ensure_label "$marker" "5319e7" "Watchdog re-dispatched repair attempt $attempt"
+              if [[ "$DRY_RUN" != "true" ]]; then
+                gh pr edit "$num" --add-label "$marker" 2>/dev/null || true
+              fi
+              dispatch "PR #$num: repair (stalled, attempt=$attempt)" impl-repair.yml \
+                -f pr_number="$num" \
+                -f specification_id="$spec_id" \
+                -f library="$library" \
+                -f attempt="$attempt"
+              continue
+            fi
+          done < <(echo "$PRS_JSON" | jq -c '.[]')
+
+          ##### B) Scan spec-ready issues for stuck generation ###############
+          ISS_JSON=$(gh issue list --state open --label spec-ready --limit 300 \
+            --json number,labels,updatedAt)
+
+          echo "Scanning $(jq 'length' <<<"$ISS_JSON") spec-ready issue(s)"
+
+          while IFS= read -r row; do
+            num=$(jq -r '.number'    <<<"$row")
+            updated=$(jq -r '.updatedAt' <<<"$row")
+            labels=$(jq -r '[.labels[].name] | join(" ")' <<<"$row")
+            updated_sec=$(date -u -d "$updated" +%s)
+            age=$(( NOW - updated_sec ))
+
+            (( age > STALE_SEC )) || continue
+
+            spec_id=""
+            spec_id_resolved=false
+
+            # Iterate label tokens
+            for label in $labels; do
+              case "$label" in
+                generate:*)
+                  lib="${label#generate:}"
+                  marker="watchdog:retried-$lib"
+                  if echo " $labels " | grep -q " $marker "; then
+                    echo "::warning::Issue #$num: generate:$lib already retried by watchdog — needs manual attention"
+                    continue
+                  fi
+                  if ! $spec_id_resolved; then
+                    spec_id=$(spec_id_for_issue "$num"); spec_id_resolved=true
+                  fi
+                  if [ -z "$spec_id" ]; then
+                    echo "::warning::Issue #$num: cannot resolve spec_id from title; skipping generate:$lib"
+                    continue
+                  fi
+                  open_pr=$(gh pr list --state open \
+                    --search "head:implementation/$spec_id/$lib" \
+                    --json number --jq 'length')
+                  if [[ "$open_pr" == "0" ]]; then
+                    ensure_label "$marker" "5319e7" "Watchdog retried $lib once"
+                    if [[ "$DRY_RUN" != "true" ]]; then
+                      gh issue edit "$num" --add-label "$marker" 2>/dev/null || true
+                    fi
+                    dispatch "Issue #$num: generate (stuck pending) $lib" \
+                      bulk-generate.yml \
+                      -f specification_id="$spec_id" \
+                      -f library="$lib"
+                  fi
+                  ;;
+                impl:*:failed)
+                  lib_failed="${label#impl:}"
+                  lib="${lib_failed%:failed}"
+                  marker="watchdog:retried-$lib"
+                  if echo " $labels " | grep -q " $marker "; then
+                    echo "::warning::Issue #$num: $lib already retried by watchdog — needs manual attention"
+                    continue
+                  fi
+                  if ! $spec_id_resolved; then
+                    spec_id=$(spec_id_for_issue "$num"); spec_id_resolved=true
+                  fi
+                  if [ -z "$spec_id" ]; then
+                    echo "::warning::Issue #$num: cannot resolve spec_id from title; skipping impl:$lib:failed"
+                    continue
+                  fi
+                  open_pr=$(gh pr list --state open \
+                    --search "head:implementation/$spec_id/$lib" \
+                    --json number --jq 'length')
+                  if [[ "$open_pr" == "0" ]]; then
+                    ensure_label "$marker" "5319e7" "Watchdog retried $lib once"
+                    if [[ "$DRY_RUN" != "true" ]]; then
+                      gh issue edit "$num" --add-label "$marker" 2>/dev/null || true
+                    fi
+                    dispatch "Issue #$num: generate (failed) $lib" \
+                      bulk-generate.yml \
+                      -f specification_id="$spec_id" \
+                      -f library="$lib"
+                  fi
+                  ;;
+              esac
+            done
+          done < <(echo "$ISS_JSON" | jq -c '.[]')
+
+          echo "::notice::Watchdog scan complete"

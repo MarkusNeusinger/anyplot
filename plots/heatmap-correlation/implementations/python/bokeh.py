@@ -1,16 +1,30 @@
-""" pyplots.ai
+""" anyplot.ai
 heatmap-correlation: Correlation Matrix Heatmap
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 98/100 | Updated: 2026-05-08
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png, save
+from bokeh.io import output_file, save
 from bokeh.models import BasicTicker, ColorBar, ColumnDataSource, HoverTool, LabelSet, LinearColorMapper
 from bokeh.palettes import RdBu11
 from bokeh.plotting import figure
 from bokeh.resources import CDN
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Data - realistic financial/economic indicators
 np.random.seed(42)
@@ -64,7 +78,7 @@ p = figure(
     x_range=variables,
     y_range=list(reversed(variables)),
     x_axis_location="below",
-    title="heatmap-correlation · bokeh · pyplots.ai",
+    title="heatmap-correlation · bokeh · anyplot.ai",
     toolbar_location="right",
     tools="",
 )
@@ -116,28 +130,57 @@ color_bar = ColorBar(
 )
 p.add_layout(color_bar, "right")
 
-# Style the figure
+# Style the figure with theme-adaptive colors
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = None
+
 p.title.text_font_size = "32pt"
 p.title.align = "center"
+p.title.text_color = INK
 
 # Domain-specific axis labels
 p.xaxis.axis_label = "Economic Indicators"
 p.yaxis.axis_label = "Economic Indicators"
 p.xaxis.axis_label_text_font_size = "24pt"
 p.yaxis.axis_label_text_font_size = "24pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
 p.xaxis.major_label_text_font_size = "18pt"
 p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
 p.xaxis.major_label_orientation = 0.785  # 45 degrees in radians
 
-# Grid styling
+# Grid and axis styling
 p.xgrid.visible = False
 p.ygrid.visible = False
-
-# Axis styling
-p.outline_line_color = None
 p.axis.axis_line_color = None
 p.axis.major_tick_line_color = None
 
-# Save as PNG and HTML
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", resources=CDN, title="heatmap-correlation · bokeh · pyplots.ai")
+# Colorbar label styling
+color_bar.title_text_color = INK
+color_bar.major_label_text_color = INK_SOFT
+
+# Save as HTML
+output_file(f"plot-{THEME}.html")
+save(p, resources=CDN)
+
+# Screenshot with headless Chrome
+W, H = 3600, 3600
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()

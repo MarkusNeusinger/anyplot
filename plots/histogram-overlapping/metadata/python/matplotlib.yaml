@@ -1,159 +1,165 @@
 library: matplotlib
+language: python
 specification_id: histogram-overlapping
 created: '2025-12-25T21:46:52Z'
-updated: '2025-12-25T21:48:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20511324888
+updated: '2026-05-08T06:53:38Z'
+generated_by: claude-haiku
+workflow_run: 25541428851
 issue: 2010
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/matplotlib/plot.png
-preview_html: null
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - alpha-blending
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent use of transparency (alpha=0.5) making overlapping regions clearly visible
-  - Consistent bin edges across all groups using np.linspace for accurate comparison
-  - Realistic salary data scenario with meaningful differences between departments
-  - Clean code structure following KISS principles with good comments
-  - Professional formatting with thousands separator on x-axis
-  - Edge colors on bars improve visual definition
+  - Perfect visual quality with zero legibility issues in both light and dark themes
+  - Excellent theme adaptation with identical data colors and properly adapted chrome
+  - All specification features correctly implemented with realistic, compelling data
+  - Clean, maintainable code with deterministic seed and proper structure
+  - Professional styling with subtle refinements (grid opacity, spine removal, legend
+    borders)
   weaknesses:
-  - Grid only on y-axis; adding subtle x-axis grid could improve value reading
-  - Could use matplotlib histtype=stepfilled or density normalization for enhanced
-    visualization
-  image_description: 'The plot displays three overlapping histograms comparing annual
-    salary distributions across three departments: Engineering (steel blue), Marketing
-    (golden yellow), and Sales (teal/cyan). The Engineering distribution is centered
-    around $95k with a tight spread, Marketing around $75k with moderate spread, and
-    Sales around $65k with the widest spread. The semi-transparent bars (alpha=0.5)
-    effectively show overlapping regions where distributions intersect. The x-axis
-    shows "Annual Salary ($)" formatted in thousands (20k-140k), and the y-axis shows
-    "Number of Employees" (0-35). A legend in the upper right clearly identifies each
-    department. The title follows the required format: "histogram-overlapping · matplotlib
-    · pyplots.ai". A subtle y-axis grid with dashed lines aids readability.'
+  - Design could leverage more distinctive matplotlib features beyond standard library
+    defaults
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 (correct)
+      Chrome: Title, axis labels, tick labels all clearly readable in dark text against light background. Subtle gray gridlines visible. Legend in upper right with light background and border, dark text all readable.
+      Data: Three overlapping distributions shown with semi-transparent bars (alpha=0.5). Engineering (green #009E73), Marketing (orange #D55E00), Sales (blue #0072B2). Bars have subtle edge color for definition. All three series clearly distinguishable despite overlap.
+      Legibility verdict: PASS - all elements readable and well-integrated
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 (correct)
+      Chrome: Title, axis labels, tick labels all clearly readable in light text against dark background. Subtle gray gridlines visible. Legend styling adapted to dark theme with appropriate contrast.
+      Data: Data colors are identical to light render (#009E73, #D55E00, #0072B2) - only chrome has flipped. All bars equally visible and distinguishable.
+      Legibility verdict: PASS - zero dark-on-dark failures, all text readable, brand green visible and accessible
+
+    Both renders pass theme-readability requirements with high polish and professional appearance.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, all perfectly
-          readable
+        comment: All font sizes explicitly set (title=24pt, labels=20pt, ticks=16pt),
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text elements, all fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Histogram bars well-sized, transparency allows all distributions
-          to be visible
+        comment: Bars optimally sized, overlapping regions visible through transparency
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Colors are distinguishable but blue/teal could be slightly closer
-          for some colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Annual Salary ($)", "Number of Employees"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette colorblind-safe, alpha blending ensures contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent layout with balanced margins and proper canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3), but only on y-axis; legend well placed
+        comment: Descriptive labels with units, correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, multi-series follows Okabe-Ito order, correct
+          backgrounds and theme-adaptive text'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults but lacks distinctive design choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace, legend styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear narrative through data choice: Engineering higher/tighter,
+          Marketing moderate, Sales widest with lower base'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: 'Correct: overlapping histograms'
+        comment: Correct overlapping histogram with all subtypes
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Continuous salary on x-axis, count on y-axis, grouped by department
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Semi-transparent fills, distinct colors, legend, aligned bins
-      - id: SC-04
-        name: Data Range
+        comment: Semi-transparent fills, distinct colors, legend, consistent bins
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis range (20k-150k)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Engineering, Marketing, Sales
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "histogram-overlapping · matplotlib · pyplots.ai"
+        comment: Title format correct, legend labels match data
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows different central tendencies, different spreads, and overlapping
-          regions
+        comment: Shows all distribution shapes and variance patterns
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Salary comparison across departments is a real, relatable scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Salary values ($20k-$150k) are realistic for US departments
+        comment: Real-world salary scenario, neutral and plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic salary ranges and standard deviations
     code_quality:
       score: 10
       max: 10
@@ -163,40 +169,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean: imports → data → plot → save, no functions/classes'
+        comment: Clean linear structure, no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility
+        comment: Seed set, deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: Only necessary imports, all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Clean, Pythonic, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png, current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ax.hist(), proper theme-adaptive styling, custom formatter
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
         max: 5
         passed: false
-        comment: Uses basic ax.hist(); could leverage histtype='stepfilled' or additional
-          matplotlib-specific features
+        comment: Uses ax.xaxis.set_major_formatter() and theme tokens, but mostly
+          standard usage
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - alpha-blending
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling

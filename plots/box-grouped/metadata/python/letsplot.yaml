@@ -1,167 +1,171 @@
 library: letsplot
+language: python
 specification_id: box-grouped
 created: '2025-12-25T19:56:13Z'
-updated: '2025-12-25T19:58:20Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510143047
+updated: '2026-05-08T03:46:29Z'
+generated_by: claude-haiku
+workflow_run: 25535090344
 issue: 2017
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/box-grouped/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/box-grouped/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/letsplot/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent text legibility with well-sized fonts throughout (28pt title, 22pt labels,
-    18pt ticks)
-  - Clean KISS code structure following the grammar of graphics pattern
-  - Realistic employee performance data scenario with appropriate variation across
-    groups
-  - Proper use of categorical ordering to ensure consistent display
-  - Good alpha transparency (0.85) making boxes visually appealing
-  - Correct implementation of all spec requirements including outliers
-  - Proper 16:9 aspect ratio with scale=3 for high-resolution output
+  - Perfect text legibility in both light and dark themes with explicitly set font
+    sizes
+  - Flawless spec compliance with all required box plot features correctly implemented
+  - Excellent data quality with realistic business scenario showing meaningful performance
+    distributions
+  - 'Theme-adaptive chrome perfectly implemented: identical data colors across renders
+    with correct background and text colors'
+  - Clean, reproducible code with proper theme token abstraction
   weaknesses:
-  - Performance scores exceeding 100% is slightly unrealistic for a percentage metric
-  - Legend title Experience Level in labs() but legend fill parameter just says fill
-    - minor label inconsistency
-  - Does not leverage lets-plot interactive features in the HTML export (tooltips
-    would enhance the visualization)
-  image_description: 'The plot displays a grouped box plot with 4 departments (Engineering,
-    Marketing, Sales, Operations) on the x-axis and Performance Score (%) on the y-axis
-    ranging from approximately 20 to 110. Within each department, there are 3 side-by-side
-    box plots representing experience levels: Junior (blue #306998), Mid-Level (yellow
-    #FFD43B), and Senior (green #4CAF50). The boxes show clear median lines, quartile
-    boxes, whiskers, and outliers displayed as gray circles. The title reads "box-grouped
-    · letsplot · pyplots.ai" in bold at the top. A legend on the right identifies
-    the three experience levels. The plot uses a minimal theme with a light gray background
-    and subtle grid lines.'
+  - Design Excellence could be enhanced with more sophisticated styling choices beyond
+    library defaults
+  - Visual storytelling relies on subtitle annotation rather than visual hierarchy
+    through emphasis
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title "box-grouped · letsplot · anyplot.ai" in bold black; subtitle "Senior performers consistently achieve higher scores (median: 75) vs Junior (median: 58)" in medium gray; axis labels "Department" and "Performance Score" in dark text; tick labels in soft gray; all clearly readable against light background
+      Data: Three colored box plots per department (green #009E73 for Junior, orange #D55E00 for Mid-Level, blue #0072B2 for Senior) with white median lines, whiskers extending to outlier fence, gray outlier circles. Grid lines in soft gray, very subtle. Legend properly positioned on right.
+      Legibility verdict: PASS - all text readable, colors distinct, no dark-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Title and all text render in light colors; subtitle in light gray; axis labels in light text; tick labels in soft light gray; all clearly readable against dark background
+      Data: Box plots maintain identical colors (green #009E73, orange #D55E00, blue #0072B2) as light render; only chrome colors have flipped. Grid lines in subtle light lines. Legend text light-colored.
+      Legibility verdict: PASS - no dark-on-dark text failures, data colors identical to light render, all elements readable
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is large and bold (28pt), axis labels are 22pt, tick labels
-          are 18pt, all perfectly readable
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt),
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all labels clear and distinct
+        comment: No overlapping text elements, all labels fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Box plots are well-sized with appropriate alpha (0.85), outliers
-          are visible with size=3
+        comment: Box widths, outlier sizing, and whiskers optimally adapted to data
+          density
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Colors are distinguishable (blue, yellow, green) but blue-green could
-          be slightly problematic for some colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space, plot is well-centered with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has "Performance Score (%)" with units, X-axis has "Department"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette colorblind-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout with balanced margins, plot fills ~70% of canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Title format correct, axis labels descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, follows Okabe-Ito order, backgrounds #FAF8F1/#1A1A17,
+          theme chrome perfect'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is present but legend title says "Experience Level" while legend
-          fill label in code says "fill" - minor inconsistency
+        comment: Well-configured library default, professional but not exceptional
+          design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Good refinement with custom grid styling and legend background
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle provides context and insight; visual hierarchy guides viewer
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct grouped box plot with side-by-side boxes
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, values on Y, subcategories as fill color
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows median, quartiles, whiskers, and outliers as specified
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: median, quartiles, whiskers, outliers, grouping'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible including outliers
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Junior, Mid-Level, Senior
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "box-grouped · letsplot · pyplots.ai"
+        comment: Title and legend labels correct
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows outliers, different distributions, varying medians and spreads
-          across groups. Minor deduction: some distributions very similar'
+        comment: 'Shows all aspects: 4 departments, 3 experience levels, varying distributions,
+          outliers'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Employee performance scores by department and experience level is
-          a realistic HR scenario
+        comment: 'Real business scenario: employee performance by department and level'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Performance scores 20-110% - scores over 100% are slightly unusual
-          for a percentage metric
+        comment: Factually plausible values and proportions
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,41 +173,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Clean, simple flow: imports → tokens → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to "plot.png" but path="." is unusual (should work but non-standard)
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format with PNG and HTML
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses lets-plot grammar of graphics appropriately with theme_minimal,
-          scale_fill_manual, but doesn't leverage unique lets-plot features like interactive
-          tooltips in HTML output
+        passed: true
+        comment: Expertly uses ggplot + geom_boxplot + scale_fill_manual + custom
+          theme
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ggsave with scale, HTML export, and theme customization
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

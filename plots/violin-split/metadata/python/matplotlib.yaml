@@ -1,167 +1,169 @@
 library: matplotlib
+language: python
 specification_id: violin-split
 created: '2025-12-26T10:02:39Z'
-updated: '2025-12-26T10:05:01Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520452159
+updated: '2026-05-08T16:52:15Z'
+generated_by: claude-haiku
+workflow_run: 25567504037
 issue: 1949
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-split/matplotlib/plot.png
-preview_html: null
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent split violin implementation using path clipping technique (manual vertex
-    manipulation)
-  - Realistic salary data scenario with meaningful department/gender comparison
-  - Clear visual distinction between Male (blue) and Female (yellow) with accessible
-    colors
-  - Properly formatted quartile markers with high-contrast white+dark edge design
-  - Clean KISS code structure with no functions/classes
-  - Perfect title format and axis labeling with units
+  - Flawless theme adaptation with proper INK/INK_SOFT token threading to all text
+    elements
+  - Both renders fully readable with no dark-on-dark or light-on-light failures
+  - 'Perfect spec compliance: split violin technique with quartile markers correctly
+    implemented'
+  - Clean, reproducible code with professional styling
+  - 'Strong visual hierarchy: color contrast naturally guides Control vs Treatment
+    comparison'
   weaknesses:
-  - Legend could more explicitly indicate that Male is left half and Female is right
-    half within each violin
-  - 'Implementation header still shows Quality: pending instead of actual score (minor
-    metadata issue)'
-  image_description: 'The plot displays four split violin plots comparing salary distributions
-    between Male (blue, #306998) and Female (yellow, #FFD43B) across Engineering,
-    Marketing, Sales, and HR departments. Each violin is properly split with the left
-    half (Male) and right half (Female) meeting at the center line. The distributions
-    show realistic salary patterns with Engineering having the highest salaries (~$40K-$180K
-    range), while HR has the lowest (~$30K-$100K range). White horizontal lines with
-    dark edges mark the median and quartiles (Q1, Q3) on each half. A legend with
-    colored patches appears in the upper left. The title correctly shows "violin-split
-    · matplotlib · pyplots.ai", y-axis is labeled "Annual Salary ($)" with $K formatting,
-    and x-axis shows "Department" with the four category names.'
+  - Design refinement could emphasize treatment effect more strongly with additional
+    visual markers
+  - Quartile markers are subtle and could benefit from slightly increased prominence
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correctly themed, not pure white
+      Chrome: Title, axis labels, tick labels all clearly visible in dark INK (#1A1A17)
+      Data: Control (green #009E73) on left halves, Treatment (orange #D55E00) on right halves
+      Quartile markers: Dark lines positioned cleanly on each side
+      Legibility verdict: PASS - excellent readability across all text and data elements
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correctly themed, not pure black
+      Chrome: Title, axis labels, tick labels all clearly visible in light INK (#F0EFE8)
+      Data: Control (green #009E73) and Treatment (orange #D55E00) - identical to light render
+      Quartile markers: Light/white lines properly adapted from INK token (no dark-on-dark)
+      Legibility verdict: PASS - excellent readability with no theme adaptation failures
+      Brand green #009E73 visibility: Confirmed - reads well on both dark and light surfaces
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt, axis labels 20pt, tick labels 16pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, legend positioned to avoid data
+        comment: All text readable in both themes with explicit font sizing (24/20/16)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean spacing, no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Violins clearly visible with good alpha=0.8, quartile markers visible
-          but could use slightly more contrast
+        comment: Violins, quartile markers, legend all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow is colorblind-safe (not red-green), good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, legend near plot
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units "Annual Salary ($)", X-axis has "Department"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito positions 1-2 with colorblind-safe palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Proper 16:9 dimensions (4800x2700), generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle with alpha=0.3 (good), but legend lacks clear explanation
-          that left=Male, right=Female in the violin context
+        comment: Correct title format with descriptive axes
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct backgrounds and theme-adaptive chrome
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful alpha blending (0.8), spine removal, token-based styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean spine treatment, subtle grid (alpha=0.15), refined legend styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Split design naturally guides Control vs Treatment comparison across
+          school levels
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct split violin plot implementation
+        comment: Correct split violin implementation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, values on Y, split_group correctly mapped to halves
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Split violins with distinct colors, legend, quartile markers as suggested
-          in notes
-      - id: SC-04
-        name: Data Range
+        comment: Colors with legend, centered halves, quartile markers
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y/split_group correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Male/Female labels match the colors correctly
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Exact format "violin-split · matplotlib · pyplots.ai"
+        comment: Correct format and labels
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows different distribution shapes per department, different spreads,
-          salary differences between groups - good variation but distributions could
-          show more distinct shapes
+        comment: 4 categories, 2 groups, rich distributions
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Salary comparison by gender across departments is a real, meaningful
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Salary ranges $30K-$180K are realistic for corporate departments
+        comment: Plausible test score distributions with treatment effect
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible value ranges and category count
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,43 +171,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save, no functions/classes'
+        comment: Clean linear script, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set correctly
+        comment: Deterministic with seed set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot, numpy, and Patch (all used)
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, idiomatic path manipulation
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No deprecated functions
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: 'Saves as ''plot.png'' which is correct, but header says "Quality:
-          pending" instead of actual score'
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct file naming and save parameters
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of violinplot with manual path clipping to create split
-          effect, uses Patch for legend, hlines for quartiles. The split violin technique
-          shows matplotlib expertise, but could leverage ax.vlines for additional
-          visual elements or fill_between for more sophisticated styling.
+        comment: Proper Axes methods, theme tokens, Patch-based legend
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Path clipping for splits is clever but relies on standard techniques
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

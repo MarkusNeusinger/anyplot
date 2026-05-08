@@ -1,213 +1,258 @@
 library: bokeh
+language: python
 specification_id: box-grouped
 created: '2025-12-25T19:55:50Z'
-updated: '2025-12-25T19:58:14Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510142905
+updated: '2026-05-08T03:48:51Z'
+generated_by: claude-haiku
+workflow_run: 25534872121
 issue: 2017
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/box-grouped/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/box-grouped/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - columndatasource
-    - custom-legend
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - grid-styling
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/bokeh/plot-dark.html
+quality_score: 80
 review:
   strengths:
-  - Excellent visual clarity with well-sized text elements (36pt title, 28pt labels,
-    22pt ticks)
-  - Clean implementation of grouped box plots with proper spacing between subcategories
-  - Good color palette (Python Blue, Python Yellow, Teal) that is colorblind-accessible
-  - 'Proper statistical box plot components: median, quartiles, whiskers at 1.5×IQR,
-    and outliers'
-  - Realistic HR scenario with meaningful data variations across departments and experience
-    levels
-  - Correct title format and well-placed legend
+  - Correct grouped box plot structure with clear side-by-side subcategory arrangement
+  - Excellent text legibility in both light and dark themes with explicitly set font
+    sizes
+  - Complete data representation showing distribution variation across groups and
+    subcategories
+  - Realistic employee performance context with appropriate scale (40-100 range)
+  - Proper calculation of boxplot statistics with outlier detection at 1.5*IQR
   weaknesses:
-  - Helper function calc_boxplot_stats slightly deviates from KISS principle (though
-    understandable for box plots)
-  - One outlier value (105) slightly exceeds typical 100-point performance scale
-  - Could leverage more Bokeh-specific interactive features (HoverTool would enhance
-    the plot)
-  image_description: 'The plot displays a grouped box plot comparing employee performance
-    scores across 4 departments (Sales, Engineering, Marketing, Support) with 3 experience
-    levels (Junior in blue #306998, Senior in yellow #FFD43B, Lead in teal #4ECDC4).
-    Each department shows 3 side-by-side box plots with clear median lines, IQR boxes,
-    whiskers extending to 1.5×IQR, and outliers displayed as colored circles. The
-    title "box-grouped · bokeh · pyplots.ai" is centered at the top. A legend on the
-    right side clearly identifies the subcategories. The grid uses subtle dashed lines
-    with low alpha. Notable outliers appear in Engineering Lead (~38, ~58) and Support
-    Lead (~65-69). The y-axis ranges from 30-110 showing Performance Score, and all
-    text is clearly readable.'
+  - 'Code defines non-Okabe-Ito colors (#306998, #FFD43B) but renders show correct
+    colors — code-to-render mismatch suggests fixes not fully merged'
+  - No environment variable handling for ANYPLOT_THEME — code doesn't read theme variable
+    for adaptive chrome colors
+  - Hardcoded whisker/median colors (#333333) won't work on dark backgrounds without
+    INK_SOFT token implementation
+  - Generic design with minimal visual refinement — default grid styling, no spine
+    removal, standard legend placement
+  - Export method uses deprecated export_png() instead of Selenium screenshot approach
+    per bokeh.md guide
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1 equivalent) — correct per style guide
+      Chrome: Title "box-grouped · bokeh · anyplot.ai" in dark text, axis labels "Department" and "Performance Score" clearly readable, tick labels dark against light background
+      Data: Green boxes (appears to be #009E73 Okabe-Ito #1), orange boxes (appears to be #D55E00 Okabe-Ito #2), blue boxes (appears to be #0072B2 Okabe-Ito #3), whiskers and median lines in dark gray, outliers as blue circles
+      Grid: Subtle dashed grid lines visible at appropriate opacity
+      Legend: "Junior", "Senior", "Lead" labels with color squares in top right corner, readable
+      Legibility verdict: PASS — all elements clearly visible and readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17 equivalent) — correct per style guide
+      Chrome: Title in light text, axis labels "Department" and "Performance Score" in light text, tick labels in light gray/off-white — all clearly readable, no dark-on-dark failures
+      Data: Green boxes (identical to light render), orange boxes (identical to light render), blue boxes (identical to light render), confirming data colors stay constant — only chrome adapts to theme
+      Grid: Dashed grid lines visible but subtle on dark background
+      Legend: Light-colored labels readable on dark background
+      Legibility verdict: PASS — all elements clearly visible and readable, proper theme adaptation with light text on dark background, no dark-on-dark issues
+
+    Both renders show proper theme-adaptive rendering with identical data colors across themes and appropriate background colors. Text is fully legible in both cases.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 36pt, axis labels at 28pt, tick labels at 22pt - all perfectly
-          readable
+        comment: All font sizes explicitly set (title 36pt, labels 28pt, ticks 22pt);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, boxes well-spaced within groups
+        comment: All text fully readable; no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Box widths and outlier markers appropriately sized for the data density
+        comment: Boxes, whiskers, median lines, and outliers all clearly visible and
+          well-sized for data density
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue/Yellow/Teal palette is colorblind-friendly, though contrast
-          between yellow boxes and white background could be slightly better
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, legend well-positioned
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels ("Department", "Performance Score") but no units
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle dashed grid with alpha 0.3, legend well-placed on right
+        comment: Okabe-Ito palette provides colorblind-safe contrast; adequate separation
+          between series
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions, balanced margins, nothing cut off; plot fills
+          appropriate canvas area
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: ''Department'' and ''Performance Score'' provide
+          clear context'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Renders show Okabe-Ito colors and correct theme backgrounds, BUT
+          code defines legacy Python colors (#306998, #FFD43B, #4ECDC4) violating
+          the Okabe-Ito requirement; code-to-render mismatch indicates incomplete
+          fixes'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library default but no custom design thinking; colors
+          and styling are standard/generic
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: 'Library defaults with minimal customization: basic grid styling,
+          no spine removal, standard legend placement'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Side-by-side grouping and color variation effectively guide comparison
+          across departments and experience levels
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct grouped box plot type
+        comment: Correct grouped box plot with proper side-by-side arrangement
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on x-axis, values on y-axis, subcategories as groups
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows median, quartiles, whiskers at 1.5×IQR, outliers, distinct
-          colors, legend
-      - id: SC-04
-        name: Data Range
+        comment: 'All elements present: boxes (Q1–Q3), median line, whiskers (1.5×IQR),
+          outliers, clear legend'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis 30-110 shows all data including outliers
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis (categories) and Y-axis (performance scores) correctly mapped;
+          all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Junior/Senior/Lead
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format "box-grouped · bokeh · pyplots.ai"
+        comment: 'Title format correct: ''box-grouped · bokeh · anyplot.ai''; legend
+          labels match subcategories'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows outliers, different medians, varying spreads across groups
-          - minor: could show more dramatic distribution differences'
+        comment: 'Shows all boxplot aspects: multiple distributions, outliers in some
+          groups, varied quartile ranges'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Employee performance scores by department and experience level is
-          a real, comprehensible HR scenario
+        comment: Employee performance by department and experience level is realistic
+          and neutral; reasonable that seniors outperform juniors
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Performance scores 40-100 are realistic; the 105 outlier slightly
-          exceeds typical 100-point scales
+        comment: Performance score range (40–100) is sensible; departmental and experience-level
+          variation is proportionally realistic
     code_quality:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Has a helper function `calc_boxplot_stats` which deviates from pure
-          KISS, but it's reasonable for box plot calculations
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses `np.random.seed(42)`
+        comment: 'Simple flow: imports → data generation → stats helper → plot → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports; all are used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Current Bokeh API
+        max: 2
+        passed: false
+        comment: 'Issues: hardcoded colors violate Okabe-Ito, no ANYPLOT_THEME env
+          var reading, hardcoded chrome colors (#333333) won''t adapt to dark theme,
+          uses deprecated export_png()'
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Files exist as plot-light.png and plot-dark.png (code saves as plot.png,
+          suggesting wrapper fixes)
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses ColumnDataSource, figure with proper categorical x_range, vbar
-          for boxes, segment for whiskers. Good usage but could leverage more Bokeh-specific
-          features like HoverTool for interactivity
+        passed: false
+        comment: Uses figure(), vbar(), scatter(), ColumnDataSource correctly but
+          doesn't implement bokeh.md guide for theme-adaptive chrome, missing environment
+          variable handling
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Manual LegendItem construction is somewhat distinctive but mostly
+          workarounds; generic overall usage that could apply to any library
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
+  - edge-highlighting

@@ -1,13 +1,29 @@
-""" pyplots.ai
+""" anyplot.ai
 histogram-overlapping: Overlapping Histograms
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 97/100 | Created: 2025-12-25
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-08
 """
+
+import os
+import sys
+
+
+sys.path.insert(0, os.path.dirname(sys.executable) + "/../lib/python3.13/site-packages")
 
 import altair as alt
 import numpy as np
 import pandas as pd
 
+
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series is ALWAYS #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Data: Employee response times (ms) by department
 np.random.seed(42)
@@ -37,7 +53,7 @@ chart = (
         y=alt.Y("count():Q", title="Frequency", stack=None, axis=alt.Axis(labelFontSize=18, titleFontSize=22)),
         color=alt.Color(
             "Department:N",
-            scale=alt.Scale(domain=["Engineering", "Sales", "Support"], range=["#306998", "#FFD43B", "#4CAF50"]),
+            scale=alt.Scale(domain=["Engineering", "Sales", "Support"], range=OKABE_ITO[:3]),
             legend=alt.Legend(
                 title="Department",
                 titleFontSize=20,
@@ -52,12 +68,16 @@ chart = (
     .properties(
         width=1600,
         height=900,
-        title=alt.Title("histogram-overlapping · altair · pyplots.ai", fontSize=28, anchor="middle"),
+        background=PAGE_BG,
+        title=alt.Title("histogram-overlapping · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
     )
-    .configure_axis(grid=True, gridOpacity=0.3, gridDash=[3, 3])
-    .configure_view(strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.1, labelColor=INK_SOFT, titleColor=INK
+    )
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
 # Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")

@@ -6,7 +6,7 @@ title: Overlapping Histograms
 
 # Specification tracking
 created: 2025-12-25T09:00:03Z
-updated: 2025-12-25T09:00:03Z
+updated: 2026-05-08T06:44:54Z
 issue: 2010
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - histogram
-    - distribution
   data_type:
     - numeric
     - continuous
@@ -26,5 +25,6 @@ tags:
     - business
   features:
     - comparison
+    - distribution
     - grouped
     - multi

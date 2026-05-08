@@ -1,167 +1,172 @@
 library: plotly
+language: python
 specification_id: histogram-2d
 created: '2025-12-25T20:10:41Z'
-updated: '2025-12-25T20:19:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510277976
+updated: '2026-05-08T05:19:24Z'
+generated_by: claude-haiku
+workflow_run: 25538175103
 issue: 2012
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/plotly/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - subplots
-    - colorbar
-    - html-export
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - custom-colormap
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/plotly/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent implementation of marginal histograms using make_subplots with shared_xaxes/shared_yaxes
-    for proper alignment
-  - Viridis colormap provides clear density visualization that is colorblind-accessible
-  - Realistic financial returns context with appropriate correlation structure (0.7)
-  - Good use of Plotly Histogram2d with proper bin configuration (40x40)
-  - Both PNG and interactive HTML outputs generated
-  - Clean code structure following KISS principles
-  - Proper font sizing for 4800x2700 output
+  - 'Excellent theme adaptation: All text and chrome properly adapt to both light
+    and dark themes with appropriate tokens (INK, INK_SOFT, PAGE_BG, GRID)'
+  - 'Marginal histograms extend visualization effectively: Top and right marginals
+    show univariate distributions, adding context beyond standard 2D histogram'
+  - 'Correct palette application: Viridis for continuous density data (heatmap), Okabe-Ito
+    green (#009E73) for marginal histograms'
+  - 'Clean, reproducible code: deterministic data generation with seed, proper theme
+    token usage throughout'
+  - 'Proper font sizing for high-resolution output: 28px title, 22px axis labels,
+    18px tick labels all clearly legible at 4800x2700px'
   weaknesses:
-  - Colorbar positioning creates slight visual imbalance with the marginal histogram
-    on the right
-  - No grid lines on marginal histograms
-  image_description: The plot displays a 2D histogram heatmap showing the joint distribution
-    of two correlated stock returns (Stock A vs Stock B). The main visualization uses
-    the Viridis colormap (dark purple for low counts transitioning through blue, green
-    to yellow for high counts ~70). A clear positive correlation pattern is visible
-    as an elongated diagonal density from lower-left to upper-right centered near
-    (0, 0). Marginal 1D histograms in blue (#306998) appear at the top (X distribution)
-    and right side (Y distribution), showing bell-curve shaped distributions. The
-    title "histogram-2d · plotly · pyplots.ai" is centered at the top. Axis labels
-    show "Stock A Daily Return (%)" and "Stock B Daily Return (%)" with values ranging
-    from approximately -3 to 3. A colorbar labeled "Count" appears on the right side.
+  - 'Marginal histogram proportions could be fine-tuned: Currently allocate 0.2 width/height;
+    reducing slightly would emphasize main 2D histogram'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified. Plot is clean and inviting.
+      Chrome: Title "histogram-2d · plotly · anyplot.ai" is clearly visible in dark text (#1A1A17), centered and prominent at 28px. X-axis label "Customer Age (years)" and Y-axis label "Annual Purchases (count)" are dark (#1A1A17) at 22px, highly legible. Tick labels are rendered in softer gray (#4A4A44) at 18px, well-differentiated from the background. Axis lines and grid are subtle (10% opacity), not competing with data.
+      Data: 2D histogram heatmap uses viridis colorscale, transitioning from deep purple (low density) to bright yellow (high density). Marginal histograms (top and right) use Okabe-Ito green (#009E73), matching the brand color perfectly. Colorbar title "Count" and tick values (0-35) are clearly readable. All data density patterns visible and interpretable.
+      Legibility verdict: PASS — Every element is readable. No text contrast failures. Theme tokens properly applied throughout.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified. Maintains visual cohesion with light render.
+      Chrome: Title remains centered and visible in light text (#F0EFE8) against the dark background. Axis labels are light (#F0EFE8) at 22px, clearly readable against dark background. Tick labels in lighter gray (#B8B7B0) at 18px, properly differentiated from the near-black surface (no dark-on-dark failures). Grid lines visible at 10% opacity of light color, subtle but not invisible. Axis spines rendered in INK_SOFT (#B8B7B0), appropriate contrast.
+      Data: All viridis colors identical to light render — purple, blues, greens, yellows in the same positions. Density patterns match exactly. Marginal histogram green (#009E73) identical to light render. Colorbar maintains same scale and labels.
+      Legibility verdict: PASS — All text readable. Data colors unchanged. Theme-adaptive chrome applied correctly. No dark-on-dark failures detected.
+
+    Both renders successfully demonstrate theme-adaptive design. Data colors (viridis + Okabe-Ito) consistent across themes; only chrome (background, text, grid, axis lines) adapted. No legibility failures in either render.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 32pt, axis labels at 22pt, tick fonts at 18pt - all clearly
-          readable
+        comment: All text (title 28px, labels 22px, ticks 18px) readable in both light
+          and dark themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: No overlapping elements; marginal histograms properly spaced
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 40x40 bins provide excellent resolution for 5000 points, density
-          pattern clearly visible
+        comment: All 2D histogram bins, marginal bars, colorbar visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is perceptually uniform and colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of subplots with marginal histograms, but colorbar positioning
-          creates slight imbalance
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Stock A Daily Return (%)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Viridis is perceptually uniform; Okabe-Ito green maintains visibility
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 landscape appropriate; nothing cut off; generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: No grid visible on the main 2D histogram (though this is acceptable
-          for heatmaps, the marginal histograms also lack subtle grid lines)
+        passed: true
+        comment: Title follows format; axes labeled with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis for continuous data; Okabe-Ito #009E73 for marginals; correct
+          backgrounds; both renders theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Marginal histograms show design intent; custom colorbar positioning
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, proper spacing, clean composition
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Marginals guide interpretation; clear focal point on high-density
+          region
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 2D histogram heatmap
+        comment: Correct 2D histogram implementation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y continuous values correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Colorbar present, Viridis colormap used, marginal histograms included
-          (optional feature implemented)
-      - id: SC-04
-        name: Data Range
+        comment: Colorbar, viridis, bins (40x40), marginal histograms all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=age, Y=purchases; axes show full data range; correlation visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled "Count"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "histogram-2d · plotly · pyplots.ai"'
+        comment: Correct title format; colorbar properly labeled
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows correlation structure, density variation, demonstrates where
-          scatter plots become unreadable (5000 points)
+        comment: Full 2D histogram capability demonstrated; density patterns visible;
+          correlation evident
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Financial returns scenario is real-world applicable, matches spec
-          applications
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Daily returns in ±3% range with 0.7 correlation is realistic for
-          correlated stocks
+        comment: Customer age vs. purchase frequency is realistic; positive correlation
+          plausible; neutral context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Age range 18-85 realistic; purchases 0-80 realistic; sensible data
+          values
     code_quality:
       score: 10
       max: 10
@@ -171,40 +176,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save, no functions/classes'
+        comment: Simple script; no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: Uses np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, plotly.graph_objects, and make_subplots used
+        comment: 'Only used imports: numpy, plotly, os'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: No fake UI; appropriate complexity for visualization
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Correctly saves plot-light.png/html and plot-dark.png/html
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Excellent use of make_subplots with shared axes, Histogram2d trace,
-          and interactive HTML export
+        comment: Uses make_subplots and graph_objects in native Plotly patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages Plotly subplots and interactive colorbar; could showcase
+          more Plotly-unique features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - colorbar
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap

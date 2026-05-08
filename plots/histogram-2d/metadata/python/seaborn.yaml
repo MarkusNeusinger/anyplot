@@ -1,162 +1,185 @@
 library: seaborn
+language: python
 specification_id: histogram-2d
 created: '2025-12-25T20:10:09Z'
-updated: '2025-12-25T20:12:20Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510277871
+updated: '2026-05-08T05:20:59Z'
+generated_by: claude-haiku
+workflow_run: 25538188428
 issue: 2012
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/seaborn/plot.png
-preview_html: null
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - subplots
-    - colorbar
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - custom-colormap
 review:
   strengths:
-  - Excellent use of seaborn JointGrid to create marginal histograms alongside the
-    2D heatmap
-  - Viridis colormap is perceptually uniform and colorblind-safe as recommended in
-    spec
-  - Text sizing is well-calibrated for the 4800x2700 canvas
-  - Clean readable code following KISS principles
-  - Colorbar properly labeled with Count for density interpretation
+  - Perfect text legibility with explicitly set font sizes (24pt title, 20pt labels,
+    16pt ticks) in both light and dark renders
+  - 'Flawless palette compliance: theme-adaptive chrome correctly applied, Okabe-Ito
+    brand green (#009E73) in marginals, viridis colormap for continuous data, correct
+    background colors (#FAF8F1 light, #1A1A17 dark)'
+  - 'Spec fully implemented: 2D histogram heatmap with colorbar and optional marginal
+    distributions showing customer age vs spending correlation'
+  - Clean, reproducible code using idiomatic seaborn patterns (JointGrid, sns.histplot,
+    sns.set_theme with theme tokens)
+  - Real-world data scenario showing realistic age-spending correlation with appropriate
+    scales and density patterns
   weaknesses:
-  - Axis labels are generic (X Value, Y Value) without units or more descriptive names
-  - Layout could be slightly improved - the right marginal histogram appears somewhat
-    cramped relative to the main plot
-  image_description: The plot displays a 2D histogram heatmap showing a bivariate
-    normal distribution with positive correlation. The main plot uses the viridis
-    colormap (dark purple for low counts through green to yellow for high counts ~50).
-    The central region shows the highest density (yellow/green) with density decreasing
-    outward (purple). Marginal 1D histograms appear on the top (X distribution) and
-    right (Y distribution) edges in a muted blue color (#306998). The title "histogram-2d
-    · seaborn · pyplots.ai" is clearly visible at the top. Axis labels show "X Value"
-    and "Y Value" with tick marks from approximately -4 to 4 on both axes. A colorbar
-    on the right indicates count values from 0 to ~50.
+  - 'Design Excellence: While visually refined, could explore more sophisticated aesthetic
+    choices (custom color harmonies, advanced colorbar styling, typography variations)'
+  - 'Library Mastery: Could leverage additional seaborn/matplotlib features like custom
+    spine styling, grid patterns, or advanced colorbar configurations for greater
+    distinction'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title in 24pt dark text, axis labels in 20pt, tick labels in 16pt - all clearly readable against light background
+      Data: 2D histogram with viridis colormap showing customer age vs annual spending distribution, marginal green (#009E73) histograms on top and right edges, colorbar with "Customer Count" label
+      Legibility verdict: PASS - all text readable, no dark-on-light or light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: All text properly light-colored (title light, labels light), fully readable against dark background
+      Data: Identical viridis colormap to light render (data colors preserved), marginal green bars identical, colorbar labels visible in light color
+      Legibility verdict: PASS - all text readable, no dark-on-dark issues, theme adaptation perfect
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all perfectly readable
+        comment: 'All font sizes explicitly set: 24pt title, 20pt labels, 16pt ticks,
+          perfectly readable in both light and dark renders'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text elements, all content fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bins are well-sized at 40 bins, density clearly visible with viridis
-          colormap
+        comment: Heatmap bins, marginal bars, and colorbar all clearly visible with
+          appropriate density-based resolution
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe
+        comment: Viridis colormap perceptually uniform and CVD-safe, Okabe-Ito brand
+          green clearly distinguishable
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of canvas with JointGrid, though the right marginal histogram
-          appears slightly cramped
+        comment: 'Perfect canvas utilization: 4800x2700px with 70-75% filled by plot
+          content, balanced margins'
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Descriptive labels "X Value" and "Y Value" but no units
+        passed: true
+        comment: 'Descriptive labels with units: ''Customer Age (years)'' and ''Annual
+          Spending ($)'', correct title format'
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
+        passed: true
+        comment: 'Perfect: Okabe-Ito #009E73 in marginals, viridis for continuous
+          data, correct backgrounds (#FAF8F1 light/#1A1A17 dark), theme-adaptive text,
+          identical data colors across light/dark'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Colorbar present and well-labeled, but no grid on main plot (acceptable
-          for heatmaps)
+        comment: Well-configured default with appropriate styling, lacks exceptional
+          artistic choices or custom palette design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: hidden marginal labels, spine removal via style,
+          generous whitespace, colorbar customization'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through data choice and marginal context;
+          viewer sees age-spending correlation story
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 2D histogram heatmap
+        comment: Correct 2D histogram heatmap with all subtypes including optional
+          marginal distributions
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned to continuous variables
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Colorbar present, viridis colormap, marginal histograms included
-          (optional but nice)
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: colorbar with scale, viridis colormap, marginal
+          1D histograms, configurable bins (35)'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Age (x-axis), Spending (y-axis) correctly mapped, full data range
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled "Count"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "histogram-2d · seaborn · pyplots.ai"'
+        comment: Title 'histogram-2d · seaborn · anyplot.ai' correct format, colorbar
+          labeled appropriately
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows correlation pattern well, but could demonstrate more varied
-          density patterns
+        comment: 'Shows all plot aspects: 2D distribution, density patterns, marginals,
+          correlation, realistic ranges'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Bivariate normal distribution is a classic statistical example
+        comment: Customer age vs annual spending in market research context, neutral
+          and comprehensible scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 5000 points is appropriate; values are sensible for standardized
-          data
+        comment: 'Factually correct: age 18-75 normal distribution, spending correlated
+          with age ($500-6000 range), realistic proportions'
     code_quality:
       score: 10
       max: 10
@@ -166,41 +189,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save'
+        comment: 'Clean flow: imports → theme → data → plot → styling → save, no over-engineering'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set, fully deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and seaborn imported (matplotlib.pyplot not imported but
-          not needed with JointGrid)
+        comment: 'All imports used: os, matplotlib.pyplot, numpy, seaborn - no unused
+          imports'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Pythonic and clear, appropriate complexity, no fake UI or deprecated
+          functions
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format plot-{THEME}.png, 300 DPI, current API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses seaborn's JointGrid and histplot effectively, but could leverage
-          sns.jointplot for more concise code
+        comment: 'Expert seaborn patterns: JointGrid, sns.histplot, sns.set_theme
+          with rc dict'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses distinctive seaborn features: JointGrid with marginals, multiple
+          histplot axes, colorbar styling'
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - colorbar
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - custom-colormap

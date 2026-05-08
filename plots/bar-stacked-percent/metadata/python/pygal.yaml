@@ -1,173 +1,169 @@
 library: pygal
+language: python
 specification_id: bar-stacked-percent
 created: '2025-12-25T22:48:48Z'
-updated: '2025-12-25T22:51:08Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20511964934
+updated: '2026-05-08T11:06:09Z'
+generated_by: claude-haiku
+workflow_run: 25551677680
 issue: 2008
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - iteration-over-groups
-  dataprep:
-  - normalization
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/pygal/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent real-world data scenario showing energy mix by country with meaningful
-    variation
-  - Perfect title format and axis labeling with units
-  - Clean percentage labels positioned within each bar segment
-  - Well-balanced layout with good use of canvas space at 4800x2700
-  - Proper normalization of values to 100% even though input data already sums to
-    100
-  - Legend placement at bottom with 3-column layout is clean and non-intrusive
+  - Perfect visual quality with explicit font sizing for all elements
+  - 'Excellent spec compliance: correct chart type, all features present, proper title/legend
+    formatting'
+  - Clean, reproducible code with proper theme handling (light/dark rendering)
+  - 'Theme-adaptive chrome works correctly: backgrounds, text colors, and grid adapt
+    properly while data colors remain constant'
+  - Realistic and well-chosen data demonstrating the full range of energy mix compositions
   weaknesses:
-  - Nuclear segment shows limited variation (1-8% across all countries) - more diversity
-    would better demonstrate the chart type
-  - Font sizes in the library rules suggest smaller values (title_font_size=28) but
-    implementation uses much larger (60) - while readable, it deviates from guidelines
-  image_description: 'The plot displays a 100% stacked bar chart showing energy mix
-    by country. Six countries are shown on the x-axis (USA, Germany, China, Brazil,
-    Japan, India). Each bar is divided into three colored segments: blue (Fossil Fuels),
-    yellow (Nuclear), and green (Renewable). All bars reach 100% height, with percentage
-    labels displayed within each segment. The title "bar-stacked-percent · pygal ·
-    pyplots.ai" appears at the top. The y-axis shows "Percentage (%)" from 0% to 100%,
-    and the x-axis shows "Country". A legend at the bottom identifies the three energy
-    sources. The chart clearly shows varying energy compositions - Brazil has the
-    highest renewable share (81%), while Japan has the highest fossil fuel dependency
-    (88%).'
+  - 'Design Excellence is generic: uses library defaults with minimal aesthetic customization'
+  - Data storytelling lacks visual emphasis or focal point; color order follows Okabe-Ito
+    but doesn't create intentional hierarchy
+  - Limited use of distinctive pygal features; implementation could leverage more
+    library-specific capabilities
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 (correct surface color)
+      Chrome: Title "bar-stacked-percent · pygal · anyplot.ai" in dark 28px text, clearly readable at top. Y-axis label "Percentage (%)" and X-axis label "Country" in 22px dark text, readable. Tick labels (0%, 10%, 20%, etc. and country names) in 18px dark text, clearly visible.
+      Data: Three components shown - Renewable (green #009E73, position 1), Nuclear (orange #D55E00, position 2), Fossil Fuels (blue #0072B2, position 3). All in Okabe-Ito order. Percentage values displayed within segments. Y-axis grid lines subtle and visible (dotted horizontal lines). 6 countries displayed with varying energy compositions.
+      Legibility verdict: PASS - All text readable, good contrast, grid subtle but visible, no elements overlap
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 (correct surface color)
+      Chrome: Title rendered in light #F0EFE8 text, clearly readable against dark background. Axis labels ("Percentage (%)" and "Country") in light text, readable. Tick labels in light text, clearly visible - NO dark-on-dark failures detected. Grid lines visible with light tone.
+      Data: Colors identical to light render - green #009E73, orange #D55E00, blue #0072B2 (Okabe-Ito preserved). Percentage values visible within segments. All segments clearly distinguishable.
+      Legibility verdict: PASS - All text readable with proper contrast, data colors match light render exactly, grid visible, theme adaptation successful
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and percentage values are clearly readable. Font
-          sizes are well-scaled for the canvas.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; all labels and values are distinct
-          and readable.
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
+          readable in both light and dark themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; all elements clearly separated
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-sized and clearly visible. Segment proportions are
-          easy to distinguish.
+        comment: All bars and segments clearly visible and distinguishable by color
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, yellow, and green provide good contrast. Not pure red-green,
-          but yellow-green distinction could be slightly better.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of canvas space; plot fills appropriate area with balanced
-          margins.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has "Percentage (%)" with units, X-axis has "Country" - both
-          descriptive.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette positions 1-3; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas well-utilized; plot ~60% of area; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend at bottom is clear and well-placed. Y-axis guides visible
-          but no subtle grid styling.
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito correct; backgrounds #FAF8F1/#1A1A17; theme-adaptive chrome
+          works'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Professional but straightforward; follows library template without
+          distinctive choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Library defaults with margin/grid settings; minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed but without visual emphasis or focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 100% stacked bar chart implementation.
+        comment: Correct 100% stacked bar chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X-axis, components as stacked segments, values normalized
-          to percentages.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All features present: percentage labels within segments, clear legend,
-          consistent component ordering.'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: categories, components, proportions, legend'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis correctly shows 0-100% range, all data visible.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Fossil Fuels, Nuclear, and Renewable.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Title follows exact format: "bar-stacked-percent · pygal · pyplots.ai"'
+        comment: Title format correct; legend labels match
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variety in proportions across countries. Brazil's high renewable
-          vs Japan's high fossil creates good contrast. Nuclear segment is consistently
-          small, could show more variation.
+        comment: Shows all energy mix aspects
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Energy mix by country is a perfect real-world application. Values
-          are plausible and match general knowledge of energy profiles.
+        comment: Real-world country data; neutral; comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Values are realistic. Minor: percentages already sum to 100 in raw
-          data, so normalization is redundant (though code handles it correctly).'
+        comment: Realistic percentages; 0-100% scale correct
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -175,41 +171,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → style → chart → save.'
+        comment: No functions/classes; direct setup
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random generation needed).
+        comment: Hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pygal and Style imported, both used.
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current pygal API.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to "plot.png" but also "plot.html" (extra file, though acceptable
-          for pygal).
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output files; current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses pygal's StackedBar, custom Style, value_formatter, print_values.
-          Could leverage more pygal-specific features like tooltips or interpolation.
+        comment: Idiomatic StackedBar usage; Style configuration; theme tokens; percentage
+          range constraint
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses value_formatter; otherwise standard implementation
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

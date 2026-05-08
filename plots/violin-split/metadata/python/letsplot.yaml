@@ -1,166 +1,192 @@
 library: letsplot
+language: python
 specification_id: violin-split
 created: '2025-12-26T10:02:20Z'
-updated: '2025-12-26T10:04:27Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520452240
+updated: '2026-05-08T17:10:44Z'
+generated_by: claude-haiku
+workflow_run: 25568269182
 issue: 1949
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-split/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/violin-split/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - hover-tooltips
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/letsplot/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent use of letsplot show_half parameter (-1 and 1) to create proper split
-    violins
-  - Well-designed data scenario with varied distributions showing different improvement
-    levels per department
-  - Includes inner boxplots for better distribution visualization as recommended in
-    spec
-  - Proper color scheme using Python Blue/Yellow that is colorblind-safe
-  - Interactive tooltips configured for HTML export
-  - Correct 16:9 aspect ratio with 3x scale export
+  - 'Perfect theme adaptation: light/dark chrome correctly flipped while data colors
+    remain identical'
+  - Excellent explicit font sizing throughout (24/20/16pt) with comprehensive theme
+    token application
+  - Strong split violin implementation using show_half parameter with overlay boxplots
+  - Clean KISS structure with deterministic reproducibility
+  - Professional Okabe-Ito palette usage with correct first series color
+  - Realistic, neutral data scenario with good feature coverage
+  - All spec requirements met
   weaknesses:
-  - Grid lines appear slightly more prominent than ideal despite alpha=0.3 setting
-  - Star import with many noqa comments reduces code clarity
-  image_description: 'The plot displays a split violin visualization comparing employee
-    satisfaction scores before and after office redesign across four departments:
-    Engineering, Marketing, Sales, and Design. Each violin is split with yellow (Python
-    Yellow #FFD43B) on the left representing "Before" and blue (Python Blue #306998)
-    on the right representing "After". Inner boxplots are embedded within each violin
-    half showing quartiles and median lines, with a few outlier points visible. The
-    y-axis spans from 15 to 105 (satisfaction score 0-100), x-axis shows department
-    names, and a legend on the right indicates the Period (Before/After). All text
-    is clearly legible with appropriately sized fonts.'
+  - Design looks like well-configured defaults rather than custom design - consider
+    more visual refinement for higher aesthetic sophistication
+  - Minimal visual refinement beyond library defaults - could remove more spines or
+    refine grid further
+  - Data storytelling could emphasize the redesign effect more through color emphasis
+    or visual hierarchy
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme-adaptive surface
+      Chrome: Title "violin-split · letsplot · anyplot.ai" in bold 24pt dark text (INK=#1A1A17), x-axis "Department" and y-axis "Satisfaction Score (0-100)" in 20pt dark text, tick labels 16pt dark (INK_SOFT). All text perfectly readable against light background.
+      Data: Orange (#D55E00, Okabe-Ito pos 2) on left for "Before", green (#009E73, Okabe-Ito pos 1) on right for "After". Inner boxplots overlay quartile information. Y-axis grid (10% opacity) is subtle.
+      Legibility verdict: PASS - all text sizes explicitly set, complete theme adaptation, perfect readability
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct warm tone, not pure black
+      Chrome: Title uses INK (#F0EFE8 light text), tick labels use INK_SOFT (#B8B7B0 light text), grid uses rgba(240,239,232,0.10) light opacity, legend box uses ELEVATED_BG (#242420). All text is light-colored and clearly readable against dark background.
+      Data: Orange and green colors are identical to light render (Okabe-Ito is theme-independent), confirming correct palette handling. Violin shapes and boxplots clearly visible.
+      Legibility verdict: PASS - no dark-on-dark failures, all text properly light-colored and readable
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt bold, axis titles 20pt, tick labels 16pt, all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text, all labels clearly separated
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Violins well-sized, boxplots visible, minor overlap of boxplots with
-          violin center
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
+          Theme tokens properly applied to INK/INK_SOFT for both themes. Both renders
+          fully readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Perfect spacing, no overlapping text elements. Department names well-spaced,
+          tick labels clear, legend positioned to right without overlapping data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Violins and boxplots optimally sized and visible. Split halves clearly
+          distinct. Alpha values (0.75 violins, 0.9 boxplots) appropriate for data
+          density.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow is colorblind-safe, high contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has descriptive label with range "(0-100)", X-axis labeled
-          "Department"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette ensures colorblind safety. Orange vs green have
+          good contrast and luminance difference.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect balance with plot filling 50-70% of canvas. Generous whitespace,
+          balanced margins, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: 'Title format correct: ''violin-split · letsplot · anyplot.ai''.
+          Y-axis descriptive with units ''(0-100)''. All labels clear.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series green (#009E73), second orange (#D55E00) follow Okabe-Ito
+          canonical order. Backgrounds #FAF8F1 (light) and #1A1A17 (dark) correct.
+          Both renders theme-correct with no dark-on-dark failures.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid alpha is 0.3 which is good, but grid lines are too prominent/dark
-          appearing
+        comment: Well-configured defaults with intentional Okabe-Ito palette and explicit
+          typography. Professional but not exceptional - lacks custom design elements
+          beyond library defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Custom grid opacity (10%), legend styling with background/border
+          present. But mostly library defaults - could remove more spines or refine
+          further.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Split violin layout naturally guides Before/After comparison. Color
+          contrast (orange vs green) creates visual distinction. Boxplots add depth.
+          Good but could emphasize redesign effect more.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct split violin plot with left/right halves for different groups
+        comment: Perfect split violin with show_half=-1 (left Before) and show_half=1
+          (right After) implementation.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, values on Y, split by Period
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Distinct colors, halves meet at center, inner boxplots included,
-          alpha transparency applied
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: distinct colors (orange/green), legend (Period),
+          centered split, inner quartile boxplots.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full data range 15-105
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Department on x-axis, Satisfaction on y-axis, Period for split groups.
+          Limits [15,105] show full data range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows Period with Before/After
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format "violin-split · letsplot · pyplots.ai"
+        comment: Title format 'violin-split · letsplot · anyplot.ai' correct. Legend
+          shows 'Period' with Before/After labels matching data.
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows varied distributions: different means, different spreads,
-          different improvements across departments'
+        comment: 'Shows all aspects: varied distribution shapes, different redesign
+          effects by department, spread variation, realistic scale.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Employee satisfaction before/after office redesign is a real, comprehensible
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Satisfaction scores 0-100 with realistic distributions, sensible
-          parameters
+        comment: Office redesign scenario is real, neutral, and comprehensible. Professional
+          and domain-appropriate.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Satisfaction 0-100 scale plausible for survey data. Means/SDs realistic.
+          Sample sizes 80-150 per group appropriate for distributions.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -168,40 +194,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: 'Perfect linear flow: imports → theme tokens → data generation →
+          plot construction → save.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output every time.
       - id: CQ-03
         name: Clean Imports
-        score: 0
-        max: 2
-        passed: false
-        comment: Uses `from lets_plot import *` with noqa comments throughout
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Current API usage
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
         score: 2
+        max: 2
+        passed: true
+        comment: 'Only used imports: os (theme), numpy (random), pandas (DataFrame),
+          lets_plot (plotting), ggsave (export).'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code. Natural pandas DataFrame usage. No over-engineering
+          or fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html. Uses current
+          letsplot 4.9.0 API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert ggplot2-style composition: ggplot() + geom_violin() + geom_boxplot()
+          + scales + theme + ggsize + ggsave.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
         max: 5
         passed: false
-        comment: Uses show_half parameter for split violins and layer_tooltips for
-          interactivity, but tooltips not fully leveraged in static output
+        comment: Uses show_half parameter (letsplot-specific) for split violins and
+          position_nudge for boxplot positioning. Mostly standard ggplot2 patterns.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending

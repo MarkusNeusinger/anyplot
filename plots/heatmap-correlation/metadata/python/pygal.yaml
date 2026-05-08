@@ -1,223 +1,219 @@
 library: pygal
+language: python
 specification_id: heatmap-correlation
 created: '2025-12-26T10:04:07Z'
-updated: '2025-12-26T10:08:53Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520464758
+updated: '2026-05-08T15:10:47Z'
+generated_by: claude-haiku
+workflow_run: 25562601642
 issue: 1948
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - annotations
-  - html-export
-  - patches
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep:
-  - correlation-matrix
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/pygal/plot-dark.html
+quality_score: 96
 review:
   strengths:
-  - Excellent implementation of a non-native chart type by extending pygal Graph class
-  - Perfect diverging colormap (blue-white-red) centered at zero for correlation visualization
-  - Clear correlation value annotations with adaptive text colors for readability
-  - Professional colorbar with proper -1 to +1 fixed range and clear labeling
-  - Realistic financial metrics dataset showing varied correlation patterns
-  - Clean square canvas layout appropriate for symmetric correlation matrix
+  - Flawless theme adaptation with perfect contrast in both light and dark renders
+  - Complete spec compliance with all required features correctly implemented
+  - Professional design with custom class, rounded cells, and subtle styling
+  - Clear data storytelling via colorbar and cell annotations
+  - Perfect code quality with clean logic and deterministic output
   weaknesses:
-  - Code uses custom class which violates KISS principle, though necessary given pygal
-    lack of native heatmap support
-  - Slight excess white space between title and matrix could be reduced
-  - Colorbar placement could be slightly closer to the main matrix
-  image_description: The plot displays an 8×8 correlation matrix heatmap for financial/business
-    metrics (Revenue, Profit, Customers, Marketing, R&D Spend, Employees, Market Share,
-    Stock Price). The diverging color scheme goes from blue (negative correlations)
-    through white (zero) to red (positive correlations), centered at zero. Each cell
-    is annotated with correlation values to 2 decimal places. The title "heatmap-correlation
-    · pygal · pyplots.ai" is at the top. Row labels are on the left side, column labels
-    are rotated 45° at the bottom with axis title "Business Metrics" below them. A
-    vertical colorbar on the right shows the gradient from +1.00 to -1.00 with "Correlation"
-    label. The diagonal shows perfect correlations (1.00) in dark red. Strong positive
-    correlations visible between Revenue-Profit (0.82), Profit-Stock Price (0.85).
-    Negative correlations shown in blue like Profit-R&D Spend (-0.22). The layout
-    is clean on a square canvas with good white margins.
+  - Color interpolation is functional but could explore smoother gradients for more
+    perceptual refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct theme token applied
+      Chrome: Title, axis labels ("Business Metrics"), row/column variable names, and colorbar labels all clearly visible in dark text (#1A1A17 INK, #4A4A44 INK_SOFT)
+      Data: 8×8 symmetric correlation matrix with diverging colormap (blue-white-teal/orange); cell values in 2-decimal format, text color automatically adjusted for contrast
+      Legibility verdict: PASS - All text readable, no contrast issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct theme token applied
+      Chrome: Title in light text (#F0EFE8 INK), labels in (#B8B7B0 INK_SOFT); no dark-on-dark failures, all readable
+      Data: Identical colors to light render (data colors theme-independent as required); cell values and annotations legible
+      Legibility verdict: PASS - All text readable, data colors consistent with light theme
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'All text is clearly readable: title large and prominent, row/column
-          labels well-sized, correlation values legible within cells, colorbar labels
-          visible'
+        comment: All font sizes explicitly set; readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, column labels rotated to prevent overlap,
-          good spacing between all elements
+        comment: Cells properly spaced; labels never collide
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Matrix cells are well-sized and clearly visible, rounded corners
-          add polish, white cell borders provide separation
+        comment: All cells clearly rendered; full range visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Diverging blue-white-red colormap is colorblind-friendly (blue vs
-          red distinguishable), text color adapts for contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of square canvas for symmetric matrix, but some excess white
-          space at top between title and matrix
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Both axes labeled with "Business Metrics" title, descriptive variable
-          names on both axes
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Diverging colormap perceptually uniform and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format appropriate; generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: No grid needed for heatmap (appropriate), but colorbar placement
-          could be closer to the matrix
+        passed: true
+        comment: Correct format; descriptive labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Backgrounds and colormap correct
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom class with theme-aware styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Rounded cells, subtle grid, good whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Colorbar and annotations guide interpretation
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct correlation matrix heatmap
+        comment: Correct correlation heatmap
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Symmetric matrix with variables on both axes correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Diverging colormap centered at zero ✓, annotations with 2 decimals
-          ✓, symmetric matrix ✓, colorbar with -1 to 1 range
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: diverging scale, annotations, matrix, colorbar'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Colorbar fixed at -1 to +1, all values within range displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correct; full range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar clearly labeled with "Correlation" and scale values
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "heatmap-correlation · pygal · pyplots.ai"'
+        comment: Correct format; colorbar serves legend
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows positive correlations (0.82, 0.85), negative correlations (-0.22,
-          -0.15), weak correlations (0.12, -0.08), perfect diagonal (1.00)
+        comment: Shows positive, negative, and near-zero correlations
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Financial portfolio metrics is a realistic scenario where correlation
-          analysis is commonly used
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: All correlation values are realistic and within valid range [-1,
-          1]
+        comment: Financial portfolio data plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 8 variables within spec range; sensible values
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
-        max: 3
-        passed: false
-        comment: Uses custom class CorrelationHeatmap extending Graph, which is necessary
-          for pygal but violates KISS principle
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) is set (though not strictly needed since data
-          is hardcoded)
+        comment: Custom class justified
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seed set; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, pygal components, sys for path handling)
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API
+        comment: Clean logic; no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png (via render_to_png), also outputs plot.svg and
-          plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct file naming
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Creates custom Graph subclass to extend pygal capabilities, uses
-          Style for theming, generates SVG+HTML+PNG outputs. However, pygal does not
-          natively support heatmaps, so this is essentially a custom implementation
-          within pygal's rendering framework rather than using built-in chart types.
+        comment: Proper Graph subclass pattern; correct Style usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom interpolation and theme-adaptive rendering
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - publication-ready
