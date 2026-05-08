@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: bar-diverging
 created: '2025-12-25T22:47:47Z'
-updated: '2026-05-08T08:51:12Z'
+updated: '2026-05-08T08:55:55Z'
 generated_by: claude-haiku
 workflow_run: 25546227958
 issue: 2009
@@ -12,42 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diver
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - Perfect text legibility in both themes with explicitly-set font sizes (title 24pt,
-    labels 20pt, ticks 16pt)
-  - 'Flawless palette compliance: Okabe-Ito colors (#009E73 and #D55E00) identical
-    across light and dark renders; theme-adaptive chrome (backgrounds, text, grid)
-    correct in both themes'
-  - 'Perfect spec compliance: correct diverging bar chart type, all features present,
-    proper data mapping and title format'
-  - 'Excellent data quality: realistic business context (quarterly P&L), shows both
-    profit and loss with full variation, sorted by value for clarity'
-  - 'Clean code: simple KISS structure, deterministic and reproducible, zero unused
-    imports, no over-engineering or fake functionality'
+  - Perfect visual quality with all text explicitly sized and readable in both themes
+  - Excellent theme adaptation—data colors identical across light/dark, chrome correctly
+    flips
+  - Correct diverging bar implementation with sorted data and clear positive/negative
+    distinction
+  - Clean, Pythonic code with deterministic data and proper import hygiene
+  - 'Proper color palette compliance (Okabe-Ito #009E73 green for profit, #D55E00
+    orange for loss)'
   weaknesses:
-  - 'Design Excellence falls short: implementation looks like well-configured library
-    defaults with minimal custom aesthetic sophistication; lacks unique design flourishes
-    or intentional visual hierarchy that would distinguish it for publication quality'
-  - 'Limited visual storytelling: data is displayed clearly but without emphasis or
-    visual hierarchy beyond the inherent diverging structure; no color emphasis on
-    key insights or size variation to guide viewer attention'
-  - 'Generic library usage: uses seaborn''s barplot and set_theme idiomatically but
-    without distinctive patterns unique to seaborn (no hue parameter layering, faceting,
-    style contexts, or creative palette cycling)'
+  - Design Excellence moderate (4/8)—correct but resembles well-configured library
+    default rather than distinctive design
+  - 'Visual storytelling limited (DE-03: 2/6)—plot displays data clearly but without
+    narrative emphasis or focal points'
+  - 'Library Mastery moderate (LM-02: 1/5)—uses seaborn generically; no distinctive
+    features beyond basic barplot'
+  - Could enhance visual hierarchy through color contrast or size variation to guide
+    viewer attention
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - theme-correct, not pure white
-      Chrome: Title "bar-diverging · seaborn · anyplot.ai" in dark text; Y-axis "Business Unit" and X-axis "Profit/Loss ($ Millions)" clearly readable; tick labels dark and legible; grid lines subtle (x-axis only)
-      Data: Orange bars (#D55E00) for negative values (left), green bars (#009E73) for positive values (right); vertical baseline at zero; 10 categories sorted by value; all bars clearly visible and distinguishable
-      Legibility verdict: PASS - all text perfectly readable in light theme
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title, axis labels (20pt), tick labels (16pt) all clearly visible in dark ink on light background
+      Data: Bars extend from zero baseline in green (#009E73, profit) and orange (#D55E00, loss); all 10 units fully readable
+      Legibility verdict: PASS — excellent contrast, no overlap, clean spines
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - theme-correct, not pure black
-      Chrome: Title and all labels now light-colored and clearly readable against dark surface; tick labels visible; grid lines subtle; no dark-on-dark text failures
-      Data: Orange bars (#D55E00) and green bars (#009E73) are IDENTICAL in color to light render - only chrome (background, text, grid) has adapted; baseline and grid perfectly visible on dark surface
-      Legibility verdict: PASS - all text perfectly readable in dark theme; data colors identical across both renders
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: All text light-colored, clearly visible on dark background; no dark-on-dark failures
+      Data: Bars identical colors to light render (theme-independent data); baseline visible
+      Legibility verdict: PASS — proper theme adaptation, light text on dark background readable
+
+    Both renders meet all legibility requirements with only chrome (background, text color, grid) flipping by theme.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -58,50 +56,44 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All fonts explicitly sized: title 24pt, labels 20pt, ticks 16pt;
-          perfectly readable in both themes'
+        comment: Title 24pt, labels 20pt, ticks 16pt—all explicitly set
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; all text fully readable; category labels
-          clean and spaced
+        comment: All category labels, tick labels readable; no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars perfectly adapted to data density (10 categories); optimal sizing
-          and spacing throughout
+        comment: Bars perfectly sized for 10 units; baseline visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Orange (#D55E00) and green (#009E73) have good contrast; CVD-safe
-          Okabe-Ito palette
+        comment: Okabe-Ito green/orange colorblind-safe; good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout; plot fills 70-80% of canvas with balanced margins;
-          no wasted space or cut-offs
+        comment: 60-70% canvas utilization; balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Profit/Loss ($ Millions)'' and
-          ''Business Unit'''
+        comment: Title format correct; labels include units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00 (Okabe-Ito 1–2); light bg #FAF8F1,
-          dark bg #1A1A17; text and grid theme-correct in both renders'
+        comment: 'First series #009E73, second #D55E00; backgrounds theme-correct;
+          chrome properly adaptive'
     design_excellence:
       score: 10
       max: 20
@@ -111,23 +103,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults with appropriate color and orientation,
-          but lacks custom flourishes or unique design sophistication for publication
-          quality
+        comment: Well-configured default; correct colors but not distinctive
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Spines removed, grid customized (x-axis only), baseline at zero -
-          some refinement visible but could be more polished
+        passed: true
+        comment: Spines removed, subtle grid, good whitespace
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Sorted bars create clear diverging pattern, but no visual hierarchy
-          or emphasis beyond inherent structure
+        comment: Displays data clearly (sorted by value) but no visual hierarchy or
+          narrative emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -137,28 +126,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct diverging bar chart; horizontal orientation appropriate for
-          category labels
+        comment: Correct diverging bar implementation
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: bars extend opposite from zero, contrasting
-          colors, sorted by value'
+        comment: Positive/negative division, contrasting colors, zero baseline, sorted
+          data
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; all data visible; axes show full range
+        comment: Categories on Y, values on X; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''bar-diverging · seaborn · anyplot.ai'';
-          legend appropriately omitted for two-category design'
+        comment: Title 'bar-diverging · seaborn · anyplot.ai' correct; no legend needed
     data_quality:
       score: 15
       max: 15
@@ -168,22 +155,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both profit and loss values; full range of variation; both
-          sides of diverging axis represented
+        comment: Shows positive and negative values, different magnitudes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real business scenario (quarterly P&L by unit); comprehensible and
-          neutral; realistic company structure
+        comment: Business scenario (quarterly profit/loss); neutral, realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values plausible for business domain; proportions sensible; no factual
-          errors
+        comment: Values (-25 to +65M) realistic for business domain
     code_quality:
       score: 10
       max: 10
@@ -193,57 +177,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple flow: imports → tokens/data → plot → save; no functions or
-          classes'
+        comment: 'Linear script: imports → tokens → data → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded data; fully deterministic
+        comment: Deterministic data; no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous packages
+        comment: All imports used (os, sys, plt, np, pd, sns)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity; no over-engineering
+        comment: Pythonic list comprehension for color assignment; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct DPI
+        comment: Saves as plot-{THEME}.png; current API
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Uses sns.barplot() with ax-level API and sns.set_theme() with detailed
-          rc configuration; follows seaborn conventions
+        passed: true
+        comment: Expert use of sns.barplot, sns.set_theme, matplotlib rc integration
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic seaborn usage; could leverage distinctive patterns (hue,
-          faceting, style contexts, palette cycling)
-  verdict: REJECTED
+        comment: Generic barplot usage; no distinctive seaborn features beyond basic
+          API
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
   - data-generation
-  - explicit-figure
   dataprep: []
   styling:
   - grid-styling

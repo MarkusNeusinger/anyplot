@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-diverging: Diverging Bar Chart
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-08
+Quality: 86/100 | Updated: 2026-05-08
 """
 
 import os
