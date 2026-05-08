@@ -1,12 +1,12 @@
-""" pyplots.ai
+"""anyplot.ai
 violin-split: Split Violin Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-26
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2026-05-08
 """
 
+import os
 import tempfile
 import time
-import urllib.request
 from pathlib import Path
 
 import numpy as np
@@ -15,6 +15,18 @@ from highcharts_core.options import HighchartsOptions
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (first series always #009E73)
+BRAND = "#009E73"
+ACCENT = "#D55E00"
 
 # Data - Employee satisfaction scores by department, comparing Remote vs Office workers
 np.random.seed(42)
@@ -46,7 +58,7 @@ for cat in categories:
 
 # Build series data for split violins
 series_data = []
-colors = {"Remote": "#306998", "Office": "#FFD43B"}
+colors = {"Remote": BRAND, "Office": ACCENT}
 
 # Track which groups have been added to legend
 legend_added = {"Remote": False, "Office": False}
@@ -99,25 +111,23 @@ for i, cat in enumerate(categories):
     for group in split_groups:
         values = data[cat][group]
         median_val = float(np.median(values))
-        q1_val = float(np.percentile(values, 25))
-        q3_val = float(np.percentile(values, 75))
         offset = -0.12 if group == "Remote" else 0.12
         x_pos = float(i + offset)
 
         # Add median marker (diamond)
-        stat_markers.append({"x": median_val, "y": x_pos, "marker": {"symbol": "diamond", "radius": 14}})
+        stat_markers.append({"x": median_val, "y": x_pos, "marker": {"symbol": "diamond", "radius": 16}})
 
 # Create chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration - inverted for horizontal violins, but NOT reversed y-axis
+# Chart configuration - inverted for horizontal violins
 chart.options.chart = {
     "type": "areasplinerange",
     "inverted": True,
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#FFFFFF",
+    "backgroundColor": PAGE_BG,
     "marginBottom": 320,
     "marginLeft": 350,
     "marginRight": 200,
@@ -125,35 +135,31 @@ chart.options.chart = {
 }
 
 # Title
-chart.options.title = {
-    "text": "violin-split · highcharts · pyplots.ai",
-    "style": {"fontSize": "56px", "fontWeight": "bold"},
-    "y": 60,
-}
+chart.options.title = {"text": "violin-split · highcharts · anyplot.ai", "style": {"fontSize": "28px", "color": INK}}
 
 chart.options.subtitle = {
     "text": "Employee Satisfaction Scores: Remote vs Office Workers",
-    "style": {"fontSize": "36px", "color": "#666666"},
-    "y": 110,
+    "style": {"fontSize": "18px", "color": INK_SOFT},
 }
 
 # X-axis (vertical after inversion - shows satisfaction scores)
-# In inverted charts, reversed: False puts higher values at top
 chart.options.x_axis = {
-    "title": {"text": "Satisfaction Score", "style": {"fontSize": "40px", "fontWeight": "bold"}, "margin": 20},
-    "labels": {"style": {"fontSize": "32px"}},
+    "title": {"text": "Satisfaction Score", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
     "min": 1,
     "max": 10,
     "reversed": False,
     "gridLineWidth": 1,
-    "gridLineColor": "#E0E0E0",
+    "gridLineColor": GRID,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "tickInterval": 1,
 }
 
 # Y-axis (horizontal after inversion - shows categories)
 chart.options.y_axis = {
-    "title": {"text": "Department", "style": {"fontSize": "40px", "fontWeight": "bold"}, "margin": 50},
-    "labels": {"style": {"fontSize": "36px"}},
+    "title": {"text": "Department", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
     "categories": categories,
     "min": -0.5,
     "max": 3.5,
@@ -161,6 +167,8 @@ chart.options.y_axis = {
     "tickPositions": [0, 1, 2, 3],
     "showLastLabel": True,
     "showFirstLabel": True,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
 }
 
 # Legend
@@ -171,17 +179,21 @@ chart.options.legend = {
     "layout": "vertical",
     "x": -80,
     "y": 150,
-    "itemStyle": {"fontSize": "32px", "fontWeight": "normal"},
-    "symbolHeight": 28,
-    "symbolWidth": 28,
-    "symbolRadius": 6,
-    "itemMarginBottom": 10,
+    "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
+    "symbolHeight": 16,
+    "symbolWidth": 16,
+    "symbolRadius": 3,
 }
 
 # Tooltip
 chart.options.tooltip = {
     "enabled": True,
-    "style": {"fontSize": "28px"},
+    "style": {"fontSize": "16px", "color": INK},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
     "headerFormat": "<b>{series.name}</b><br/>",
     "pointFormat": "Score: {point.x:.1f}",
 }
@@ -202,19 +214,23 @@ median_series = {
     "name": "Median",
     "showInLegend": False,
     "data": stat_markers,
-    "marker": {"symbol": "diamond", "radius": 14, "fillColor": "#FFFFFF", "lineColor": "#333333", "lineWidth": 3},
+    "marker": {"symbol": "diamond", "radius": 16, "fillColor": PAGE_BG, "lineColor": INK_SOFT, "lineWidth": 2},
     "enableMouseTracking": False,
 }
 chart.options.add_series(median_series)
 
-# Download Highcharts JS
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Load Highcharts JS from node_modules
+script_dir = os.path.dirname(os.path.abspath(__file__))
+highcharts_js_path = os.path.join(script_dir, "node_modules", "highcharts", "highcharts.js")
+highcharts_more_js_path = os.path.join(
+    script_dir, "node_modules", "highcharts", "highcharts-more.js"
+)
 
-highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
-with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
-    highcharts_more_js = response.read().decode("utf-8")
+with open(highcharts_js_path, "r", encoding="utf-8") as f:
+    highcharts_js = f.read()
+
+with open(highcharts_more_js_path, "r", encoding="utf-8") as f:
+    highcharts_more_js = f.read()
 
 # Generate HTML with inline scripts
 html_str = chart.to_js_literal()
@@ -226,20 +242,20 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{highcharts_more_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
+# Write the HTML file
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
 # Write temp HTML and take screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
-
-# Also save the HTML file for interactive viewing
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
 
 chrome_options = Options()
 chrome_options.add_argument("--headless")
@@ -251,7 +267,7 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
