@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-color-mapped: Color-Mapped Scatter Plot
-Library: altair 6.0.0 | Python 3.13
-Quality: pending | Created: 2025-05-08
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-08
 """
 
 import os
