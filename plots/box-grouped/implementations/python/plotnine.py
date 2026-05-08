@@ -1,16 +1,21 @@
-""" pyplots.ai
+""" anyplot.ai
 box-grouped: Grouped Box Plot
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-25
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-08
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    element_line,
+    element_rect,
     element_text,
     geom_boxplot,
     ggplot,
+    ggsave,
     labs,
     position_dodge2,
     scale_fill_manual,
@@ -18,6 +23,16 @@ from plotnine import (
     theme_minimal,
 )
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data: Employee performance scores by department and experience level
 np.random.seed(42)
@@ -46,9 +61,9 @@ for dept in departments:
         values = np.random.normal(base, spread, n)
         # Add some outliers
         if exp == "Senior" and dept == "Sales":
-            values = np.append(values, [55, 98])  # Add outliers
+            values = np.append(values, [55, 98])
         if exp == "Junior" and dept == "Engineering":
-            values = np.append(values, [42, 95])  # Add outliers
+            values = np.append(values, [42, 95])
 
         for v in values:
             data.append({"Department": dept, "Experience": exp, "Score": v})
@@ -58,8 +73,22 @@ df = pd.DataFrame(data)
 # Order experience levels properly
 df["Experience"] = pd.Categorical(df["Experience"], categories=experience_levels, ordered=True)
 
-# Custom color palette using Python colors and complementary
-colors = ["#306998", "#FFD43B", "#4B8BBE"]  # Python Blue, Python Yellow, Light Blue
+# Create theme
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+    panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
+    panel_border=element_rect(color=INK_SOFT, fill=None),
+    axis_title=element_text(color=INK, size=20),
+    axis_text=element_text(color=INK_SOFT, size=16),
+    axis_line=element_line(color=INK_SOFT),
+    plot_title=element_text(color=INK, size=24),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_text=element_text(color=INK_SOFT, size=16),
+    legend_title=element_text(color=INK, size=18),
+    figure_size=(16, 9),
+)
 
 # Create grouped box plot
 plot = (
@@ -67,20 +96,16 @@ plot = (
     + geom_boxplot(
         position=position_dodge2(preserve="single", padding=0.1), width=0.7, outlier_size=3, outlier_alpha=0.7
     )
-    + scale_fill_manual(values=colors)
-    + labs(x="Department", y="Performance Score", title="box-grouped · plotnine · pyplots.ai", fill="Experience Level")
-    + theme_minimal()
-    + theme(
-        figure_size=(16, 9),
-        text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
-        legend_position="right",
+    + scale_fill_manual(values=OKABE_ITO)
+    + labs(
+        x="Department",
+        y="Performance Score (0-100)",
+        title="box-grouped · plotnine · anyplot.ai",
+        fill="Experience Level",
     )
+    + theme_minimal()
+    + anyplot_theme
 )
 
 # Save
-plot.save("plot.png", dpi=300)
+ggsave(plot, filename=f"plot-{THEME}.png", dpi=300, width=16, height=9)
