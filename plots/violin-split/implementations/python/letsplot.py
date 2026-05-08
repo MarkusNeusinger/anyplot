@@ -1,16 +1,29 @@
-""" pyplots.ai
+""" anyplot.ai
 violin-split: Split Violin Plot
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-26
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-08
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from lets_plot import *  # noqa: F403
 from lets_plot.export import ggsave
 
-
 LetsPlot.setup_html()  # noqa: F405
+
+# Theme tokens (see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID_LINE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (first series always #009E73)
+COLOR_BEFORE = "#009E73"  # Okabe-Ito position 1
+COLOR_AFTER = "#D55E00"  # Okabe-Ito position 2
 
 # Data - Employee satisfaction scores before and after office redesign across departments
 np.random.seed(42)
@@ -20,22 +33,10 @@ data = []
 
 # Generate realistic distributions showing varied effects of office redesign
 distributions = {
-    "Engineering": {
-        "Before": {"mean": 65, "std": 12},  # Moderate satisfaction
-        "After": {"mean": 78, "std": 10},  # Clear improvement
-    },
-    "Marketing": {
-        "Before": {"mean": 58, "std": 15},  # Lower satisfaction with high variance
-        "After": {"mean": 72, "std": 11},  # Improvement with less variance
-    },
-    "Sales": {
-        "Before": {"mean": 70, "std": 14},  # Already decent
-        "After": {"mean": 75, "std": 12},  # Modest improvement
-    },
-    "Design": {
-        "Before": {"mean": 55, "std": 18},  # Low satisfaction
-        "After": {"mean": 82, "std": 8},  # Dramatic improvement, tight distribution
-    },
+    "Engineering": {"Before": {"mean": 65, "std": 12}, "After": {"mean": 78, "std": 10}},
+    "Marketing": {"Before": {"mean": 58, "std": 15}, "After": {"mean": 72, "std": 11}},
+    "Sales": {"Before": {"mean": 70, "std": 14}, "After": {"mean": 75, "std": 12}},
+    "Design": {"Before": {"mean": 55, "std": 18}, "After": {"mean": 82, "std": 8}},
 }
 
 for dept in departments:
@@ -43,48 +44,38 @@ for dept in departments:
         params = distributions[dept][period]
         n_samples = np.random.randint(80, 150)
         values = np.random.normal(params["mean"], params["std"], n_samples)
-        values = np.clip(values, 20, 100)  # Satisfaction score bounds
+        values = np.clip(values, 20, 100)
         for v in values:
             data.append({"Department": dept, "Satisfaction": v, "Period": period})
 
 df = pd.DataFrame(data)
 
-# Split violin: use show_half=-1 for "Before" (left side) and show_half=1 for "After" (right side)
+# Prepare data for split violin
 df_before = df[df["Period"] == "Before"].copy()
 df_after = df[df["Period"] == "After"].copy()
 
-# Create split violin plot  # noqa: F405
+# Create split violin plot
 plot = (
     ggplot()  # noqa: F405
     # Left half: Before (show_half=-1)
     + geom_violin(  # noqa: F405
         aes(x="Department", y="Satisfaction", fill="Period"),  # noqa: F405
         data=df_before,
-        show_half=-1,  # Left half
+        show_half=-1,
         trim=False,
-        size=1.0,
+        size=0.8,
         alpha=0.75,
-        color="#306998",
-        tooltips=layer_tooltips()  # noqa: F405
-        .title("@Department - Before")
-        .line("Satisfaction: @Satisfaction")
-        .format("@Satisfaction", ".0f"),
     )
     # Right half: After (show_half=1)
     + geom_violin(  # noqa: F405
         aes(x="Department", y="Satisfaction", fill="Period"),  # noqa: F405
         data=df_after,
-        show_half=1,  # Right half
+        show_half=1,
         trim=False,
-        size=1.0,
+        size=0.8,
         alpha=0.75,
-        color="#FFD43B",
-        tooltips=layer_tooltips()  # noqa: F405
-        .title("@Department - After")
-        .line("Satisfaction: @Satisfaction")
-        .format("@Satisfaction", ".0f"),
     )
-    # Add inner quartile lines for better distribution visualization
+    # Inner quartile lines for distribution visualization
     + geom_boxplot(  # noqa: F405
         aes(x="Department", y="Satisfaction", fill="Period"),  # noqa: F405
         data=df_before,
@@ -92,7 +83,7 @@ plot = (
         outlier_shape=None,
         position=position_nudge(x=-0.05),  # noqa: F405
         alpha=0.9,
-        size=0.8,
+        size=0.6,
         show_legend=False,
     )
     + geom_boxplot(  # noqa: F405
@@ -102,37 +93,36 @@ plot = (
         outlier_shape=None,
         position=position_nudge(x=0.05),  # noqa: F405
         alpha=0.9,
-        size=0.8,
+        size=0.6,
         show_legend=False,
     )
-    # Color scale: Python Blue for Before, Python Yellow for After
-    + scale_fill_manual(values=["#FFD43B", "#306998"], name="Period")  # noqa: F405
-    # Set y-axis limits to match data range (satisfaction scores 0-100)
+    # Okabe-Ito colors (Before=#009E73, After=#D55E00)
+    + scale_fill_manual(values=[COLOR_AFTER, COLOR_BEFORE], name="Period")  # noqa: F405
     + scale_y_continuous(limits=[15, 105])  # noqa: F405
     # Labels
-    + labs(  # noqa: F405
-        x="Department", y="Satisfaction Score (0-100)", title="violin-split · letsplot · pyplots.ai"
-    )
-    # Theme
+    + labs(x="Department", y="Satisfaction Score (0-100)", title="violin-split · letsplot · anyplot.ai")  # noqa: F405
+    # Theme-adaptive styling
     + theme_minimal()  # noqa: F405
     + theme(  # noqa: F405
-        plot_title=element_text(size=24, face="bold"),  # noqa: F405
-        axis_title_x=element_text(size=20),  # noqa: F405
-        axis_title_y=element_text(size=20),  # noqa: F405
-        axis_text_x=element_text(size=16),  # noqa: F405
-        axis_text_y=element_text(size=16),  # noqa: F405
-        legend_title=element_text(size=18),  # noqa: F405
-        legend_text=element_text(size=14),  # noqa: F405
-        legend_position="right",
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),  # noqa: F405
+        panel_background=element_rect(fill=PAGE_BG),  # noqa: F405
         panel_grid_major_x=element_blank(),  # noqa: F405
         panel_grid_minor=element_blank(),  # noqa: F405
-        panel_grid_major_y=element_line(color="rgba(0, 0, 0, 0.3)", size=0.5),  # noqa: F405
+        panel_grid_major_y=element_line(color=GRID_LINE, size=0.4),  # noqa: F405
+        plot_title=element_text(size=24, face="bold", color=INK),  # noqa: F405
+        axis_title_x=element_text(size=20, color=INK),  # noqa: F405
+        axis_title_y=element_text(size=20, color=INK),  # noqa: F405
+        axis_text_x=element_text(size=16, color=INK_SOFT),  # noqa: F405
+        axis_text_y=element_text(size=16, color=INK_SOFT),  # noqa: F405
+        axis_line=element_line(color=INK_SOFT, size=0.4),  # noqa: F405
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),  # noqa: F405
+        legend_title=element_text(size=18, color=INK),  # noqa: F405
+        legend_text=element_text(size=16, color=INK_SOFT),  # noqa: F405
+        legend_position="right",
     )
     + ggsize(1600, 900)  # noqa: F405
 )
 
-# Save PNG (scale 3x to get 4800 x 2700 px)
-ggsave(plot, "plot.png", path=".", scale=3)
-
-# Save HTML for interactive version
-ggsave(plot, "plot.html", path=".")
+# Save outputs (scale 3x to get 4800 x 2700 px)
+ggsave(plot, f"plot-{THEME}.png", scale=3)
+ggsave(plot, f"plot-{THEME}.html")
