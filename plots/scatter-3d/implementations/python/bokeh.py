@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" anyplot.ai
 scatter-3d: 3D Scatter Plot
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: regeneration | Created: 2025-12-26
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-08
 """
 
 import os
