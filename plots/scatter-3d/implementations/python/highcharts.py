@@ -1,10 +1,12 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-3d: 3D Scatter Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: highcharts unknown | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-08
 """
 
+import gzip
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -15,23 +17,33 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+# Theme tokens (from prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette - first series always #009E73
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
 # Data - 3D clustered data demonstrating spatial relationships
 np.random.seed(42)
 
-# Create three distinct clusters in 3D space
 n_points_per_cluster = 50
 
-# Cluster 1: centered at (2, 2, 2) - Python Blue
+# Cluster 1: centered at (2, 2, 2) - Okabe-Ito position 1 (green)
 cluster1_x = np.random.randn(n_points_per_cluster) * 0.8 + 2
 cluster1_y = np.random.randn(n_points_per_cluster) * 0.8 + 2
 cluster1_z = np.random.randn(n_points_per_cluster) * 0.8 + 2
 
-# Cluster 2: centered at (-2, -1, 3) - Python Yellow
+# Cluster 2: centered at (-2, -1, 3) - Okabe-Ito position 2 (orange)
 cluster2_x = np.random.randn(n_points_per_cluster) * 0.7 - 2
 cluster2_y = np.random.randn(n_points_per_cluster) * 0.7 - 1
 cluster2_z = np.random.randn(n_points_per_cluster) * 0.7 + 3
 
-# Cluster 3: centered at (0, -2, -1) - Teal
+# Cluster 3: centered at (0, -2, -1) - Okabe-Ito position 3 (blue)
 cluster3_x = np.random.randn(n_points_per_cluster) * 0.9 + 0
 cluster3_y = np.random.randn(n_points_per_cluster) * 0.9 - 2
 cluster3_z = np.random.randn(n_points_per_cluster) * 0.9 - 1
@@ -40,11 +52,29 @@ cluster3_z = np.random.randn(n_points_per_cluster) * 0.9 - 1
 highcharts_url = "https://code.highcharts.com/highcharts.js"
 highcharts_3d_url = "https://code.highcharts.com/highcharts-3d.js"
 
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
 
-with urllib.request.urlopen(highcharts_3d_url, timeout=30) as response:
-    highcharts_3d_js = response.read().decode("utf-8")
+def download_js(url):
+    req = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/javascript, */*; q=0.01",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Referer": "https://www.highcharts.com/",
+            "Connection": "keep-alive",
+        },
+    )
+    with urllib.request.urlopen(req, timeout=30) as response:
+        data = response.read()
+        if data[:2] == b"\x1f\x8b":  # gzip magic number
+            data = gzip.decompress(data)
+        return data.decode("utf-8")
+
+
+highcharts_js = download_js(highcharts_url)
+time.sleep(1)
+highcharts_3d_js = download_js(highcharts_3d_url)
 
 # Create series data for each cluster
 cluster1_data = [
@@ -57,27 +87,27 @@ cluster3_data = [
     [float(cluster3_x[i]), float(cluster3_y[i]), float(cluster3_z[i])] for i in range(n_points_per_cluster)
 ]
 
-# Define series with colorblind-safe colors
+# Define series with Okabe-Ito colors
 series_data = [
     {
         "type": "scatter3d",
         "name": "Cluster A",
         "data": cluster1_data,
-        "color": "#306998",  # Python Blue
+        "color": OKABE_ITO[0],  # Green
         "marker": {"radius": 14, "symbol": "circle"},
     },
     {
         "type": "scatter3d",
         "name": "Cluster B",
         "data": cluster2_data,
-        "color": "#FFD43B",  # Python Yellow
+        "color": OKABE_ITO[1],  # Orange
         "marker": {"radius": 14, "symbol": "circle"},
     },
     {
         "type": "scatter3d",
         "name": "Cluster C",
         "data": cluster3_data,
-        "color": "#17BECF",  # Teal
+        "color": OKABE_ITO[2],  # Blue
         "marker": {"radius": 14, "symbol": "circle"},
     },
 ]
@@ -92,7 +122,7 @@ Highcharts.chart('container', {{
         type: 'scatter3d',
         width: 4800,
         height: 2700,
-        backgroundColor: '#ffffff',
+        backgroundColor: '{PAGE_BG}',
         options3d: {{
             enabled: true,
             alpha: 15,
@@ -101,25 +131,20 @@ Highcharts.chart('container', {{
             viewDistance: 5,
             fitToPlot: true,
             frame: {{
-                bottom: {{ size: 2, color: 'rgba(48, 105, 152, 0.12)' }},
-                back: {{ size: 2, color: 'rgba(48, 105, 152, 0.08)' }},
-                side: {{ size: 2, color: 'rgba(48, 105, 152, 0.10)' }}
+                bottom: {{ size: 2, color: 'rgba(154,193,205,0.15)' }},
+                back: {{ size: 2, color: 'rgba(154,193,205,0.10)' }},
+                side: {{ size: 2, color: 'rgba(154,193,205,0.12)' }}
             }}
         }},
-        marginTop: 180,
-        marginBottom: 200,
-        marginLeft: 150,
-        marginRight: 220
+        marginTop: 150,
+        marginBottom: 150,
+        marginLeft: 120,
+        marginRight: 120
     }},
     title: {{
-        text: 'scatter-3d · highcharts · pyplots.ai',
-        style: {{ fontSize: '80px', fontWeight: 'bold' }},
-        y: 70
-    }},
-    subtitle: {{
-        text: 'Three-dimensional clustered data visualization',
-        style: {{ fontSize: '52px', color: '#666666' }},
-        y: 130
+        text: 'scatter-3d · highcharts · anyplot.ai',
+        style: {{ fontSize: '28px', color: '{INK}', fontWeight: 'normal' }},
+        y: 40
     }},
     xAxis: {{
         min: -5,
@@ -127,15 +152,16 @@ Highcharts.chart('container', {{
         tickInterval: 2,
         title: {{
             text: 'X Position (units)',
-            style: {{ fontSize: '52px', color: '#306998', fontWeight: 'bold' }},
-            margin: 50
+            style: {{ fontSize: '22px', color: '{INK}', fontWeight: 'normal' }},
+            margin: 30
         }},
         labels: {{
-            style: {{ fontSize: '48px' }},
+            style: {{ fontSize: '18px', color: '{INK_SOFT}' }},
             format: '{{value}}'
         }},
-        gridLineWidth: 2,
-        gridLineColor: 'rgba(0, 0, 0, 0.12)'
+        lineColor: '{INK_SOFT}',
+        tickColor: '{INK_SOFT}',
+        gridLineColor: '{GRID}'
     }},
     yAxis: {{
         min: -5,
@@ -143,15 +169,16 @@ Highcharts.chart('container', {{
         tickInterval: 2,
         title: {{
             text: 'Y Position (units)',
-            style: {{ fontSize: '52px', color: '#306998', fontWeight: 'bold' }},
-            margin: 50
+            style: {{ fontSize: '22px', color: '{INK}', fontWeight: 'normal' }},
+            margin: 30
         }},
         labels: {{
-            style: {{ fontSize: '48px' }},
+            style: {{ fontSize: '18px', color: '{INK_SOFT}' }},
             format: '{{value}}'
         }},
-        gridLineWidth: 2,
-        gridLineColor: 'rgba(0, 0, 0, 0.12)'
+        lineColor: '{INK_SOFT}',
+        tickColor: '{INK_SOFT}',
+        gridLineColor: '{GRID}'
     }},
     zAxis: {{
         min: -4,
@@ -159,31 +186,35 @@ Highcharts.chart('container', {{
         tickInterval: 2,
         title: {{
             text: 'Z Position (units)',
-            style: {{ fontSize: '52px', color: '#306998', fontWeight: 'bold' }},
-            margin: 50
+            style: {{ fontSize: '22px', color: '{INK}', fontWeight: 'normal' }},
+            margin: 30
         }},
         labels: {{
-            style: {{ fontSize: '48px' }},
+            style: {{ fontSize: '18px', color: '{INK_SOFT}' }},
             format: '{{value}}'
         }},
-        gridLineWidth: 2,
-        gridLineColor: 'rgba(0, 0, 0, 0.12)'
+        lineColor: '{INK_SOFT}',
+        tickColor: '{INK_SOFT}',
+        gridLineColor: '{GRID}'
     }},
     legend: {{
         enabled: true,
         layout: 'vertical',
         align: 'right',
         verticalAlign: 'middle',
-        x: -40,
+        x: -80,
         y: 0,
         itemStyle: {{
-            fontSize: '48px',
-            fontWeight: 'normal'
+            fontSize: '18px',
+            color: '{INK_SOFT}'
         }},
-        symbolRadius: 12,
-        symbolHeight: 32,
-        symbolWidth: 32,
-        itemMarginBottom: 25
+        backgroundColor: '{ELEVATED_BG}',
+        borderColor: '{INK_SOFT}',
+        borderWidth: 1,
+        symbolRadius: 8,
+        symbolHeight: 20,
+        symbolWidth: 20,
+        itemMarginBottom: 15
     }},
     credits: {{
         enabled: false
@@ -192,7 +223,8 @@ Highcharts.chart('container', {{
         enabled: true,
         headerFormat: '<b>{{series.name}}</b><br>',
         pointFormat: 'X: {{point.x:.2f}}<br>Y: {{point.y:.2f}}<br>Z: {{point.z:.2f}}',
-        style: {{ fontSize: '32px' }}
+        style: {{ fontSize: '16px', color: '{INK}' }},
+        backgroundColor: '{ELEVATED_BG}'
     }},
     plotOptions: {{
         scatter3d: {{
@@ -225,13 +257,17 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{highcharts_3d_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{chart_config}</script>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
+# Save HTML artifact for interactive version
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Write temp HTML and take screenshot for PNG artifact
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
@@ -241,35 +277,13 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2800")
+chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(6)  # Wait for 3D rendering
 
-# Take screenshot of just the chart container element
-container = driver.find_element("id", "container")
-container.screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
-
-# Also save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    interactive_html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/highcharts-3d.js"></script>
-    <style>
-        body {{ margin: 0; font-family: Arial, sans-serif; }}
-        #container {{ width: 100%; height: 100vh; }}
-    </style>
-</head>
-<body>
-    <div id="container"></div>
-    <script>{chart_config}</script>
-</body>
-</html>"""
-    f.write(interactive_html)
