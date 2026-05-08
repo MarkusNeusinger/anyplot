@@ -1,13 +1,25 @@
-""" pyplots.ai
+""" anyplot.ai
 box-grouped: Grouped Box Plot
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-25
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-08
 """
 
-import altair as alt
+import os
+
+import altair
 import numpy as np
 import pandas as pd
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (positions 1, 2, 3 for Junior, Mid, Senior)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data - Employee performance scores across departments and experience levels
 np.random.seed(42)
@@ -47,35 +59,41 @@ for dept in departments:
 
 df = pd.DataFrame(data)
 
-# Create grouped box plot
+# Create grouped box plot with theme-adaptive styling
 chart = (
-    alt.Chart(df)
-    .mark_boxplot(size=60, median={"stroke": "white", "strokeWidth": 2}, outliers={"size": 80})
+    altair.Chart(df)
+    .mark_boxplot(size=60, median={"stroke": INK, "strokeWidth": 2}, outliers={"size": 80, "strokeOpacity": 0.7})
     .encode(
-        x=alt.X("Department:N", title="Department", axis=alt.Axis(labelFontSize=18, titleFontSize=22)),
-        y=alt.Y(
+        x=altair.X("Department:N", title="Department", axis=altair.Axis(labelFontSize=18, titleFontSize=22)),
+        y=altair.Y(
             "Performance Score:Q",
             title="Performance Score (%)",
-            scale=alt.Scale(domain=[0, 105]),
-            axis=alt.Axis(labelFontSize=18, titleFontSize=22),
+            scale=altair.Scale(domain=[0, 105]),
+            axis=altair.Axis(labelFontSize=18, titleFontSize=22),
         ),
-        color=alt.Color(
+        color=altair.Color(
             "Experience:N",
             title="Experience Level",
-            scale=alt.Scale(domain=["Junior", "Mid", "Senior"], range=["#306998", "#FFD43B", "#4ECDC4"]),
-            legend=alt.Legend(titleFontSize=20, labelFontSize=18, symbolSize=300, orient="right"),
+            scale=altair.Scale(domain=["Junior", "Mid", "Senior"], range=OKABE_ITO),
+            legend=altair.Legend(titleFontSize=20, labelFontSize=18, symbolSize=300, orient="top-left"),
         ),
         xOffset="Experience:N",
+        tooltip=["Department:N", "Experience:N", "Performance Score:Q"],
     )
     .properties(
-        width=1400, height=800, title=alt.Title(text="box-grouped · altair · pyplots.ai", fontSize=28, anchor="middle")
+        width=1600,
+        height=900,
+        background=PAGE_BG,
+        title=altair.Title(text="box-grouped · altair · anyplot.ai", fontSize=28, anchor="middle"),
     )
-    .configure_view(strokeWidth=0)
-    .configure_axis(grid=True, gridOpacity=0.3, gridDash=[4, 4])
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_axis(
+        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK
+    )
+    .configure_title(color=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save as PNG (scale_factor=3 for 4800x2700 target, adjusted for 1600x900 base)
-chart.save("plot.png", scale_factor=3.0)
-
-# Save as HTML for interactivity
-chart.save("plot.html")
+# Save as PNG and HTML with theme-suffixed filenames
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
