@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 donut-nested: Nested Donut Chart
-Library: pygal | Python 3.13
-Quality: pending | Created: 2025-05-08
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 82/100 | Updated: 2026-05-08
 """
 
 import io
