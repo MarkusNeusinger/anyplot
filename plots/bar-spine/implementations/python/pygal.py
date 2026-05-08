@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-spine: Spine Plot for Two-Variable Proportions
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 81/100 | Created: 2026-05-08

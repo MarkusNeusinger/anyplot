@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: bar-spine
 created: '2026-05-08T15:29:07Z'
-updated: '2026-05-08T15:35:19Z'
+updated: '2026-05-08T15:44:00Z'
 generated_by: claude-sonnet
 workflow_run: 25563761654
 issue: 5249
@@ -15,40 +15,44 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine
 quality_score: 81
 review:
   strengths:
-  - Clever use of pygal.Histogram with x-range tuples (value, x_min, x_max) to implement
-    a spine plot — pygal has no native spine type, and this approach correctly encodes
-    proportional bar widths and conditional proportions
-  - Historically accurate Titanic data with correct survival rates (~62%/~43%/~25%)
-    and class counts — factually grounded and naturally compelling dataset
-  - 'Perfect palette compliance: brand green (#009E73) first, Okabe-Ito order for
-    second series, correct theme-adaptive backgrounds (#FAF8F1 light / #1A1A17 dark)
-    in both renders with no dark-on-dark failures'
-  - 'Perfect code quality: fully deterministic hardcoded data, clean KISS structure
-    with no functions/classes, all imports used'
+  - Correctly implements spine plot with variable-width bars using pygal.Histogram
+    overlay technique
+  - Bar widths accurately proportional to class marginal frequencies (1st 24.7%, 2nd
+    21.2%, 3rd 54.2%)
+  - 'Both themes correctly rendered with #FAF8F1 / #1A1A17 backgrounds and adaptive
+    chrome'
+  - 'Okabe-Ito first series #009E73 (Survived) and second #D55E00 (Not Survived) in
+    correct order'
+  - 'Title format correct: ''bar-spine · pygal · anyplot.ai'' embedded in descriptive
+    title'
+  - 'Perfect code quality: KISS structure, deterministic data, clean imports, correct
+    output files (PNG + HTML)'
+  - X-axis labels centered under variable-width bars with width percentages shown
+    as spec requires
   weaknesses:
-  - Axis label font size (label_font_size=18) and tick label size (major_label_font_size=16)
-    are below the 22px/18px guidelines for pixel-based libraries at 4800x2700 — legend
-    and y-axis label appear very small in the rendered output
-  - X-axis labels are not centered under each variable-width bar as required by the
-    spec — instead a single combined label is used at the bottom of the chart
-  - Legend positioning (top-left overlay) is cramped and the small text makes it hard
-    to identify the two series at a glance
-  - Design lacks visual storytelling emphasis — no annotation, size variation, or
-    color contrast highlight guides the viewer to the key class-survival disparity;
-    y-axis uses raw decimal ticks (0, 0.25, 0.5, 0.75, 1.0) instead of percentage
-    format
+  - Visible gaps between adjacent bars — spec requires bars be adjacent with no gaps
+    to emphasize continuous proportion axis; pygal Histogram rendering leaves thin
+    separators between bars
+  - No percentage labels within segments — spec says 'Consider adding percentage labels
+    within segments when space permits'; at 4800x2700 there is ample space, this is
+    a missed storytelling opportunity
+  - Limited design sophistication — monolithic flat color blocks with no annotations,
+    no subtle bar edge definition, and no visual hierarchy beyond the data itself
+    (DE-01 at defaults)
+  - Bar chart frame/box visible in pygal's default rendering — ideally top/right spines
+    would be removed but pygal Histogram has limited spine control
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "Titanic Survival by Passenger Class · bar-spine · pygal · anyplot.ai" in small dark text at top center — readable. Y-axis label "Conditional Proportion" is rotated vertically in very small text. Tick labels (0, 0.25, 0.5, 0.75, 1.0) are small but legible. Legend in top-left corner shows "Survived" and "Not Survived" labels — very small, barely legible at canvas size.
-      Data: Three proportional-width spine columns — 1st Class (~25% width), 2nd Class (~21% width), 3rd Class (~54% width). Brand green (#009E73) occupies upper (Survived) segment; Okabe-Ito orange (#D55E00) occupies lower (Not Survived) segment. Survival fractions correctly rendered (~62%, ~43%, ~25%). Subtle dashed horizontal grid lines at 0.25, 0.5, 0.75, 1.0 intervals.
-      Legibility verdict: PARTIAL PASS — title readable; legend and y-axis label are undersized for 4800x2700 canvas (label_font_size=18, below 22px guideline)
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Title "Titanic Survival by Passenger Class · bar-spine · pygal · anyplot.ai" in dark ink at top, readable. Y-axis label "Survival Rate" in dark ink, readable. Tick labels 0%, 25%, 50%, 75%, 100% visible along left axis. X-axis labels "1st Class (24.7%)", "2nd Class (21.2%)", "3rd Class (54.2%)" centered under bars at bottom, readable.
+      Data: First series (Survived) in #009E73 teal-green — correct Okabe-Ito position 1. Second series (Not Survived) in #D55E00 orange — correct position 2. Variable-width bars clearly show 3rd class is widest (~54% of canvas width), 1st class narrower (~25%), 2nd class narrowest (~21%). Conditional proportions: 1st class ~62% survived, 2nd class ~43%, 3rd class ~25%.
+      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light issues. Minor: thin gaps visible between adjacent bars (rendering artifact).
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title, axis labels, and tick labels all flip to light-colored text and are visible against the dark background. No dark-on-dark failures. Legend shows light text in top-left corner — small but readable. Grid lines appear as subtle light lines.
-      Data: Colors are identical to light render — brand green (#009E73) for Survived, orange (#D55E00) for Not Survived. Okabe-Ito positions 1-2 unchanged between themes as required.
-      Legibility verdict: PASS — all text visible against dark background, no dark-on-dark failures detected
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black.
+      Chrome: Title and axis labels rendered in light ink (#F0EFE8 or similar) against near-black background — all readable. Tick labels in muted light tone, visible. No dark-on-dark failures detected; chrome correctly adapts to dark theme via foreground/foreground_subtle Style tokens.
+      Data: Data colors #009E73 and #D55E00 are identical to light render — only chrome flips between themes as required.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
       score: 26
@@ -56,51 +60,56 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Sizes explicitly set but label_font_size=18 below 22px guideline;
-          legend and y-axis label appear very small on 4800x2700 canvas
+        comment: Font sizes explicitly set (title=28, label=22, major_label=18, legend=18,
+          value=16). All text readable in both light and dark themes. Slight deduction
+          as title appears small relative to large monolithic chart area.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No text overlaps. X-axis labels well-spaced. Minor deduction for
+          thin gap lines between bars creating visual noise.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Spine plot bars are large and clearly visible with strong color contrast
+        comment: Both Survived and Not Survived segments clearly visible and distinguishable.
+          Slight deduction as no bar edge definition (subtle borders would improve
+          separation).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green and orange are colorblind-safe Okabe-Ito colors with adequate
-          luminance difference
+        comment: 'Okabe-Ito palette used — peer-reviewed colorblind-safe. Good contrast
+          between #009E73 and #D55E00.'
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Plot fills canvas well; legend in top-left overlaps plot area — minor
-          layout concern
+        comment: 4800x2700 canvas used correctly. Bars fill the plot area appropriately.
+          Small deduction for visible gaps between adjacent bars which the spec forbids.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: Conditional Proportion; x-axis: includes class names and
-          marginal percentages'
+        comment: Title 'Titanic Survival by Passenger Class · bar-spine · pygal ·
+          anyplot.ai' correct. Y-axis labeled 'Survival Rate'. X-labels with width
+          percentages present.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00, backgrounds #FAF8F1/#1A1A17,
-          chrome theme-correct in both renders'
+        comment: 'First series #009E73 (Survived). Second series #D55E00 (Not Survived).
+          Backgrounds #FAF8F1 light and #1A1A17 dark. Both renders theme-correct.'
     design_excellence:
       score: 10
       max: 20
@@ -110,22 +119,25 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Correct palette and font sizes, but overall appearance is a well-configured
-          default without intentional typographic hierarchy or polish
+        comment: Default level — monolithic flat color blocks with no additional design
+          touches. No annotations, no emphasis hierarchy, no typography refinements
+          beyond required sizes.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: x-guides disabled, theme-adaptive colors applied; pygal limits spine
-          removal; moderate refinement but not polished
+        comment: Slightly above default. Grid is subtle (dashed y-guides only). However,
+          the Histogram frame/box is visible and pygal does not allow easy spine removal
+          for this chart type.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Step-wise spine naturally reveals survival disparity but no visual
-          emphasis or annotation to guide viewer to key insight
+        comment: Slightly above default. The variable-width bars naturally tell the
+          story of class size + survival rate. However no segment percentage labels
+          or annotations to guide the viewer to key insights.
     spec_compliance:
       score: 14
       max: 15
@@ -135,29 +147,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct spine plot: bar widths proportional to marginal class frequency,
-          segments show conditional survival proportions, all bars normalized to 100%'
+        comment: 'Correct spine/spineplot: variable-width bars proportional to marginal
+          frequency, normalized 100% height, conditional proportions as stacked segments.'
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
-        passed: false
-        comment: Variable-width bars, conditional proportions, adjacent bars, legend
-          all present; missing centered x-axis labels under each bar (spec requirement)
+        passed: true
+        comment: 'Bar widths proportional to marginal counts, segments show conditional
+          proportions, x-labels centered. Minor deduction: spec requires ''no gaps''
+          between bars but thin gaps are visible in rendering.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X encodes marginal frequency, Y encodes conditional proportion; all
-          data visible
+        comment: X categories (1st/2nd/3rd class), fill categories (Survived/Not Survived),
+          counts accurately reflected.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: Titanic Survival by Passenger Class · bar-spine · pygal ·
-          anyplot.ai; legend: Survived / Not Survived'
+        comment: Title contains 'bar-spine · pygal · anyplot.ai'. Legend labels 'Survived'
+          and 'Not Survived' at bottom.
     data_quality:
       score: 14
       max: 15
@@ -167,22 +180,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows all spine plot features (variable widths, normalized stacks);
-          only 2 fill categories — could show 3+ for fuller coverage but 2 is within
-          spec range
+        comment: 'Shows both marginal proportions (bar widths) and conditional distributions
+          (segment heights). Missed: no percentage labels within segments (spec says
+          ''consider adding when space permits'' — at 4800x2700 there is ample space).'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Titanic survival data: well-known, historically documented, neutral'
+        comment: Titanic survival data by passenger class — well-known historical
+          dataset, realistic, neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Passenger counts (323/277/709) and survival rates (~62%/~43%/~25%)
-          are historically accurate
+        comment: Proportions 0.0–1.0 shown as 0%–100%. 3 classes with counts in plausible
+          historical range.
     code_quality:
       score: 10
       max: 10
@@ -192,32 +206,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> data -> plot -> save; no functions or classes
+        comment: No functions or classes. Clean top-level code flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: hardcoded historical counts, no randomness'
+        comment: All data hardcoded. Fully deterministic, no random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, pygal, Style — all used
+        comment: os, sys, pygal, Style — all used. sys needed for path collision workaround.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic; overlapping Histogram approach to simulate spine
-          plot is clever
+        comment: Elegant use of overlapping Histogram bars for spine plot. sys.path
+          manipulation is necessary for filename collision avoidance.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct for interactive
+          library.
     library_mastery:
       score: 7
       max: 10
@@ -227,23 +242,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses pygal.Histogram with dict-based data including (value, x_min,
-          x_max) tuples — idiomatic for pygal's histogram API; Style object correctly
-          applied
+        comment: Uses pygal.Histogram with Style object correctly. Custom y_labels
+          and x_labels with value-based positioning. Labeled data points via dict
+          format. Good idiomatic usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses pygal's histogram x-range format and interactive HTML output
-          (pygal strength); could leverage more distinctive features like custom tooltip
-          content or data label formatters
-  verdict: REJECTED
+        passed: true
+        comment: Creative use of Histogram chart type for spine plot via overlapping
+          bars. legend_at_bottom with legend_at_bottom_columns. Interactive HTML output
+          via chart.render(). Above default.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - manual-ticks
   - html-export
-  patterns: []
+  patterns:
+  - iteration-over-groups
   dataprep:
   - normalization
   styling: []
