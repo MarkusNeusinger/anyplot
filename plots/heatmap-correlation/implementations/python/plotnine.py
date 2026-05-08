@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 heatmap-correlation: Correlation Matrix Heatmap
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-26
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-08
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,16 +12,24 @@ from plotnine import (
     aes,
     coord_fixed,
     element_blank,
+    element_line,
+    element_rect,
     element_text,
     geom_text,
     geom_tile,
     ggplot,
     labs,
-    scale_fill_gradient2,
+    scale_fill_cmap,
     theme,
     theme_minimal,
 )
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - realistic financial/portfolio variables for correlation analysis
 np.random.seed(42)
@@ -59,32 +69,32 @@ df["Var2"] = pd.Categorical(df["Var2"], categories=variables, ordered=True)
 # Create heatmap with lower triangle only
 plot = (
     ggplot(df, aes(x="Var2", y="Var1", fill="Correlation"))
-    + geom_tile(color="white", size=0.5)
-    + geom_text(aes(label="Correlation"), format_string="{:.2f}", size=14, color="black")
-    + scale_fill_gradient2(
-        low="#2166AC",  # Blue for negative correlations
-        mid="white",  # White for zero correlation
-        high="#B2182B",  # Red for positive correlations
-        midpoint=0,
-        limits=(-1, 1),
-        name="Correlation\nCoefficient",
-    )
+    + geom_tile(color=INK_SOFT, size=0.5)
+    + geom_text(aes(label="Correlation"), format_string="{:.2f}", size=14, color=INK)
+    + scale_fill_cmap(cmap_name="BrBG", limits=(-1, 1), name="Correlation\nCoefficient")
     + coord_fixed(ratio=1)
-    + labs(title="heatmap-correlation · plotnine · pyplots.ai", x="Portfolio Asset", y="Portfolio Asset")
+    + labs(title="heatmap-correlation · plotnine · anyplot.ai", x="Portfolio Asset", y="Portfolio Asset")
     + theme_minimal()
     + theme(
         figure_size=(12, 12),  # 12x12 at 300 DPI = 3600x3600 px
-        plot_title=element_text(size=26, ha="center", weight="bold"),
-        axis_title_x=element_text(size=22),
-        axis_title_y=element_text(size=22),
-        axis_text_x=element_text(size=16, rotation=45, ha="right"),
-        axis_text_y=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
+        panel_border=element_rect(color=INK_SOFT, fill=None),
+        plot_title=element_text(size=26, color=INK, ha="center", weight="bold"),
+        axis_title_x=element_text(size=22, color=INK),
+        axis_title_y=element_text(size=22, color=INK),
+        axis_text_x=element_text(size=16, color=INK_SOFT, rotation=45, ha="right"),
+        axis_text_y=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT),
+        legend_background=element_rect(fill=PAGE_BG, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=16, color=INK_SOFT),
     )
 )
 
 # Save at 300 DPI for 3600x3600 pixel output
-plot.save("plot.png", dpi=300, width=12, height=12)
+script_dir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(script_dir)
+plot.save(f"plot-{THEME}.png", dpi=300, width=12, height=12)
