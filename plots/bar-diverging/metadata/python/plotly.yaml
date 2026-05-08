@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: bar-diverging
 created: '2025-12-25T22:47:36Z'
-updated: '2026-05-08T08:53:28Z'
+updated: '2026-05-08T09:00:13Z'
 generated_by: claude-haiku
 workflow_run: 25546316970
 issue: 2009
@@ -12,34 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diver
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/plotly/plot-dark.html
-quality_score: 82
+quality_score: 84
 review:
   strengths:
-  - Perfect technical execution with all text readable and no overlap
-  - Excellent palette compliance with correct Okabe-Ito colors in both themes
-  - Professional data presentation sorted by value for pattern recognition
-  - Clean KISS code structure with proper theme-token usage
-  - Robust theme adaptation with correct background and text colors in both renders
+  - Clean, readable code with proper theme adaptation (all colors and fonts use theme
+    tokens correctly)
+  - 'Perfect visual distinction between positive/negative values using Okabe-Ito colors
+    (#009E73 green, #D55E00 orange)'
+  - No text overlap or readability issues - all labels, titles, and values clearly
+    visible in both light and dark themes
+  - 'Excellent data organization: bars sorted by value for clear pattern recognition
+    and visual hierarchy'
+  - Correct horizontal bar chart orientation with zero baseline marked by explicit
+    vline
+  - 'Strong spec compliance: all required features present (diverging direction, color
+    coding, category labels, magnitude display)'
+  - Fully deterministic and reproducible - no randomness, hardcoded data
+  - Both light (#FAF8F1 bg) and dark (#1A1A17 bg) themes render correctly with proper
+    theme-adaptive text colors
   weaknesses:
-  - Generic design lacking intentional visual polish beyond library defaults
-  - No visual hierarchy or data storytelling to guide viewer to insights
-  - Limited leveraging of plotly-distinctive features like rich hover templates
-  - Minimal visual refinement in margins, spacing, and styling choices
+  - 'Title format includes custom prefix (''Customer Satisfaction Survey'') but spec
+    requires strict format: ''{spec-id} · {library} · anyplot.ai'''
+  - 'X-axis label ''Satisfaction Score'' lacks explicit units - could be ''(Satisfaction
+    Score: -100 to +100)'' for clarity'
+  - Design is functional but generic - lacks visual refinement (could remove top/right
+    spines per style guide, refine grid subtlety)
+  - Limited use of library-specific distinctive features - straightforward horizontal
+    bar chart without leveraging plotly's advanced capabilities
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct light theme surface
-      Chrome: Title (28px dark text), axis labels (22px dark), tick labels (18px dark gray) - all clearly readable with strong contrast
-      Data: Positive values in Okabe-Ito green (#009E73), negative in Okabe-Ito orange (#D55E00); vertical zero baseline in dark gray; value labels positioned outside bars
-      Legibility verdict: PASS - All text perfectly readable; no light-on-light failures; gridlines subtle but visible
+      Background: Warm off-white (#FAF8F1) - CORRECT
+      Chrome: Title "Customer Satisfaction Survey · bar-diverging · plotly · anyplot.ai" in dark text (#1A1A17), axis titles "Department" (Y) and "Satisfaction Score" (X) clearly visible, tick labels in softer gray (#4A4A44), all readable against light background
+      Data: Positive satisfaction scores rendered as horizontal bars in Okabe-Ito green (#009E73), negative scores in orange (#D55E00), sorted from lowest (-42 "Return Policy") to highest (+72 "Customer Support"), value labels positioned outside bars ("+72", "+68", etc.) in gray text, zero baseline marked by vertical line
+      Layout: 10 department categories on Y-axis, -100 to +100 range on X-axis, subtle grid lines, bars fill ~60% of canvas with balanced margins
+      Legibility verdict: PASS - All text clearly readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title, axis labels, tick labels all rendered in light colors - clearly readable against dark background; no dark-on-dark failures observed
-      Data: Identical colors to light render - green (#009E73) for positive, orange (#D55E00) for negative; confirms proper theme adaptation with constant data colors
-      Legibility verdict: PASS - All text perfectly readable in dark theme; proper contrast; only chrome changed, data colors remain constant across both renders
+      Background: Warm near-black (#1A1A17) - CORRECT
+      Chrome: Title in light text (#F0EFE8), axis labels and titles clearly visible in light color, tick labels in lighter gray (#B8B7B0), grid lines subtle but visible with light opacity rgba(240,239,232,0.10)
+      Data: Positive bars remain Okabe-Ito green (#009E73) - IDENTICAL to light render, negative bars remain orange (#D55E00) - IDENTICAL, only chrome/background theme-flipped, value labels in light gray (#B8B7B0), zero baseline in light gray
+      Layout: Identical to light render - proper dark theme chrome adaptation
+      Legibility verdict: PASS - All text readable against warm near-black background, no dark-on-dark issues, brand green #009E73 clearly visible, proper theme-adaptive chrome throughout
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -47,47 +63,53 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title 28px, labels 22px, ticks 18px;
-          perfectly readable in both themes
+        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, ticks
+          18px. Perfectly readable in both light and dark themes.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; all labels fully readable
+        comment: No overlapping text elements. Value labels positioned outside bars,
+          category names fully visible, no tick label overlap.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible; bargap=0.3 optimal spacing; markers well-adapted
+        comment: Bars clearly visible and appropriately sized. Colors distinct and
+          visible against backgrounds.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito colors colorblind-safe; strong contrast between positive/negative
+        comment: Okabe-Ito palette is colorblind-safe. Good luminance contrast between
+          green (#009E73) and orange (#D55E00).
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 70-80% of canvas; balanced margins; generous whitespace
+        comment: Perfect proportions - plot fills 60% of canvas with balanced margins.
+          No cut-off elements.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Title correct format; descriptive axis labels
+        passed: false
+        comment: Labels are descriptive ('Satisfaction Score', 'Department') but could
+          include explicit units like (-100 to +100).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 and #D55E00 correct; backgrounds #FAF8F1/#1A1A17
-          correct; chrome theme-correct in both renders'
+        comment: 'First series green #009E73, second series orange #D55E00 (Okabe-Ito
+          positions 1-2). Backgrounds correct: light #FAF8F1, dark #1A1A17. Theme-adaptive
+          chrome perfect in both renders.'
     design_excellence:
-      score: 8
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -95,24 +117,26 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured default; professional but generic; no exceptional
-          design thought
+        comment: Well-configured defaults using Okabe-Ito palette correctly. Design
+          is functional but not exceptionally sophisticated - looks like configured
+          library defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Minimal customization; library defaults; adequate whitespace but
-          not exceptional
+        comment: Bars have subtle edges (PAGE_BG color outline). Grid is subtle. Could
+          improve by removing top/right spines per style guide and refining grid opacity.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Bars sorted by value but no visual hierarchy; data displayed as list,
-          not narrative
+        comment: Good visual hierarchy created through sorting (negative to positive,
+          by magnitude) and color coding. Zero baseline explicitly marked. Clear focal
+          point showing most/least satisfied departments.
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -120,26 +144,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct diverging bar chart; bars extend opposite from zero baseline
+        comment: Correct horizontal diverging bar chart. All subtypes present.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: contrasting colors, horizontal orientation,
-          zero baseline, sorted bars'
+        comment: Bars extend in opposite directions from zero. Positive/negative color
+          distinction. Zero baseline marked. Sorted for pattern recognition.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on Y-axis, values on X-axis; range -100 to +100 correct
+        comment: 'X-axis (values): -100 to +100 correct. Y-axis (categories): all
+          10 departments visible and readable. Data mapping correct.'
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title format correct; no legend needed
+        passed: false
+        comment: 'Title format INCORRECT: ''Customer Satisfaction Survey · bar-diverging
+          · plotly · anyplot.ai'' has extra prefix. Spec requires ''{spec-id} · {library}
+          · anyplot.ai'' (should be ''bar-diverging · plotly · anyplot.ai'').'
     data_quality:
       score: 15
       max: 15
@@ -149,21 +176,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows positive (+72) and negative (-42) values; good magnitude range;
-          variation across 10 categories
+        comment: 'Shows all aspects: positive values (7), negative values (3), range
+          of magnitudes (-42 to +72), 10 diverse categories.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Customer satisfaction survey is real, neutral, professional; realistic
-          department names
+        comment: Customer satisfaction survey by department - real, comprehensible,
+          neutral scenario with plausible values.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Satisfaction scores -100 to +100 proportionally correct and plausible
+        comment: Scale (-100 to +100) is appropriate for satisfaction surveys. Values
+          are factually plausible and well-proportioned.
     code_quality:
       score: 10
       max: 10
@@ -173,56 +201,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save; no functions/classes'
+        comment: 'Simple linear structure: imports → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded data; fully deterministic; no randomness
+        comment: Fully deterministic - hardcoded data, no randomness, produces identical
+          output on every run.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os and plotly.graph_objects; both used
+        comment: 'Only used imports: os (for theme env var), plotly.graph_objects
+          (for plotting). No extraneous modules.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; appropriate complexity; no fake functionality; good
-          theme-token usage
+        comment: Clean, Pythonic code. Uses zip(strict=True) for safety. No over-engineering,
+          no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; correct API; proper
-          resolution
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Correct naming and
+          current plotly API.
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses go.Figure() and go.Bar() correctly; correct add_trace/update_layout;
-          doesn't leverage advanced patterns
+        passed: true
+        comment: Good use of go.Figure(), go.Bar(), add_vline(), update_layout().
+          High-level API with proper theme-token integration. Slightly conservative
+          but correct.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Uses orientation='h' and add_vline(); mostly generic; minimal plotly-distinctive
-          features
-  verdict: REJECTED
+        comment: Straightforward horizontal bar chart - generic approach achievable
+          in many libraries. The add_vline() zero baseline and text positioning are
+          idiomatic but not distinctive.
+    score_caps:
+      applied: false
+      details: No score caps triggered. VQ-02, VQ-03, SC-01, DQ-02 all passed. DE
+        scores (11/20) are above cap threshold.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - edge-highlighting
