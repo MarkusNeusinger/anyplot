@@ -1,212 +1,243 @@
 library: plotnine
+language: python
 specification_id: donut-nested
 created: '2025-12-25T20:05:07Z'
-updated: '2025-12-25T20:07:13Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510190047
+updated: '2026-05-08T01:13:15Z'
+generated_by: claude-haiku
+workflow_run: 25530765077
 issue: 2015
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/donut-nested/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - patches
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent hierarchical data representation with clear parent-child relationships
-  - Consistent color families (same hue, varying lightness) as specified
-  - Gap between inner and outer rings provides good visual separation
-  - Smart labeling strategy - only labels segments >= 80K threshold
-  - White bold text on inner ring provides excellent contrast
-  - Clean theme with all axis elements properly hidden
-  - Realistic budget allocation scenario matches spec applications
+  - Elegant color family approach exactly matching spec requirement (same hue, varying
+    lightness per parent)
+  - Perfect theme adaptation with identical data colors across light and dark renders,
+    only chrome flipping
+  - Excellent text legibility in both renders with no readability failures or dark-on-dark
+    issues
+  - Professional layout with balanced composition, generous spacing, and appropriate
+    visual hierarchy
+  - Realistic, comprehensible budget scenario with authentic department and expense
+    category names
+  - Clean, straightforward code with well-structured helper function for polygon generation
   weaknesses:
-  - Helper function slightly deviates from KISS principle but is necessary for the
-    polygon-based approach
-  - Outer ring labels could be slightly larger for better readability at full resolution
-  image_description: 'The plot displays a nested donut chart showing budget allocation
-    by department. The inner ring shows four parent categories: Engineering (blue),
-    Marketing (yellow), Operations (green), and Sales (red). Each parent has bold
-    white text labels. The outer ring shows child categories with lighter shades of
-    the parent colors: Engineering has Salaries, Equipment, and Training; Marketing
-    has Advertising, Events; Sales has Commissions, Travel; Operations has IT Infrastructure,
-    Facilities. Child segment labels are in dark gray text. There is a clear gap between
-    the inner and outer rings for visual separation. The title "Budget Allocation
-    by Department · donut-nested · plotnine · pyplots.ai" appears at the top. The
-    plot uses a square 1:1 aspect ratio with the donut centered and good canvas utilization.'
+  - Library mastery limited by manual geometry construction (polygon coordinates)
+    rather than high-level API usage, though necessary for donut shapes
+  - Text could be marginally larger to achieve VQ-01 score of 8/8 at maximum resolution
+  - Data storytelling could be more explicit through stronger visual emphasis of key
+    budget insights
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title centered in bold dark text (22pt), parent category names in bold dark text (size 11) centered in inner ring segments, child segment names in softer dark text on outer ring. All text clearly readable.
+      Data: Inner ring shows four parent categories with Okabe-Ito colors (#009E73 for Engineering as position 1, #D55E00, #0072B2, #CC79A7 for positions 2-4). Each parent has color family with varying lightness for child categories. White borders separate segments.
+      Legibility verdict: PASS - All text is clearly readable against light background with excellent contrast. No readability failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title and parent labels now in light text (#F0EFE8), child labels in softer light text (#B8B7B0). All text clearly readable against dark background.
+      Data: All data colors identical to light render - parent categories use same Okabe-Ito colors, child color families preserved. White borders remain clearly visible. No dark-on-dark failures present. Perfect theme adaptation.
+      Legibility verdict: PASS - All text is clearly readable against dark background. Theme adaptation successful with no legibility issues.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text readable, inner labels bold white, outer labels dark gray.
-          Title is clear. Slight deduction as outer labels could be slightly larger.
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text, segments well separated with gaps
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Segments clearly visible with good alpha values, small segments are
-          still visible
+        comment: Font sizes explicitly set (title 22pt, labels 11pt), all readable
+          in both themes, well-scaled for high resolution
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Excellent label positioning with smart culling strategy, all text
+          fully readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All segments clearly visible and differentiated, ring separation
+          aids visibility
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses blue/yellow/green/red color families with good differentiation,
-          colorblind-friendly palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Square layout with centered donut, good canvas utilization (~60%
-          of canvas used)
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for donut charts, axes are hidden appropriately
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid needed, no legend needed (labels on segments)
+        comment: Okabe-Ito palette ensures CVD safety, good contrast throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect square composition (3600×3600 px), balanced margins, no wasted
+          space
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correctly formatted and descriptive, axes appropriately omitted
+          for donut chart
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct, color families with varying lightness,
+          backgrounds #FAF8F1/#1A1A17 perfect, theme-adaptive text correct in both
+          renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Elegant color family approach, thoughtful hierarchy through hue progression,
+          professional polish, near publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal chrome, white segment borders for definition, generous spacing,
+          very refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy from parent to child breakdown, color families
+          create natural grouping
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct nested donut chart with two concentric rings
+        comment: Correct nested donut chart with proper 2-level hierarchy
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Inner ring = parent categories (departments), outer ring = child
-          categories (expense types)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has consistent color families per parent, child segments aligned
-          with parent boundaries, gap between rings, labels on larger segments
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: color families per parent, aligned segments,
+          label strategy, ring separation'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All segments visible, proportions correct
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Hierarchical values correctly aggregated and mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Direct labeling used, no legend needed
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "donut-nested · plotnine · pyplots.ai"
+        comment: Title format correct, legend appropriately omitted with data labels
+          substituting
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows 4 parent categories with 2-3 children each, demonstrates hierarchical
-          relationships well. Minor deduction: could show more variation in segment
-          sizes'
+        comment: Complete nested hierarchy with 4 departments and 3-5 categories each
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Budget allocation by department is an excellent, realistic scenario
-          matching the spec applications
+        comment: Budget allocation is realistic, authentic department and category
+          names, neutral business context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values in \$K range are realistic for department budgets, though
-          some values are nicely rounded
+        comment: Values realistic for corporate budgets, proportions make logical
+          sense
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Uses a helper function `create_annular_segment`, which deviates slightly
-          from pure KISS but is necessary for plotnine polygon approach
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Deterministic data (hardcoded values, no random)
+        comment: 'Clean linear flow: imports → setup → data → geometry → plot → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic data with no randomization
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used, no extraneous libraries
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Well-structured helper function, Pythonic coordinate/angle handling
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png correctly, current API
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses plotnine's grammar of graphics with geom_polygon, scale_fill_identity,
-          coord_fixed. Creative solution using polygons since plotnine lacks native
-          pie/donut geoms. Minor deduction as it relies on manual polygon construction
-          rather than ggplot-native pie approach.
+        passed: false
+        comment: Uses ggplot() + geom idiomatically, polygon approach necessary but
+          not high-level
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Creative use of geom_polygon and coord_fixed, but mathematically-driven
+          rather than distinctively plotnine
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - minimal-chrome

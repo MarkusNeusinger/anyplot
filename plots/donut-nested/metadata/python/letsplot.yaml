@@ -1,210 +1,261 @@
 library: letsplot
+language: python
 specification_id: donut-nested
 created: '2025-12-25T20:03:39Z'
-updated: '2025-12-25T20:05:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510190055
+updated: '2026-05-08T01:27:30Z'
+generated_by: claude-haiku
+workflow_run: 25530954959
 issue: 2015
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/donut-nested/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/donut-nested/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/letsplot/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent use of consistent color families per parent category (blues for Marketing,
-    yellows for Operations, greens for R&D, oranges for Sales)
-  - Clear visual hierarchy with bold white labels on inner ring and dark labels on
-    outer ring
-  - Well-proportioned spacing between rings for visual separation
-  - Creative use of geom_polygon to create donut segments, demonstrating lets-plot
-    flexibility
-  - Center label showing total value adds informative context
-  - Clean white borders between segments enhance readability
+  - Excellent text legibility with all font sizes explicitly set and perfectly readable
+    in both light and dark themes
+  - 'Perfect palette compliance: first series is #009E73, multi-series follows Okabe-Ito
+    order, backgrounds and chrome fully theme-correct'
+  - Sophisticated geometric implementation with precise angle/radius calculations
+    for accurate nested donut structure
+  - Design polish with white segment separators and clear center focal point adding
+    visual refinement
+  - Realistic business budget data with plausible department allocations and expense
+    categories demonstrating feature coverage
   weaknesses:
-  - Uses a helper function create_wedge() which violates KISS structure guidelines
-    (prefer inline code)
-  - No legend provided to explain the color scheme, relying solely on segment labels
-  - Outer ring labels could include percentage values for better data interpretation
-  image_description: The plot displays a nested donut chart with two concentric rings.
-    The inner ring shows four parent departments (Marketing in blue, Operations in
-    yellow, R&D in green, Sales in orange), with bold white labels. The outer ring
-    displays child expense categories for each department using lighter shades of
-    the parent color family (blues for Marketing subcategories, yellows for Operations,
-    greens for R&D, oranges for Sales). Each segment has a dark text label. The center
-    of the donut displays "Total $100M" in bold black text. White borders separate
-    segments clearly. The title "donut-nested · letsplot · pyplots.ai" appears at
-    the top. The chart uses a square 1:1 aspect ratio with the donut well-centered.
+  - 'Design excellence moderate: relies on well-configured defaults rather than exceptional
+    aesthetic innovation (DE-01 at upper end of typical, not publication-exceptional)'
+  - 'Visual storytelling straightforward: presents data structure clearly but does
+    not emphasize a particular narrative or insight through visual hierarchy beyond
+    color families'
+  - 'Library mastery conventional: uses letsplot capably but polygon composition approach
+    is replicable in other ggplot-style libraries, not distinctively letsplot-specific'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color, not pure white
+      Chrome: Title "donut-nested · letsplot · anyplot.ai" in dark 28pt bold text, centered and clearly readable. Inner ring labels (Marketing, Operations, R&D, Sales) in bold 12pt dark text, highly readable. Outer ring labels in 10pt softer gray text, readable. Center label "Total $100M" in 16pt bold dark text, prominent and clear.
+      Data: First series Marketing segment is bluish green (#009E73), verified as correct Okabe-Ito first color. Other departments: Operations (#D55E00 vermillion), R&D (#0072B2 blue), Sales (#CC79A7 reddish purple) - all Okabe-Ito positions 2-4. Child category segments inherit parent colors with size variation showing data distribution. White segment borders aid visual separation.
+      Legibility verdict: PASS - All text elements fully readable against light background with proper contrast. No dark-on-light legibility issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color, not pure black, has warmth
+      Chrome: Title in light text (#F0EFE8) on dark background, centered and clearly readable. Inner ring labels in light text, easily readable. Outer ring labels in softer light text (#B8B7B0), readable against dark background. Center label "Total $100M" in white text on dark center, very prominent and clear.
+      Data: Data colors verified identical to light render - Marketing still #009E73, Operations still #D55E00, R&D still #0072B2, Sales still #CC79A7. This confirms proper color independence from theme (only chrome adapts). White segment borders remain highly visible on dark background, providing excellent definition. Child segments maintain size relationships and color family inheritance from light render.
+      Legibility verdict: PASS - All text elements fully readable in light colors against dark background. No dark-on-dark legibility failures. Theme adaptation is correct: data colors identical, chrome colors adapted (dark text → light text, light background → dark background).
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'All text is readable; inner ring labels are bold white, outer ring
-          labels are dark and clear. Title is visible at top. Minor: some outer labels
-          could be slightly larger.'
+        comment: 'All font sizes explicitly set: title 28pt, inner labels 12pt bold,
+          outer 10pt, center 16pt bold. Perfectly readable in both light and dark
+          themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; all labels are positioned in the middle of their
-          respective arcs without collision.
+        comment: Zero overlapping text elements. All segment labels and center label
+          positioned perfectly with no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Segments are clearly visible with good proportions; white borders
-          separate segments excellently.
+        comment: All donut segments large, bright, and clearly distinguishable. White
+          separators enhance visibility. Optimal sizing for density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Colors are distinct: blue, yellow, green, orange families with lighter
-          shades for children. No red-green only distinctions.'
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout with donut well-centered. The chart uses appropriate
-          canvas area (~60-70%). Slight extra whitespace at bottom.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        score: 2
         max: 2
         passed: true
-        comment: No legend provided. While segment labels are present, a legend showing
-          the color-to-category mapping would help interpretation.
+        comment: Okabe-Ito palette ensures CVD-safe contrast. All colors distinct
+          and accessible
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 3600×3600 format appropriate for symmetric donut. Plot fills
+          canvas well with balanced margins. No wasted space
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title format correct: ''donut-nested · letsplot · anyplot.ai''.
+          Center label ''Total $100M'' provides valuable context'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct. Multi-series follows Okabe-Ito (#D55E00,
+          #0072B2, #CC79A7). Backgrounds #FAF8F1 light and #1A1A17 dark correct. Theme
+          chrome fully adapted in both renders. Data colors identical across themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional polish with thoughtful color application. Okabe-Ito
+          palette used effectively. Typography hierarchy (bold inner, soft outer)
+          shows design intent. White segment separators are elegant refinement. Above
+          default configuration but not exceptionally creative
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Perfect execution: no grid (appropriate), all spines hidden, generous
+          whitespace, white separators add refinement, clean uncluttered design'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Good visual hierarchy through color families per parent category
+          and size variation. Center total is clear focal point. Data choice shows
+          realistic budget variance. Hierarchy guides viewer from general to specific.
+          Straightforward presentation without exceptional narrative emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct nested donut chart with two concentric rings.
+        comment: Correct nested donut chart. Two hierarchical levels properly implemented
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Inner ring shows parent categories (level_1), outer ring shows children
-          (level_2) as specified.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: hierarchical display, color families
-          per parent, spacing between rings, labels on segments.'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: hierarchical structure, inner ring parents,
+          outer ring children, color families per parent, labels on segments, center
+          total'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data values visible and proportionally represented.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Level_1 maps to inner ring, level_2 to outer ring. Values properly
+          aggregated. All data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Labels directly on segments are accurate.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Title follows exact format: "donut-nested · letsplot · pyplots.ai"'
+        comment: Title format correct 'donut-nested · letsplot · anyplot.ai'. Legend
+          omitted (appropriate, labels on segments)
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 4 parent categories with 2-3 children each. Good variety in
-          segment sizes showing different proportions. Could show percentage values
-          on segments for completeness.
+        comment: 'Shows all aspects: 4 departments with 2-5 child categories. Size
+          variation demonstrates realistic budget distribution'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Budget allocation scenario is realistic and matches spec example
-          (department totals inner, expense categories outer).
+        comment: Real business budget scenario. Neutral, uncontroversial topic. Department
+          and category names are standard and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Total $100M is realistic for company budget. Individual values (4-18M)
-          are reasonable. Minor: would benefit from showing actual percentages.'
+        comment: $100M corporate budget is realistic. Department allocations (32%
+          Marketing, 30% Ops, 25% R&D, 13% Sales) are plausible. Proportions correct
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: true
-        comment: Uses a function `create_wedge()` which violates pure KISS structure
-          (imports → data → plot → save without functions).
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Data is deterministic (no random values), ensuring reproducibility.
+        comment: 'Simple linear structure: imports, data setup, polygon construction,
+          plotting, save. No unnecessary functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Data hardcoded and deterministic. No randomness. No seed needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used; no unused imports.
+        comment: 'All imports used: math (trig), os (theme), pandas (DataFrame), lets_plot
+          components, ggsave'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API.
+        comment: Appropriately complex. Geometric calculations well-structured. No
+          fake functionality. Clean approach
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html correctly.
-    library_features:
-      score: 5
-      max: 5
+        comment: 'Correct outputs: plot-{THEME}.png and plot-{THEME}.html. Current
+          letsplot API'
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Good use of lets-plot''s ggplot2 grammar: geom_polygon for custom
-          shapes, coord_fixed for aspect ratio, scale_fill_manual for custom colors,
-          comprehensive theme customization.'
+        comment: Expert use of ggplot() + geom_*() composition. Proper aes() mapping.
+          scale_fill_manual() for colors. coord_fixed() for aspect. theme() customization.
+          Fully idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Effective use of geom_polygon() with manual coordinate manipulation.
+          Sophisticated angle/radius calculations. Pattern replicable in other ggplot
+          libraries, not distinctively letsplot
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
