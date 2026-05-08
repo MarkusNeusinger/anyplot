@@ -1,174 +1,214 @@
 library: letsplot
+language: python
 specification_id: scatter-3d
 created: '2025-12-26T10:30:50Z'
-updated: '2025-12-26T10:33:00Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520860140
+updated: '2026-05-08T22:58:56Z'
+generated_by: claude-haiku
+workflow_run: 25583214316
 issue: 1945
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep:
-  - normalization
-  styling:
-  - alpha-blending
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/letsplot/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent isometric projection implementation with proper rotation angles and
-    depth-based sizing (painter's algorithm)
-  - Floor grid provides outstanding depth perception and spatial context
-  - Three distinct clusters effectively demonstrate 3D spatial relationships and clustering
-    patterns
-  - Color encoding via viridis for altitude adds informative fourth dimension
-  - Interactive tooltips showing Altitude and Depth values enhance the HTML output
-  - Clean code structure with well-commented sections
+  - 'Perfect visual quality (30/30): Explicit font sizing, excellent readability in
+    both light and dark themes, no overlap, perfect palette compliance'
+  - 'Impeccable spec compliance and data quality: All specification features present,
+    clear axis labels with units, realistic clustering data with three distinct geometric
+    characteristics'
+  - 'Sophisticated 3D visualization technique: Isometric projection with depth-based
+    perspective sizing creates genuine 3D depth perception in 2D canvas, floor grid
+    provides spatial context, proper painter''s algorithm for occlusion handling'
+  - 'Excellent theme-adaptive chrome: Both light (#FAF8F1) and dark (#1A1A17) renders
+    properly themed with correct text colors, no dark-on-dark or light-on-light failures,
+    viridis colormap constant across themes'
+  - 'Thoughtful design details: Custom axis colors, subtle grid styling (alpha 0.4),
+    transparent points (alpha 0.75) revealing internal structure, meaningful legend
+    with units'
+  - 'Clean, reproducible code: Deterministic with seed, proper KISS structure, high-level
+    idiomatic lets_plot API usage, layer composition of multiple geoms'
   weaknesses:
-  - Library features score is moderate since lets-plot lacks native 3D support and
-    the projection is manually implemented
-  - Realistic context could be more specific (e.g., meteorological sensors or geological
-    survey points)
-  image_description: The plot displays a 3D scatter plot rendered as a 2D isometric
-    projection. Three distinct clusters of points are visible, each colored according
-    to altitude (z-value) using the viridis colormap ranging from purple (low, ~0m)
-    to yellow (high, ~4m). The upper-left cluster shows yellow/green points at higher
-    altitudes. The lower-left cluster displays purple points at lower altitudes. The
-    right-center cluster shows cyan/teal points at intermediate altitudes. A floor
-    grid provides depth perception, and three axis lines (X, Y, Z) emanate from the
-    origin with bold labels. The title "scatter-3d · letsplot · pyplots.ai" appears
-    at the top. Axis labels read "Projected X (m)" and "Projected Y (m)". The legend
-    shows "Altitude (m)" with the viridis color scale.
+  - 'Output filenames don''t use ANYPLOT_THEME: Code saves bare ''plot.png'' and ''plot.html''
+    (lines 204-207) without reading ANYPLOT_THEME environment variable. Should save
+    as ''plot-{THEME}.png'' and ''plot-{THEME}.html''. Current images are correctly
+    named (plot-light.png, plot-dark.png), suggesting code was manually fixed or regenerated.
+    Add ''import os'' and use: ggsave(plot, f''plot-{os.getenv("ANYPLOT_THEME", "light")}.png'',
+    ...) to fix.'
+  - 'Design Excellence below potential (13/20): Follows ggplot2 defaults for overall
+    aesthetic rather than pursuing distinctive visual sophistication. DE-01=5 (vs
+    6+ for strong design). Visual refinement is good (4/6) but could be more refined.
+    DE-03=4 shows good visual hierarchy but lacks narrative emphasis—consider color
+    contrast or emphasis to tell a clearer data story.'
+  - 'Limited distinctive library usage (LM-02=2): layer_tooltips() configured but
+    invisible in static PNG. Implementation is generic grammar-of-graphics that could
+    be replicated in plotnine or other ggplot2 tools. Leverage more lets_plot-specific
+    interactive features or visual techniques to distinguish from other libraries.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white. Correctly rendered.
+      Chrome: Title "scatter-3d · letsplot · anyplot.ai" (32pt bold), axis labels "Projected X (m)" / "Projected Y (m)" (22pt), tick labels (18pt), all in dark INK color (#1A1A17). All text is clearly readable against the light background with excellent contrast.
+      Data: 150 points color-encoded by altitude using viridis colormap (yellow to purple gradient). Point sizes vary 4-10pt based on depth, creating 3D perspective effect. Alpha=0.75 transparency reveals overlapping points. Three distinct clusters visible: upper-left (dense sphere, high altitude), center-right (elongated, medium altitude), bottom-left (flat disk, low altitude). Grid: subtle floor plane grid (#CCCCCC, alpha 0.4) provides spatial context. Axes: explicit X, Y, Z axis lines with bold labels positioned at endpoints.
+      Legibility verdict: PASS - all text readable, excellent contrast, no dark-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black. Correctly rendered.
+      Chrome: Same title and labels rendered in light text (#F0EFE8 or similar INK_SOFT color). All text clearly readable against dark background. No dark-on-dark failures. Axis lines rendered in white for visibility.
+      Data: Viridis colors identical to light render (yellow-green-blue progression unchanged—only chrome flipped). Point sizes and distribution match light render exactly. Three clusters clearly visible with same spatial relationships. Grid lines slightly lighter gray for contrast with dark background, still subtle and not competing with data. Alpha=0.75 transparency still effective.
+      Legibility verdict: PASS - all text readable on dark background, no dark-on-dark failures, data colors perfectly preserved across themes.
+
+    Both renders successfully implement theme-adaptive styling with correct Okabe-Ito/continuous palette rules (viridis constant, chrome adaptive). Legibility passes in both conditions.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick marks, legend text, and axis markers (X,
-          Y, Z) are all clearly readable at full size
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; all labels and data points are well-separated
+        comment: All font sizes explicitly set (title 32pt, labels 22pt, ticks 18pt).
+          Perfect readability in both light and dark renders at 4800×2700px.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. Axis labels properly positioned at endpoints
+          with label_offset=1.15. Perfect spacing.
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Points are visible with good alpha (0.75), but some overlapping in
-          the dense right-center cluster; size variation based on depth is a nice
-          touch
+        comment: Point markers perfectly adapted to 150-point density. Size variation
+          (4-10pt, depth-based) and alpha=0.75 transparency create excellent 3D perspective
+          effect.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is colorblind-safe with excellent contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins; floor grid and axis
-          lines create good spatial context
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Projected X (m)", "Projected Y (m)",
-          "Altitude (m)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Viridis colormap is perceptually uniform and CVD-safe. Good contrast
+          in both themes.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~65% of canvas with balanced margins. Legend properly
+          positioned on right. No cut-off content.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Title format correct (scatter-3d · letsplot · anyplot.ai). Axis labels
+          descriptive with units (Projected X/Y in meters).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis colormap correct for continuous altitude data. Background
+          colors: #FAF8F1 (light), #1A1A17 (dark). Text colors theme-adaptive. Data
+          colors identical across renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: false
-        comment: Grid is appropriately subtle, but the standard axis grid lines are
-          removed (panel_grid=element_blank()) while only the floor grid remains;
-          legend is well-placed
+        comment: Well-executed geometric approach with thoughtful 3D projection. Custom
+          axis colors (#555555) and grid styling show design consideration. Follows
+          ggplot2 defaults rather than pursuing distinctive visual sophistication
+          (would require 6+ for strong design).
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Good refinement: theme_minimal() removes unnecessary elements, custom
+          grid styling (alpha 0.4, color #CCCCCC), subtle axis treatment. More than
+          default (2) but could be more polished.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Visual hierarchy through color gradient (altitude) and size variation
+          (depth) reveals clustering patterns. Three distinct clusters tell a spatial
+          story. No explicit annotations, but visual emphasis guides viewer. Lacks
+          narrative emphasis for higher score.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 3D scatter plot type with isometric projection
+        comment: Correct 3D scatter plot with isometric projection and perspective
+          sizing.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X, Y, Z correctly mapped; color encoding for altitude adds fourth
-          dimension as spec suggests
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: 3D visualization, color encoding, point
-          transparency, clear axis labels'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: three numeric variables (x, y, z), fourth
+          dimension encoded via altitude color, clear axes, transparency for dense
+          data, interactive HTML export, axis labels.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible within the plot range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X→x_proj, Y→y_proj, Z→altitude (color) + depth (size). Correct axis
+          assignments. All data visible, no clipping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows "Altitude (m)" with accurate color scale
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "scatter-3d · letsplot · pyplots.ai"'
+        comment: 'Title format: scatter-3d · letsplot · anyplot.ai. Legend label:
+          Altitude (m) with units.'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 3 distinct clusters with different shapes (spherical, elongated,
-          flat disk) demonstrating various 3D spatial relationships
+        comment: 'Shows all aspects of 3D scatter: three distinct clusters with varied
+          characteristics (dense sphere, elongated ellipsoid, flat disk). Demonstrates
+          multivariate relationships and spatial patterns.'
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: '"Sensor readings in a volume" is plausible but somewhat generic;
-          could be more specific'
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Values in sensible ranges (-6 to 6 meters) for spatial measurements
+        comment: 'Real-world plausible scenario: ''3D spatial measurements (e.g.,
+          sensor readings in a volume)''. Neutral, comprehensible, science-appropriate
+          context.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Altitude range (-1.5 to 4.5m), cluster scales, and spatial proportions
+          are sensible and realistic for the described sensor-measurement scenario.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -176,41 +216,70 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script with imports → data → plot → save; no functions/classes
+        comment: 'Clean structure: imports → seed → data generation → plot → save.
+          No functions or classes. Straightforward, no over-engineering.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic data generation. Fully reproducible.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: lets_plot functions, numpy, pandas, ggsave. No
+          unused imports.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: No over-engineering, no fake UI. Geometric transformations are clear
+          and Pythonic. No simulated interactivity.
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
+        passed: false
+        comment: 'CRITICAL: Code saves as bare ''plot.png'' and ''plot.html'' (lines
+          204-207) without ANYPLOT_THEME environment variable. Should use f''plot-{os.getenv("ANYPLOT_THEME",
+          "light")}.png''. Current outputs are correctly named (plot-light.png, plot-dark.png),
+          suggesting code was fixed elsewhere. Needs correction.'
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert idiomatic usage: ggplot() + geom_* composition, proper aes()
+          mappings, scale_color_viridis(), custom theme(). High-level API throughout,
+          recommended patterns.'
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses ggplot grammar, viridis scale, layer_tooltips for interactivity,
-          but the 3D projection is custom math rather than a lets-plot feature; no
-          native 3D support utilized
-  verdict: APPROVED
+        comment: layer_tooltips() is configured (lets_plot-specific) but invisible
+          in static PNG. Implementation uses generic grammar-of-graphics that could
+          be replicated in plotnine. Lacks distinctive lets_plot-specific techniques
+          beyond tooltip configuration.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - custom-colormap
