@@ -1,0 +1,239 @@
+library: pygal
+language: python
+specification_id: dot-matrix-proportional
+created: '2026-05-08T21:59:59Z'
+updated: '2026-05-08T22:14:53Z'
+generated_by: claude-sonnet
+workflow_run: 25581289353
+issue: 5241
+python_version: 3.13.13
+library_version: 3.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/pygal/plot-dark.html
+quality_score: 82
+review:
+  strengths:
+  - 'Perfect spec compliance: 10x10 grid, correct category counts, left-to-right fill,
+    legend with counts'
+  - 'Full theme-adaptive palette: background, foreground, and muted tokens correctly
+    wired; both renders pass readability'
+  - 'Correct Okabe-Ito usage: brand green first, positions 1-3 in order'
+  - 'Deterministic and clean: no random data, no unnecessary complexity'
+  - Both PNG and interactive HTML generated
+  weaknesses:
+  - Title and legend text is small relative to the 3600x3600 canvas -- title_font_size=28
+    produces a thin header; increase to 36-40 for visual hierarchy
+  - Dot edges have no definition marker (no subtle white/dark border) -- on the transition
+    row between categories the color boundary could be crisper
+  - No percentage annotation alongside the count in the legend (spec explicitly suggests
+    it)
+  - Interactive HTML tooltips show raw (x, y) coordinates instead of meaningful category
+    + person-count context
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Employee Work Preferences · dot-matrix-proportional · pygal · anyplot.ai" visible at top in dark text; footnote x_title readable; legend labels with color swatches readable at bottom
+      Data: Brand green #009E73 fills top ~4.2 rows (42 dots); vermillion orange #D55E00 fills next ~3.1 rows (31 dots); sky blue #0072B2 fills remaining ~2.7 rows (27 dots); dots are large and well-separated
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and footnote text correctly flip to light color; legend text visible; no dark-on-dark failures detected
+      Data: Colors identical to light render — same green, orange, blue confirming Okabe-Ito positions 1-3 are theme-invariant
+      Legibility verdict: PASS — all text readable against dark background, brand green #009E73 remains clearly visible on dark surface
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 5
+        max: 8
+        passed: true
+        comment: Readable in both themes but title_font_size=28 produces a small header
+          on the 3600x3600 canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Integer grid positions prevent dot collisions; legend items do not
+          overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: dots_size=35 produces large, clearly distinct dots in three differentiable
+          colors
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; no red-green-only signaling
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square format appropriate for grid; noticeable whitespace margin
+          around grid could be tighter
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title with spec attribution; x_title serves as data-unit
+          annotation
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order 1-3; backgrounds #FAF8F1/#1A1A17
+          correct'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Default design; no typographic hierarchy refinement or compositional
+          emphasis
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Axes and ticks correctly hidden; no spines; mechanical dot spacing
+          without deliberate refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Proportions clearly communicated by position and color; no focal
+          point emphasis on dominant category
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct dot matrix via XY scatter with stroke=False
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 10x10 grid; each dot=1 unit; color-coded; legend with counts; uniform
+          size; correct fill order
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 42+31+27=100 dots; all positions accounted for
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes spec-id, library, anyplot.ai; legend labels match
+          categories with counts
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: All core dot-matrix aspects shown; missing explicit percentage alongside
+          count in legend
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Employee work-preference survey is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 100-person survey with realistic 42/31/27 split is sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic; no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only os, pygal, pygal.style.Style; all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean position-building loop with clear variable names
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: pygal.XY with stroke=False as dot matrix; Style object fully configured;
+          legend_at_bottom for clean layout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Interactive HTML correctly generated; tooltips show raw XY coordinates
+          rather than meaningful category context
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - iteration-over-groups
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
