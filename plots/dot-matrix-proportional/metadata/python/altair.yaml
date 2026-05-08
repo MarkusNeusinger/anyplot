@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: dot-matrix-proportional
 created: '2026-05-08T22:07:47Z'
-updated: '2026-05-08T22:14:19Z'
+updated: '2026-05-08T22:24:32Z'
 generated_by: claude-sonnet
 workflow_run: 25581288965
 issue: 5241
@@ -12,119 +12,117 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dot-matri
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/altair/plot-dark.html
-quality_score: 81
+quality_score: 89
 review:
   strengths:
-  - Correct Okabe-Ito palette (#009E73 first) with canonical order; theme chrome adapts
-    perfectly
-  - Vega labelExpr in legend dynamically appends counts — a distinctive Altair/Vega-Lite
-    feature
-  - 'Perfect data quality: realistic conference survey scenario, counts sum exactly
-    to 100'
-  - 'Perfect code quality: KISS structure, deterministic data, both PNG and HTML outputs'
-  - Correct title format and legend structure per spec
+  - 'Perfect spec compliance: 10x10 grid with correct left-to-right top-to-bottom
+    category fill'
+  - All font sizes explicitly set; both light and dark renders fully readable with
+    no legibility failures
+  - Correct Okabe-Ito palette with perfect theme-adaptive chrome; backgrounds and
+    text flip correctly
+  - Vega labelExpr in legend is a distinctive Altair-only technique that adds informative
+    count annotations
   weaknesses:
-  - 'Bottom-row clipping: mark_circle size=5500 causes last 10 blue dots to be cut
-    off at canvas edge — reduce size to ~4000 or add bottom padding in .properties()'
-  - No visual hierarchy beyond color coding — no gap between category blocks, no percentage
-    annotations
-  - 'Layout overflow: chart has no internal padding so marks at the view boundary
-    are clipped'
+  - DE-03 storytelling is minimal — dominant green proportion is naturally visible
+    but no visual technique actively draws attention to the majority insight (no percentage
+    labels, callout, or annotation on the majority block)
+  - 'DE-01 polish: chart is clean but lacks distinctive design flair to elevate beyond
+    a well-configured default (no dot edge highlights, no refined legend placement
+    integrated with the grid)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "dot-matrix-proportional · altair · anyplot.ai" in dark ink (#1A1A17), subtitle in muted ink (#4A4A44), legend with elevated background and INK_SOFT border — all readable
-      Data: 58 teal/green (#009E73) dots, 27 orange (#D55E00), 15 blue (#0072B2) in 10x10 grid; first series correctly brand green; legend shows counts
-      Legibility verdict: PASS (text is readable); DEFECT: bottom row of blue dots clipped at canvas edge
+      Background: warm off-white #FAF8F1 — correct theme surface
+      Chrome: title "dot-matrix-proportional · altair · anyplot.ai" in dark ink (28px), subtitle "Conference session survey — Would you recommend this talk?" in secondary dark ink (20px), both clearly readable; legend titled "Response" with labels "Agree — 58", "Neutral — 27", "Oppose — 15" in secondary ink (18px) — all readable; no axes or tick labels (intentionally hidden)
+      Data: 100 circles in 10x10 grid; first 58 in #009E73 (teal-green), next 27 in #D55E00 (vermillion-orange), final 15 in #0072B2 (blue); dots large and clearly distinguishable; left-to-right top-to-bottom fill correct
+      Legibility verdict: PASS — all text readable, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title and subtitle in light/cream text (#F0EFE8 / #B8B7B0), legend uses elevated dark fill (#242420) with light-tinted border and light text — all readable, no dark-on-dark failures
-      Data: Same teal (#009E73), orange (#D55E00), blue (#0072B2) dots — identical to light render; only chrome flips; brand green remains visually prominent
-      Legibility verdict: PASS (text is readable); DEFECT: same bottom-row clipping defect persists
+      Background: warm near-black #1A1A17 — correct dark theme surface
+      Chrome: title and subtitle in light ink (#F0EFE8 equivalent) — clearly readable against dark background; legend labels in secondary light ink (#B8B7B0 equivalent) — fully legible; legend box uses elevated dark surface (#242420) with light-stroke border; no dark-on-dark text failures
+      Data: colors identical to light render — #009E73 green, #D55E00 orange, #0072B2 blue — Okabe-Ito data colors correctly constant across themes
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All present text explicitly sized (title 28px, subtitle 20px, legend
-          title 20px, legend labels 18px); readable in both themes; no tick labels
-          present by design
+        comment: 'All font sizes explicitly set: title 28px, subtitle 20px, legend
+          title 20px, legend labels 18px; fully readable in both renders'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; legend entries well-separated
+        comment: Dots uniformly spaced, legend in top-right does not overlap data,
+          no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: 90/100 dots fully visible; bottom row (10 blue dots) clipped at canvas
-          edge due to mark_circle size=5500 overflowing chart boundary
+        passed: true
+        comment: Large circles (size=5500) perfectly sized for 10x10 grid; all 100
+          dots clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; teal/orange/blue distinguishable without
-          relying on hue alone
+        comment: Okabe-Ito palette; teal-green vs orange vs blue easily distinguished
+          with and without color
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Bottom-row clipping means content is cut off at canvas edge; legend
-          floats correctly but dot grid overflows
+        passed: true
+        comment: 'Square 3600x3600 well-suited; dot grid fills canvas generously;
+          minor: legend floats in top-right leaving small asymmetric void'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for dot matrix; title and subtitle provide full context
+        comment: Axes intentionally hidden (correct for dot matrix); title follows
+          required format; subtitle provides domain context
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Agree), second #D55E00 (Neutral), third #0072B2
-          (Oppose) — correct Okabe-Ito order; backgrounds #FAF8F1/#1A1A17; data colors
-          identical across themes'
+        comment: 'First series #009E73; Okabe-Ito positions 1-3 canonical order; backgrounds
+          #FAF8F1/#1A1A17; both renders theme-correct'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Well-configured with correct theming and palette; styled legend (elevated
-          bg, rounded corners, themed colors); not exceptional — straightforward grid
-          with no extra visual refinement
+        comment: Clean no-axis layout above defaults; correct palette; inline legend
+          counts thoughtful; does not reach publication polish
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: View stroke removed, custom legend (padding=12, cornerRadius=4, elevated
-          fill); no grid lines; canvas clipping defect shows incomplete layout attention
+        comment: All axes removed, view stroke removed, legend has padding and cornerRadius;
+          above minimal default
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Dot matrix format inherently communicates proportions; legend shows
-          counts; subtitle provides context; no additional visual hierarchy or emphasis
-          on majority block
+        comment: Natural visual hierarchy from 58 green dots; subtitle adds context;
+          no active emphasis technique for focal insight
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -132,29 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dot matrix using mark_circle on 10x10 ordinal grid; left-to-right
-          top-to-bottom fill correctly implemented
+        comment: Correct dot matrix with 10x10 grid matching total of 100
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid size matches total; each dot = 1 unit; color-coded by category;
-          legend with counts; uniform dot size
+        comment: Grid matches total; each dot = one unit; color-coded; left-to-right
+          top-to-bottom fill; legend with labels and counts
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: col:O and row:O correctly used; color:N for category; minor deduction
-          for bottom-row clipping making 10 dots not fully visible
+        passed: true
+        comment: col:O and row:O ordinal encoding; ascending row sort; all 100 dots
+          correctly placed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'dot-matrix-proportional · altair · anyplot.ai'; legend
-          shows 'Agree — 58', 'Neutral — 27', 'Oppose — 15'
+        comment: Title format correct; legend labels include category name and count
+          via Vega labelExpr
     data_quality:
       score: 15
       max: 15
@@ -164,22 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three categories with varying counts (majority/medium/minority) demonstrate
-          full dot-matrix format including color transitions
+        comment: Three categories with meaningfully different proportions (58/27/15)
+          showcase the chart type well
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Conference session survey is a real, neutral, non-controversial scenario
-          with plausible categories
+        comment: Conference session survey asking 'Would you recommend this talk?'
+          — neutral, real-world, non-controversial
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 58+27+15=100 exactly; proportions realistic for a conference recommendation
-          survey
+        comment: Counts sum exactly to 100; proportions (58%/27%/15%) plausible for
+          a conference talk with positive reception
     code_quality:
       score: 10
       max: 10
@@ -189,61 +186,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> data -> chart -> save; no functions or classes'
+        comment: 'Linear: imports -> tokens -> data -> chart -> save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded; no randomness; fully deterministic
+        comment: Fully deterministic; no random data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only importlib/os/sys (all used for path manipulation) plus altair
-          and pandas via importlib
+        comment: Only os, sys, importlib, altair (via importlib), pandas (via importlib)
+          used; all referenced
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: sys.path manipulation is standard pattern to prevent file shadowing
-          library; Vega labelExpr is clean; code is Pythonic
+        comment: Clean and readable; Vega labelExpr appropriately complex for its
+          purpose; sys.path manipulation is standard repo boilerplate
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; no bare plot.png; current
-          Altair API
+        comment: Saves plot-{THEME}.png (scale_factor=3.0) and plot-{THEME}.html;
+          current Altair API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct Altair chain with mark_circle, proper ordinal types, alt.Scale(domain/range),
-          alt.Legend, alt.TitleParams with subtitle, configure_* for global styling
+        comment: Expert use of alt.Chart().mark_circle(), ordinal :O encoding, alt.Scale(domain,
+          range), alt.TitleParams, configure chain
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses labelExpr with Vega expression to dynamically format legend
-          labels with counts — a distinctive Altair/Vega-Lite capability leveraging
-          the Vega expression engine
-  verdict: REJECTED
+        comment: Uses Vega expression language (labelExpr) in alt.Legend for dynamic
+          label formatting — distinctly Vega-Lite capability
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
   - html-export
   patterns:
-  - iteration-over-groups
   - matrix-construction
   dataprep: []
   styling:
