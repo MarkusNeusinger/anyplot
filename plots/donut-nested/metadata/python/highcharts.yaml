@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: donut-nested
 created: '2025-12-25T20:05:51Z'
-updated: '2026-05-08T01:17:04Z'
+updated: '2026-05-08T01:23:50Z'
 generated_by: claude-haiku
 workflow_run: 25530890360
 issue: 2015
@@ -12,107 +12,111 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-nes
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/highcharts/plot-dark.html
-quality_score: 65
+quality_score: 94
 review:
   strengths:
-  - Clear hierarchical data structure with proper parent-child nesting
-  - Well-positioned labels with connector lines avoiding overlap
-  - Consistent color families per department showing intentional design
-  - Good visual separation between rings
-  - Realistic and neutral budget allocation scenario
+  - Full palette compliance with Okabe-Ito colors and brand green as first series
+  - Perfect theme-adaptive rendering with proper tokens in both light and dark modes
+  - Clear visual hierarchy through nested structure and color family grouping
+  - All text explicitly sized and perfectly readable at high resolution in both themes
+  - Professional code with linear KISS structure and robust error handling
+  - Expert use of Highcharts library features including nested pie series and custom
+    data labels
   weaknesses:
-  - 'Palette non-compliance: uses custom colors instead of Okabe-Ito; first series
-    is blue #306998 instead of required #009E73'
-  - 'Theme-adaptive chrome missing: no ANYPLOT_THEME environment variable usage; hardcoded
-    white (#ffffff) and dark backgrounds instead of #FAF8F1 / #1A1A17'
-  - 'Dark render unreadable: center circle is solid black (dark-on-dark failure);
-    text colors don''t use theme tokens'
-  - Output files saved as plot.png/plot.html instead of plot-light.png/plot-dark.html
-  - Title format includes contextual description instead of spec-id-first format
+  - Title format should be 'donut-nested · highcharts · anyplot.ai' but uses descriptive
+    text instead
   image_description: |-
     Light render (plot-light.png):
-      Background: Pure white (#ffffff), should be warm off-white (#FAF8F1) per style guide
-      Chrome: Title, subtitle, and all labels are visible with explicitly set font sizes (title 48px, subtitle 32px, labels 26px/20px). All text is readable against the light background.
-      Data: Uses custom colors (blue #306998, yellow #FFD43B, purple #9467BD, cyan #17BECF) instead of Okabe-Ito palette. First series (Engineering) should be #009E73 (brand green) but is blue. Color families per department are intentional and consistent.
-      Legibility verdict: PASS (text is readable, but palette is non-compliant)
+      Background: Warm off-white (#FAF8F1) per style guide
+      Chrome: Title (48px), subtitle (32px), labels (26px/20px) all explicitly set and perfectly readable against light background
+      Data: Okabe-Ito palette with first series #009E73 (brand green), color variants per department showing intentional design; inner ring departments, outer ring expense categories with leader lines avoiding overlap
+      Legibility verdict: PASS - all text highly readable with perfect contrast
 
     Dark render (plot-dark.png):
-      Background: Appears to be pure black or very dark (should be warm near-black #1A1A17)
-      Chrome: Title and subtitle are visible but text colors don't use theme-adaptive tokens (should be #F0EFE8 for primary, #B8B7B0 for secondary). Outer ring labels have marginal contrast.
-      Data: Data colors are identical to light render (correct color consistency), but the center circle is solid black, creating a critical dark-on-dark visibility failure.
-      Legibility verdict: FAIL (dark-on-dark failure with center circle; insufficient text contrast in some areas; background is wrong color)
+      Background: Warm near-black (#1A1A17) per style guide
+      Chrome: Title and subtitle visible (light text #F0EFE8), labels in theme-adaptive color (#B8B7B0); text outline using PAGE_BG ensures contrast; all text perfectly readable
+      Data: Data colors identical to light render (#009E73, #D55E00, #0072B2, #CC79A7); only chrome has flipped to dark theme
+      Legibility verdict: PASS - all text highly readable, no dark-on-dark failures, perfect theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 20
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
-        passed: false
-        comment: Readable in light, marginal in dark render
+        passed: true
+        comment: All sizes explicitly set (title 48px, subtitle 32px, labels 26px/20px);
+          perfectly readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Labels well-positioned with connector lines
+        comment: Leader lines position outer labels cleanly; no text collision anywhere
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Dark center circle causes dark-on-dark visibility failure
+        passed: true
+        comment: All segments clearly visible and distinguishable in both light and
+          dark renders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Colors are distinguishable and accessible
+        comment: Okabe-Ito palette is colorblind-safe; color variants maintain hue
+          families with good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions and canvas utilization
+        comment: Square format appropriate for symmetric donut; centered with balanced
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title present
+        comment: Descriptive title and subtitle clearly explaining the hierarchy
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL: Non-compliant palette (uses #306998 instead of #009E73);
-          wrong backgrounds (#ffffff instead of #FAF8F1)'
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order (positions 2-4: #D55E00, #0072B2,
+          #CC79A7); backgrounds #FAF8F1/#1A1A17; theme-adaptive chrome perfect in
+          both renders'
     design_excellence:
-      score: 8
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 6
         max: 8
-        passed: false
-        comment: Custom colors violate spec; not following Okabe-Ito
+        passed: true
+        comment: Custom color variants per department create intentional visual hierarchy;
+          strong design beyond library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Connector lines and disabled legend show some thought
+        passed: true
+        comment: Clean ring separation, subtle leader lines, text outline effects
+          for contrast; professional polish evident
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Good hierarchy through color families, but limited emphasis
+        passed: true
+        comment: Nested structure clearly tells hierarchy; color families guide viewer;
+          budget allocation narrative is clear and compelling
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -120,26 +124,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct nested donut chart
+        comment: Correct nested donut chart with parent categories in inner ring and
+          children in outer ring
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present
+        comment: 'All spec features present: hierarchy, color families, labels, ring
+          spacing'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct inner/outer mapping
+        comment: Inner/outer mapping correct; hierarchy properly aligned; values accurate
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 2
         max: 3
         passed: false
-        comment: Title format incorrect (includes context, uses pyplots.ai instead
-          of anyplot.ai)
+        comment: Title should follow 'donut-nested · highcharts · anyplot.ai' format
+          but uses descriptive title; legend appropriately disabled
     data_quality:
       score: 15
       max: 15
@@ -149,21 +155,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full hierarchical demonstration
+        comment: Full hierarchical demonstration with multiple departments and expense
+          categories showing variation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Budget allocation is realistic and neutral
+        comment: Budget allocation scenario is realistic, neutral, and comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values are factually reasonable
+        comment: Values are plausible; proportions factually correct; inner ring totals
+          match outer groupings
     code_quality:
-      score: 4
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,48 +179,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear structure
+        comment: 'Linear flow: imports → theme tokens → data → chart config → export'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data
+        comment: Deterministic hardcoded data; fully reproducible
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: 'Only used imports: urllib/PIL/selenium for export, highcharts_core
+          for plotting'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI
+        comment: Clean Pythonic code; robust CDN fallback; no fake UI
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: 'CRITICAL: Files saved as plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html'
+        passed: true
+        comment: 'Correct output naming: plot-{THEME}.png and plot-{THEME}.html; current
+          API'
     library_mastery:
-      score: 5
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Correct PieSeries usage, but no theme-adaptive tokens
+        passed: true
+        comment: 'Expert idiomatic usage: proper Chart constructor with container,
+          HighchartsOptions, theme-adaptive rendering, robust Selenium export'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Uses nested PieSeries effectively
-  verdict: REJECTED
+        passed: true
+        comment: Uses nested pie series, custom data labels with connector lines,
+          text outline styling, multi-variant color approach; distinctly Highcharts
+          features
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow

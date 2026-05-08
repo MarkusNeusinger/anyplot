@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 donut-nested: Nested Donut Chart
 Library: highcharts unknown | Python 3.13.13
-Quality: 65/100 | Updated: 2026-05-08
+Quality: 94/100 | Updated: 2026-05-08
 """
 
 import os
