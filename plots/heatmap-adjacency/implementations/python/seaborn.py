@@ -1,7 +1,7 @@
 """ anyplot.ai
 heatmap-adjacency: Network Adjacency Matrix Heatmap
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 87/100 | Created: 2026-05-08
+Quality: 85/100 | Created: 2026-05-08
 """
 
 import os
