@@ -1,0 +1,260 @@
+library: seaborn
+language: python
+specification_id: heatmap-adjacency
+created: '2026-05-08T07:07:07Z'
+updated: '2026-05-08T07:21:22Z'
+generated_by: claude-sonnet
+workflow_run: 25541908429
+issue: 5240
+python_version: 3.13.13
+library_version: 0.13.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - Hierarchical clustering reordering (scipy linkage + leaves_list) correctly exposes
+    block-diagonal community structure — the core storytelling goal of this plot type
+  - Masking of zero-weight cells (mask=adj_ordered==0) lets the page background show
+    through absent edges, creating a clean visual distinction per spec requirements
+  - 'Full theme-adaptive chrome: PAGE_BG, INK, INK_SOFT tokens threaded through title,
+    axis labels, ticks, colorbar label, colorbar ticks, and spines — both renders
+    pass legibility checks'
+  - viridis colormap is correct for continuous weight data; vmin=0, vmax=1.0 anchors
+    the scale consistently
+  - Realistic corporate social network scenario (Research/Marketing/Engineering) with
+    plausible community density (78% intra, 12% inter) and weight ranges
+  - 'Perfect spec compliance: symmetric matrix, colorbar, node-name tick labels, hierarchical
+    reordering all implemented'
+  - Clean KISS code structure with reproducible seed (42) and all imports actually
+    used
+  weaknesses:
+  - Tick label size is 11pt, below the 16pt guideline for DPI-based libraries at 3600×3600px
+    — with 25 rotated labels this is a density compromise but still below spec
+  - X-axis rotation=45 without ha='right' can misalign rotated labels; 25 closely-packed
+    labels show minor crowding risk
+  - Colorbar shrink=0.75 leaves the right side slightly shorter than the full plot
+    height, creating minor layout imbalance
+  - DE-01 is above-average but not exceptional — no community boundary annotation
+    lines, no highlighted subgroup, no focal point beyond the raw block-diagonal clustering
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correctly set, not pure white.
+      Chrome: Title "heatmap-adjacency · seaborn · anyplot.ai" at 24pt in dark ink — fully readable. Axis labels "Node" at 20pt — readable. Tick labels at 11pt rotated 45° on x-axis, 11pt horizontal on y-axis — readable but small. Colorbar label "Connection Strength" at 16pt — clear.
+      Data: viridis colormap from dark purple (0.0) through teal/green to yellow (1.0). Three community blocks visible on the block-diagonal: top-left (Research R01–R09), middle (Marketing M01–M08), bottom-right (Engineering E01–E08). Within-community cells show dense viridis coloring (green/teal/yellow); cross-community cells are mostly background (masked white), with a few sparse lower-weight cells in dark purple. The hierarchical clustering reordering exposes the block-diagonal structure clearly.
+      Legibility verdict: PASS — all text readable on warm off-white background. No light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct, not pure black.
+      Chrome: Title visible in light off-white (#F0EFE8-range) — readable. Axis labels light-colored — readable. Tick labels in INK_SOFT (#B8B7B0 dark token) — visible against near-black. Colorbar label and ticks light-colored — clear. Spines in INK_SOFT tone — subtle.
+      Data: viridis colormap colors are IDENTICAL to the light render — teal/green/yellow community blocks, dark purple sparse cross-community connections. The absent-edge masked cells now blend with the near-black background (#1A1A17) rather than off-white, which is visually correct. The block-diagonal community structure remains clearly visible.
+      Legibility verdict: PASS — no dark-on-dark failures observed. All text elements use light theme tokens. The near-black background for masked absent-edge cells is indistinguishable from PAGE_BG (#1A1A17), which is correct behavior.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 5
+        max: 8
+        passed: true
+        comment: Title 24pt, axis labels 20pt, colorbar label 16pt all explicitly
+          set and correct. Tick labels explicitly set at 11pt but below the 16pt guideline
+          for DPI-based libraries; readable but suboptimal at 3600x3600px.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 25 x-axis labels rotated 45° are closely packed but mostly non-overlapping;
+          minor crowding risk at this density.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap cells clearly visible with viridis; masked zero cells cleanly
+          show background; community blocks visually distinct.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: viridis is perceptually uniform and colorblind-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 12x12 square figure fills well; tight_layout applied; colorbar shrink=0.75
+          creates slight height mismatch on right side.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title follows spec format; 'Node' is appropriate for both axes of
+          a symmetric adjacency matrix.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'viridis used for continuous weight data (correct). Light background
+          #FAF8F1, dark #1A1A17. All chrome tokens theme-adaptive in both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional and clean; masking of absent edges and hierarchical
+          reordering make it above defaults. No community boundary annotations or
+          focal point emphasis to push to 6+.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed; linewidths=0 for clean cell edges; grid
+          alpha 0.10 subtle; tight_layout applied. Good but not exceptional.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: The hierarchical clustering reordering exposes the block-diagonal
+          community structure — the plot tells the story of three distinct departments.
+          Visual hierarchy guides the reader clearly.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct network adjacency matrix heatmap.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements: hierarchical reordering, symmetric matrix
+          (both triangles), color-encoded weight, absent edges masked, colorbar legend,
+          node-name tick labels.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Source/target nodes on both axes; color maps to connection strength;
+          symmetric.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'heatmap-adjacency · seaborn · anyplot.ai' correct; colorbar
+          labeled 'Connection Strength'.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all adjacency matrix features: weighted edges, binary absence,
+          community clustering, block-diagonal structure, symmetric matrix.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Corporate social network with Research/Marketing/Engineering departments
+          — realistic, neutral, comprehensible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 25 nodes (within 20-200 spec range); 78% intra-community density
+          vs 12% inter-community is realistic community structure; weight ranges plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports → theme → data → plot → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os, sys (path fix), matplotlib, numpy, seaborn,
+          scipy.cluster.hierarchy, scipy.spatial.distance.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic. sys.path fix is a documented project pattern.
+          Community loop logic is clear.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png with bbox_inches='tight' and facecolor=PAGE_BG.
+          Current seaborn 0.13.2 API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: sns.set_theme(style='ticks', rc={...}) for theme; sns.heatmap() with
+          mask, cmap, vmin/vmax, square, cbar_kws — idiomatic and well-configured.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: mask parameter in sns.heatmap() is a seaborn-specific feature for
+          selective cell hiding; cbar_kws for colorbar customization is also seaborn-specific.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - hierarchical-clustering
+  styling:
+  - custom-colormap
