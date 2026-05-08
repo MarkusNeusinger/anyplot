@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-3d: 3D Scatter Plot
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 40/100 | Created: 2026-05-08
@@ -22,8 +22,6 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9")
 
 np.random.seed(42)
 n_samples = 150
@@ -52,13 +50,29 @@ points_z = np.array(points_z)
 
 z_norm = (points_z - points_z.min()) / (points_z.max() - points_z.min())
 
+
+def viridis(t):
+    """Approximate viridis colormap (t in [0, 1])."""
+    if t < 0.5:
+        r = int(68 + (33 - 68) * (t * 2))
+        g = int(1 + (145 - 1) * (t * 2))
+        b = int(84 + (140 - 84) * (t * 2))
+    else:
+        r = int(33 + (253 - 33) * ((t - 0.5) * 2))
+        g = int(145 + (231 - 145) * ((t - 0.5) * 2))
+        b = int(140 + (37 - 140) * ((t - 0.5) * 2))
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
+z_hex_colors = tuple(viridis(z) for z in z_norm)
+
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
+    colors=z_hex_colors,
     title_font_size=28,
     label_font_size=22,
     major_label_font_size=18,
@@ -70,25 +84,16 @@ chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="scatter-3d · pygal · anyplot.ai",
+    title="scatter-3d (Z encoded by color) · pygal · anyplot.ai",
     x_title="X Dimension",
     y_title="Y Dimension",
-    show_legend=True,
+    show_legend=False,
     show_dots=True,
     dots_size=7,
 )
 
-for i in range(n_clusters):
-    start_idx = (i * n_samples) // n_clusters
-    end_idx = ((i + 1) * n_samples) // n_clusters
-
-    cluster_data = [
-        (x, y)
-        for x, y in zip(
-            points_x[start_idx:end_idx], points_y[start_idx:end_idx], strict=True
-        )
-    ]
-    chart.add(f"Cluster {i + 1}", cluster_data)
+for i in range(n_samples):
+    chart.add(f"Z: {points_z[i]:.1f}", [(points_x[i], points_y[i])])
 
 chart.render_to_png(f"plot-{THEME}.png")
 
