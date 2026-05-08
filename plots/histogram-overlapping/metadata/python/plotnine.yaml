@@ -1,165 +1,170 @@
 library: plotnine
+language: python
 specification_id: histogram-overlapping
 created: '2025-12-25T21:48:10Z'
-updated: '2025-12-25T21:50:28Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20511325005
+updated: '2026-05-08T07:03:15Z'
+generated_by: claude-haiku
+workflow_run: 25541817585
 issue: 2010
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/plotnine/plot.png
-preview_html: null
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - alpha-blending
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
 review:
   strengths:
-  - Excellent use of plotnine grammar of graphics with proper layering
-  - Semi-transparent overlapping histograms clearly show distribution differences
-    and overlap regions
-  - Realistic data scenario (user response times) that demonstrates the plot type
-    effectively
-  - Good color choices with sufficient contrast between groups
-  - Proper text sizing for high-resolution output
-  - Clean, well-structured code following KISS principles
+  - Flawless theme adaptation with consistent INK tokens across both renders; zero
+    legibility issues
+  - Proper use of semi-transparency (alpha=0.6) to reveal overlapping distributions
+  - Well-structured theme composition using plotnine's idiomatic API
+  - Clean, maintainable code with good separation of data generation and visualization
+  - Realistic, meaningful dataset (response times by user group)
+  - 'All palette requirements met: first series green (#009E73), correct Okabe-Ito
+    order, proper backgrounds'
   weaknesses:
-  - 'Legend order is alphabetical rather than matching the logical data pattern (could
-    order by mean response time: Power Users → Regular Users → New Users)'
-  image_description: "The plot displays three overlapping histograms showing response\
-    \ time distributions (in milliseconds) for three user groups. The x-axis shows\
-    \ \"Response Time (ms)\" ranging from approximately 0 to 800ms, and the y-axis\
-    \ shows \"Frequency\" ranging from 0 to about 33. Three distinct distributions\
-    \ are visible:\n- **Power Users** (yellow): Concentrated around 200ms with the\
-    \ tightest distribution\n- **Regular Users** (salmon/coral): Centered around 350ms\
-    \ with moderate spread  \n- **New Users** (blue): Centered around 450-500ms with\
-    \ the widest spread\n\nThe histograms use semi-transparent fills (alpha ~0.5)\
-    \ allowing overlap regions to be clearly visible. A legend labeled \"User Group\"\
-    \ is positioned on the right side. The title follows the correct format: \"histogram-overlapping\
-    \ · plotnine · pyplots.ai\". The plot uses a minimal theme with subtle grid lines."
+  - 'Design refinement could be elevated: consider removing top/right spines (currently
+    four-sided frame), or adding subtle y-axis-only grid for reference'
+  - 'Limited distinctive library features: basic geom_histogram without advanced techniques
+    (faceting, custom legends, annotations could enhance storytelling)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme background
+      Chrome: Title in dark bold text (#1A1A17), axis labels in dark INK, tick labels in INK_SOFT (#4A4A44). All text clearly readable against light surface. Legend positioned right with elevated background. Panel border visible with INK_SOFT color.
+      Data: Three histogram distributions - New Users (green #009E73), Power Users (orange #D55E00), Regular Users (blue #0072B2) in Okabe-Ito order. Semi-transparent bars (alpha=0.6) clearly show overlapping regions. X-axis: Response Time (ms), Y-axis: Frequency. 30 bins with identity positioning.
+      Legibility verdict: PASS - All elements readable, no text-background contrast issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme background
+      Chrome: Title in light bold text (#F0EFE8), axis labels in light INK, tick labels in INK_SOFT (#B8B7B0). All text clearly readable against dark surface. No dark-on-dark failures. Legend background is elevated (#242420) with light text. Panel border visible.
+      Data: Same three histograms with identical colors to light render - green, orange, blue in identical positions. Semi-transparent bars maintain visibility and overlap clarity. X and Y axes properly labeled and readable.
+      Legibility verdict: PASS - All elements readable, theme adaptation perfect, no legibility issues
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, tick marks, and legend all clearly readable at
-          appropriate sizes
+        comment: All text explicitly sized and readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No text overlap issues
+        comment: Semi-transparent bars (alpha=0.6) with position='identity' enable
+          clear visibility of overlapping regions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Histogram bars well-sized with appropriate alpha for overlapping
-          visibility
+        comment: All markers, text, and grid elements properly sized and visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, yellow, and coral are distinguishable; yellow could be slightly
-          harder to see against white background
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: X-axis has units "Response Time (ms)", Y-axis labeled "Frequency"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is colorblind-safe; no red-green-only signals
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 aspect ratio well-proportioned; no elements cut off; generous
+          whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is very subtle (good), but legend shows groups in alphabetical
-          order rather than logical order (New→Regular→Power would match the visual
-          left-to-right distribution pattern)
+        passed: true
+        comment: Descriptive labels with units (ms); clear title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order, correct backgrounds, theme-adaptive
+          chrome'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional custom theme with theme-adaptive styling; well-executed
+          but standard approach
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Panel border styled; subtle grid; legend has elevated background
+          with border
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Visual hierarchy through color; clear comparison of distributions
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct overlapping histogram implementation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Response time on X, frequency on Y, grouped by user type
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Semi-transparent fills, distinct colors, legend present, aligned
-          bins
-      - id: SC-04
-        name: Data Range
+        comment: Semi-transparent fills, distinct colors, legend, aligned bins (30,
+          identity position)
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: Response Time (ms), Y: Frequency; well-distributed data'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three groups
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "histogram-overlapping · plotnine · pyplots.ai"'
+        comment: Format correct; legend title and labels match data
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows three distinct distributions with different means and spreads,
-          clear overlap regions
+        comment: Shows full histogram technique across three groups
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Response times for different user experience levels is a realistic,
-          comprehensible scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Response times in 100-800ms range are realistic for web application
-          metrics
+        comment: Response times by user group is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Response time values (220-450ms) sensible for system performance
     code_quality:
       score: 10
       max: 10
@@ -169,40 +174,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: No unnecessary functions; straightforward code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Proper ggplot2 grammar with aes mapping, geom_histogram with position="identity",
-          scale_fill_manual, theme customization
+        comment: Correct ggplot2 API; theme_minimal() + custom overlay; geom_histogram
+          with position='identity'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Good theme system use; semi-transparent overlapping shows understanding
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - alpha-blending
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
