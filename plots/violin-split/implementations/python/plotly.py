@@ -1,108 +1,145 @@
-""" pyplots.ai
+"""pyplots.ai
 violin-split: Split Violin Plot
 Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-26
+Quality: Regenerated from 92/100
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
 
-# Data - Employee performance scores before and after training program
+# Theme-adaptive colors
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (first series is always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
+# Data - Salary distributions by gender across job categories
 np.random.seed(42)
 
-departments = ["Engineering", "Marketing", "Sales", "Operations"]
-n_per_group = 80
+categories = ["Software Engineering", "Product Management", "Sales", "Operations"]
+n_per_group = 100
 
 data = []
-for dept in departments:
-    # Before training - varying baseline distributions by department
-    if dept == "Engineering":
-        before = np.random.normal(65, 12, n_per_group)
-    elif dept == "Marketing":
-        before = np.random.normal(58, 15, n_per_group)
-    elif dept == "Sales":
-        before = np.random.normal(62, 18, n_per_group)
+for category in categories:
+    # Male (left half) - varied distributions
+    if category == "Software Engineering":
+        male = np.concatenate(
+            [np.random.normal(95000, 18000, n_per_group // 2), np.random.normal(135000, 15000, n_per_group // 2)]
+        )
+    elif category == "Product Management":
+        male = np.random.normal(105000, 20000, n_per_group)
+    elif category == "Sales":
+        male = np.concatenate(
+            [
+                np.random.normal(60000, 12000, n_per_group // 3),
+                np.random.normal(95000, 15000, n_per_group // 3),
+                np.random.normal(140000, 18000, n_per_group // 3),
+            ]
+        )
     else:  # Operations
-        before = np.random.normal(55, 10, n_per_group)
+        male = np.random.normal(72000, 16000, n_per_group)
 
-    # After training - improved scores with tighter distributions
-    if dept == "Engineering":
-        after = np.random.normal(78, 10, n_per_group)
-    elif dept == "Marketing":
-        after = np.random.normal(72, 12, n_per_group)
-    elif dept == "Sales":
-        after = np.random.normal(75, 14, n_per_group)
+    # Female (right half) - varied distributions with different centers
+    if category == "Software Engineering":
+        female = np.concatenate(
+            [np.random.normal(92000, 17000, n_per_group // 2), np.random.normal(132000, 16000, n_per_group // 2)]
+        )
+    elif category == "Product Management":
+        female = np.random.normal(101000, 21000, n_per_group)
+    elif category == "Sales":
+        female = np.concatenate(
+            [
+                np.random.normal(58000, 13000, n_per_group // 3),
+                np.random.normal(92000, 16000, n_per_group // 3),
+                np.random.normal(135000, 19000, n_per_group // 3),
+            ]
+        )
     else:  # Operations
-        after = np.random.normal(68, 9, n_per_group)
+        female = np.random.normal(68000, 17000, n_per_group)
 
-    # Clamp scores to valid 0-100 range
-    before = np.clip(before, 0, 100)
-    after = np.clip(after, 0, 100)
+    # Clamp to reasonable salary range
+    male = np.clip(male, 40000, 200000)
+    female = np.clip(female, 40000, 200000)
 
-    for val in before:
-        data.append({"Department": dept, "Score": val, "Period": "Before Training"})
-    for val in after:
-        data.append({"Department": dept, "Score": val, "Period": "After Training"})
+    for val in male:
+        data.append({"Category": category, "Salary": val, "Gender": "Male"})
+    for val in female:
+        data.append({"Category": category, "Salary": val, "Gender": "Female"})
 
 df = pd.DataFrame(data)
 
 # Create split violin plot
 fig = go.Figure()
 
-# Python Blue and Yellow for the two groups
-colors = {"Before Training": "#306998", "After Training": "#FFD43B"}
-
-for period in ["Before Training", "After Training"]:
-    subset = df[df["Period"] == period]
-    side = "negative" if period == "Before Training" else "positive"
+# Add traces for each gender
+for gender, okabe_idx in [("Male", 0), ("Female", 1)]:
+    subset = df[df["Gender"] == gender]
+    side = "negative" if gender == "Male" else "positive"
 
     fig.add_trace(
         go.Violin(
-            x=subset["Department"],
-            y=subset["Score"],
-            name=period,
+            x=subset["Category"],
+            y=subset["Salary"],
+            name=gender,
             side=side,
-            line_color=colors[period],
-            fillcolor=colors[period],
-            opacity=0.7,
+            line_color=OKABE_ITO[okabe_idx],
+            fillcolor=OKABE_ITO[okabe_idx],
+            opacity=0.75,
             meanline_visible=True,
-            meanline_color="#333333",
+            meanline_color=INK_SOFT,
             points=False,
             scalemode="width",
             width=0.9,
         )
     )
 
-# Layout for 4800x2700 px
+# Update layout with theme-adaptive styling
 fig.update_layout(
-    title=dict(text="violin-split · plotly · pyplots.ai", font=dict(size=32, color="#333333"), x=0.5, xanchor="center"),
-    xaxis=dict(title=dict(text="Department", font=dict(size=24)), tickfont=dict(size=20)),
-    yaxis=dict(
-        title=dict(text="Performance Score (0-100 points)", font=dict(size=24)),
-        tickfont=dict(size=20),
-        gridcolor="rgba(0,0,0,0.1)",
-        gridwidth=1,
-        range=[0, 100],
+    title=dict(text="violin-split · plotly · pyplots.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
+    xaxis=dict(
+        title=dict(text="Job Category", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
+        gridcolor=GRID,
+        linecolor=INK_SOFT,
+        zerolinecolor=INK_SOFT,
     ),
-    template="plotly_white",
+    yaxis=dict(
+        title=dict(text="Annual Salary ($)", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
+        gridcolor=GRID,
+        linewidth=0.5,
+        linecolor=INK_SOFT,
+        zerolinecolor=INK_SOFT,
+    ),
     legend=dict(
-        title=dict(text="Period", font=dict(size=20)),
-        font=dict(size=18),
+        title=dict(text="Gender", font=dict(size=18, color=INK)),
+        bgcolor=ELEVATED_BG,
+        bordercolor=INK_SOFT,
+        borderwidth=1,
+        font=dict(size=16, color=INK_SOFT),
         orientation="h",
         yanchor="bottom",
         y=1.02,
         xanchor="center",
         x=0.5,
     ),
-    violingap=0.1,
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    violingap=0.15,
     violinmode="overlay",
-    plot_bgcolor="white",
-    paper_bgcolor="white",
     margin=dict(l=100, r=60, t=120, b=80),
+    font=dict(family="sans-serif", color=INK),
 )
 
 # Save as PNG and HTML
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
