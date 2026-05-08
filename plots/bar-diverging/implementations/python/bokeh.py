@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-diverging: Diverging Bar Chart
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-08
+Quality: 90/100 | Updated: 2026-05-08
 """
 
 import os

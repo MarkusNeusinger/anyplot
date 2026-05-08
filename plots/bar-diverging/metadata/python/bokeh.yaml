@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: bar-diverging
 created: '2025-12-25T22:48:28Z'
-updated: '2026-05-08T08:56:32Z'
+updated: '2026-05-08T09:02:37Z'
 generated_by: claude-haiku
 workflow_run: 25546402730
 issue: 2009
@@ -12,39 +12,36 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diver
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/bokeh/plot-dark.html
-quality_score: 84
+quality_score: 90
 review:
   strengths:
-  - Perfect visual quality across both light and dark renders with no readability
-    issues
-  - 'Excellent theme adaptation: data colors identical across themes, chrome properly
-    flips for legibility'
-  - Idiomatic Bokeh code using ColumnDataSource, Span elements, and theme-aware styling
-  - 'All specification requirements met: diverging layout, color distinction, sorting,
-    zero baseline'
-  - Realistic, business-appropriate example data (customer satisfaction survey)
-  - Clean, straightforward code structure with all necessary imports
+  - Perfect technical execution with all text explicitly sized and readable in both
+    light and dark themes
+  - 'Excellent palette compliance: correct Okabe-Ito colors with perfect theme-adaptive
+    chrome in both renders'
+  - Clear data storytelling through sorting, color contrast, and zero baseline focal
+    point that guides the viewer
+  - Clean, deterministic code following KISS principle with idiomatic Bokeh usage
+  - Realistic, neutral customer satisfaction survey context demonstrating full feature
+    range
   weaknesses:
-  - Design Excellence uses standard library defaults without distinctive aesthetic
-    choices (no custom palette refinements, no visual emphasis, no unique styling
-    touches)
-  - Data Storytelling relies solely on value-based sorting; could benefit from additional
-    visual hierarchy through conditional color intensity, annotations, or strategic
-    grouping
-  - Library Mastery limited to idiomatic usage rather than distinctive Bokeh features—the
-    visualization pattern is generic across charting libraries
+  - Design could reach publication-level sophistication; zero baseline is a nice touch
+    but additional refinement in typography hierarchy or custom styling would elevate
+    DE-01 above 4/8
+  - Could leverage more distinctive Bokeh features (interactive callbacks, selection
+    tools, custom glyphs) for stronger library mastery score
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1, correct theme surface
-      Chrome: Title "bar-diverging · bokeh · anyplot.ai" at 28pt dark ink; axis labels "Category" and "Net Satisfaction Score" at 22pt dark ink; category labels in soft gray #4A4A44 at 18pt; all clearly readable against light background
-      Data: Green (#009E73) bars extend rightward for positive values; orange (#D55E00) bars extend leftward for negative values; bars sorted by value (Tech Support -35 to Return Policy 52); zero baseline visible
-      Legibility verdict: PASS - All text is dark-on-light, no readability issues; grid is subtle at 0.10 alpha
+      Background: Warm off-white (#FAF8F1), exactly as specified
+      Chrome: Title "bar-diverging · bokeh · anyplot.ai" and axis labels rendered in dark ink (#1A1A17); all perfectly readable against light background
+      Data: 10 horizontal bars with green (#009E73) for positive satisfaction scores extending right, orange (#D55E00) for negative scores extending left; subtle vertical grid at 10% alpha; discrete vertical line at zero baseline; category labels fully readable
+      Legibility verdict: PASS - excellent contrast, no dark-on-dark issues, all elements distinguished
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17, correct theme surface
-      Chrome: Title, axis labels now rendered in light text (#F0EFE8); category labels in light gray (#B8B7B0); all perfectly readable against dark background
-      Data: Green (#009E73) and orange (#D55E00) bars are IDENTICAL to light render; bar proportions and sorting match exactly; zero baseline remains visible
-      Legibility verdict: PASS - All text is light-on-dark, no dark-on-dark failures; brand green is clearly visible; proper theme adaptation confirmed
+      Background: Warm near-black (#1A1A17), exactly as specified
+      Chrome: Title and axis labels rendered in light tones (#F0EFE8 primary, #B8B7B0 secondary); all clearly visible against dark background with no dark-on-dark failures
+      Data: Green and orange bar colors are identical to light render (confirming only chrome adapted to theme); zero baseline visible; subtle grid maintained; all category labels remain fully readable in light text
+      Legibility verdict: PASS - perfect theme adaptation with clear text hierarchy and zero contrast failures; brand green #009E73 displays well on dark surface
   criteria_checklist:
     visual_quality:
       score: 30
@@ -55,69 +52,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (28pt title, 22pt labels, 18pt ticks);
-          all readable in both themes
+        comment: All font sizes explicitly set (28pt title, 22pt labels, 18pt ticks);
+          perfect readability in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly separated with 0.7 height spacing; no overlapping text
+        comment: Zero overlap—all category labels and axis ticks fully distinct and
+          readable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible; colors distinct; zero line visible
+        comment: Bar heights optimally sized with 0.7 spacing; all elements clearly
+          visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73, #D55E00) is CVD-safe with good contrast'
+        comment: Green (#009E73) and orange (#D55E00) have excellent contrast; Okabe-Ito
+          palette is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect balance; plot fills ~60% of canvas; balanced margins
+        comment: Excellent balance; plot fills ~65% of canvas with generous balanced
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with context; proper title format
+        comment: 'Descriptive labels: ''Category'' and ''Net Satisfaction Score'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct Okabe-Ito colors; correct backgrounds (#FAF8F1 light, #1A1A17
-          dark); both renders theme-correct'
+        comment: 'Perfect: #009E73 (pos.), #D55E00 (neg.), correct backgrounds, theme-adaptive
+          chrome, identical data colors across renders'
     design_excellence:
-      score: 8
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
-        comment: Professional styling with proper tokens; no distinctive design choices
-          beyond standard defaults
+        passed: false
+        comment: Well-configured library default with intentional color choice and
+          zero-baseline detail, but not publication-exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid (0.10 alpha); library defaults with minimal customization
+        comment: 'Good refinement: subtle grid (10% alpha), L-shaped frame, generous
+          whitespace, zero baseline adds polish'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
         passed: true
-        comment: Value-based sorting helps pattern recognition; no additional visual
-          hierarchy or emphasis
+        comment: Good visual hierarchy through sorting, color contrast split at zero,
+          and baseline focal point
     spec_compliance:
       score: 15
       max: 15
@@ -127,26 +129,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal diverging bar chart
+        comment: Correct diverging bar chart with positive and negative bars
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: contrasting colors, horizontal layout, zero
-          baseline, sorting'
+        comment: 'All features present: opposite-direction bars, contrasting colors,
+          zero baseline'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct X/Y assignment; all data visible
+        comment: Perfect X/Y mapping; all data visible; axes correctly labeled
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed (implicit 2-series coloring)
+        comment: 'Title correct: ''bar-diverging · bokeh · anyplot.ai'''
     data_quality:
       score: 15
       max: 15
@@ -156,20 +158,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: both positive and negative values with variety'
+        comment: 'Shows full range: -35 to +52, both positive and negative, all 10
+          categories'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Customer satisfaction survey (NPS style) is realistic and business-appropriate
+        comment: Realistic customer satisfaction survey context (NPS-style); plausible
+          categories and values
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (-35 to 52) plausible for NPS data; axis range (-60 to 70)
-          sensible
+        comment: Factually correct survey satisfaction proportions
     code_quality:
       score: 10
       max: 10
@@ -179,33 +182,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: 'Clean: imports → tokens → data → figure → styling → output; no unnecessary
+          functions'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Completely deterministic with hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no extraneous dependencies
+        comment: 'All imports used: os, sys, time, Path, bokeh, selenium'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake functionality
+        comment: Clean, Pythonic, appropriate complexity; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format (plot-{THEME}.png and .html)
+        comment: 'Correct output: plot-{THEME}.html and plot-{THEME}.png'
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -213,24 +217,22 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert Bokeh patterns: ColumnDataSource, Span element, theme-adaptive
-          styling'
+        comment: 'Expert usage: figure(), hbar(), ColumnDataSource, Span, output_file()/save()'
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Generic usage; could be replicated in other libraries with minor
-          syntax changes
+        passed: true
+        comment: Uses distinctive features (Span for reference line, ColumnDataSource
+          binding); could leverage more
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
-  techniques:
-  - html-export
+  techniques: []
   patterns:
-  - data-generation
   - columndatasource
   dataprep: []
   styling:
-  - publication-ready
+  - alpha-blending
+  - grid-styling
