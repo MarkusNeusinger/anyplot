@@ -1,0 +1,259 @@
+library: bokeh
+language: python
+specification_id: dot-matrix-proportional
+created: '2026-05-08T22:01:07Z'
+updated: '2026-05-08T22:17:57Z'
+generated_by: claude-sonnet
+workflow_run: 25581288860
+issue: 5241
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/bokeh/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - 'Correct Okabe-Ito palette with #009E73 as first series, matching canonical order
+    across all 4 categories'
+  - Perfect spec compliance — 20×10 grid with 200 dots, left-to-right/top-to-bottom
+    fill, legend with counts and percentages
+  - Both themes render correctly with warm off-white (#FAF8F1) and near-black (#1A1A17)
+    backgrounds; data colors identical across themes
+  - Hover tooltips showing category, count, and share percentage are a natural fit
+    for this interactive Bokeh chart
+  - Fully deterministic data (exercise frequency survey) with realistic proportions
+    and neutral topic
+  weaknesses:
+  - Design Excellence is middling — the chart lacks a focal point or visual emphasis;
+    the four categories are presented with equal visual weight so no story is highlighted
+    for the viewer
+  - Legend panel text (20pt title, 22pt labels) and title (28pt) appear visually small
+    against the large 140px dots, creating a typographic imbalance — consider raising
+    the title to 36pt and adding a subtitle annotation
+  - DE-02 refinement is minimal beyond hiding axes/grid; adding subtle dot-gap whitespace
+    or a thin grid behind the dots would add polish
+  - No inter-category visual rhythm — a subtle horizontal spacer row between category
+    bands would help the viewer group the dots more intuitively
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — matches the required light surface token, not pure white.
+      Chrome: Title "dot-matrix-proportional · bokeh · anyplot.ai" visible at top center (dark ink on light bg). No axis labels (axes hidden — correct for dot matrix). Legend panel on right shows "n = 200 respondents" title and four category entries with counts/percentages. All text is readable against the light background; however the 28pt title and 22pt legend labels appear small relative to the large 140px dots — a typographic imbalance but not a legibility failure.
+      Data: 200 dots in a 20×10 grid. First band (top 3 rows) is #009E73 brand green (Daily, 52 dots). Second band is #D55E00 vermillion (3–5 times/week, 74 dots). Third band is #0072B2 blue (1–2 times/week, 46 dots). Bottom-right corner is #CC79A7 reddish purple (Rarely/Never, 28 dots). Dots have a thin PAGE_BG border for visual separation. Left-to-right, top-to-bottom fill is correct.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — matches the required dark surface token, not pure black.
+      Chrome: Title and legend text flip to light colors correctly. No dark-on-dark failures — all text renders as light ink on the near-black background. Legend box uses the elevated dark token (#242420) with appropriate border.
+      Data: All four dot colors (#009E73, #D55E00, #0072B2, #CC79A7) are visually identical to the light render — only the chrome flips. White dot gaps use the PAGE_BG dark token so they blend into the background, maintaining clean dot separation.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28pt, legend labels 22pt, legend
+          title 20pt). Readable at full resolution but slight typographic imbalance
+          — dots at size=140 visually dominate the text elements.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap — legend placed in a right panel outside the plot area.
+          Dots have clear separation via PAGE_BG border.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Dots at size=140 on a 4800×2700 canvas with 20×10 grid. Well-sized
+          with good spacing.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe. Good contrast between all four hues.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Dot matrix fills most of the canvas. Legend panel on right is a bit
+          small proportionally but content is not cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes hidden (appropriate for dot matrix). Title descriptive. Legend
+          acts as the key context provider.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Okabe-Ito order for positions 1-4.
+          Backgrounds #FAF8F1 light / #1A1A17 dark. Data colors identical across themes.
+          Chrome correctly theme-adaptive.'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured defaults. Correct colors, clean layout, legend with
+          counts and percentages. Not exceptional — no typographic hierarchy elevation
+          or focal-point emphasis.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Axes and grid hidden, outline removed, dot borders use PAGE_BG for
+          subtle separation. Beyond defaults but limited additional polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed without emphasis. All four categories presented with
+          equal visual weight; the viewer must find the story themselves.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct dot matrix chart. Grid layout matches total (20×10=200).
+          Dots color-coded by category, filled left-to-right top-to-bottom.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Uniform dot size, proper grid dimensions, legend with category labels
+          and counts/percentages.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 200 dots rendered (52+74+46+28=200). Category-to-color mapping
+          correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''dot-matrix-proportional · bokeh · anyplot.ai''. Legend
+          labels include category, count, and percentage.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 4 categories with varying proportions (26%, 37%, 23%, 14%) demonstrate
+          full range of dot matrix capabilities.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Exercise frequency survey — neutral, realistic, comprehensible scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 200 respondents is a realistic survey size. Proportions are plausible
+          for exercise behavior distribution.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: path fix → imports → data → plot → save. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — hardcoded data, no random generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imported modules are used. No unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. The sys.path manipulation is necessary and well-explained.
+          No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.html and screenshots to plot-{THEME}.png. Current
+          API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ColumnDataSource per category, figure.scatter(), HoverTool, custom
+          Legend with LegendItem objects, add_layout with right panel — idiomatic
+          Bokeh patterns throughout.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Interactive hover tooltips (category/count/share), right-panel legend
+          layout, and per-category ColumnDataSource for selective hover — Bokeh-specific
+          features used well.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - hover-tooltips
+  - html-export
+  - custom-legend
+  patterns:
+  - iteration-over-groups
+  - columndatasource
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting
