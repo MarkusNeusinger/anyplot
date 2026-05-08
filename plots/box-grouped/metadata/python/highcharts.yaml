@@ -1,15 +1,257 @@
 library: highcharts
+language: python
 specification_id: box-grouped
 created: '2025-12-25T19:56:26Z'
-updated: '2025-12-25T19:59:06Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510142992
+updated: '2026-05-08T21:47:34Z'
+generated_by: claude-haiku
+workflow_run: 25535254700
 issue: 2017
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/box-grouped/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/box-grouped/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/highcharts/plot-dark.html
+quality_score: 83
+review:
+  strengths:
+  - Correct Highcharts renders now generated — pipeline issue from Attempt 1 (wrong
+    seaborn images) is resolved
+  - 'Full Okabe-Ito compliance: #009E73 first series, correct 3-color order (#D55E00,
+    #0072B2), identical data colors across both themes'
+  - All theme chrome tokens correctly applied (INK, INK_SOFT, GRID, PAGE_BG, ELEVATED_BG);
+    no dark-on-dark failures in either render
+  - 1.5*IQR whiskers computed manually with outliers as separate ScatterSeries(show_in_legend=False)
+    — complete boxplot feature coverage done idiomatically
+  - Subtitle in rendered output adds clear data storytelling about the Junior-to-Senior
+    seniority progression
+  - Both highcharts.js and highcharts-more.js inlined with retry+fallback logic —
+    robust headless Chrome approach
+  weaknesses:
+  - 'X-axis category labels (Engineering/Sales/Marketing/Finance) cut off: screenshot
+    captures 2561 px instead of 2700 px, placing the marginBottom:150 label area outside
+    the capture window — fix by using --window-size=4800,2900 or adding spacingBottom
+    to chart options'
+  - Subtitle visible in rendered images is not set explicitly in chart.options.subtitle
+    in the current code — add it explicitly so future regenerations are consistent
+  - Default Highcharts panel border not removed; add borderWidth:0 and plotBorderWidth:0
+    to chart options for a cleaner look
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — confirmed, not pure white
+      Chrome: Title "box-grouped · highcharts · anyplot.ai" in dark ink clearly readable; subtitle line visible; y-axis label "Performance Score" readable; y-axis tick labels (22–100) readable; x-axis category labels CUT OFF (screenshot height 2561 px vs chart 2700 px)
+      Data: Four groups of three boxes; Junior=#009E73 (teal-green), Mid-Level=#D55E00 (orange), Senior=#0072B2 (blue); median lines in dark INK visible; whiskers extend down to ~34 range; outlier dots visible
+      Legibility verdict: PASS for all chrome except x-axis category labels which are cut off at bottom
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17) — confirmed, not pure black
+      Chrome: Title and subtitle in light cream (~#F0EFE8) clearly readable on dark background; y-axis tick labels light-colored; legend has elevated dark background (#242420) with light text; NO dark-on-dark failures; median lines render in light cream (INK token in dark mode) — correct theme adaptation
+      Data: Colors IDENTICAL to light render — Junior=#009E73, Mid-Level=#D55E00, Senior=#0072B2; same distribution patterns visible; same outliers
+      Legibility verdict: PASS for all chrome except same x-axis label cutoff issue
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 5
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28px, axis 22px, ticks 18px,
+          legend 18px); title/subtitle/y-axis all readable; x-axis category labels
+          cut off due to screenshot height mismatch (2561 vs 2700 px)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Boxes well-spaced with groupPadding:0.1 and pointPadding:0.05; legend
+          does not overlap data; no text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Boxes and whiskers clearly visible with explicit lineWidth:3, medianWidth:4,
+          whiskerWidth:4; outlier dots at radius:6 are small but visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito palette CVD-safe; good luminance separation between #009E73,
+          #D55E00, #0072B2'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: 4800x2700 canvas with proper margins set in code; however x-axis
+          labels cut off in render due to screenshot capturing 2561px not 2700px;
+          some empty lower y-range (20-60)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Performance Score''; x-axis: ''Department''; title format
+          correct; descriptive labels'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, order follows Okabe-Ito (#D55E00, #0072B2);
+          backgrounds #FAF8F1/#1A1A17; all chrome tokens theme-adaptive; data colors
+          identical across both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured Highcharts chart with correct palette, styled legend
+          (border + elevated background), explicit median/whisker/stem colors — above
+          defaults but follows standard Highcharts layout
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid (10% opacity GRID token), generous margins, legend styled
+          with background/border; lacks panel border removal (borderWidth:0, plotBorderWidth:0)
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtitle in renders tells clear story about seniority progression;
+          data choice shows Junior->Senior median rise and variance reduction; three
+          distinct colors guide comparison
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct grouped box plot using BoxPlotSeries with three series side-by-side
+          per category
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Side-by-side boxes with distinct colors, clear legend, consistent
+          box widths, median+Q1/Q3+1.5*IQR whiskers+outliers (ScatterSeries) all present
+      - id: SC-03
+        name: Data Mapping
+        score: 2
+        max: 3
+        passed: false
+        comment: Y-axis (Performance Score) and subcategory grouping correct; x-axis
+          category labels (Engineering/Sales/Marketing/Finance) not visible in rendered
+          output due to screenshot cutoff
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'box-grouped · highcharts · anyplot.ai' matches required format;
+          legend labels Junior/Mid-Level/Senior with correct Okabe-Ito colors
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Varied distributions across departments; different spreads per experience
+          tier; outliers in multiple groups; clear Junior->Senior progression in both
+          median and IQR
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Employee performance scores by department (Engineering/Sales/Marketing/Finance)
+          and experience level (Junior/Mid-Level/Senior) — neutral, real-world business
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Scores clipped to 20-100; Junior medians ~68-72, Senior medians ~84-88;
+          seniority gradient and department differences proportionally realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: tokens -> data generation -> series construction -> chart
+          config -> JS download -> render -> save; no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os, tempfile, time, Path, numpy, requests, highcharts_core
+          (Chart, HighchartsOptions, BoxPlotSeries, ScatterSeries), selenium'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean loop-based series construction; retry logic with exponential
+          backoff for JS downloads; no over-engineering or fake UI elements
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly for interactive
+          library
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct BoxPlotSeries API with [low, q1, median, q3, high] data format;
+          Chart(container='container'); highcharts-more.js inlined; proper chart.add_series()
+          pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses Highcharts-specific per-series color properties (fill_color,
+          median_color, stem_color, whisker_color) for granular theme control; ScatterSeries
+          with show_in_legend=False for outliers — a distinctive Highcharts pattern;
+          could further leverage plotBands, tooltip formatting, or responsive rules
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -17,194 +259,7 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - Excellent colorblind-safe palette (blue, yellow, purple)
-  - Realistic business scenario with employee performance data
-  - Proper grouped box plot implementation with clear visual distinction between subcategories
-  - Correct title format following pyplots.ai conventions
-  - Good use of Highcharts-specific features like BoxPlotSeries and proper chart configuration
-  weaknesses:
-  - Contains a helper function calc_boxplot_stats() which violates the KISS principle
-    (no functions/classes rule)
-  - Outliers are not displayed as separate points (spec requests outliers to be shown)
-  - Legend could be positioned closer to the chart area
-  image_description: 'The plot displays a grouped box plot visualization with 4 department
-    categories (Engineering, Sales, Marketing, Finance) on the x-axis and Performance
-    Score (range 20-100) on the y-axis. Each department contains 3 side-by-side box
-    plots colored distinctly: blue (Junior), yellow (Mid-Level), and purple (Senior).
-    The title correctly reads "box-grouped · highcharts · pyplots.ai" in bold black
-    text with a gray subtitle "Employee Performance Scores by Department and Experience
-    Level". A vertical legend in the top-right identifies the three experience levels.
-    All boxes show clear median lines (black), quartile boxes with fill colors matching
-    the legend, and whiskers extending to data bounds. The distributions vary meaningfully
-    across groups - e.g., Sales Junior has a wide spread down to ~36, while Finance
-    Senior reaches up to 100.'
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, subtitle, axis labels, and tick marks are all clearly readable.
-          Font sizes are appropriate for 4800x2700 canvas.
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements. Category labels are well-spaced, legend
-          doesn't overlap data.
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Box plots are clearly visible with good line widths. Boxes could
-          be slightly wider for optimal visibility.
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, purple palette is colorblind-safe. No red-green conflicts.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space. Slight excess whitespace at bottom due
-          to y-axis starting at 20.
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: '"Department" and "Performance Score" are descriptive labels.'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid is subtle. Legend placement is good but could be closer to the
-          chart.
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct grouped box plot implementation
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on x-axis, values on y-axis, subcategories as grouped
-          series
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Side-by-side boxes, distinct colors, legend, median/quartile/whiskers
-          shown
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Y-axis 20-100 shows all data appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly identifies Junior, Mid-Level, Senior
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "box-grouped · highcharts · pyplots.ai"'
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows varied distributions, different medians, spread differences.
-          Missing explicit outliers beyond whiskers.
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Employee performance by department/experience is a highly realistic
-          business scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Performance scores 20-100 are reasonable. Some extreme values at
-          boundaries (100) are slightly artificial.
-    code_quality:
-      score: 7
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Contains a helper function `calc_boxplot_stats()` which violates
-          KISS principle
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses `np.random.seed(42)`
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Highcharts API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
-        max: 5
-        passed: true
-        comment: Properly uses BoxPlotSeries, Highcharts styling options, inline JS
-          embedding for Selenium rendering
-  verdict: APPROVED
+  styling:
+  - grid-styling
