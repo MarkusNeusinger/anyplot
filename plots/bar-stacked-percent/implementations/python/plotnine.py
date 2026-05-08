@@ -1,16 +1,22 @@
-""" pyplots.ai
+""" anyplot.ai
 bar-stacked-percent: 100% Stacked Bar Chart
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-25
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-08
 """
 
-import pandas as pd
-from plotnine import (
+import os
+import sys
+
+sys.path = [p for p in sys.path if os.path.abspath(p) != os.getcwd()]
+
+import pandas as pd  # noqa: E402
+from plotnine import (  # noqa: E402
     aes,
     element_blank,
+    element_line,
+    element_rect,
     element_text,
     geom_bar,
-    geom_text,
     ggplot,
     labs,
     position_fill,
@@ -20,8 +26,19 @@ from plotnine import (
 )
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
 # Data - Market share by quarter for tech companies
 quarters = ["Q1 2023", "Q2 2023", "Q3 2023", "Q4 2023", "Q1 2024", "Q2 2024"]
+companies_ordered = ["Others", "Xiaomi", "Samsung", "Apple"]
 data = {
     "Quarter": quarters * 4,
     "Company": (["Apple"] * 6 + ["Samsung"] * 6 + ["Xiaomi"] * 6 + ["Others"] * 6),
@@ -60,44 +77,38 @@ df = pd.DataFrame(data)
 
 # Set categorical ordering for proper display
 df["Quarter"] = pd.Categorical(df["Quarter"], categories=quarters, ordered=True)
-df["Company"] = pd.Categorical(df["Company"], categories=["Others", "Xiaomi", "Samsung", "Apple"], ordered=True)
+df["Company"] = pd.Categorical(df["Company"], categories=companies_ordered, ordered=True)
 
-# Calculate percentages for labels (values shown on chart)
-df_grouped = df.groupby(["Quarter", "Company"], observed=True).agg({"Share": "sum"}).reset_index()
-df_grouped["Quarter"] = pd.Categorical(df_grouped["Quarter"], categories=quarters, ordered=True)
-df_grouped["Percent"] = df_grouped.groupby("Quarter", observed=True)["Share"].transform(lambda x: x / x.sum() * 100)
-df_grouped["Label"] = df_grouped["Percent"].apply(lambda x: f"{x:.0f}%" if x >= 8 else "")
+# Color mapping with Okabe-Ito palette
+color_map = {"Others": OKABE_ITO[3], "Xiaomi": OKABE_ITO[2], "Samsung": OKABE_ITO[1], "Apple": OKABE_ITO[0]}
 
-# Colors - Python Blue first, then complementary colors
-colors = {
-    "Apple": "#306998",  # Python Blue
-    "Samsung": "#FFD43B",  # Python Yellow
-    "Xiaomi": "#4CAF50",  # Green
-    "Others": "#9E9E9E",  # Gray
-}
+# Theme-adaptive colors for legend and text
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+    panel_grid_minor=element_blank(),
+    panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
+    axis_title=element_text(color=INK, size=20),
+    axis_text=element_text(color=INK_SOFT, size=16),
+    axis_line=element_line(color=INK_SOFT, size=0.5),
+    plot_title=element_text(color=INK, size=24, weight="bold"),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_title=element_text(color=INK, size=16),
+    legend_text=element_text(color=INK_SOFT, size=16),
+    legend_position="right",
+    figure_size=(16, 9),
+)
 
 # Create 100% stacked bar chart
 plot = (
-    ggplot(df_grouped, aes(x="Quarter", y="Share", fill="Company"))
-    + geom_bar(stat="identity", position=position_fill(), width=0.7)
-    + geom_text(aes(label="Label"), position=position_fill(vjust=0.5), size=14, color="white", fontweight="bold")
-    + scale_fill_manual(values=colors)
-    + labs(title="bar-stacked-percent · plotnine · pyplots.ai", x="Quarter", y="Market Share (%)", fill="Company")
+    ggplot(df, aes(x="Quarter", y="Share", fill="Company"))
+    + geom_bar(stat="identity", position=position_fill(), width=0.65)
+    + scale_fill_manual(values=color_map)
+    + labs(title="bar-stacked-percent · plotnine · anyplot.ai", x="Quarter", y="Market Share (%)", fill="Company")
     + theme_minimal()
-    + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=24, weight="bold"),
-        axis_title_x=element_text(size=20),
-        axis_title_y=element_text(size=20),
-        axis_text_x=element_text(size=16),
-        axis_text_y=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
-        legend_position="right",
-        panel_grid_major_x=element_blank(),
-        panel_grid_minor=element_blank(),
-    )
+    + anyplot_theme
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)

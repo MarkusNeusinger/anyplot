@@ -1,77 +1,75 @@
-""" pyplots.ai
+""" anyplot.ai
 bar-stacked-percent: 100% Stacked Bar Chart
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-25
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-08
 """
+
+import os
 
 import pygal
 from pygal.style import Style
 
 
-# Data: Energy mix by country (% of total energy production)
-countries = ["USA", "Germany", "China", "Brazil", "Japan", "India"]
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Energy sources (values will be normalized to 100%)
-fossil = [78, 52, 85, 18, 88, 75]
-nuclear = [8, 6, 5, 1, 4, 2]
-renewable = [14, 42, 10, 81, 8, 23]
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
 
-# Custom style for large canvas
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998", "#FFD43B", "#4CAF50"),  # Python Blue, Python Yellow, Green
-    title_font_size=60,
-    label_font_size=40,
-    major_label_font_size=36,
-    legend_font_size=36,
-    value_font_size=28,
-    value_label_font_size=28,
-    tooltip_font_size=28,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=3,
 )
 
-# Create 100% stacked bar chart
+countries = ["USA", "Germany", "China", "Brazil", "Japan", "Australia"]
+renewable = [18, 46, 12, 84, 9, 28]
+nuclear = [8, 6, 5, 1, 8, 9]
+fossil = [74, 48, 83, 15, 83, 63]
+
+percentages_renewable = []
+percentages_nuclear = []
+percentages_fossil = []
+
+for i in range(len(countries)):
+    total = renewable[i] + nuclear[i] + fossil[i]
+    percentages_renewable.append(round(renewable[i] / total * 100, 1))
+    percentages_nuclear.append(round(nuclear[i] / total * 100, 1))
+    percentages_fossil.append(round(fossil[i] / total * 100, 1))
+
 chart = pygal.StackedBar(
     width=4800,
     height=2700,
     style=custom_style,
-    title="bar-stacked-percent · pygal · pyplots.ai",
+    title="bar-stacked-percent · pygal · anyplot.ai",
     x_title="Country",
     y_title="Percentage (%)",
     show_y_guides=True,
     show_x_guides=False,
     legend_at_bottom=True,
-    legend_at_bottom_columns=3,
     print_values=True,
     print_values_position="center",
     value_formatter=lambda x: f"{x:.0f}%",
     margin=50,
-    spacing=30,
 )
 
-# Normalize data to percentages (100% stacked)
-percentages_fossil = []
-percentages_nuclear = []
-percentages_renewable = []
-
-for i in range(len(countries)):
-    total = fossil[i] + nuclear[i] + renewable[i]
-    percentages_fossil.append(round(fossil[i] / total * 100, 1))
-    percentages_nuclear.append(round(nuclear[i] / total * 100, 1))
-    percentages_renewable.append(round(renewable[i] / total * 100, 1))
-
-# Add data series
 chart.x_labels = countries
-chart.add("Fossil Fuels", percentages_fossil)
-chart.add("Nuclear", percentages_nuclear)
 chart.add("Renewable", percentages_renewable)
+chart.add("Nuclear", percentages_nuclear)
+chart.add("Fossil Fuels", percentages_fossil)
 
-# Set y-axis range to 0-100 for percentage scale
 chart.range = (0, 100)
 
-# Save outputs
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())

@@ -1,163 +1,179 @@
 library: plotnine
+language: python
 specification_id: bar-stacked-percent
 created: '2025-12-25T22:50:12Z'
-updated: '2025-12-25T22:53:39Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20511964930
+updated: '2026-05-08T11:07:23Z'
+generated_by: claude-haiku
+workflow_run: 25551716625
 issue: 2008
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - groupby-aggregation
-  dataprep:
-  - normalization
-  styling: []
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Excellent use of position_fill() for 100% stacking with matching text positioning
-  - Clean grammar of graphics implementation with proper aesthetic mappings
-  - Well-chosen color palette using Python Blue as primary color with harmonious complements
-  - Percentage labels only shown for segments >= 8%, avoiding clutter
-  - Proper categorical ordering ensures consistent segment order across all bars
-  - Theme customization provides excellent text legibility at high resolution
+  - Perfect theme-adaptive styling in both light and dark renders
+  - Correct Okabe-Ito palette with proper color ordering (#009E73 first)
+  - Excellent text legibility with explicitly sized fonts (title 24pt, labels 20pt,
+    ticks 16pt)
+  - Clean, KISS-structured code with proper categorical ordering
+  - Accurate 100% stacked bar implementation using position_fill()
+  - Realistic and neutral market share data with clear quarterly trends
   weaknesses:
-  - Y-axis scale shows 0.00-1.00 (proportions) while label says Market Share (%) -
-    minor inconsistency but not misleading since percentages are labeled in bars
-  image_description: 'The plot displays a 100% stacked bar chart showing smartphone
-    market share by quarter from Q1 2023 to Q2 2024. Six vertical bars represent each
-    quarter, with each bar normalized to 100% (shown as 0.00-1.00 on y-axis). Four
-    segments per bar represent: Apple (Python Blue), Samsung (Python Yellow), Xiaomi
-    (Green), and Others (Gray). Each segment displays a percentage label in white
-    bold text (e.g., 23%, 22%, 12%, 43% for Q1 2023). The y-axis is labeled "Market
-    Share (%)", x-axis shows "Quarter" with clear quarterly labels. A legend on the
-    right identifies all four companies. The title correctly follows the format "bar-stacked-percent
-    · plotnine · pyplots.ai".'
+  - Design Excellence lacks distinctive custom elements beyond style guide requirements
+  - Visual storytelling is straightforward—displays data clearly but without particular
+    emphasis or focal points
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title "bar-stacked-percent · plotnine · anyplot.ai" bold and large (24pt), axis labels "Quarter" and "Market Share (%)" clearly visible in dark text (INK #1A1A17), tick labels for quarters and percentages readable at 16pt
+      Data: Green (#009E73) Apple segment at bottom, orange (#D55E00) Samsung, blue (#0072B2) Xiaomi, pink (#CC79A7) Others—all segments clearly distinguishable with proper proportions
+      Legend: Company labels match data; legend positioned right of plot with adequate spacing
+      Grid: Subtle major grid lines at 10% opacity; no visual competition with data
+      Legibility verdict: PASS — all elements readable with good contrast against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) matching specification
+      Chrome: Title visible in light text (INK #F0EFE8), axis labels and tick labels clearly readable in INK_SOFT (#B8B7B0), no dark-on-dark failures
+      Data: All data colors identical to light render (Apple #009E73, Samsung #D55E00, Xiaomi #0072B2, Others #CC79A7)—categorical series maintain visual identity across themes; proportions match light render
+      Legend: Company labels equally visible with light text on elevated background (#242420)
+      Grid: Subtle grid at same opacity; visible but not dominant
+      Legibility verdict: PASS — excellent readability on dark surface; all text and data elements clearly distinguished
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is large and bold (24pt), axis labels (20pt), tick labels (16pt)
-          all clearly readable
+        comment: Title 24pt, labels 20pt, ticks 16pt—all explicitly sized and readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all labels clearly separated
+        comment: No overlapping elements; all quarter labels and legend clear
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar segments well-sized with appropriate width (0.7), percentage
-          labels visible
+        comment: Bar segments clearly visible and sized appropriately for 100% stacked
+          format
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Colors are distinguishable: blue, yellow, green, gray - good contrast
-          and colorblind-safe'
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions, plot fills canvas well, legend well-positioned
-          on right
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Y-axis says "Market Share (%)" but shows 0.00-1.00 (proportions,
-          not actual percentages)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Vertical grid removed, horizontal grid subtle, legend clear and well-placed
+        comment: Okabe-Ito palette ensures colorblind safety; good contrast between
+          segments
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Figure 16×9 (4800×2700px) fills canvas appropriately with balanced
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Quarter'' (descriptive), Y: ''Market Share (%)'' (with units)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 ✓; Okabe-Ito order maintained; backgrounds
+          #FAF8F1/#1A1A17 ✓; theme-correct chrome in both renders'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library defaults following style guide; no exceptional
+          custom design beyond requirements
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Grid and theme customized; mostly library defaults with theme token
+          application
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data clearly displayed with natural composition order; no visual
+          emphasis or focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 100% stacked bar chart
+        comment: 100% stacked bar chart with position_fill() normalization ✓
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=quarters (categorical), Y=share values normalized, fill=company
-          segments
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: distinct colors, percentage labels, legend,
-          consistent component ordering'
-      - id: SC-04
-        name: Data Range
+        comment: Multiple categories (6 quarters), components (4 companies), proportional
+          segments, legend all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, bars span 0-100%
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: Quarter, Y: normalized share, Fill: Company—correct and complete'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels match data correctly
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format `bar-stacked-percent · plotnine · pyplots.ai`
+        comment: 'Title: ''bar-stacked-percent · plotnine · anyplot.ai'' ✓; Legend:
+          Company with correct labels'
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows proportional variation across quarters (Xiaomi growing, Samsung
-          declining slightly), demonstrates the comparison use case well
+        comment: 'Shows all aspects: multiple categories, multiple components, composition
+          changes over time'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Smartphone market share is a real, comprehensible scenario with plausible
-          company names
+        comment: Tech company market share by quarter—real, neutral, comprehensible
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
-        passed: false
-        comment: Values are realistic market shares, but "Others" consistently ~43-46%
-          feels slightly high for a real market analysis
+        max: 4
+        passed: true
+        comment: Percentages sum to ~100% per quarter; trends are realistic for smartphone
+          market
     code_quality:
       score: 10
       max: 10
@@ -167,41 +183,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save, no functions/classes'
+        comment: Imports → Data → Plot → Save; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses deterministic hardcoded data (no random generation needed)
+        comment: Hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used, well-organized from plotnine
+        comment: Only used imports; all necessary
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Clean Python; proper categorical ordering; no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as `plot.png`
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png; current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent use of plotnine''s grammar of graphics: `ggplot()` + `geom_bar()`
-          with `position_fill()`, `geom_text()` with position matching, `scale_fill_manual()`,
-          and comprehensive `theme()` customization'
+        comment: 'Expert ggplot2 style: ggplot() + geom_bar() + position_fill() +
+          scale_fill_manual() + theme()'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses position_fill() and comprehensive theme customization; solid
+          library knowledge but standard patterns
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
