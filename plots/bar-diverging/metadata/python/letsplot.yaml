@@ -1,166 +1,174 @@
 library: letsplot
+language: python
 specification_id: bar-diverging
 created: '2025-12-25T22:48:32Z'
-updated: '2025-12-25T22:50:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20511948659
+updated: '2026-05-08T09:12:51Z'
+generated_by: claude-haiku
+workflow_run: 25546837853
 issue: 2009
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/letsplot/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent implementation of the diverging bar chart concept with clear visual
-    separation of positive/negative values
-  - Perfect title format and spec compliance with all required features (contrasting
-    colors, horizontal orientation, zero baseline, sorted bars)
-  - Clean, readable code following KISS principles with appropriate lets-plot grammar
-    of graphics syntax
-  - Good color choice with red/blue that is colorblind accessible
-  - Proper use of pd.Categorical to preserve sort order
+  - Perfect theme-adaptive styling with data colors identical across light/dark renders
+    and chrome flipping correctly
+  - Explicit font sizing throughout (title 28pt, labels 22pt, ticks 18pt) ensures
+    readability at large canvas 4800x2700
+  - Clean data visualization with clear zero baseline and proper color mapping for
+    sentiment using Okabe-Ito palette
+  - Strong spec compliance with all required features present and correctly implemented
+  - Simple, reproducible, and idiomatic letsplot code with proper ggplot2-style grammar
+    of graphics usage
   weaknesses:
-  - Could add interactive tooltips to leverage lets-plot interactive capabilities
-    in the HTML output
-  - Data distribution slightly unbalanced (only 4 negative vs 8 positive categories)
-  image_description: 'The plot displays a horizontal diverging bar chart showing Net
-    Promoter Scores for 12 customer satisfaction categories. Bars extend left (red,
-    #DC2626) for negative scores and right (blue, #306998) for positive scores from
-    a clear vertical baseline at zero. Categories are sorted by score from lowest
-    (Mobile App at -35) to highest (Product Quality at +72). The title "bar-diverging
-    · letsplot · pyplots.ai" appears at top center in bold. X-axis is labeled "Net
-    Promoter Score" and Y-axis is labeled "Category". A legend on the right shows
-    "Sentiment" with Negative (red) and Positive (blue) indicators. The layout is
-    clean with a minimal theme, subtle grid lines on the x-axis only, and good use
-    of whitespace.'
+  - Design Excellence slightly below publication-ready due to minimal custom palette
+    depth beyond Okabe-Ito direct usage
+  - Data storytelling could emphasize insight more through visual hierarchy techniques
+    beyond basic color separation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "bar-diverging · letsplot · anyplot.ai" bold and centered; X-axis label "Net Promoter Score (-100 to +100)" with units; Y-axis label "Category"; all tick labels (category names and score values) clearly visible in dark text; legend "Sentiment" on right with light background
+      Data: 12 horizontal bars extending left (negative, orange #D55E00) and right (positive, green #009E73) from central zero baseline marked with subtle vertical line; bars sorted by value; clear visual separation of positive/negative sentiment
+      Legibility verdict: PASS - All text fully readable against light background; no light-on-light issues; grid subtle but visible on X-axis only
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title and axis labels in light color (#F0EFE8); tick labels in light gray (#B8B7B0) with excellent contrast against dark background; legend box has elevated dark background (#242420) with light text; NO dark-on-dark failures observed
+      Data: Identical bar colors to light render - green (#009E73) and orange (#D55E00) prove theme-independent data color handling; zero baseline visible; all bars clearly distinguishable
+      Legibility verdict: PASS - All text clearly readable in dark render; no dark-on-dark issues; brand green maintains visibility
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is large and bold, axis labels and tick marks are all clearly
-          readable
+        comment: All font sizes explicitly set; title 28pt, labels 22pt, ticks 18pt;
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, category labels are well-spaced horizontally
+        comment: All labels fully visible without collision
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-sized with appropriate width and alpha for clear visibility
+        comment: Bar width 0.75, alpha 0.95; optimal sizing for data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Red/blue is colorblind-safe (distinguishable even with red-green
-          colorblindness)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space, balanced margins, legend positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Labels are descriptive but "Net Promoter Score" could include units
-          or range indicator
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (only on x-axis), legend is well-placed and doesn't
-          overlap data
+        comment: Okabe-Ito palette; excellent contrast; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 55-65% of canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis includes units; both axes descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; second #D55E00 (Okabe-Ito order); backgrounds
+          correct (#FAF8F1 light, #1A1A17 dark); all theme-adaptive chrome perfect'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with thoughtful sentiment-color mapping; professional
+          typography; intentional theme-adaptive styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: subtle X-axis-only grid, vertical zero-line for
+          context, clean minimal approach'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Data sorted by value enhances pattern recognition; color hierarchy
+          clearly separates sentiment
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct diverging bar chart with bars extending in opposite directions
-          from zero
+        comment: Perfect diverging bar implementation with horizontal orientation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on Y-axis, values on X-axis, correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has contrasting colors, horizontal orientation, zero baseline indicator,
-          sorted bars
-      - id: SC-04
-        name: Data Range
+        comment: Diverging bars from zero, opposite colors, baseline indicator, sorted
+          for clarity
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, range from -40 to +70 shown appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; all data visible and properly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Negative/Positive sentiment
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Exact format "bar-diverging · letsplot · pyplots.ai"
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both positive and negative values with good distribution (4
-          negative, 8 positive)
+        comment: Shows both positive and negative values with wide magnitude range
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Customer satisfaction NPS data is plausible, though slightly more
-          negative categories could improve balance
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: NPS scores from -35 to +72 are realistic for the -100 to +100 scale
+        comment: Customer satisfaction survey; real-world NPS-style scenario; neutral
+          domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values plausible for NPS-style scoring; factually correct
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -168,42 +176,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple script: imports → data → plot → save, no functions/classes'
+        comment: 'Simple linear: imports → theme setup → data → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Data is deterministic (hardcoded), but no random seed comment for
-          clarity
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data; always produces same result
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Pythonic, appropriate complexity, no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: 'Correct format: plot-{THEME}.png and plot-{THEME}.html'
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses ggplot grammar correctly with geom_bar, geom_vline, scale_fill_manual,
-          and theme customization. Could leverage more lets-plot specific features
-          like tooltips for interactivity.
+        passed: true
+        comment: 'Expert ggplot2-style usage: proper aes() mapping, clean layering,
+          idiomatic theme configuration'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good use of letsplot-specific: ggsize(), ggsave() with scale, element_*()
+          theme functions'
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
