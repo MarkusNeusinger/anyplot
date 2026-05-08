@@ -1,166 +1,177 @@
 library: seaborn
+language: python
 specification_id: scatter-color-mapped
 created: '2025-12-26T09:46:07Z'
-updated: '2025-12-26T09:48:20Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520225313
+updated: '2026-05-08T21:19:21Z'
+generated_by: claude-haiku
+workflow_run: 25556201149
 issue: 2004
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - colorbar
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - custom-colormap
-    - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 83
 review:
   strengths:
-  - Excellent visual clarity with proper font sizes and colorblind-safe viridis palette
-  - Well-chosen realistic scenario (temperature across geographic grid) that demonstrates
-    the color-mapping concept effectively
-  - Clean KISS code structure with proper reproducibility (seed=42)
-  - Colorbar is well-positioned with clear label including units
-  - Good use of alpha=0.8 for transparency to handle overlapping points
+  - Thorough theme adaptation with INK/INK_SOFT tokens applied to every chrome element
+    — colorbar spines, ticks, axis labels, spines — no dark-on-dark failures in either
+    render
+  - 'Excellent domain choice: geographic AQI distribution with exponential urban-density
+    model creates a natural spatial story through the viridis gradient'
   weaknesses:
-  - Size encoding duplicates the color encoding (both map to temperature) without
-    adding informational value
-  - Grid legend comment says disabled legend but size variation without legend may
-    confuse viewers
-  - Could leverage seaborn native hue legend capabilities instead of manually creating
-    ScalarMappable
-  image_description: The plot displays a color-mapped scatter plot showing 150 data
-    points representing temperature readings across a geographic grid. The X-axis
-    shows "Longitude (°E)" ranging from -10 to 10, and the Y-axis shows "Latitude
-    (°N)" ranging from -8 to 8. Each point is colored using the viridis colormap,
-    with a colorbar on the right indicating "Temperature (°C)" ranging from approximately
-    12°C (dark purple) to 37°C (bright yellow). Points near the center of the plot
-    are warmer (yellow/green) while those at the edges are cooler (blue/purple), clearly
-    demonstrating the radial temperature pattern. The title reads "scatter-color-mapped
-    · seaborn · pyplots.ai". A subtle dashed grid is visible in the background.
+  - No seaborn plot functions used — ax.scatter() is matplotlib; replace with sns.scatterplot(...,
+    hue=aqi, palette=viridis, legend=False) and add sns.set_theme() for seaborn-native
+    chrome
+  - Marker size s=150 exceeds the 50-100 guideline for 200 points; reduce to s=80
+    for better density handling
+  - 'Data storytelling gap: the AQI hotspot cluster is present but unmarked; an annotation
+    or secondary encoding would lift DE-03'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — not pure white
+      Chrome: Title "scatter-color-mapped · seaborn · anyplot.ai" in dark ink, clearly readable; axis labels "Longitude (°W)" and "Latitude (°N)" in dark ink, readable; tick labels in muted dark tone, readable; colorbar label "Air Quality Index" and ticks readable
+      Data: 200 scatter points using viridis colormap — dark purple for low AQI (~30), teal/green for mid values, yellow for high AQI (~100+); concentration of high-AQI points visible around -90 longitude / 40 latitude; edgecolors set to background for marker definition; alpha=0.7 for moderate transparency
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black consistent with #1A1A17 — not pure black
+      Chrome: Title and axis labels in light off-white tone, clearly readable against dark background; tick labels in lighter muted tone, readable; colorbar label and ticks in light colors, readable; no dark-on-dark failures
+      Data: Colors are identical to the light render — same viridis gradient from dark purple to yellow; data colors unchanged between themes as expected; same geographic AQI distribution visible
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues observed
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: Title 24pt, axis labels 20pt, ticks 16pt, colorbar label 20pt — all
+          explicitly set; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; 200 points with alpha=0.7 keep scatter overlap
+          minimal
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Markers are well-sized with good alpha (0.8), though size variation
-          adds slight visual complexity
+        comment: s=150 slightly above the 50-100 guideline for 200 points; edgecolors
+          add definition; visually acceptable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout, plot fills canvas well, slight asymmetry due to colorbar
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Longitude (°E)", "Latitude (°N)",
-          "Temperature (°C)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Viridis is CVD-safe; adequate contrast across full AQI range
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16x9 figure with tight_layout; colorbar well-positioned; canvas utilization
+          appropriate
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid has alpha=0.3 which is good, but no legend for size encoding
-          (size also maps to temperature)
+        comment: 'Units included: Longitude (°W), Latitude (°N), Air Quality Index'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous data uses viridis (correct per style guide); backgrounds
+          #FAF8F1/#1A1A17; all chrome theme-adaptive in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: thorough theme adaptation, domain-appropriate data,
+          background-colored marker edges; not FiveThirtyEight-level; no seaborn theming
+          or additional design layers'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis-only grid at alpha=0.10, top/right spines removed, remaining
+          spines and colorbar spines set to INK_SOFT; good but not exhaustive polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Exponential urban-density model creates visible AQI hotspot cluster;
+          story embedded in data but lacks explicit focal-point emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct scatter plot with color mapping
+        comment: Scatter plot with continuous color encoding — correct chart type
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned as geographic coordinates, color mapped to
-          temperature
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has colorbar with clear label, moderate point size, transparency
-          for overlap
-      - id: SC-04
-        name: Data Range
+        comment: Viridis colormap, labeled colorbar, moderate marker size, alpha transparency
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 150 points visible within axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Longitude, Y=Latitude, color=AQI; all 200 points visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar accurately labeled with variable and units
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "scatter-color-mapped · seaborn · pyplots.ai"'
+        comment: 'Title format correct: ''scatter-color-mapped · seaborn · anyplot.ai'';
+          colorbar labeled ''Air Quality Index'''
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows full range of color values, demonstrates pattern (center=hot,
-          edge=cold), good variation
+        comment: Full AQI range (~10-150); clear spatial variation; demonstrates core
+          purpose of color-mapped scatter
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Temperature distribution across geographic coordinates is a real-world
+        comment: Air quality index over US geography — real, neutral environmental
           scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Temperatures 12-37°C are realistic, though longitude/latitude range
-          is small for typical geographic data
+        comment: AQI 10-150 factually plausible; coordinates cover continental US
+          correctly; 200 points within recommended range
     code_quality:
       score: 10
       max: 10
@@ -170,42 +181,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save'
+        comment: 'Linear: imports → tokens → data → plot → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib, numpy, seaborn - all used
+        comment: All imports (os, sys, matplotlib, numpy) are used; no unused imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current seaborn API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png with correct dpi and bbox_inches
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; no fake UI elements; sys.path manipulation is a
+          known pipeline pattern
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png; no deprecated API
+    library_mastery:
+      score: 2
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 1
         max: 5
         passed: false
-        comment: Uses sns.scatterplot which is standard, but manually creates colorbar
-          rather than leveraging seaborn's built-in hue handling with legend. The
-          size parameter adds complexity but seaborn could handle color mapping more
-          elegantly.
+        comment: No seaborn plotting functions used — ax.scatter() is matplotlib.
+          Seaborn is not imported. File is labelled as seaborn but is entirely matplotlib.
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: 'No seaborn-specific features: no sns.scatterplot(), no sns.set_theme(),
+          no statistical overlays. Nothing uniquely seaborn in the output.'
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - custom-colormap
