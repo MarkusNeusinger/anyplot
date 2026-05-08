@@ -1,160 +1,195 @@
 library: plotnine
+language: python
 specification_id: box-grouped
 created: '2025-12-25T19:54:59Z'
-updated: '2025-12-25T19:57:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510142938
+updated: '2026-05-08T03:31:11Z'
+generated_by: claude-haiku
+workflow_run: 25534905328
 issue: 2017
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/box-grouped/plotnine/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent use of plotnine grammar of graphics with proper layered construction
-  - Well-designed data generation with realistic variation across departments and
-    experience levels
-  - Good use of position_dodge2 for clean grouped box arrangement
-  - Appropriate outlier handling with clear visibility
-  - Clean theme customization with appropriate font sizes for high-resolution output
-  - Categorical ordering ensures consistent experience level display order
+  - Perfect text legibility with explicit font sizing (Title 24pt, Labels 20pt, Ticks
+    16pt)
+  - 'Flawless theme adaptation: both light and dark renders perfectly readable with
+    zero dark-on-dark or light-on-light failures'
+  - 'Correct Okabe-Ito palette with brand green #009E73 as first series across both
+    themes'
+  - Well-executed grouped box plot with proper position_dodge2 spacing, no overlap,
+    clear box widths
+  - 'Excellent data quality: realistic employee performance scenario with good variation
+    across departments and experience levels'
+  - 'All spec requirements met: correct plot type, features, data mapping, and title
+    format'
+  - Clean, reproducible code with proper KISS structure, seed control, and no unnecessary
+    complexity
+  - 'Comprehensive feature coverage: median lines, quartile boxes, whiskers, and outliers
+    all visible'
   weaknesses:
-  - The two blue colors (Junior and Senior) are somewhat similar; a more distinct
-    palette would improve differentiation
-  - Y-axis label could include units (e.g., Performance Score (0-100))
-  image_description: 'The plot displays a grouped box plot showing employee performance
-    scores across four departments (Engineering, Marketing, Sales, Support) on the
-    x-axis, with Performance Score on the y-axis ranging from approximately 30 to
-    120. Three experience levels (Junior, Mid-Level, Senior) are shown side-by-side
-    within each department using distinct colors: dark blue (#306998) for Junior,
-    yellow (#FFD43B) for Mid-Level, and light blue (#4B8BBE) for Senior. The boxes
-    show medians, quartiles, and whiskers with outliers displayed as gray dots. The
-    title "box-grouped · plotnine · pyplots.ai" appears at the top. The legend on
-    the right identifies "Experience Level" with the three categories. The plot uses
-    a minimal theme with subtle gray gridlines.'
+  - 'Design Excellence is solid but not exceptional: follows library defaults rather
+    than pushing for distinctive aesthetic sophistication'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface (#FAF8F1) with subtle 4px border
+      Chrome: Title "box-grouped · plotnine · anyplot.ai" rendered in dark ink (#1A1A17), clearly visible. X-axis labeled "Department" (4 categories: Engineering, Marketing, Sales, Support), Y-axis labeled "Performance Score (0-100)" with units. All tick labels in soft ink (#4A4A44), readable. Legend titled "Experience Level" with labels "Junior", "Mid-Level", "Senior" positioned right of plot on light background.
+      Data: 3 box plots per department in grouped arrangement. Junior (green #009E73), Mid-Level (orange #D55E00), Senior (blue #0072B2) boxes with consistent widths. Median lines, quartile boxes, whiskers at 1.5*IQR, and outlier circles all visible. Subtle horizontal grid lines aid readability.
+      Layout: Balanced whitespace, plot fills 60% of canvas, no cramping or wasted space
+      Legibility verdict: PASS — All text perfectly readable against light background, no overlap, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface (#1A1A17) with subtle light border
+      Chrome: Title rendered in light ink (#F0EFE8), clearly visible against dark background. Axis labels in light ink, tick labels in soft ink (#B8B7B0), all readable with NO dark-on-dark failures. Legend on dark background with light text, properly styled.
+      Data: Box plots display identical colors to light render (green, orange, blue) — only chrome adapted to dark theme. Median lines, quartile boxes, whiskers, and outliers all visible and distinguishable. Grid lines subtle but present.
+      Layout: Same balanced composition as light render, no elements cut off or lost
+      Legibility verdict: PASS — All text perfectly readable against dark background, brand green #009E73 visually prominent, no theme adaptation failures, excellent dark-theme chrome
+
+    Both renders pass theme-readiness checks. Data colors are pixel-perfect identical between themes (only chrome flips). Okabe-Ito palette correctly applied with brand green as first series.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable at appropriate
-          sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; department labels and boxes are well-spaced
+        comment: Title 24pt, axis labels 20pt, ticks 16pt—all explicitly set and perfectly
+          readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements; X-axis, legend, and all labels fully
+          readable with clear separation
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Boxes are well-sized and visible; outliers clearly marked with good
-          alpha
+        comment: Box plots perfectly sized and visible; outlier markers (size=3) clearly
+          distinguishable; whiskers and medians distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue/yellow/blue palette provides good contrast; the two blues are
-          distinguishable but could be more distinct
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins; legend positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels ("Department", "Performance Score") but no units
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid, well-placed legend with clear title
+        comment: Okabe-Ito palette is CVD-safe; colors distinguishable without relying
+          on hue alone; good contrast throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~60% of 4800×2700 canvas; balanced margins; legend well-positioned;
+          no wasted space or cramping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis includes units (0-100); title in correct format; descriptive
+          category labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First categorical series #009E73; follows Okabe-Ito order; backgrounds
+          #FAF8F1 (light) / #1A1A17 (dark); all chrome theme-correct in both renders;
+          data colors identical between themes'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library default with clean Okabe-Ito palette; professional
+          polish present but not exceptional—no custom refinements or FiveThirtyEight-level
+          design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Top/right spines removed (theme_minimal); subtle grid (alpha 0.10);
+          legend styled with background; balanced whitespace—good refinement but not
+          exceptional
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Good visual hierarchy through spatial grouping and color contrast;
+          experience level progression visible through color; realistic data context
+          tells a story—solid but not exceptional emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct grouped box plot implementation
+        comment: Correct grouped box plot with side-by-side boxes; all subtypes present
+          (median, quartile, whiskers, outliers)
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on x-axis, values on y-axis, subcategories as fill
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Side-by-side boxes, legend, consistent widths, median/quartiles/whiskers/outliers
-          all present
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features implemented: side-by-side boxes, distinct colors,
+          clear legend, consistent box widths, proper statistics'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full data range including outliers
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Department, Y=Score, Fill=Experience Level; all data visible; axes
+          show full range (0-100)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies experience levels
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "box-grouped · plotnine · pyplots.ai"
+        comment: 'Title: ''box-grouped · plotnine · anyplot.ai'' (correct format);
+          legend labels match data (Junior, Mid-Level, Senior)'
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows different distributions across departments and experience levels,
-          includes outliers, varying spreads
+        comment: 'Excellent coverage: variation across departments and experience
+          levels; outliers present; different spread patterns (some tight, some wide)'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Employee performance scores by department and experience level is
-          a plausible real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Performance scores in 40-100 range are realistic for workplace metrics
+        comment: Real-world scenario (employee performance by department and experience);
+          neutral topic; factually sensible context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Performance scores 0-100 (typical for metrics); experience progression
+          realistic; distributions vary plausibly by dept; outliers reasonable
     code_quality:
       score: 10
       max: 10
@@ -164,40 +199,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save'
+        comment: 'Clean flow: imports → theme tokens → data generation → plot creation
+          → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set; deterministic data generation ensures consistent
+          output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used (os, numpy, pandas, plotnine elements); no dead
+          code
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Pythonic and readable; appropriate complexity; no over-engineering
+          or fake UI elements
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: 'Correct output: ggsave() with f''plot-{THEME}.png'', DPI=300, size=(16,9);
+          current plotnine API'
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Proper ggplot2 grammar with aes(), geom_boxplot(), position_dodge2(),
-          scale_fill_manual(), theme_minimal(), and detailed theme() customization
+        comment: 'Excellent ggplot2 grammar: ggplot() + geom_boxplot() + theme composition;
+          proper use of position_dodge2, scale_fill_manual, element_* functions'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Good use of position_dodge2 with preserve/padding, element_* theme
+          customization, and ggsave parameters—distinctive to plotnine, but not exceptionally
+          advanced
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
