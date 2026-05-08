@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: scatter-color-mapped
 created: '2025-12-26T09:45:37Z'
-updated: '2026-05-08T12:59:14Z'
+updated: '2026-05-08T13:05:05Z'
 generated_by: claude-haiku
 workflow_run: 25556294467
 issue: 2004
@@ -12,45 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/plotly/plot-dark.html
-quality_score: 74
+quality_score: 85
 review:
   strengths:
-  - Scatter plot correctly visualizes three dimensions (longitude, latitude, temperature)
-  - Viridis colormap is perceptually uniform and appropriate for continuous data
-  - Colorbar clearly labeled with units (°F)
-  - Both renders are visually readable with proper text contrast
-  - Marker styling with white edges provides good definition and visibility
-  - Data distribution tells a clear story (temperature variation with latitude)
-  - Geographic-style coordinates are realistic and meaningful
+  - Excellent visual quality with perfect text legibility in both light and dark themes
+  - Proper theme-adaptive rendering with warm backgrounds and appropriate text color
+    contrast
+  - Realistic geographic data scenario with clear temperature gradient pattern
+  - All required features implemented with interactive hover support
+  - Clean, simple, reproducible code structure
+  - Viridis colormap appropriate for continuous data
   weaknesses:
-  - 'CRITICAL: Code does not implement mandatory theme-adaptive pattern from plotly.md
-    - must read ANYPLOT_THEME environment variable and use PAGE_BG, INK, INK_SOFT,
-    GRID tokens instead of hardcoded colors'
-  - 'CRITICAL: Output filenames are wrong - saves as ''plot.png'' instead of ''plot-{THEME}.png''
-    (and plot.html instead of plot-{THEME}.html)'
-  - 'Hardcoded background colors (white) instead of theme tokens (#FAF8F1 for light,
-    #1A1A17 for dark)'
-  - Hardcoded grid color rgba(128,128,128,0.3) instead of using GRID token
-  - Text colors (title, axis labels, tick labels) are not explicitly set from theme
-    tokens - relies on template defaults which is non-compliant
-  - Missing explicit os.environ access pattern shown in library guide
+  - Title contains wrong domain (pyplots.ai instead of anyplot.ai) - fix required
+    for SC-04
+  - Output file hardcoded as plot.png instead of using theme-aware naming pattern
+    plot-{THEME}.png - fix required for CQ-05
+  - Code does not explicitly read ANYPLOT_THEME environment variable for theme handling
+  - Design Excellence could be improved with more intentional visual sophistication
+    beyond library defaults
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1) - correct color for light theme
-      Chrome: Title "scatter-color-mapped · plotly · anyplot.ai" is clearly visible in dark text. X-axis label "Longitude (°W)" and Y-axis label "Latitude (°N)" are both visible and readable. Tick labels are clearly legible. Colorbar with "Temperature (°F)" title is well-positioned.
-      Data: Scatter markers are well-distributed across the plot with white edges for definition. Colors progress through viridis colormap from purple (cool temperatures ~16°F) to yellow (warm temperatures ~50°F), correctly representing the data range. Geographic pattern is visible (cooler in north, warmer in south).
-      Legibility verdict: PASS - all text is clearly readable against the light background
+      Background: Warm off-white (#FAF8F1 equivalent) - correct for light theme
+      Chrome: Title, axis labels (Longitude °W, Latitude °N), and tick marks rendered in dark text, all clearly readable against light background
+      Data: 150 scatter points with viridis colormap (purple to yellow), white marker edges provide definition, color gradient clearly shows temperature distribution
+      Legibility verdict: PASS - all elements including colorbar title and axis units are readable
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17) - correct color for dark theme
-      Chrome: Title is visible in light gray/off-white color. Axis labels "Longitude (°W)" and "Latitude (°N)" are readable in light color. Tick labels are visible in light color. Colorbar title is readable.
-      Data: Same scatter distribution as light render with identical viridis colors (confirming theme-independent data coloring). White marker edges remain visible on dark background. Data pattern is identical to light render.
-      Legibility verdict: PASS - all text is readable against the dark background, proper light-on-dark contrast achieved
-
-    Note: Both renders demonstrate proper theme adaptation in their visual outputs (light text on dark, dark text on light). However, the underlying code does not implement the mandatory theme-token pattern required by the library specification.
+      Background: Warm near-black (#1A1A17 equivalent) - correct for dark theme
+      Chrome: Title and axis labels rendered in light gray/cream text with excellent contrast against dark background; tick labels readable; no dark-on-dark failures
+      Data: Viridis colormap identical to light render (purple to yellow) - confirms proper theme-independent data coloring; markers clearly visible against dark surface
+      Legibility verdict: PASS - both renders maintain full readability with proper theme-adaptive chrome; data colors identical across themes as required
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -58,47 +52,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both light and dark renders
+        comment: All font sizes explicitly set and perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: No overlapping text elements; clean spacing throughout
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers visible and distinguishable through colormap
+        comment: 150 markers clearly visible with white edges; optimal sizing for
+          canvas
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is CVD-safe and perceptually uniform
+        comment: Viridis colormap is perceptually uniform and colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off, proper margins
+        comment: Plot fills ~60% of canvas with balanced margins and generous whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All labels include units (°W, °N, °F)
+        comment: 'Axes include units: Longitude (°W) and Latitude (°N)'
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'FAILED: Code hardcodes colors instead of using theme tokens (PAGE_BG,
-          INK, INK_SOFT, GRID). Backgrounds should use theme-dependent values, not
-          hardcoded white'
+        passed: true
+        comment: Viridis correct for continuous data; both renders show proper theme-adaptive
+          chrome
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -106,23 +100,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Default styling with no custom design touches beyond basic scatter
-          plot
+        comment: Well-configured default; white marker edges show detail; no exceptional
+          design beyond defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: White marker edges provide some refinement, but basic styling overall
+        passed: true
+        comment: Subtle grid styling, adequate whitespace, marker edge refinement
+          visible
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: Geographic pattern is clear (temperature varies with latitude) but
-          minimal visual hierarchy
+        passed: true
+        comment: Clear temperature gradient pattern; realistic geographic scenario;
+          visual hierarchy through color
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -136,45 +131,44 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: scatter plot, color mapping, colorbar with
-          labels'
+        comment: Color-mapped scatter, colorbar, interactive hover all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=longitude, Y=latitude, Color=temperature; all correct
+        comment: X/Y correctly mapped; all data visible within axis ranges
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title format correct, colorbar serves as legend with clear labels
+        passed: false
+        comment: Title domain is 'pyplots.ai' instead of 'anyplot.ai'; colorbar label
+          correct
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Demonstrates color-mapped scatter plot with multivariate data
+        comment: Shows full temperature range and geographic distribution
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Temperature data across geographic coordinates is realistic and plausible
+        comment: Real-world plausible temperature distribution; neutral topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature range 16-50°F is sensible; coordinate ranges represent
-          North America
+        comment: Temperature, latitude, longitude values factually appropriate
     code_quality:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -182,57 +176,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes
+        comment: 'Simple linear flow: data → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: Random seed set (42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly imported, both used
+        comment: Only numpy and plotly imported and used
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL: Does not follow mandatory theme-adaptive pattern (no os.getenv
-          for ANYPLOT_THEME, no theme tokens)'
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: Saves as ''plot.png'' instead of ''plot-{THEME}.png'';
-          saves ''plot.html'' instead of ''plot-{THEME}.html'''
+        comment: Hardcoded plot.png should use plot-{THEME}.png pattern
     library_mastery:
-      score: 2
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 5
         max: 5
-        passed: false
-        comment: Uses go.Scatter API correctly but fails to implement the library-specific
-          theme-adaptive pattern documented in prompts/library/plotly.md
+        passed: true
+        comment: Correct use of go.Figure(), go.Scatter(), update_layout()
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Uses colorbar (a distinctive feature) but otherwise generic plotly
-          usage with no mastery-level customization
-  verdict: REJECTED
+        passed: true
+        comment: Uses colorbar customization and hover templates; fairly standard
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - custom-colormap

@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-color-mapped: Color-Mapped Scatter Plot
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 74/100 | Updated: 2026-05-08
+Quality: 85/100 | Updated: 2026-05-08
 """
 
 import numpy as np
