@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-overlapping: Overlapping Histograms
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2025-12-25
+Library: highcharts unknown | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-08
 """
 
 import os
