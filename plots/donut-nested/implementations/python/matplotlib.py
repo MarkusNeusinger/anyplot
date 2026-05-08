@@ -1,7 +1,7 @@
 """ anyplot.ai
 donut-nested: Nested Donut Chart
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-08
+Quality: 92/100 | Updated: 2026-05-08
 """
 
 import os

@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: donut-nested
 created: '2025-12-25T20:01:52Z'
-updated: '2026-05-08T01:03:14Z'
+updated: '2026-05-08T01:09:47Z'
 generated_by: claude-haiku
 workflow_run: 25530458199
 issue: 2015
@@ -12,44 +12,33 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-nes
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 92
 review:
   strengths:
-  - 'Perfect theme adaptation: both light and dark renders fully readable with correct
-    color contrasts and theme-appropriate chrome'
-  - 'All text explicitly sized and readable: title 24pt, inner labels 16pt bold, outer
-    labels 12pt, legend 14pt'
-  - 'Correct palette compliance: first series #009E73, multi-series follows Okabe-Ito
-    positions 1–4; backgrounds #FAF8F1 (light) / #1A1A17 (dark)'
-  - 'Clean hierarchical visualization: inner ring (departments) vs outer ring (categories)
-    creates clear visual structure'
-  - 'Realistic, neutral data: budget allocation scenario with plausible department/category
-    combinations'
-  - Alpha blending on outer ring adds visual refinement showing subcategory importance
-    via opacity gradient
+  - 'Excellent theme adaptation: both light and dark renders maintain full readability
+    with correct color application'
+  - Smart label filtering (≥$100K only) reduces clutter while showing sufficient detail
+  - Alpha-blending technique effectively distinguishes subcategories within parent
+    color families
+  - Custom legend construction shows matplotlib mastery
+  - 'Clean visual hierarchy: department totals in inner ring clearly aggregate from
+    outer values'
   weaknesses:
-  - 'Design Excellence is generic: mostly defaults with limited customization; legend
-    custom but standard matplotlib patterns'
-  - 'Visual refinement minimal: legend frame styling is adequate but no exceptional
-    polish in typography or color harmony'
-  - 'Visual storytelling could be stronger: hierarchy exists but lacks emphasis techniques
-    (bold color contrast, size variation) to guide viewer'
-  - 'Library Mastery is standard: custom legend and alpha blending are solid but not
-    distinctively matplotlib—same patterns work across libraries'
+  - 'Design Excellence slightly below maximum: while refined, visual sophistication
+    could be elevated with additional design polish (e.g., custom fonts, bolder typography
+    hierarchy, or enhanced shadow/depth effects)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle warmth, never pure white. Perfect foundational surface.
-      Chrome: Title "donut-nested · matplotlib · anyplot.ai" renders in dark text (#1A1A17), fully readable. Inner ring department labels (Engineering, Marketing, Operations, Sales) with totals display in bold dark text, centered and clearly legible. Outer ring category labels appear on larger segments (≥$100K) in dark text. Legend on right with department:category format, dark text on elevated background (#FFFDF6). All elements highly readable.
-      Data: Inner ring uses Okabe-Ito positions 1–4 (green #009E73 for Engineering, orange #D55E00 for Marketing, blue #0072B2 for Operations, reddish-purple #CC79A7 for Sales). Outer ring uses the same base colors with opacity gradient (0.5–1.0), creating visual hierarchy showing subcategory importance. Wedges have clean white separators (#FAF8F1 edges).
-      Legibility verdict: PASS. All text is crisp, dark-on-light contrast is excellent, no overlapping elements, wedges are clearly distinguishable.
+      Background: Warm off-white (#FAF8F1) – correct for light theme
+      Chrome: Title "Nested Budget Allocation · Department & Category Hierarchy" is prominent and readable; department labels in inner ring are bold and centered; category labels on outer ring clearly visible; legend on right with proper formatting. All text is dark and highly readable.
+      Data: Inner ring uses Okabe-Ito colors (#009E73, #D55E00, #0072B2, #CC79A7) for 4 departments. Outer ring subcategories use parent color with alpha variation (0.5–1.0) for distinction. All values displayed. First series (#009E73 green) is correct.
+      Legibility verdict: PASS – All elements clearly readable with good contrast against light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), never pure black. Maintains the same warmth as light render background.
-      Chrome: Title renders in light text (#F0EFE8), easily readable against dark background. Inner ring department labels display in light text, clearly legible. Outer ring category labels in light text on dark surface. Legend has light text (#B8B7B0) on dark elevated background (#242420). All chrome elements are well-lit and readable.
-      Data: Inner ring maintains identical colors to light render—green #009E73, orange #D55E00, blue #0072B2, reddish-purple #CC79A7. Outer ring uses same base colors with identical opacity gradients (0.5–1.0). Okabe-Ito palette is color-constant between themes as required. Wedge separators match background (#1A1A17), maintaining visual containment.
-      Legibility verdict: PASS. No dark-on-dark text failures; all labels use light colors on dark surface. Wedge edges blend seamlessly (feature not a flaw). Data colors remain distinct and readable.
-
-    Both renders meet theme-readability requirements: text is legible in both light and dark modes, data colors are identical, and only chrome (background, text, legend) changes between themes as specified.
+      Background: Warm near-black (#1A1A17) – correct for dark theme
+      Chrome: Title, department labels, category labels, and legend text are all rendered in light colors (light ink) for readability. Legend frame properly styled. No dark-on-dark failures detected.
+      Data: Colors are identical to light render – only chrome elements adapted. Okabe-Ito colors preserved (#009E73, #D55E00, #0072B2, #CC79A7 unchanged). Alpha variations in outer ring maintained. Brand green (#009E73) visibly present and readable.
+      Legibility verdict: PASS – All text clearly readable against dark background. No legibility issues.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -60,71 +49,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set: title 24pt, labels 16/12pt, legend 14pt;
-          all readable in both themes'
+        comment: All text readable in both light and dark themes, proper font sizes
+          and contrast
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Radial positioning prevents all overlapping; labels well-spaced
+        comment: Clean label placement, inner ring at 0.42 radius, outer ring at 0.82
+          radius, legend positioned right
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Both rings clearly visible; wedges distinctly defined; opacity gradient
-          aids visibility
+        comment: All wedges clearly visible, good ring separation, alpha variation
+          distinguishes subcategories
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; high contrast between series
+        comment: Okabe-Ito palette is colorblind-safe, no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format ideal for concentric rings; balanced margins; legend
-          positioned well
+        comment: Square format (3600×3600px) appropriate for donut chart, generous
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title 'donut-nested · matplotlib · anyplot.ai' correct format
+        comment: Descriptive title with values and percentages shown per segment
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; multi-series follows Okabe-Ito 1–4; backgrounds
-          correct for both themes; text colors theme-adaptive'
+        comment: 'First color #009E73, Okabe-Ito order followed, backgrounds correct,
+          both renders theme-correct'
     design_excellence:
-      score: 9
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured defaults with some custom touches (legend, alpha
-          blending) but not exceptional or publication-ready
+        passed: true
+        comment: Uses alpha variation in outer ring, consistent color families, intentional
+          design thinking
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Legend frame styling is present but minimal refinement beyond defaults
+        passed: true
+        comment: Clean styling, refined legend, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Clear visual hierarchy (size, color coding) guides viewer to budget
-          structure, but storytelling lacks emphasis or focal point
+        passed: true
+        comment: Clear hierarchy, color families aid grouping, budget values guide
+          narrative
     spec_compliance:
       score: 15
       max: 15
@@ -134,28 +124,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct nested donut with inner ring (departments) and outer ring
-          (categories)
+        comment: Correct nested donut chart with hierarchical structure
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All hierarchical features present: two levels, labels on major segments,
-          legend for all categories'
+        comment: Level 1 inner ring, Level 2 outer ring, values displayed, proper
+          aggregation
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Inner/outer ring mapping correct; data properly aggregated and positioned
+        comment: Angles map to values, all data represented, correct hierarchical
+          aggregation
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format 'donut-nested · matplotlib · anyplot.ai' correct; legend
-          labels match data
+        comment: Title format correct, legend labels match data, colors accurate
     data_quality:
       score: 15
       max: 15
@@ -165,22 +154,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all nested donut aspects: multiple departments (4), multiple
-          categories per department (3–4 each), clear hierarchical relationships'
+        comment: 4 departments with 3-4 subcategories each, complete representation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Budget allocation scenario is real, neutral, and comprehensible;
-          department and expense category names are plausible
+        comment: Budget allocation is plausible, neutral, realistic structure
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values in $K are realistic for budget context; proportions are plausible
-          and coherent
+        comment: Values $60K–$450K sensible for budget context
     code_quality:
       score: 10
       max: 10
@@ -190,34 +176,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save; no unnecessary
-          functions or classes'
+        comment: Simple, direct implementation
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data; no random elements; reproducible across runs
+        comment: Deterministic data, no random elements
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported; both are used
+        comment: Only necessary imports, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no over-engineering or fake UI elements
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png; uses current matplotlib API
+        comment: Saves as plot-{THEME}.png, current API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -225,23 +210,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good matplotlib patterns: ax.pie(), custom legend with handles,
-          theme-aware token system'
+        comment: Proper ax.pie() usage, theme-aware implementation
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Uses custom legend and alpha blending, but patterns are standard
-          matplotlib—could leverage library strengths more distinctively
-  verdict: REJECTED
+        passed: true
+        comment: Alpha variation, custom legend, radial label placement
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
   - annotations
   patterns:
-  - data-generation
+  - explicit-figure
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
