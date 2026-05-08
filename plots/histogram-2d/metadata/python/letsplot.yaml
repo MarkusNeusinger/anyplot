@@ -1,161 +1,174 @@
 library: letsplot
+language: python
 specification_id: histogram-2d
 created: '2025-12-25T20:11:49Z'
-updated: '2025-12-25T20:15:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510278070
+updated: '2026-05-08T05:40:28Z'
+generated_by: claude-haiku
+workflow_run: 25538574497
 issue: 2012
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/letsplot/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent use of viridis colormap for perceptually uniform color representation
-  - Realistic market research scenario with plausible customer data
-  - Clean KISS code structure with proper reproducibility (seed=42)
-  - Correct title format and descriptive axis labels with units
-  - Good bin resolution (25x25) that reveals density patterns clearly
+  - Excellent text legibility in both light and dark themes with explicitly sized
+    fonts
+  - 'Correct implementation of theme-adaptive colors: viridis data colors identical
+    across themes, chrome adapts perfectly'
+  - 'Perfect palette compliance: viridis for continuous density data, correct background
+    colors, proper text color tokens'
+  - Well-chosen realistic data scenario (customer age/spending) that clearly shows
+    the plot type's strength
+  - Clean, reproducible code structure with proper environment-variable theming
+  - Idiomatic letsplot usage with ggplot2-style composition
   weaknesses:
-  - Does not leverage lets-plot distinctive interactive features (could have used
-    tooltips or hover info)
-  - Grid/legend styling could be refined - legend appears somewhat distant from main
-    plot area
-  image_description: The plot displays a 2D histogram heatmap showing the joint distribution
-    of Customer Age (years) on the x-axis and Annual Spending ($k) on the y-axis.
-    The visualization uses a viridis colormap with colors ranging from dark purple
-    (low counts) through blue and teal to bright yellow/green (high counts around
-    20). The data shows a clear elliptical density pattern centered approximately
-    at age 42 and spending $55k, demonstrating positive correlation between age and
-    spending. The colorbar on the right shows "Count" ranging from about 5 to 20.
-    The title "histogram-2d · letsplot · pyplots.ai" appears at the top. The plot
-    uses a minimal theme with subtle gray grid lines.
+  - 'Design Excellence is solid but not exceptional: the aesthetic is well-configured
+    defaults rather than custom visual hierarchy or palette innovations'
+  - Data storytelling is clear but relies primarily on color gradation; could emphasize
+    insights through accent colors or focal-point sizing (though not required by spec)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Chrome: Title "histogram-2d · letsplot · anyplot.ai" in bold dark text (24pt). Axis labels "Customer Age (years)" and "Annual Spending ($k)" in dark text (20pt) with units. Tick labels in soft gray (#4A4A44, 16pt). All text clearly readable and explicitly sized.
+      Data: 2D histogram with rectangular bins using viridis colormap (dark purple to bright yellow). Density scale 5–25 counts shown in colorbar legend. Clear density clustering visible.
+      Grid: Subtle horizontal grid lines at 10% opacity, visible but not dominant.
+      Legibility verdict: PASS — all text is clearly readable in light theme, no unreadable elements.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title in light text (#F0EFE8, 24pt), axis labels in light text (20pt), tick labels in soft light gray (#B8B7B0, 16pt). All text clearly readable. No dark-on-dark failures.
+      Data: Identical viridis colormap to light render (purple to yellow) — data colors preserved perfectly. Same density scale and legend.
+      Grid: Subtle light-colored grid lines at 10% opacity, visible but not dominant.
+      Legibility verdict: PASS — all text is clearly readable in dark theme. Data colors are identical to light render (only chrome changed). No theme-readability issues.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is bold and readable at 24pt, axis labels at 20pt, tick labels
-          at 16pt. Slightly smaller than optimal for 4800px output but still clear.
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: No overlapping text; all labels cleanly spaced
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bin sizes are well-chosen (25x25), density variations are clearly
-          visible
+        comment: Histogram bins clearly visible across full density range; color gradation
+          from purple to yellow unambiguous
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses viridis colormap which is perceptually uniform and colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Good use of canvas space, plot fills most of the area. Minor: legend
-          could be positioned slightly better'
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes have descriptive labels with units: "Customer Age (years)"
-          and "Annual Spending ($k)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Viridis is perceptually uniform and colorblind-safe; excellent contrast
+          throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas with balanced margins; clean use of space
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with alpha, but legend positioning appears a bit far
-          from the plot area
+        comment: Descriptive labels with units; title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis for continuous data; correct theme-adaptive backgrounds and
+          text colors; data colors identical across themes
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults; professional but not exceptional design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, minimal spines, balanced whitespace; good refinement
+          visible
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Data choice shows clear correlation story; visual hierarchy through
+          color gradient
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 2D histogram/heatmap with rectangular bins
+        comment: Correct 2D histogram with geom_bin2d
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X and Y correctly assigned to continuous variables
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has colorbar showing count scale, uses viridis colormap as recommended
-      - id: SC-04
-        name: Data Range
+        comment: Colorbar present, bins set, viridis colormap used
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped; axes span appropriate ranges
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled "Count"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "histogram-2d · letsplot · pyplots.ai"'
+        comment: Title format correct; legend properly labeled
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows bivariate distribution with correlation, density variation
-          from sparse edges to dense center
+        comment: Shows joint distribution, density patterns, and correlation
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Customer age vs annual spending is a plausible market research scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Age range 18-75 and spending $5-120k are realistic values
+        comment: Customer age vs spending is realistic market-research scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Age 18-75, spending 5-120k are factually realistic
     code_quality:
       score: 10
       max: 10
@@ -165,40 +178,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: Linear flow; no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, pandas, lets_plot, os, shutil)
+        comment: All imports used; no extraneous dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Clean, Pythonic; sensible data clipping
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 0
-      max: 5
+        comment: Correct plot-{THEME}.png output; current letsplot API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert ggplot2-style grammar usage; high-level API
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
         max: 5
         passed: false
-        comment: Uses basic geom_bin2d which is standard ggplot2 grammar. Does not
-          leverage lets-plot specific interactive features or advanced capabilities
+        comment: Good theme system usage; demonstrates library-specific patterns
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
