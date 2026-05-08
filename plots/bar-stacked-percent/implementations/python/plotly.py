@@ -1,33 +1,40 @@
-""" pyplots.ai
+""" anyplot.ai
 bar-stacked-percent: 100% Stacked Bar Chart
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 94/100 | Created: 2025-12-25
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-08
 """
+
+import os
 
 import pandas as pd
 import plotly.graph_objects as go
 
 
-# Data: Energy mix by country (percentage breakdown)
-categories = ["Germany", "France", "UK", "Spain", "Italy", "Poland"]
-components = ["Renewables", "Nuclear", "Natural Gas", "Coal", "Other"]
+# Theme configuration
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Raw values (TWh) - will be normalized to 100%
+# Okabe-Ito palette - first color is always #009E73
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+
+# Data: Smartphone OS market share across world regions
+categories = ["North America", "South America", "Europe", "Africa", "Asia"]
+components = ["iOS", "Android", "Other"]
+
+# Market share percentages by region
 data = {
-    "Germany": [250, 65, 90, 105, 30],
-    "France": [120, 340, 45, 10, 25],
-    "UK": [145, 50, 130, 5, 20],
-    "Spain": [175, 55, 85, 15, 20],
-    "Italy": [115, 0, 145, 25, 15],
-    "Poland": [45, 0, 25, 130, 15],
+    "North America": [25, 72, 3],
+    "South America": [18, 78, 4],
+    "Europe": [22, 75, 3],
+    "Africa": [8, 88, 4],
+    "Asia": [15, 83, 2],
 }
 
-# Convert to percentages
-df = pd.DataFrame(data, index=components)
-df_percent = df.div(df.sum(axis=0), axis=1) * 100
-
-# Colors: Python Blue first, then colorblind-safe palette
-colors = ["#306998", "#FFD43B", "#45B39D", "#E74C3C", "#9B59B6"]
+df = pd.DataFrame(data, index=components).T
 
 # Create figure
 fig = go.Figure()
@@ -37,33 +44,63 @@ for i, component in enumerate(components):
         go.Bar(
             name=component,
             x=categories,
-            y=df_percent.loc[component].values,
-            marker_color=colors[i],
-            text=[f"{v:.1f}%" for v in df_percent.loc[component].values],
+            y=df[component].values,
+            marker=dict(color=OKABE_ITO[i], line=dict(width=0)),
+            text=[f"{v:.0f}%" for v in df[component].values],
             textposition="inside",
             textfont=dict(size=16, color="white"),
-            insidetextanchor="middle",
+            hovertemplate="<b>%{x}</b><br>%{fullData.name}: %{y:.0f}%<extra></extra>",
         )
     )
 
 # Layout for 4800x2700 px
 fig.update_layout(
     barmode="stack",
-    title=dict(text="bar-stacked-percent · plotly · pyplots.ai", font=dict(size=32), x=0.5, xanchor="center"),
-    xaxis=dict(title=dict(text="Country", font=dict(size=24)), tickfont=dict(size=20)),
+    title=dict(
+        text="bar-stacked-percent · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"
+    ),
+    xaxis=dict(
+        title=dict(text="Region", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
+        gridcolor=GRID,
+        linecolor=INK_SOFT,
+        linewidth=2,
+        showline=True,
+        showgrid=False,
+    ),
     yaxis=dict(
-        title=dict(text="Energy Share (%)", font=dict(size=24)), tickfont=dict(size=20), range=[0, 100], ticksuffix="%"
+        title=dict(text="Market Share (%)", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
+        range=[0, 100],
+        ticksuffix="%",
+        gridcolor=GRID,
+        linewidth=2,
+        linecolor=INK_SOFT,
+        showgrid=True,
+        showline=True,
     ),
     legend=dict(
-        font=dict(size=18), orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, traceorder="normal"
+        font=dict(size=18, color=INK),
+        bordercolor=INK_SOFT,
+        borderwidth=2,
+        orientation="h",
+        yanchor="bottom",
+        y=1.04,
+        xanchor="center",
+        x=0.5,
+        bgcolor=PAGE_BG,
     ),
-    template="plotly_white",
-    margin=dict(l=80, r=40, t=120, b=80),
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font=dict(color=INK),
+    margin=dict(l=100, r=40, t=140, b=100),
     bargap=0.2,
+    hovermode="x unified",
 )
 
-# Save as PNG (4800x2700)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
+fig.update_xaxes(showline=True, linewidth=2, linecolor=INK_SOFT, mirror=False)
+fig.update_yaxes(showline=True, linewidth=2, linecolor=INK_SOFT, mirror=False, side="left")
 
-# Save as HTML for interactivity
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
