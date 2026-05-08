@@ -1,14 +1,26 @@
-""" pyplots.ai
+"""anyplot.ai
 bar-stacked-percent: 100% Stacked Bar Chart
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 98/100 | Created: 2025-12-25
+Library: altair | Python 3.13
+Quality: pending | Created: 2026-05-08
 """
+
+import os
 
 import altair as alt
 import pandas as pd
 
 
-# Data - Energy mix by country (proportions normalized to 100%)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series is always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
+# Data - Energy mix by country
 data = pd.DataFrame(
     {
         "Country": [
@@ -59,11 +71,6 @@ data = pd.DataFrame(
     }
 )
 
-# Define color scheme - Python Blue, Python Yellow, and colorblind-safe additions
-color_scale = alt.Scale(
-    domain=["Fossil Fuels", "Nuclear", "Renewables", "Hydro"], range=["#306998", "#FFD43B", "#2ca02c", "#17becf"]
-)
-
 # Create 100% stacked bar chart
 chart = (
     alt.Chart(data)
@@ -74,11 +81,11 @@ chart = (
             "Value:Q",
             stack="normalize",
             axis=alt.Axis(labelFontSize=18, titleFontSize=22, format="%"),
-            title="Share of Energy Mix",
+            title="Share of Energy Mix (%)",
         ),
         color=alt.Color(
             "Source:N",
-            scale=color_scale,
+            scale=alt.Scale(domain=["Fossil Fuels", "Nuclear", "Renewables", "Hydro"], range=OKABE_ITO),
             legend=alt.Legend(
                 title="Energy Source",
                 titleFontSize=18,
@@ -96,14 +103,18 @@ chart = (
         ],
     )
     .properties(
-        width=1400,
-        height=800,
-        title=alt.Title("bar-stacked-percent \u00b7 altair \u00b7 pyplots.ai", fontSize=28, anchor="middle"),
+        width=1600,
+        height=900,
+        background=PAGE_BG,
+        title=alt.Title("bar-stacked-percent · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
     )
-    .configure_axis(grid=True, gridOpacity=0.3)
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.15, labelColor=INK_SOFT, titleColor=INK
+    )
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save as PNG and HTML
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save PNG and HTML
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
