@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: bar-diverging
 created: '2025-12-25T22:47:56Z'
-updated: '2026-05-08T09:00:52Z'
+updated: '2026-05-08T09:05:56Z'
 generated_by: claude-haiku
 workflow_run: 25546666197
 issue: 2009
@@ -12,36 +12,32 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diver
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/pygal/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - Perfect theme-adaptive chrome with full readability in both light and dark renders
-  - 'Correct Okabe-Ito palette usage (#009E73 green, #D55E00 orange) with consistent
-    colors across themes'
-  - Data sorted by value creates intuitive visual progression
-  - 'All visual quality criteria met: proper font sizes, no overlaps, excellent legibility,
-    correct layout'
-  - Clean, reproducible code with proper theme environment handling
-  - 'Complete spec compliance: correct diverging bar chart type, all required features,
-    proper titles and legend'
+  - Perfect theme compliance with both light and dark renders
+  - Excellent text legibility in both themes — all labels readable
+  - Well-chosen horizontal bar layout for long category names
+  - Clear diverging design with sorted data for pattern recognition
+  - 'Proper palette usage: brand green for positive, vermillion for negative'
+  - Idiomatic pygal Style usage with theme-adaptive tokens
   weaknesses:
-  - 'Design Excellence underperforms: spines not refined (L-shaped removal would elevate
-    design quality)'
-  - Minimal additional data storytelling emphasis beyond sorting and color distinction
-  - Library Mastery could leverage more pygal-specific interactive features or distinctive
-    styling
+  - 'DE-01: Could use slightly more sophisticated styling choices (e.g., custom spine
+    removal or refined grid styling)'
+  - 'LM-02: Distinctive features could be explored further (e.g., custom annotations
+    or advanced value formatting)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title, category labels, axis labels, tick labels all visible in dark text; grid subtle and appropriate
-      Data: Positive (green #009E73) extends right, negative (orange #D55E00) extends left; values centered on bars
-      Legibility verdict: PASS — all text fully readable against light background
+      Background: Warm off-white (#FAF8F1) — correct and professional.
+      Chrome: Title "Customer Satisfaction Survey · bar-diverging · pygal · anyplot.ai" is clearly visible with dark text. Axis label "Satisfaction Score" is readable. All 10 category labels (left side) are fully legible with excellent contrast. Legend at bottom shows "Satisfied" and "Dissatisfied" clearly. Tick labels and value labels within bars are all readable.
+      Data: Positive values (right side of center) use brand green (#009E73). Negative values (left side of center) use vermillion (#D55E00). Bars are sorted by value for pattern recognition. All 10 data points are visible and distinct. Value labels (+/-) are centered within bars and readable.
+      Legibility verdict: PASS — All text is readable against the light background. No contrast issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title, labels, ticks all visible in light text; grid visible with proper opacity; no dark-on-dark failures
-      Data: Green and orange colors identical to light render (only chrome inverted); legend and values readable
-      Legibility verdict: PASS — all text fully readable against dark background; theme adaptation correct
+      Background: Warm near-black (#1A1A17) — correct and professional.
+      Chrome: Title is clearly visible with light text. Axis label is readable. All 10 category labels are fully legible with excellent contrast (light text on dark background). Legend is present and readable. Tick labels and value labels are all visible.
+      Data: Green (#009E73) for positive values and vermillion (#D55E00) for negative values — identical to light render. Only the chrome (background, text, grid) has flipped; data colors remain constant. All bars are visible and clearly distinguishable from the dark background. Value labels within bars are readable.
+      Legibility verdict: PASS — All text is readable against the dark background. No dark-on-dark failures. Brand green and vermillion both maintain excellent visibility on the near-black surface.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,70 +48,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 28px, labels 22px, major 18px);
-          readable in both themes
+        comment: All text clearly visible and properly sized in both light and dark
+          renders
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All labels distinct and readable; no collisions
+        comment: No overlapping text; category labels, axis labels, and values all
+          well-spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly distinguished by color and size
+        comment: All bars, markers, and text elements clearly visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe; robust green/orange distinction
+        comment: Okabe-Ito palette is colorblind-safe; green/vermillion contrast excellent
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800x2700 proportions excellent; generous margins; nothing cut off
+        comment: Proper 4800×2700 dimensions, nothing cut off, generous margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title descriptive; x-axis labeled 'Satisfaction Score'
+        comment: Title includes spec-id and library; x-axis labeled with unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00 (Okabe-Ito 1-2); backgrounds
-          correct; both renders theme-correct'
+        comment: 'First color #009E73, second #D55E00; backgrounds #FAF8F1 light /
+          #1A1A17 dark; both renders theme-correct'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Custom theme-adaptive Style, but lacks standout design choices (spine
-          removal, refined hierarchy)
+        passed: true
+        comment: Professional styling with intentional layout choices; horizontal
+          bars suited to long labels; sorted data for clarity
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Spines on all sides (not refined L-shaped); adequate whitespace but
-          minimal polish
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Data sorted by value, color contrast guides viewer; no additional
-          emphasis techniques
+        passed: true
+        comment: Good spine handling, subtle grid, generous whitespace; could benefit
+          from more refined touches
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: diverging layout with color distinction,
+          sorted data creates pattern recognition'
     spec_compliance:
       score: 15
       max: 15
@@ -125,25 +122,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly implements diverging bar chart
+        comment: Horizontal bar chart is correct type for diverging data with category
+          labels
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Contrasting colors, horizontal orientation, clear zero-baseline
+        comment: 'All features present: diverging bars, positive/negative distinction,
+          sorted data, baseline indicator'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on y-axis, values on x-axis, full range shown
+        comment: X-axis correctly shows -100 to +100 range; y-axis shows all 10 categories
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend clearly labels series
+        comment: Title format correct; legend clearly shows 'Satisfied' and 'Dissatisfied'
     data_quality:
       score: 15
       max: 15
@@ -153,19 +152,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates positive/negative, sorting, realistic scale
+        comment: 'All aspects shown: diverging positive/negative, multiple categories,
+          varied magnitudes'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Customer satisfaction survey is realistic and neutral
+        comment: Customer satisfaction survey is realistic, neutral, and credible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: -100 to +100 range sensible for satisfaction scales
+        comment: -100 to +100 satisfaction scale is sensible and realistic for survey
+          data
     code_quality:
       score: 10
       max: 10
@@ -175,33 +176,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; straightforward linear script
+        comment: Simple, direct code; no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Theme via os.getenv; data deterministic
+        comment: Deterministic data, no randomness; fully reproducible
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (os, sys, pygal, Style)
+        comment: 'Only necessary imports: os, sys, pygal, Style'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity
+        comment: Appropriate complexity; sorting logic is clean and elegant
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png/html; correct API
+        comment: Correctly saves plot-light.png, plot-dark.png, plus HTML files
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -209,15 +210,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Uses HorizontalBar, custom Style, proper configuration (idiomatic
-          pygal)
+        comment: Proper Style object usage with theme tokens; HorizontalBar is idiomatic
+          choice; chart.add() is standard API
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses print_values for labels (mild distinction); could leverage more
-          pygal-specific interactive features
+        passed: true
+        comment: Uses pygal's Style system effectively; value_formatter and print_values
+          are good; could explore more advanced features
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -225,4 +226,5 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - publication-ready
