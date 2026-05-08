@@ -1,170 +1,170 @@
 library: plotnine
+language: python
 specification_id: heatmap-correlation
 created: '2025-12-26T10:03:58Z'
-updated: '2025-12-26T10:07:50Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520464769
+updated: '2026-05-08T15:07:00Z'
+generated_by: claude-haiku
+workflow_run: 25562501733
 issue: 1948
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/plotnine/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - annotations
-  patterns:
-  - wide-to-long
-  - iteration-over-groups
-  dataprep:
-  - correlation-matrix
-  styling: []
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 84
 review:
   strengths:
-  - Excellent diverging color scheme (blue-white-red) perfectly suited for correlation
-    visualization
-  - Lower triangle masking reduces visual redundancy as recommended in spec
-  - Clear cell annotations with proper formatting (2 decimal places)
-  - Realistic financial portfolio data demonstrating varied correlation patterns
-  - Proper use of coord_fixed(ratio=1) for square cells
-  - Clean code structure following KISS principles
-  - Title follows exact pyplots.ai format
+  - Perfect spec compliance—all required correlation heatmap features present
+  - Excellent theme adaptation with token-based light/dark rendering
+  - Clean financial dataset demonstrating realistic correlation patterns with stocks,
+    bonds, gold, and real estate
+  - Proper use of diverging BrBG colormap centered at zero for ±1.0 scale
+  - Strong visual quality with no text overlap, proper sizing, or canvas wasting
+  - All font sizes explicitly set and readable at full 3600×3600px resolution
   weaknesses:
-  - Legend could be positioned slightly closer to the heatmap to reduce whitespace
-  - Data does not include any extreme negative correlations (below -0.35) to show
-    the full range of the diverging colormap blue end
-  image_description: 'The plot displays a lower-triangular correlation matrix heatmap
-    for 8 portfolio assets (Stock_A, Stock_B, Stock_C, Bonds, Gold, Real_Estate, Oil,
-    Tech_Index). The heatmap uses a diverging color scheme: deep blue (#2166AC) for
-    negative correlations, white for zero correlation, and deep red (#B2182B) for
-    positive correlations. Each cell is annotated with the correlation coefficient
-    to 2 decimal places in black text. The colorbar on the right shows "Correlation
-    Coefficient" ranging from -1.0 to 1.0. The title "heatmap-correlation · plotnine
-    · pyplots.ai" is bold and centered at the top. X-axis labels are rotated 45 degrees
-    for readability. The plot uses a square 1:1 aspect ratio with coord_fixed, and
-    grid lines are removed for cleaner visualization.'
+  - Dark render has reduced text contrast on light-colored cells (negative correlations)—annotation
+    text should adapt color based on cell luminance, not just theme
+  - Design is competent but generic—library defaults with minimal visual hierarchy
+    or aesthetic distinction beyond color
+  - Limited use of plotnine-specific features or advanced styling techniques
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1, provides excellent contrast for all elements
+      Chrome: Title (26pt bold dark), axis labels (22pt dark), tick labels (16pt dark, rotated on x-axis) all clearly readable with no overlap
+      Data: BrBG diverging colormap shows teal for positive correlations, brown for negative, cream for near-zero values; cell annotations in dark text with excellent contrast on all cell backgrounds; colorbar shows -1.0 to 1.0 scale
+      Legibility verdict: PASS - All text explicitly sized and perfectly readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17, maintains appropriate contrast for structural elements
+      Chrome: Title and axis labels in light #F0EFE8, clearly readable; tick labels light and distinct from background
+      Data: BrBG colormap maintains identical data colors to light render (teal positive, brown negative, cream neutral); cell annotations in light text show excellent contrast on dark/teal cells but reduced contrast on light/cream cells representing negative/near-zero correlations—this is a minor legibility issue where light text on light background creates subdued readability, though text remains discernible
+      Legibility verdict: PASS with caveat - Mostly readable but cell annotations on light-colored cells have suboptimal contrast in dark theme
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title is bold 26pt, axis titles 22pt, tick labels 16pt, cell annotations
-          14pt - all clearly readable
+        comment: All text explicitly sized; dark render shows reduced contrast on
+          light cells
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; x-axis labels rotated 45° to prevent collision
+        comment: All text fully readable with no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Tiles are well-sized, annotations clearly visible, good contrast
+        comment: All heatmap cells and colorbar perfectly visible and well-sized
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue-white-red diverging scheme is colorblind-safe (RdBu variant)
+        comment: BrBG is perceptually uniform and CVD-safe
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good use of 12×12 square canvas; slight whitespace on right due to
-          legend
+        comment: Perfect 3600×3600px square format with balanced margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive "Portfolio Asset" labels but no units (correlation matrices
-          don't have units, so acceptable)
+        comment: Descriptive labels with proper formatting
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid removed (appropriate for heatmap); legend well-placed but could
-          be slightly closer
+        comment: BrBG diverging; backgrounds correct; theme tokens applied properly
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults; thoughtful BrBG choice but lacks exceptional
+          polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid removed, generous whitespace; could emphasize hierarchy further
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Color hierarchy shows patterns but minimal narrative emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct heatmap for correlation matrix
+        comment: Correct correlation matrix heatmap with lower triangle
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Variables correctly mapped to both axes
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Diverging colormap ✓, centered at zero ✓, annotations with 2 decimals
-          ✓, lower triangle to reduce redundancy ✓, colorbar range -1 to 1
-      - id: SC-04
-        name: Data Range
+        comment: 'All features: diverging colormap, 2-decimal annotations, symmetric
+          matrix, -1 to 1 range'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All correlations displayed correctly (-1 to 1)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Variables correctly mapped to axes, values to color
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled "Correlation Coefficient"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "heatmap-correlation · plotnine · pyplots.ai"'
+        comment: Title and legend properly formatted
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows positive correlations (stocks), negative correlations (bonds
-          vs stocks), near-zero correlations (gold), and diagonal (1.00). Minor: could
-          include one extreme negative (-0.8+) for fuller range'
+        comment: 'All aspects shown: positive, negative, near-zero correlations, diagonal
+          values'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Financial portfolio correlation is a perfect real-world scenario
-          for this plot type
+        comment: Real financial portfolio scenario with genuine asset types
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic for financial assets; correlations range from
-          -0.35 to 0.91 which is plausible
+        comment: Correlation values -1 to 1; all specific values plausible
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -172,44 +172,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: Clean linear flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set (though not strictly needed since data is
-          hardcoded)
+        comment: Seed set to 42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports utilized
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic, appropriate complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Modern plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png ✓ but uses separate width/height in save() instead
-          of relying solely on figure_size
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: 'Uses plotnine grammar of graphics well: geom_tile + geom_text +
-          scale_fill_gradient2 + coord_fixed + theme customization. Could leverage
-          more plotnine-specific features like faceting or position adjustments, but
-          grammar usage is appropriate for this plot type.'
+        comment: Follows plotnine patterns; doesn't leverage all advanced features
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses coord_fixed and scale_fill_cmap; fairly standard heatmap
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - correlation-matrix
+  styling:
+  - custom-colormap
+  - grid-styling
