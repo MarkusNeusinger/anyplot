@@ -1,26 +1,32 @@
-""" pyplots.ai
+"""anyplot.ai
 scatter-3d: 3D Scatter Plot
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-26
+Library: altair | Python 3.13
+Quality: pending | Created: 2025-12-26
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
 
 
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+
 # Data - create 3D clusters to demonstrate spatial relationships
 np.random.seed(42)
 
 n_points = 150
 
-# Create three distinct clusters in 3D space (positioned for better canvas coverage)
+# Create three distinct clusters in 3D space
 clusters = []
-centers = [
-    (2.5, 2.5, 2.5),  # Cluster 1 - upper-right quadrant
-    (-2.5, -1.5, 1.0),  # Cluster 2 - left-center area
-    (0.5, 0.0, -2.5),  # Cluster 3 - lower-center area
-]
+centers = [(2.5, 2.5, 2.5), (-2.5, -1.5, 1.0), (0.5, 0.0, -2.5)]
 
 for i, (cx, cy, cz) in enumerate(centers):
     n_cluster = n_points // 3
@@ -54,13 +60,13 @@ df["opacity"] = 0.65 + 0.35 * (df["depth"] - depth_min) / (depth_max - depth_min
 # Scatter chart with clusters
 scatter = (
     alt.Chart(df)
-    .mark_circle(size=280, strokeWidth=1.5, stroke="white")
+    .mark_circle(size=280, strokeWidth=1.5, stroke=PAGE_BG)
     .encode(
-        x=alt.X("x_proj:Q", axis=alt.Axis(title="X-Y Plane (Horizontal)", labelFontSize=18, titleFontSize=22)),
-        y=alt.Y("z_proj:Q", axis=alt.Axis(title="Z Axis (Vertical)", labelFontSize=18, titleFontSize=22)),
+        x=alt.X("x_proj:Q", axis=alt.Axis(title="X Axis", labelFontSize=18, titleFontSize=22)),
+        y=alt.Y("z_proj:Q", axis=alt.Axis(title="Z Axis", labelFontSize=18, titleFontSize=22)),
         color=alt.Color(
             "cluster:N",
-            scale=alt.Scale(domain=["Cluster 1", "Cluster 2", "Cluster 3"], range=["#306998", "#FFD43B", "#E07B39"]),
+            scale=alt.Scale(domain=["Cluster 1", "Cluster 2", "Cluster 3"], range=OKABE_ITO),
             legend=alt.Legend(title="Cluster", titleFontSize=20, labelFontSize=16, orient="top-right", offset=10),
         ),
         opacity=alt.Opacity("opacity:Q", legend=None),
@@ -75,26 +81,24 @@ scatter = (
 )
 
 # Add pan and zoom interactivity
-pan_zoom = alt.selection_interval(bind="scales", encodings=["x", "y"])
+pan_zoom = scatter.interactive()
 
 # Final chart
 chart = (
-    scatter.add_params(pan_zoom)
-    .properties(
+    pan_zoom.properties(
         width=1600,
         height=900,
-        title=alt.Title(
-            text="scatter-3d · altair · pyplots.ai",
-            subtitle="Isometric projection with depth-based opacity",
-            fontSize=28,
-            subtitleFontSize=18,
-            subtitleColor="#666666",
-        ),
+        background=PAGE_BG,
+        title=alt.Title(text="scatter-3d · altair · anyplot.ai", fontSize=28),
     )
-    .configure_axis(grid=True, gridOpacity=0.3, gridDash=[6, 4])
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_axis(
+        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK
+    )
+    .configure_title(color=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
 # Save outputs
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
