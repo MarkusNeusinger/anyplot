@@ -1,0 +1,59 @@
+name: "Impl: Review Retry"
+run-name: "Review retry: PR #${{ github.event.pull_request.number }}"
+
+# Listener that re-dispatches impl-review.yml exactly once when a PR is
+# labeled `ai-review-failed`. The review workflow already has its own
+# in-step retry; if it bails out and applies that label, this listener
+# gives it one more fresh dispatch. Repeated failures (label re-applied
+# after rescue) are left to watchdog-stuck-jobs.yml.
+
+on:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  pull-requests: write
+  issues: write
+  actions: write
+
+concurrency:
+  group: impl-review-retry-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  rescue:
+    if: github.event.label.name == 'ai-review-failed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Re-dispatch review
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ github.event.pull_request.number }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+
+          if [[ ! "$BRANCH" =~ ^implementation/ ]]; then
+            echo "::notice::Non-implementation branch ($BRANCH); skipping"
+            exit 0
+          fi
+
+          LABELS=$(gh pr view "$PR_NUM" --json labels --jq '[.labels[].name] | join(" ")')
+          if echo " $LABELS " | grep -q " ai-review-rescued "; then
+            echo "::notice::PR #$PR_NUM already rescued once; watchdog will handle further escalation"
+            exit 0
+          fi
+
+          gh label create ai-review-rescued \
+            --color 5319e7 \
+            --description "Review re-dispatched once after ai-review-failed" \
+            2>/dev/null || true
+
+          # Add the rescue marker before removing the trigger label so a
+          # crash between the two operations leaves the PR in a state
+          # the watchdog can detect (still review-failed, not rescued).
+          gh pr edit "$PR_NUM" --add-label "ai-review-rescued"
+          gh pr edit "$PR_NUM" --remove-label "ai-review-failed" 2>/dev/null || true
+
+          echo "::notice::Re-dispatching impl-review for PR #$PR_NUM"
+          gh workflow run impl-review.yml -f pr_number="$PR_NUM"
