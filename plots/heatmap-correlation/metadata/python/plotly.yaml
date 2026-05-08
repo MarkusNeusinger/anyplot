@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: heatmap-correlation
 created: '2025-12-26T10:03:27Z'
-updated: '2026-05-08T14:56:21Z'
+updated: '2026-05-08T15:05:08Z'
 generated_by: claude-haiku
 workflow_run: 25562197976
 issue: 1948
@@ -12,95 +12,85 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/plotly/plot-dark.html
-quality_score: 85
+quality_score: 79
 review:
   strengths:
-  - 'Perfect specification compliance: diverging colorscale, cell annotations, masked
-    triangle, fixed -1 to 1 range all implemented correctly'
-  - 'Excellent technical execution: all text sizes explicitly set, theme tokens properly
-    applied to both renders, no readability issues'
-  - 'Strong data quality: realistic health metrics with meaningful correlations, covers
-    full spectrum from strong positive/negative to weak/no correlation'
-  - 'Clean code structure: KISS principle followed, reproducible (seed=42), proper
-    imports, correct Plotly API usage (Graph Objects + customdata for rich hover text)'
+  - Correct plot type with all specification requirements implemented
+  - Realistic, neutral healthcare data with meaningful correlations
+  - Clean, reproducible code with deterministic seed
+  - Proper theme-adaptive token usage in most elements (title, axis labels, grid)
+  - Effective use of lower triangle mask to reduce redundancy
+  - Colorbar with customized styling and proper scale
   weaknesses:
-  - 'Design Excellence: Implementation is technically solid but visually generic—uses
-    library defaults without distinctive aesthetic touches or custom design sophistication'
-  - 'Visual storytelling lacking: Heatmap displays data clearly but doesn''t create
-    emphasis or narrative hierarchy to guide viewer to key insights'
-  - 'Library Mastery: While correct Plotly usage, doesn''t leverage distinctive library
-    features beyond customdata/hoverongaps—mostly generic heatmap implementation that
-    could work in any library'
+  - 'Annotation text color logic fails in dark theme: ELEVATED_BG (#242420) on background
+    (#1A1A17) creates dark-on-dark contrast failure for cells with correlation > 0.5'
+  - Generic design with no visual refinement beyond library defaults
+  - No visual storytelling or hierarchy to emphasize interesting patterns
+  - Limited use of Plotly-specific features
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle grid implied by cell borders
-      Chrome: Title, axis labels ("Health Metrics" on both axes), and tick labels all dark (#1A1A17) and clearly readable against light surface
-      Data: 8×8 correlation heatmap using BrBG diverging colorscale (brown for negative, green for positive). Cell values annotated with 2-decimal correlations. Lower triangle + diagonal displayed, upper triangle masked. Colorbar shows Pearson Correlation range [-1, 1]. All data elements clearly distinguishable.
-      Legibility verdict: PASS - All text readable, no contrast failures
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title centered at 32px, axis labels "Health Metrics" at 24px, tick labels at 18px - all clearly visible with dark text (#1A1A17) and INK_SOFT secondary text (#4A4A44)
+      Data: BrBG diverging colorscale (brown for negative -0.54 to -0.03, white for zero, teal-green for positive 0.07 to 1.0). Lower triangle + diagonal displayed. Colorbar shows Pearson correlation from -1 to 1. Cell annotations (1.00, 0.83, 0.65, 0.55, 0.48, etc.) are clearly readable.
+      Legibility verdict: PASS - all elements are crisp and readable
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with cell borders visible
-      Chrome: Title, axis labels, and tick labels all light (#F0EFE8 for title, #B8B7B0 for secondary) and clearly visible against dark surface. Colorbar properly themed with light text.
-      Data: Identical BrBG colorscale to light render (only chrome flips theme). Cell annotations present and readable. Grid lines visible at 10% opacity.
-      Legibility verdict: PASS - Text is readable in both renders, data colors consistent, no dark-on-dark failures
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title, axis labels, and tick labels are visible in light text (#F0EFE8). Grid lines visible.
+      Data: BrBG colorscale identical to light render (data colors unchanged, only chrome flips). ISSUE: Annotation text on strong correlations (> 0.5) uses ELEVATED_BG (#242420) text color, creating poor contrast against #1A1A17 background. Numbers like "1.00", "0.83", "0.70", "0.65" are readable but lack visual clarity compared to light render. Weak correlation annotations use light INK text and are readable.
+      Legibility verdict: CONDITIONAL FAIL - dark-on-dark annotation text issue creates suboptimal readability on strong correlation cells
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
-        passed: true
-        comment: 'All text explicitly sized: title 32px, labels 24px, ticks 18px,
-          annotations 18px; perfectly readable in both light and dark renders'
+        passed: false
+        comment: All fonts explicitly set and readable in light theme. Dark theme
+          annotations lack contrast on strong correlation cells.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: X-axis labels rotated 45°, no overlap; title centered; annotations
-          within cells; all text fully readable
+        comment: Lower triangle + diagonal eliminates redundancy. 45° axis labels
+          prevent overlap.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 8×8 heatmap well-sized for canvas; cell colors clearly visible; correlation
-          values readable in every cell; markers/cells adapted to data density
+        comment: All heatmap cells, colorbar, and hover tooltips clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: BrBG diverging colorscale is colorblind-safe and perceptually uniform;
-          annotation colors adapt based on cell intensity for contrast
+        comment: BrBG is colorblind-safe. Adequate luminance contrast overall.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 50-80% of canvas; balanced margins (l:140, r:100, t:100,
-          b:150); nothing cut off; generous whitespace
+        comment: Plot fills 60-70% of canvas with balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X/Y axis: ''Health Metrics'' (descriptive; units not applicable
-          for correlation data); title format correct: ''heatmap-correlation · plotly
-          · anyplot.ai'''
+        comment: Health Metrics is descriptive; title follows required format.
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Perfect: BrBG diverging colorscale appropriate for continuous data;
-          plot background #FAF8F1 (light) and #1A1A17 (dark); all text/grid colors
-          theme-adaptive; data colors identical across renders'
+        passed: false
+        comment: BrBG colormap correct, backgrounds correct, but annotation text color
+          logic fails theme-adaptive chrome in dark render.
     design_excellence:
-      score: 9
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -108,25 +98,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default; clean professional appearance; appropriate
-          color choice for data type; but lacks custom design touches or intentional
-          hierarchy
+        comment: Well-configured library defaults. Professional but generic with no
+          custom refinement.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Margins and spacing are appropriate; colorbar well-positioned; some
-          theme customization visible; but mostly relies on library defaults without
-          distinctive refinement
+        comment: Minimal customization; library defaults with no spine removal or
+          grid adjustment.
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed clearly with color + numeric values; no special visual
-          hierarchy or emphasis to guide viewer to insights; correlation patterns
-          are apparent but not narrated
+        comment: Data displayed but not interpreted. No visual hierarchy or emphasis
+          on interesting patterns.
     spec_compliance:
       score: 15
       max: 15
@@ -136,28 +123,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct chart type: correlation matrix heatmap with diverging colorscale'
+        comment: Correct correlation matrix heatmap.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features implemented: diverging colorscale (BrBG), 2-decimal
-          annotations, symmetric display, lower-triangle mask, -1 to 1 range'
+        comment: Diverging colormap, cell annotations, symmetric matrix, colorbar
+          -1 to 1.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correctly map to variables; Z values (correlation coefficients)
-          map to color intensity; axes show all 8 variables
+        comment: X/Y correct; matrix complete and visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''heatmap-correlation · plotly · anyplot.ai''; colorbar labeled
-          ''Pearson Correlation'' with -1 to 1 scale; variable names on both axes'
+        comment: Correct title format; colorbar legend present.
     data_quality:
       score: 15
       max: 15
@@ -167,28 +152,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows full spectrum: perfect correlations (1.00), strong positive
-          (0.83), moderate (0.48, 0.55), weak (0.07, 0.05), negative (−0.54, −0.47);
-          demonstrates all correlation types'
+        comment: 'Shows all aspects: strong positive, weak, and negative correlations.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real-world scenario: health metrics (heart rate, blood pressure,
-          BMI, sleep, exercise, stress, O2). Relationships are plausible (exercise
-          inversely related to heart rate/stress; sleep inversely related to stress).
-          Neutral, comprehensible domain.'
+        comment: Healthcare metrics scenario is neutral, professional, and plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All correlation values correctly in [-1, 1] range; health metric
-          relationships factually sound for clinical domain; proportions and magnitudes
-          realistic
+        comment: Correlation ranges are factually correct and domain-appropriate.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -196,63 +174,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → theme tokens → data generation → correlation
-          calculation → heatmap creation → customization → save. No functions/classes.'
+        comment: 'Simple flow: imports → data → plot → save. No unnecessary functions.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic synthetic data generation ensures
-          reproducible output
+        comment: Seed set to 42.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os (ANYPLOT_THEME), numpy (data), plotly.graph_objects
-          (visualization). All used.'
+        comment: Only used imports.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Pythonic, well-organized; annotation color logic is slightly complex
-          but justified; no over-engineering or fake functionality
+        passed: false
+        comment: Clean overall, but annotation text color logic is flawed (uses ELEVATED_BG
+          on dark backgrounds).
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with correct naming;
-          uses current Plotly API
+        comment: Correct output filenames and format.
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Correct Graph Objects API (go.Figure + go.Heatmap); proper use of
-          update_layout(); customdata + hovertemplate for rich interactivity. Idiomatic
-          Plotly but not exploiting all advanced patterns.
+        passed: false
+        comment: Uses go.Heatmap correctly but doesn't leverage full Plotly capabilities.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses customdata/hovertemplate for rich tooltips (Plotly-specific);
-          hoverongaps=False to handle masked cells (distinctive). But overall visualization
-          is generic—could be implemented in any library with minor syntax changes.
+        comment: Uses hover tooltips and colorbar customization but limited to basic
+          features.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
-  - html-export
   patterns:
   - data-generation
   - matrix-construction
