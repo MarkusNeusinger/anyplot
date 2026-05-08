@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dot-matrix-proportional: Dot Matrix Chart for Proportional Counts
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 86/100 | Created: 2026-05-08
@@ -63,12 +63,17 @@ plot = (
     + geom_point(size=9)
     + scale_color_manual(values=OKABE_ITO, labels=legend_labels)
     + coord_fixed()
-    + labs(title="dot-matrix-proportional · plotnine · anyplot.ai", color="")
+    + labs(
+        title="dot-matrix-proportional · plotnine · anyplot.ai",
+        subtitle="Household Solar Panel Adoption Survey  ·  n = 100 homes",
+        color="",
+    )
     + theme_void()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        plot_title=element_text(color=INK, size=24, ha="center"),
+        plot_title=element_text(color=INK, size=24, ha="left", weight="bold"),
+        plot_subtitle=element_text(color=INK_SOFT, size=18, ha="left"),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_text=element_text(color=INK_SOFT, size=16),
         legend_title=element_text(color=INK, size=16),
@@ -79,4 +84,4 @@ plot = (
 )
 
 # Save
-ggsave(plot, filename=f"plot-{THEME}.png", dpi=300, width=12, height=12)
+ggsave(plot, filename=f"plot-{THEME}.png", dpi=300, width=12, height=10)
