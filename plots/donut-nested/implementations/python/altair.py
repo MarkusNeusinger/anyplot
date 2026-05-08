@@ -1,91 +1,96 @@
-""" pyplots.ai
+""" anyplot.ai
 donut-nested: Nested Donut Chart
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-25
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-08
 """
+
+import os
 
 import altair as alt
 import pandas as pd
 
 
-# Data - Budget allocation by department (inner) and expense categories (outer)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
+# Data - Market share by region (inner) and product lines within each region (outer)
 data = {
-    "level_1": [
-        "Engineering",
-        "Engineering",
-        "Engineering",
-        "Engineering",
-        "Marketing",
-        "Marketing",
-        "Marketing",
-        "Sales",
-        "Sales",
-        "Sales",
-        "Operations",
-        "Operations",
-        "Operations",
-        "Operations",
-    ],
+    "level_1": ["Americas", "Americas", "Americas", "EMEA", "EMEA", "EMEA", "EMEA", "Asia", "Asia", "Asia", "Asia"],
     "level_2": [
-        "Salaries",
-        "Equipment",
-        "Software",
+        "Cloud Services",
+        "Software Licenses",
+        "Consulting",
+        "Cloud Services",
+        "Software Licenses",
+        "Hardware",
+        "Support Services",
+        "Cloud Services",
+        "Hardware",
+        "Software Licenses",
         "Training",
-        "Digital Ads",
-        "Events",
-        "Content",
-        "Commissions",
-        "Travel",
-        "Tools",
-        "Facilities",
-        "IT Support",
-        "Logistics",
-        "HR",
     ],
-    "value": [450, 120, 80, 50, 200, 150, 100, 180, 120, 50, 160, 100, 90, 50],
+    "value": [420, 280, 150, 320, 240, 180, 160, 380, 200, 220, 140],
 }
 
 df = pd.DataFrame(data)
 
 # Calculate parent totals for inner ring
 inner_df = df.groupby("level_1", as_index=False)["value"].sum()
-inner_df["level_2"] = inner_df["level_1"]  # Use level_1 as label for inner ring
+inner_df["level_2"] = inner_df["level_1"]
 
-# Color palette - consistent color families per parent category
-# Python Blue family for Engineering, Yellow family for Marketing,
-# Teal family for Sales, Purple family for Operations
-color_map_outer = {
-    "Engineering": {"Salaries": "#306998", "Equipment": "#4A89B5", "Software": "#6BA3C8", "Training": "#8DBDD8"},
-    "Marketing": {"Digital Ads": "#FFD43B", "Events": "#FFDD66", "Content": "#FFE699"},
-    "Sales": {"Commissions": "#2D9D78", "Travel": "#4DB891", "Tools": "#6FD3AB"},
-    "Operations": {"Facilities": "#7B68A6", "IT Support": "#9683B8", "Logistics": "#B19FCA", "HR": "#CCBBDC"},
-}
+# Color mapping for consistent color families per parent category
+# Use Okabe-Ito palette positions with variations for subcategories
+color_map = {}
+for i, parent in enumerate(inner_df["level_1"]):
+    parent_color = OKABE_ITO[i % len(OKABE_ITO)]
+    parent_children = df[df["level_1"] == parent]["level_2"].tolist()
+    color_map[parent] = {}
+    for j, child in enumerate(parent_children):
+        # Create lighter shades of the parent color for children
+        base_rgb = int(parent_color[1:3], 16), int(parent_color[3:5], 16), int(parent_color[5:7], 16)
+        # Use different lightness adjustments for each child
+        if j == 0:
+            color_map[parent][child] = parent_color  # Full saturation
+        else:
+            # Lighter variants for subsequent children
+            factor = 1 + (j * 0.2)
+            lighter_rgb = tuple(min(255, int(c * factor)) for c in base_rgb)
+            color_map[parent][child] = "#{:02x}{:02x}{:02x}".format(*lighter_rgb)
 
-# Flatten color map for outer ring
+# Assign colors to outer ring items
 outer_colors = []
 for _, row in df.iterrows():
-    outer_colors.append(color_map_outer[row["level_1"]][row["level_2"]])
+    outer_colors.append(color_map[row["level_1"]][row["level_2"]])
 df["color"] = outer_colors
 
-# Inner ring colors (darker shade per category)
-inner_color_map = {"Engineering": "#1F4A66", "Marketing": "#D4A800", "Sales": "#1A7553", "Operations": "#5A4980"}
+# Inner ring colors (use Okabe-Ito positions)
+inner_color_map = {}
+for i, parent in enumerate(inner_df["level_1"]):
+    inner_color_map[parent] = OKABE_ITO[i % len(OKABE_ITO)]
 inner_df["color"] = inner_df["level_1"].map(inner_color_map)
 
 # Format values for tooltip
-df["formatted_value"] = df["value"].apply(lambda x: f"${x}K")
-inner_df["formatted_value"] = inner_df["value"].apply(lambda x: f"${x}K")
+df["formatted_value"] = df["value"].apply(lambda x: f"${x}M")
+inner_df["formatted_value"] = inner_df["value"].apply(lambda x: f"${x}M")
 
 # Outer ring (child categories)
 outer_ring = (
     alt.Chart(df)
-    .mark_arc(innerRadius=280, outerRadius=400, stroke="white", strokeWidth=3)
+    .mark_arc(innerRadius=280, outerRadius=420, stroke=PAGE_BG, strokeWidth=3)
     .encode(
         theta=alt.Theta("value:Q", stack=True),
         color=alt.Color("color:N", scale=None, legend=None),
         tooltip=[
-            alt.Tooltip("level_1:N", title="Department"),
-            alt.Tooltip("level_2:N", title="Category"),
-            alt.Tooltip("formatted_value:N", title="Budget"),
+            alt.Tooltip("level_1:N", title="Region"),
+            alt.Tooltip("level_2:N", title="Product"),
+            alt.Tooltip("formatted_value:N", title="Revenue"),
         ],
     )
 )
@@ -93,26 +98,26 @@ outer_ring = (
 # Inner ring (parent categories)
 inner_ring = (
     alt.Chart(inner_df)
-    .mark_arc(innerRadius=140, outerRadius=260, stroke="white", strokeWidth=3)
+    .mark_arc(innerRadius=120, outerRadius=260, stroke=PAGE_BG, strokeWidth=3)
     .encode(
         theta=alt.Theta("value:Q", stack=True),
         color=alt.Color("color:N", scale=None, legend=None),
-        tooltip=[alt.Tooltip("level_1:N", title="Department"), alt.Tooltip("formatted_value:N", title="Total Budget")],
+        tooltip=[alt.Tooltip("level_1:N", title="Region"), alt.Tooltip("formatted_value:N", title="Total Revenue")],
     )
 )
 
-# Labels for inner ring (department names)
+# Labels for inner ring (region names)
 inner_labels = (
     alt.Chart(inner_df)
-    .mark_text(radius=200, fontSize=22, fontWeight="bold", color="white")
+    .mark_text(radius=185, fontSize=24, fontWeight="bold", color=INK)
     .encode(theta=alt.Theta("value:Q", stack=True), text="level_1:N")
 )
 
-# Labels for outer ring (show all, but only for larger segments)
-df["label"] = df.apply(lambda row: row["level_2"] if row["value"] >= 100 else "", axis=1)
+# Labels for outer ring (show labels for larger segments)
+df["label"] = df.apply(lambda row: row["level_2"] if row["value"] >= 150 else "", axis=1)
 outer_labels = (
     alt.Chart(df)
-    .mark_text(radius=340, fontSize=16, color="#333333")
+    .mark_text(radius=360, fontSize=16, color=INK_SOFT)
     .encode(theta=alt.Theta("value:Q", stack=True), text="label:N")
 )
 
@@ -120,13 +125,15 @@ outer_labels = (
 chart = (
     alt.layer(inner_ring, outer_ring, inner_labels, outer_labels)
     .properties(
-        width=1200,
-        height=1200,
-        title=alt.Title("donut-nested · altair · pyplots.ai", fontSize=32, anchor="middle", offset=20),
+        width=1600,
+        height=1600,
+        background=PAGE_BG,
+        title=alt.Title("donut-nested · altair · anyplot.ai", fontSize=32, anchor="middle", offset=20, color=INK),
     )
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, stroke=None, strokeWidth=0)
+    .configure_title(color=INK)
 )
 
 # Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
