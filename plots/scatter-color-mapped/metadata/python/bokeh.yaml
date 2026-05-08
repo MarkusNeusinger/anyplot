@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: scatter-color-mapped
 created: '2025-12-26T09:45:17Z'
-updated: '2026-05-08T12:53:15Z'
+updated: '2026-05-08T12:58:27Z'
 generated_by: claude-haiku
 workflow_run: 25556383538
 issue: 2004
@@ -12,35 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/bokeh/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Excellent visual quality with perfect theme adaptation—text legible in both light
-    and dark renders, data colors identical across themes
-  - Perfect spec compliance—all required features present and properly labeled
-  - Clean code structure with proper reproducibility (seeded random data)
-  - Proper use of bokeh patterns (ColumnDataSource, linear_cmap, HoverTool)
-  - Good layout with appropriate whitespace and proportions
-  - Viridis colormap correctly applied for continuous data
+  - Perfect Visual Quality (30/30) with all text explicitly sized and readable in
+    both light and dark themes
+  - 'Flawless theme compliance: both renders perfectly themed with identical data
+    colors and appropriate chrome adaptation'
+  - 'Complete spec adherence: scatter plot with continuous viridis colormap, colorbar
+    legend, and interactive hover tooltips'
+  - Clean, reproducible code with proper theme tokenization for light/dark rendering
+  - Perceptually uniform viridis colormap appropriate for scientific intensity visualization
   weaknesses:
-  - Generic design without custom styling or visual refinement—relies on default bokeh
-    appearance
-  - Limited use of bokeh's distinctive features—HoverTool and ColorBar are standard
-    implementations
-  - No visual hierarchy or data storytelling emphasis—plot shows data clearly but
-    doesn't guide viewer through insights
+  - Design Excellence (12/20) relies on library defaults without custom aesthetic
+    sophistication
+  - Could leverage more bokeh-specific advanced features (callbacks, interactive selection
+    tools) for higher Library Mastery score
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white around #FAF8F1, matching spec exactly
-      Chrome: Title, axis labels, and tick labels all in appropriate dark/soft colors (#1A1A17, #4A4A44), clearly readable
-      Data: Scatter points color-mapped with viridis (purple to yellow), showing 150 points with clear intensity gradient
-      Legibility verdict: PASS - all text readable, proper contrast
+      Background: Warm off-white (#FAF8F1), clean and neutral
+      Chrome: Title, axis labels, tick labels all in dark text (INK #1A1A17, INK_SOFT #4A4A44), clearly readable at 28pt, 22pt, 18pt respectively
+      Data: 150 scatter points with viridis colormap gradient (purple to yellow), size=35, alpha=0.8, well-differentiated
+      Grid: Subtle (alpha=0.10), visible but non-intrusive
+      Colorbar: Clear label "Intensity (magnitude)", positioned right, readable
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black around #1A1A17, matching spec exactly
-      Chrome: Title, axis labels in light colors (#F0EFE8, #B8B7B0), all readable with no dark-on-dark failures
-      Data: Viridis colormap identical to light render (purple to yellow gradient preserved), only chrome adapted
-      Legibility verdict: PASS - all text readable, proper light-on-dark contrast throughout
+      Background: Warm near-black (#1A1A17), high contrast
+      Chrome: Title, axis labels, tick labels all in light text (INK #F0EFE8, INK_SOFT #B8B7B0), clearly visible against dark background
+      Data: Identical viridis colormap progression as light render (purple to yellow) - confirming theme-independent data colors
+      Grid: Subtle, visible
+      Colorbar: Light-colored frame and text, readable
+      Legibility verdict: PASS - No dark-on-dark failures. All text readable. Data colors identical to light render.
+
+    Both renders pass theme-readability check. Chrome correctly flips between light/dark while data remains consistent.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,19 +56,21 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes
+        comment: All font sizes explicitly set (28pt, 22pt, 18pt); perfect readability
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements, clean layout
+        comment: Zero text collisions; all elements well-spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers clearly visible and distinguishable
+        comment: Markers optimally sized for 150-point density; colormap gradient
+          clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -75,22 +82,23 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Excellent proportions, proper whitespace, nothing cut off
+        comment: Plot fills 65% of canvas; generous balanced margins; colorbar positioned
+          cleanly
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units, proper title format
+        comment: Title format correct; axes labeled with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Viridis correct for continuous data, backgrounds correct, both renders
-          theme-correct
+        comment: 'Viridis256 for continuous data; backgrounds #FAF8F1/#1A1A17; all
+          chrome properly themed in both renders'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -98,19 +106,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Generic styling with standard viridis, no custom palette
+        comment: Well-configured defaults; viridis is appropriate but standard; no
+          exceptional design
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grid styled appropriately but minimal customization
+        passed: true
+        comment: Subtle grid (alpha=0.10); clean outline; generous whitespace; thoughtful
+          styling
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Clear relationship shown but no exceptional visual hierarchy
+        passed: true
+        comment: Color gradient creates visual hierarchy; correlation pattern visible;
+          clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -120,47 +131,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with continuous color mapping
+        comment: Correct scatter plot with color mapping
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorbar with proper labels, colormap encoding third variable
+        comment: Scatter, viridis colormap, colorbar, hover tooltips all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped, intensity used for color, all data visible
+        comment: X/Y axes correctly mapped; all data visible; intensity encoded in
+          color
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format, colorbar properly labeled
+        comment: Title format correct; colorbar properly labeled
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Demonstrates multivariate visualization effectively
+        comment: Demonstrates intensity variation and x-y relationship; could show
+          more extremes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic synthetic data with intensity based on distance
+        comment: Plausible scientific measurement scenario; neutral, non-controversial
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible value ranges for all dimensions
+        comment: Factually correct values; logical proportions
     code_quality:
       score: 10
       max: 10
@@ -170,33 +183,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear, straightforward code with no unnecessary abstractions
+        comment: Linear flow; no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic results
+        comment: np.random.seed(42) ensures determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no extraneous packages
+        comment: All imports used; no unused dependencies
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clean and readable
+        comment: Pythonic; proper theme token usage
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+        comment: Correctly saves as plot-{THEME}.png and .html
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -204,14 +217,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ColumnDataSource, linear_cmap, ColorBar patterns; follows
-          bokeh conventions
+        comment: Proper use of figure, scatter, ColumnDataSource, linear_cmap, ColorBar,
+          HoverTool
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Uses HoverTool and ColorBar but in standard ways
+        passed: true
+        comment: Leverages linear_cmap, ColorBar customization, HoverTool; could use
+          more advanced features
   verdict: APPROVED
 impl_tags:
   dependencies:
