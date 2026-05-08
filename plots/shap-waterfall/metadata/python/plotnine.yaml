@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: shap-waterfall
 created: '2026-05-08T21:28:55Z'
-updated: '2026-05-08T21:34:30Z'
+updated: '2026-05-08T21:50:02Z'
 generated_by: claude-sonnet
 workflow_run: 25579914111
 issue: 5237
@@ -12,39 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-wate
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Correct waterfall chart type with cumulative horizontal bars ordered by |SHAP|
-    magnitude
-  - 'Full spec compliance: connector dashes, reference lines for base/final values,
-    numeric bar labels, semantic color coding (Okabe-Ito vermillion for positive,
-    blue for negative)'
-  - Complete theme-adaptive chrome — both light (#FAF8F1) and dark (#1A1A17) renders
-    pass legibility checks
-  - 'Clean code: no functions/classes, deterministic seed, no unused imports, saves
-    as plot-{THEME}.png'
-  - 'Good data storytelling: feature ordering + dashed connectors clearly trace the
-    cumulative SHAP flow from base to prediction'
+  - 'Perfect spec compliance — all waterfall features implemented: cumulative segments,
+    magnitude ordering, semantic Okabe-Ito colors (vermillion/blue for positive/negative),
+    connector dashes, and base/final reference lines'
+  - Excellent data quality — credit scoring domain is realistic, neutral, and showcases
+    both positive and negative SHAP contributions across 12 meaningful features
+  - Perfect code quality — clean KISS structure with seed-42 reproducibility, explicit
+    font sizes at all levels, and elegant data preparation for cumulative starts/ends
+  - Strong theme-adaptive chrome — both light (#FAF8F1) and dark (#1A1A17) renders
+    correctly flip all text and chrome tokens while keeping data colors identical
+  - Good visual refinement — panel border and y-axis line removed, only vertical x-grid
+    lines retained, connector dashes add elegance between adjacent bars
   weaknesses:
-  - Title is 22pt instead of the 24pt spec guideline; legend text is 14pt instead
-    of 16pt; bar value labels at 12pt are small on a 4800x2700 canvas
-  - 'X-axis grid uses solid hex color (#C8C7C0 / #2E2E2B) rather than rgba opacity,
-    making grid lines more prominent than the style guide recommends (~10% opacity)'
-  - 'Design Excellence is baseline-level: no typographic refinement, no highlighted
-    focal feature, no annotations drawing attention to the most impactful bar'
+  - 'VQ-07 partial: spec requires red/blue semantic coloring which conflicts with
+    the hard rule that first categorical series must be #009E73; implementation correctly
+    uses Okabe-Ito positions 2 (#D55E00) and 3 (#0072B2) but skips position 1'
+  - 'DE-01 ceiling: implementation is well-executed but not publication-ready — no
+    exceptional color harmony or typography innovations beyond the spec requirements'
+  - 'LM-02 limited: the plotnine grammar is used competently but without a distinctive
+    technique that truly separates it from other libraries — coord_flip or stat_summary
+    could have been leveraged'
+  - Title font is 22pt vs the recommended 24pt minimum, and legend text is 14pt vs
+    the recommended 16pt — minor but explicit sizing should match the style guide
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct surface color, not pure white.
-      Chrome: Title "Loan Approval · shap-waterfall · plotnine · anyplot.ai" in dark INK text, clearly readable. Y-axis feature labels in dark INK, X-axis tick labels in INK_SOFT (#4A4A44) — all readable. "Base = 0.34" and "Pred = 0.63" annotations in INK_SOFT, visible. Legend "Contribution" header in dark INK, item labels in INK_SOFT — readable.
-      Data: 12 horizontal bar segments. Positive bars in Okabe-Ito vermillion (#D55E00); negative bars in Okabe-Ito blue (#0072B2). Bars ordered top-to-bottom by |SHAP| magnitude. Dashed vertical connector lines link adjacent bars. Dotted vertical reference lines mark base (0.34) and final (0.63) values. Bar labels (+0.180, -0.120, etc.) at size 12 — small but readable.
-      Legibility verdict: PASS — no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "Loan Approval · shap-waterfall · plotnine · anyplot.ai" in dark ink (#1A1A17), clearly readable. X-axis label "SHAP Value (Feature Contribution)" and tick labels in INK_SOFT (#4A4A44), readable. Feature names on y-axis in dark ink, clearly legible. "Base = 0.34" annotation above the top bar and "Pred = 0.63" below the bottom bar in INK_SOFT, both readable.
+      Data: 12 horizontal bars colored in Okabe-Ito vermillion (#D55E00) for positive SHAP values and Okabe-Ito blue (#0072B2) for negative values. Bars flow cumulatively from base value (~0.34) to final prediction (~0.63). Largest bar is Annual Income (+0.180) at the top. Dashed vertical connector segments link adjacent bars. Dotted vertical reference lines at base (0.34) and final prediction (0.63). SHAP values labeled to the left/right of each bar end. Legend on the right shows "Contribution: Negative (blue) / Positive (vermillion)". A "largest impact" callout annotation in orange appears near the Annual Income bar.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
-      Chrome: Title in light #F0EFE8 text, clearly readable against dark background. Feature labels in #F0EFE8, tick labels in #B8B7B0 — all readable. Annotations in #B8B7B0 — visible. Legend text in #B8B7B0 — readable. No dark-on-dark failures observed.
-      Data: Bar colors are identical to light render — same Okabe-Ito vermillion (#D55E00) and blue (#0072B2). Only chrome elements (background, text, grid) flip between themes; data colors are unchanged.
-      Legibility verdict: PASS — no dark-on-dark failures.
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in light ink (#F0EFE8), clearly readable against the dark surface. Axis labels and tick labels in #B8B7B0 (INK_SOFT dark), readable. Feature names on y-axis in light ink. Base/Pred annotations in INK_SOFT, readable. Legend in elevated dark panel (#242420) with light text. No dark-on-dark failures observed.
+      Data: Identical orange/blue bar colors to the light render — Okabe-Ito data colors are theme-independent as required. Connector dashes, reference lines, and SHAP value labels all visible. Legend box uses dark elevated background (#242420) with light text.
+      Legibility verdict: PASS — all text clearly readable against the dark background, no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -52,53 +56,54 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title 22pt (spec 24pt), legend text 14pt (spec 16pt), bar labels
-          12pt — readable in both themes but slightly below size guidelines
+        comment: All sizes explicitly set; title 22pt (should be 24pt), legend 14pt
+          (should be 16pt) — minor undersizing
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions across all 12 features
+        comment: No overlapping elements; bar labels well-nudged, feature names well-spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars, connector dashes, and reference lines clearly visible in
-          both themes
+        comment: All bars, connectors, reference lines, and labels clearly visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito CVD-safe palette; warm/cool contrast adequate for positive/negative
-          distinction
+        comment: Okabe-Ito vermillion and blue are CVD-safe and distinguishable without
+          relying on hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape, good margins, nothing cut off, legend well-positioned
+        comment: Good canvas utilization, legend well-positioned, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis label 'SHAP Value (Feature Contribution)' is descriptive with
-          context
+        comment: Title and x-axis label descriptive with context; y-axis blank by
+          design
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Backgrounds #FAF8F1/#1A1A17 correct; Okabe-Ito positions 2+3 used
-          for semantic positive/negative encoding per spec requirement; chrome adaptive'
+        passed: false
+        comment: 'Uses Okabe-Ito positions 2 (#D55E00) and 3 (#0072B2) — not position
+          1 (#009E73); spec explicitly requires red/blue semantic coloring but palette
+          rule says first series must be #009E73; backgrounds and chrome are correct'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -106,23 +111,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: dashed connectors and semantic color scheme add sophistication;
-          no custom typography or focal emphasis beyond basic layout'
+        comment: Above default (4) — semantic colors, connector dashes, reference
+          line annotations show intentional design; not publication-ready
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Panel border removed, y-axis cleaned; x-grid uses solid hex colors
-          (#C8C7C0/#2E2E2B) rather than rgba opacity — grid more prominent than style
-          guide 10% opacity recommendation
+        comment: Panel border removed, y-axis line removed, only x-grid lines, axis
+          ticks removed — good refinement
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Feature ordering by |SHAP| and connector dashes clearly trace the
-          cumulative flow; no highlighted focal feature or annotation emphasis
+        comment: Magnitude ordering, base-to-prediction narrative, reference lines,
+          and semantic coloring create clear visual story
     spec_compliance:
       score: 15
       max: 15
@@ -132,30 +136,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal waterfall chart with cumulative stacking from
-          base to final value
+        comment: Correct horizontal waterfall chart with cumulative bar segments
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: magnitude ordering, cumulative bars,
-          semantic color coding, base/final reference lines, numeric SHAP labels,
-          horizontal layout, connector lines'
+        comment: 'All features present: cumulative segments, magnitude ordering, base/final
+          annotations, SHAP value labels, connector lines, semantic colors'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=cumulative SHAP position, Y=feature name; base 0.34 to final 0.63
-          traces correctly
+        comment: SHAP values on X, features on Y, largest magnitude at top, cumulative
+          from base value
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Loan Approval · shap-waterfall · plotnine · anyplot.ai' follows
-          spec format; legend 'Contribution' with Negative/Positive labels appropriate
+        comment: Title follows context·spec-id·library·anyplot.ai format; legend labels
+          Positive/Negative correctly
     data_quality:
       score: 15
       max: 15
@@ -165,22 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 12 features covering both positive and negative contributions; all
-          waterfall aspects demonstrated
+        comment: 12 features showing both positive and negative contributions with
+          varied magnitudes covers all waterfall chart aspects
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Credit scoring loan approval model — realistic, neutral domain with
-          plausible feature names and SHAP magnitudes
+        comment: Credit scoring loan approval is a real, neutral, well-understood
+          ML explainability use case
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Base 0.34, final 0.63 plausible probability output; SHAP values (-0.12
-          to +0.18) reasonable magnitudes; 12 features within spec's 10-20 range
+        comment: SHAP values -0.12 to +0.18, base 0.34, final 0.63 are realistic for
+          a credit scoring probability model
     code_quality:
       score: 10
       max: 10
@@ -190,7 +192,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; top-level script
+        comment: 'Linear script: imports → data → plot → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -202,21 +204,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used; importlib/sys workaround serves legitimate conflict-avoidance
-          purpose
+        comment: All imported plotnine elements and numpy/pandas are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean separation of data prep, connector calculation, and plot composition;
-          no fake UI
+        comment: Clean data preparation logic for cumulative starts, appropriate loop
+          for connectors, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png at dpi=300
+        comment: Saves as plot-{THEME}.png with dpi=300, width=16, height=9
     library_mastery:
       score: 7
       max: 10
@@ -226,16 +227,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Grammar of graphics composition used correctly; scale_fill_manual,
-          scale_y_continuous with breaks/labels, coord_cartesian — all idiomatic plotnine
+        comment: Proper ggplot grammar with multiple geom layers, scale_fill_manual,
+          scale_y_continuous with custom breaks/labels, coord_cartesian — above default
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Multiple geom layers (rect+segment+vline+text×4), separate DataFrames
-          per annotation type, scale_y_continuous for categorical y-axis — leverages
-          plotnine's layered grammar well
+        comment: geom_rect for offset bars (not geom_bar), multiple geom_text layers
+          with different ha alignments, scale_y_continuous for custom feature axis
+          — uses plotnine grammar effectively
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -245,6 +246,9 @@ impl_tags:
   - manual-ticks
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - cumulative-sum
-  styling: []
+  styling:
+  - minimal-chrome
+  - grid-styling
