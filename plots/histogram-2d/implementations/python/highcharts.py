@@ -1,19 +1,28 @@
-""" pyplots.ai
+"""anyplot.ai
 histogram-2d: 2D Histogram Heatmap
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-25
+Library: highcharts | Python 3.13
+Quality: 91/100 | Updated: 2026-05-08
 """
 
 import json
+import os
 import tempfile
 import time
-import urllib.request
 from pathlib import Path
 
 import numpy as np
+import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Data - bivariate normal with correlation (5000 points)
 np.random.seed(42)
@@ -54,23 +63,31 @@ chart_options = {
         "type": "heatmap",
         "width": 4800,
         "height": 2700,
-        "backgroundColor": "#ffffff",
+        "backgroundColor": PAGE_BG,
         "marginTop": 120,
         "marginBottom": 250,
         "marginLeft": 200,
         "marginRight": 250,
     },
-    "title": {"text": "histogram-2d · highcharts · pyplots.ai", "style": {"fontSize": "48px", "fontWeight": "bold"}},
+    "title": {
+        "text": "histogram-2d · highcharts · anyplot.ai",
+        "style": {"fontSize": "28px", "fontWeight": "normal", "color": INK},
+    },
     "xAxis": {
         "categories": x_categories,
-        "title": {"text": "Asset A Return (%)", "style": {"fontSize": "36px"}},
-        "labels": {"style": {"fontSize": "22px"}, "rotation": 0},
-        "tickLength": 10,
+        "title": {"text": "Asset A Return (%)", "style": {"fontSize": "22px", "color": INK}},
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}, "rotation": 0},
+        "lineColor": INK_SOFT,
+        "tickColor": INK_SOFT,
+        "gridLineColor": GRID,
     },
     "yAxis": {
         "categories": y_categories,
-        "title": {"text": "Asset B Return (%)", "style": {"fontSize": "36px"}},
-        "labels": {"style": {"fontSize": "22px"}},
+        "title": {"text": "Asset B Return (%)", "style": {"fontSize": "22px", "color": INK}},
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+        "lineColor": INK_SOFT,
+        "tickColor": INK_SOFT,
+        "gridLineColor": GRID,
         "reversed": False,
     },
     "colorAxis": {
@@ -83,7 +100,7 @@ chart_options = {
             [0.75, "#5ec962"],  # Green
             [1, "#fde725"],  # Yellow (viridis end)
         ],
-        "labels": {"style": {"fontSize": "24px"}},
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
     },
     "legend": {
         "align": "right",
@@ -91,36 +108,38 @@ chart_options = {
         "verticalAlign": "middle",
         "symbolHeight": 500,
         "symbolWidth": 40,
-        "title": {"text": "Count", "style": {"fontSize": "28px", "fontWeight": "normal"}},
-        "itemStyle": {"fontSize": "24px"},
+        "title": {"text": "Count", "style": {"fontSize": "22px", "fontWeight": "normal", "color": INK}},
+        "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
+        "backgroundColor": ELEVATED_BG,
+        "borderColor": INK_SOFT,
+        "borderWidth": 1,
     },
-    "tooltip": {
-        "style": {"fontSize": "24px"},
-        "formatter": None,  # Will be set via JavaScript
-    },
+    "tooltip": {"style": {"fontSize": "18px"}},
     "credits": {"enabled": False},
-    "series": [{"type": "heatmap", "name": "Density", "data": heatmap_data, "borderWidth": 0, "nullColor": "#ffffff"}],
+    "series": [{"type": "heatmap", "name": "Density", "data": heatmap_data, "borderWidth": 0, "nullColor": PAGE_BG}],
 }
 
-# Download Highcharts JS and heatmap module
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-heatmap_url = "https://code.highcharts.com/modules/heatmap.js"
+# Download Highcharts JS and heatmap module from jsDelivr CDN
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@11.4.0/highcharts.js"
+heatmap_url = "https://cdn.jsdelivr.net/npm/highcharts@11.4.0/modules/heatmap.js"
 
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+resp = requests.get(highcharts_url, headers=headers, timeout=30)
+resp.raise_for_status()
+highcharts_js = resp.text
 
-with urllib.request.urlopen(heatmap_url, timeout=30) as response:
-    heatmap_js = response.read().decode("utf-8")
+resp = requests.get(heatmap_url, headers=headers, timeout=30)
+resp.raise_for_status()
+heatmap_js = resp.text
 
-# Convert options to JSON (remove None for tooltip formatter)
-chart_options["tooltip"] = {"style": {"fontSize": "24px"}}
+# Convert options to JSON
 options_json = json.dumps(chart_options)
 
 # Create x and y center arrays for tooltip
 x_centers_json = json.dumps([round(v, 2) for v in x_centers])
 y_centers_json = json.dumps([round(v, 2) for v in y_centers])
 
-# Generate HTML with inline scripts
+# Generate HTML with inline scripts for PNG export
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -128,7 +147,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{heatmap_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>
         var xCenters = {x_centers_json};
@@ -144,7 +163,7 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Save HTML for interactive version
+# Save HTML for interactive version (CDN-based for website deployment)
 html_interactive = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -152,7 +171,7 @@ html_interactive = f"""<!DOCTYPE html>
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/modules/heatmap.js"></script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 100%; height: 100vh;"></div>
     <script>
         var xCenters = {x_centers_json};
@@ -170,7 +189,8 @@ html_interactive = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save interactive HTML with theme suffix
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_interactive)
 
 # Take screenshot using headless Chrome
@@ -188,7 +208,7 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
