@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-adjacency: Network Adjacency Matrix Heatmap
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 86/100 | Created: 2026-05-08
@@ -82,14 +82,14 @@ anyplot_theme = theme(
     panel_background=element_rect(fill=ABSENT_CELL),
     panel_grid_major=element_blank(),
     panel_grid_minor=element_blank(),
-    panel_border=element_rect(color=INK_SOFT, fill=None),
-    axis_title=element_text(color=INK, size=18),
-    axis_text=element_text(color=INK_SOFT, size=9),
-    axis_text_x=element_text(angle=45, ha="right", color=INK_SOFT, size=9),
-    plot_title=element_text(color=INK, size=20, ha="center"),
-    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(color=INK_SOFT, size=14),
-    legend_title=element_text(color=INK, size=16),
+    panel_border=element_blank(),
+    axis_title=element_text(color=INK, size=20),
+    axis_text=element_text(color=INK_SOFT, size=16),
+    axis_text_x=element_text(angle=45, ha="right", color=INK_SOFT, size=16),
+    plot_title=element_text(color=INK, size=24, ha="center"),
+    legend_background=element_rect(fill=ELEVATED_BG, color=None),
+    legend_text=element_text(color=INK_SOFT, size=16),
+    legend_title=element_text(color=INK, size=18),
 )
 
 plot = (
