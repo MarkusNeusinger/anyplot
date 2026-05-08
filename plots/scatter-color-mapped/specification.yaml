@@ -6,7 +6,7 @@ title: Color-Mapped Scatter Plot
 
 # Specification tracking
 created: 2025-12-25T08:58:07Z
-updated: 2025-12-25T08:58:07Z
+updated: 2026-05-08T20:35:12Z
 issue: 2004
 suggested: MarkusNeusinger
 
@@ -19,10 +19,10 @@ tags:
   data_type:
     - numeric
     - continuous
+    - multivariate
   domain:
     - general
     - science
   features:
     - color-mapped
     - colorbar
-    - multivariate
