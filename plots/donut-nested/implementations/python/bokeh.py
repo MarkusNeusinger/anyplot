@@ -1,17 +1,27 @@
-""" pyplots.ai
+"""anyplot.ai
 donut-nested: Nested Donut Chart
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-25
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2025-05-08
 """
 
+import os
+import time
 from math import pi
+from pathlib import Path
 
 import numpy as np
-from bokeh.io import export_png, save
+from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, LabelSet
 from bokeh.plotting import figure
-from bokeh.resources import CDN
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data: Budget allocation by department and expense categories
 # Inner ring: Departments
@@ -23,12 +33,13 @@ data = {
     "Operations": {"Facilities": 180, "IT Support": 95, "Utilities": 55},
 }
 
-# Colors: Use consistent color families per parent (Python Blue based palette)
+# Color families: Each department gets a color family based on Okabe-Ito positions
+# Using consistent hue with varying lightness per department
 color_palettes = {
-    "Engineering": ["#306998", "#4a88b5", "#6ba8d2", "#8dc8ef"],  # Blues
-    "Marketing": ["#FFD43B", "#ffe066", "#ffeb99", "#fff5cc"],  # Yellows
-    "Sales": ["#2d8659", "#4ba376", "#6bc093", "#8bddb0"],  # Greens
-    "Operations": ["#8b4d6e", "#a8698a", "#c585a6", "#e2a1c2"],  # Purples
+    "Engineering": ["#009E73", "#1ab98d", "#35d5a7", "#4ff1c1"],  # Greens (position 1)
+    "Marketing": ["#D55E00", "#e07714", "#eb8f28", "#f6a83c"],  # Oranges (position 2)
+    "Sales": ["#0072B2", "#1f8ac9", "#3ea2e0", "#5dbaf7"],  # Blues (position 3)
+    "Operations": ["#CC79A7", "#d98cbc", "#e69fd1", "#f3b2e6"],  # Purples (position 4)
 }
 
 # Calculate totals and angles
@@ -105,7 +116,7 @@ for dept, categories in data.items():
 p = figure(
     width=3600,
     height=3600,
-    title="donut-nested · bokeh · pyplots.ai",
+    title="donut-nested · bokeh · anyplot.ai",
     x_range=(-1.3, 1.3),
     y_range=(-1.3, 1.3),
     tools="",
@@ -113,13 +124,14 @@ p = figure(
 )
 
 # Style the figure
-p.title.text_font_size = "36pt"
+p.title.text_font_size = "28pt"
+p.title.text_color = INK
 p.title.align = "center"
 p.axis.visible = False
 p.grid.visible = False
 p.outline_line_color = None
-p.background_fill_color = None
-p.border_fill_color = None
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
 
 # Inner ring (departments)
 inner_source = ColumnDataSource(
@@ -142,7 +154,7 @@ p.annular_wedge(
     start_angle="start_angle",
     end_angle="end_angle",
     color="color",
-    line_color="white",
+    line_color=PAGE_BG,
     line_width=3,
     source=inner_source,
 )
@@ -166,7 +178,7 @@ p.annular_wedge(
     inner_radius=outer_radius_inner,
     outer_radius=outer_radius_outer,
     color="color",
-    line_color="white",
+    line_color=PAGE_BG,
     line_width=2,
     source=outer_source,
 )
@@ -182,8 +194,8 @@ inner_labels_set = LabelSet(
     source=inner_label_source,
     text_align="center",
     text_baseline="middle",
-    text_font_size="18pt",
-    text_color="white",
+    text_font_size="20pt",
+    text_color=INK,
     text_font_style="bold",
 )
 p.add_layout(inner_labels_set)
@@ -211,8 +223,8 @@ outer_labels_set = LabelSet(
     source=outer_label_source,
     text_align="center",
     text_baseline="middle",
-    text_font_size="14pt",
-    text_color="#333333",
+    text_font_size="16pt",
+    text_color=INK_SOFT,
 )
 p.add_layout(outer_labels_set)
 
@@ -225,9 +237,28 @@ p.text(
     text_baseline="middle",
     text_font_size="24pt",
     text_font_style="bold",
-    text_color="#306998",
+    text_color=INK,
 )
 
-# Save outputs
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", resources=CDN, title="Nested Donut Chart")
+# Save HTML output
+output_file(f"plot-{THEME}.html")
+save(p)
+
+# Screenshot with headless Chrome using Selenium
+W, H = 3600, 3600
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
