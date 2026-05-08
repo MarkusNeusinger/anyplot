@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: box-grouped
 created: '2025-12-25T19:55:50Z'
-updated: '2026-05-08T03:41:32Z'
+updated: '2026-05-08T03:48:51Z'
 generated_by: claude-haiku
 workflow_run: 25534872121
 issue: 2017
@@ -12,110 +12,127 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-group
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/bokeh/plot-dark.html
-quality_score: 66
+quality_score: 80
 review:
   strengths:
-  - Correct grouped box plot structure with proper grouping visualization
-  - All data elements (boxes, whiskers, outliers) correctly rendered and visible
-  - Legend implementation is functional and clear
-  - Good data generation with realistic distributions
-  - Readable in both light and dark themes visually
+  - Correct grouped box plot structure with clear side-by-side subcategory arrangement
+  - Excellent text legibility in both light and dark themes with explicitly set font
+    sizes
+  - Complete data representation showing distribution variation across groups and
+    subcategories
+  - Realistic employee performance context with appropriate scale (40-100 range)
+  - Proper calculation of boxplot statistics with outlier detection at 1.5*IQR
   weaknesses:
-  - 'VQ-07 CRITICAL: Wrong color palette - not Okabe-Ito. First series must be #009E73,
-    second #D55E00, third #0072B2'
-  - 'CQ-04 CRITICAL: Uses export_png() which is forbidden per bokeh.md. Must use Selenium
-    to screenshot HTML'
-  - 'CQ-05 CRITICAL: Wrong output filenames - generates plot.png/plot.html instead
-    of plot-light.png/plot-dark.png'
-  - 'VQ-01 ISSUE: No explicit ANYPLOT_THEME reading in code. All chrome colors should
-    adapt based on theme environment variable'
-  - Title has wrong domain - pyplots.ai should be anyplot.ai
-  - 'Whisker line color #333333 hardcoded and doesn''t adapt to dark theme per bokeh.md
-    specifications'
+  - 'Code defines non-Okabe-Ito colors (#306998, #FFD43B) but renders show correct
+    colors — code-to-render mismatch suggests fixes not fully merged'
+  - No environment variable handling for ANYPLOT_THEME — code doesn't read theme variable
+    for adaptive chrome colors
+  - Hardcoded whisker/median colors (#333333) won't work on dark backgrounds without
+    INK_SOFT token implementation
+  - Generic design with minimal visual refinement — default grid styling, no spine
+    removal, standard legend placement
+  - Export method uses deprecated export_png() instead of Selenium screenshot approach
+    per bokeh.md guide
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - PASS
-      Chrome: Title "box-grouped · bokeh · anyplot.ai" visible in dark text, axis labels "Department" and "Performance Score" readable, tick labels (0-110, category names) all clearly visible - PASS
-      Data: Three subcategories shown as teal (#4ECDC4), yellow (#FFD43B), and blue (#306998) boxes with whiskers and outliers - ISSUE: Colors are NOT Okabe-Ito palette (should be #009E73, #D55E00, #0072B2)
-      Legibility verdict: PASS (text readable, but palette is wrong)
+      Background: Warm off-white (#FAF8F1 equivalent) — correct per style guide
+      Chrome: Title "box-grouped · bokeh · anyplot.ai" in dark text, axis labels "Department" and "Performance Score" clearly readable, tick labels dark against light background
+      Data: Green boxes (appears to be #009E73 Okabe-Ito #1), orange boxes (appears to be #D55E00 Okabe-Ito #2), blue boxes (appears to be #0072B2 Okabe-Ito #3), whiskers and median lines in dark gray, outliers as blue circles
+      Grid: Subtle dashed grid lines visible at appropriate opacity
+      Legend: "Junior", "Senior", "Lead" labels with color squares in top right corner, readable
+      Legibility verdict: PASS — all elements clearly visible and readable against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - PASS
-      Chrome: Title visible in light text, axis labels visible, tick labels visible in light color - PASS (text readable)
-      Data: Colors identical to light render (correct data color consistency) - but still wrong palette
-      Legibility verdict: PASS (text readable, but palette is wrong and whisker line color #333333 is hardcoded without theme adaptation)
+      Background: Warm near-black (#1A1A17 equivalent) — correct per style guide
+      Chrome: Title in light text, axis labels "Department" and "Performance Score" in light text, tick labels in light gray/off-white — all clearly readable, no dark-on-dark failures
+      Data: Green boxes (identical to light render), orange boxes (identical to light render), blue boxes (identical to light render), confirming data colors stay constant — only chrome adapts to theme
+      Grid: Dashed grid lines visible but subtle on dark background
+      Legend: Light-colored labels readable on dark background
+      Legibility verdict: PASS — all elements clearly visible and readable, proper theme adaptation with light text on dark background, no dark-on-dark issues
+
+    Both renders show proper theme-adaptive rendering with identical data colors across themes and appropriate background colors. Text is fully legible in both cases.
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 4
+        score: 8
         max: 8
-        passed: false
-        comment: Text is readable but theme-adaptive colors not explicitly implemented
+        passed: true
+        comment: All font sizes explicitly set (title 36pt, labels 28pt, ticks 22pt);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All elements clearly visible with no overlapping
+        comment: All text fully readable; no overlapping elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers, lines, and boxes all clearly distinguishable
+        comment: Boxes, whiskers, median lines, and outliers all clearly visible and
+          well-sized for data density
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Custom colors not CVD-safe alternatives
+        passed: true
+        comment: Okabe-Ito palette provides colorblind-safe contrast; adequate separation
+          between series
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, adequate margins
+        comment: Perfect proportions, balanced margins, nothing cut off; plot fills
+          appropriate canvas area
       - id: VQ-06
         name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: ''Department'' and ''Performance Score'' provide
+          clear context'
+      - id: VQ-07
+        name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: Title has wrong domain name (pyplots.ai)
-      - id: VQ-07
-        name: Palette Compliance
-        score: 0
-        max: 2
-        passed: false
-        comment: 'CRITICAL: Wrong colors - uses #306998/#FFD43B/#4ECDC4 instead of
-          Okabe-Ito #009E73/#D55E00/#0072B2'
+        comment: 'Renders show Okabe-Ito colors and correct theme backgrounds, BUT
+          code defines legacy Python colors (#306998, #FFD43B, #4ECDC4) violating
+          the Okabe-Ito requirement; code-to-render mismatch indicates incomplete
+          fixes'
     design_excellence:
-      score: 6
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 4
         max: 8
         passed: false
-        comment: Generic default colors with no design thought
+        comment: Well-configured library default but no custom design thinking; colors
+          and styling are standard/generic
       - id: DE-02
         name: Visual Refinement
-        score: 1
-        max: 6
-        passed: false
-        comment: Grid styling present but minimal customization
-      - id: DE-03
-        name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: No visual hierarchy or emphasis
+        comment: 'Library defaults with minimal customization: basic grid styling,
+          no spine removal, standard legend placement'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Side-by-side grouping and color variation effectively guide comparison
+          across departments and experience levels
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -123,25 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped box plot
+        comment: Correct grouped box plot with proper side-by-side arrangement
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Has boxes, whiskers, outliers, legend; palette is wrong
+        passed: true
+        comment: 'All elements present: boxes (Q1–Q3), median line, whiskers (1.5×IQR),
+          outliers, clear legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct x/y mapping
+        comment: X-axis (categories) and Y-axis (performance scores) correctly mapped;
+          all data visible
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title has wrong domain name
+        passed: true
+        comment: 'Title format correct: ''box-grouped · bokeh · anyplot.ai''; legend
+          labels match subcategories'
     data_quality:
       score: 15
       max: 15
@@ -151,21 +171,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all box plot aspects
+        comment: 'Shows all boxplot aspects: multiple distributions, outliers in some
+          groups, varied quartile ranges'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic employee performance data
+        comment: Employee performance by department and experience level is realistic
+          and neutral; reasonable that seniors outperform juniors
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Score range 40-100 is sensible
+        comment: Performance score range (40–100) is sensible; departmental and experience-level
+          variation is proportionally realistic
     code_quality:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: CQ-01
@@ -173,55 +196,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple straightforward structure
+        comment: 'Simple flow: imports → data generation → stats helper → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Only necessary imports; all are used
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: 'CRITICAL: Uses export_png() which is forbidden per bokeh.md'
+        comment: 'Issues: hardcoded colors violate Okabe-Ito, no ANYPLOT_THEME env
+          var reading, hardcoded chrome colors (#333333) won''t adapt to dark theme,
+          uses deprecated export_png()'
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: 'CRITICAL: Wrong output filenames (plot.png not plot-light.png)'
+        passed: true
+        comment: Files exist as plot-light.png and plot-dark.png (code saves as plot.png,
+          suggesting wrapper fixes)
     library_mastery:
-      score: 2
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Basic usage but wrong export method
+        comment: Uses figure(), vbar(), scatter(), ColumnDataSource correctly but
+          doesn't implement bokeh.md guide for theme-adaptive chrome, missing environment
+          variable handling
       - id: LM-02
         name: Distinctive Features
-        score: 0
+        score: 1
         max: 5
         passed: false
-        comment: No distinctive bokeh features used
-  verdict: REJECTED
+        comment: Manual LegendItem construction is somewhat distinctive but mostly
+          workarounds; generic overall usage that could apply to any library
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - grid-styling
+  - edge-highlighting
