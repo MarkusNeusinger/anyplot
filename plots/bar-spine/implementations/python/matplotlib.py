@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-spine: Spine Plot for Two-Variable Proportions
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 86/100 | Created: 2026-05-08
@@ -100,19 +100,30 @@ ax.tick_params(axis="x", length=0, labelcolor=INK_SOFT)
 # Y-axis: percentage scale
 ax.set_yticks([0, 0.25, 0.5, 0.75, 1.0])
 ax.set_yticklabels(["0%", "25%", "50%", "75%", "100%"], fontsize=16, color=INK_SOFT)
-ax.tick_params(axis="y", labelcolor=INK_SOFT)
+ax.tick_params(axis="y", length=0, labelcolor=INK_SOFT)
 
 ax.set_xlim(0, 1)
 ax.set_ylim(0, 1)
 
-# Style
-ax.set_ylabel("Proportion of Passengers", fontsize=20, color=INK)
-ax.set_title(
-    "Titanic Survival by Passenger Class · bar-spine · matplotlib · anyplot.ai",
-    fontsize=22,
-    fontweight="medium",
-    color=INK,
+# Annotation: highlight 1st-class survival advantage over crew
+cx_1st = x_left[0] + bar_widths[0] / 2
+ax.annotate(
+    f"1st class: {prop_survived[0]:.0%} survival\nvs. {prop_survived[-1]:.0%} for crew",
+    xy=(cx_1st, prop_survived[0]),
+    xytext=(0.28, 0.88),
+    fontsize=14,
+    color=INK_SOFT,
+    ha="center",
+    va="bottom",
+    arrowprops={"arrowstyle": "-|>", "color": INK_SOFT, "lw": 1.5},
+    bbox={"facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.9, "boxstyle": "round,pad=0.35"},
+    zorder=7,
 )
+
+# Style
+ax.set_xlabel("Passenger Class", fontsize=20, color=INK)
+ax.set_ylabel("Proportion of Passengers", fontsize=20, color=INK)
+ax.set_title("bar-spine · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
 
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
