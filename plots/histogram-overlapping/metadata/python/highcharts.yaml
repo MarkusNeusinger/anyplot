@@ -1,179 +1,174 @@
 library: highcharts
+language: python
 specification_id: histogram-overlapping
 created: '2025-12-25T21:49:16Z'
-updated: '2025-12-25T21:51:29Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20511325077
+updated: '2026-05-08T07:08:13Z'
+generated_by: claude-haiku
+workflow_run: 25541970775
 issue: 2010
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - alpha-blending
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep:
-  - binning
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/highcharts/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - 'Excellent implementation of overlapping effect using grouping: false in plot
-    options'
-  - Colorblind-safe palette (yellow, purple, blue) with good transparency (0.55 alpha)
-  - Clear, realistic data scenario with meaningful sample sizes in legend
-  - Proper bin alignment across all three distributions
-  - Good subtitle adding context to the visualization
+  - 'Perfect visual quality: both renders pass legibility and theme-adaptation checks'
+  - Complete spec compliance with all overlapping histogram requirements
+  - Excellent data quality with realistic employee performance context
+  - Clean, reproducible code with deterministic data generation
+  - Flawless Okabe-Ito palette implementation with identical colors across themes
+  - Proper theme-adaptive chrome tokens throughout (INK, INK_SOFT, PAGE_BG, GRID,
+    ELEVATED_BG)
+  - Correct Selenium export with inline script handling for headless Chrome
   weaknesses:
-  - Legend box is slightly isolated in upper right corner; could be positioned closer
-    to the chart area
-  - Y-axis label Frequency (Count) is slightly redundant
-  - Image height is 2561px instead of target 2700px
-  image_description: 'The plot displays three overlapping histograms showing employee
-    performance score distributions across three departments. The chart uses semi-transparent
-    column bars with:
+  - 'Design Excellence (13/20): Could add more visual refinement such as adjusted
+    grid opacity or subtle spine styling'
+  - 'Library Mastery (7/10): Relies on standard Highcharts patterns; limited use of
+    distinctive library-specific techniques beyond opacity and shared tooltip'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct, not pure white
+      Chrome: Title "histogram-overlapping · highcharts · anyplot.ai" in dark text (28px), axis labels "Performance Score" and "Frequency (Count)" in dark INK (#1A1A17), tick labels in INK_SOFT (#4A4A44), all readable
+      Data: Three semi-transparent column series with Okabe-Ito colors:
+        - Engineering in #009E73 (brand green, opacity 0.55) - correct first series
+        - Sales in #D55E00 (vermillion, opacity 0.55)
+        - Marketing in #0072B2 (blue, opacity 0.55)
+      Legend: Right side, styled with border and padding, clear identification
+      Legibility verdict: PASS - all elements readable, excellent contrast, no legibility issues
 
-    - **Yellow** (Sales, n=150) - widest distribution, lower center
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct, not pure black
+      Chrome: Title in light cream (#F0EFE8), axis labels in light cream, tick labels in light secondary color (#B8B7B0), all readable against dark background
+      Data: Identical colors to light render - same #009E73, #D55E00, #0072B2 with 0.55 opacity, proving only chrome changed theme-adaptively
+      Legend: Light text on dark background, proper styling maintained
+      Legibility verdict: PASS - no dark-on-dark failures, all text clearly visible, gridlines subtle but visible
 
-    - **Purple** (Marketing, n=150) - middle layer
-
-    - **Blue** (Engineering, n=150) - highest concentration around 71-78 range
-
-
-    The title reads "histogram-overlapping · highcharts · pyplots.ai" with subtitle
-    "Employee Performance Score Distribution by Department". X-axis shows "Performance
-    Score" (ranging from 16 to 125), Y-axis shows "Frequency (Count)" (0-56). A boxed
-    legend in the upper right identifies each department with sample sizes. Bars overlap
-    correctly with transparency (~0.55 alpha), allowing visibility of all three distributions.
-    The overlapping regions show blended colors where distributions intersect.'
+    Both renders confirmed: data colors identical between themes, only chrome flips theme-adaptively, transparency shows overlaps clearly in both.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, subtitle, axis labels, and tick marks are all clearly readable
-          at appropriate font sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; all labels clearly separated
+        comment: All text properly sized (28/22/18px) and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No problematic overlaps; transparency allows visibility
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-sized and transparency works well; slight deduction
-          as some smaller bars at distribution tails are harder to see
+        comment: All series visible; density handled with 0.55 opacity
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Yellow, purple, and blue palette is colorblind-safe (no red-green
-          combination)
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization; slight excess whitespace at bottom margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Performance Score" and "Frequency (Count)" are descriptive with
-          context'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent proportions; generous margins; legend well-positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is very subtle (good), but legend placement in upper right with
-          large white box feels slightly disconnected from the data
+        passed: true
+        comment: Descriptive labels with units; spec format title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct Okabe-Ito order; backgrounds and data colors theme-compliant
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional design with theme-adaptive colors, styled legend, bar
+          borders
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Generous whitespace, styled legend, bar borders; could refine grid/spines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Overlapping shows distributions clearly; transparency reveals insights
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct overlapping histogram using column chart with grouping disabled
+        comment: Correct overlapping histogram
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis shows bin ranges, Y-axis shows frequency counts correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Semi-transparent fills, distinct colors, legend with group labels,
-          aligned bin edges
-      - id: SC-04
-        name: Data Range
+        comment: Semi-transparent fills, distinct colors, legend, aligned bins
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y axes correct; all data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies each department with sample sizes
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "histogram-overlapping · highcharts · pyplots.ai"
+        comment: Spec format title; clear group labels with n
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows different central tendencies and spreads; Engineering peaks
-          higher, Sales has wider spread. Minor deduction: could show more dramatic
-          differences'
+        comment: Shows shapes, tendency, spread, overlaps
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Employee performance scores by department is a realistic, relatable
-          business scenario
+        comment: Employee performance context; normal distributions plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Scores 0-100 range makes sense for performance; some outliers extend
-          to 125 which is slightly unusual for a 100-point scale
+        comment: Score range and frequencies appropriate
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -181,43 +176,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script structure: imports → data → histogram computation
-          → chart → save'
+        comment: No unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; clean approach
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current highcharts-core API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png ✓ but image dimensions are 4800x2561 instead of
-          4800x2700 (minor)
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct plot-{THEME}.png/html; current API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses grouping:false for overlap effect, shared tooltips, proper Highcharts
-          column series configuration. Could leverage more interactive features like
-          hover states or data labels.
+        comment: 'Excellent: container, HighchartsOptions, grouping=False, theme tokens,
+          Selenium'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: 'Standard patterns: opacity, shared tooltip; could use more distinctive
+          techniques'
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending

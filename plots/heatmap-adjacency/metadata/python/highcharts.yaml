@@ -1,0 +1,262 @@
+library: highcharts
+language: python
+specification_id: heatmap-adjacency
+created: '2026-05-08T07:06:42Z'
+updated: '2026-05-08T07:24:58Z'
+generated_by: claude-sonnet
+workflow_run: 25541908867
+issue: 5240
+python_version: 3.13.13
+library_version: unknown
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/highcharts/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - All font sizes explicitly set (title 28px, axis 22px, ticks 16px) — readable at
+    3600×3600
+  - 'Perfect spec compliance: symmetric matrix, viridis colorbar, node labels, department
+    ordering all present'
+  - Realistic scientific collaboration network with plausible within-department vs
+    cross-department weight distributions
+  - Correct viridis color stops for continuous heatmap data; distinct empty-cell color
+    that flips with theme
+  - Complete theme adaptation — INK/INK_SOFT/ELEVATED_BG tokens applied to every chrome
+    element in both renders
+  - Block-diagonal structure is clearly visible; subtitle explains the ordering rationale
+  weaknesses:
+  - No explicit department boundary separators or group-label annotations to make
+    block structure more prominent — a thin white/ink rule at department boundaries
+    would greatly strengthen the storytelling
+  - gridLineColor not explicitly set in xAxis/yAxis — relies on Highcharts default,
+    misses opportunity to style grid subtly
+  - Uses raw JSON dict + inline HTML instead of highcharts_core Python SDK (Chart/HighchartsOptions
+    pattern) as recommended in the library guide
+  - fetch_js helper function violates KISS flat-script structure; CDN fallback logic
+    adds complexity
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, no pure white
+      Chrome: Title "Research Collaboration Network · heatmap-adjacency · highcharts · anyplot.ai" in dark ink, clearly readable. Subtitle in lighter ink_soft. X-axis label "Researcher" and Y-axis label "Researcher" in dark ink. Tick labels (NS-01 through PH-05) rotated -45° along x-axis and horizontal on y-axis, all readable in ink_soft. Colorbar on the right titled "Collaboration Strength" with 0–1 scale.
+      Data: 25×25 heatmap cells. Empty/zero cells render in a warm grey (#E0DFD6) that contrasts clearly with the warm white background. Active connections range from deep purple (#440154) through teal (#21908c) to bright yellow (#fde725) — standard viridis. Block-diagonal structure is clearly visible: 5 distinct 5×5 bright clusters along the diagonal (one per department), with sparse scattered cells elsewhere.
+      Legibility verdict: PASS — all text is readable against the light background; no light-on-light failures observed.
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title visible in light ink (#F0EFE8), clearly readable on dark surface. Subtitle and axis titles in lighter ink_soft (#B8B7B0). Tick labels also in ink_soft, readable. Colorbar labels in ink_soft, readable.
+      Data: Viridis data colors are identical to the light render — deep purple through bright yellow. Empty cells flip to a dark (#2A2A26) that is distinct from both the chart background and the colored cells. Block-diagonal structure equally clear on the dark surface.
+      Legibility verdict: PASS — all text is light-colored and readable against the dark background; no dark-on-dark failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, ticks
+          16px, legend 16px — all readable at 3600x3600'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: X-axis labels rotated -45°, no collisions between tick labels or
+          other elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap cells clearly visible; viridis range from purple to yellow
+          is perceptually distinct; empty cells contrast well
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis is perceptually uniform and CVD-safe; empty cells use neutral
+          grey/dark-grey for distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions and margin sizing; slight asymmetry between left
+          (110) and right (300) margins, colorbar symbolHeight 400 is modest for 3600px
+          canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X/Y labeled 'Researcher', colorAxis titled 'Collaboration Strength'
+          — descriptive for a categorical network plot
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis color stops for continuous data; background #FAF8F1 (light)
+          / #1A1A17 (dark); chrome tokens fully applied; data colors identical across
+          themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: custom viridis stops, theme-adaptive empty-cell color,
+          informative subtitle — but no department boundary annotations or separator
+          rules that would lift to publication-ready'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Thin cell borders (0.5px in background color), generous margins,
+          clean typography — but gridLineColor not explicitly set and axis frame (lineColor)
+          shows
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Block-diagonal structure is visually salient and subtitle explains
+          the insight; color contrast effectively shows within- vs cross-department
+          patterns
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct adjacency matrix heatmap using Highcharts heatmap type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Symmetric matrix, department ordering, weight-mapped colors, distinct
+          empty-cell background, colorbar legend, and node name tick labels all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=target, Y=source (reversed), value=weight — correct adjacency matrix
+          layout
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title contains spec-id (heatmap-adjacency), library (highcharts),
+          and anyplot.ai in order with descriptive prefix
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows: present edges with varying weights, absent edges (zero weight),
+          symmetric structure, block-diagonal clustering — all key aspects of the
+          plot type'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Scientific collaboration network across Neuroscience, CS, Statistics,
+          Genomics, Physics departments — neutral, plausible, real-world scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 25 nodes (5 per department), within-dept weights 0.5–1.0, cross-dept
+          weights 0.1–0.5, connection probabilities 85%/20% — realistic community
+          structure
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly flat script but defines a fetch_js() helper function — violates
+          strict KISS
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (json, os, tempfile, time, urllib, pathlib, numpy, selenium)
+          are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized; CDN fallback list is reasonable defensive
+          practice
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Bypasses highcharts_core Python SDK (Chart/HighchartsOptions) and
+          uses raw JSON dict — works correctly but deviates from the library guide
+          pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Highcharts colorAxis with custom viridis stops, heatmap module,
+          symbolHeight for colorbar, reversed Y-axis — several Highcharts-specific
+          features
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  - colorbar
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap

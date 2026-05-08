@@ -1,0 +1,239 @@
+library: bokeh
+language: python
+specification_id: heatmap-adjacency
+created: '2026-05-08T07:07:51Z'
+updated: '2026-05-08T07:28:26Z'
+generated_by: claude-sonnet
+workflow_run: 25541908792
+issue: 5240
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/bokeh/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Community-ordered layout with clear block-diagonal structure — spec requirement
+    fully realized
+  - 'Excellent theme adaptation: warm backgrounds, NaN color correctly shifts from
+    #E8E5DE (light) to #252520 (dark)'
+  - Full spec compliance including colorbar, symmetric fill, and proper weight scale
+  - Clean readable code with seed set, clean imports, and current Bokeh 3.9.0 API
+  weaknesses:
+  - Tick label font size is 15pt vs. recommended 18pt minimum for pixel-based libraries
+    (VQ-01)
+  - Colorbar width of 60px is slightly narrow for a 3600px canvas; could be 80-100px
+    for better readability
+  - Design excellence could be elevated with subtle department boundary separators
+    to reinforce cluster structure
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), not pure white — correct light theme surface
+      Chrome: Title "Researcher Collaboration · heatmap-adjacency · bokeh · anyplot.ai" in dark INK (#1A1A17); axis labels "Researcher (Source)" and "Researcher (Target)" in INK; tick labels (Phy01-Math06) in INK_SOFT gray — all clearly readable
+      Data: Viridis256 colormap on weighted adjacency matrix; absent edges use warm gray NaN color (#E8E5DE); block-diagonal community structure across 4 departments is immediately apparent; colorbar on right with "Connection Strength" label
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), not pure black — correct dark theme surface
+      Chrome: Title and axis labels in light INK (#F0EFE8); tick labels in INK_SOFT (#B8B7B0) — all clearly readable against dark background; no dark-on-dark text failures detected
+      Data: Viridis256 colors identical to light render (purple/teal/yellow unchanged); absent-edge NaN cells use #252520 (nearly matches dark background — intentional recession of absent edges in dark mode)
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title 28pt, axis labels 22pt, colorbar 18-20pt correct; tick labels
+          15pt below recommended 18pt
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 24 x-axis labels at pi/3 rotation, no overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Heatmap cells clear; colorbar width 60px slightly narrow for 3600px
+          canvas
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis256 is perceptually uniform and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square 3600x3600 ideal for symmetric matrix; minor wasted space in
+          title region
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Researcher (Source) and Researcher (Target) are descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis256 for continuous data; #FAF8F1 light / #1A1A17 dark backgrounds;
+          all chrome tokens theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above-default: warm backgrounds + Viridis cohesive; NaN color tasteful;
+          lacks exceptional flourishes'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid removed; all chrome explicitly themed; appropriate outline for
+          enclosed heatmap
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Community-ordered layout makes 4-department block-diagonal structure
+          immediately legible
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct matrix-based adjacency heatmap with symmetric fill
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorbar, community-ordered nodes, symmetric matrix, NaN absent-edge
+          color, node name labels
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=target, y=source, cell color=connection weight
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title contains required spec-id · library · anyplot.ai pattern; colorbar
+          as weight scale legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Within-department dense clusters, sparse cross-dept edges, weighted
+          connections, 4 distinct communities
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Academic research collaboration — real, neutral, commonly-cited adjacency
+          matrix use case
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 24 nodes, 80%/8% intra/inter-dept probability, weight ranges 0.5-1.0/0.1-0.4
+          plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; ruff noqa justified by sys.path manipulation
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code, list comprehension for data flattening, no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: plot-{THEME}.html + plot-{THEME}.png; current Bokeh 3.9.0 API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ColumnDataSource with field transforms, LinearColorMapper with nan_color,
+          categorical ranges, ColorBar via add_layout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: nan_color on LinearColorMapper, field-based color transform, ColorBar
+          as layout component are Bokeh-native
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - colorbar
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - columndatasource
+  dataprep: []
+  styling:
+  - custom-colormap
