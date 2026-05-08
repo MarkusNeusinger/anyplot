@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-spine: Spine Plot for Two-Variable Proportions
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 81/100 | Created: 2026-05-08
@@ -53,24 +53,23 @@ custom_style = Style(
     foreground_subtle=INK_MUTED,
     colors=OKABE_ITO,
     title_font_size=28,
-    label_font_size=18,
-    major_label_font_size=16,
-    legend_font_size=16,
-    value_font_size=14,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=18,
+    value_font_size=16,
 )
-
-x_axis_label = f"← 1st Class ({widths[0]:.1%})  ·  2nd Class ({widths[1]:.1%})  ·  3rd Class ({widths[2]:.1%}) →"
 
 chart = pygal.Histogram(
     style=custom_style,
     width=4800,
     height=2700,
     title="Titanic Survival by Passenger Class · bar-spine · pygal · anyplot.ai",
-    x_title=x_axis_label,
-    y_title="Conditional Proportion",
+    y_title="Survival Rate",
     show_legend=True,
     show_x_guides=False,
     show_y_guides=True,
+    legend_at_bottom=True,
+    legend_at_bottom_columns=2,
 )
 
 # Spine plot using overlapping Histogram bars:
@@ -89,7 +88,20 @@ not_survived_data = [
 chart.add("Survived", survived_data)
 chart.add("Not Survived", not_survived_data)
 
-chart.y_labels = [0, 0.25, 0.5, 0.75, 1.0]
+# Y-axis in percentage format
+chart.y_labels = [
+    {"label": "0%", "value": 0},
+    {"label": "25%", "value": 0.25},
+    {"label": "50%", "value": 0.50},
+    {"label": "75%", "value": 0.75},
+    {"label": "100%", "value": 1.0},
+]
+
+# X-axis labels centered under each variable-width bar (spec requirement)
+chart.x_labels = [
+    {"label": f"{cls} ({w:.1%})", "value": (x_min + x_max) / 2}
+    for cls, w, (x_min, x_max) in zip(class_names, widths, x_ranges, strict=True)
+]
 
 chart.render_to_png(f"plot-{THEME}.png")
 with open(f"plot-{THEME}.html", "wb") as f:
