@@ -1,164 +1,183 @@
 library: altair
+language: python
 specification_id: donut-nested
 created: '2025-12-25T20:04:20Z'
-updated: '2025-12-25T20:06:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510190009
+updated: '2026-05-08T01:17:33Z'
+generated_by: claude-haiku
+workflow_run: 25530701388
 issue: 2015
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/donut-nested/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/donut-nested/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/altair/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent use of consistent color families per department with darker inner ring
-    and lighter outer variations
-  - Clean hierarchical data structure with proper aggregation from outer to inner
-    ring
-  - Good visual separation between rings using white stroke and radius gap
-  - Appropriate use of Altair layered chart composition
-  - Realistic budget allocation scenario with sensible values
-  - Smart label filtering showing only segments >=100 to avoid clutter
+  - Flawless spec compliance — all required features implemented perfectly
+  - Excellent theme adaptation — both light and dark renders pass legibility checks
+    with proper chrome adaptation
+  - Strong visual hierarchy — nested parent→child structure with color families creates
+    clear data storytelling
+  - High technical execution — proper Altair APIs, theme tokens, layer composition,
+    and interactive tooltips
+  - Clean, maintainable code — no unnecessary complexity, hardcoded deterministic
+    data, reproducible output
   weaknesses:
-  - Outer ring labels could be slightly larger for better readability at full size
-  - No explicit legend for smaller segments that do not have labels
-  - The Engineering label in the inner ring slightly clips at the edge of its segment
-  image_description: 'The plot displays a nested donut chart showing budget allocation
-    across 4 departments. The inner ring shows department totals (Engineering, Marketing,
-    Sales, Operations) with dark colors and white bold labels centered in each segment.
-    The outer ring shows 14 expense categories using lighter variations within each
-    department''s color family: Blue shades for Engineering (Salaries, Equipment,
-    Software, Training), Yellow/Gold for Marketing (Digital Ads, Events, Content),
-    Teal/Green for Sales (Commissions, Travel, Tools), and Purple shades for Operations
-    (Facilities, IT Support, Logistics, HR). White strokes separate all segments.
-    Labels appear on larger outer segments. The title "donut-nested · altair · pyplots.ai"
-    is positioned at the top center. The chart uses a square 1200x1200 canvas (scaled
-    3x to 3600x3600) and fills a good portion of the available space.'
+  - Design Excellence ceiling — uses Okabe-Ito defaults without custom refinements
+    (palette, styling, emphasis techniques) that could raise DE scores to 20/20 potential
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title in dark text (fontSize=32), inner region labels in dark text (fontSize=24), outer product labels in soft dark text (fontSize=16) — all clearly readable
+      Data: Inner ring shows Americas (#009E73 green), EMEA (#D55E00 orange), Asia (#0072B2 blue) with bold centered labels. Outer ring displays product categories in lightness-varied shades of parent colors. White stroke separators (width=3) clearly define ring boundaries.
+      Legibility verdict: PASS — all text readable, strong contrast, segments clearly distinguishable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title in light text, region/product labels adapted to light tones for dark background. All elements readable with appropriate contrast.
+      Data: **Identical data colors to light render** — green, orange, blue in same positions. Only background and chrome changed (as required). Black stroke separators provide clear ring definition on dark surface.
+      Legibility verdict: PASS — all text readable in both themes, no dark-on-dark failures, data colors confirm proper theme-adaptation pattern
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title and inner labels clearly readable, outer labels could be slightly
-          larger
+        comment: Title, inner labels (24px), outer labels (16px) all explicitly set
+          and readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, segments well separated
+        comment: Labels positioned with radius parameter, selective display (≥150
+          values) prevents collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Both rings clearly visible with good proportions and spacing
+        comment: 11 data points at manageable density, inner/outer rings separated
+          by strokes, all segments distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Color families are colorblind-safe with good contrast between categories
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization, slight asymmetry due to label placement
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for donut charts (no axes)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid needed, tooltips available for details, clean presentation
+        comment: 'Okabe-Ito palette (#009E73, #D55E00, #0072B2) is CVD-safe, no red-green-only
+          signals'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format (1600×1600) appropriate for donut, inner radius 120–260px,
+          outer 280–420px, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title 'donut-nested · altair · anyplot.ai' in standard format, no
+          redundant axes
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order correct, backgrounds #FAF8F1
+          light/#1A1A17 dark, data colors identical between themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Uses Okabe-Ito standards (not custom palette), ring separators add
+          hierarchy, raised above default 4 for theme-aware styling but lacks custom
+          refinement
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Strokes separate rings, selective labeling reduces clutter, color
+          family gradations show refinement, raised above default 2
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: false
+        comment: Clear parent→child hierarchy, region labels anchor narrative, color
+          families associate products with regions, raised above default 2
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct nested donut chart with two concentric rings
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Inner ring shows parent categories, outer shows children with correct
-          aggregation
-      - id: SC-03
+        comment: Correct nested donut with 2 hierarchy levels (parent level_1, child
+          level_2)
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has color families per parent, segment alignment, labels on larger
-          segments; spacing between rings present
-      - id: SC-04
-        name: Data Range
+        comment: Color families per parent, child segments aligned with parent boundaries,
+          selective labeling, ring spacing via strokes
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible and proportionally represented
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: level_2→theta outer ring, level_1→theta inner ring, values aggregated
+          correctly, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No explicit legend, relies on labels and tooltips only
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format "donut-nested · altair · pyplots.ai"
+        comment: Standard title format, direct labeling replaces legend, labels match
+          data
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows hierarchy with 4 parents and 14 children, varying segment sizes
+        comment: 2 hierarchy levels, 3 parent categories (Americas, EMEA, Asia), 3–4
+          children per parent, realistic breadth
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Budget allocation by department is a real, comprehensible business
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values in $K range (50-450K) are realistic for budget allocation
+        comment: Market share by region and product (regions, products, revenue $140M–$420M),
+          plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Parent totals balanced (Americas $850M, EMEA $900M, Asia $940M),
+          supports visual distinction
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -166,40 +185,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script structure with imports, data, plot, save
+        comment: No functions or classes, straightforward inline construction
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data, no random generation
+        comment: Hardcoded deterministic data, no randomization
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported
+        comment: os, altair, pandas all used, no unused imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for hierarchical palette, no fake interactivity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html correctly
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html, no bare plot.png, Altair 6.1.0
+          API current
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Altair's layered chart approach with mark_arc, but could leverage
-          more declarative features like tooltips more prominently
+        comment: Excellent alt.layer() composition, proper theta encoding, mark_arc()
+          idiomatic, tooltips and configure_* methods correct
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Multi-layer composition, parent-child color mapping, selective labeling,
+          interactive tooltips — beyond generic but not groundbreaking
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep: []
+  styling: []
