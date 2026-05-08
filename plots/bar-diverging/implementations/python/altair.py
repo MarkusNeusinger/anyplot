@@ -1,12 +1,30 @@
-""" pyplots.ai
+"""anyplot.ai
 bar-diverging: Diverging Bar Chart
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-25
+Library: altair 6.0.0 | Python 3.13
+Quality: 92/100 | Updated: 2026-05-08
 """
 
-import altair as alt
-import pandas as pd
+import os
+import sys
 
+
+# Prevent import collision with this script's filename
+sys.path = [p for p in sys.path if not p.endswith("/python")]
+
+import altair as alt  # noqa: E402
+import pandas as pd  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+POSITIVE_COLOR = "#009E73"  # Okabe-Ito position 1 (brand green)
+NEGATIVE_COLOR = "#D55E00"  # Okabe-Ito position 2 (vermillion)
 
 # Data - Customer satisfaction survey results by department
 data = pd.DataFrame(
@@ -54,29 +72,37 @@ chart = (
         ),
         color=alt.Color(
             "sentiment:N",
-            scale=alt.Scale(
-                domain=["Positive", "Negative"],
-                range=["#306998", "#FFD43B"],  # Python Blue for positive, Python Yellow for negative
-            ),
+            scale=alt.Scale(domain=["Positive", "Negative"], range=[POSITIVE_COLOR, NEGATIVE_COLOR]),
             legend=alt.Legend(title="Sentiment", titleFontSize=20, labelFontSize=18, orient="bottom-right", offset=10),
         ),
         tooltip=[alt.Tooltip("department:N", title="Department"), alt.Tooltip("satisfaction_score:Q", title="Score")],
     )
     .properties(
-        width=1400, height=800, title=alt.Title("bar-diverging · altair · pyplots.ai", fontSize=28, anchor="middle")
+        width=1400, height=800, title=alt.Title("bar-diverging · altair · anyplot.ai", fontSize=28, anchor="middle")
     )
 )
 
-# Add zero baseline rule
-zero_line = alt.Chart(pd.DataFrame({"x": [0]})).mark_rule(color="#333333", strokeWidth=2).encode(x="x:Q")
+# Add zero baseline rule with theme-adaptive color
+zero_line = alt.Chart(pd.DataFrame({"x": [0]})).mark_rule(color=INK_SOFT, strokeWidth=2).encode(x="x:Q")
 
-# Combine chart and zero line
+# Combine chart and zero line with theme-adaptive styling
 final_chart = (
-    (chart + zero_line).configure_axis(grid=True, gridOpacity=0.3, gridDash=[3, 3]).configure_view(strokeWidth=0)
+    (chart + zero_line)
+    .properties(background=PAGE_BG)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
+    .configure_axis(
+        grid=True,
+        gridOpacity=0.10,
+        gridColor=INK,
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+    )
+    .configure_title(color=INK, anchor="middle")
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save as PNG (scale_factor=3 for 4800x2700 target)
-final_chart.save("plot.png", scale_factor=3.0)
-
-# Save as HTML for interactivity
-final_chart.save("plot.html")
+# Save as PNG and HTML with theme-suffixed filenames
+final_chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+final_chart.save(f"plot-{THEME}.html")
