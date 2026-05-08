@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-3d: 3D Scatter Plot
-Library: altair | Python 3.13
-Quality: pending | Created: 2025-12-26
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-08
 """
 
 import os
