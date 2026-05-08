@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-adjacency: Network Adjacency Matrix Heatmap
-Library: matplotlib | Python 3.13
-Quality: pending | Created: 2026-05-08
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 90/100 | Created: 2026-05-08
 """
 
 import os
