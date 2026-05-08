@@ -1,159 +1,175 @@
 library: bokeh
+language: python
 specification_id: histogram-2d
 created: '2025-12-25T20:10:38Z'
-updated: '2025-12-25T20:13:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510277989
+updated: '2026-05-08T05:29:40Z'
+generated_by: claude-haiku
+workflow_run: 25538242169
 issue: 2012
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/bokeh/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent use of Viridis colormap for perceptually uniform density representation
-  - Proper canvas sizing (4800x2700) with appropriately scaled text
-  - Clean code structure following KISS principles
-  - Correctly transposed histogram for proper orientation
-  - Grid disabled appropriately for heatmap visualization
-  - Both PNG and HTML outputs generated for interactivity
+  - 'Theme adaptation fixed: both renders now correctly apply light (#FAF8F1) and
+    dark (#1A1A17) backgrounds with appropriate text colors'
+  - Correct 2D histogram with proper binning (35 bins), viridis colormap, and clear
+    density visualization
+  - 'Strong spec compliance: all required features present including colorbar, perceptually
+    uniform colormap, and hover tooltips'
+  - 'Excellent text readability: proper font sizing (28/22/18pt) with correct contrast
+    in both themes'
+  - Clean, professional layout with no overlaps, balanced margins, and excellent canvas
+    utilization
+  - 'Bokeh patterns well-applied: LinearColorMapper, image glyph, and HoverTool used
+    idiomatically'
   weaknesses:
-  - Axis labels are generic (X Value, Y Value) instead of contextual labels with units
-  - Could add HoverTool to show bin counts on mouseover for the HTML version
-  - Data scenario could be more realistic (e.g., financial returns, physics measurements)
-  image_description: The plot displays a 2D histogram heatmap showing the joint distribution
-    of two continuous variables. The visualization uses the Viridis colormap (dark
-    purple for low density transitioning through blue and green to bright yellow for
-    high density). The data clearly shows a positive correlation pattern (diagonal
-    band from lower-left to upper-right), consistent with the bivariate normal distribution
-    with 0.7 correlation specified in the code. The highest density region (yellow,
-    ~45 counts) is centered around (0.5, 0.5). A colorbar labeled "Count" on the right
-    indicates density values ranging from 0 to ~45. The title "histogram-2d · bokeh
-    · pyplots.ai" is displayed at the top-left. X-axis is labeled "X Value" (-3.5
-    to 3.5), Y-axis is labeled "Y Value" (-3 to 4). Grid lines are appropriately disabled
-    for the heatmap. The plot fills the canvas well with good proportions.
+  - 'Design Excellence generic: only default styling applied, no custom aesthetic
+    choices or visual refinement'
+  - 'No visual storytelling: central correlation peak (key insight) not emphasized;
+    viewer must extract pattern'
+  - 'Minor VQ-07: background color rendering appears slightly off from exact reference
+    hex values'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) correctly applied to margins and plot area
+      Chrome: Title "histogram-2d · bokeh · anyplot.ai" in dark text (INK color); axis labels "Tech Stock Returns (%)" and "Commodity Returns (%)" in dark text; tick labels in medium gray (INK_SOFT); colorbar titled "Frequency"
+      Data: Viridis colormap showing 2D histogram with diagonal peak (yellow/bright green for high density, purple for low); 35 bins clearly visible
+      Legibility verdict: PASS - all text readable, correct theme adaptation, no contrast issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) correctly applied to margins and plot area
+      Chrome: All text elements in light colors; title, axis labels in light text (INK color); tick labels in lighter gray (INK_SOFT); colorbar readable
+      Data: Identical viridis distribution to light render (data colors theme-independent, only chrome changed)
+      Legibility verdict: PASS - excellent contrast, no dark-on-dark failures, theme adaptation correct, colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick marks are readable but could be slightly
-          larger
+        comment: All text properly sized (28/22/18pt) and readable in both themes
+          with correct color contrast
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Perfect layout with excellent spacing, no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Heatmap bins are clearly visible with good color contrast
+        comment: Heatmap perfectly visible, colorbar clearly legible across full canvas
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe
+        comment: Viridis is perceptually uniform and CVD-safe
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good proportions, slight asymmetry with colorbar
+        comment: Well-balanced proportions with generous margins
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units, correct title format
+      - id: VQ-07
+        name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: Labels are descriptive but lack units (generic X/Y Value)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid correctly disabled, colorbar present but title could be more
-          descriptive
+        comment: Viridis and backgrounds now correct; minor deduction for background
+          color precision
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Generic defaults; Viridis is standard choice, no custom design elements
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Grid off is appropriate; clean but no intentional refinements beyond
+          defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Distribution shown clearly but no visual emphasis on central correlation
+          peak
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 2D histogram heatmap
+        comment: Correct 2D histogram heatmap implementation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Colorbar present, perceptually uniform colormap used
-      - id: SC-04
-        name: Data Range
+        comment: Colorbar, viridis colormap, 35 bins, hover tooltips all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned, axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar shows correct count range
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: histogram-2d · bokeh · pyplots.ai'
+        comment: Title format correct, colorbar properly labeled
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows correlation, density variation, but no extreme outliers
+        comment: Full bivariate distribution visualized with peak and tail regions
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Bivariate normal is plausible but generic
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Values are sensible for normalized data
+        comment: Financial scenario realistic, domain-appropriate, and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values realistic for asset returns; bin count appropriate for 5000
+          points
     code_quality:
       score: 10
       max: 10
@@ -163,33 +179,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear structure with no functions/classes
+        comment: Linear progression, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set with np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern Bokeh API used
+        comment: Clean, no fake UI, proper Selenium approach
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
-      items: []
+        comment: Correct output format (plot-{THEME}.png/html)
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Proper API usage: figure(), image() glyph, LinearColorMapper, ColorBar,
+          HoverTool'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: LinearColorMapper + image glyph well-utilized; theme-tokens demonstrate
+          mastery
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - colorbar
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
