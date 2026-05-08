@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-stacked-percent: 100% Stacked Bar Chart
-Library: letsplot | Python 3.13
-Quality: pending | Created: 2025-05-08
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-08
 """
 
 import os
