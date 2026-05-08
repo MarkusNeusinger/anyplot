@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dot-matrix-proportional: Dot Matrix Chart for Proportional Counts
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 89/100 | Created: 2026-05-08
@@ -20,7 +20,7 @@ import time
 from pathlib import Path
 
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, Legend, LegendItem, Range1d
+from bokeh.models import ColumnDataSource, HoverTool, Legend, LegendItem, Range1d
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -61,21 +61,33 @@ for row in range(N_ROWS):
 p = figure(
     width=4800,
     height=2700,
-    title="Exercise Frequency Survey  ·  dot-matrix-proportional  ·  bokeh  ·  anyplot.ai",
+    title="dot-matrix-proportional  ·  bokeh  ·  anyplot.ai",
     toolbar_location=None,
     x_range=Range1d(-0.8, N_COLS - 0.2),
-    y_range=Range1d(-1.0, N_ROWS),
+    y_range=Range1d(-0.6, N_ROWS - 0.3),
 )
 
 # Draw one renderer per category; collect legend items manually
 legend_items = []
 total = sum(counts)
+renderers = []
 for i, (cat, cnt) in enumerate(zip(categories, counts, strict=True)):
     mask = [j for j, c in enumerate(colors) if c == OKABE_ITO[i]]
-    src = ColumnDataSource(data={"x": [xs[j] for j in mask], "y": [ys[j] for j in mask]})
-    r = p.scatter("x", "y", source=src, color=OKABE_ITO[i], size=140, line_color=PAGE_BG, line_width=2)
     pct = round(cnt / total * 100)
+    src = ColumnDataSource(
+        data={
+            "x": [xs[j] for j in mask],
+            "y": [ys[j] for j in mask],
+            "category": [cat] * len(mask),
+            "count": [cnt] * len(mask),
+            "pct": [pct] * len(mask),
+        }
+    )
+    r = p.scatter("x", "y", source=src, color=OKABE_ITO[i], size=140, line_color=PAGE_BG, line_width=2)
+    renderers.append(r)
     legend_items.append(LegendItem(label=f"{cat}  ({cnt} · {pct}%)", renderers=[r]))
+
+hover = HoverTool(renderers=renderers, tooltips=[("Category", "@category"), ("Count", "@count"), ("Share", "@pct%")])
 
 # Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
@@ -90,6 +102,7 @@ p.xaxis.visible = False
 p.yaxis.visible = False
 p.xgrid.grid_line_color = None
 p.ygrid.grid_line_color = None
+p.add_tools(hover)
 
 # Legend in right panel (outside plot area so no overlap with data)
 legend = Legend(
