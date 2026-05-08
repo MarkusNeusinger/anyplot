@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: bar-spine
 created: '2026-05-08T15:15:56Z'
-updated: '2026-05-08T15:24:07Z'
+updated: '2026-05-08T15:40:35Z'
 generated_by: claude-sonnet
 workflow_run: 25563122960
 issue: 5249
@@ -12,40 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 85
 review:
   strengths:
-  - Perfect spec compliance — true spine plot with variable-width bars, proportion
-    normalization, and centered x-axis labels via FixedTicker.
-  - Excellent data quality — plausible neutral business scenario with meaningful variation
-    across both bar widths and segment proportions.
-  - Idiomatic Bokeh code — ColumnDataSource, HoverTool tooltips, NumeralTickFormatter,
-    FixedTicker all used correctly.
-  - 'Correct Okabe-Ito palette with #009E73 as first series.'
+  - 'Correct spine plot: bar widths proportional to marginal counts, stacked segments
+    normalized to 100%'
+  - Proper Okabe-Ito palette in canonical order with fully theme-adaptive chrome for
+    both light/dark renders
+  - '"★ Best: 85% on-time" focal-point annotation creates genuine data storytelling'
+  - 'Idiomatic Bokeh: ColumnDataSource, FixedTicker + major_label_overrides, NumeralTickFormatter,
+    HoverTool with rich segment-level tooltips'
+  - Clean flat script with seed, all font sizes explicitly set to spec values
   weaknesses:
-  - 'Dark render appears to use light-theme chrome: background shows as warm off-white
-    (#FAF8F1) instead of #1A1A17, and text appears dark instead of light — verify
-    ANYPLOT_THEME=dark is correctly passed at runtime.'
-  - 'Design Excellence needs elevation: no explicit visual emphasis on the key story
-    (Operations outperforms at 85% on-time) — consider highlighting the best-performing
-    bar or adding a reference line.'
-  - Box outline still present — set p.outline_line_color = None for a cleaner spine-free
-    look and bolder title typography.
+  - 'Screenshot cropped: figure is 4800x2700 but screenshot is only 4800x2561 — x-axis
+    tick labels (department names) and x-axis label are likely cut off; fix by injecting
+    document.body.style.margin=''0'' before screenshot or setting p.min_border_bottom
+    = 150'
+  - 'Excessive top whitespace: Bokeh adds default padding to a [0.0, 1.0] y-range,
+    leaving ~15% of the canvas empty above the 100% line; fix with p.y_range = Range1d(-0.01,
+    1.03)'
+  - 'Visible gaps between adjacent bars: line_color=PAGE_BG, line_width=2 creates
+    divider lines; the spec requires ''no gaps'' — set line_color=None'
+  - Thin 'Cancelled' segments (2.5-8%) are barely visible at the top of each bar and
+    have no labels; consider making the minimum segment height more visually distinct
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme background, not pure white.
-      Chrome: Title "Project Completion Status by Department · bar-spine · bokeh · anyplot.ai" in dark ink at top-left — clearly readable. Axis labels ("Department (bar width ∝ project count)" / "Proportion of Projects") in dark ink, readable. Y-axis tick labels (0%–100%) in dark secondary ink, readable. X-axis tick labels (Engineering, Marketing, Sales, Operations) in dark secondary ink, readable.
-      Data: Four variable-width stacked bars. Bottom segment = #009E73 (On Time, teal/green), middle = #D55E00 (Delayed, orange), top = #0072B2 (Cancelled, blue). Bold white percentage labels within each large segment. Legend in top-right with correct Okabe-Ito colors.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "Project Completion Status by Department · bar-spine · bokeh · anyplot.ai" in dark ink (#1A1A17), readable. Y-axis label "Proportion of Projects" visible. Y-axis tick labels (20%-100%) in gray (#4A4A44), readable. X-axis tick labels (department names) and x-axis label likely cut off — screenshot is 4800x2561 vs. 4800x2700 figure height.
+      Data: Four variable-width bars (Engineering ~30%, Marketing ~16%, Sales ~35%, Operations ~19%). Segments: teal/green (#009E73) for On Time, orange (#D55E00) for Delayed, blue (#0072B2) for Cancelled. White percentage labels inside larger segments (65%, 27%, 71%, 21%, 73%, 20%, 85%, 12%). Star annotation "Best: 85% on-time" near legend.
+      Legibility verdict: PARTIAL PASS — all visible text readable, but bottom x-axis area (department names + axis label) appears cut off due to screenshot height discrepancy
 
     Dark render (plot-dark.png):
-      Background: Appears to be warm off-white (#FAF8F1) — SAME as light render. Should be #1A1A17 (warm near-black) for dark theme. This is a theme-chrome failure.
-      Chrome: Title text appears dark (same dark ink as light render). Axis labels appear dark. Tick labels appear dark. All chrome elements appear to use light-theme token values instead of dark-theme tokens (#F0EFE8 / #B8B7B0). This indicates ANYPLOT_THEME=dark was not applied at render time, or the dark theme values were not correctly propagated.
-      Data: Identical to light render — #009E73, #D55E00, #0072B2 bar colors (correct, data colors should be theme-invariant).
-      Legibility verdict: FAIL — dark render appears to render with light-theme chrome (light background, dark text) instead of dark-theme chrome (#1A1A17 background, light text). Text is readable on the displayed light background, but the dark render is wrong-themed.
+      Background: Near-black (#1A1A17) — correct
+      Chrome: Title in light (#F0EFE8), readable. Axis labels and tick labels in light gray (#B8B7B0), readable. Legend uses elevated dark (#242420). No dark-on-dark failures. Same screenshot height concern as light render.
+      Data: Colors identical to light render — teal (#009E73), orange (#D55E00), blue (#0072B2). White percentage labels readable on colored bars. Star annotation visible in teal.
+      Legibility verdict: PASS — all visible text readable against dark background; no dark-on-dark issues found
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -53,49 +57,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set (28pt title, 22pt axis, 18pt ticks/legend).
-          Readable in both renders; dark render appears to show light-theme chrome.
+        comment: Font sizes explicitly set (28pt/22pt/18pt); all visible text readable
+          in both themes. Screenshot 4800x2561 vs 4800x2700 figure likely clips bottom
+          x-axis labels.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements.
+        comment: No collisions; percentage labels inside bars well-placed.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Bars and percentage labels clearly visible.
+        comment: Bars and labels clearly visible. Thin Cancelled segments (2.5-8%
+          height) barely distinguishable at bar tops.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito CVD-safe; white labels on colored bars provide good contrast.
+        comment: Okabe-Ito palette is CVD-safe; segments clearly distinguished by
+          hue and luminance.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Good layout; minor blank space at canvas bottom from taller Selenium
-          window.
+        passed: false
+        comment: Large top whitespace above 100% line (~15% canvas wasted) and screenshot
+          height shorter than figure suggests bottom clipping.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
-        max: 2
-        passed: true
-        comment: Descriptive axis labels including 'bar width proportional to project
-          count' note.
-      - id: VQ-07
-        name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Data colors correct Okabe-Ito order (#009E73 first). Light render
-          background correct (#FAF8F1). Dark render appears to show light-theme chrome
-          (same warm off-white background, dark text) instead of #1A1A17 background
-          with light chrome.'
+        comment: Y-axis label visible and descriptive. X-axis label 'Department (bar
+          width proportional to project count)' likely cut off in screenshot.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order (teal/orange/blue), backgrounds
+          #FAF8F1/#1A1A17 correct, all chrome theme-adaptive.'
     design_excellence:
       score: 12
       max: 20
@@ -105,26 +110,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above well-configured default: correct Okabe-Ito, custom font sizes,
-          styled legend, no toolbar, thin separator borders between segments. Not
-          yet at strong-design level.'
+        comment: 'Professional Okabe-Ito colors, thoughtful percentage labels, star
+          annotation shows design intent. Held below 6: Bokeh frame outline retained,
+          top whitespace unpolished.'
       - id: DE-02
         name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Y-only grid at 10% alpha is tasteful, legend properly styled. Outer
+          frame outline and top whitespace reduce refinement.
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Y-grid only at 10% alpha, x-grid removed, toolbar off, legend padded.
-          Box outline still present (outline_line_color=INK_SOFT).
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: false
-        comment: Color semantics (green=good, orange=warning, blue=cancelled) and
-          percentage labels guide viewer. Bar widths encode marginal sizes. No emphasis
-          on key insight (Operations 85% vs Engineering 65% on-time).
+        comment: Star annotation creates focal point, percentage labels guide viewer,
+          variable widths add data depth. Story is implicit rather than guided by
+          clear visual hierarchy.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -132,27 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: True spine plot with variable-width bars and 100% normalized segments.
+        comment: 'Correct spine plot: variable-width stacked bars normalized to 100%.'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Variable widths, proportional segments, no gaps, percentage labels,
-          centered x-labels, legend.
+        comment: 'All main features present. Deduction: line_color=PAGE_BG creates
+          visible gaps between bars violating no-gaps spec; x-axis labels potentially
+          cut off.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = departments, Y = conditional proportion, width = marginal count.
+        comment: X encodes departments via proportional widths; Y encodes conditional
+          proportions 0-100%. All four departments shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title ends with 'bar-spine · bokeh · anyplot.ai'. Legend labels match
-          data.
+        comment: Title follows correct format. Legend labels match status categories.
     data_quality:
       score: 15
       max: 15
@@ -162,22 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 4 departments x 3 statuses with variation in both bar widths and
-          proportions.
+        comment: 'Demonstrates all spine plot aspects: variable widths, 100%-height
+          stacks, 3+ fill categories, percentage labels, highlighted insight.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Project completion by corporate department — neutral, real-world
+        comment: Project completion status by department is a neutral, real-world
           business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: On-time 65-85%, delay 12-27%, cancel 2-8% — plausible corporate project
-          ranges.
+        comment: Project counts 70-150 per dept, on-time rates 65-85%, delayed/cancelled
+          proportions internally consistent and realistic.
     code_quality:
       score: 10
       max: 10
@@ -187,7 +193,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions or classes.
+        comment: 'Flat script: imports, data, plot, save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -199,22 +205,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imported names are used.
+        comment: All imports (numpy, bokeh, selenium) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; loop over statuses for ColumnDataSource is idiomatic.
+        comment: Iterating over statuses for quads is clean and Pythonic.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png using current Bokeh
-          API.
+        comment: Saves plot-{THEME}.html + plot-{THEME}.png correctly.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -222,16 +227,17 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ColumnDataSource, quad glyph, HoverTool, FixedTicker, NumeralTickFormatter
-          — exemplary idiomatic Bokeh.
+        comment: ColumnDataSource per series, FixedTicker, NumeralTickFormatter, HoverTool,
+          Selenium screenshot pattern. Fully idiomatic Bokeh.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: HoverTool with custom tooltips, HTML export, FixedTicker for non-standard
-          x-axis centering. Good Bokeh-specific usage; standard but well-applied.
-  verdict: REJECTED
+        comment: HoverTool with per-segment tooltips, NumeralTickFormatter 0%, FixedTicker
+          + major_label_overrides for custom categorical x-axis on numeric range are
+          distinctly Bokeh.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -246,6 +252,7 @@ impl_tags:
   - iteration-over-groups
   dataprep:
   - normalization
+  - cumulative-sum
   styling:
   - alpha-blending
   - edge-highlighting
