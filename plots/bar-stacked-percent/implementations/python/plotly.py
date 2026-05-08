@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-stacked-percent: 100% Stacked Bar Chart
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 75/100 | Updated: 2026-05-08
@@ -45,10 +45,11 @@ for i, component in enumerate(components):
             name=component,
             x=categories,
             y=df[component].values,
-            marker_color=OKABE_ITO[i],
+            marker=dict(color=OKABE_ITO[i], line=dict(width=0)),
             text=[f"{v:.0f}%" for v in df[component].values],
             textposition="inside",
             textfont=dict(size=16, color="white"),
+            hovertemplate="<b>%{x}</b><br>%{fullData.name}: %{y:.0f}%<extra></extra>",
         )
     )
 
@@ -63,6 +64,9 @@ fig.update_layout(
         tickfont=dict(size=18, color=INK_SOFT),
         gridcolor=GRID,
         linecolor=INK_SOFT,
+        linewidth=2,
+        showline=True,
+        showgrid=False,
     ),
     yaxis=dict(
         title=dict(text="Market Share (%)", font=dict(size=22, color=INK)),
@@ -70,26 +74,32 @@ fig.update_layout(
         range=[0, 100],
         ticksuffix="%",
         gridcolor=GRID,
-        linewidth=1,
+        linewidth=2,
+        linecolor=INK_SOFT,
         showgrid=True,
+        showline=True,
     ),
     legend=dict(
-        font=dict(size=18, color=INK_SOFT),
-        bgcolor=ELEVATED_BG,
+        font=dict(size=18, color=INK),
         bordercolor=INK_SOFT,
-        borderwidth=1,
+        borderwidth=2,
         orientation="h",
         yanchor="bottom",
-        y=1.02,
+        y=1.04,
         xanchor="center",
         x=0.5,
+        bgcolor=PAGE_BG,
     ),
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font=dict(color=INK),
-    margin=dict(l=100, r=40, t=120, b=100),
+    margin=dict(l=100, r=40, t=140, b=100),
     bargap=0.2,
+    hovermode="x unified",
 )
+
+fig.update_xaxes(showline=True, linewidth=2, linecolor=INK_SOFT, mirror=False)
+fig.update_yaxes(showline=True, linewidth=2, linecolor=INK_SOFT, mirror=False, side="left")
 
 # Save
 fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
