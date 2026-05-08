@@ -1,33 +1,56 @@
-""" pyplots.ai
+"""anyplot.ai
 donut-nested: Nested Donut Chart
 Library: plotly 6.5.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-25
+Quality: pending | Created: 2025-12-25
 """
 
+import os
+
 import plotly.graph_objects as go
+
+
+# Theme tokens (see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito categorical palette (canonical order, positions 1-4 for inner ring)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
+
+def lighten_hex(hex_color, factor=0.4):
+    """Create a lighter shade of a hex color by blending with white."""
+    hex_color = hex_color.lstrip("#")
+    r, g, b = tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
+    r = int(r + (255 - r) * factor)
+    g = int(g + (255 - g) * factor)
+    b = int(b + (255 - b) * factor)
+    return f"#{r:02x}{g:02x}{b:02x}"
 
 
 # Data - Company budget allocation by department and expense category
 departments = ["Engineering", "Marketing", "Sales", "Operations"]
 dept_values = [45, 25, 18, 12]  # Millions
-dept_colors = ["#306998", "#FFD43B", "#4ECDC4", "#FF6B6B"]
+dept_colors = OKABE_ITO
 
-# Child categories (outer ring) with consistent color families
+# Child categories (outer ring) with consistent color families (lighter shades)
 categories = [
-    # Engineering (blues)
+    # Engineering
     "Salaries",
     "Infrastructure",
     "R&D",
     "Tools",
-    # Marketing (yellows/golds)
+    # Marketing
     "Advertising",
     "Events",
     "Content",
-    # Sales (teals)
+    # Sales
     "Commissions",
     "Travel",
     "Training",
-    # Operations (reds/corals)
+    # Operations
     "Facilities",
     "IT Support",
 ]
@@ -49,40 +72,31 @@ cat_values = [
     8,
     4,
 ]
-# Color families - lighter shades for children within each parent
-cat_colors = [
-    # Engineering blues
-    "#306998",
-    "#4682B4",
-    "#5B9BD5",
-    "#7CB9E8",
-    # Marketing yellows
-    "#FFD43B",
-    "#FFE066",
-    "#FFEB99",
-    # Sales teals
-    "#4ECDC4",
-    "#7DDCD5",
-    "#A6EBE6",
-    # Operations reds
-    "#FF6B6B",
-    "#FF9999",
-]
+
+# Generate child colors as lighter shades of parent colors
+cat_colors = []
+child_counts = [4, 3, 3, 2]  # Children per department
+for dept_idx, count in enumerate(child_counts):
+    base_color = dept_colors[dept_idx]
+    for i in range(count):
+        # Create progressively lighter shades
+        shade = lighten_hex(base_color, factor=0.15 + i * 0.15)
+        cat_colors.append(shade)
 
 # Create figure with two pie traces (inner and outer rings)
 fig = go.Figure()
 
-# Inner ring - Departments (parent categories)
+# Inner ring - Departments (parent categories) with both name and percentage
 fig.add_trace(
     go.Pie(
         values=dept_values,
         labels=departments,
         hole=0.30,
         domain={"x": [0.12, 0.72], "y": [0.05, 0.95]},
-        marker=dict(colors=dept_colors, line=dict(color="white", width=3)),
-        textinfo="percent",
+        marker={"colors": dept_colors, "line": {"color": PAGE_BG, "width": 3}},
+        textinfo="label+percent",
         textposition="inside",
-        textfont=dict(size=20, color="white"),
+        textfont={"size": 18, "color": "white"},
         hovertemplate="<b>%{label}</b><br>$%{value}M<br>%{percent}<extra></extra>",
         name="Departments",
         sort=False,
@@ -96,33 +110,52 @@ fig.add_trace(
         labels=categories,
         hole=0.58,
         domain={"x": [0.12, 0.72], "y": [0.05, 0.95]},
-        marker=dict(colors=cat_colors, line=dict(color="white", width=2)),
+        marker={"colors": cat_colors, "line": {"color": PAGE_BG, "width": 2}},
         textinfo="label",
         textposition="outside",
-        textfont=dict(size=16),
+        textfont={"size": 15, "color": INK},
         hovertemplate="<b>%{label}</b><br>$%{value}M<br>%{percent}<extra></extra>",
         name="Categories",
         sort=False,
     )
 )
 
-# Layout
+# Layout with theme-adaptive colors
 fig.update_layout(
-    title=dict(
-        text="Company Budget Allocation · donut-nested · plotly · pyplots.ai",
-        font=dict(size=28),
-        x=0.5,
-        xanchor="center",
-    ),
+    title={
+        "text": "Company Budget Allocation · donut-nested · plotly · pyplots.ai",
+        "font": {"size": 28, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
     showlegend=True,
-    legend=dict(font=dict(size=16), orientation="v", x=1.02, y=0.5, yanchor="middle"),
-    template="plotly_white",
-    margin=dict(l=80, r=200, t=100, b=80),
-    annotations=[dict(text="<b>$100M</b><br>Total Budget", x=0.42, y=0.5, font=dict(size=24), showarrow=False)],
+    legend={
+        "font": {"size": 16, "color": INK_SOFT},
+        "orientation": "v",
+        "x": 1.02,
+        "y": 0.5,
+        "yanchor": "middle",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+    },
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
+    margin={"l": 80, "r": 200, "t": 100, "b": 80},
+    annotations=[
+        {
+            "text": "<b>$100M</b><br>Total Budget",
+            "x": 0.42,
+            "y": 0.5,
+            "font": {"size": 24, "color": INK},
+            "showarrow": False,
+        }
+    ],
 )
 
 # Save as PNG (4800 x 2700 px)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
 
 # Save interactive HTML
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
