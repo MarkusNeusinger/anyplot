@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: heatmap-adjacency
 created: '2026-05-08T21:24:50Z'
-updated: '2026-05-08T21:29:43Z'
+updated: '2026-05-08T21:40:50Z'
 generated_by: claude-sonnet
 workflow_run: 25579880458
 issue: 5240
@@ -12,86 +12,96 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance and data quality: all required adjacency-matrix features
-    present, realistic context, correct scale'
-  - Both theme renders correctly adapt chrome (background, text, absent-cell fill,
-    legend frame) while keeping viridis data colors identical
-  - Community-separator lines (geom_vline/geom_hline) are an elegant grammar-of-graphics
-    approach that tells the block-diagonal story clearly
-  - Clean, reproducible code with no extraneous complexity
+  - Viridis colormap is correctly chosen for continuous weight data, providing perceptual
+    uniformity and CVD safety
+  - 'Custom per-theme absent-cell background colors (#E0DED7 light / #2A2A25 dark)
+    cleanly distinguish empty cells without using pure white or black'
+  - Dashed community separators (geom_vline/geom_hline) effectively highlight block-diagonal
+    cluster structure
+  - 'All theme tokens correctly wired: plot_background, panel_background, axis_title,
+    axis_text, legend_background all adapt between light/dark'
+  - 'Perfect spec compliance: undirected graph fills both triangles, node ordering
+    exposes community blocks, colorbar legend included'
+  - Flat, reproducible script with seed(42) and clean imports — idiomatic plotnine
+    grammar throughout
   weaknesses:
-  - Tick label font size (size=9) is far below the recommended 16pt for a 3600x3600
-    canvas; axis title (18pt) and plot title (20pt) are also below 20pt/24pt recommendations
-    — all text should be scaled up
-  - Legend frame box could be removed for a more minimal, modern look
-  - 'DE-02 refinement: heatmap implementations typically remove all four spines rather
-    than keeping panel border'
+  - X-axis tick labels with 30 node names are tight even at 45-degree rotation — consider
+    reducing font size slightly or using abbreviated labels for large matrices
+  - 'DE-01 moderate: design is clean and functional but the default panel aspect-ratio
+    and uniform tile sizing leave room for a stronger focal-point emphasis on the
+    densest clusters'
+  - axis_line not explicitly set in theme(), relies on plotnine defaults — for strict
+    dark-theme compliance the axis line color should be set to INK_SOFT
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct per style guide
-      Chrome: Title "heatmap-adjacency · plotnine · anyplot.ai" in dark ink, clearly visible. Axis labels "Source Researcher" / "Target Researcher" in dark ink. Tick labels (P01-P10, B01-B10, C01-C10) visible in secondary ink but noticeably small (size=9, recommended 16pt).
-      Data: viridis colormap from dark purple (low weight ~0.05) through blue, teal, green to yellow (high weight ~1.0). Absent edges rendered as light gray #E0DED7. Block-diagonal structure clearly visible for three research field clusters separated by dashed lines.
-      Legibility verdict: PASS (minor concern: tick fonts below style guide recommendation)
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "heatmap-adjacency · plotnine · anyplot.ai" is clearly readable in dark ink at top center. Y-axis label "Source Researcher" and X-axis label "Target Researcher" are clearly visible. Tick labels (P01–P10, B01–B10, C01–C10) are visible at 16pt; x-axis labels rotated 45° are somewhat tight with 30 nodes but legible.
+      Data: Viridis colormap (purple → green → yellow) on the heatmap tiles. Three block-diagonal clusters (Physics P-group, Biology B-group, CompSci C-group) are clearly visible as dense yellow-green regions. Cross-community connections are sparse purple dots. Absent cells render as #E0DED7 (light warm gray). Dashed community separators are well-visible. Legend "Collaboration Strength" shows viridis scale 0.25–1.0.
+      Legibility verdict: PASS — all text readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct per style guide
-      Chrome: Title and axis labels rendered in light cream (#F0EFE8), clearly visible against near-black background. Tick labels in softer gray (#B8B7B0), readable against dark panel. Legend frame uses elevated dark (#242420). No dark-on-dark issues detected.
-      Data: viridis data colors identical to light render — only absent-cell fill switches to #2A2A25 (dark near-black). Block-diagonal structure and community separators remain fully visible.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title is light-colored and clearly readable. Axis labels and tick labels appear in light/soft ink and are legible against the dark background. No dark-on-dark failures observed — all chrome elements properly adapt to the dark theme.
+      Data: Viridis data colors are identical to the light render (purple → green → yellow). Absent cells render as #2A2A25 (slightly lighter than background), providing subtle but sufficient distinction. Dashed community separators and block structure remain clearly visible.
+      Legibility verdict: PASS — all text readable against the near-black background; no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
-        passed: false
-        comment: Tick labels size=9 (recommended 16pt), axis titles 18pt (recommended
-          20pt), title 20pt (recommended 24pt) — all below style guide for large canvas
+        passed: true
+        comment: All text readable in both themes; font sizes explicitly set (title=24,
+          axis_title=20, axis_text=16, legend=16/18); tick labels slightly tight with
+          30 nodes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: x-axis labels rotated 45deg with ha=right, no collisions
+        comment: X-axis labels rotated 45deg and mostly readable; some tightness with
+          30-node labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All matrix tiles clearly visible; block-diagonal clusters apparent
+        comment: Tiles clearly visible; block-diagonal structure immediately apparent;
+          absent vs present cells clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: viridis is CVD-safe and perceptually uniform
+        comment: Viridis is perceptually uniform and CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 12x12 inch square (3600x3600px) appropriate for symmetric matrix
+        comment: Square 12x12in format appropriate for symmetric matrix; nothing cut
+          off; legend well-placed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels; title follows spec format
+        comment: Title matches spec format; axis labels descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'viridis for continuous data; #FAF8F1 light bg, #1A1A17 dark bg —
-          both correct'
+        comment: 'Viridis correctly used for continuous data; backgrounds #FAF8F1
+          light / #1A1A17 dark confirmed'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -99,22 +109,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: theme-adaptive absent-cell colors, viridis, proper
-          token wiring; held back by small fonts and unnecessary legend border'
+        comment: 'Above default: custom theme-adaptive absent-cell color, community
+          separators add intentional hierarchy; not exceptional but thoughtfully designed'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Above default: grid removed, rotated tick labels; could remove all
-          four spines for heatmap'
+        comment: All spines removed, grid blanked (appropriate for heatmap), dashed
+          community boundaries add refinement
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Community-separator dashed lines create clear visual narrative of
-          block structure
+        comment: Block-diagonal structure clearly communicates community clusters;
+          dashed separators guide the viewer; sparse cross-community connections vs
+          dense within-community visible
     spec_compliance:
       score: 15
       max: 15
@@ -124,26 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct adjacency matrix heatmap
+        comment: Correct heatmap adjacency matrix
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Community ordering, colorbar, node-name tick labels, symmetric matrix
-          all present
+        comment: 'All features: node reordering by community, both triangles filled,
+          weight color mapping, distinct absent background, colorbar, node name tick
+          labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=target, Y=source; all 30 nodes; weight to fill color
+        comment: X=target, Y=source; all 30 nodes shown on both axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labeled Collaboration Strength
+        comment: Title 'heatmap-adjacency · plotnine · anyplot.ai' correct; legend
+          'Collaboration Strength' with viridis scale
     data_quality:
       score: 15
       max: 15
@@ -153,21 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Presence/absence, weighted edges, community clusters, cross-field
-          connections all shown
+        comment: Shows weighted adjacency matrix, symmetric undirected graph, block-diagonal
+          community structure, cross-community sparsity
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Researcher collaboration across Physics, Biology, CompSci — plausible
-          and neutral
+        comment: Researcher collaboration network across 3 scientific fields — realistic,
+          neutral, plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30 nodes (within 20-200 spec range); weights 0.05-1.0 sensible
+        comment: 30 nodes within spec range (20-200); weights 0.05-1.0 appropriate
+          for collaboration strength
     code_quality:
       score: 10
       max: 10
@@ -177,7 +191,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no classes or functions
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -195,14 +209,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Clean code; minor: size= deprecated in geom_vline/geom_hline in
-          newer plotnine'
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png correctly
+        comment: Saves as plot-{THEME}.png with correct dimensions
     library_mastery:
       score: 7
       max: 10
@@ -212,25 +225,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct grammar of graphics; scale_fill_cmap, pd.Categorical(ordered=True),
-          proper theme() wiring
+        comment: ggplot grammar correctly used; geom_tile, scale_fill_cmap, scale_x/y_discrete,
+          geom_vline/hline all idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: geom_vline/geom_hline as grammar layers for community boundaries;
-          na_value= in scale_fill_cmap for absent edges
+        comment: na_value in scale_fill_cmap for absent cells, pd.Categorical for
+          node ordering, scale_x_discrete(limits=...) for custom order
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - layer-composition
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
   styling:
   - custom-colormap
-  - alpha-blending
