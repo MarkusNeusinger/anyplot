@@ -1,167 +1,171 @@
 library: matplotlib
+language: python
 specification_id: scatter-color-mapped
 created: '2025-12-26T09:44:54Z'
-updated: '2025-12-26T09:47:17Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520225317
+updated: '2026-05-08T12:47:51Z'
+generated_by: claude-haiku
+workflow_run: 25556111854
 issue: 2004
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/matplotlib/plot.png
-preview_html: null
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-    - colorbar
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - custom-colormap
-    - alpha-blending
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent use of viridis colormap with perceptually uniform color distribution
-  - Clean, well-structured code following KISS principles
-  - Realistic data scenario (geographic temperature measurements) with meaningful
-    correlation
-  - White edge outlines on markers improve visibility and separation
-  - Perfect title format and axis labeling with units
-  - Good marker sizing and alpha for the data density
+  - Excellent theme-adaptive design—both light and dark renders fully readable and
+    visually balanced
+  - Proper use of viridis colormap for continuous data (perceptually uniform, colorblind-safe)
+  - Clean, reproducible code with elegant theme token system
+  - Appropriate realistic data context (weather stations, geographic patterns)
+  - All design elements purposeful—no chartjunk or unnecessary ornamentation
   weaknesses:
-  - Could use matplotlib-specific features like Normalize for explicit color range
-    control
-  - Grid could be even more subtle (alpha=0.2) to reduce visual noise
-  - Colorbar tick label size (16pt) is slightly smaller relative to other labels (20pt)
-  image_description: The plot displays a scatter plot with 150 data points distributed
-    across a coordinate system representing longitude (-10° to 10°) on the x-axis
-    and latitude (-5° to 5°) on the y-axis. Each point is colored according to a temperature
-    value using the viridis colormap, ranging from approximately 2°C (dark purple)
-    to 30°C (bright yellow). The color gradient clearly shows warmer temperatures
-    (yellow-green) concentrated toward the top-right region and cooler temperatures
-    (purple-blue) toward the bottom-left, demonstrating the intended correlation.
-    Points have white edge outlines for better visibility. A vertical colorbar on
-    the right shows "Temperature (°C)" with appropriate tick marks. The title correctly
-    follows the format "scatter-color-mapped · matplotlib · pyplots.ai". Grid lines
-    are subtle with alpha transparency.
+  - Design could be elevated with additional visual refinement (e.g., subtle background
+    pattern, marker shape variation)
+  - Wind speed magnitude only encoded in color—could explore secondary encoding (marker
+    size) for enhanced visual clarity
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1, correct for light theme
+      Chrome: Title, axis labels ("Latitude (°N)", "Longitude (°W)"), tick labels, and colorbar label all in dark text (#1A1A17 for primary, #4A4A44 for secondary). All clearly readable against light surface.
+      Data: 180 scatter markers colored with viridis colormap (purple→blue→cyan→green→yellow) representing wind speed (5-25 m/s). Markers at s=200 with edgecolors matching background. Y-axis grid subtle (alpha=0.2).
+      Legibility verdict: PASS — All text readable, no light-on-light failures, data markers clearly distinguishable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17, correct for dark theme
+      Chrome: Title, axis labels, tick labels, and colorbar label all in light text (#F0EFE8 for primary, #B8B7B0 for secondary). All clearly readable against dark surface. Spines are light gray (#B8B7B0).
+      Data: Viridis colormap colors identical to light render (purple→blue→cyan→green→yellow), confirming correct data color preservation. Grid visible with adjusted opacity.
+      Legibility verdict: PASS — All text readable, no dark-on-dark failures, proper theme adaptation throughout, data colors preserved identically.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, colorbar
-          label at 20pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, all labels are clearly separated
+        comment: All text (title, labels, ticks, colorbar) properly sized and colored
+          for clarity in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 180 points well distributed; alpha=0.75 handles density; colorbar
+          positioned without collision
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers sized at s=150 with alpha=0.8, appropriate for 150 points
-          (guidelines suggest s=100-200 for 100-300 points, so this is good but could
-          be slightly larger)
+        comment: s=200 markers clearly visible; viridis perceptually uniform; full
+          colorbar range shown
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses viridis colormap, which is perceptually uniform and colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space, plot is well-centered with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Longitude (°)" and "Latitude (°)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Viridis is colorblind-safe and perceptually uniform
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 landscape with tight margins; 4800×2700 px proportioned; nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle at alpha=0.3, but colorbar label font could be slightly
-          larger for better balance
+        comment: Descriptive labels with units; correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Continuous viridis correct; backgrounds theme-correct; both renders
+          properly adapted
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional use of theme tokens and careful colormap choice; could
+          push further with subtle enhancements
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace, refined marker
+          edges
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Geographic clustering patterns clear; wind intensity gradient supports
+          interpretation
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct scatter plot type
+        comment: Correct scatter with color-mapped third variable
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X (longitude), Y (latitude), color (temperature) correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Colormap present, colorbar with clear label and units, moderate point
-          size with transparency
-      - id: SC-04
-        name: Data Range
+        comment: Scatter markers, colorbar, color mapping all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y/color mapping correct; axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar accurately represents temperature scale
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "scatter-color-mapped · matplotlib · pyplots.ai"
+        comment: Title format correct; colorbar label descriptive
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows color gradient across full range, but correlation pattern could
-          be more pronounced in some areas
+        comment: Geographic distribution, regional clusters, wind patterns all shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Geographic temperature measurements is a real-world scenario that
-          makes sense
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature range of ~2-30°C is realistic, longitude/latitude ranges
-          are sensible
+        comment: Weather station data realistic; US geographic region plausible; wind
+          speeds realistic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 180 points balanced; coordinate ranges sensible; density appropriate
     code_quality:
       score: 10
       max: 10
@@ -171,41 +175,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions or classes
+        comment: No functions/classes; straightforward linear flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: All imports used and necessary
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current matplotlib API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI; elegant theme handling
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png; current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses ax.scatter with colormap correctly, but could leverage more
-          matplotlib-specific features like norm for color scaling or custom colorbar
-          formatting
+        passed: true
+        comment: Axes methods used correctly; high-level API appropriate
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Normalize, colorbar styling, theme tokens show knowledge
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending

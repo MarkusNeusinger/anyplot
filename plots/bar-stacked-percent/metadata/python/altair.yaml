@@ -1,155 +1,176 @@
 library: altair
+language: python
 specification_id: bar-stacked-percent
 created: '2025-12-25T22:49:25Z'
-updated: '2025-12-25T22:52:06Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20511964949
+updated: '2026-05-08T10:55:44Z'
+generated_by: claude-haiku
+workflow_run: 25551509658
 issue: 2008
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/altair/plot.html
-quality_score: 98
-impl_tags:
-  dependencies: []
-  techniques:
-  - hover-tooltips
-  patterns: []
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/altair/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent use of Altair's declarative grammar with proper encoding types (:N,
-    :Q)
-  - Perfect implementation of 100% stacking using stack="normalize"
-  - Colorblind-safe palette with good visual contrast between segments
-  - Real-world energy mix data scenario that perfectly demonstrates proportional comparison
-  - Clean segment separation with white strokes improves readability
-  - Interactive tooltips enhance data exploration
-  - Consistent component ordering across all bars
-  weaknesses:
-  - Y-axis label "Share of Energy Mix" could include explicit unit notation like "(%)"
-    even though format shows percentages
-  image_description: 'The plot displays a 100% stacked bar chart showing energy mix
-    composition by country (Brazil, China, Germany, India, USA). Each bar is normalized
-    to 100% and divided into four colored segments: Fossil Fuels (dark blue #306998),
-    Nuclear (yellow #FFD43B), Renewables (green #2ca02c), and Hydro (cyan #17becf).
-    The x-axis shows country names with horizontal labels, the y-axis shows percentage
-    from 0% to 100% labeled "Share of Energy Mix". The title "bar-stacked-percent
-    · altair · pyplots.ai" appears at the top center. A legend on the right identifies
-    each energy source. White strokes separate bar segments. Brazil notably shows
-    ~70% hydro (cyan), while India shows ~72% fossil fuels (blue). Germany shows the
-    highest renewables share (~38%).'
+  - 'Perfect theme adaptation: all text readable in both light and dark modes; data
+    colors unchanged; chrome properly adapts'
+  - 'Idiomatic Altair: stack="normalize" is the correct, high-level approach for 100%
+    stacking'
+  - 'Strict Okabe-Ito compliance: first series is brand green (#009E73), colors follow
+    canonical order'
+  - 'Clean visual hierarchy: white strokes, subtle grid, legend placement all well-considered'
+  - 'Correct spec implementation: all required features present, no scope creep, realistic
+    data'
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title "bar-stacked-percent · altair · anyplot.ai" (28px dark #1A1A17), X-axis "Country" (22px), Y-axis "Share of Energy Mix (%)" (22px), tick labels (18px) - all clearly readable against light background
+      Data: Four bars (Brazil, China, Germany, India, USA) with normalized segments in Okabe-Ito colors - Fossil Fuels (#009E73 brand green, bottom), Nuclear (#D55E00 orange), Renewables (#0072B2 blue), Hydro (#CC79A7 pink, top). White strokes on bars provide definition. Legend on right with "Energy Source" title.
+      Grid: Subtle y-axis grid lines (15% opacity) visible but not dominant
+      Legibility verdict: PASS - All text excellent contrast, no overlap, all colors clearly distinguishable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title, axis labels, and tick labels all rendered in light color (#F0EFE8) with excellent contrast against dark background. Legend on elevated background (#242420) with light text labels. Grid lines subtle and visible.
+      Data: Data colors are IDENTICAL to light render - Fossil Fuels #009E73, Nuclear #D55E00, Renewables #0072B2, Hydro #CC79A7 (no color flipping between themes, only chrome adapts). White bar strokes remain visible and provide definition.
+      Theme adaptation: Perfect - no dark-on-dark failures, all elements readable, brand green (#009E73) maintains visibility on dark surface
+      Legibility verdict: PASS - All elements perfectly readable, proper contrast throughout, no theme-adaptation failures
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: all text perfectly readable, title 28pt, axis labels 18-22pt
+        comment: All text explicitly sized (title 28px, axis labels 22px, ticks 18px),
+          rendered clearly in both themes with proper contrast
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: no overlapping text, horizontal x-axis labels well-spaced
+        comment: All text distinct, no collisions or overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: bar segments clearly visible with white stroke separation
+        comment: All bars fully visible, colors clearly distinguishable, segments
+          well-defined
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: 'colorblind-safe palette: blue, yellow, green, cyan'
+        comment: Okabe-Ito palette is colorblind-safe; no red-green as sole signal
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: excellent canvas utilization, balanced margins
+        comment: Proportions excellent (1600×900), nothing cut off, generous margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: descriptive labels but y-axis could include explicit units
+        comment: '"Country" and "Share of Energy Mix (%)" are descriptive with units;
+          format correct'
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: subtle grid (alpha 0.3), legend well placed
+        comment: 'First series #009E73, Okabe-Ito order correct, backgrounds #FAF8F1
+          (light) / #1A1A17 (dark), both renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Okabe-Ito palette is inherently sophisticated; white bar strokes
+          add polish; clean, intentional styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle y-axis grid (15% opacity), L-shaped spine frame, white strokes
+          for definition, elevated legend background
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 100% stacking reveals energy composition across countries; segment
+          sizes show proportional differences; visual hierarchy guides reader
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: correct 100% stacked bar chart with stack="normalize"
+        comment: Correct 100% stacked bar chart (normalize encoding applied)
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: category on x-axis, components as stacked segments
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: distinct colors, clear legend, consistent ordering, tooltips
-      - id: SC-04
-        name: Data Range
+        comment: Shows categories (5 countries), components (4 energy sources), proportional
+          segments, legend
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: y-axis shows full 0-100% range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: countries (nominal), Y: normalized percentages (0–100%), Color:
+          energy source (nominal)'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: legend clearly identifies all four energy sources
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'uses exact format: bar-stacked-percent · altair · pyplots.ai'
+        comment: 'Title format correct: ''bar-stacked-percent · altair · anyplot.ai'',
+          legend clearly identifies all sources'
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: shows varied proportions across countries demonstrating different
-          energy profiles
+        comment: 'Demonstrates all aspects of 100% stacked bar visualization: composition,
+          proportional segments, multi-series variation'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: real-world energy mix scenario from spec examples
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: realistic energy mix percentages for each country
+        comment: Energy mix by country is real-world plausible and neutral (factual
+          statistics)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sensible (per-country percentages sum to 100%); country selection
+          geographically diverse
     code_quality:
       score: 10
       max: 10
@@ -159,40 +180,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: imports → data → chart → save
+        comment: No unnecessary functions or classes; straightforward dataframe to
+          chart pipeline
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: deterministic hardcoded data
+        comment: Data hardcoded and deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: only altair and pandas
+        comment: Only os, pandas, altair; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: current Altair API
+        comment: No fake UI; appropriate complexity; clean, readable code
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: declarative encoding types, stack="normalize", alt.Order(), tooltips,
-          alt.Scale(), configure methods
+        comment: 'Proper Altair patterns: stack="normalize" for 100% stacking, color
+          scale domain/range mapping, order encoding, configure methods for theming'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses interactive tooltips, saves PNG and HTML, clean configure_axis/configure_legend
+          for theme adaptation
+    score_caps_applied: []
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

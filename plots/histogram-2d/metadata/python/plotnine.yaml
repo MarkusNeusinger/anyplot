@@ -1,162 +1,168 @@
 library: plotnine
+language: python
 specification_id: histogram-2d
 created: '2025-12-25T20:09:48Z'
-updated: '2025-12-25T20:12:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510278009
+updated: '2026-05-08T05:34:05Z'
+generated_by: claude-haiku
+workflow_run: 25538650260
 issue: 2012
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
 review:
   strengths:
-  - Excellent use of viridis colormap which is perceptually uniform and colorblind-safe
-  - Clean grammar of graphics implementation with geom_bin2d
-  - Appropriate bin count (40) provides good resolution for the 5000-point dataset
-  - Text sizing follows the library guidelines perfectly (24pt title, 20pt axis, 16pt
-    ticks)
-  - Correlation pattern in the bivariate normal data is clearly visible
-  weaknesses:
-  - Axis labels are generic (X Value, Y Value) rather than context-specific; could
-    use a realistic scenario like Asset Returns vs Index Returns
-  - Grid lines could be more subtle (lower alpha) for a cleaner appearance
-  image_description: The plot displays a 2D histogram heatmap showing a bivariate
-    normal distribution with positive correlation. The visualization uses rectangular
-    bins colored with the viridis colormap, ranging from dark purple (low counts ~10)
-    through teal/cyan to bright yellow (high counts ~40+). The highest density appears
-    in the center around (0, 0) with an elongated elliptical pattern extending from
-    lower-left to upper-right, clearly showing the correlation structure. The title
-    reads "histogram-2d · plotnine · pyplots.ai" at the top. X-axis is labeled "X
-    Value" ranging from -4 to ~3, Y-axis is labeled "Y Value" ranging from -2 to 4.
-    A colorbar legend on the right shows "Count" with scale from ~10 to 40. The background
-    uses a minimal theme with subtle grid lines.
+  - 'Theme adaptation: Perfectly executed theme-adaptive chrome with no legibility
+    failures in either render'
+  - 'Typography & sizing: Font sizes explicitly set and perfectly readable at full
+    resolution (4800×2700 px)'
+  - 'Color palette: Correct viridis colormap for continuous density data with excellent
+    perceptual uniformity and colorblind safety'
+  - 'Data presentation: Bivariate normal distribution with clear correlation effectively
+    revealed; density peak visually prominent'
+  - 'Codecraft: Clean, reproducible, idiomatic plotnine implementation with proper
+    seed and no unnecessary complexity'
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title, axis labels, tick labels all in dark INK colors (#1A1A17 for primary, #4A4A44 for secondary) - excellent readability on light background
+      Data: 2D histogram with 40×40 bins showing bivariate normal distribution. Colormap is viridis with yellow (high density ~40) at center transitioning through green, teal, blue, and dark purple (low density ~0) at periphery. Density peak clearly visible.
+      Colorbar: Shows scale 0-40 with viridis gradient
+      Legibility verdict: PASS - All text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title, axis labels, tick labels all in light INK colors (#F0EFE8 for primary, #B8B7B0 for secondary) - excellent readability on dark background, NO dark-on-dark failures
+      Data: Identical data colors to light render - yellow, green, teal, blue, purple in exact same positions and intensities. This confirms theme-correct chrome adaptation.
+      Colorbar: Identical to light render, scale visible
+      Legibility verdict: PASS - All text readable, proper light-on-dark contrast throughout
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable with
-          appropriate font sizes (24pt title, 20pt axis labels, 16pt ticks)
+        comment: All font sizes explicitly set and perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: Zero overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bins are well-sized (40 bins), density pattern clearly visible with
-          good color gradient
+        comment: Histogram bins optimally sized; density patterns clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Viridis colormap is perceptually uniform and colorblind-safe
+        comment: Viridis colormap is perceptually uniform and CVD-safe
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions but some empty space on left side of plot; plot
-          fills reasonable canvas area
+        comment: Perfect layout with 60-70% plot utilization and balanced margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels "X Value" and "Y Value" but no units (though units
-          aren't really applicable for this abstract data)
+        comment: Descriptive labels with units
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle, legend is well-placed; however grid could be slightly
-          more subtle
+        comment: Viridis for continuous data, correct backgrounds, theme-adaptive
+          chrome, no theme legibility failures
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional, intentional design above defaults but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Good refinement with subtle grid, borders, and whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through density encoding; correlation structure
+          evident
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 2D histogram heatmap with rectangular bins
+        comment: Correct 2D histogram heatmap
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X and Y correctly mapped to axes
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Includes colorbar showing density scale, uses viridis colormap as
-          recommended
-      - id: SC-04
-        name: Data Range
+        comment: Colorbar, perceptually uniform colormap, density visualization all
+          present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show complete distribution
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Axes correctly mapped with appropriate ranges
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled as "Count"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "histogram-2d · plotnine · pyplots.ai"'
+        comment: Title format correct, colorbar properly labeled
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows correlation pattern and density variation well, but could benefit
-          from showing different density regions more distinctly
+        comment: Bivariate normal with clear correlation structure exemplifies the
+          plot type
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Bivariate normal distribution is a classic statistical example; plausible
-          but generic
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Standard normal distribution scale (-4 to 4) is appropriate
+        comment: Financial returns scenario is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values factually realistic for percentage returns
     code_quality:
       score: 10
       max: 10
@@ -166,40 +172,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions or classes
+        comment: Clean linear flow with no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Random seed set for determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: All imports used, no unnecessary dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current plotnine API used
+        comment: Clean, Pythonic, no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format and dpi
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses plotnine's grammar of graphics (ggplot + geom_bin2d + scale_fill_continuous),
-          but doesn't leverage advanced features like faceting or statistical transformations
+        comment: Expert use of grammar of graphics pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages geom_bin2d and scale_fill_cmap distinctively
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - grid-styling
+  - publication-ready

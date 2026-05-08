@@ -1,158 +1,170 @@
 library: seaborn
+language: python
 specification_id: histogram-overlapping
 created: '2025-12-25T21:47:40Z'
-updated: '2025-12-25T21:49:43Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20511324915
+updated: '2026-05-08T07:00:11Z'
+generated_by: claude-haiku
+workflow_run: 25541719178
 issue: 2010
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/seaborn/plot.png
-preview_html: null
-quality_score: 96
-impl_tags:
-  dependencies: []
-  techniques:
-  - alpha-blending
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent visual clarity with well-chosen transparency (alpha=0.5) that reveals
-    overlapping distribution regions
-  - Realistic business context (employee response times by department) with appropriate
-    data characteristics
-  - Clean, readable code following KISS principles with proper reproducibility (seed=42)
-  - Professional styling with appropriate font sizes, subtle grid, and well-positioned
-    legend
+  - Excellent theme adaptation with no readability failures in either render
+  - 'Perfect palette compliance: first series is brand green, Okabe-Ito order followed
+    precisely'
+  - Clean code with explicit, readable styling choices
+  - Well-chosen realistic data context (employee response times)
+  - All text legible with explicit font sizing throughout
   weaknesses:
-  - Bins are calculated independently for each histogram rather than being explicitly
-    aligned across all groups (spec recommends aligned bin edges)
-  - Could use more idiomatic seaborn approach with DataFrame and hue parameter instead
-    of three separate histplot calls
-  image_description: The plot displays three overlapping histograms showing employee
-    response times (ms) by department. Engineering (blue) is centered around 450ms
-    with a tight distribution, Marketing (yellow) has a wider spread centered around
-    520ms extending to ~900ms, and Sales (pink/coral) shows a consistent mid-range
-    distribution around 480ms. The transparency (alpha=0.5) effectively reveals overlapping
-    regions where distributions intersect. The title "histogram-overlapping · seaborn
-    · pyplots.ai" appears at the top, with a clear legend in the upper right corner.
-    Axis labels include units, and a subtle dashed y-axis grid aids readability.
+  - Design Excellence could be elevated with more distinctive styling choices beyond
+    defaults
+  - Could leverage sns.set_theme() for more systematic theme configuration
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), perfectly matches spec
+      Chrome: Title, axis labels, tick labels all clearly visible in dark text
+      Data: Three overlapping histograms in Okabe-Ito colors (green #009E73, orange #D55E00, blue #0072B2) with alpha=0.5 transparency
+      Legend: Upper right corner with proper styling and contrast
+      Grid: Subtle Y-axis grid with appropriate alpha
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), perfectly matches spec
+      Chrome: Title, axis labels, tick labels all clearly visible in light text, no dark-on-dark failures
+      Data: Identical colors to light render (green, orange, blue) - only chrome flipped
+      Legend: Proper dark theme styling with light text on dark background
+      Grid: Subtle and readable against dark surface
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 39
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt - all perfectly readable
+        comment: All text explicitly sized (24/20/16pt), perfectly readable in both
+          themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No text overlap issues
+        comment: Histogram bars clearly distinguishable despite overlap via transparency
+          and color
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars clearly visible with appropriate alpha for overlapping
+        comment: Optimal bin sizing, bars clearly visible, alpha=0.5 allows proper
+          overlap visibility
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow/coral distinguishable; yellow/coral slightly close for
-          some colorblind users
+        comment: Okabe-Ito palette is CVD-safe with excellent contrast
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good canvas utilization, balanced margins
+        comment: Ideal proportions, nothing cut off, generous whitespace
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Response Time (ms)", "Count"'
+        comment: Descriptive with units, title matches spec format
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Subtle dashed grid (alpha=0.3), legend well-placed upper right
+        comment: 'First series #009E73, follows Okabe-Ito order, correct theme backgrounds'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Polished use of Okabe-Ito palette and clean theme adaptation; goes
+          beyond defaults but no custom innovation
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, subtle grid, proper legend styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Employee response times creates clear departmental efficiency narrative
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct overlapping histogram
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X-axis shows continuous values, Y-axis shows frequency count
-      - id: SC-03
+        comment: Correct overlapping histogram implementation
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has transparency, legend, distinct colors; bins independently calculated
-          per group rather than explicitly aligned
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: overlapping, transparent, distinct colors,
+          legend'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Response Time on X, Count on Y, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Engineering, Marketing, Sales
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct: "histogram-overlapping · seaborn · pyplots.ai"'
+        comment: Title matches format, legend correctly labels groups
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows different central tendencies (450/520/480ms), different spreads
-          (60-100 std), clear overlap regions
+        comment: Three distributions with different means and spreads
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Employee response times by department is a plausible business scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 300-700ms response times are realistic for employee metrics
+        comment: Employee response times by department is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Response times 200-900ms are realistic and well-proportioned
     code_quality:
       score: 10
       max: 10
@@ -162,11 +174,11 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Simple, clean code without unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: Uses np.random.seed(42)
       - id: CQ-03
@@ -174,28 +186,43 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib, numpy, seaborn imported
+        comment: Only required imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly saves as plot-{THEME}.png
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses sns.histplot correctly with good styling, but could leverage
-          DataFrame + hue parameter for more idiomatic seaborn
+        comment: Proper sns.histplot() usage, clean theme integration
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses seaborn's histplot with fine-grained matplotlib control
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

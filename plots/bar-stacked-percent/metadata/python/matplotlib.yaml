@@ -1,168 +1,175 @@
 library: matplotlib
+language: python
 specification_id: bar-stacked-percent
 created: '2025-12-25T22:49:07Z'
-updated: '2025-12-25T22:51:20Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20511964841
+updated: '2026-05-08T10:55:28Z'
+generated_by: claude-haiku
+workflow_run: 25551170861
 issue: 2008
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/matplotlib/plot.png
-preview_html: null
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - explicit-figure
-  - iteration-over-groups
-  dataprep:
-  - normalization
-  styling:
-  - edge-highlighting
 review:
   strengths:
-  - Excellent data storytelling with realistic European energy mix showing diverse
-    compositions (nuclear-heavy France vs coal-heavy Poland)
-  - Smart percentage label placement only for segments >=8%, avoiding clutter
-  - Good color contrast with white edge separators between segments
-  - Proper normalization to 100% with clear visual communication
-  - Title format correctly includes spec-id and library
-  weaknesses:
-  - No distinctive matplotlib features used (hatching, custom annotations, or advanced
-    styling could enhance)
-  - Legend frame adds slight visual weight that could be removed for cleaner look
-  image_description: 'The plot displays a 100% stacked bar chart showing the European
-    energy mix for 6 countries (Germany, France, UK, Spain, Italy, Poland). Each bar
-    is divided into 5 colored segments representing energy sources: Renewables (Python
-    blue #306998), Nuclear (golden yellow #FFD43B), Natural Gas (green #50C878), Coal
-    (crimson red #DC143C), and Other (purple #9370DB). Percentage labels appear within
-    segments that are ≥8%, using white text on dark backgrounds and black text on
-    light backgrounds. The title reads "European Energy Mix · bar-stacked-percent
-    · matplotlib · pyplots.ai" at the top. The legend is positioned outside the plot
-    area to the upper right. A subtle horizontal grid at y=0, 25, 50, 75, 100 aids
-    reading. The country names appear below each bar on the x-axis, with "Country"
-    as the axis label and "Percentage (%)" on the y-axis.'
+  - Perfect theme adaptation with both light and dark renders visually beautiful and
+    readable
+  - 'Correct Okabe-Ito palette usage with perfect ordering (first series = brand green
+    #009E73)'
+  - Intelligent data labeling threshold (≥8%) balances information density with readability
+  - Professional typography hierarchy and generous whitespace throughout
+  - Clean, idiomatic matplotlib code with comprehensive theme-adaptive chrome implementation
+  - Excellent visual clarity for comparing energy composition across countries
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title is bold and readable in dark text (#1A1A17). Axis labels "Country" and "Percentage (%)" are clear dark text. Tick labels (countries and y-axis percentages) are dark and readable. Grid lines are subtle (alpha 0.15). Spines colored appropriately with INK_SOFT. Legend is positioned upper right with light background.
+      Data: Five energy sources shown in Okabe-Ito colors (green #009E73, orange #D55E00, blue #0072B2, pink #CC79A7, gold #E69F00). First series is correct brand green. Percentage labels displayed inside segments where ≥8%, using bold dark text. All bars and segments fully visible and distinct.
+      Legibility verdict: PASS - All text elements are clearly readable against the light background with excellent contrast.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title is bold and readable in light text (#F0EFE8). Axis labels and tick labels are light text (#B8B7B0) with excellent contrast against dark background. Grid lines remain subtle but visible. Spines properly colored. Legend frame adapts to dark theme with appropriate background.
+      Data: All five energy source colors are identical to light render (green, orange, blue, pink, gold). Percentage labels inside segments remain visible in light text. No dark-on-dark text issues detected.
+      Legibility verdict: PASS - All text elements are clearly readable against the dark background. No dark-on-dark failures. Brand green reads well on dark surface.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, percentage
-          labels at 14pt bold - all clearly readable
+        comment: All fonts properly sized (title 24pt, labels 20pt, ticks 16pt). Readable
+          in both light and dark themes.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, percentage labels only shown when segment ≥8%
+        comment: Clean spacing, data labels positioned well within segments, legend
+          outside plot area, no collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar segments are well-sized with white edge separators, clearly visible
+        comment: All bars and segments fully visible, colors well-saturated, smart
+          label threshold (≥8%) prevents clutter.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Good palette avoiding pure red-green conflict, though red/green segments
-          adjacent could be slightly improved
+        comment: Okabe-Ito palette is colorblind-safe, correct green (#009E73) as
+          first series, good contrast throughout.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well, legend outside doesn't waste space, good
-          proportions
+        comment: 0-100% scale appropriate for composition, good proportions, nothing
+          cut off, generous margins.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: '"Country" and "Percentage (%)" are descriptive; "Percentage (%)"
-          has unit but "Country" is generic'
+        comment: Descriptive title, clear axis labels, subtitle provides context.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle at alpha=0.3, legend well-placed but frameon=True adds
-          visual weight
+        comment: 'First series #009E73 correct, Okabe-Ito order perfect, backgrounds
+          #FAF8F1 (light) / #1A1A17 (dark) correct, both renders theme-correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom Okabe-Ito palette applied correctly, professional polish,
+          intentional visual hierarchy with typography, data labels add refinement.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, subtle grid, generous whitespace, clean
+          L-shaped frame.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy (title → categories → segments), percentage
+          labels guide viewer focus, color progression aids tracking.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 100% stacked bar chart
+        comment: Correct 100% stacked bar chart implementation.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on x-axis, components as stacked segments, values normalized
-          to 100%
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Percentage labels in segments, distinct colors, clear legend, consistent
-          component order
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: 6 categories, 5 components, normalized to
+          100%, percentage labels shown.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All bars show 0-100%, all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Countries on x-axis, energy sources as segments, values normalized
+          to percentages, axes show full data range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all 5 energy sources
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses "{context} · {spec-id} · {library} · pyplots.ai" format correctly
+        comment: Title format correct (bar-stacked-percent · matplotlib · anyplot.ai),
+          legend identifies all components.
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows diverse proportions: France dominated by Nuclear (66%), Poland
-          by Coal (68%), Germany more balanced mix, Italy with zero Nuclear - demonstrates
-          the visualization''s ability to show both dominated and mixed compositions'
+        comment: Shows all aspects of plot type (composition, proportions, multiple
+          categories across multiple components).
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: European energy mix is a real, comprehensible scenario with plausible
-          country-specific patterns (France nuclear-heavy, Poland coal-dependent)
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: TWh values are realistic for European electricity generation
+        comment: Energy mix by country is real-world plausible, neutral context, no
+          controversial aspects.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100% normalized scale sensible for composition analysis, country
+          values realistic.
     code_quality:
       score: 10
       max: 10
@@ -172,40 +179,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: Simple straightforward code, no unnecessary functions or classes,
+          direct array operations.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (hardcoded numpy array), no random elements
+        comment: Deterministic hardcoded data, no randomness, fully reproducible.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy, both used
+        comment: Only os, numpy, matplotlib imported; all used, no extraneous dependencies.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Appropriate complexity, clean loop structure, no fake interactivity,
+          smart conditional label display.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png correctly, uses current matplotlib API,
+          proper savefig with theme parameter.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Standard matplotlib bar stacking, no distinctive features like custom
-          annotations, hatching, or advanced styling
+        passed: true
+        comment: Proper axes methods (not pyplot), correct figure/axes creation, theme
+          env var handling, tight_layout appropriate.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Smart percentage label threshold (≥8%), careful bottom array stacking
+          management, thoughtful edge-color matching to background.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - publication-ready
+  - grid-styling

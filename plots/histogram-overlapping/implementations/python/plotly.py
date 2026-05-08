@@ -1,17 +1,28 @@
-""" pyplots.ai
+""" anyplot.ai
 histogram-overlapping: Overlapping Histograms
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 96/100 | Created: 2025-12-25
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-08
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+OKABE_ITO = ["#009E73", "#D55E00"]
+
 # Data - heights by gender (realistic scenario showing overlapping distributions)
 np.random.seed(42)
-male_heights = np.random.normal(175, 7, 200)  # Mean ~175cm, std ~7cm
-female_heights = np.random.normal(162, 6, 200)  # Mean ~162cm, std ~6cm
+male_heights = np.random.normal(175, 7, 200)
+female_heights = np.random.normal(162, 6, 200)
 
 # Create figure
 fig = go.Figure()
@@ -21,7 +32,7 @@ fig.add_trace(
     go.Histogram(
         x=male_heights,
         name="Male",
-        marker=dict(color="#306998", line=dict(color="#1a3a52", width=1)),
+        marker=dict(color=OKABE_ITO[0], line=dict(color=INK_SOFT, width=1)),
         opacity=0.5,
         xbins=dict(size=3),
     )
@@ -31,7 +42,7 @@ fig.add_trace(
     go.Histogram(
         x=female_heights,
         name="Female",
-        marker=dict(color="#FFD43B", line=dict(color="#b3940a", width=1)),
+        marker=dict(color=OKABE_ITO[1], line=dict(color=INK_SOFT, width=1)),
         opacity=0.5,
         xbins=dict(size=3),
     )
@@ -42,35 +53,40 @@ fig.update_layout(barmode="overlay")
 
 # Layout styling for 4800x2700 px output
 fig.update_layout(
-    title=dict(text="histogram-overlapping · plotly · pyplots.ai", font=dict(size=32), x=0.5, xanchor="center"),
+    title=dict(
+        text="histogram-overlapping · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"
+    ),
     xaxis=dict(
-        title=dict(text="Height (cm)", font=dict(size=24)),
-        tickfont=dict(size=18),
-        gridcolor="rgba(0,0,0,0.1)",
-        gridwidth=1,
+        title=dict(text="Height (cm)", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
+        gridcolor=GRID,
+        linecolor=INK_SOFT,
+        zerolinecolor=INK_SOFT,
     ),
     yaxis=dict(
-        title=dict(text="Frequency", font=dict(size=24)),
-        tickfont=dict(size=18),
-        gridcolor="rgba(0,0,0,0.1)",
-        gridwidth=1,
+        title=dict(text="Frequency", font=dict(size=22, color=INK)),
+        tickfont=dict(size=18, color=INK_SOFT),
+        gridcolor=GRID,
+        linecolor=INK_SOFT,
+        zerolinecolor=INK_SOFT,
     ),
     legend=dict(
-        font=dict(size=20),
+        font=dict(size=16, color=INK_SOFT),
         x=0.98,
         y=0.98,
         xanchor="right",
         yanchor="top",
-        bgcolor="rgba(255,255,255,0.8)",
-        bordercolor="rgba(0,0,0,0.2)",
+        bgcolor=ELEVATED_BG,
+        bordercolor=INK_SOFT,
         borderwidth=1,
     ),
-    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
     margin=dict(l=100, r=80, t=100, b=100),
 )
 
 # Save as PNG (4800 x 2700 px)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
 
 # Save interactive HTML version
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

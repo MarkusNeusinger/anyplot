@@ -1,168 +1,180 @@
 library: bokeh
+language: python
 specification_id: bar-diverging
 created: '2025-12-25T22:48:28Z'
-updated: '2025-12-25T22:50:36Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20511948599
+updated: '2026-05-08T09:02:37Z'
+generated_by: claude-haiku
+workflow_run: 25546402730
 issue: 2009
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - manual-ticks
-  patterns:
-  - data-generation
-  - columndatasource
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/bokeh/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of diverging bar chart with clear visual distinction
-    between positive/negative values
-  - Proper use of horizontal orientation for long category labels as recommended in
-    spec
-  - Good sorting by value for pattern recognition
-  - Clean zero baseline using Bokeh Span annotation
-  - Appropriate text sizing for 4800x2700 canvas
-  - Realistic NPS-style customer satisfaction data scenario
+  - Perfect technical execution with all text explicitly sized and readable in both
+    light and dark themes
+  - 'Excellent palette compliance: correct Okabe-Ito colors with perfect theme-adaptive
+    chrome in both renders'
+  - Clear data storytelling through sorting, color contrast, and zero baseline focal
+    point that guides the viewer
+  - Clean, deterministic code following KISS principle with idiomatic Bokeh usage
+  - Realistic, neutral customer satisfaction survey context demonstrating full feature
+    range
   weaknesses:
-  - Missing legend to explain blue=positive, yellow=negative color encoding
-  - No random seed set (though data is deterministic, adding np.random.seed(42) would
-    be consistent with style guide)
-  - Could leverage Bokeh interactive features like HoverTool to show exact values
-    on hover
-  image_description: The plot displays a horizontal diverging bar chart showing customer
-    satisfaction survey results (Net Promoter Score style) across 10 categories. Blue
-    bars (#306998) extend rightward from zero for positive values, while yellow/gold
-    bars (#FFD43B) extend leftward for negative values. Categories are sorted by value
-    from lowest (Tech Support at -35) to highest (Return Policy at +52). The title
-    "bar-diverging · bokeh · pyplots.ai" appears at the top left. X-axis shows "Net
-    Satisfaction Score" ranging from -60 to 60+, Y-axis shows "Category" with all
-    10 category labels clearly visible. A subtle vertical baseline at zero separates
-    positive from negative values. The plot uses the full canvas width effectively
-    with good proportions.
+  - Design could reach publication-level sophistication; zero baseline is a nice touch
+    but additional refinement in typography hierarchy or custom styling would elevate
+    DE-01 above 4/8
+  - Could leverage more distinctive Bokeh features (interactive callbacks, selection
+    tools, custom glyphs) for stronger library mastery score
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), exactly as specified
+      Chrome: Title "bar-diverging · bokeh · anyplot.ai" and axis labels rendered in dark ink (#1A1A17); all perfectly readable against light background
+      Data: 10 horizontal bars with green (#009E73) for positive satisfaction scores extending right, orange (#D55E00) for negative scores extending left; subtle vertical grid at 10% alpha; discrete vertical line at zero baseline; category labels fully readable
+      Legibility verdict: PASS - excellent contrast, no dark-on-dark issues, all elements distinguished
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), exactly as specified
+      Chrome: Title and axis labels rendered in light tones (#F0EFE8 primary, #B8B7B0 secondary); all clearly visible against dark background with no dark-on-dark failures
+      Data: Green and orange bar colors are identical to light render (confirming only chrome adapted to theme); zero baseline visible; subtle grid maintained; all category labels remain fully readable in light text
+      Legibility verdict: PASS - perfect theme adaptation with clear text hierarchy and zero contrast failures; brand green #009E73 displays well on dark surface
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all clearly
-          readable
+        comment: All font sizes explicitly set (28pt title, 22pt labels, 18pt ticks);
+          perfect readability in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, horizontal orientation prevents label collisions
+        comment: Zero overlap—all category labels and axis ticks fully distinct and
+          readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-sized with good height (0.7), alpha at 0.9 provides
-          solid visibility
+        comment: Bar heights optimally sized with 0.7 spacing; all elements clearly
+          visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow is colorblind-safe, though contrast could be slightly
-          better
+        comment: Green (#009E73) and orange (#D55E00) have excellent contrast; Okabe-Ito
+          palette is CVD-safe
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well, good margins, balanced whitespace
+        comment: Excellent balance; plot fills ~65% of canvas with generous balanced
+          margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no units (score is unitless, so acceptable)
+        comment: 'Descriptive labels: ''Category'' and ''Net Satisfaction Score'''
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.3), but no legend explaining color meaning
+        comment: 'Perfect: #009E73 (pos.), #D55E00 (neg.), correct backgrounds, theme-adaptive
+          chrome, identical data colors across renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library default with intentional color choice and
+          zero-baseline detail, but not publication-exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: subtle grid (10% alpha), L-shaped frame, generous
+          whitespace, zero baseline adds polish'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good visual hierarchy through sorting, color contrast split at zero,
+          and baseline focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct diverging bar chart type
+        comment: Correct diverging bar chart with positive and negative bars
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on Y-axis, values on X-axis correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: contrasting colors, horizontal orientation,
-          zero baseline, sorted bars'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: opposite-direction bars, contrasting colors,
+          zero baseline'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-range (-60, 70) shows all data with padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Perfect X/Y mapping; all data visible; axes correctly labeled
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed as colors are self-explanatory with positive/negative
-          context
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "bar-diverging · bokeh · pyplots.ai"'
+        comment: 'Title correct: ''bar-diverging · bokeh · anyplot.ai'''
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both positive and negative values with good variety (-35 to
-          +52)
+        comment: 'Shows full range: -35 to +52, both positive and negative, all 10
+          categories'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Customer satisfaction NPS scenario is realistic and comprehensible
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values in -100 to +100 NPS range are realistic
+        comment: Realistic customer satisfaction survey context (NPS-style); plausible
+          categories and values
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Factually correct survey satisfaction proportions
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -170,40 +182,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: 'Clean: imports → tokens → data → figure → styling → output; no unnecessary
+          functions'
       - id: CQ-02
         name: Reproducibility
-        score: 0
-        max: 3
-        passed: false
-        comment: No random seed, though data is deterministic (hardcoded values)
+        score: 2
+        max: 2
+        passed: true
+        comment: Completely deterministic with hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: 'All imports used: os, sys, time, Path, bokeh, selenium'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern Bokeh API used
+        comment: Clean, Pythonic, appropriate complexity; no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: 'Correct output: plot-{THEME}.html and plot-{THEME}.png'
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses Bokeh features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert usage: figure(), hbar(), ColumnDataSource, Span, output_file()/save()'
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, Span for zero line, hbar method, but could
-          leverage HoverTool or other interactive features
+        comment: Uses distinctive features (Span for reference line, ColumnDataSource
+          binding); could leverage more
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques: []
+  patterns:
+  - columndatasource
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

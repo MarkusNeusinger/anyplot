@@ -1,13 +1,25 @@
-""" pyplots.ai
+""" anyplot.ai
 violin-split: Split Violin Plot
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-08
 """
+
+import os
 
 import numpy as np
 import pygal
 from pygal.style import Style
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette: position 1 (brand green) and position 2 (vermillion)
+COLOR_1 = "#009E73"  # Before
+COLOR_2 = "#D55E00"  # After
 
 # Data - Patient recovery scores before/after treatment across clinics
 np.random.seed(42)
@@ -36,25 +48,20 @@ for cat in categories:
     for group in split_groups:
         data[cat][group] = np.clip(data[cat][group], 10, 95)
 
-# Colors for split groups
-before_color = "#306998"  # Python Blue
-after_color = "#FFD43B"  # Python Yellow
-marker_color = "#333333"  # Dark gray for markers
-
 # Custom style for 4800x2700 px canvas
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    guide_stroke_color="#e0e0e0",
-    colors=(before_color,) * 4 + (after_color,) * 4 + (marker_color,) * 50,
-    title_font_size=84,
-    label_font_size=54,
-    major_label_font_size=48,
-    legend_font_size=48,
-    value_font_size=36,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    guide_stroke_color=INK_MUTED,
+    colors=(COLOR_1, COLOR_2),
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
     opacity=0.7,
     opacity_hover=0.9,
 )
@@ -64,9 +71,9 @@ chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="violin-split · pygal · pyplots.ai",
+    title="violin-split · pygal · anyplot.ai",
     x_title="Clinic",
-    y_title="Recovery Score",
+    y_title="Recovery Score (0-100)",
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=2,
@@ -83,22 +90,7 @@ chart = pygal.XY(
 # Parameters for violin shapes
 violin_width = 0.38
 n_points = 80
-
-
-# KDE helper function
-def compute_kde(values, y_range):
-    """Compute Gaussian KDE using Silverman's rule."""
-    n = len(values)
-    std = np.std(values)
-    iqr = np.percentile(values, 75) - np.percentile(values, 25)
-    bandwidth = 0.9 * min(std, iqr / 1.34) * n ** (-0.2)
-
-    density = np.zeros_like(y_range)
-    for v in values:
-        density += np.exp(-0.5 * ((y_range - v) / bandwidth) ** 2)
-    density /= n * bandwidth * np.sqrt(2 * np.pi)
-    return density
-
+marker_width = 0.04
 
 # Pre-compute all violin shapes and markers
 before_violins = []
@@ -117,8 +109,16 @@ for i, category in enumerate(categories):
         padding = (y_max - y_min) * 0.15
         y_range = np.linspace(y_min - padding, y_max + padding, n_points)
 
-        # Compute KDE
-        density = compute_kde(values, y_range)
+        # Compute Gaussian KDE using Silverman's rule (inlined)
+        n = len(values)
+        std = np.std(values)
+        iqr = np.percentile(values, 75) - np.percentile(values, 25)
+        bandwidth = 0.9 * min(std, iqr / 1.34) * n ** (-0.2)
+
+        density = np.zeros_like(y_range)
+        for v in values:
+            density += np.exp(-0.5 * ((y_range - v) / bandwidth) ** 2)
+        density /= n * bandwidth * np.sqrt(2 * np.pi)
 
         # Normalize density to desired width
         density = density / density.max() * violin_width
@@ -142,18 +142,17 @@ for i, category in enumerate(categories):
             after_violins.append(half_points)
             after_markers.append((center_x, median, q1, q3, 0.08))
 
-# Add all "Before" violins first (blue, with legend entry for first one only)
+# Add all "Before" violins first (green, with legend entry for first one only)
 for i, violin in enumerate(before_violins):
     label = "Before" if i == 0 else None
     chart.add(label, violin, show_dots=False)
 
-# Add all "After" violins (yellow, with legend entry for first one only)
+# Add all "After" violins (orange, with legend entry for first one only)
 for i, violin in enumerate(after_violins):
     label = "After" if i == 0 else None
     chart.add(label, violin, show_dots=False)
 
 # Add quartile markers for "Before" group (no legend entries)
-marker_width = 0.04
 for center_x, median, q1, q3, offset in before_markers:
     # IQR line (thin vertical line)
     iqr_line = [(center_x + offset, q1), (center_x + offset, q3)]
@@ -182,5 +181,5 @@ chart.x_labels = [
 ]
 
 # Save outputs
-chart.render_to_file("plot.html")
-chart.render_to_png("plot.png")
+chart.render_to_file(f"plot-{THEME}.html")
+chart.render_to_png(f"plot-{THEME}.png")

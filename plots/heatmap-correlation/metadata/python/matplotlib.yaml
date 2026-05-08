@@ -1,174 +1,181 @@
 library: matplotlib
+language: python
 specification_id: heatmap-correlation
 created: '2025-12-26T10:03:14Z'
-updated: '2025-12-26T10:06:56Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520464631
+updated: '2026-05-08T14:59:48Z'
+generated_by: claude-haiku
+workflow_run: 25561993832
 issue: 1948
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/matplotlib/plot.png
-preview_html: null
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - manual-ticks
-  - annotations
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep:
-  - correlation-matrix
-  styling:
-  - custom-colormap
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
 review:
   strengths:
-  - Excellent implementation of all spec requirements including upper triangle masking,
-    diverging colormap centered at zero, and correlation annotations
-  - Adaptive text coloring (white on dark, black on light backgrounds) ensures excellent
-    readability
-  - Realistic economic indicator data with believable correlation patterns (Okun's
-    Law reflected in GDP-Unemployment)
-  - Clean square layout perfectly suited for symmetric matrix visualization
-  - Proper colorbar with full -1 to 1 range for consistent interpretation
+  - Excellent theme-adaptive implementation with both renders properly readable
+  - Clean visual design with appropriate masking and emphasis borders on strong correlations
+  - Correct use of BrBG diverging colormap for correlation data centered at zero
+  - 'All required features implemented: annotations, colorbar with fixed range, variable
+    names on axes'
+  - Realistic and well-chosen weather variable data with appropriate correlation values
+  - Strong code quality with seed-based reproducibility and clean theme handling
   weaknesses:
-  - Axis labels say Economic Indicators on both axes which is redundant - could be
-    more informative or omitted on one axis
-  - Font size of 14pt for cell annotations is adequate but could be slightly larger
-    (16pt) for better readability at this image size
-  image_description: 'The plot displays a lower-triangular correlation matrix heatmap
-    showing relationships between 8 economic indicators: GDP Growth, Inflation, Unemployment,
-    Interest Rate, Stock Index, Consumer Conf., Industrial Prod., and Trade Balance.
-    The colormap is RdBu_r (red-blue diverging) with red indicating positive correlations
-    and blue indicating negative correlations. The colorbar on the right ranges from
-    -1.00 to 1.00. Each cell is annotated with correlation coefficients to 2 decimal
-    places (e.g., -0.89, 0.72, 0.81). The diagonal shows 1.00 (perfect self-correlation).
-    Text colors adapt based on background intensity - white text on dark cells, black
-    text on light cells. The title reads "heatmap-correlation · matplotlib · pyplots.ai"
-    in bold at the top. X-axis labels are rotated 45 degrees for readability. The
-    layout is square (12x12) with clean margins.'
+  - Title contains 'pyplots.ai' instead of 'anyplot.ai' - spec compliance miss (SC-04)
+  - Design excellence could be elevated with more distinctive styling choices beyond
+    defaults
+  - Library mastery is competent but doesn't showcase particularly creative matplotlib
+    techniques
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) provides proper contrast
+      Chrome: Title "heatmap-correlation · matplotlib · pyplots.ai" is readable in bold dark text; axis labels "Weather Variables" in dark INK color; all 8 variable names on both axes clearly visible with 45° rotation on X-axis; tick labels readable in INK_SOFT; colorbar label "Correlation Coefficient" and scale labels all legible
+      Data: Lower triangle of correlation matrix displayed with BrBG diverging colormap (brown for negative, white/cream for zero, teal/green for positive); all cell values annotated with 2 decimals; orange emphasis borders highlight strong correlations (>0.75); subtle grid lines at alpha=0.3 provide structure without overwhelming; text color in cells switches between white (high contrast) and INK_SOFT (low contrast) appropriately
+      Legibility verdict: PASS - All text is readable against the light background with excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) maintains proper off-black tone
+      Chrome: Title, axis labels, and all tick labels are rendered in light INK_SOFT (#B8B7B0) with excellent contrast against the dark background; no dark-on-dark failures detected; colorbar labeling and scale are readable
+      Data: Data colors from BrBG colormap are identical to light render (only chrome has flipped to light theme tokens); cell annotations visible with appropriate text colors; emphasis borders still orange and visible; grid remains subtle but distinguishable
+      Legibility verdict: PASS - All text is readable with strong light-on-dark contrast; no theme-adaptation failures detected
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, tick labels 16pt, annotations 14pt - all
-          clearly readable
+        comment: All font sizes explicitly set and readable in both themes; minor
+          typo in title
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; rotated x-labels prevent collision
+        comment: No overlapping text elements; variable names well-spaced with appropriate
+          rotation
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Cells are well-sized, annotations clearly visible with adaptive text
-          colors
+        comment: All heatmap cells clearly visible and separated by grid; annotations
+          readable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: RdBu_r diverging colormap is colorblind-friendly for correlation
-          matrices
+        comment: BrBG is perceptually-uniform and colorblind-safe; good contrast between
+          colors
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Square format perfect for symmetric matrix; plot fills canvas well
+        comment: Square 12x12 format appropriate; good canvas utilization; nothing
+          cut off
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 1
         max: 2
-        passed: true
-        comment: Descriptive labels ("Economic Indicators") but no units (appropriate
-          for correlation)
+        passed: false
+        comment: 'Title has typo: ''pyplots.ai'' instead of ''anyplot.ai'' (spec requirement)'
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Colorbar well-placed; no grid needed for heatmap (cells serve as
-          grid)
+        comment: BrBG diverging colormap correct for correlation data; backgrounds
+          and text colors theme-correct
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean design with emphasis borders showing intentional touches; mostly
+          well-configured defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed; subtle grid with minor ticks; good whitespace; emphasis
+          borders add refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Diverging colormap clearly communicates positive/negative; emphasis
+          guides attention to strong correlations
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct heatmap visualization for correlation matrix
+        comment: Correct correlation matrix heatmap with lower triangle masking
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Variables on both axes, correlation values in cells
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Diverging colormap centered at zero ✓, annotations with 2 decimals
-          ✓, symmetric matrix ✓, upper triangle masked ✓, colorbar range -1 to 1
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: diverging colormap, annotations, symmetric
+          matrix, colorbar with -1 to 1 range'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All correlations visible from -0.91 to 1.00
-      - id: SC-05
-        name: Legend Accuracy
+        comment: Correlation values properly mapped; all variables shown; square aspect
+          correct
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Colorbar labeled "Correlation Coefficient"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "heatmap-correlation · matplotlib · pyplots.ai"
+        max: 3
+        passed: false
+        comment: Title format should be 'anyplot.ai' but reads 'pyplots.ai' - explicit
+          spec miss
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows strong positive (0.81), strong negative (-0.91), weak correlations,
-          and near-zero values; excellent range coverage
+        comment: Shows full range of correlations (-0.84 to 1.0); includes strong
+          positive, negative, and weak
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Economic indicators with plausible correlations (GDP-Unemployment
-          inverse, Inflation-Interest positive)
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: All correlations within valid -1 to 1 range with realistic magnitudes
+        comment: Weather variables context is real, comprehensible, and neutral; correlations
+          are realistic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All values within valid -1 to 1 range; relationships plausible for
+          domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -176,41 +183,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → plot → save'
+        comment: Linear flow with no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set (though data is deterministic)
+        comment: np.random.seed(42) set for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy used
+        comment: 'Only necessary imports used: os, matplotlib, numpy, patches'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and appropriate complexity; no fake functionality; good theme
+          handling
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: All APIs current
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as 'plot.png' (correct filename but no path verification)
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly saves as plot-{THEME}.png with modern matplotlib API
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Uses imshow with colormap, colorbar customization, text annotations
-          with conditional coloring. Could use matplotlib's built-in heatmap styling
-          more.
+        comment: Correct usage of imshow(), colorbar(), text(), Rectangle patches;
+          standard patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Rectangle patch borders for emphasis is matplotlib-specific; mostly
+          standard usage
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - patches
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - correlation-matrix
+  styling:
+  - custom-colormap
+  - grid-styling

@@ -1,0 +1,247 @@
+library: altair
+language: python
+specification_id: bar-spine
+created: '2026-05-08T15:47:46Z'
+updated: '2026-05-08T15:54:39Z'
+generated_by: claude-sonnet
+workflow_run: 25564513508
+issue: 5249
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/altair/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Textbook spine plot implementation: proportional bar widths, normalized stacking,
+    no inter-bar gaps'
+  - Full theme adaptation with all chrome tokens correctly threaded to every element
+  - 'First series = #009E73 and Okabe-Ito order maintained throughout'
+  - Percentage labels inside segments add immediate readability with no overlap
+  - labelExpr (Vega-Lite expression language) for custom x-axis tick placement — sophisticated
+    Altair technique
+  - Deterministic, realistic dataset with a compelling real-world story
+  weaknesses:
+  - Full four-sided view enclosure (configure_view stroke) creates a boxed look; removing
+    top/right border would make the plot lighter and more modern
+  - No focal emphasis to guide the viewer to the main insight (comfort collapses in
+    55+ groups); a subtle annotation or highlight would push storytelling to exceptional
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Chrome: Title "Technology Comfort by Age Group · bar-spine · altair · anyplot.ai" in dark ink (#1A1A17), clearly readable. Axis labels "Age Group" and "Proportion of Respondents" in dark ink, readable. Y-axis tick labels (0%-100% percentages) and x-axis age group labels in INK_SOFT (#4A4A44), readable. Legend "Technology Comfort" title and labels readable.
+      Data: Six variable-width bars. First series (Very Comfortable) = #009E73 teal. Second (Comfortable) = #D55E00 orange. Third (Neutral) = #0072B2 blue. Fourth (Uncomfortable) = #CC79A7 reddish-purple. White bold percentage labels inside segments ≥10%. All colors clearly distinguishable.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title in off-white (#F0EFE8), clearly readable. Axis labels and tick labels in light gray (#B8B7B0), readable against dark background. Legend title and labels also in light gray, readable. Medium-gray rectangular border around plot area (configure_view stroke=INK_SOFT=#B8B7B0 in dark mode) — visible and functional. No dark-on-dark failures.
+      Data: Colors identical to light render — same #009E73, #D55E00, #0072B2, #CC79A7 segments with same proportions and white percentage labels.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=28px, axis labels=22px, tick
+          labels=18px, legend=16px; readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; x-axis labels centered under variable-width
+          bars via labelExpr; percentage labels well-placed
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All spine segments clearly visible; white stroke separates bars cleanly
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; good luminance contrast between all
+          four segments
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Bars span full canvas width; proportional widths use space effectively;
+          balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels; y-axis formatted as percentages
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series = #009E73; Okabe-Ito order maintained; correct backgrounds;
+          all chrome theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Clearly above defaults: correct palette, explicitly sized typography,
+          percentage labels, elevated legend fill. Not quite publication-ready; enclosed
+          border adds visual weight'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle y-axis-only grid at 10% opacity is good; custom legend frame.
+          configure_view applies full four-sided enclosure rather than L-frame
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Declining green segments tell a clear story; variable widths show
+          sample distribution; percentage labels guide reading. Missing focal emphasis
+          on 55+ transition
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct spine plot: proportional widths + normalized stacked segments'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Proportional widths, conditional proportions summing to 100%, no
+          gaps, percentage labels, legend
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x_category drives bar widths; fill_category drives stacked segments;
+          all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes spec-id (bar-spine), library (altair), and anyplot.ai;
+          legend labels match four comfort categories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 6 variable-width bars, 4 fill categories, proportional widths showing
+          sample distribution, conditional proportions shifting across age groups
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Technology comfort survey by age group is a real, neutral, professionally
+          relevant scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Comfort declining with age is well-documented; plausible sample sizes
+          (550-880 per group); proportions internally consistent
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear Imports → Data → Plot → Save; no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data; no random seed needed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os (theme env), sys (path fix), altair, pandas'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Manual x/y boundary computation is necessarily complex for spine
+          plot; well-organized and Pythonic
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Strong Altair idioms: mark_rect with x/x2/y/y2, alt.layer(), alt.TitleParams,
+          alt.Scale with explicit domain, configure_* chain'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Vega-Lite labelExpr (conditional expression language) for custom
+          bar-midpoint tick labels — distinctly Altair/Vega-Lite; mark_rect dual-endpoint
+          encodings also Altair-idiomatic
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  - manual-ticks
+  patterns:
+  - groupby-aggregation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  - cumulative-sum
+  styling:
+  - edge-highlighting
