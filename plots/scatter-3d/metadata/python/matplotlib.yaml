@@ -1,169 +1,178 @@
 library: matplotlib
+language: python
 specification_id: scatter-3d
 created: '2025-12-26T10:30:26Z'
-updated: '2025-12-26T10:32:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520860012
+updated: '2026-05-08T22:40:53Z'
+generated_by: claude-haiku
+workflow_run: 25582655874
 issue: 1945
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/matplotlib/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - 3d-projection
-  - colorbar
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
-  - custom-colormap
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent scientific context using protein structure data with realistic Angstrom
-    units
-  - Clear three-cluster visualization demonstrates spatial relationships effectively
-  - Good use of viridis colormap for colorblind accessibility
-  - White edge color on markers helps distinguish overlapping points
-  - Clean, well-commented code following KISS principles
-  - Proper title format matching spec requirements
+  - Perfect theme-adaptive chrome with no dark-on-dark failures in both renders
+  - All text elements explicitly sized and perfectly legible at high resolution
+  - Excellent data quality with realistic protein structure context
+  - Proper continuous colormap (viridis) applied correctly for 4D visualization
+  - Clean code structure following KISS principle with deterministic seed
+  - Thoughtful view angle (elev=25, azim=45) provides good 3D visualization
+  - Colorbar properly integrated and labeled with units
   weaknesses:
-  - Colorbar placement on left side creates slight visual asymmetry; consider right
-    side or adjusting padding
-  - Axis label font size at 18pt is slightly below the recommended 20pt for optimal
-    legibility
-  - Could benefit from subtle grid lines to help viewers judge positions in 3D space
-  image_description: The plot displays a 3D scatter plot with points distributed in
-    three-dimensional space representing protein structure data. The title "Protein
-    Structure · scatter-3d · matplotlib · pyplots.ai" appears at the top. Three axes
-    are labeled "X Coordinate (Å)", "Y Coordinate (Å)", and "Z Coordinate (Å)" with
-    tick marks showing values roughly from -2 to 12 on each axis. Points are colored
-    using the viridis colormap (purple to green to yellow) based on their Z-coordinate
-    (elevation), with a colorbar on the left labeled "Elevation (Å)" ranging from
-    0 to approximately 11. The points show three distinct clusters at different locations
-    in 3D space. Each point has a white edge and partial transparency (alpha=0.7).
-    The viewing angle shows the plot from an elevated perspective (elev=25, azim=45).
+  - Design Excellence (12/20) is below publication-ready level - could use more aesthetic
+    polish beyond defaults
+  - Data storytelling lacks explicit visual emphasis on the three distinct protein
+    domains
+  - Library Mastery (7/10) - uses standard 3D features but could explore more advanced
+    matplotlib 3D techniques
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all in dark color (#1A1A17) - all fully readable
+      Data: 150 points using viridis colormap (purple→cyan→green→yellow) showing three spatial clusters
+      Legibility verdict: PASS - all text and data elements clearly visible against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title, axis labels, tick labels all in light color (#F0EFE8, #B8B7B0) - all fully readable, no dark-on-dark failures
+      Data: Identical viridis colors to light render (purple→cyan→green→yellow) - proper theme separation confirmed
+      Legibility verdict: PASS - perfect theme readiness with equal legibility in both renders
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 18pt, tick labels at 14pt - all readable
-          but axis labels slightly under the recommended 20pt
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt
+          - perfectly readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements - tick labels, colorbar, and title well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points at s=120 with alpha=0.7 are well-sized for 150 points, white
-          edges help distinguish overlapping points
+        comment: 150 points with s=120 and alpha=0.7 clearly visible - color gradient
+          distinct and effective
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, slight imbalance with colorbar on left creating
-          asymmetry
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: All axes have descriptive labels with units (Å)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Viridis colormap perceptually uniform and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 figure with plot filling 60-70% of canvas - balanced margins
+          and proper positioning
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Pane styling is subtle but no explicit grid lines shown
+        comment: 'All axes labeled with units: X/Y/Z Coordinate (Å) and Elevation
+          (Å) on colorbar'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis colormap correct for continuous data - backgrounds (#FAF8F1
+          light, #1A1A17 dark) exactly spec-compliant - data colors identical in both
+          renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Uses theme tokens and thoughtful colormap choice, but still follows
+          library defaults for most styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Pane styling and grid refinement present but could be stronger
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Three clusters are visible and spatially distinct, but lacks explicit
+          visual emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 3D scatter plot using matplotlib's projection="3d"
+        comment: Correct 3D scatter plot with all three dimensions properly displayed
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X, Y, Z correctly assigned to three dimensions
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has color encoding for 4th dimension, point transparency for overlapping,
-          clear axis labels
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: three axes, color encoding, units, 150 points
+          in recommended range'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y/Z correctly mapped, color mapped to elevation, all ranges appropriate
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar accurately represents elevation values
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Title follows `{description} · {spec-id} · {library} · pyplots.ai`
-          format
+        comment: Title correctly formatted as 'scatter-3d · matplotlib · anyplot.ai'
+          - colorbar serves as legend
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows three distinct clusters demonstrating spatial relationships,
-          color encoding shows z-variation
+        comment: Shows all aspects of 3D scatter - three distinct clusters with different
+          distributions and full elevation range
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Protein structure with atomic coordinates in Angstroms is an excellent
-          scientific context
+        comment: Real scientific scenario (protein structure) with authentic elements
+          (alpha helix, beta sheet, loop) and accurate Ångström scale
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are reasonable for molecular coordinates (0-12 Å range), though
-          typical protein domains might span larger ranges
+        comment: Coordinate ranges (0-10 Å) and clustering patterns realistic for
+          protein analysis
     code_quality:
       score: 10
       max: 10
@@ -173,41 +182,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save'
+        comment: Clean Imports → Data → Plot → Save structure with no unnecessary
+          functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set for deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: Only os, matplotlib.pyplot, numpy - all imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: No deprecated functions used
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves to 'plot.png'
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
-        max: 5
+        max: 2
         passed: true
-        comment: Uses matplotlib's 3D projection capability with basic customization
-          (view_init, pane styling), but doesn't leverage advanced features like surface
-          plots, custom colormaps, or annotations
+        comment: Clean Pythonic code with appropriate complexity - no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with current API (dpi=300, bbox_inches='tight')
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: false
+        comment: Uses high-level matplotlib 3D API appropriately with theme-aware
+          handling - could leverage more advanced capabilities
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses 3D projection, colorbar, pane styling, view angle configuration
+          - could explore more distinctive 3D techniques
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - colorbar
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - custom-colormap
