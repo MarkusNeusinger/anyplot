@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dot-matrix-proportional: Dot Matrix Chart for Proportional Counts
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 88/100 | Created: 2026-05-08
@@ -28,7 +28,7 @@ grid_rows = total // grid_cols  # 10
 # Build dot grid positions: fill left-to-right, top-to-bottom
 dot_positions = {}
 idx = 0
-for cat, count in zip(categories, counts):
+for cat, count in zip(categories, counts, strict=False):
     positions = []
     for _ in range(count):
         col = idx % grid_cols
@@ -40,7 +40,7 @@ for cat, count in zip(categories, counts):
 # Plot
 fig = go.Figure()
 
-for cat, color, count in zip(categories, colors, counts):
+for cat, color, count in zip(categories, colors, counts, strict=False):
     xs = [p[0] for p in dot_positions[cat]]
     ys = [p[1] for p in dot_positions[cat]]
     pct = count / total * 100
@@ -50,53 +50,66 @@ for cat, color, count in zip(categories, colors, counts):
             y=ys,
             mode="markers",
             name=f"{cat}  ·  {count} ({pct:.0f}%)",
-            marker=dict(color=color, size=44, symbol="circle"),
+            marker={"color": color, "size": 44, "symbol": "circle"},
             hovertemplate=f"<b>{cat}</b><br>Count: {count}<br>Share: {pct:.0f}%<extra></extra>",
         )
     )
 
 # Layout
 fig.update_layout(
-    title=dict(
-        text="City Commute Survey · dot-matrix-proportional · plotly · anyplot.ai",
-        font=dict(size=28, color=INK),
-        x=0.5,
-        xanchor="center",
-        y=0.97,
-        yanchor="top",
-    ),
+    title={
+        "text": "City Commute Survey · dot-matrix-proportional · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+        "y": 0.975,
+        "yanchor": "top",
+    },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    xaxis=dict(visible=False, range=[-0.7, grid_cols - 0.3], fixedrange=True),
-    yaxis=dict(visible=False, range=[-0.7, grid_rows - 0.3], scaleanchor="x", scaleratio=1, fixedrange=True),
-    legend=dict(
-        orientation="h",
-        x=0.5,
-        y=-0.05,
-        xanchor="center",
-        yanchor="top",
-        bgcolor=ELEVATED_BG,
-        bordercolor=INK_SOFT,
-        borderwidth=1,
-        font=dict(color=INK_SOFT, size=18),
-        tracegroupgap=0,
-    ),
+    xaxis={"visible": False, "range": [-0.7, grid_cols - 0.3], "fixedrange": True},
+    yaxis={"visible": False, "range": [-0.7, grid_rows - 0.3], "scaleanchor": "x", "scaleratio": 1, "fixedrange": True},
+    legend={
+        "orientation": "h",
+        "x": 0.5,
+        "y": -0.05,
+        "xanchor": "center",
+        "yanchor": "top",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+        "font": {"color": INK_SOFT, "size": 18},
+        "tracegroupgap": 0,
+    },
     annotations=[
-        dict(
-            text="Each ● represents 1 commuter  ·  n = 100",
-            x=0.5,
-            y=-0.01,
-            xref="paper",
-            yref="paper",
-            showarrow=False,
-            font=dict(size=16, color=INK_MUTED),
-            xanchor="center",
-            yanchor="bottom",
-        )
+        # Insight subtitle: draw attention to the dominant transit mode
+        {
+            "text": "<b>42%</b> rely on public transit — the city's dominant commute mode",
+            "x": 0.5,
+            "y": 1.03,
+            "xref": "paper",
+            "yref": "paper",
+            "showarrow": False,
+            "font": {"size": 18, "color": "#009E73"},
+            "xanchor": "center",
+            "yanchor": "bottom",
+        },
+        # Scale context
+        {
+            "text": "Each ● represents 1 commuter  ·  n = 100",
+            "x": 0.5,
+            "y": -0.01,
+            "xref": "paper",
+            "yref": "paper",
+            "showarrow": False,
+            "font": {"size": 16, "color": INK_MUTED},
+            "xanchor": "center",
+            "yanchor": "bottom",
+        },
     ],
     width=1200,
     height=1200,
-    margin=dict(l=80, r=80, t=110, b=250),
+    margin={"l": 80, "r": 80, "t": 145, "b": 110},
 )
 
 # Save
