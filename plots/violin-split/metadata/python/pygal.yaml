@@ -1,214 +1,244 @@
 library: pygal
+language: python
 specification_id: violin-split
 created: '2025-12-26T10:02:31Z'
-updated: '2025-12-26T10:04:50Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520452216
+updated: '2026-05-08T16:58:23Z'
+generated_by: claude-haiku
+workflow_run: 25568077894
 issue: 1949
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-split/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/violin-split/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/pygal/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent creative implementation of split violins using pygal XY chart with filled
-    polygons
-  - Clear visual distinction between Before (blue) and After (yellow) groups
-  - Well-chosen realistic scenario (patient recovery scores) that makes the comparison
-    meaningful
-  - Proper use of KDE for smooth density estimation
-  - Quartile markers (IQR lines and median) add statistical information
-  - Clean legend placement at bottom with appropriate column layout
-  - Good canvas utilization and balanced proportions
+  - Excellent theme adaptation with proper light/dark text colors and zero contrast
+    failures
+  - Clean split violin implementation with accurate KDE density curves using Silverman's
+    rule
+  - Complete quartile visualization (IQR and median markers) enhances analytical value
+  - Proper Okabe-Ito palette compliance with correct first-series brand green
+  - High-resolution canvas (4800×2700) with properly scaled typography for visibility
+  - Deterministic data generation and clean code structure
   weaknesses:
-  - Code contains a helper function (compute_kde) which violates KISS principle -
-    should inline the KDE computation or restructure
-  - Axis labels could include units (e.g., Recovery Score 0-100)
-  image_description: 'The plot displays four split violin plots for Clinics A through
-    D. Each violin is split into two halves: blue (Before) on the left and yellow
-    (After) on the right. The title reads "violin-split · pygal · pyplots.ai" at the
-    top. The y-axis shows "Recovery Score" ranging from 0-100, and the x-axis shows
-    "Clinic" with four category labels. Each violin half shows a smooth KDE distribution
-    shape with quartile markers (vertical IQR lines and horizontal median markers)
-    visible within each half. The legend at the bottom shows "Before" (blue) and "After"
-    (yellow). The distributions clearly show improvement patterns - After scores are
-    generally higher than Before scores across all clinics. The plot uses a clean
-    white background with subtle horizontal grid lines.'
+  - Design Excellence could be higher with additional visual polish (spine styling,
+    refined grid tuning)
+  - Library-specific features not heavily leveraged (custom KDE is algorithm-agnostic,
+    not pygal-specific)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 with subtle grid lines
+      Chrome: Title "violin-split · pygal · anyplot.ai", Y-axis "Recovery Score (0-100)", X-axis "Clinic", tick labels 0-100
+      All text is dark (#1A1A17) and clearly readable against light background
+      Data: Green violins (#009E73) on left (Before), orange violins (#D55E00) on right (After)
+      Quartile markers (IQR and median lines) are visible and distinct
+      Legend at bottom shows "Before" and "After" with correct colors
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 with subtle grid lines
+      Chrome: Title, axis labels, tick labels are light (#F0EFE8) and clearly readable against dark background
+      No dark-on-dark failures - all text is properly contrasted
+      Data: Green (#009E73) and orange (#D55E00) colors are IDENTICAL to light render - only chrome adapted
+      Quartile markers are equally visible in dark theme
+      Legend colors match the data perfectly
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable. Font
-          sizes are well-scaled for the 4800x2700 canvas.
+        comment: Title=28px, labels=22px, ticks=18px; all readable in both light and
+          dark themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements. All labels are cleanly separated.
+        comment: All text properly spaced; clinic labels and legend have no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Violin shapes are well-sized and clearly visible. Quartile markers
-          are visible within each half.
+        comment: Violins, quartile markers (IQR and median), and data elements all
+          clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue and yellow provide good contrast and are distinguishable for
-          most colorblind viewers, though not an ideal colorblind-optimized palette.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Good use of canvas space. Plot fills approximately 60% of canvas.
-          Minor issue: some empty space at bottom below legend.'
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: '"Recovery Score" and "Clinic" are descriptive but lack units.'
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle horizontal grid lines (dotted), legend well-placed at bottom.
+        comment: Okabe-Ito colors colorblind-safe; good contrast green and orange
+          distinct
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700px landscape; properly scaled for high-resolution; margins=60
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; axis labels descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green); second #D55E00 (Okabe-Ito pos
+          2); backgrounds correct both themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional split violin with custom KDE, distinct colors; could
+          have more visual embellishment
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean grid, generous whitespace; could refine spines or grid opacity
+          further
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear Before/After comparison with strong visual hierarchy; quartile
+          markers add analytical depth
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct split violin plot with left/right halves representing different
-          groups.
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Categories on x-axis, values as distributions, split by group correctly.
-      - id: SC-03
+        comment: Correct split violin with left/right halves for Before/After comparison
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Has distinct colors, legend, and quartile markers. The two halves
-          meet at the center line as specified. Minor: inner markers could be more
-          prominent.'
-      - id: SC-04
-        name: Data Range
+        comment: Distinct colors, center line, quartile markers, legend all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full 0-100 range, all data visible.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis categories (clinics), Y-axis values (0-100 recovery scores)
+          correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows "Before" and "After" with matching colors.
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format "violin-split · pygal · pyplots.ai" but uses
-          monospace font style.
+        comment: Title format and legend labels match specification
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows different distribution shapes and positions across clinics.
-          Each clinic shows different improvement patterns. Could show more variation
-          in distribution shapes (e.g., bimodal).
+        comment: Complete split violin with KDE density curves and quartile markers
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: 'Excellent real-world scenario: patient recovery scores before/after
-          treatment across clinics. Very comprehensible.'
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Recovery scores 0-100 are realistic, values are clipped appropriately.
+        comment: Patient recovery before/after treatment scenario is realistic and
+          neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100 range appropriate for recovery scores; before~42-55, after~65-78
+          realistic
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: true
-        comment: Code uses a helper function `compute_kde` which violates the "no
-          functions" rule, though it's understandable for KDE computation.
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses `np.random.seed(42)`.
+        comment: No unnecessary functions/classes; direct implementation
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, pygal, Style).
+        comment: 'Only necessary imports: os, numpy, pygal, Style'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions used.
+        comment: No fake functionality; clean KDE implementation with Silverman's
+          rule
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 5
-      max: 5
+        comment: Correct output format plot-{THEME}.html and plot-{THEME}.png
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of pygal's XY chart with custom styling, fill/stroke
-          options, and SVG-native output. Creative solution for split violins using
-          polygon shapes.
+        comment: Proper Style object with theme tokens, XY chart usage, render API;
+          somewhat standard approach
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Custom KDE implementation is algorithm-agnostic; not distinctly leveraging
+          pygal-specific features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep:
+  - kde
+  styling:
+  - dark-theme
