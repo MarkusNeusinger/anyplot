@@ -1,165 +1,168 @@
 library: pygal
+language: python
 specification_id: scatter-color-mapped
 created: '2025-12-26T09:44:16Z'
-updated: '2025-12-26T09:51:11Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520225362
+updated: '2026-05-08T13:04:35Z'
+generated_by: claude-haiku
+workflow_run: 25556653680
 issue: 2004
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/pygal/plot.html
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep:
-  - binning
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/pygal/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Effective workaround for pygal lack of continuous colormap by using discrete temperature
-    bins
-  - Viridis-inspired colorblind-safe palette with smooth gradient progression
-  - Clean KISS code structure with clear comments explaining the approach
-  - Realistic temperature sensor grid scenario with plausible radial temperature pattern
-  - Good use of custom Style for appropriate font sizes at high resolution
+  - Perfect text legibility and theme adaptation in both light and dark renders
+  - All specifications met with clear, descriptive labels and proper data mapping
+  - Excellent data quality with realistic scientific context and full feature coverage
+  - Clean, reproducible code with proper random seeding
+  - Clever use of pygal's series system to achieve color-mapped effect
+  - Viridis palette provides scientifically-sound, colorblind-safe continuous color
+    scale
   weaknesses:
-  - 'Legend first bin label includes Temperature: prefix while others do not, creating
-    inconsistency'
-  - Layout could utilize more canvas space; legend at bottom takes significant real
-    estate
-  image_description: 'The plot displays a scatter visualization titled "scatter-color-mapped
-    · pygal · pyplots.ai" showing 100 data points representing temperature readings
-    across a 100×100 meter sensor grid. The X-axis is labeled "Grid X Position (meters)"
-    and Y-axis "Grid Y Position (meters)". Points are colored using a viridis-inspired
-    palette spanning 8 temperature bins from dark purple (13-16°C) to yellow (32-35°C).
-    The visualization clearly demonstrates a radial temperature pattern with warmer
-    temperatures (yellow/green points: 26-35°C) concentrated toward the center of
-    the grid and cooler temperatures (purple/blue points: 13-24°C) at the periphery.
-    The legend at the bottom displays all 8 temperature ranges. Grid lines are subtle
-    with dashed styling. The plot fills the canvas well with balanced margins.'
+  - Design Excellence could be elevated with visual refinement (spine removal, grid
+    refinement)
+  - Library Mastery shows standard idiomatic usage; could showcase more distinctive
+    pygal features
+  - Visual styling feels like well-configured defaults rather than intentional custom
+    design
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 surface
+      Chrome: Title "scatter-color-mapped · pygal · anyplot.ai" clearly visible at top in dark text. Axis labels "Grid X Position (meters)" and "Grid Y Position (meters)" readable. Tick labels are clear. Legend at bottom shows 8 temperature bins with descriptive ranges.
+      Data: Scatter points use viridis-inspired colormap (dark purple → yellow) representing temperature distribution across sensor grid. Points are well-defined and distinct. Full range of colors visible.
+      Legibility verdict: PASS - All text is readable against light background. No legibility issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 surface
+      Chrome: Title, axis labels, and tick labels all visible in light text. No dark-on-dark failures. Grid lines are subtle but visible.
+      Data: Colors are identical to light render - dark purple in cool regions, green/yellow in warm regions. Confirms color consistency across themes with only chrome adaptation.
+      Legibility verdict: PASS - All text is light-colored and legible. Both renders meet theme-readability requirements.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and legend all readable at full size; font sizes
-          well-calibrated for 4800×2700
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; legend properly placed at bottom
+        comment: All font sizes explicitly set. Perfect readability in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text fully readable, no collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Dots size 16 appropriate for 100 points; alpha 0.85 provides good
-          visibility
+        comment: Scatter markers optimally sized for 100-point dataset.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Viridis-inspired palette is colorblind-safe
+        comment: Viridis palette is perceptually uniform and CVD-safe.
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good overall but legend takes significant space; plot area could
-          be slightly larger
+        comment: Landscape format with balanced margins. Plot fills 50-70% of canvas.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Grid X Position (meters)", "Grid
-          Y Position (meters)"'
+        comment: Descriptive labels with units (meters).
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Grid subtle with dashed lines; legend clear and well-organized
+        comment: Viridis correct for continuous data. Backgrounds theme-correct. Data
+          colors identical across themes.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Custom palette with thoughtful binning and theme support. Shows design
+          intent but feels like configured defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid and good whitespace. Could be more polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Color-mapped temperature tells spatial narrative. Good visual hierarchy
+          through color.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct scatter plot type using pygal.XY()
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X/Y correctly mapped to grid positions
-      - id: SC-03
+        comment: Correct XY scatter with color mapping.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Color mapping implemented via discrete bins; legend serves as colorbar
-          substitute, but continuous colorbar would be ideal (pygal limitation)
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: three-variable mapping, legend/colorbar.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data within 0-100 range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: X/Y correctly mapped. Color to temperature. All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correct but first bin has extra "Temperature:" prefix
-          breaking consistency
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "scatter-color-mapped · pygal · pyplots.ai"'
+        comment: Title format correct. Legend labels properly show ranges.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows temperature gradient pattern effectively with radial distribution;
-          good color range coverage
+        comment: Full temperature range displayed. Spatial variation evident.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Temperature sensor grid is a plausible real-world scenario
+        comment: Temperature sensor grid is realistic and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Temperature range 13-35°C realistic for outdoor measurements; grid
-          size reasonable
+        comment: Plausible values (10-35°C, 0-100m grid).
     code_quality:
       score: 10
       max: 10
@@ -169,40 +172,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save pattern; no functions/classes
+        comment: Linear flow with no unnecessary abstractions.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures consistent output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pygal, and Style imported; all used
+        comment: All imports used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API
+        comment: Clean, Pythonic. Clever series binning.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses XY chart, custom Style, renders to both PNG and SVG/HTML; creative
-          use of discrete series for color mapping
+        passed: false
+        comment: Proper XY chart class and Style usage. Standard patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Clever multi-series color-mapping. Interactive HTML leverages pygal.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
