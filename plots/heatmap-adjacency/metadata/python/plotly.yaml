@@ -1,0 +1,252 @@
+library: plotly
+language: python
+specification_id: heatmap-adjacency
+created: '2026-05-08T07:08:08Z'
+updated: '2026-05-08T07:28:42Z'
+generated_by: claude-sonnet
+workflow_run: 25541908678
+issue: 5240
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/plotly/plot-dark.html
+quality_score: 81
+review:
+  strengths:
+  - Block-diagonal cluster structure is visually compelling and immediately communicates
+    community membership
+  - Viridis colorscale correctly applied to continuous adjacency data — CVD-safe and
+    perceptually uniform
+  - Strong intra/inter-cluster contrast (0.55–1.0 vs 0–0.12) makes cluster boundaries
+    pop visually
+  - Both themes correctly themed with no readability failures in either light or dark
+    render
+  - Custom hovertemplate adds meaningful Plotly-distinctive interactivity
+  - 'Perfect code quality: seed, clean imports, KISS structure, correct output format'
+  weaknesses:
+  - Tick labels at 13px are below the recommended 18px minimum for a 3600×3600 pixel-based
+    canvas — should be increased to at least 16–18px
+  - Axis titles (Research Terms) are not explicitly set in xaxis/yaxis update_layout
+    title property — add explicit title=dict(text='Research Terms', font=dict(size=22,
+    color=INK)) to both axes
+  - Absent edges render as viridis dark purple rather than the spec-preferred white/near-white
+    background; consider a colorscale with white at 0 or a sequential single-hue scale
+    starting from near-white
+  - 'Design excellence could be elevated: domain group labels as annotations along
+    axes would improve storytelling'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "Research Domain Co-occurrence · heatmap-adjacency · plotly · anyplot.ai" in dark ink (#1A1A17), clearly readable. Y-axis and x-axis tick labels (node names) visible in #4A4A44 at 13px — readable but slightly small for canvas. Colorbar title "Co-occurrence strength" and ticks clearly readable.
+      Data: 30×30 adjacency matrix with viridis colorscale. Dark purple (≈0) for cross-domain connections, yellow-green (0.55–1.0) for intra-domain connections. 5 clear block-diagonal clusters separated by dark ink boundary lines. Colorbar shows 0–1 scale.
+      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title visible in light ink (#F0EFE8). Axis tick labels render in #B8B7B0 (INK_SOFT dark token) — clearly readable against the dark surface. No dark-on-dark failures observed. Colorbar title and ticks also render in correct light-on-dark colors.
+      Data: Viridis heatmap colors are identical to light render — same dark purple for absent connections, same yellow-green for strong connections. Only chrome flips between themes.
+      Legibility verdict: PASS — all text readable against warm near-black background, no dark-on-dark issues
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 5
+        max: 8
+        passed: true
+        comment: Sizes explicitly set but tick labels at 13px are below the 16px minimum
+          for 3600x3600 canvas; title at 24px meets minimum
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 30 nodes with -45 degree angling manages crowding well; minor tightness
+          on x-axis
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Strong viridis contrast between intra-cluster (yellow-green) and
+          inter-cluster (dark purple); boundary lines clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis is perceptually uniform and CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square 3600x3600 format appropriate for symmetric heatmap; top margin
+          (t=80) slightly tight for the long title
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: true
+        comment: Axis labels appear in rendered output but not explicitly set in xaxis/yaxis
+          title property in code; descriptive without units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis correct for continuous heatmap; backgrounds #FAF8F1 and
+          #1A1A17 correct; chrome uses theme-adaptive tokens'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional and clean; block-diagonal cluster structure elevates
+          above generic default; no exceptional typographic or color-harmony touches
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: No grid lines correct; explicit margins; clean layout; spines/axis
+          lines still present; whitespace could be more generous
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Block-diagonal structure immediately communicates community clusters;
+          5 scientific domain grouping creates natural story; strong visual hierarchy
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: go.Heatmap with nodes x nodes adjacency matrix
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Colorbar, symmetric matrix, block-diagonal structure, node tick labels,
+          boundary lines all present; absent edges are dark purple not white as spec
+          suggests
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X and Y axes show all 30 nodes; color encodes co-occurrence strength;
+          y-axis reversed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title contains heatmap-adjacency · plotly · anyplot.ai; colorbar
+          serves as legend with descriptive label
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows intra/inter-cluster connections, symmetric undirected graph,
+          block-diagonal structure, continuous weight encoding
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Research domain co-occurrence is neutral and credible; five scientific
+          domains appropriate
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 30 nodes within spec range; weights 0-1; clear intra/inter-cluster
+          separation (0.55-1.0 vs 0-0.12)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports -> Data -> Plot -> Save; no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, sys (both used), numpy, plotly.graph_objects — all needed
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and readable; sys.path manipulation is necessary boilerplate;
+          boundary iteration is appropriate
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png (3600x3600) and plot-{THEME}.html
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: go.Figure + go.Heatmap appropriate; add_shape for boundary lines
+          idiomatic; well-structured update_layout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom hovertemplate leverages Plotly interactive hover; HTML export
+          via write_html is Plotly-specific
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
