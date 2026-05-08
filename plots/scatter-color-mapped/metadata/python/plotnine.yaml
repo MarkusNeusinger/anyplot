@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: scatter-color-mapped
 created: '2025-12-26T09:45:15Z'
-updated: '2026-05-08T12:58:17Z'
+updated: '2026-05-08T13:04:42Z'
 generated_by: claude-haiku
 workflow_run: 25556562728
 issue: 2004
@@ -12,38 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 78
 review:
   strengths:
-  - Excellent visual rendering in both light and dark themes with proper chrome adaptation
-  - Perfect text legibility at full resolution with explicit font sizing
-  - Correct use of viridis colormap for continuous data - perceptually uniform and
-    CVD-safe
-  - Clean, reproducible code with deterministic data generation
-  - Realistic and informative example data showing spatial temperature patterns
-  - All spec requirements met in rendered output
+  - Excellent color accessibility with viridis colormap (CVD-safe)
+  - Clear spatial pattern visualization (temperature gradient from lower-left to upper-right)
+  - Proper theme adaptation in rendered output with readable text in both light and
+    dark surfaces
+  - Appropriate marker size (4pt) for 150-point scatter with adequate color visibility
+  - Clean data and realistic context (sensor grid temperature measurements)
   weaknesses:
-  - Code doesn't implement theme-adaptive chrome using ANYPLOT_THEME environment variable
-    per plotnine.md guide
-  - Output filename hardcoded as plot.png instead of theme-aware plot-{THEME}.png
-  - Title branding in code is pyplots.ai instead of anyplot.ai
-  - No custom design choices or visual refinement - relies entirely on library defaults
-  - Minimal visual hierarchy or data storytelling
+  - Code does not read ANYPLOT_THEME environment variable or implement theme-adaptive
+    colors in theme() call
+  - Output filename hardcoded to 'plot.png' instead of f'plot-{THEME}.png' (violates
+    CQ-05 spec)
+  - Title in code shows 'pyplots.ai' but images show correct 'anyplot.ai' (code/output
+    mismatch)
+  - No explicit theme-adaptive color configuration (PAGE_BG, INK, INK_SOFT tokens)
+    in theme() despite images appearing properly themed
+  - Generic design with default minimal theme; no custom refinement beyond viridis
+    colormap
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct light theme surface
-      Chrome: Title "scatter-color-mapped · plotnine · anyplot.ai", axis labels "X Position (m)" and "Y Position (m)", tick marks all in dark text - fully readable
-      Data: 150 scatter points with viridis colormap (purple→cyan→green→yellow) encoding temperature 20-55°C, colorbar on right with scale
-      Legibility verdict: PASS - all text clearly readable against light background with excellent contrast
+      Background: Warm off-white (#FAF8F1) — correct surface color
+      Chrome: Title "scatter-color-mapped · plotnine · anyplot.ai" in dark text; axis labels "X Position (m)" and "Y Position (m)" in dark text; tick labels (0, 25, 50, 75, 100) in dark gray; colorbar label "Temperature (°C)" dark text; all clearly readable on light surface.
+      Data: viridis colormap applied correctly — purple/dark colors (15-20°C) in lower left, transitioning through cyan/teal (mid temps ~30-40°C) to yellow/bright green (55°C) in upper right, showing expected spatial pattern.
+      Grid: Subtle light gray lines, appropriate opacity, enhances readability without competing with data.
+      Legibility verdict: PASS — all text and elements clearly visible with strong contrast.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title and axis labels in light text, all fully readable against dark background - no dark-on-dark failures
-      Data: Identical viridis colors to light render confirming data consistency across themes, colorbar properly themed
-      Legibility verdict: PASS - all text light-colored and fully readable on dark background, perfect theme adaptation
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: Title in light text; axis labels in light gray text; tick labels in light gray; colorbar with light text and light border; all text readable against dark background with no dark-on-dark failures.
+      Data: Colors identical to light render (viridis gradient unchanged) — only chrome adapted between themes, confirming proper theme separation.
+      Grid: Subtle light gray gridlines properly visible on dark surface.
+      Legibility verdict: PASS — no readability issues; text contrasts well; grid visible but subtle.
+
+    Both renders meet theme-readiness criteria: backgrounds are correct colors (warm off-white / warm near-black, never pure white/black), all text maintains legibility in its respective theme, chrome chrome elements properly flipped while data colors remain constant.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -51,82 +58,68 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt.
-          Perfect readability in both light and dark themes.'
+        comment: All text readable in both light and dark renders; no legibility issues
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. All axis labels, tick labels, title,
-          and legend are well-spaced and distinct.
+        comment: 150 points well-distributed; no text/marker collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 150 markers with size=4, alpha=0.8. Optimal visibility for data density.
-          All points clearly distinguishable.
+        comment: All markers, grid, axes, labels visible and distinct
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: viridis colormap is perceptually uniform and CVD-safe. Excellent
-          contrast throughout the range.
+        comment: viridis is perceptually uniform and CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout with 16:9 aspect ratio (4800x2700px), balanced margins.
-          Plot fills appropriate canvas area.
+        comment: Good 16:9 proportions; all elements within bounds
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: X Position (m), Y Position (m), Temperature
-          (°C).'
+        comment: Descriptive labels with units (°C, m); title format correct
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Continuous data correctly uses viridis. Light background #FAF8F1,
-          dark background #1A1A17 - both correct. Both renders theme-correct visually.
-          Deduction: Code lacks explicit ANYPLOT_THEME environment variable implementation
-          per plotnine.md guide; relies on workflow post-processing.'
+        passed: true
+        comment: 'viridis applied correctly; backgrounds match spec (#FAF8F1 light,
+          #1A1A17 dark); theme chrome properly adapted'
     design_excellence:
-      score: 9
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 2
         max: 8
         passed: false
-        comment: Well-configured library defaults. Professional and clean, but no
-          exceptional design choices, custom palette, or intentional hierarchy. Looks
-          like default theme_minimal() output.
+        comment: Generic defaults; minimal custom palette work
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: theme_minimal() provides clean look with subtle grid. Some refinement
-          visible but minimal customization. Spines not explicitly removed, whitespace
-          adequate but not generous.
+        comment: theme_minimal() used; subtle grid; could refine spines further
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Data displayed clearly with color-encoded temperature gradient. No
-          visual emphasis, focal points, or narrative hierarchy. Viewer must find
-          their own story.
+        comment: Spatial gradient visible but no emphasized focal point or annotation
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -134,29 +127,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with continuous color mapping for third variable.
+        comment: Correct scatter plot with color mapping
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: colorbar with labels, 150 data points (within
-          50-500 range), clear color encoding of temperature variable.'
+        comment: Scatter, colorbar, x/y axes, color encoding all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X position correctly on x-axis, Y position correctly on y-axis, temperature
-          correctly encoded as color. Axes show all data.
+        comment: x/y position correct; color mapped to temperature; axes show full
+          range [0-100], [15-55°C]
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Rendered images correctly show ''scatter-color-mapped · plotnine
-          · anyplot.ai'' with colorbar label ''Temperature (°C)''. Deduction: Source
-          code has ''pyplots.ai'' instead of ''anyplot.ai'', title mismatch.'
+        passed: true
+        comment: Title present (despite code/image mismatch); colorbar legend clear
     data_quality:
       score: 15
       max: 15
@@ -166,24 +156,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full spatial distribution across 0-100m range for both axes
-          and complete temperature range 20-55°C with spatial pattern.
+        comment: 150 points showcase scatter + color-mapping technique fully
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic sensor grid scenario with temperature measurements. Neutral,
-          comprehensible, scientifically plausible.
+        comment: Temperature sensor grid data plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature values 20-55°C are factually correct for sensor data.
-          Spatial coordinates 0-100m are sensible. Values and proportions correct.
+        comment: 20-30°C range realistic; spatial pattern (warmer upper-right) sensible
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -191,57 +178,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure. No functions or classes.
-          Straightforward and readable.
+        comment: Straightforward; no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data generation. Output
-          is reproducible.
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pandas, plotnine components. No unused
-          dependencies.'
+        comment: All imports used; no cruft
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic code with appropriate complexity. No over-engineering
-          or fake functionality.
+        passed: false
+        comment: Appropriate complexity but hardcoded 'pyplots.ai' typo and no theme-adaptive
+          logic
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: Code saves to ''plot.png'' instead of ''plot-{THEME}.png''.
-          Should implement environment-aware filename. Per plotnine.md, should use
-          ggsave() with proper naming. Renders show correct theme-based filenames
-          (plot-light.png, plot-dark.png), indicating workflow post-processing.'
+        comment: 'CRITICAL: Saves to ''plot.png'' (should be f''plot-{THEME}.png'');
+          does not read ANYPLOT_THEME; does not match spec requirement'
     library_mastery:
       score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: false
-        comment: 'Correct ggplot/geom syntax, proper aes() mapping, good use of scale_color_cmap()
-          for continuous data. Deduction: Missing explicit ANYPLOT_THEME environment
-          variable implementation shown in plotnine.md example.'
+        comment: Uses ggplot/geom_point correctly but missing theme-adaptive color
+          implementation (INK, INK_SOFT tokens)
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Uses scale_color_cmap() for continuous color mapping (library-specific).
-          No exceptional feature usage beyond standard patterns.
+        comment: Uses scale_color_cmap (plotnine-specific) but doesn't showcase library's
+          theme integration capabilities
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -251,4 +232,4 @@ impl_tags:
   - data-generation
   dataprep: []
   styling:
-  - custom-colormap
+  - theme-minimal
