@@ -1,12 +1,24 @@
-""" pyplots.ai
+"""anyplot.ai
 bar-stacked-percent: 100% Stacked Bar Chart
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-25
+Library: matplotlib | Python 3.13
+Quality: pending | Created: 2025-12-25
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series is ALWAYS position 1)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
 
 # Data: Energy mix by country (percentage of total electricity generation)
 categories = ["Germany", "France", "UK", "Spain", "Italy", "Poland"]
@@ -27,11 +39,9 @@ data = np.array(
 # Normalize to percentages
 percentages = data / data.sum(axis=1, keepdims=True) * 100
 
-# Colors: colorblind-safe palette starting with Python Blue
-colors = ["#306998", "#FFD43B", "#50C878", "#DC143C", "#9370DB"]
-
-# Create plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Calculate cumulative percentages for stacking
 x = np.arange(len(categories))
@@ -39,9 +49,9 @@ bar_width = 0.6
 bottom = np.zeros(len(categories))
 
 # Create stacked bars
-for i, (component, color) in enumerate(zip(components, colors, strict=True)):
+for i, (component, color) in enumerate(zip(components, OKABE_ITO, strict=True)):
     bars = ax.bar(
-        x, percentages[:, i], bar_width, bottom=bottom, label=component, color=color, edgecolor="white", linewidth=1.5
+        x, percentages[:, i], bar_width, bottom=bottom, label=component, color=color, edgecolor=PAGE_BG, linewidth=1.5
     )
 
     # Add percentage labels within segments if large enough
@@ -55,28 +65,40 @@ for i, (component, color) in enumerate(zip(components, colors, strict=True)):
                 va="center",
                 fontsize=14,
                 fontweight="bold",
-                color="white" if color in ["#306998", "#DC143C"] else "black",
+                color=INK,
             )
 
     bottom += percentages[:, i]
 
-# Labels and styling
-ax.set_xlabel("Country", fontsize=20)
-ax.set_ylabel("Percentage (%)", fontsize=20)
-ax.set_title("European Energy Mix · bar-stacked-percent · matplotlib · pyplots.ai", fontsize=24)
+# Style
+ax.set_xlabel("Country", fontsize=20, color=INK)
+ax.set_ylabel("Percentage (%)", fontsize=20, color=INK)
+ax.set_title("bar-stacked-percent · matplotlib · anyplot.ai", fontsize=24, color=INK, fontweight="medium")
 
 ax.set_xticks(x)
-ax.set_xticklabels(categories, fontsize=16)
-ax.tick_params(axis="y", labelsize=16)
+ax.set_xticklabels(categories, fontsize=16, color=INK_SOFT)
+ax.tick_params(axis="y", labelsize=16, colors=INK_SOFT)
 
 ax.set_ylim(0, 100)
 ax.set_yticks([0, 25, 50, 75, 100])
 
-# Legend outside the plot to avoid covering data
-ax.legend(fontsize=16, loc="upper left", bbox_to_anchor=(1.02, 1), frameon=True, edgecolor="gray")
+# Legend
+leg = ax.legend(fontsize=16, loc="upper left", bbox_to_anchor=(1.02, 1))
+if leg:
+    leg.get_frame().set_facecolor(ELEVATED_BG)
+    leg.get_frame().set_edgecolor(INK_SOFT)
+    leg.get_frame().set_linewidth(0.8)
+    plt.setp(leg.get_texts(), color=INK_SOFT)
 
-ax.grid(True, axis="y", alpha=0.3, linestyle="--")
+# Grid
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.set_axisbelow(True)
 
+# Spines
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
+
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
