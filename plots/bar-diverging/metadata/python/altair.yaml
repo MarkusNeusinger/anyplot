@@ -1,166 +1,177 @@
 library: altair
+language: python
 specification_id: bar-diverging
 created: '2025-12-25T22:47:26Z'
-updated: '2025-12-25T22:49:36Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20511948572
+updated: '2026-05-08T08:56:51Z'
+generated_by: claude-haiku
+workflow_run: 25546490633
 issue: 2009
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/altair/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - html-export
-  - hover-tooltips
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/altair/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent implementation of diverging bar chart following all spec requirements
-  - Clean declarative Altair code with proper encoding types and sorting
-  - Good color choice with Python blue/yellow that is colorblind accessible
-  - Proper zero baseline rule layered on top of bars
-  - Interactive tooltips and HTML export leverage Altair web-native capabilities
-  - Well-sized text elements for readability at target resolution
+  - 'Palette Excellence: First categorical series correctly uses brand green (#009E73);
+    second series uses Okabe-Ito position 2 (#D55E00)'
+  - 'Theme Adaptation: Flawless theme-adaptive chrome; all text, grid, and legend
+    box colors correctly adjust between light and dark'
+  - 'Data Presentation: Sorted by value creates clear visual hierarchy; diverging
+    bars naturally show sentiment polarity'
+  - 'Legibility: All text sizes explicitly set and verified readable in both themes;
+    no dark-on-dark or light-on-light failures'
+  - 'Spec Adherence: Full coverage of diverging bar spec with zero baseline, contrasting
+    colors, and horizontal orientation'
+  - 'Polish: Subtle grid styling, rounded bar corners, well-positioned legend, and
+    clean composition'
   weaknesses:
-  - Legend placement in bottom-right creates slight visual imbalance; could be positioned
-    closer to the chart or at top
-  - Realistic context score slightly reduced - while customer satisfaction is valid,
-    the exact score values feel somewhat arbitrary
-  image_description: 'The plot displays a horizontal diverging bar chart showing "Net
-    Satisfaction Score" for 12 company departments. Bars extend from a central zero
-    baseline - positive values (blue/Python blue #306998) extend to the right, negative
-    values (yellow/Python yellow #FFD43B) extend to the left. The chart is sorted
-    by satisfaction score from lowest (Logistics at -45) at the top to highest (Customer
-    Service at +42) at the bottom. A dark vertical line marks the zero baseline. The
-    x-axis ranges from -60 to 60 with label "Net Satisfaction Score". Department names
-    appear on the y-axis. A legend in the bottom-right corner shows "Sentiment" with
-    Positive and Negative indicators. The title "bar-diverging · altair · pyplots.ai"
-    appears centered at the top. Grid lines are subtle with dashed styling.'
+  - 'Library Distinctiveness: Uses standard altair patterns; could explore more advanced
+    interactivity techniques for HTML export'
+  - 'Design Storytelling: While data sorting creates hierarchy, could enhance emphasis
+    through size variation or focus on outliers'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), exactly as specified
+      Chrome: Title dark text (28px), axis labels dark (22px), tick labels soft gray (18px) - all clearly readable
+      Data: Green bars (#009E73) for positive sentiment, orange bars (#D55E00) for negative - Okabe-Ito palette correct
+      Zero baseline: Dark gray rule at x=0, clearly visible and marked
+      Legend: Bottom-right positioned, "Positive/Negative" labels distinct
+      Grid: Subtle 10% opacity, visible but not competing with data
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), exactly as specified
+      Chrome: Title light cream text (#F0EFE8), axis labels and ticks light gray (#B8B7B0) - all clearly readable
+      Data: Identical green (#009E73) and orange (#D55E00) bars to light render - colors preserved correctly
+      Zero baseline: Light gray rule, visible against dark background
+      Legend: Dark elevated background (#242420) with light text, properly themed
+      Grid: Subtle light gray grid, complementary to dark surface
+      Dark-on-dark check: NO failures - all text is light-colored on dark background
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all clearly
-          readable
+        comment: All font sizes explicitly set; readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, department labels well spaced
+        comment: No overlapping elements; all text fully legible
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are appropriately sized with cornerRadius for polish
+        comment: Bars perfectly adapted to density; clear visual distinction
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow is colorblind-safe (not red-green)
+        comment: Okabe-Ito palette CVD-safe; good contrast
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good use of canvas, slight margin imbalance on left side with longer
-          department names
+        comment: Perfect layout; plot fills 60-70% with balanced margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: X-axis has descriptive label but no units (score is unitless, so
-          acceptable)
+        comment: Title format correct; descriptive axis labels
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with alpha 0.3 and dashed style; legend placed bottom-right
-          but could be better integrated
+        comment: Okabe-Ito correct; theme-adaptive chrome perfect
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional color scheme; intentional design; clean typography
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, rounded corners, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Sorted by value creates visual flow and hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct diverging bar chart with bars extending in opposite directions
+        comment: Correct diverging bar chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Category on Y-axis, value on X-axis, correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Contrasting colors, horizontal orientation, zero baseline, sorted
-          bars - all present
-      - id: SC-04
-        name: Data Range
+        comment: All spec features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Scale domain [-60, 60] shows all data with headroom
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped; domain includes all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Positive/Negative sentiment
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Exact format "bar-diverging · altair · pyplots.ai" used
+        comment: Title format correct; legend labels match
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both positive and negative values with good distribution across
-          the range
+        comment: Shows both positive and negative ranges
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Customer satisfaction survey is plausible; scores ranging -45 to
-          +42 are reasonable for net satisfaction
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Values are sensible for a satisfaction score context
+        comment: Customer satisfaction survey is real-world plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values realistic for survey data
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -168,34 +179,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save'
+        comment: Linear flow; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Deterministic data (no random), but could benefit from explicit comment
-          noting this
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Clean Pythonic code
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
-      items: []
+        comment: Correct output format and API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Excellent use of altair API and patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Layer composition and scale configuration
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
