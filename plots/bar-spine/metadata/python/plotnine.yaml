@@ -1,0 +1,249 @@
+library: plotnine
+language: python
+specification_id: bar-spine
+created: '2026-05-08T15:27:31Z'
+updated: '2026-05-08T15:33:48Z'
+generated_by: claude-sonnet
+workflow_run: 25563619606
+issue: 5249
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - 'Flawless spec compliance: all spine plot requirements met including variable-width
+    bars, conditional proportions, adjacent bars, percentage labels, and centered
+    x-axis labels with sample counts'
+  - 'Perfect theme-adaptive chrome: both light and dark renders are fully readable
+    with correctly adapted text and background tokens'
+  - 'Clean plotnine grammar: idiomatic geom_rect + geom_text layer composition with
+    all font sizes explicitly set'
+  - Realistic, neutral business data (SaaS churn) with plausible and varied proportions
+    that fully exercise the spine plot concept
+  - Informative axis label (bar width proportional to customer count) and two-line
+    x-tick labels communicate the encoding clearly
+  weaknesses:
+  - 'DE-01 not yet FiveThirtyEight-level: the implementation follows the style template
+    faithfully but lacks further design elevation such as a focal-point annotation
+    on the highest-churn tier or subtle emphasis on the churn segments'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "Churn Rate by Tier · bar-spine · plotnine · anyplot.ai" in bold dark ink, clearly readable. Y-axis "Proportion of Customers" and X-axis "Subscription Tier (bar width ∝ customer count)" in dark ink. Tick labels (0%–100% on Y, tier names + n=counts on X) in INK_SOFT grey — all readable. Legend box with "Status" title and Retained/Churned labels clearly visible.
+      Data: First series (Retained) = #009E73 teal-green, second series (Churned) = #D55E00 vermillion-orange. Bold white percentage labels inside each segment. Bars are variable-width: Basic (~39%), Standard (~31%), Premium (~22%), Enterprise (~8%). Proportions: Basic 72%/28%, Standard 76%/24%, Premium 84%/16%, Enterprise 82%/18%.
+      Legibility verdict: PASS — all text elements clearly readable against #FAF8F1 background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title, axis labels, tick labels, and legend text all rendered in light off-white/grey tones. No dark-on-dark failures detected — all text clearly readable against the dark background.
+      Data: Colors are identical to light render: #009E73 (Retained) and #D55E00 (Churned) — correctly unchanged between themes. Bold white percentage labels remain readable. Bar separators (PAGE_BG edges) slightly more visible on dark background but do not impair readability.
+      Legibility verdict: PASS — all text elements clearly readable against #1A1A17 background
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: Title=24pt, Axis=20pt, Ticks=16pt,
+          Legend=16pt. Fully readable in both renders.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Percentage labels inside segments, no collisions. Axis tick labels
+          well-spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars prominently visible. Bold white labels readable even in narrow
+          Enterprise column.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito palette is CVD-safe. Strong luminance contrast between
+          #009E73 and #D55E00.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well. Legend at right. Balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y: Proportion of Customers; X: Subscription Tier (bar width proportional
+          to customer count). Both informative.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Retained) is #009E73, second (Churned) is #D55E00.
+          Backgrounds #FAF8F1 (light) and #1A1A17 (dark) correct. Theme chrome correct
+          in both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: explicit Okabe-Ito colors, typography hierarchy,
+          clean panel with no grid, PAGE_BG bar separators, informative axis label.
+          Follows template closely without further creative elevation.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Panel grid fully removed. Panel border styled with INK_SOFT (appropriate
+          for spine plot bounding box). Good refinement above defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Two-color system creates focal contrast. Variable widths encode tier
+          size. Bold percentage labels give precise context. Viewer sees higher tiers
+          retain customers better.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct spine plot: variable-width bars proportional to marginal
+          counts, conditional proportions within each bar, normalized to 100%.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Variable-width bars, conditional proportions, 100% normalization,
+          adjacent no-gap bars, distinct colors with legend, centered x-labels with
+          sample counts, percentage labels in segments — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=tier mapped to proportional x-position, Y=cumulative conditional
+          proportion, fill=status. All axes labeled and data fully visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title includes all required elements. Legend title 'Status' with
+          'Retained'/'Churned' labels match data.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 4 tiers with varying widths, meaningfully different conditional proportions
+          (churn 16-28%), 2 fill categories. Full coverage of spine plot features.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Customer churn by SaaS subscription tier is a real, neutral business
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Retention rates 72-84% and churn rates 16-28% are realistic SaaS
+          benchmarks. Customer counts 200-1000 are credible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear structure: imports -> tokens -> data -> data-prep ->
+          theme -> plot -> save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Data is fully deterministic (hardcoded values). No random state needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All plotnine imports are used. No unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity. Data prep for cumulative
+          proportions and bar widths is necessary and well-organized.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png. Current plotnine API used throughout.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expertly uses plotnine grammar: layered geoms, scale_fill_manual,
+          scale_x/y_continuous with breaks/labels, theme() for chrome. geom_rect with
+          explicit coordinate mapping is the correct plotnine approach.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: geom_rect coordinate-mapping approach is distinctly plotnine/ggplot2
+          grammar. Does not showcase deeply unique plotnine-only capability beyond
+          standard grammar.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  patterns:
+  - groupby-aggregation
+  dataprep: []
+  styling: []
