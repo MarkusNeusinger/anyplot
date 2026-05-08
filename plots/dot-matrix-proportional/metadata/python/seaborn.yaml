@@ -1,0 +1,248 @@
+library: seaborn
+language: python
+specification_id: dot-matrix-proportional
+created: '2026-05-08T21:59:44Z'
+updated: '2026-05-08T22:19:37Z'
+generated_by: claude-sonnet
+workflow_run: 25581288748
+issue: 5241
+python_version: 3.13.13
+library_version: 0.13.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - 'Perfect spec compliance: 10x10 grid, correct fill order, counts+percentages in
+    legend, all spec features present'
+  - 'Excellent data quality: neutral real-world context (energy survey), realistic
+    proportions, full feature coverage'
+  - 'Clean code: deterministic, KISS structure, Pythonic zip(strict=True), all imports
+    used'
+  - 'Theme adaptation: complete chrome token system; both renders pass legibility
+    checks with no dark-on-dark failures'
+  - 'Annotation storytelling: Solar Power leads annotation effectively guides viewer
+    attention to the key insight'
+  - Dot edge colors match page background - polished visual detail that prevents crowding
+  weaknesses:
+  - Title fontsize 22pt is below the 24pt guideline; caption at 14pt is below 16pt
+    minimum - bump both up
+  - 'Library mastery is moderate: sns.scatterplot used as a thin matplotlib wrapper;
+    no seaborn-specific statistical features utilized'
+  - Design sophistication stops short of publication-ready - typography hierarchy
+    could be stronger, annotation styling more intentional
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "Energy Source Survey · dot-matrix-proportional · seaborn · anyplot.ai" in dark ink (#1A1A17), clearly readable. Teal annotation "Solar Power leads: 38 of 100 respondents (38%)" below title. Legend title and labels in dark/soft ink tones. Caption "1 dot = 1 respondent" in muted italic.
+      Data: First series (Solar Power) in #009E73 (brand green), Wind Energy in #D55E00 (orange), Hydropower in #0072B2 (blue), Other Sources in #CC79A7 (pink). 10x10 grid of 100 dots, filled left-to-right top-to-bottom by category.
+      Legibility verdict: PASS - all text clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title, annotation, legend text, and caption all render in light cream/off-white tones. Legend box uses elevated dark (#242420). All chrome elements correctly flipped for dark theme.
+      Data: Dot colors identical to light render - #009E73, #D55E00, #0072B2, #CC79A7. Data identity preserved across themes as required.
+      Legibility verdict: PASS - no dark-on-dark failures; all text clearly readable against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set throughout but title at 22pt (below 24pt
+          guideline) and caption at 14pt (below 16pt minimum)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap - dot matrix clean, legend does not overlap grid
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: s=1200 markers optimal for 10x10 grid, all dots clearly distinct
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; sufficient luminance contrast across
+          both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 12x12 in square canvas (3600x3600px), balanced layout with legend
+          to right
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title; caption provides scale context; axes hidden appropriately
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order throughout, correct theme
+          backgrounds and chrome tokens'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: background-matched dot edges, well-spaced legend
+          with counts/percentages, intentional annotation. Not publication-grade.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All spines removed, no grid (appropriate for dot matrix), generous
+          legend spacing, dot edge colors match page background
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Annotation explicitly highlights Solar Power as leading category;
+          color hierarchy reinforces the message
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct dot matrix; 10x10 grid for 100 total; left-to-right top-to-bottom
+          fill order
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid matches total, uniform dot size, color-coded by category, legend
+          with counts and percentages
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 100 dots accounted for with correct category assignment
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend shows all 4 categories with counts and
+          percentages
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All aspects of dot matrix shown: multiple categories, varying proportions,
+          full grid'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Energy source preference survey - neutral, real-world, non-controversial
+          domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Total 100 within spec range, counts [38,29,21,12] sum correctly with
+          realistic variation
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: tokens -> data -> grid -> plot -> style -> save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (os, matplotlib.pyplot, pandas, seaborn, Line2D) are
+          used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic zip(strict=True), clean grid construction, no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with correct dpi and facecolor
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct sns.scatterplot with hue/palette, sns.set_theme for RC config;
+          manual Line2D legend is appropriate given format requirements
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: hue+palette system and theme RC integration are seaborn-specific
+          but core visualization could be replicated in matplotlib; no seaborn statistical
+          features leveraged
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  - manual-ticks
+  patterns:
+  - iteration-over-groups
+  - matrix-construction
+  - explicit-figure
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting
