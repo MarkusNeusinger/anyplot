@@ -1,163 +1,170 @@
 library: seaborn
+language: python
 specification_id: violin-split
 created: '2025-12-25T08:36:14Z'
-updated: '2025-12-25T08:43:13Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20502054902
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-08T16:48:43Z'
+generated_by: claude-haiku
+workflow_run: 25567601434
+issue: 1949
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-split/seaborn/plot.png
-preview_html: null
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
 review:
   strengths:
-  - Excellent use of seaborn split violin feature with inner quartile markers
-  - Highly realistic and relevant data scenario (salary by gender/department)
-  - Clean, readable code following KISS principles
-  - Professional color palette with good contrast and accessibility
-  - Well-formatted currency axis labels
-  - Title follows exact spec format
+  - 'Perfect visual quality: all text legible, no overlap, excellent element visibility'
+  - 'Flawless spec compliance: split violins correctly implemented with all required
+    features'
+  - 'Thoughtful theme adaptation: both light and dark renders perfect with correct
+    color consistency'
+  - 'Idiomatic seaborn usage: leverages library''s split parameter and rc theming'
+  - Real-world plausible salary data showing interesting gender/department patterns
+  - Clean reproducible code structure with explicit font sizing and theme tokens
   weaknesses:
-  - Distribution shapes are relatively similar across all groups - more variety would
-    better showcase split violin comparative power
-  - Only horizontal grid lines present
-  image_description: 'The plot displays four split violin plots arranged horizontally,
-    one for each department (Engineering, Marketing, Sales, Finance). Each violin
-    is split vertically down the center, with the left half (dark blue, #306998) representing
-    Male salary distribution and the right half (golden yellow, #FFD43B) representing
-    Female distribution. The violins show smooth kernel density estimates with inner
-    quartile markers (dashed horizontal lines at 25th, 50th, and 75th percentiles).
-    The y-axis shows Annual Salary ($) ranging from ~$20K to ~$160K with proper currency
-    formatting. Engineering shows the highest salaries (~$90K-$100K median), followed
-    by Finance (~$80K-$85K), Marketing (~$72K-$78K), and Sales (~$65K-$72K). A clear
-    legend in the upper right identifies the Gender groups. The title correctly follows
-    the format ''violin-split · seaborn · pyplots.ai''.'
+  - 'Design Excellence relies on library defaults (DE-01: 4/8) rather than introducing
+    distinctive aesthetic choices—could benefit from more intentional visual hierarchy
+    or refined color treatment'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), clean and professional
+      Chrome: Title "violin-split · seaborn · anyplot.ai" dark and readable; department names and salary axis labels clear; tick labels in dark text (#1A1A17) perfectly readable at 16pt
+      Data: Male (green #009E73 left half) and Female (orange #D55E00 right half) with distinct colors; quartile markers visible as dotted/dashed lines; all violin shapes clearly defined
+      Legibility verdict: PASS - All text and data elements perfectly readable with excellent contrast against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matching theme specification
+      Chrome: Title, department labels, and salary axis labels rendered in light text (#F0EFE8 for primary, #B8B7B0 for secondary); all readable against dark background with no dark-on-dark failures; legend clearly visible
+      Data: Male and Female colors identical to light render (#009E73 and #D55E00 unchanged), confirming proper color consistency; quartile markers visible
+      Legibility verdict: PASS - All text readable with proper theme adaptation; data colors consistent with light render; no legibility issues
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt bold, axis labels at 20pt, tick labels at 16pt - all
-          perfectly readable
+        comment: All font sizes explicitly set (24pt title, 20pt labels, 16pt ticks);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, labels well spaced
+        comment: No overlapping text elements; excellent spacing throughout
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Violin shapes are clear, quartile lines visible, appropriate density
-          representation
+        comment: Violin shapes, split halves, and quartile markers all clearly visible
+          and well-scaled
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) are highly distinguishable, colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, legend positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has 'Annual Salary ($)' with implied units via formatting,
-          X-axis has 'Department'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette with excellent contrast; CVD-safe design
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect 16:9 layout with balanced margins; plot fills ~60% of canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: 'Descriptive labels with units: "Annual Salary ($)"'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Male=#009E73 (pos 1), Female=#D55E00 (pos 2); backgrounds correct;
+          theme chrome perfect
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is subtle (alpha=0.3), but only horizontal y-axis grid present;
-          legend well-placed with good styling
+        comment: Well-configured defaults with thoughtful theme handling; not exceptional
+          or publication-innovative
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines properly removed, subtle grid, generous whitespace, good legend
+          styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through split design; salary disparities apparent;
+          quartile markers add insight
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct split violin plot implementation using seaborn's split=True
+        comment: Correct split violin implementation with split=True
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=Department (category), Y=Salary (value), hue=Gender (split_group)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Split violins, distinct colors, legend, inner quartile markers as
-          recommended
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: distinct colors, split halves, quartile markers'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All salary ranges visible, y-axis accommodates full distribution
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'Perfect mapping: Department→X, Salary→Y, Gender→split'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows 'Male' and 'Female' with matching colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as 'violin-split · seaborn · pyplots.ai'
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: 'Shows different distribution shapes, varying medians, different
-          spreads across departments. Minor: distributions are relatively similar
-          in shape (all roughly normal)'
+        comment: 'Shows all aspects: multiple departments, gender comparisons, varied
+          distribution shapes'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Salary comparison by gender across departments is a highly relevant
-          real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Salary ranges ($30K-$180K bounds, means $65K-$95K) are realistic
-          for corporate positions
+        comment: Real-world salary scenario, plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Factually accurate salary ranges and gender pay gap patterns
     code_quality:
       score: 10
       max: 10
@@ -167,41 +174,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data generation → plot → styling → save'
+        comment: Linear structure; no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at the start
+        comment: np.random.seed(42) for deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: matplotlib.pyplot, numpy, pandas, seaborn'
+        comment: All imports used; no unused dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API correctly
+        comment: Clean, Pythonic, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 3
-      max: 5
+        comment: 'Correct format: plot-{THEME}.png with proper DPI'
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses seaborn's violinplot with split=True and inner='quart', hue
-          parameter, and palette. Good usage but could leverage more seaborn features
-          like set_theme() or additional statistical annotations.
+        comment: 'Expert seaborn: split=True, inner="quart", sns.set_theme(), proper
+          rc config'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses distinctive seaborn features; theme-adaptive rc parameters showcase
+          library strengths
+    summary:
+      total_score: 92
+      max_score: 100
+      verdict: APPROVED
+      stage_threshold: 90
+      passed: true
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
