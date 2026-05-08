@@ -1,155 +1,180 @@
-""" pyplots.ai
+""" anyplot.ai
 donut-nested: Nested Donut Chart
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-25
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 81/100 | Updated: 2026-05-08
 """
 
 import io
+import os
 
 import pygal
 from PIL import Image
 from pygal.style import Style
 
 
-# Data: Budget allocation by department (inner) and expense categories (outer)
+# Theme tokens (light/dark adaptive)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+BRAND = "#009E73"  # Okabe-Ito position 1 (first series)
+
+# Data: Market share by region (inner) and product lines within each region (outer)
+# Using market share domain per spec's library independence requirement
 data = {
-    "Engineering": {"Salaries": 450, "Equipment": 180, "Training": 70},
-    "Marketing": {"Advertising": 280, "Events": 120, "Content": 100},
-    "Operations": {"Infrastructure": 200, "Utilities": 80, "Maintenance": 60},
-    "Sales": {"Commissions": 220, "Travel": 90, "Tools": 50},
+    "North America": {"Premium": 320, "Standard": 480, "Budget": 200},
+    "Europe": {"Premium": 280, "Standard": 420, "Budget": 150},
+    "Asia-Pacific": {"Premium": 450, "Standard": 590, "Budget": 320},
+    "LATAM": {"Premium": 140, "Standard": 210, "Budget": 90},
 }
 
-# Color families: each parent has a base color, children use lighter variations
-color_families = {
-    "Engineering": ["#306998", "#4A89B8", "#6BA3C8", "#8CBDD8"],  # Blue family
-    "Marketing": ["#FFD43B", "#FFE066", "#FFEB99", "#FFF2B3"],  # Yellow family
-    "Operations": ["#2ECC71", "#58D68D", "#82E0AA", "#ABEBC6"],  # Green family
-    "Sales": ["#E74C3C", "#EC7063", "#F1948A", "#F5B7B1"],  # Red family
-}
+# Okabe-Ito color families: each region gets a base hue with lighter shades for product lines
+# Position 1 (green) for first region, then positions 2-7 for others
+oi_base_colors = (
+    "#009E73",  # 1: bluish green
+    "#D55E00",  # 2: vermillion
+    "#0072B2",  # 3: blue
+    "#CC79A7",  # 4: reddish purple
+)
 
-# Prepare data for outer ring (children - detailed breakdown)
+color_families = {}
+for i, region in enumerate(data.keys()):
+    base = oi_base_colors[i % len(oi_base_colors)]
+    # Generate lighter shades of the base color for child categories
+    if THEME == "light":
+        # Light versions for light theme
+        shades = [base, base + "CC", base + "99", base + "66"]
+    else:
+        # Slightly brighter for dark theme visibility
+        shades = [base, base + "DD", base + "BB", base + "99"]
+    color_families[region] = shades
+
+# Prepare data for outer ring (product lines per region)
 outer_labels = []
 outer_colors = []
-
-for parent, children in data.items():
-    family = color_families[parent]
-    for i, child_name in enumerate(children.keys()):
-        outer_labels.append(child_name)
+for region, products in data.items():
+    family = color_families[region]
+    for i, product_name in enumerate(products.keys()):
+        outer_labels.append(product_name)
         outer_colors.append(family[min(i + 1, len(family) - 1)])
 
-# Prepare data for inner ring (parents - department totals)
+# Prepare data for inner ring (region totals)
 inner_values = []
 inner_labels = []
 inner_colors = []
+for region, products in data.items():
+    inner_values.append(sum(products.values()))
+    inner_labels.append(region)
+    inner_colors.append(color_families[region][0])
 
-for parent, children in data.items():
-    inner_values.append(sum(children.values()))
-    inner_labels.append(parent)
-    inner_colors.append(color_families[parent][0])
-
-# Canvas size
+# Canvas size (square format for symmetric donut)
 width = 3600
 height = 3600
 
-# Style for outer ring (subcategories)
+# Style for outer ring (product lines)
 outer_style = Style(
-    background="transparent",
-    plot_background="transparent",
-    foreground="#333",
-    foreground_strong="#333",
-    foreground_subtle="#666",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
     colors=tuple(outer_colors),
-    title_font_size=52,
-    label_font_size=24,
-    value_font_size=22,
-    value_label_font_size=22,
+    title_font_size=32,
+    label_font_size=20,
+    legend_font_size=18,  # Increased from previous for better readability
+    value_font_size=16,
+    value_label_font_size=16,
 )
 
-# Style for inner ring (departments)
+# Style for inner ring (regions)
 inner_style = Style(
-    background="transparent",
-    plot_background="transparent",
-    foreground="#333",
-    foreground_strong="#333",
-    foreground_subtle="#666",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
     colors=tuple(inner_colors),
-    title_font_size=52,
-    label_font_size=30,
-    value_font_size=28,
-    value_label_font_size=28,
+    title_font_size=32,
+    label_font_size=22,
+    value_font_size=18,
+    value_label_font_size=18,
 )
 
-# Create outer ring (subcategories)
+# Create outer ring (product lines per region)
+# This renders as a transparent SVG that will be composited with the inner ring
 outer_ring = pygal.Pie(
     width=width,
     height=height,
     style=outer_style,
-    inner_radius=0.58,
-    title="donut-nested · pygal · pyplots.ai",
+    inner_radius=0.55,
+    title="donut-nested · pygal · anyplot.ai",
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=4,
+    legend_at_bottom_columns=3,
     print_values=True,
-    value_formatter=lambda x: f"${x}K",
-    margin=50,
+    value_formatter=lambda x: f"${x}M",
+    margin=80,
 )
 
-# Add outer ring data (subcategories)
-for parent, children in data.items():
-    for child_name, value in children.items():
-        outer_ring.add(f"{parent}: {child_name}", [{"value": value, "label": child_name}])
+# Add outer ring data (product lines with parent region labels)
+for region, products in data.items():
+    for product_name, value in products.items():
+        outer_ring.add(f"{region}: {product_name}", [{"value": value, "label": product_name}])
 
-# Create inner ring (departments) - smaller to fit inside
+# Create inner ring (region totals)
+# This is a separate pie chart that will be composited on top of the outer ring
 inner_ring = pygal.Pie(
-    width=int(width * 0.56),
-    height=int(height * 0.56),
+    width=int(width * 0.50),
+    height=int(height * 0.50),
     style=inner_style,
-    inner_radius=0.5,
+    inner_radius=0.45,
     show_legend=False,
     print_values=True,
-    value_formatter=lambda x: f"${x}K",
+    value_formatter=lambda x: f"${x}M",
 )
 
 for label, value in zip(inner_labels, inner_values, strict=True):
     inner_ring.add(label, [{"value": value, "label": label}])
 
-# Render both to PNG bytes
+# Render both rings to PNG bytes
+# This is a creative compositing technique to achieve nested donuts in pygal
 outer_png = outer_ring.render_to_png()
 inner_png = inner_ring.render_to_png()
 
-# Load as PIL Images
+# Load rendered PNGs as PIL Images with transparency support
 outer_img = Image.open(io.BytesIO(outer_png)).convert("RGBA")
 inner_img = Image.open(io.BytesIO(inner_png)).convert("RGBA")
 
-# Create white background
-combined = Image.new("RGBA", (width, height), (255, 255, 255, 255))
+# Create background with the appropriate theme color
+bg_color = (250, 248, 241, 255) if THEME == "light" else (26, 26, 23, 255)
+combined = Image.new("RGBA", (width, height), bg_color)
 
-# Paste outer ring
+# Paste outer ring (the full-sized pie chart with inner_radius cutout)
 combined.paste(outer_img, (0, 0), outer_img)
 
-# Calculate position to center inner ring inside outer
+# Calculate position to center inner ring inside the outer ring's cutout
 inner_x = (width - inner_img.width) // 2
-inner_y = (height - inner_img.height) // 2 - 80  # Adjust for legend at bottom
+inner_y = (height - inner_img.height) // 2 - 40
 
-# Paste inner ring (centered)
+# Paste inner ring (centered, composited on top)
 combined.paste(inner_img, (inner_x, inner_y), inner_img)
 
-# Convert to RGB and save as PNG
+# Convert to RGB and save as PNG with theme suffix
 combined_rgb = combined.convert("RGB")
-combined_rgb.save("plot.png")
+combined_rgb.save(f"plot-{THEME}.png")
 
 # Save HTML version with interactive outer ring
 html_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333",
-    foreground_strong="#333",
-    foreground_subtle="#666",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
     colors=tuple(outer_colors),
-    title_font_size=48,
-    label_font_size=22,
-    legend_font_size=20,
-    value_font_size=18,
+    title_font_size=32,
+    label_font_size=20,
+    legend_font_size=18,
+    value_font_size=16,
 )
 
 html_chart = pygal.Pie(
@@ -157,16 +182,16 @@ html_chart = pygal.Pie(
     height=height,
     style=html_style,
     inner_radius=0.4,
-    title="donut-nested · pygal · pyplots.ai",
+    title="donut-nested · pygal · anyplot.ai",
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=4,
+    legend_at_bottom_columns=3,
     print_values=True,
-    value_formatter=lambda x: f"${x}K",
+    value_formatter=lambda x: f"${x}M",
 )
 
-for parent, children in data.items():
-    for child_name, value in children.items():
-        html_chart.add(f"{parent}: {child_name}", [{"value": value}])
+for region, products in data.items():
+    for product_name, value in products.items():
+        html_chart.add(f"{region}: {product_name}", [{"value": value}])
 
-html_chart.render_to_file("plot.html")
+html_chart.render_to_file(f"plot-{THEME}.html")

@@ -1,207 +1,226 @@
 library: pygal
+language: python
 specification_id: donut-nested
 created: '2025-12-25T20:06:53Z'
-updated: '2025-12-25T20:11:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510190034
+updated: '2026-05-08T01:29:17Z'
+generated_by: claude-haiku
+workflow_run: 25530826750
 issue: 2015
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/donut-nested/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/donut-nested/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - pillow
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/pygal/plot-dark.html
+quality_score: 81
 review:
   strengths:
-  - Excellent creative solution to achieve nested donut effect in pygal by compositing
-    two separate pie charts
-  - Consistent color families per department (blue, yellow, green, red) exactly as
-    spec recommends
-  - Professional budget allocation scenario that is immediately relatable
-  - Values displayed with proper currency formatting ($XXK)
-  - Generates both PNG static and HTML interactive versions
-  - Title follows exact required format
+  - Excellent spec compliance with all required features implemented correctly
+  - Proper color adaptation to both light and dark themes using Okabe-Ito palette
+  - Clear hierarchical data visualization effectively conveying part-to-whole relationships
+  - Realistic, neutral market-share domain data with appropriate scaling
+  - All text readable in both light and dark theme renders
   weaknesses:
-  - Legend text at bottom is somewhat small and could be larger for better readability
-  - The PIL compositing approach adds code complexity that could benefit from comments
-    explaining the technique
-  image_description: 'The plot displays a nested donut chart with two concentric rings
-    on a white background. The outer ring shows 12 budget subcategories (Salaries,
-    Equipment, Training for Engineering; Advertising, Events, Content for Marketing;
-    Infrastructure, Utilities, Maintenance for Operations; Commissions, Travel, Tools
-    for Sales). The inner ring displays the 4 department totals: Engineering ($700K,
-    blue), Marketing ($500K, yellow), Operations ($340K, green), and Sales ($360K,
-    red). Each department uses a consistent color family - Engineering in blue shades,
-    Marketing in yellow shades, Operations in green shades, and Sales in red/coral
-    shades. Values are displayed in dollar format ($XXK). The title "donut-nested
-    · pygal · pyplots.ai" appears at the top. A legend at the bottom lists all 12
-    subcategories in 4 columns.'
+  - PIL image compositing creates non-idiomatic implementation; pygal lacks native
+    nested-donut support
+  - Center background color in composited image doesn't perfectly match theme tokens
+  - Large legend (12 region-product combinations) takes significant space; could filter
+    to larger segments only
+  - Design lacks sophistication due to compositing workaround approach; library mastery
+    limited by library constraints
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title "donut-nested · pygal · anyplot.ai" is clearly readable in dark text; legend at bottom shows all region-product combinations in readable 3-column layout; axis and segment labels all visible
+      Data: Outer ring shows product categories (Premium, Standard, Budget) in color families per region: green (#009E73) for North America, vermillion (#D55E00) for LATAM, blue (#0072B2) for Europe, reddish purple for Asia-Pacific; inner ring shows regional totals with matching base colors; segment values labeled in $M
+      Legibility verdict: PASS - All elements readable against light background with good contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title and legend text render in light color appropriate for dark background, all labels readable; legend maintains same 3-column structure
+      Data: Identical color palette to light render (Okabe-Ito positions 1-4 maintained); data colors are consistent and clearly distinguished from background; segment values visible
+      Legibility verdict: PASS - All text readable against dark background; no dark-on-dark failures detected; theme adaptation successful
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title and values clearly readable, though legend text at bottom is
-          quite small
+        comment: All text readable in both themes; minor deduction for compositing
+          center background
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: Segments clearly separated; no text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Both rings are well-sized and clearly visible
+        comment: All markers and segments distinctly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of color families; blue/yellow/green/red are distinguishable
-          but green and blue could be closer for some colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Chart fills canvas well, good proportions, legend placed at bottom
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: N/A for donut charts (no axes)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend at bottom is functional, no grid needed for donuts
+        comment: Okabe-Ito palette is colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format (3600×3600) appropriate for symmetric plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title and region/product labels present
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Okabe-Ito colors correct, but center background doesn't perfectly
+          match theme tokens
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 3
+        max: 8
+        passed: false
+        comment: Competent structure but PIL compositing workaround reduces sophistication
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean but compositing approach lacks refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear hierarchy effectively conveys part-to-whole relationships
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct nested donut chart with two concentric rings
+        comment: Correct nested donut chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Inner ring shows departments, outer shows subcategories
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Hierarchical display with color families, values displayed
-      - id: SC-04
-        name: Data Range
+        comment: Hierarchical structure, color families, child alignment, labels and
+          legend all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, values sum correctly
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Inner ring aggregates correctly; outer ring shows child values
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels all 12 subcategories with parent prefix
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "donut-nested · pygal · pyplots.ai"
+        comment: Title format correct; legend matches spec
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows hierarchical relationships, varying segment sizes, color families;
-          could have more variance in child distributions
+        comment: Full hierarchy, parent aggregates, child values shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Budget allocation is a perfect real-world use case matching the spec
+        comment: Market share data is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are reasonable for budget allocations though all in similar
-          magnitude
+        comment: $90M–$590M range is sensible
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Uses PIL for compositing which adds complexity, but necessary for
-          nested effect in pygal
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Deterministic data, no random elements
+        comment: Straightforward code without unnecessary complexity
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed data; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: PIL compositing is functional but not idiomatic
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No deprecated functions
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png (correct) and plot.html (bonus)
-    library_features:
+        comment: Correct output format
+    library_mastery:
       score: 4
-      max: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
-        passed: true
-        comment: Creative use of pygal's transparent background rendering and PIL
-          compositing to achieve nested effect; uses Style customization well; generates
-          both PNG and HTML
+        passed: false
+        comment: Correct API but PIL workaround not idiomatic for pygal
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Compositing is creative but not a pygal-specific feature
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pillow
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - dark-theme
