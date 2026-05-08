@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-spine: Spine Plot for Two-Variable Proportions
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 84/100 | Created: 2026-05-08
+Quality: 88/100 | Created: 2026-05-08
 """
 
 import os
