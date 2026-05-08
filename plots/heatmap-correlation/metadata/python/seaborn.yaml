@@ -1,164 +1,171 @@
 library: seaborn
+language: python
 specification_id: heatmap-correlation
 created: '2025-12-26T10:03:13Z'
-updated: '2025-12-26T10:06:39Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520464683
+updated: '2026-05-08T15:07:39Z'
+generated_by: claude-haiku
+workflow_run: 25562095335
 issue: 1948
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/seaborn/plot.png
-preview_html: null
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-    - colorbar
-    - annotations
-  patterns:
-    - data-generation
-  dataprep:
-    - correlation-matrix
-  styling:
-    - custom-colormap
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 76
 review:
   strengths:
-  - Excellent use of seaborn heatmap function with mask parameter for triangle display
-  - Well-chosen real estate context with realistic correlated variables showing diverse
-    correlation strengths
-  - 'Perfect implementation of spec requirements: diverging colormap, centered at
-    0, fixed -1 to 1 range, 2-decimal annotations'
-  - Clean, readable code following KISS principles
-  - Good font sizing and layout for the high-resolution output
+  - Perfect spec compliance with all required features
+  - Realistic and well-chosen real estate data with sensible correlations
+  - Correct theme adaptation with identical data colors and proper chrome flip between
+    light and dark
+  - Clean, reproducible code with seed control and minimal dependencies
   weaknesses:
-  - 'Minor: Colorbar label is set twice (via cbar_kws and separately on cbar.ax),
-    which is redundant but not harmful'
-  image_description: The plot displays a lower-triangular correlation matrix heatmap
-    for 9 real estate variables (Price, Area, Bedrooms, Bathrooms, Age, Garage Spots,
-    Lot size, Distance, Crime Index). The heatmap uses the RdBu_r diverging colormap
-    with dark red indicating strong positive correlations (e.g., 0.87 between Price
-    and Area), blue indicating negative correlations (e.g., -0.37 between Price and
-    Age), and white/light colors near zero. Each cell displays its correlation value
-    to 2 decimal places in white text. The upper triangle is masked to reduce redundancy.
-    The colorbar on the right shows the range from -1.0 to 1.0 with "Correlation Coefficient"
-    label. Variable names appear on both axes with rotated x-axis labels. The title
-    follows the required format.
+  - 'Critical layout failure: heatmap compressed into lower-right corner with excessive
+    blank space (VQ-05)'
+  - Generic design with standard seaborn defaults and no aesthetic polish
+  - Small effective heatmap size due to figure sizing and margin issues
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "heatmap-correlation · seaborn · anyplot.ai" in dark INK color, readable. Tick labels in INK_SOFT (dark gray), clearly visible. Colorbar label and ticks properly styled.
+      Data: BrBG diverging colormap with teal (positive) and brown (negative) correlations. Annotations show 2-decimal values. Upper triangle masked. All correlation values visible and readable.
+      Layout: CRITICAL ISSUE - Heatmap compressed into lower-right corner with massive blank space above and to the left. Canvas severely underutilized.
+      Legibility verdict: PASS (text is readable, but layout fails)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title in light INK color (F0EFE8), readable against dark background. Tick labels in INK_SOFT light variant (B8B7B0), clearly visible. No dark-on-dark failures.
+      Data: Colors identical to light render - teal for positive, brown for negative in BrBG palette. Annotations clearly visible.
+      Layout: Same critical issue - heatmap compressed into lower-right corner with excessive blank space above and to the left.
+      Legibility verdict: PASS (no dark-on-dark failures, but layout fails)
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 24
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 24pt, tick labels at 14pt, annotations at 14pt - all clearly
-          readable
+        comment: All text readable in both themes; minor improvement possible for
+          dark-theme title brightness
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text, rotated x-labels prevent collision
+        comment: Rotated x-axis labels slightly tight but mostly readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Cells are square and well-sized, linewidths separate cells cleanly
+        comment: Cells and annotations visible; colors clearly distinguish positive/negative;
+          cells somewhat small due to layout
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: RdBu_r diverging colormap is colorblind-friendly with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Square aspect ratio perfect for correlation matrix, good canvas utilization
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Variable names include units where applicable (sq ft, years, mi,
-          $K)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
+        comment: BrBG perceptually uniform and CVD-safe; diverging palette centered
+          at 0
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 1
+        max: 4
         passed: false
-        comment: No grid (appropriate for heatmap), but colorbar label is duplicated
-          (set twice)
+        comment: 'CRITICAL: Heatmap compressed into lower-right corner with vast empty
+          space above and left; figure canvas poorly utilized'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; variable names shown as readable tick labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'BrBG correct for correlation data; backgrounds exact (#FAF8F1 light,
+          #1A1A17 dark); both renders theme-correct'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Generic defaults; BrBG is standard; no distinctive aesthetic choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization; layout issue detracts from refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Straightforward visualization with no visual hierarchy or emphasis;
+          upper triangle masking is smart but limited
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct correlation matrix heatmap
+        comment: Correct heatmap with diverging colormap
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Variables on both axes, correlation values in cells
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Diverging colormap centered at 0, annotations with 2 decimals, triangle
-          mask, fixed -1 to 1 range
-      - id: SC-04
-        name: Data Range
+        comment: Diverging colormap, 2-decimal annotations, upper triangle masked,
+          variable names on axes
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Colorbar shows full -1 to 1 range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correlation matrix computed correctly; colorbar range fixed to -1..1
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "heatmap-correlation · seaborn · pyplots.ai"'
+        comment: 'Title format correct: heatmap-correlation · seaborn · anyplot.ai'
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows full range of correlations: strong positive (0.87), moderate
-          (0.53), weak (0.08), negative (-0.37), near-zero (0.02)'
+        comment: 'Shows all aspects: correlations, all variables, positive/negative
+          relationships'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Real estate features with plausible relationships (area/bedrooms
-          correlated, age/price negatively correlated)
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 9 variables is within recommended 5-15 range, correlation values
-          are realistic
+        comment: Real estate features with realistic correlations
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Correlation values correctly scaled -1..1
     code_quality:
       score: 10
       max: 10
@@ -168,40 +175,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save, no functions/classes'
+        comment: Straightforward script, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Uses np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib, numpy, pandas, seaborn)
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: No fake UI; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=300
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
         passed: true
-        comment: Excellent use of sns.heatmap with mask, annot, fmt, center, cbar_kws,
-          linewidths
-  verdict: APPROVED
+        comment: Uses seaborn heatmap appropriately; theme tokens correctly applied
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic heatmap with standard styling; no seaborn-specific enhancements
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - matrix-masking
+  patterns:
+  - data-generation
+  dataprep:
+  - correlation-matrix
+  styling:
+  - theme-adaptive-tokens
