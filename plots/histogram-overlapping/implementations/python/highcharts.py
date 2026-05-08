@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 histogram-overlapping: Overlapping Histograms
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-25
+Library: highcharts unknown | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-08
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -16,15 +17,26 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+
 # Data - Employee performance scores by department
 np.random.seed(42)
-engineering = np.random.normal(75, 10, 150)  # Higher mean, moderate spread
-sales = np.random.normal(70, 15, 150)  # Lower mean, wider spread
-marketing = np.random.normal(72, 12, 150)  # Middle ground
+engineering = np.random.normal(75, 10, 150)
+sales = np.random.normal(70, 15, 150)
+marketing = np.random.normal(72, 12, 150)
 
 # Compute histogram bins (aligned across all groups)
 all_data = np.concatenate([engineering, sales, marketing])
-bins = np.linspace(all_data.min() - 5, all_data.max() + 5, 16)  # 15 bins for clarity
+bins = np.linspace(all_data.min() - 5, all_data.max() + 5, 16)
 bin_width = bins[1] - bins[0]
 
 # Calculate histogram counts for each group
@@ -44,115 +56,96 @@ chart.options.chart = {
     "type": "column",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginBottom": 200,
     "marginLeft": 150,
 }
 
 # Title
 chart.options.title = {
-    "text": "histogram-overlapping · highcharts · pyplots.ai",
-    "style": {"fontSize": "56px", "fontWeight": "bold"},
-}
-
-# Subtitle
-chart.options.subtitle = {
-    "text": "Employee Performance Score Distribution by Department",
-    "style": {"fontSize": "36px", "color": "#666666"},
+    "text": "histogram-overlapping · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "fontWeight": "normal", "color": INK},
 }
 
 # X-axis
 chart.options.x_axis = {
     "categories": bin_labels,
-    "title": {"text": "Performance Score", "style": {"fontSize": "40px"}},
-    "labels": {"style": {"fontSize": "28px"}},
-    "lineWidth": 2,
-    "lineColor": "#333333",
+    "title": {"text": "Performance Score", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": GRID,
 }
 
 # Y-axis
 chart.options.y_axis = {
-    "title": {"text": "Frequency (Count)", "style": {"fontSize": "40px"}},
-    "labels": {"style": {"fontSize": "28px"}},
+    "title": {"text": "Frequency (Count)", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.1)",
-    "lineWidth": 2,
-    "lineColor": "#333333",
+    "gridLineColor": GRID,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
 }
 
 # Legend
 chart.options.legend = {
     "enabled": True,
-    "itemStyle": {"fontSize": "32px"},
+    "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
     "align": "right",
     "verticalAlign": "top",
     "layout": "vertical",
     "x": -80,
     "y": 120,
-    "backgroundColor": "rgba(255, 255, 255, 0.9)",
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
     "borderWidth": 1,
-    "borderColor": "#cccccc",
     "padding": 15,
 }
 
-# Plot options for overlapping bars - all same width, same position
+# Plot options for overlapping bars
 chart.options.plot_options = {
     "column": {
-        "grouping": False,  # Disable grouping so bars overlap
+        "grouping": False,
         "shadow": False,
-        "borderWidth": 2,
-        "borderColor": "#333333",
-        "pointPadding": 0.05,  # Same padding for all
+        "borderWidth": 1,
+        "borderColor": INK_SOFT,
+        "pointPadding": 0.05,
         "groupPadding": 0.1,
     }
 }
 
 # Add series with transparency for overlapping effect
-# Order matters for z-index - first is behind, last is in front
-
-# Sales (Python Yellow) - back layer (widest distribution)
-chart.add_series(
-    {
-        "type": "column",
-        "name": "Sales (n=150)",
-        "data": sales_counts.tolist(),
-        "color": "rgba(255, 212, 59, 0.55)",
-        "borderColor": "#b39400",
-    }
-)
-
-# Marketing (Purple - colorblind safe) - middle layer
-chart.add_series(
-    {
-        "type": "column",
-        "name": "Marketing (n=150)",
-        "data": mkt_counts.tolist(),
-        "color": "rgba(148, 103, 189, 0.55)",
-        "borderColor": "#6b3fa0",
-    }
-)
-
-# Engineering (Python Blue) - front layer
+# Engineering (Okabe-Ito green) - front layer
 chart.add_series(
     {
         "type": "column",
         "name": "Engineering (n=150)",
         "data": eng_counts.tolist(),
-        "color": "rgba(48, 105, 152, 0.55)",
-        "borderColor": "#1a4a6e",
+        "color": OKABE_ITO[0],
+        "opacity": 0.55,
     }
+)
+
+# Sales (Okabe-Ito vermillion) - middle layer
+chart.add_series(
+    {"type": "column", "name": "Sales (n=150)", "data": sales_counts.tolist(), "color": OKABE_ITO[1], "opacity": 0.55}
+)
+
+# Marketing (Okabe-Ito blue) - back layer
+chart.add_series(
+    {"type": "column", "name": "Marketing (n=150)", "data": mkt_counts.tolist(), "color": OKABE_ITO[2], "opacity": 0.55}
 )
 
 # Tooltip
 chart.options.tooltip = {
     "shared": True,
-    "headerFormat": '<span style="font-size:24px">Score: {point.key}</span><br/>',
-    "pointFormat": '<span style="color:{point.color}">\u25cf</span> {series.name}: <b>{point.y}</b><br/>',
-    "style": {"fontSize": "22px"},
+    "headerFormat": '<span style="font-size:18px">Score: {point.key}</span><br/>',
+    "pointFormat": '<span style="color:{point.color}">●</span> {series.name}: <b>{point.y}</b><br/>',
+    "style": {"fontSize": "16px"},
 }
 
 # Download Highcharts JS for headless Chrome
-highcharts_url = "https://code.highcharts.com/highcharts.js"
+highcharts_url = "https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.4.3/highcharts.min.js"
 with urllib.request.urlopen(highcharts_url, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
@@ -164,14 +157,14 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
 # Save interactive HTML
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
 # Take screenshot with headless Chrome
@@ -189,7 +182,7 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
