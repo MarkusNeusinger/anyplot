@@ -1,21 +1,31 @@
-""" pyplots.ai
+""" anyplot.ai
 box-grouped: Grouped Box Plot
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-25
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-08
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data - Employee performance scores by department and experience level
 np.random.seed(42)
 
 categories = ["Sales", "Engineering", "Marketing", "Support"]
 subcategories = ["Junior", "Mid-Level", "Senior"]
-
-# Color palette following style guide
-colors = ["#306998", "#FFD43B", "#4ECDC4"]
 
 # Generate realistic performance data with varying distributions
 data = {
@@ -42,9 +52,9 @@ data = {
 }
 
 # Add some outliers for feature coverage
-data["Sales"]["Junior"] = np.append(data["Sales"]["Junior"], [30, 95])
-data["Engineering"]["Senior"] = np.append(data["Engineering"]["Senior"], [55, 100])
-data["Marketing"]["Mid-Level"] = np.append(data["Marketing"]["Mid-Level"], [35, 98])
+data["Sales"]["Junior"] = np.append(data["Sales"]["Junior"], [35, 95])
+data["Engineering"]["Senior"] = np.append(data["Engineering"]["Senior"], [55, 95])
+data["Marketing"]["Mid-Level"] = np.append(data["Marketing"]["Mid-Level"], [40, 98])
 
 # Create figure
 fig = go.Figure()
@@ -63,7 +73,7 @@ for i, subcat in enumerate(subcategories):
             x=x_vals,
             y=y_vals,
             name=subcat,
-            marker_color=colors[i],
+            marker_color=OKABE_ITO[i],
             boxmean=False,
             line={"width": 2},
             marker={"size": 8, "opacity": 0.7},
@@ -73,29 +83,45 @@ for i, subcat in enumerate(subcategories):
 
 # Update layout for 4800x2700 resolution
 fig.update_layout(
-    title={"text": "box-grouped · plotly · pyplots.ai", "font": {"size": 32}, "x": 0.5, "xanchor": "center"},
-    xaxis={"title": {"text": "Department", "font": {"size": 24}}, "tickfont": {"size": 20}},
+    title={
+        "text": "box-grouped · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
+    xaxis={
+        "title": {"text": "Department", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+    },
     yaxis={
-        "title": {"text": "Performance Score", "font": {"size": 24}},
-        "tickfont": {"size": 20},
-        "gridcolor": "rgba(0,0,0,0.1)",
+        "title": {"text": "Performance Score (0-100)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "gridcolor": GRID,
         "gridwidth": 1,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
     },
     legend={
-        "title": {"text": "Experience Level", "font": {"size": 20}},
-        "font": {"size": 18},
+        "title": {"text": "Experience Level", "font": {"size": 20, "color": INK}},
+        "font": {"size": 18, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
         "x": 1.02,
         "y": 1,
         "xanchor": "left",
         "yanchor": "top",
     },
     boxmode="group",
-    template="plotly_white",
-    plot_bgcolor="white",
-    paper_bgcolor="white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     margin={"l": 100, "r": 200, "t": 100, "b": 100},
 )
 
 # Save as PNG and HTML
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
