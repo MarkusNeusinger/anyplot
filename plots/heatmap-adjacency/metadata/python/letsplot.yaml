@@ -1,0 +1,239 @@
+library: letsplot
+language: python
+specification_id: heatmap-adjacency
+created: '2026-05-08T07:13:38Z'
+updated: '2026-05-08T07:31:29Z'
+generated_by: claude-sonnet
+workflow_run: 25541909133
+issue: 5240
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/letsplot/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - 'Perfect spec compliance: symmetric adjacency matrix with block-diagonal community
+    structure, colorbar, NaN-as-background absent-edge encoding'
+  - 'Clean theme adaptation: both light and dark renders pass legibility checks with
+    all text elements properly tokenized'
+  - 'Excellent data quality: realistic research collaboration context with plausible
+    within-/cross-department weight distributions and clear 3-community structure'
+  weaknesses:
+  - Tick label size (11pt) is below the recommended 16pt — for a 30-node matrix at
+    3600x3600px output, labels are legible but smaller than optimal
+  - 'Design excellence is basic: no annotations highlighting key findings (most collaborative
+    pairs, cross-department links), no dendrogram for hierarchical ordering context'
+  - 'LM-02 limited: no letsplot-distinctive interactive features (hover tooltips,
+    dynamic filtering) used beyond the standard HTML export'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "heatmap-adjacency · letsplot · anyplot.ai" in dark ink, clearly readable. Both "Researcher" axis labels readable. Y-axis names in dark soft ink readable; X-axis names rotated 90deg at size=11, readable but slightly below recommended 16pt. Legend "Collaboration Strength" readable.
+      Data: Viridis colormap (deep purple → teal → yellow) encodes collaboration strength. Three block-diagonal clusters clearly visible (Dept A: Alice-Jack, Dept B: Kate-Tina, Dept C: Uma-Derek). Absent edges render as background (#FAF8F1), creating clean absence encoding. Sparse cross-department connections visible as isolated colored tiles.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title, axis labels, and tick labels all render in light-colored text, clearly readable against the dark background. No dark-on-dark failures. Legend frame and text render correctly in dark theme. Colorbar tick labels are light and readable.
+      Data: Viridis palette colors are identical to the light render — only background, empty cells, and chrome flip to dark. Block-diagonal community structure equally clear. Empty cells become near-black background, maintaining the absence signal.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title 24pt and axis labels 20pt are correct; tick labels at size=11
+          below recommended 16pt but legible at 3x scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: X-axis labels rotated 90deg, no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Tiles clearly visible; viridis range well-differentiated; NaN cells
+          cleanly blend into background
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis is perceptually uniform and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 3600x3600 px format appropriate for symmetric heatmap; nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Researcher on both axes; correct spec-id title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis for continuous weight data (correct); backgrounds #FAF8F1/#1A1A17
+          correct in both themes'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional categorical ordering exposes block-diagonal structure;
+          NaN-as-background creates clean absence encoding; no dendrogram or community
+          annotation to further elevate
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Panel grid removed, axis lines removed, subtle legend border; stops
+          short of full minimalism
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Block-diagonal structure tells community story; no annotation or
+          callout to highlight key findings
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct adjacency matrix heatmap using geom_tile
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Symmetric matrix, weight-to-color, absent edges as background, colorbar,
+          node names on axes, block-diagonal via reordering
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Source on X, target on Y reversed for top-left origin, weight to
+          fill; all 30 nodes shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format; Collaboration Strength legend with scale
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Weighted edges, symmetric matrix, community clustering, absent-edge
+          encoding, full weight range covered
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Research collaboration network with 3 departments, 30 researchers
+          — plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 30 nodes within 20-200 spec range; intra-dept weights 0.4-1.0, cross-dept
+          0.05-0.35
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; clean linear script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imported symbols are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; symmetric matrix construction is clean
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct grammar-of-graphics usage; geom_tile + scale_fill_viridis
+          + aes(fill=) is idiomatic; theme() chaining correct; pd.Categorical for
+          axis ordering
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: HTML export used; no letsplot-distinctive features like tooltip aesthetics,
+          interactive layers, or coordinate_flip
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
