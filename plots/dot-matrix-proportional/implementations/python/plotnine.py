@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 dot-matrix-proportional: Dot Matrix Chart for Proportional Counts
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-05-08
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 86/100 | Created: 2026-05-08
 """
 
 import os
