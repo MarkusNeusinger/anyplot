@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: scatter-3d
 created: '2025-12-26T10:31:32Z'
-updated: '2026-05-08T22:42:42Z'
+updated: '2026-05-08T22:49:55Z'
 generated_by: claude-haiku
 workflow_run: 25582870408
 issue: 1945
@@ -12,123 +12,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/bokeh/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Perfect theme adaptation — both light and dark renders are correctly styled with
-    proper text colors and backgrounds
-  - Effective 3D isometric projection technique with correct depth-based sizing for
-    visual hierarchy
-  - Viridis256 colormap appropriately applied for continuous Z-value mapping with
-    perceptually uniform coloring
-  - Clean axis design with custom 3D coordinate frame (lines + arrows) that clearly
-    establishes spatial orientation
-  - Excellent text legibility across both renders at proper 48pt title and 44pt label
-    sizes
+  - Clear 3D isometric projection with effective depth perception via size variation
+    and Z-value color mapping
+  - Excellent theme adaptation with consistent data colors across light/dark renders
+    and proper chrome theming
+  - 'Strong use of Bokeh''s distinctive features: custom 3D projection math, ColumnDataSource,
+    LinearColorMapper, and Selenium export'
+  - Well-designed axis arrows and labels that clearly orient viewer in 3D space
+  - Subtle, professional grid styling (alpha=0.05, dashed) that doesn't compete with
+    data
   weaknesses:
-  - Design Excellence below median — generic styling choices without distinctive polish
-    or visual refinement
-  - Limited Bokeh library mastery — no HoverTool tooltips or advanced interactivity
-    beyond basic pan/zoom controls
-  - 3D visualization lacks rotation capability (Bokeh limitation for static output,
-    but static isometric view limits exploration)
+  - 'Title contains wrong domain: ''pyplots.ai'' instead of ''anyplot.ai'' (appears
+    on line 100 and 282) - must be corrected to ''anyplot.ai'''
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white at #FAF8F1, correct surface color per style guide
-      Chrome: Title "scatter-3d · bokeh · pyplots.ai" in bold dark text (INK #1A1A17) at 48pt — clearly readable. Axis labels "X-Axis (units)", "Y-Axis (units)", "Z-Axis (units)" at 44pt bold dark text — all legible. Color bar title "Z-Value" in secondary text color, readable. 3D axis arrows in INK_SOFT gray.
-      Data: 150 scatter points color-mapped via Viridis256 (blue to yellow gradient) encoding Z-values. Points sized 25-50 based on depth (back-to-front occlusion handling). Gray outline (INK_SOFT) on each point for definition. Three clusters visible by position and color: lower cluster (blue), middle-right cluster (cyan-green), upper cluster (yellow-green).
-      Legibility verdict: PASS — all text readable on light background, data colors distinct, no light-on-light failures.
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "scatter-3d · bokeh · pyplots.ai" in dark text (44pt), axis labels "X-Axis (units)", "Y-Axis (units)", "Z-Axis (units)" in dark bold text (44pt), color bar title in 32pt dark text. All text clearly readable against light background.
+      Data: 150 points with viridis gradient (purple at low Z to cyan to green to yellow at high Z). Points sized 25-50 based on depth, alpha=0.8. Three clusters clearly visible. Data colors match viridis256 palette.
+      Legibility verdict: PASS - all elements readable and well-contrasted
 
     Dark render (plot-dark.png):
-      Background: Warm near-black at #1A1A17, correct surface color per style guide
-      Chrome: Title in light/pale text (INK #F0EFE8) at 48pt — clearly readable on dark. Axis labels at 44pt in same light INK color — all legible. Color bar title in secondary text color. 3D axes arrows in light INK_SOFT gray against dark background.
-      Data: Identical Viridis256 coloring as light render — blue to yellow gradient unchanged. Same point sizes and outlines. Same three clusters distinguishable by color and position. Perfect color consistency between themes (only chrome flipped).
-      Legibility verdict: PASS — all text readable on dark background, NO dark-on-dark failures, data colors identical to light render confirming correct theme adaptation.
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Same title format in light text (appears to be light cream/off-white color). Axis labels in light text, color bar title and labels in light text. All chrome elements are light-colored and clearly visible against dark background.
+      Data: Same viridis gradient colors as light render (purple to cyan to green to yellow) - colors are IDENTICAL to light render, only chrome changed theme. Points, sizing, and cluster distribution are identical.
+      Legibility verdict: PASS - all text is light-on-dark with excellent contrast, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: Title 48pt bold, axis labels 44pt bold, color bar 32pt — all theme-adaptive
-          and readable in both renders
+        comment: 'Font sizes explicitly set (title 48pt, labels 44pt, colorbar 32pt/24pt).
+          All text readable in both themes. Minor: title domain error affects content
+          but not legibility.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Points don't obscure labels, depth-sorting prevents occlusion issues,
-          color bar positioned clearly
+        comment: No overlapping text. Axis labels positioned away from data. Color
+          bar labels clear.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers range 25-50px based on depth, alpha=0.8 allows density visualization,
-          edge outlines for definition
+        comment: 150 points with size variation (25-50) based on depth. Alpha=0.8.
+          Markers clearly visible and adapted to data density. Edge color provides
+          definition.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis256 is perceptually uniform and colorblind-safe, no red-green
-          sole signals
+        comment: Viridis colormap is perceptually uniform and CVD-safe. Good contrast
+          between data and background. No red-green dependency.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 4800x2700 landscape format appropriate for isometric 3D, 15% padding,
-          color bar positioned right, nothing cut off
+        comment: 4800×2700 canvas with balanced margins. Plot centered, title top,
+          colorbar right. Good use of space but slightly conservative.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Title: ''scatter-3d · bokeh · pyplots.ai'', axis labels descriptive
-          with units, color bar titled'
+        passed: false
+        comment: 'Axis labels are descriptive with units (X/Y/Z-Axis (units)). CRITICAL:
+          Title has wrong domain - shows ''pyplots.ai'' instead of ''anyplot.ai''.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis256 for continuous Z mapping, backgrounds #FAF8F1 (light)
-          and #1A1A17 (dark) correct, text colors properly theme-adaptive, both renders
-          correct'
+        comment: 'Viridis256 palette used for continuous Z-value mapping (correct
+          for continuous data). Background colors theme-correct (#FAF8F1 light, #1A1A17
+          dark). Data colors identical across renders. All chrome theme-adaptive.'
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 3D isometric projection is sophisticated technique, custom axis arrows
-          show intent, but within expected bounds for 3D plots. Viridis is standard
-          for continuous data.
+        passed: true
+        comment: Custom 3D isometric projection implementation with mathematical rotation
+          matrix. Viridis colormap chosen appropriately for continuous data. Above
+          default appearance but not exceptionally sophisticated.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Hidden axes for clean look, subtle dashed grid (alpha=0.05), generous
-          margins, custom 3D axes with arrows add refinement. Could enhance spines
-          and whitespace further.
+        passed: true
+        comment: Grid lines very subtle (dashed, alpha=0.05). Custom axis arrows and
+          labels instead of default axes. Clean, uncluttered layout. No unnecessary
+          decoration.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Three clusters visible by position and color, depth-based sizing
-          creates hierarchy, Viridis adds 4th dimension. Exploratory rather than narrative-focused,
-          no explicit emphasis.
+        passed: true
+        comment: Three clusters clearly visible through spatial arrangement. Z-value
+          encoded as color gradient adds fourth dimension. Size variation by depth
+          creates visual hierarchy. Effectively tells story of 3D clustering.
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -136,29 +133,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: 3D scatter plot with isometric 2D projection showing spatial
-          relationships across three dimensions'
+        comment: Correct 3D scatter plot with proper isometric projection. Effectively
+          displays spatial relationships.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: X, Y, Z axes with labels and units, color encoding for Z-value (4th
-          dimension), interactive tools, clear coordinate frame
+        comment: X/Y/Z axes with labels and units present. Color encoding for Z-value
+          with colorbar. Interactive tools in HTML (pan, wheel_zoom, box_zoom, reset,
+          save).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X, Y, Z correctly mapped, all 150 data points visible in plot range,
-          depth-based sizing for 3D perception
+        comment: X mapped to x-axis, Y to y-axis, Z to vertical position and color.
+          All data visible. Ranges appropriate.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title formatted correctly, color bar serves as legend for Z-value
-          mapping
+        passed: false
+        comment: Title format is 'scatter-3d · bokeh · pyplots.ai' but WRONG DOMAIN
+          - should be 'anyplot.ai'. Color bar serves as legend with proper Z-Value
+          label. Domain error prevents full score.
     data_quality:
       score: 15
       max: 15
@@ -168,24 +167,26 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 150 points (50 per cluster), 3 distinct spatial clusters, demonstrates
-          multivariate relationships, point density appropriate
+        comment: Data shows three distinct clusters with different centers and spreads.
+          Z-value variation across full range. Demonstrates spatial relationships
+          and clustering effectively.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Synthetic clustered data is neutral and appropriate, represents typical
-          3D exploration scenario, not biased
+        comment: Random 3D clustered data is plausible for scientific/ML exploration.
+          Neutral, non-controversial. Realistic use case for 3D scatter visualization.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Z-range ~-4 to ~5 with sensible cluster spreads, values appropriate
-          for generic multi-dimensional exploration
+        comment: Data ranges reasonable (approximately -3 to 4). Cluster sizes and
+          centers are statistically plausible. Factually sound random generation with
+          proper seed.
     code_quality:
-      score: 9.5
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -193,63 +194,69 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes, linear script, easy to follow
+        comment: 'Linear structure: imports → theme → data generation → figure → plotting
+          → save. No unnecessary functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for deterministic output
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only imports actually used: numpy, bokeh, selenium'
+        comment: 'All imports used: os, time, pathlib (file handling), numpy (math/data),
+          bokeh (plotting), selenium (screenshot).'
       - id: CQ-04
         name: Code Elegance
-        score: 1.5
+        score: 2
         max: 2
-        passed: false
-        comment: Isometric projection math is correct with good variable naming, somewhat
-          verbose but acceptable
+        passed: true
+        comment: Appropriate complexity for 3D projection. Clear variable names. No
+          fake functionality or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output as plot-{THEME}.html and plot-{THEME}.png, uses CDN
-          resources
+        comment: Saves as plot-light.png and plot-dark.png. Also saves HTML. Uses
+          current Bokeh API correctly.
     library_mastery:
-      score: 5.5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Proper figure() API, ColumnDataSource, p.scatter/line/patch methods,
-          ColorBar for legend, ColorMapper setup. Correct Selenium screenshot approach
-          per bokeh.md. Good high-level API usage.
+        passed: true
+        comment: Uses ColumnDataSource, figure(), scatter(), ColorBar, and LinearColorMapper
+          idiomatically. Proper theme-token usage. Well-structured Bokeh patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 1.5
+        score: 4
         max: 5
-        passed: false
-        comment: 'Uses ColumnDataSource and ColorBar well, basic interactive tools
-          configured. Lacks: HoverTool for tooltips, callbacks, CustomJS, advanced
-          Bokeh-specific styling. Limited distinctive feature usage.'
-  verdict: APPROVED
+        passed: true
+        comment: Custom 3D isometric projection with mathematical transformation.
+          LinearColorMapper for color mapping. Selenium-based PNG export. Custom axis
+          arrows via patches. Sophisticated Bokeh-specific techniques that couldn't
+          easily transfer to other libraries.
+  verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - 3d-projection
+  - html-export
+  - annotations
   - colorbar
   patterns:
   - data-generation
+  - columndatasource
   dataprep: []
   styling:
   - custom-colormap
   - alpha-blending
+  - grid-styling
