@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: bar-diverging
 created: '2025-12-25T22:49:10Z'
-updated: '2026-05-08T09:04:14Z'
+updated: '2026-05-08T09:09:56Z'
 generated_by: claude-haiku
 workflow_run: 25546752765
 issue: 2009
@@ -12,35 +12,35 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diver
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 90
 review:
   strengths:
-  - Perfect text legibility across both themes with explicitly set font sizes
-  - Correct implementation of diverging bar chart with proper color separation (green
-    for positive, orange for negative)
-  - 'All spec requirements met: title format correct, features present, data mapping
-    correct'
-  - Excellent code quality with KISS structure and clean imports
-  - Theme-adaptive chrome perfectly configured with no legibility issues in dark render
-  - Zero baseline line clearly marks the neutral point, enhancing clarity
+  - Perfect theme adaptation with data colors invariant and chrome fully responsive
+  - Clean, professional design with proper spacing and visual hierarchy
+  - Excellent palette compliance using Okabe-Ito correctly for CVD safety
+  - Strong code quality with no unnecessary complexity or fake interactivity
+  - Proper use of Highcharts-specific features (plotLines for baseline, per-point
+    colors)
+  - All text legible in both light and dark themes with no readability failures
   weaknesses:
-  - 'Design Excellence is modest (9/20): minimal visual refinement beyond defaults,
-    no distinct visual hierarchy or data storytelling'
-  - 'Library Mastery is moderate (6/10): uses correct patterns but doesn''t leverage
-    distinctive Highcharts features (animations, drill-down, custom event handlers)
-    that could enhance the visualization'
+  - Design Excellence could be improved by removing top/right spines for a more refined
+    aesthetic
+  - Library Mastery could showcase more advanced Highcharts features beyond basic
+    diverging bars
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct surface color.
-      Chrome: Title "bar-diverging · highcharts · anyplot.ai" in dark text at top, Y-axis label "Net Satisfaction Score" clearly visible, category labels (Customer Service, IT Support, etc.) readable on left at 18px, tick labels readable.
-      Data: Positive values (right side) render in #009E73 (brand green), negative values (left side) in #D55E00 (vermillion). Data labels show numeric values. Zero baseline line visible. Bars sized appropriately.
-      Legibility verdict: PASS - All text is readable, no contrast issues, no dark-on-light problems.
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "bar-diverging · highcharts · anyplot.ai" in dark text (28px), Y-axis label "Net Satisfaction Score" (22px), category labels and tick labels (18px) all in appropriate dark gray (#1A1A17/#4A4A44) - fully readable
+      Data: Positive values in brand green (#009E73) extending right, negative values in vermillion (#D55E00) extending left, with data labels overlaid in dark text - colors distinct and accessible
+      Grid/lines: Subtle horizontal grid and clear zero baseline marked with vertical plotLine
+      Legibility verdict: PASS - All text and data elements are clearly readable with strong contrast against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct surface color.
-      Chrome: Title in light text, Y-axis label readable, category labels in light color (#F0EFE8), tick labels readable. No dark-on-dark failures - all text is properly light-colored on dark background.
-      Data: Positive bars still #009E73 (identical to light render), negative bars still #D55E00 (identical to light render). Data labels visible. Zero baseline line visible. Colors are perfectly preserved between themes (only chrome changes).
-      Legibility verdict: PASS - All text readable, no dark-on-dark issues, theme adaptation is correct.
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title, axis labels, and tick labels now in light text (#F0EFE8/#B8B7B0) - fully readable against dark background, no dark-on-dark failures
+      Data: Identical colors to light render - brand green (#009E73) and vermillion (#D55E00) remain unchanged, confirming proper theme-invariant data colors
+      Grid/lines: Subtle grid and zero baseline clearly visible on dark surface
+      Legibility verdict: PASS - All text maintains strong contrast, no readability issues, perfect theme separation between data (invariant) and chrome (adaptive)
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,72 +51,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
-          perfectly readable in both themes
+        comment: All text explicitly styled with theme-adaptive colors (28px title,
+          22px labels, 18px ticks). Readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; category labels, data labels, and axis titles
-          all readable
+        comment: Category labels well-spaced, bars non-overlapping, data labels positioned
+          clearly with no collisions.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars and data labels clearly visible; sizing appropriate for 10 categories
+        comment: Bars clearly visible with strong contrast. Grid subtle. Colors distinct
+          and accessible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe; good contrast between green
-          and orange
+        comment: 'Okabe-Ito palette (#009E73 and #D55E00) CVD-safe. Positive/negative
+          not color-only signal.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~70% of canvas; balanced margins; no cut-off content
+        comment: 4800×2700 landscape. Generous margins. Clean proportions. Nothing
+          cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; Y-axis label descriptive (Net Satisfaction
-          Score)
+        comment: Title format correct. Y-axis descriptive. Zero baseline clearly marked.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand), second #D55E00; backgrounds #FAF8F1
-          (light)/#1A1A17 (dark); theme chrome perfect in both renders'
+        comment: 'First series #009E73, second #D55E00 (Okabe-Ito). Backgrounds #FAF8F1/#1A1A17.
+          Chrome fully theme-adaptive.'
     design_excellence:
-      score: 9
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful color choices and explicit typography; above defaults
-          but not publication-ready
+        passed: true
+        comment: Clean, professional execution. Proper theme integration. Okabe-Ito
+          applied correctly. Straightforward but solid.
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Library defaults with minimal customization; zero baseline is good
-          addition
+        passed: true
+        comment: Spines present. Grid subtle. Whitespace generous. Could benefit from
+          spine removal.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed clearly but no visual hierarchy or strategic emphasis
+        passed: true
+        comment: Clear hierarchy with diverging pattern as focal point. Sorted by
+          value aids pattern recognition.
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +128,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal diverging bar chart type
+        comment: Correct horizontal diverging bar chart with opposite-direction bars
+          from zero.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: positive/negative separation, color distinction,
-          zero baseline, category labels'
+        comment: Positive/negative colors, zero baseline visible, categories labeled,
+          values on bars.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories to Y-axis, values to X-axis; all data visible
+        comment: X-axis -50 to +60 shows all data. Y-axis shows all categories. Mapping
+          accurate.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend disabled (appropriate for single series)
+        comment: Title format correct. Legend appropriately disabled for single-series.
     data_quality:
       score: 15
       max: 15
@@ -155,20 +159,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows positive values (5 items) and negative values (5 items); balanced
-          representation
+        comment: Diverging bar concept fully demonstrated. All plot type aspects represented.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Department satisfaction scenario is realistic and neutral
+        comment: Customer satisfaction survey by department is plausible, neutral,
+          real-world scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values -38 to +45 are realistic for satisfaction scores
+        comment: Range -50 to +60 sensible for satisfaction scores. Good positive/negative
+          distribution.
     code_quality:
       score: 10
       max: 10
@@ -178,33 +183,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: Direct chart configuration without extraneous functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data; fully reproducible
+        comment: Deterministic synthetic data. Reproducible every run.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: 'Only necessary imports: stdlib, highcharts_core, selenium. All used.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity; no over-engineering
+        comment: Appropriate complexity. No fake UI or simulated interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+        comment: Outputs plot-{THEME}.png and .html with correct naming. Current API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -212,15 +217,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct Chart initialization, HighchartsOptions, BarSeries; follows
-          Highcharts patterns well
+        comment: Chart with container specified. BarSeries configured correctly. HighchartsOptions
+          used idiomatically. Theme tokens embedded.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses BarSeries and plotLines for baseline; Selenium export is library-specific
-          but basic usage overall
+        passed: true
+        comment: Uses plotLines for baseline, per-point colors, inline JS embedding.
+          Good library-specific features.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -230,4 +235,5 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - publication-ready
