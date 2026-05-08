@@ -1,169 +1,168 @@
 library: seaborn
+language: python
 specification_id: donut-nested
 created: '2025-12-25T20:04:30Z'
-updated: '2025-12-25T20:06:52Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510190017
+updated: '2026-05-08T01:04:58Z'
+generated_by: claude-haiku
+workflow_run: 25530517791
 issue: 2015
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/donut-nested/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - custom-legend
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
 review:
   strengths:
-  - Excellent hierarchical color scheme using seaborn light_palette() to create cohesive
-    color families per region
-  - Clean visual separation with white edges between segments
-  - Well-organized dual legend system clearly distinguishing inner (regions) and outer
-    (categories) rings
-  - Center text effectively communicates total budget
-  - Labels on inner ring include both region names and values for quick reference
-  - Realistic business scenario (regional budget allocation) makes the visualization
-    immediately understandable
+  - Nested donut structure properly executed with clear hierarchical visualization
+  - Flawless Okabe-Ito palette implementation with perfect theme adaptation
+  - Exceptional text legibility in both light and dark renders
+  - Clean, readable code with straightforward logic
+  - Effective use of color families to group related categories
+  - Strategic center focal point (total budget label)
+  - Proper spacing between rings enhances visual separation
   weaknesses:
-  - Seaborn is primarily used for styling/palettes rather than native plot functions
-    (pie charts are matplotlib-native)
-  - Inner ring labels at fontsize=13 could be slightly larger for better readability
-    at full resolution
-  - Category legend only shows blue shades which may cause slight confusion as each
-    region has different color shades for the same categories
-  image_description: The plot displays a nested donut chart showing regional budget
-    allocation. The inner ring shows 4 regions (North America $120M in dark blue,
-    Europe $95M in yellow, Asia Pacific $105M in teal, Latin America $50M in gray).
-    The outer ring displays expense categories (Salaries, Marketing, Operations, R&D)
-    with color gradients from dark to light shades matching each region's parent color.
-    The center shows "Total Budget $370M" in bold. Two well-organized legends appear
-    on the left side - one for regions (inner) and one for categories (outer). The
-    title "donut-nested · seaborn · pyplots.ai" is displayed at the top in bold. The
-    plot uses a square 12x12 figure with white background, white edge separations
-    between segments, and labels on the inner ring segments showing region names and
-    values.
+  - Style configuration uses simplified sns.set_theme() instead of full rc dictionary
+    (guideline provides more complete example)
+  - Categories legend uses first-region palette as reference, which could be more
+    explicitly explained
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct and not pure white
+      Chrome: Title in bold dark text is clearly visible; region labels on donut segments are dark and readable; legends have proper contrast with dark text on light background; all label text is readable
+      Data: Inner ring shows 4 regions (green, orange, blue, purple) using Okabe-Ito colors; outer ring shows lighter shades of each parent color for categories; wedge separators are white for clarity
+      Legibility verdict: PASS - all text elements have excellent contrast against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct and not pure black
+      Chrome: Title in light text is clearly visible; region labels on segments are white/light colored and readable; legend boxes have dark backgrounds (#242420) with light text and borders; all text has proper contrast
+      Data: Inner ring colors (Okabe-Ito 1-4) are identical to light render; outer ring shades also match; no dark-on-dark issues; wedges are clearly distinguishable
+      Legibility verdict: PASS - all text elements have excellent contrast against dark background; data colors maintain full visibility
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, center text at 26pt, labels at 13pt, legend at 16pt
-          - all readable but inner ring labels slightly small
+        comment: All font sizes explicitly set; fully readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text, all labels are clearly separated
+        comment: Clean positioning; minor crowding risk on smaller segments
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Wedges well-sized, clear visual separation with white edges
+        comment: All wedges, text, and colors clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Good color distinction using blue, yellow, teal, gray families; colorblind-friendly
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of square canvas, donut fills majority of space, legends
-          well-positioned but slightly tight on left
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for donut charts (no axes)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Two legends well-organized with clear titles
+        comment: 'Okabe-Ito palette; CVD-safe; first series #009E73'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3600×3600px square format appropriate for symmetric plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title descriptive; labels clear
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order; correct backgrounds; theme-correct
+          both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Color families show intentional hierarchy; custom palette derived
+          from Okabe-Ito
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Generous whitespace; subtle ring borders; legend frames polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy; center focal point; color families group
+          by region
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct nested donut chart with inner and outer rings
+        comment: Correct nested donut with two hierarchy levels
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Inner ring: regions (parent), Outer ring: categories (children)
-          - correctly mapped'
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Hierarchical data, consistent color families per parent, segment
-          alignment, labels, legends
-      - id: SC-04
-        name: Data Range
+        comment: All spec requirements met
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, segments proportionally sized
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Values correctly mapped; hierarchy intact
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Both legends correctly labeled for regions and categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "donut-nested · seaborn · pyplots.ai"
+        comment: Title format correct; legends accurate
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows 4 regions with 4 categories each, good variety in values; could
-          show more variation in relative proportions
+        comment: Shows hierarchy, aggregation, part-to-whole
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Regional budget allocation is a real, comprehensible business scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values in millions ($10M-$45M range) are realistic for corporate
-          budgets
+        comment: Budget allocation; realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sensible and well-scaled
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,40 +170,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean sequential script: imports → data → plot → save'
+        comment: No unnecessary complexity
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: No random seed used, but data is deterministic - minor deduction
+        max: 2
+        passed: true
+        comment: Deterministic; no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib.pyplot, numpy, seaborn, Patch)
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern API usage
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Standard ax.pie() usage; sns.light_palette() for colors; style config
+          could use full rc dict
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses sns.set_theme() and sns.light_palette() for color gradients,
-          but pie charts are matplotlib-native, not seaborn-specific
+        comment: sns.light_palette() for color families; custom Patch legend shows
+          skill
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
