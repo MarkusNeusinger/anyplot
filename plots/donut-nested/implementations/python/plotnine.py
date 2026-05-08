@@ -1,13 +1,16 @@
-""" pyplots.ai
+"""pyplots.ai
 donut-nested: Nested Donut Chart
 Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-25
+Quality: pending | Created: 2025-12-25
 """
 
+import os
 import sys
 
 
-sys.path = [p for p in sys.path if not p.endswith("implementations")]
+# Remove the script's directory from sys.path to avoid circular imports
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != script_dir]
 
 import math  # noqa: E402
 
@@ -17,6 +20,7 @@ from plotnine import (  # noqa: E402
     aes,
     coord_fixed,
     element_blank,
+    element_rect,
     element_text,
     geom_polygon,
     geom_text,
@@ -29,8 +33,14 @@ from plotnine import (  # noqa: E402
 )
 
 
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BORDER_COLOR = "#E8E6DC" if THEME == "light" else "#353531"
+
 # Data - Budget allocation: departments (inner) and expense categories (outer)
-# Structure: parent category -> list of (child name, value) tuples
+# First parent uses Okabe-Ito position 1; others use positions 2-4
 data = {
     "Engineering": [("Salaries", 450), ("Equipment", 120), ("Training", 80)],
     "Marketing": [("Advertising", 280), ("Events", 95), ("Content", 75)],
@@ -38,12 +48,12 @@ data = {
     "Sales": [("Commissions", 220), ("Travel", 110), ("Tools", 50)],
 }
 
-# Color families - each parent has a base color, children get lighter shades
+# Color families - first parent uses Okabe-Ito brand (#009E73), then positions 2-4
 color_families = {
-    "Engineering": ("#306998", ["#306998", "#4A83AB", "#6B9DBE"]),  # Python Blue family
-    "Marketing": ("#FFD43B", ["#FFD43B", "#FFE066", "#FFEB99"]),  # Python Yellow family
-    "Operations": ("#2ECC71", ["#2ECC71", "#58D68D", "#82E0A8"]),  # Green family
-    "Sales": ("#E74C3C", ["#E74C3C", "#EC7063", "#F1948A"]),  # Red family
+    "Engineering": ("#009E73", ["#009E73", "#2FA88A", "#59B5A1"]),  # Okabe-Ito pos 1
+    "Marketing": ("#D55E00", ["#D55E00", "#DC7925", "#E5934A"]),  # Okabe-Ito pos 2
+    "Operations": ("#0072B2", ["#0072B2", "#3589C8", "#5BA0DE"]),  # Okabe-Ito pos 3
+    "Sales": ("#CC79A7", ["#CC79A7", "#D98FB8", "#E6A5C9"]),  # Okabe-Ito pos 4
 }
 
 # Calculate totals for each parent
@@ -176,14 +186,16 @@ plot = (
     ggplot()
     # Inner ring (parents)
     + geom_polygon(
-        aes(x="x", y="y", group="segment", fill="fill"), data=inner_df, color="#FFFFFF", size=0.5, alpha=0.95
+        aes(x="x", y="y", group="segment", fill="fill"), data=inner_df, color=BORDER_COLOR, size=0.5, alpha=0.95
     )
     # Outer ring (children)
-    + geom_polygon(aes(x="x", y="y", group="segment", fill="fill"), data=outer_df, color="#FFFFFF", size=0.5, alpha=0.9)
+    + geom_polygon(
+        aes(x="x", y="y", group="segment", fill="fill"), data=outer_df, color=BORDER_COLOR, size=0.5, alpha=0.9
+    )
     # Inner ring labels (parent names)
-    + geom_text(aes(x="x", y="y", label="label"), data=inner_label_df, size=11, fontweight="bold", color="#FFFFFF")
+    + geom_text(aes(x="x", y="y", label="label"), data=inner_label_df, size=11, fontweight="bold", color=INK)
     # Outer ring labels (child names for large segments)
-    + geom_text(aes(x="x", y="y", label="label"), data=outer_label_df, size=9, color="#333333")
+    + geom_text(aes(x="x", y="y", label="label"), data=outer_label_df, size=11, color=INK_SOFT)
     # Use fill colors directly
     + scale_fill_identity()
     # Fixed aspect ratio for proper circles
@@ -193,20 +205,22 @@ plot = (
     + scale_y_continuous(limits=(-180, 180))
     # Title
     + labs(title="Budget Allocation by Department · donut-nested · plotnine · pyplots.ai")
-    # Clean theme
+    # Clean theme with adaptive background
     + theme(
         figure_size=(12, 12),
-        plot_title=element_text(size=22, ha="center"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(size=22, ha="center", color=INK),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         axis_line=element_blank(),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_background=element_blank(),
         legend_position="none",
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300)
+output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), f"plot-{THEME}.png")
+plot.save(output_path, dpi=300)
