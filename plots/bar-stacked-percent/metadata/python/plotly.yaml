@@ -1,163 +1,191 @@
 library: plotly
+language: python
 specification_id: bar-stacked-percent
 created: '2025-12-25T22:49:52Z'
-updated: '2025-12-25T22:53:17Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20511964889
+updated: '2026-05-08T10:58:26Z'
+generated_by: claude-haiku
+workflow_run: 25551341808
 issue: 2008
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/plotly/plot.html
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - explicit-figure
-  dataprep:
-  - normalization
-  styling: []
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/plotly/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent use of realistic energy data showing diverse compositions across countries
-  - Clean, professional layout with well-positioned horizontal legend
-  - Perfect compliance with title format and spec requirements
-  - Good use of Plotly features including text labels inside segments and HTML interactive
-    export
-  - Colorblind-safe palette with Python blue (#306998) as primary color
+  - 'Perfect palette compliance: uses Okabe-Ito with #009E73 as primary series across
+    both themes'
+  - 'Flawless theme adaptation: both light (#FAF8F1) and dark (#1A1A17) renders are
+    readable with correct chrome'
+  - 'Excellent text legibility: all font sizes explicitly set (title 28px, labels
+    22px, ticks 18px, labels 16px), perfectly readable in both themes'
+  - 'Clear data communication: percentage labels embedded in segments make values
+    immediately visible'
+  - '100% spec compliance: all required features present (5 categories, 3 components,
+    normalized stacking)'
+  - 'Clean, reproducible code: deterministic data, idiomatic Plotly usage, no extraneous
+    imports'
+  - 'Accessibility prioritized: colorblind-safe palette with adequate contrast on
+    all colored backgrounds'
   weaknesses:
-  - Missing subtle gridlines on y-axis would help readers estimate exact percentages
-  image_description: 'The plot displays a 100% stacked bar chart showing the energy
-    mix across six European countries (Germany, France, UK, Spain, Italy, Poland).
-    Each bar is divided into five colored segments representing different energy sources:
-    Renewables (dark blue #306998), Nuclear (yellow #FFD43B), Natural Gas (teal #45B39D),
-    Coal (coral/red #E74C3C), and Other (purple #9B59B6). All bars are normalized
-    to 100% with percentage labels displayed inside each segment in white text. The
-    title "bar-stacked-percent · plotly · pyplots.ai" is centered at the top. A horizontal
-    legend sits below the title identifying all five energy components. The y-axis
-    is labeled "Energy Share (%)" ranging from 0-100%, and the x-axis is labeled "Country".
-    The chart uses a clean plotly_white template with balanced margins.'
+  - 'Design Excellence: plot appears as well-configured library default (DE-01: 4/8)
+    rather than demonstrating custom aesthetic sophistication'
+  - 'Visual refinement: minimal customization beyond library defaults; spines, grid,
+    legend styling are standard (DE-02: 2/6)'
+  - 'Data storytelling: visualization displays data straightforwardly without visual
+    hierarchy, emphasis, or narrative (DE-03: 2/6)'
+  - 'Library mastery: uses Plotly correctly but generically; custom hover template
+    and percentage labels are standard techniques, not distinctive features (LM-02:
+    3/5)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white at #FAF8F1, clean and professional
+      Chrome: Title in dark text (28px) centered at top; X-axis labeled "Region" (22px dark); Y-axis labeled "Market Share (%)" (22px dark); Tick labels at 18px in soft gray, all clearly readable against light background
+      Data: Three-component stacked bars — iOS (green #009E73) at bottom, Android (orange #D55E00) in middle, Other (blue #0072B2) at top. Percentage labels in white text (16px) are readable on all colored segments. Five regions (North America, South America, Europe, Africa, Asia) show varied market share proportions
+      Legibility verdict: PASS — all text is readable, data colors are distinct, percentages are clearly visible in segments
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black at #1A1A17, consistent with design tokens
+      Chrome: Title in light cream text, clearly readable on dark background; axis labels and tick labels in light gray (#F0EFE8), excellent contrast and legibility on dark surface; grid lines subtle and appropriate
+      Data: Data colors are identical to light render — iOS (green #009E73), Android (orange #D55E00), Other (blue #0072B2). Percentage labels in white remain readable on all colored segments. No dark-on-dark failures detected; all text elements have adequate luminance
+      Legibility verdict: PASS — all text is readable, data colors maintain identity and contrast, no chrome failures, brand green is prominent and visible
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 32pt, axis labels at 24pt, tick fonts at 20pt, percentage
-          labels at 16pt - all clearly readable
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px),
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels fit within segments
+        comment: No overlapping text; legend positioned at top-center away from data
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar segments are well-sized and clearly visible, percentage labels
-          readable
+        comment: Bar segments clearly visible and distinct; percentage labels readable
+          on all segments
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses colorblind-safe palette with good contrast between adjacent
-          segments
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Chart fills canvas well, balanced margins, legend positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has "Energy Share (%)" with units, X-axis has "Country"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette ensures CVD safety; white text on colored backgrounds
+          provides adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout with balanced margins; plot elements utilize canvas
+          well; legend near plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Y-axis includes units (Market Share %); title follows spec format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; multi-series follows Okabe-Ito order (#D55E00,
+          #0072B2); backgrounds #FAF8F1 (light) and #1A1A17 (dark); theme chrome correct
+          in both renders'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: No grid visible (while clean, subtle gridlines would help read percentages)
+        comment: Well-configured library default; professional but not exceptional
+          design
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Library defaults with minimal customization; no distinctive refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed straightforwardly; no visual hierarchy or emphasis
+          to guide viewer
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 100% stacked bar chart
+        comment: Correct 100% stacked bar chart with all subtypes
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X-axis, components as stacked segments, values normalized
-          correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has percentage labels, clear legend, distinct colors, consistent
-          component ordering
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: 100% stacking, 3 components, 5 categories,
+          percentage labels, legend'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows 0-100% range, all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X (Region) and Y (Market Share %) correctly mapped; all data visible
+          and normalized
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all five energy components
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "bar-stacked-percent · plotly · pyplots.ai"
+        comment: Title format correct (bar-stacked-percent · plotly · anyplot.ai);
+          legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows varied distributions: France dominated by nuclear, Poland
-          by coal, others by renewables/gas mix - excellent diversity'
+        comment: 'Shows all aspects: varied iOS proportions (8-25%), Android dominance
+          (72-88%), ''Other'' consistent'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Energy mix by European country is a real, comprehensible scenario
-          with plausible proportions
+        comment: Real smartphone market share by region; proportions are factually
+          accurate and neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
-        max: 5
-        passed: false
-        comment: Values are generally plausible but some minor inaccuracies (e.g.,
-          France nuclear at 63% vs actual ~70%, Poland coal at ~61% vs actual ~70%)
+        score: 4
+        max: 4
+        passed: true
+        comment: All values align with real-world smartphone market facts; proportions
+          logically consistent
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -165,42 +193,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Simple flow: imports → data → plot → save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 0
-        max: 3
-        passed: false
-        comment: No random seed needed as data is deterministic, but data is hardcoded
-          (acceptable for this use case) - deducting as there's no seed even though
-          randomization isn't used
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic data (hardcoded values); fully reproducible
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pandas and plotly.graph_objects imported, both used
+        comment: Only three imports (os, pandas, plotly), all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Clean, Pythonic, appropriate complexity; no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Uses go.Figure with go.Bar traces, proper barmode="stack", text positioning,
-          plotly_white template, horizontal legend, and HTML export for interactivity
+        comment: Expert use of go.Figure(), go.Bar(), update_layout(), theme-adaptive
+          design patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses custom hover template and percentage labels, but these are standard
+          Plotly techniques
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling: []
