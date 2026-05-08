@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: bar-diverging
 created: '2025-12-25T22:47:40Z'
-updated: '2026-05-08T08:59:35Z'
+updated: '2026-05-08T09:04:58Z'
 generated_by: claude-haiku
 workflow_run: 25546578830
 issue: 2009
@@ -12,33 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diver
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 91
 review:
   strengths:
-  - Perfect visual quality with excellent text legibility in both light and dark themes
-  - Proper theme adaptation with correct chrome colors and no dark-on-dark failures
-  - Complete spec compliance with all required features implemented
-  - Clean, reproducible code with proper idiomatic usage
-  - Realistic, diverse data showing full range of sentiment
-  - 'Proper Okabe-Ito palette with first series correctly set to #009E73'
-  weaknesses:
-  - Design lacks sophistication—uses default styling without custom polish or visual
-    refinement
-  - No distinctive plotnine features beyond basic layer composition
-  - Limited visual hierarchy or emphasis techniques to guide viewer attention
-  - Could benefit from custom colors, spine removal, or refined typography hierarchy
+  - Excellent theme adaptation with data colors identical across light and dark renders
+    while chrome adapts correctly
+  - All text fully legible in both themes with no dark-on-dark or light-on-light failures;
+    proper use of theme tokens
+  - Strong data storytelling through value sorting, clear zero baseline, and effective
+    diverging bar structure
+  - Professional plotnine patterns demonstrating idiomatic grammar of graphics usage
+    and comprehensive theme customization
+  - Specification fully implemented with all required features working perfectly
+  weaknesses: []
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface at #FAF8F1 - correct theme color
-      Chrome: Title "bar-diverging · plotnine · anyplot.ai" is dark (#1A1A17) and readable. Axis labels "Product Category" and "Net Satisfaction Score (%)" are dark and clear. Tick labels are in INK_SOFT (#4A4A44) and fully readable. Legend with "Sentiment" title is properly styled.
-      Data: Green bars (#009E73) for Positive sentiment, orange bars (#D55E00) for Negative. Zero baseline is visible as a vertical line. All bars clearly distinguishable from background.
-      Legibility verdict: PASS - All text readable with no contrast issues
+      Background: Warm off-white (#FAF8F1) - correct light theme surface
+      Chrome: Dark text (#1A1A17) for title (24pt), axis labels (20pt), tick labels (16pt), and legend
+      Data: Bars in Okabe-Ito colors - green (#009E73) for positive values extending right, orange (#D55E00) for negative values extending left
+      Structure: 12 product categories sorted by value (Warranty -62 to Mobile App +72); zero baseline marked with visible horizontal line in subtle gray
+      Grid: Very subtle horizontal gridlines at 10% opacity for major axis, 5% for minor
+      Legend: "Sentiment" category with "Negative" and "Positive" labels, positioned with subtle background box
+      Legibility verdict: PASS - All elements clearly readable, no overlaps, excellent contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface at #1A1A17 - correct theme color
-      Chrome: Title is light-colored (#F0EFE8) and fully readable against dark background. Axis labels are light and clear. Tick labels in light gray (INK_SOFT #B8B7B0) are legible. No dark-on-dark text failures detected. Legend is properly styled for dark theme.
-      Data: Green bars (#009E73) and orange bars (#D55E00) are identical to light render - data colors do not change with theme, only chrome. Grid lines are subtle and visible.
-      Legibility verdict: PASS - All text readable, no dark-on-dark failures, data colors identical to light render
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Light text (#F0EFE8) for titles and axis labels, muted light text (#B8B7B0) for ticks and legend
+      Data: Colors identical to light render - green #009E73 and orange #D55E00 unchanged (only chrome flips)
+      Structure: Identical layout and data organization; zero baseline clearly visible as light gray line
+      Grid: Gridlines adapted for dark background but same subtle styling maintained
+      Typography: Same sizes (24pt title, 20pt labels, 16pt ticks) with light-colored text for visibility
+      Legibility verdict: PASS - All elements clearly readable against dark background, no dark-on-dark failures, full visual hierarchy preserved across both themes
   criteria_checklist:
     visual_quality:
       score: 30
@@ -49,68 +53,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set; all readable in both themes
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
+          all perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean layout with no colliding elements
+        comment: No overlapping text; all elements clearly separated and legible
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Well-spaced bars, visible baseline marker
+        comment: All bars visible and distinguishable; diverging structure is clear
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe and high-contrast
+        comment: Green and orange provide excellent contrast; colorblind-safe Okabe-Ito
+          palette
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off, generous whitespace
+        comment: Perfect 16:9 proportions; plot fills 60-70% of canvas with balanced
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units; proper title format
+        comment: 'Descriptive labels with units: ''Net Satisfaction Score (%)'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; second #D55E00; proper theme backgrounds'
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; text and chrome
+          theme-correct in both renders'
     design_excellence:
-      score: 8
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Uses standard Okabe-Ito palette and theme_minimal without custom
-          polish
+        passed: true
+        comment: Well-configured library default with Okabe-Ito palette and professional
+          customization
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Minimal styling beyond defaults; no spine removal or generous whitespace
-          refinement
+        passed: true
+        comment: Subtle grid, removed spines, styled legend, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Sorting creates visual hierarchy; diverging design is clear; could
-          emphasize insights further
+        passed: true
+        comment: Data sorted by value; zero baseline emphasizes divergence; color
+          directly encodes sentiment
     spec_compliance:
       score: 15
       max: 15
@@ -120,26 +127,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct diverging bar chart with bars extending from zero baseline
+        comment: Correct diverging bar chart with horizontal orientation
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Horizontal orientation, contrasting colors, zero baseline, sorted
-          by value
+        comment: Bars extend in opposite directions; positive/negative distinguished
+          by color; zero baseline visible; sorted
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: value; Y: category; fill: sentiment; all data shown'
+        comment: 'X-axis: satisfaction scores; Y-axis: categories; all data visible'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Format matches spec; legend labels match data
+        comment: Title format correct; legend labels match sentiment column
     data_quality:
       score: 15
       max: 15
@@ -149,19 +156,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full range of diverging sentiment with 12 categories
+        comment: 'Shows all aspects: positive values, negative values, full range,
+          all categories'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible customer satisfaction survey data; neutral and non-controversial
+        comment: Customer satisfaction survey; real-world plausible; neutral topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scale from -60 to +80 is appropriate for satisfaction scores
+        comment: Values -62 to +72 realistic for satisfaction survey; sound proportions
     code_quality:
       score: 10
       max: 10
@@ -171,48 +179,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, straightforward code with no unnecessary abstractions
+        comment: 'Straightforward: imports → data → plot → save; no functions'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data; no random generation
+        comment: Hardcoded deterministic data; no random elements
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports; sys.path workaround is required for environment
+        comment: All imports used; no extraneous libraries
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity
+        comment: Clean, Pythonic; appropriate complexity; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png using current API
+        comment: Saves as plot-{THEME}.png correctly
     library_mastery:
-      score: 4
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Correct grammar-of-graphics approach; geoms and themes used properly
+        comment: 'Expert use of grammar of graphics: ggplot + aes + geoms + scales
+          + theme'
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Layer composition with geom_hline is functional but basic; limited
-          distinctive plotnine patterns
+        passed: true
+        comment: Uses coord_flip, element_rect/text/line for fine-grained control;
+          good but not exceptionally creative
   verdict: APPROVED
 impl_tags:
   dependencies: []
