@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-color-mapped: Color-Mapped Scatter Plot
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-08
+Quality: 83/100 | Updated: 2026-05-08
 """
 
 import os
