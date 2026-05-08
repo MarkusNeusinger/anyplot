@@ -73,6 +73,10 @@ jobs:
           }
 
           ensure_label() {
+            if [[ "$DRY_RUN" == "true" ]]; then
+              echo "::notice::[dry-run] would ensure label: $1"
+              return 0
+            fi
             gh label create "$1" --color "$2" --description "$3" 2>/dev/null || true
           }
 
@@ -167,6 +171,11 @@ jobs:
               case "$label" in
                 generate:*)
                   lib="${label#generate:}"
+                  marker="watchdog:retried-$lib"
+                  if echo " $labels " | grep -q " $marker "; then
+                    echo "::warning::Issue #$num: generate:$lib already retried by watchdog — needs manual attention"
+                    continue
+                  fi
                   if ! $spec_id_resolved; then
                     spec_id=$(spec_id_for_issue "$num"); spec_id_resolved=true
                   fi
@@ -178,6 +187,10 @@ jobs:
                     --search "head:implementation/$spec_id/$lib" \
                     --json number --jq 'length')
                   if [[ "$open_pr" == "0" ]]; then
+                    ensure_label "$marker" "5319e7" "Watchdog retried $lib once"
+                    if [[ "$DRY_RUN" != "true" ]]; then
+                      gh issue edit "$num" --add-label "$marker" 2>/dev/null || true
+                    fi
                     dispatch "Issue #$num: generate (stuck pending) $lib" \
                       bulk-generate.yml \
                       -f specification_id="$spec_id" \
