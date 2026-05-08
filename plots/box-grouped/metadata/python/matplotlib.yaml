@@ -1,163 +1,185 @@
 library: matplotlib
+language: python
 specification_id: box-grouped
 created: '2025-12-25T19:54:27Z'
-updated: '2025-12-25T19:56:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510142859
+updated: '2026-05-08T03:25:30Z'
+generated_by: claude-haiku
+workflow_run: 25534609983
 issue: 2017
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/box-grouped/matplotlib/plot.png
-preview_html: null
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques:
-  - custom-legend
-  - manual-ticks
-  - edge-highlighting
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent grouped box plot with clear visual separation between experience levels
-  - Perfect title format and axis labeling with units
-  - Good colorblind-safe palette (blue/yellow/teal)
-  - 'Data shows meaningful variation: Junior employees have wider distributions, Senior
-    more consistent'
-  - Outliers properly displayed and styled with matching colors
-  - Clean, readable KISS-style code with reproducible seed
+  - 'Perfect visual quality: both themes render clearly with excellent text legibility
+    and proper contrast'
+  - 'Flawless spec compliance: all required features implemented correctly'
+  - 'Clean, reproducible code: simple structure with proper seeding and current API
+    usage'
+  - 'Exemplary theme adaptation: data colors preserved, chrome properly flips between
+    themes'
+  - 'Idiomatic matplotlib: correct use of Axes methods, manual positioning for grouping,
+    patch_artist pattern'
   weaknesses:
-  - Legend position in upper left could potentially overlap with high outliers; upper
-    right might be safer
-  - Data pattern is quite uniform across departments (all show same Junior<Mid<Senior
-    progression) - more inter-department variation would be more interesting
-  - Could use matplotlib-specific features like notched boxes to show confidence intervals
-  image_description: 'The plot displays a grouped box plot showing employee performance
-    scores (0-100) across 4 departments (Sales, Engineering, Marketing, Support).
-    Each department has 3 side-by-side box plots representing experience levels: Junior
-    (dark blue #306998), Mid-Level (yellow #FFD43B), and Senior (teal #4ECDC4). The
-    boxes clearly show medians (dark horizontal lines), interquartile ranges, whiskers
-    extending to 1.5*IQR, and several outliers (visible as circles, e.g., around 20
-    in Engineering Junior, and in the 40 range for Support Mid-Level). A legend in
-    the upper left identifies the three subcategories. The title "box-grouped · matplotlib
-    · pyplots.ai" is displayed at the top. Y-axis shows "Performance Score (0-100)"
-    and X-axis shows "Department". A subtle horizontal grid aids readability.'
+  - 'Design could be more distinctive: no unique visual enhancements beyond spec requirements'
+  - 'Data storytelling lacks emphasis: could use color highlighting, annotations,
+    or strategic focus to guide viewer attention'
+  - 'Limited design polish: professional but not exceptional in aesthetic sophistication'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "box-grouped · matplotlib · anyplot.ai" in dark INK (#1A1A17), axis labels "Department" and "Performance Score (0-100)" in dark INK, all tick labels in INK_SOFT (#4A4A44) - all text clearly readable
+      Data: Three box colors in Okabe-Ito order: green (#009E73), orange (#D55E00), blue (#0072B2) with alpha=0.85; whiskers and caps in INK_SOFT at 1.5pt; median lines in INK at 2.5pt; outlier points visible in data colors
+      Grid: Y-axis only, subtle (alpha=0.12), does not compete with data
+      Legend: Upper right with light elevated background (#FFFDF6), labels in INK_SOFT, properly styled frame
+      Spines: Top and right removed (L-shaped frame), left and bottom in INK_SOFT
+      Legibility verdict: PASS - all text readable, high contrast, no legibility issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title, axis labels, and tick labels all in light colors (INK #F0EFE8, INK_SOFT #B8B7B0) - all clearly readable against dark background, no dark-on-dark failures
+      Data: Identical colors to light render - green, orange, blue boxes with same alpha and styling; confirms theme-independent data color preservation
+      Grid: Y-axis grid visible and subtle, theme-adapted with light-colored lines
+      Legend: Dark elevated background (#242420) with light text, maintains legibility
+      Spines: Same styling as light render with light-colored strokes
+      Legibility verdict: PASS - excellent theme adaptation with no readability issues, data colors preserved identically
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16-18pt - all perfectly readable
+        comment: All text properly themed with explicit font sizes (title 24pt, labels
+          20pt, ticks 16pt), readable in both light and dark renders
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, boxes well-spaced within groups
+        comment: Boxes properly spaced with group_gap=0.4, no text collisions, whiskers
+          and outliers unobstructed
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Boxes appropriately sized, outliers visible with good marker size
+        comment: Boxes, whiskers (1.5pt), caps, median lines (2.5pt), and outliers
+          all clearly visible; alpha=0.85 on boxes appropriate
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/teal palette is colorblind-safe (no red-green issues)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, good margins, legend well-positioned
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units "(0-100)", X-axis descriptive "Department"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe; no red-green as sole signal; adequate
+          contrast throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Figure (16,9)@300dpi = 4800×2700px; generous margins; y-limits (0-110)
+          provide padding; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Title format correct; axis labels clear and include units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito positions 1-3 in order, backgrounds
+          correct, theme-adaptive chrome throughout'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: false
-        comment: Grid is subtle (alpha=0.3), but legend could be positioned better
-          (upper right would avoid any potential overlap with data)
+        comment: Professional styling with intentional choices (custom positioning,
+          alpha values, legend background) but no custom palette flourishes beyond
+          Okabe-Ito
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Spine removal, subtle grid, whitespace generous, legend frame refined,
+          but limited sophistication
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Clear comparison structure via grouping and color, realistic context,
+          but lacks emphasis or annotation for stronger narrative
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct grouped box plot
+        comment: Grouped box plot correctly implemented
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, values on Y, subcategories as grouped boxes
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Side-by-side boxes, distinct colors, legend, median/quartiles/whiskers/outliers
-          all present
-      - id: SC-04
-        name: Data Range
+        comment: 'All required features present: colors, legend, widths, median, quartiles,
+          whiskers, outliers'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis 0-110 shows all data including outliers
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: categories, Y: values, proper grouping, all data visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Junior/Mid-Level/Senior
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "box-grouped · matplotlib · pyplots.ai"
+        comment: Title format correct, legend labels match subcategories
     data_quality:
-      score: 19
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows different distributions (Junior wider spread, Senior narrower),
-          varying medians by experience level, outliers present in multiple groups
+        comment: 4 categories × 3 subcategories with realistic variation by department
+          and level, includes outliers
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Employee performance by department and experience is plausible, though
-          pattern is somewhat uniform across departments
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Performance scores 0-100 are sensible, distributions realistic
+        comment: Employee performance scenario is realistic, neutral, and contextually
+          appropriate
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Data points (30-60 per group) appropriate, y-range (0-110) provides
+          padding, categories align with spec
     code_quality:
       score: 10
       max: 10
@@ -167,40 +189,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple script: imports → data → plot → save, no functions/classes'
+        comment: Linear, straightforward code with no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) used
+        comment: Uses np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported
+        comment: All imports (os, matplotlib.pyplot, numpy) are actively used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current matplotlib API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: No unnecessary complexity, no fake UI, idiomatic approach
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses Axes methods, proper fig/ax pattern, theme token pattern, manual
+          positioning is correct matplotlib idiom
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
         max: 5
         passed: false
-        comment: Standard boxplot with patch_artist for coloring, but could use additional
-          matplotlib features like notched boxes or custom styling
+        comment: Good use of boxplot properties and patch manipulation, but relatively
+          standard implementation
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
