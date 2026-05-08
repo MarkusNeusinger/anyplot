@@ -1,14 +1,44 @@
-""" pyplots.ai
+"""anyplot.ai
 bar-stacked-percent: 100% Stacked Bar Chart
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-25
+Library: seaborn 0.13.2 | Python 3.13
+Quality: pending | Created: 2025-12-25
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
+# Configure seaborn with theme-adaptive colors
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
 # Data: Market share by quarter for tech companies
 np.random.seed(42)
@@ -32,10 +62,8 @@ df_percent = df.div(df.sum(axis=1), axis=0) * 100
 df_cumsum = df_percent.cumsum(axis=1)
 
 # Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Colors - Python Blue, Python Yellow, and colorblind-safe additions
-colors = ["#306998", "#FFD43B", "#4ECDC4", "#E76F51"]
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Plot stacked bars by drawing each segment
 x = np.arange(len(quarters))
@@ -45,43 +73,47 @@ bar_width = 0.6
 for i, company in enumerate(companies):
     bottom = df_cumsum.iloc[:, i - 1].values if i > 0 else np.zeros(len(quarters))
     heights = df_percent[company].values
-    ax.bar(
-        x, heights, bar_width, bottom=bottom, label=company, color=colors[i], edgecolor="white", linewidth=1.5
-    )
+    ax.bar(x, heights, bar_width, bottom=bottom, label=company, color=OKABE_ITO[i], edgecolor=PAGE_BG, linewidth=1.5)
 
     # Add percentage labels inside segments (only if segment is large enough)
     for j, (h, b) in enumerate(zip(heights, bottom, strict=True)):
         if h > 8:  # Only label if segment is > 8%
+            # Determine text color based on background brightness
+            text_color = "#1A1A17" if OKABE_ITO[i] != "#009E73" else "white"
             ax.text(
-                x[j],
-                b + h / 2,
-                f"{h:.0f}%",
-                ha="center",
-                va="center",
-                fontsize=14,
-                fontweight="bold",
-                color="white" if colors[i] != "#FFD43B" else "#333333",
+                x[j], b + h / 2, f"{h:.0f}%", ha="center", va="center", fontsize=14, fontweight="bold", color=text_color
             )
 
 # Styling
-ax.set_xlabel("Quarter", fontsize=20)
-ax.set_ylabel("Market Share (%)", fontsize=20)
-ax.set_title("bar-stacked-percent · seaborn · pyplots.ai", fontsize=24)
+ax.set_xlabel("Quarter", fontsize=20, color=INK)
+ax.set_ylabel("Market Share (%)", fontsize=20, color=INK)
+ax.set_title("bar-stacked-percent · seaborn · anyplot.ai", fontsize=24, color=INK)
 ax.set_xticks(x)
-ax.set_xticklabels(quarters, fontsize=16)
-ax.tick_params(axis="y", labelsize=16)
+ax.set_xticklabels(quarters, fontsize=16, color=INK_SOFT)
+ax.tick_params(axis="y", labelsize=16, colors=INK_SOFT)
 ax.set_ylim(0, 100)
 ax.set_yticks([0, 20, 40, 60, 80, 100])
 
-# Legend
-ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1), fontsize=14, frameon=True, edgecolor="#cccccc")
+# Legend inside the plot
+ax.legend(
+    loc="upper center",
+    bbox_to_anchor=(0.5, 0.95),
+    ncol=2,
+    fontsize=14,
+    frameon=True,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
+)
 
 # Grid
-ax.yaxis.grid(True, alpha=0.3, linestyle="--")
+ax.yaxis.grid(True, alpha=0.10, linewidth=0.8)
 ax.set_axisbelow(True)
 
 # Remove top and right spines
-sns.despine()
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for spine in ["left", "bottom"]:
+    ax.spines[spine].set_color(INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
