@@ -1,7 +1,7 @@
-"""anyplot.ai
-Research Domain Co-occurrence · heatmap-adjacency
-Library: plotly | Python 3.13
-Quality: pending | Created: 2026-05-08
+""" anyplot.ai
+heatmap-adjacency: Network Adjacency Matrix Heatmap
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 83/100 | Created: 2026-05-08
 """
 
 import os
