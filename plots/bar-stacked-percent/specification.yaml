@@ -6,7 +6,7 @@ title: 100% Stacked Bar Chart
 
 # Specification tracking
 created: 2025-12-25T08:59:14Z
-updated: 2025-12-25T08:59:14Z
+updated: 2026-05-08T10:39:04Z
 issue: 2008
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - bar
-    - stacked
   data_type:
     - categorical
     - numeric
