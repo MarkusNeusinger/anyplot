@@ -1,7 +1,7 @@
 """ anyplot.ai
 donut-nested: Nested Donut Chart
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-08
+Quality: 93/100 | Updated: 2026-05-08
 """
 
 import os
