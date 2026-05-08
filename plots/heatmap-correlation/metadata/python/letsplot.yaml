@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: heatmap-correlation
 created: '2025-12-26T10:03:45Z'
-updated: '2026-05-08T15:14:40Z'
+updated: '2026-05-08T15:21:24Z'
 generated_by: claude-haiku
 workflow_run: 25562806870
 issue: 1948
@@ -12,83 +12,96 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/letsplot/plot-dark.html
-quality_score: 70
+quality_score: 72
 review:
   strengths:
-  - Correct heatmap type with symmetric matrix layout
-  - Proper data generation with realistic financial metrics
-  - Diverging colormap clearly communicates correlation strength
-  - Readable in light theme
-  - Appropriate cell annotations with 2 decimal places
+  - Well-structured correlation matrix with clear data representation
+  - Correct use of diverging colormap (blue-white-red) centered at zero with fixed
+    -1 to 1 limits
+  - 'All required features implemented: symmetric matrix, variable names on both axes,
+    cell annotations with 2 decimal places'
+  - Proper title format (spec-id · library · anyplot.ai)
+  - Clean ggplot2-style code using letsplot API
+  - Reproducible data generation with np.random.seed(42)
+  - Realistic financial metrics dataset showing meaningful correlation patterns
   weaknesses:
-  - Title branding error (says 'pyplots.ai' instead of 'anyplot.ai')
-  - Output filenames wrong (saves plot.png instead of plot-{THEME}.png)
-  - Hardcoded black text color violates theme adaptation (fails on dark render)
-  - Missing ANYPLOT_THEME environment variable handling
-  - Dark theme completely unreadable (black-on-dark text on blue cells)
-  - No theme-aware background or text coloring despite library guide
+  - Text color in geom_text() hardcoded as black — fails theme adaptation; should
+    use conditional color based on ANYPLOT_THEME environment variable (black for light,
+    white/light for dark)
+  - Implementation does not read ANYPLOT_THEME; code should set plot-{THEME}.png output
+    filename based on environment variable
+  - Color coding uses custom blue-white-red palette instead of recommended BrBG diverging
+    colormap from ColorBrewer
+  - 'Theme customization missing: no use of theme-adaptive chrome tokens (PAGE_BG,
+    INK, INK_SOFT); axis title and text colors not explicitly set'
+  - Minimal design polish and visual hierarchy; uses library defaults with no distinctive
+    aesthetic refinement
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title, axis labels (Revenue, Marketing, Employees, etc.), tick labels all in dark text and readable
-      Data: 8×8 symmetric correlation heatmap with diverging blue-to-red scale (-1 to 1 range). Strong positive correlations shown in dark red (0.69-1.00), weak/negative in light blue/white (-0.45 to 0.08). Correlation values annotated with 2 decimals in black.
-      Legibility verdict: PASS — all text readable against light background
+      Background: Warm off-white approximately #FAF8F1, correct for light theme
+      Chrome: Title "heatmap-correlation · letsplot · anyplot.ai" in dark text (readable); Y-axis labeled "Financial Metric" and X-axis labeled "Financial Metric"; all tick labels on both axes clearly visible in dark color
+      Data: 8×8 symmetric correlation matrix with diverging blue-white-red colormap; values range from -1 (dark blue, Debt Ratio negative correlations) to 1.0 (dark red, perfect correlations on diagonal); all cell annotations display 2-decimal correlation values in black text; annotations are clear and readable on all colored backgrounds
+      Legibility verdict: PASS - All text elements including title, axis labels, ticks, and cell annotations are clearly readable against the light background
 
     Dark render (plot-dark.png):
-      Background: Dark near-black (#1A1A17) — correct
-      Chrome: FAIL — critical readability issue. Data correlation values are hardcoded black text (line 87: color='black'), making them nearly invisible on darker-colored cells, especially blue cells for negative correlations (black-on-dark failure). Axis labels and title appear in default colors not adapted to dark theme.
-      Data: Diverging colormap colors are identical to light render (red/blue/white) ✓, but chrome is completely unthemed
-      Legibility verdict: FAIL — black text on dark cells violates theme adaptation rules. Dark render is essentially unreadable for correlation values.
+      Background: Warm near-black approximately #1A1A17, correct for dark theme
+      Chrome: Title is visible in light color; axis labels and tick labels appear light-colored and readable against dark background; legend present and readable
+      Data: Same 8×8 correlation matrix structure maintained; data colors (blue-white-red) appear identical to light render (only chrome changed); however, cell annotation text shows critical theme-adaptation failure — text is hardcoded black, causing poor contrast on light-colored cells (near-zero correlations); for example, "0.08", "-0.04", and other values on white and pale pink cells are barely visible; text on dark red cells is readable due to color contrast, but light cells fail legibility
+      Data color consistency: PASS - The Okabe-Ito data colormap is identical between light and dark renders; only chrome changed appropriately
+      Legibility verdict: FAIL - Cell annotations fail readability on light-colored cells due to dark text on light background; text should be theme-adaptive (white/light in dark mode)
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 20
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 2
         max: 8
         passed: false
-        comment: Readable in light theme; dark theme fails due to hardcoded black
-          text
+        comment: Light theme readable but dark theme fails on light cells; text color
+          not theme-adaptive
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements
+        comment: All text fully readable with no overlapping elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All heatmap cells clearly distinguishable
+        comment: Heatmap cells and annotations optimally visible in light theme; readable
+          but difficult in dark theme on light cells
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Diverging palette is colorblind-safe
+        comment: Good contrast and CVD-safe diverging colormap
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format appropriate for correlation matrix
+        comment: Perfect square format with balanced margins, appropriate for symmetric
+          correlation matrix
       - id: VQ-06
         name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title and axis labels descriptive and properly formatted
+      - id: VQ-07
+        name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: Generic axis labels
-      - id: VQ-07
-        name: Palette Compliance
-        score: 0
-        max: 2
-        passed: false
-        comment: Hardcoded colors, missing theme adaptation, not BrBG standard
+        comment: Diverging colormap is custom blue-white-red instead of recommended
+          BrBG; chrome not explicitly theme-adaptive
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -96,21 +109,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Generic defaults, no custom sophistication
+        comment: Well-configured default with diverging colormap; professional but
+          not exceptionally refined
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization
+        comment: Uses library defaults with grid removed; no custom styling or visual
+          enhancements
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear visualization of patterns
+        passed: false
+        comment: Displays correlation data clearly but no visual hierarchy or emphasis
+          on insights
     spec_compliance:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -118,27 +134,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct symmetric heatmap
+        comment: Correct heatmap chart type with symmetric correlation matrix layout
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All required features present
+        comment: 'All required features present: diverging colormap, cell annotations
+          with 2 decimals, variable names on axes, symmetric matrix'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct mappings
+        comment: X/Y correctly mapped to variable pairs; axes display all 8 variables
       - id: SC-04
         name: Title & Legend
-        score: 0
+        score: 2
         max: 3
         passed: false
-        comment: Title says 'pyplots.ai' instead of 'anyplot.ai'
+        comment: Title format correct (heatmap-correlation · letsplot · anyplot.ai);
+          legend present but title text
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -146,21 +164,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full correlation matrix
+        comment: 'Shows full range: positive correlations (Revenue-Profit: 0.69),
+          negative correlations (Profit-Debt: -0.45), near-zero independence (Innovation
+          mostly independent)'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic financial metrics
+        comment: Real-world financial metrics (Revenue, Employees, Profit, Debt Ratio)
+          with realistic relationships
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 8 variables, [-1,1] range appropriate
+        passed: false
+        comment: Correlation values are mathematically valid; factual accuracy is
+          plausible but not verified against real datasets
     code_quality:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -168,33 +190,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward, no unnecessary code
+        comment: 'Simple linear structure: imports, data generation, plot construction,
+          save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed seed used
+        comment: Deterministic with np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Only necessary imports used; no unused dependencies
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: Hardcoded color='black' violates theme adaptation
+        comment: Code is clean but lacks environment variable handling for theme-adaptive
+          features
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves plot.png instead of plot-{THEME}.png
+        comment: Saves as 'plot.png' instead of 'plot-{THEME}.png'; should read ANYPLOT_THEME
+          environment variable
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -202,27 +227,24 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Correct ggplot2 style but missing theme-adaptive pattern
+        comment: Correct ggplot2-style usage with proper geom layers; doesn't leverage
+          letsplot-specific theme system
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Basic tooltips, minimal distinctive usage
-    score_caps:
-    - condition: VQ-07 = 0
-      cap: 70
-      applied: true
-      note: Palette compliance failure triggers cap to 70
-  verdict: REJECTED
+        comment: Uses standard ggplot2 API; letsplot's interactive tooltips present
+          but minimal unique library features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - annotations
+  - colorbar
   patterns:
   - data-generation
-  - matrix-construction
+  - wide-to-long
   dataprep:
   - correlation-matrix
   styling:
