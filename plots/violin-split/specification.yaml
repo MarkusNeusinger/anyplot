@@ -6,7 +6,7 @@ title: Split Violin Plot
 
 # Specification tracking
 created: 2025-12-25T08:20:18Z
-updated: null
+updated: 2026-05-08T12:34:56Z
 issue: 1949
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - violin
-    - distribution
   data_type:
     - numeric
     - categorical
@@ -27,3 +26,4 @@ tags:
     - split
     - comparison
     - grouped
+    - distribution
