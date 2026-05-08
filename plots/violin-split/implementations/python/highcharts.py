@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 violin-split: Split Violin Plot
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2026-05-08
+Library: highcharts unknown | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-08
 """
 
 import os
