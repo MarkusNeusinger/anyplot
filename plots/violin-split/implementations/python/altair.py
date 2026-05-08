@@ -1,13 +1,31 @@
-""" pyplots.ai
+"""anyplot.ai
 violin-split: Split Violin Plot
 Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Quality: 91/100 | Updated: 2025-05-08
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import os
+import sys
 
+
+# Remove script directory from path to avoid importing this file as altair
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if p != script_dir and p != ""]
+
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (positions 1-2)
+OKABE_ITO = ["#009E73", "#D55E00"]
 
 # Data: Test scores (%) by department comparing control vs treatment groups
 np.random.seed(42)
@@ -44,7 +62,7 @@ quartile_data = (
     .reset_index()
 )
 
-# Merge quartile data back to main dataframe so we have a single data source
+# Merge quartile data back to main dataframe
 df_with_quartiles = df.merge(quartile_data, on=["Department", "Group"])
 
 # Create split violin using density transform with xOffset for split
@@ -55,28 +73,38 @@ base = alt.Chart().transform_density(
 # For split violin: Control goes left (negative), Treatment goes right (positive)
 split_violin = (
     base.transform_calculate(signed_density="datum.Group === 'Control' ? -datum.density : datum.density")
-    .mark_area(orient="horizontal", opacity=0.8)
+    .mark_area(orient="horizontal", opacity=0.75)
     .encode(
         x=alt.X("signed_density:Q", title=None, axis=alt.Axis(labels=False, ticks=False, domain=False), stack=None),
         y=alt.Y("Score (%):Q", title="Score (%)", scale=alt.Scale(domain=[30, 100])),
         color=alt.Color(
             "Group:N",
-            scale=alt.Scale(domain=["Control", "Treatment"], range=["#306998", "#FFD43B"]),
-            legend=alt.Legend(title="Group", titleFontSize=18, labelFontSize=16, symbolSize=400, orient="right"),
+            scale=alt.Scale(domain=["Control", "Treatment"], range=OKABE_ITO),
+            legend=alt.Legend(
+                title="Group",
+                titleFontSize=20,
+                labelFontSize=18,
+                symbolSize=400,
+                orient="right",
+                fillColor=ELEVATED_BG,
+                strokeColor=INK_SOFT,
+                titleColor=INK,
+                labelColor=INK_SOFT,
+            ),
         ),
     )
 )
 
-# IQR rule (vertical line from q1 to q3) - uses aggregate values from data
+# IQR rule (vertical line from q1 to q3)
 iqr_rule = (
     alt.Chart()
     .transform_aggregate(q1="min(q1)", q3="max(q3)", groupby=["Department", "Group"])
-    .mark_rule(size=5, opacity=0.9)
+    .mark_rule(size=4, opacity=0.85)
     .encode(
         y=alt.Y("q1:Q", scale=alt.Scale(domain=[30, 100])),
         y2="q3:Q",
         xOffset=alt.XOffset("Group:N", scale=alt.Scale(domain=["Control", "Treatment"], range=[-20, 20])),
-        color=alt.Color("Group:N", scale=alt.Scale(domain=["Control", "Treatment"], range=["#1a3d5c", "#b8941a"])),
+        color=alt.Color("Group:N", scale=alt.Scale(domain=["Control", "Treatment"], range=OKABE_ITO)),
     )
 )
 
@@ -89,7 +117,7 @@ median_marker = (
         y=alt.Y("median:Q", scale=alt.Scale(domain=[30, 100])),
         xOffset=alt.XOffset("Group:N", scale=alt.Scale(domain=["Control", "Treatment"], range=[-20, 20])),
         color=alt.value("white"),
-        stroke=alt.Color("Group:N", scale=alt.Scale(domain=["Control", "Treatment"], range=["#1a3d5c", "#b8941a"])),
+        stroke=alt.Color("Group:N", scale=alt.Scale(domain=["Control", "Treatment"], range=OKABE_ITO)),
         strokeWidth=alt.value(2),
     )
 )
@@ -97,18 +125,28 @@ median_marker = (
 # Layer violin, IQR, and median markers with shared data
 layered = alt.layer(split_violin, iqr_rule, median_marker, data=df_with_quartiles)
 
-# Facet by department with better aspect ratio
+# Facet by department
 chart = (
-    layered.properties(width=300, height=380)
-    .facet(column=alt.Column("Department:N", title=None, header=alt.Header(labelFontSize=20, labelPadding=15)))
+    layered.properties(width=320, height=400)
+    .facet(column=alt.Column("Department:N", title=None, header=alt.Header(labelFontSize=22, labelPadding=15)))
     .resolve_scale(x="independent")
-    .properties(title=alt.Title("violin-split · altair · pyplots.ai", fontSize=28))
+    .properties(title=alt.Title("violin-split · altair · anyplot.ai", fontSize=28), background=PAGE_BG)
     .configure_facet(spacing=50)
-    .configure_view(stroke=None)
-    .configure_axis(labelFontSize=16, titleFontSize=20, titlePadding=15)
-    .configure_title(anchor="middle", offset=20)
+    .configure_view(stroke=None, fill=PAGE_BG)
+    .configure_axis(
+        labelFontSize=18,
+        titleFontSize=22,
+        titleColor=INK,
+        labelColor=INK_SOFT,
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.12,
+    )
+    .configure_title(anchor="middle", offset=20, color=INK)
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save (in script directory)
+output_dir = os.path.dirname(os.path.abspath(__file__))
+chart.save(os.path.join(output_dir, f"plot-{THEME}.png"), scale_factor=3.0)
+chart.save(os.path.join(output_dir, f"plot-{THEME}.html"))
