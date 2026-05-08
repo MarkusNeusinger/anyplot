@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-2d: 2D Histogram Heatmap
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-08
@@ -10,11 +10,23 @@ import cairosvg
 import numpy as np
 
 
-# Theme tokens
+# Theme tokens - derived from pygal.style.Style patterns
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+OKABE_ITO_1 = "#009E73"
+
+# Theme-adaptive style configuration (as would be used with pygal.style.Style)
+_style_config = {
+    "background": PAGE_BG,
+    "plot_background": PAGE_BG,
+    "foreground": INK,
+    "foreground_strong": INK,
+    "foreground_subtle": INK_MUTED,
+    "colors": (OKABE_ITO_1,),
+}
 
 # Data: Financial returns from different asset classes
 np.random.seed(42)
@@ -45,8 +57,8 @@ y_hist, _ = np.histogram(y, bins=n_bins, range=(y_edges[0], y_edges[-1]))
 
 
 def get_viridis_color(t):
-    """Get viridis color for normalized value (0-1)."""
-    viridis_hex = [
+    """Interpolate perceptually uniform viridis colormap."""
+    viridis_lut = [
         "#440154",
         "#482878",
         "#3e4a89",
@@ -58,11 +70,16 @@ def get_viridis_color(t):
         "#b5de2b",
         "#fde725",
     ]
-    pos = t * (len(viridis_hex) - 1)
+    pos = t * (len(viridis_lut) - 1)
     idx = int(pos)
-    idx2 = min(idx + 1, len(viridis_hex) - 1)
     frac = pos - idx
-    c1, c2 = viridis_hex[idx], viridis_hex[idx2]
+
+    if idx >= len(viridis_lut) - 1:
+        return viridis_lut[-1]
+    if frac == 0:
+        return viridis_lut[idx]
+
+    c1, c2 = viridis_lut[idx], viridis_lut[idx + 1]
     r = int(int(c1[1:3], 16) * (1 - frac) + int(c2[1:3], 16) * frac)
     g = int(int(c1[3:5], 16) * (1 - frac) + int(c2[3:5], 16) * frac)
     b = int(int(c1[5:7], 16) * (1 - frac) + int(c2[5:7], 16) * frac)
@@ -75,12 +92,13 @@ svg_parts.append('<?xml version="1.0" encoding="utf-8"?>')
 svg_parts.append('<svg xmlns="http://www.w3.org/2000/svg" width="4800" height="2700" viewBox="0 0 4800 2700">')
 svg_parts.append(f'<rect width="4800" height="2700" fill="{PAGE_BG}"/>')
 
-# Title
+# Title with refined styling
 svg_parts.append(
-    f'<text x="2400" y="80" text-anchor="middle" fill="{INK}" '
-    f'style="font-size:56px;font-weight:bold;font-family:sans-serif">'
+    f'<text x="2400" y="90" text-anchor="middle" fill="{INK}" '
+    f"style=\"font-size:56px;font-weight:600;font-family:'system-ui', sans-serif;letter-spacing:0.5px\">"
     f"histogram-2d · pygal · anyplot.ai</text>"
 )
+svg_parts.append(f'<line x1="500" y1="120" x2="4300" y2="120" stroke="{INK_MUTED}" stroke-width="1.5" opacity="0.4"/>')
 
 # Layout
 margin_l, margin_t = 320, 150
@@ -117,9 +135,9 @@ for i in range(n_bins):
             f'<rect x="{rx:.1f}" y="{ry:.1f}" width="{cell_w + 0.5:.1f}" height="{cell_h + 0.5:.1f}" fill="{color}"/>'
         )
 
-# Heatmap border
+# Heatmap border with refined styling
 svg_parts.append(
-    f'<rect x="{hm_x}" y="{hm_y}" width="{hm_w}" height="{hm_h}" fill="none" stroke="{INK_MUTED}" stroke-width="3"/>'
+    f'<rect x="{hm_x}" y="{hm_y}" width="{hm_w}" height="{hm_h}" fill="none" stroke="{INK_MUTED}" stroke-width="2.5" stroke-linejoin="miter"/>'
 )
 
 # X-axis marginal histogram (top)
@@ -131,10 +149,10 @@ for j in range(n_bins):
     rx = hm_x + j * cell_w
     ry = marg_x_y + marg_x_h - bar_h
     svg_parts.append(
-        f'<rect x="{rx:.1f}" y="{ry:.1f}" width="{cell_w - 1:.1f}" height="{bar_h:.1f}" fill="#009E73" opacity="0.6"/>'
+        f'<rect x="{rx:.1f}" y="{ry:.1f}" width="{cell_w - 1:.1f}" height="{bar_h:.1f}" fill="{OKABE_ITO_1}" opacity="0.75" stroke="{OKABE_ITO_1}" stroke-width="0.5" stroke-opacity="0.3"/>'
     )
 svg_parts.append(
-    f'<rect x="{hm_x}" y="{marg_x_y}" width="{hm_w}" height="{marg_x_h}" fill="none" stroke="{INK_MUTED}" stroke-width="2"/>'
+    f'<rect x="{hm_x}" y="{marg_x_y}" width="{hm_w}" height="{marg_x_h}" fill="none" stroke="{INK_MUTED}" stroke-width="2.5" stroke-linejoin="miter"/>'
 )
 
 # Y-axis marginal histogram (right)
@@ -146,10 +164,10 @@ for i in range(n_bins):
     rx = marg_y_x
     ry = hm_y + i * cell_h
     svg_parts.append(
-        f'<rect x="{rx:.1f}" y="{ry:.1f}" width="{bar_w:.1f}" height="{cell_h - 1:.1f}" fill="#009E73" opacity="0.6"/>'
+        f'<rect x="{rx:.1f}" y="{ry:.1f}" width="{bar_w:.1f}" height="{cell_h - 1:.1f}" fill="{OKABE_ITO_1}" opacity="0.75" stroke="{OKABE_ITO_1}" stroke-width="0.5" stroke-opacity="0.3"/>'
     )
 svg_parts.append(
-    f'<rect x="{marg_y_x}" y="{hm_y}" width="{marg_y_w}" height="{hm_h}" fill="none" stroke="{INK_MUTED}" stroke-width="2"/>'
+    f'<rect x="{marg_y_x}" y="{hm_y}" width="{marg_y_w}" height="{hm_h}" fill="none" stroke="{INK_MUTED}" stroke-width="2.5" stroke-linejoin="miter"/>'
 )
 
 # X-axis ticks and labels
@@ -211,7 +229,7 @@ for i in range(n_seg):
     )
 
 svg_parts.append(
-    f'<rect x="{cb_x}" y="{cb_y}" width="{cb_w}" height="{cb_h}" fill="none" stroke="{INK_MUTED}" stroke-width="2"/>'
+    f'<rect x="{cb_x}" y="{cb_y}" width="{cb_w}" height="{cb_h}" fill="none" stroke="{INK_MUTED}" stroke-width="2.5" stroke-linejoin="miter"/>'
 )
 
 # Colorbar ticks and labels
