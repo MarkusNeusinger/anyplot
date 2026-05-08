@@ -1,168 +1,169 @@
 library: altair
+language: python
 specification_id: heatmap-correlation
 created: '2025-12-26T10:03:02Z'
-updated: '2025-12-26T10:06:56Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520464727
+updated: '2026-05-08T15:19:48Z'
+generated_by: claude-haiku
+workflow_run: 25562399837
 issue: 1948
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/altair/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - annotations
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  - wide-to-long
-  dataprep:
-  - correlation-matrix
-  styling: []
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/altair/plot-dark.html
+quality_score: 71
 review:
   strengths:
-  - Excellent diverging color scheme (redblue) properly centered at zero with domain
-    [-1, 1]
-  - Smart conditional text coloring (white on dark backgrounds, black on light) improves
-    readability
-  - Clean data generation approach creating valid symmetric correlation matrix
-  - Good use of Altair's layered composition (heatmap + text)
-  - Professional styling with white cell borders and bold fonts
+  - Light theme is production-ready with excellent readability and bold, clear typography
+  - Full spec compliance with all required features (diverging colormap, annotations,
+    lower-triangle masking)
+  - Appropriate brownbluegreen diverging colormap for correlation visualization
+  - Smart annotation text coloring with conditional contrast (white on dark cells,
+    dark on light cells)
+  - Clean, reproducible code with good structure and realistic financial context
+  - Correct output format with PNG and HTML exports for interactivity
   weaknesses:
-  - Missing axis titles (could add "Variables" or similar descriptive label)
-  - Triangle masking not implemented (spec mentions "consider masking upper or lower
-    triangle")
-  - Could add tooltips for interactivity since HTML is also saved
-  image_description: The plot displays an 8×8 correlation matrix heatmap showing financial
-    metrics (Revenue, Profit, Expenses, Employees, Market Cap, Debt, Assets, R&D Spend).
-    The color scheme uses a diverging blue-white-red palette where dark red represents
-    strong positive correlations (1.0), dark blue represents strong negative correlations
-    (-1.0), and white/light colors represent values near zero. Each cell is annotated
-    with the correlation coefficient to 2 decimal places. The title "heatmap-correlation
-    · altair · pyplots.ai" appears at the top. Variable names are displayed on both
-    axes with bold text. A vertical colorbar legend labeled "Correlation" appears
-    on the right side ranging from -1.0 to 1.0. The diagonal shows perfect correlations
-    (1.00) in dark red. The layout is square and well-balanced with white borders
-    between cells.
+  - 'CRITICAL: Dark theme text legibility failure persists — Variable labels, title,
+    and axis labels are dark/unreadable on dark background. Despite code specifying
+    INK="#F0EFE8" (light color), rendered output shows dark text. This is the same
+    failure as Attempts 1 and 2.'
+  - Generic aesthetic without custom design sophistication or polish
+  - Minimal visual refinement beyond library defaults
+  - Limited use of distinctive altair features beyond basic chart composition
+  - No visual hierarchy or emphasis to guide viewer focus to high-correlation pairs
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "heatmap-correlation · altair · anyplot.ai" is bold and clearly readable in dark text at top. All variable labels (Revenue, Profit, Expenses, Employees, Market Cap, Debt, Assets, R&D Spend) are bold dark text, fully readable. Axis titles "Financial Metrics" are clear. All text elements are crisp and legible.
+      Data: Brownbluegreen diverging colormap correctly encodes correlations from -1 (brown) to 0 (cream) to +1 (teal). Only lower triangle displayed. Correlation values annotated with 2 decimal places using conditional text coloring (white on dark cells, dark on light cells).
+      Legibility verdict: PASS - All text is readable and clearly visible against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) - correct background color
+      Chrome: CRITICAL FAILURE - Title is nearly invisible, rendered as extremely faint text on dark background. Y-axis labels (Revenue, Profit, Expenses, etc.) appear as dark/black text on the near-black background - dark-on-dark failure. X-axis labels at bottom are similarly faint and hard to read. Axis titles "Financial Metrics" are barely visible. Theme colors are not rendering correctly despite code specifying INK="#F0EFE8" (light color).
+      Data: Brownbluegreen color scheme for heatmap cells appears identical to light render (correct - data colors should not change). Correlation value annotations are somewhat more readable than axis labels but still difficult to read against dark background.
+      Legibility verdict: FAIL - Dark render has severe legibility issues. Dark-on-dark text rendering on axis labels and title makes this render nearly unusable. This is a production-blocking failure.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 19
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is large and bold at 28pt, axis labels are 15pt bold, cell
-          annotations are 14pt bold, all clearly readable
+        score: 0
+        max: 8
+        passed: false
+        comment: Critical failure in dark theme - dark-on-dark text rendering
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all labels and annotations are well spaced
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Cells are appropriately sized, white borders provide clear separation
+        comment: All heatmap cells and annotations clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Red-blue diverging colormap is colorblind-friendly (not pure red-green)
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good square layout but plot could fill slightly more canvas area
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
+        score: 1
         max: 2
+        passed: false
+        comment: Colorblind-safe colormap but dark render fails contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: No axis titles provided (just variable names, no descriptive labels
-          like "Variables")
-      - id: VQ-07
-        name: Grid & Legend
+        comment: Well-proportioned square format with good margins
+      - id: VQ-06
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Legend well placed with appropriate sizing, white cell borders serve
-          as grid
+        comment: Correct title format and descriptive labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: Chrome failure in dark theme - text colors not theme-adapted
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Generic defaults, no custom design thinking
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization beyond defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: No visual hierarchy or emphasis
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct correlation matrix heatmap
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Variables correctly mapped to both axes
-      - id: SC-03
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has diverging colormap, annotations, symmetric matrix; missing optional
-          triangle masking
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: diverging colormap, annotations, symmetric
+          matrix'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Colorbar correctly fixed to -1 to 1
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct mapping, all variables displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend clearly shows Correlation scale
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "heatmap-correlation · altair · pyplots.ai"'
+        comment: Correct title format and colorbar labeling
     data_quality:
-      score: 19
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows positive correlations (Profit-Market Cap: 0.66), negative
-          correlations (Assets-Profit: -0.67), near-zero values (Employees-Market
-          Cap: 0.01), diagonal 1.0s'
+        comment: Full range of correlations from -1 to 1
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Financial metrics is a realistic scenario for correlation analysis
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: All correlation values are in valid -1 to 1 range with sensible relationships
+        comment: Real financial metrics, neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Sensible values and variable count
     code_quality:
       score: 10
       max: 10
@@ -172,41 +173,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: Clean, linear code flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set for deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas imported and used
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Clean and Pythonic
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        passed: false
+        comment: Correct format but dark render unusable
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Uses Altair's declarative grammar with mark_rect and mark_text layering,
-          conditional color encoding for text visibility, but could leverage more
-          interactive features
-  verdict: APPROVED
+        comment: Correct encode/mark patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Generic usage, basic tooltips
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - correlation-matrix
+  styling:
+  - custom-colormap
