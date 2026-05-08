@@ -1,159 +1,177 @@
 library: matplotlib
+language: python
 specification_id: histogram-2d
 created: '2025-12-25T20:08:18Z'
-updated: '2025-12-25T20:12:02Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510277882
+updated: '2026-05-08T05:29:35Z'
+generated_by: claude-haiku
+workflow_run: 25538121878
 issue: 2012
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/matplotlib/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep: []
-  styling:
-  - custom-colormap
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 83
 review:
   strengths:
-  - Excellent use of viridis colormap for perceptually uniform density representation
-  - Clean code structure following KISS principles with proper seed for reproducibility
-  - Appropriate bin count (40) balances resolution and noise for 5000 data points
-  - cmin=1 effectively hides empty bins, improving visual clarity
-  - Proper font sizing throughout (24/20/16pt hierarchy)
-  - Colorbar well-positioned and labeled
+  - Proper 2D histogram displaying bivariate normal distribution with positive correlation
+  - Viridis colormap correctly applied for perceptual uniformity and colorblind safety
+  - 'Theme-adaptive chrome correctly implemented—light render readable on #FAF8F1,
+    dark render readable on #1A1A17'
+  - Colorbar properly labeled showing frequency scale
+  - Clean, reproducible code with proper seeding (np.random.seed(42))
+  - Title follows spec format exactly
+  - All text legible in both themes—no dark-on-dark or light-on-light failures
   weaknesses:
-  - Axis labels are generic (X Value, Y Value) rather than contextual or domain-specific
-  - Missing grid (though acceptable for heatmaps, a subtle grid could help read values)
-  - Could showcase more matplotlib-specific features like hexbin alternative or marginal
-    histograms
-  image_description: The plot displays a 2D histogram heatmap showing a bivariate
-    normal distribution with positive correlation. The viridis colormap ranges from
-    dark purple (low counts ~5) through teal/green to bright yellow (high counts ~45).
-    The data forms a clear elliptical pattern oriented diagonally from bottom-left
-    to top-right, centered around (0,0), demonstrating the 0.7 correlation coefficient.
-    A vertical colorbar on the right indicates "Count" with well-sized tick labels.
-    The title follows the correct format "histogram-2d · matplotlib · pyplots.ai".
-    Axis labels show "X Value" and "Y Value". Empty bins appear as white/transparent,
-    making the density pattern clearly visible.
+  - Axis labels lack units (Feature X and Feature Y should have specific units for
+    real-world context)
+  - Design is functional but generic—no distinctive visual refinement or aesthetic
+    customization beyond defaults
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1, not pure white
+      Chrome: Title "histogram-2d · matplotlib · anyplot.ai" in dark text, clearly readable. Axis labels "Feature X" and "Feature Y" dark and legible. Tick labels dark on light background. Grid lines subtle and visible.
+      Data: 2D histogram showing bivariate normal distribution with viridis colormap (purple=low frequency, green=mid, yellow=high). Clear diagonal density concentration indicating positive correlation. Colorbar labeled "Frequency" with readable numeric scale.
+      Legibility verdict: PASS - all elements readable, proper contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17, not pure black
+      Chrome: Title in light text, clearly visible. Axis labels light and legible on dark background. Tick labels light gray. Grid lines visible.
+      Data: Identical histogram colors to light render (viridis colormap preserved exactly—only chrome flipped). Density gradient clear.
+      Legibility verdict: PASS - all text readable, no dark-on-dark failures, proper contrast maintained
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all perfectly readable
+        comment: All text readable in both themes—title 24pt, labels 20pt, ticks 16pt,
+          all explicitly set and legible
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: All text clearly visible, no overlapping elements, good spacing
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 40 bins provides excellent resolution for 5000 points, density patterns
-          clearly visible
+        comment: Histogram bins clearly distinguishable from background, viridis provides
+          strong contrast
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe
+        comment: Viridis is perceptually uniform and colorblind-safe, no pure red-green
+          signal
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins, colorbar properly positioned
+        comment: Good proportions, nothing cut off, generous whitespace, tight_layout
+          applied
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 1
         max: 2
         passed: false
-        comment: Labels are descriptive ("X Value", "Y Value") but lack units or context
+        comment: Title follows spec format perfectly. Axis labels descriptive but
+          lack units (Feature X/Y should specify real-world units)
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: No grid present (acceptable for heatmap), colorbar well placed
+        comment: Viridis for continuous data, backgrounds correct (#FAF8F1 light/#1A1A17
+          dark), theme tokens applied (INK/INK_SOFT), both renders theme-correct
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Uses default viridis palette, no custom design choices or intentional
+          visual hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Spines properly removed (top/right). Grid subtle. No additional visual
+          refinement beyond defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Effectively shows correlation, but no special visual emphasis or
+          focal point beyond standard density gradient
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 2D histogram heatmap
+        comment: Correct 2D histogram heatmap showing joint distribution
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X and Y correctly assigned to axes
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Colorbar present, viridis colormap used, empty bins hidden (cmin=1)
-      - id: SC-04
-        name: Data Range
+        comment: Colorbar included, viridis colormap (perceptually uniform), bins=40
+          parameter used
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped, full data range displayed, correlation evident
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled "Count"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "histogram-2d · matplotlib · pyplots.ai"'
+        comment: Title 'histogram-2d · matplotlib · anyplot.ai', colorbar labeled
+          'Frequency'
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows correlation and density clustering well, but doesn't demonstrate
-          multimodal or asymmetric distributions
+        comment: 'Shows all aspects: bivariate distribution, density gradient, correlation,
+          full range'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Bivariate normal is a classic statistical example, but generic labels
-          reduce real-world context
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Standard normal values (-3 to 3) are sensible
+        comment: Bivariate normal with correlation 0.7 is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard normal (mean=0, cov matrix with correlation 0.7) appropriate
+          for demonstration
     code_quality:
       score: 10
       max: 10
@@ -163,40 +181,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save'
+        comment: No unnecessary functions or classes, straightforward linear flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures reproducibility
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib and numpy imported, both used
+        comment: 'Only used imports: os, matplotlib.pyplot, numpy'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Using current matplotlib API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI, clean matplotlib API usage
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly saves plot-{THEME}.png (no bare plot.png), uses current
+          API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses ax.hist2d() idiomatically, theme tokens properly applied
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
         max: 5
         passed: false
-        comment: Uses basic hist2d; could leverage matplotlib's hexbin, marginal histograms,
-          or norm parameter for log scaling
+        comment: Uses standard matplotlib colorbar feature but no unique library-specific
+          advanced techniques
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling: []
