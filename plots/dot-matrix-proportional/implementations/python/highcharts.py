@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dot-matrix-proportional: Dot Matrix Chart for Proportional Counts
 Library: highcharts unknown | Python 3.13.13
 Quality: 84/100 | Created: 2026-05-08
@@ -49,7 +49,7 @@ for idx, cat_name in enumerate(flat_cats):
     row = rows - 1 - (idx // cols)
     dots_by_category[cat_name].append([col, row])
 
-# Build chart — 4800×2700 landscape with right-side vertical legend
+# Build chart — 4800×2700 landscape with right-side vertical legend + annotation area
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
@@ -62,7 +62,7 @@ chart.options.chart = {
     "marginTop": 200,
     "marginBottom": 200,
     "marginLeft": 200,
-    "marginRight": 900,
+    "marginRight": 650,
 }
 chart.options.title = {
     "text": "dot-matrix-proportional · highcharts · anyplot.ai",
@@ -71,7 +71,7 @@ chart.options.title = {
 }
 chart.options.subtitle = {
     "text": "Preferred Code Editor · Tech Survey (n=100 developers · 1 dot = 1 respondent)",
-    "style": {"fontSize": "20px", "color": INK_SOFT},
+    "style": {"fontSize": "22px", "color": INK_SOFT},
 }
 chart.options.x_axis = {
     "min": -0.5,
@@ -107,16 +107,19 @@ chart.options.legend = {
     "symbolHeight": 24,
     "symbolWidth": 24,
 }
+# Radius 85 gives ~74% fill of the row height — avoids crowding while keeping dots large
 chart.options.plot_options = {
-    "scatter": {"marker": {"radius": 100, "symbol": "circle", "lineWidth": 0}, "enableMouseTracking": False}
+    "scatter": {"marker": {"radius": 85, "symbol": "circle", "lineWidth": 0}, "enableMouseTracking": False}
 }
 chart.options.tooltip = {"enabled": False}
 chart.options.colors = OKABE_ITO
 chart.options.credits = {"enabled": False}
 
+# Include percentage in each legend entry per spec note on count/percentage annotations
 for cat in categories:
+    pct = round(cat["count"] / total * 100)
     series = ScatterSeries()
-    series.name = f"{cat['name']} ({cat['count']} / {total})"
+    series.name = f"{cat['name']} ({cat['count']} / {total} · {pct}%)"
     series.data = dots_by_category[cat["name"]]
     chart.add_series(series)
 
@@ -129,6 +132,32 @@ with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
 html_str = chart.to_js_literal()
+
+# Annotation: callout label in the right margin highlighting the key finding
+# Uses Highcharts SVG renderer — runs synchronously after chart construction
+annotation_js = f"""
+(function() {{
+    var chart = Highcharts.charts[0];
+    if (!chart) return;
+    var x = chart.plotLeft + chart.plotWidth + 30;
+    var y = chart.plotTop + 30;
+    chart.renderer.label(
+        '<span style="font-size:52px; font-weight:700; color:#009E73;">52%</span>' +
+        '<br/><span style="font-size:30px; color:{INK};">prefer VS Code</span>',
+        x, y, null, null, null, true
+    )
+    .attr({{
+        fill: 'rgba(0,158,115,0.10)',
+        stroke: '#009E73',
+        'stroke-width': 2,
+        r: 10,
+        padding: 28,
+        zIndex: 5
+    }})
+    .add();
+}})();
+"""
+
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -138,6 +167,7 @@ html_content = f"""<!DOCTYPE html>
 <body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
+    <script>{annotation_js}</script>
 </body>
 </html>"""
 
