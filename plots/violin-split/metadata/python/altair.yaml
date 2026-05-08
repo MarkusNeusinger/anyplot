@@ -1,164 +1,177 @@
 library: altair
+language: python
 specification_id: violin-split
 created: '2025-12-26T10:05:27Z'
-updated: '2025-12-26T10:09:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520452177
+updated: '2026-05-08T16:55:05Z'
+generated_by: claude-haiku
+workflow_run: 25567890324
 issue: 1949
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-split/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/violin-split/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - faceting
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/python/altair/plot-dark.html
+quality_score: 95
 review:
   strengths:
-  - Excellent implementation of split violin using transform_density with signed density
-    calculation
-  - Clean faceted layout that scales well across departments
-  - Includes quartile markers (IQR rule + median diamond) as suggested in spec
-  - Colorblind-friendly blue/yellow palette with good contrast
-  - Realistic data scenario with varying treatment effects per department
-  weaknesses:
-  - Grid lines appear at default opacity rather than subtle (alpha 0.2-0.4)
-  - The IQR and median markers use xOffset which places them slightly offset from
-    violin center rather than overlaid on the violin halves
-  image_description: 'The plot displays a split violin visualization across 4 faceted
-    panels (Engineering, HR, Marketing, Sales). Each panel shows two distributions
-    side-by-side within split violins: Control group (blue, #306998) on the left half
-    and Treatment group (yellow, #FFD43B) on the right half. The violins meet at the
-    center line and include inner IQR rules (dark vertical lines) and white diamond
-    median markers. The title "violin-split · altair · pyplots.ai" appears at the
-    top center. A legend on the right indicates the two groups. Y-axis shows "Score
-    (%)" ranging from 30-100, and each department is labeled above its respective
-    panel.'
+  - Perfect theme-adaptive design with correct token usage in both renders
+  - Sophisticated split violin implementation using Altair's density transform and
+    xOffset encoding
+  - 'Excellent data storytelling: color contrast (green/orange) and statistical markers
+    (IQR, median) guide comparison'
+  - 'All visual quality criteria met: text legibility, no overlap, element visibility,
+    palette compliance'
+  - 'Idiomatic Altair patterns: transform_density, layer composition, faceting, custom
+    legend configuration'
+  - 'High-quality synthetic data: realistic test score context with meaningful treatment
+    effects across departments'
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), as specified
+      Chrome: Title "violin-split · altair · anyplot.ai" (28px, dark), axis labels "Score (%)" and department names (22px, dark), tick labels (18px, dark) — all clearly readable
+      Data: Green (#009E73) for Control on left, orange (#D55E00) for Treatment on right, meeting at center line; white diamond median markers with colored stroke outlines; subtle vertical IQR rules; alpha-blended violin shapes showing clear density distributions
+      Layout: 4 faceted panels (Engineering, HR, Marketing, Sales) with responsive scaling and 50px spacing
+      Legibility verdict: PASS — all elements readable, no overlap, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), as specified
+      Chrome: Title, axis labels, tick labels all rendered in light text (INK/INK_SOFT tokens) and clearly readable against dark surface; grid lines subtle with proper opacity
+      Data: Data colors identical to light render (green #009E73, orange #D55E00); only theme-adaptive chrome changed (background, text, grid); white median markers pop against dark background; IQR rules clearly visible
+      Layout: Same faceted structure, properly rendered for dark theme with elevated backgrounds for legend
+      Legibility verdict: PASS — no dark-on-dark failures, all text readable, data colors unchanged, theme adaptation complete
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 28pt, axis labels 16-20pt, all clearly readable. Slightly smaller
-          than ideal for tick labels.
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
+          fully readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text elements; all labels well-separated
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Violin shapes well-defined, median markers and IQR lines clearly
-          visible
+        comment: Violins, IQR rules, and median markers all clearly visible and well-sized
+          for data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow contrast is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas via faceting, though some whitespace at bottom
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Score (%)" includes units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette with excellent contrast; colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Faceted layout perfectly proportioned; 50px spacing; legend well-positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is visible but no alpha applied (appears at default opacity),
-          legend well-placed
+        comment: Y-axis labeled with units; title follows spec format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito positions 1-2 correct; backgrounds #FAF8F1/#1A1A17; theme-adaptive
+          chrome perfect in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional design with thoughtful color assignment and custom legend
+          styling; strong visual hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid (opacity 0.12), refined facet headers, white-stroke median
+          markers, generous spacing
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Split design naturally enables comparison; color contrast guides
+          viewer; IQR/median provide statistical context
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct split violin plot with two halves per category
+        comment: Correct split violin plot; halves meet at center
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Category on facet columns, value on Y, split group determines left/right
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Split violins, distinct colors, legend, inner quartile markers all
+        comment: Distinct colors, halves centered, IQR rules, alpha transparency all
           present
-      - id: SC-04
-        name: Data Range
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full 30-100 range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Y-axis (Score %), X-axis (Department), split group (Control/Treatment)
+          all correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows Control and Treatment
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "violin-split · altair · pyplots.ai"
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows different distribution shapes and shifts between groups, Engineering
-          shows largest treatment effect
+        comment: 'All aspects shown: split distributions, variation across departments,
+          statistical markers'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Test scores by department comparing control vs treatment is a plausible
-          A/B testing scenario
+        comment: 'Real-world plausible: test scores with treatment effects across
+          departments; neutral topic'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Scores 30-100% reasonable, though some distributions compressed at
-          upper bound
+        comment: Scores 30-100% realistic; treatment effects (5-15% improvement) plausible
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -166,41 +179,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: 'Clear flow: imports → setup → data → chart → save; no unnecessary
+          abstractions'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set; deterministic generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas used
+        comment: All imports used; no cruft
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic, appropriate complexity, no over-engineering
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves both plot.png and plot.html (correct)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and .html with scale_factor=3.0
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses transform_density, transform_calculate, faceting, layering -
-          good Altair patterns but xOffset approach for IQR/median markers is somewhat
-          complex
+        comment: Expert use of transform_density, transform_calculate, transform_aggregate,
+          layer composition, faceting, proper configuration
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Uses Altair-specific strengths: density transform, xOffset for split,
+          signed_density calculation, sophisticated layering'
+    score_caps:
+      applied: false
+      note: No caps triggered
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending
