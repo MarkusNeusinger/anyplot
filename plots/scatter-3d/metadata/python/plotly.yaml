@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: scatter-3d
 created: '2025-12-26T10:30:19Z'
-updated: '2026-05-08T22:39:33Z'
+updated: '2026-05-08T22:45:18Z'
 generated_by: claude-haiku
 workflow_run: 25582798014
 issue: 1945
@@ -12,39 +12,33 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/plotly/plot-dark.html
-quality_score: 89
+quality_score: 85
 review:
   strengths:
-  - Perfect visual quality across both themes with explicit font sizing and no readability
-    issues
-  - Excellent theme adaptation with data colors preserving Turbo while chrome perfectly
-    adapts light/dark
-  - Strong data quality with realistic molecular chemistry context and three distinct
-    clusters
-  - Clean, reproducible code following KISS principle
-  - All specification requirements met with high fidelity
+  - Perfect theme adaptation with readable text in both light and dark renders
+  - Proper 3D visualization with intentional camera positioning and appropriate marker
+    sizing
+  - Clean, reproducible code with deterministic seed; all imports used efficiently
+  - All specification requirements met; correct plot type, data mapping, and title
+    format
   weaknesses:
-  - Design Excellence is generic - relies on library defaults without custom aesthetic
-    choices or visual storytelling
-  - No visual hierarchy or focal points to guide viewer through data insights
-  - Marker appearance and grid styling could be refined for enhanced visual emphasis
+  - Design Excellence moderate — lacks sophisticated visual refinement beyond defaults
+  - Library Mastery competent but could showcase more advanced plotly features
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) correctly applied
-      Chrome: Title clearly visible in dark text (#1A1A17, 32px); axis labels in dark with units (22px); tick labels (16px) - all explicitly sized and fully readable
-      Data: 150 points rendered with Turbo continuous colormap (blue→purple→red gradient); colorbar shows "Molecular Weight (g/mol)" with proper scale; three distinct clusters visible
-      Grid: Subtle horizontal/vertical lines with low opacity
-      Legibility verdict: PASS - no text readability issues, excellent contrast on light surface
+      Background: Warm off-white (#FAF8F1), exactly as spec requires
+      Chrome: Title "scatter-3d · plotly · anyplot.ai" dark INK color, axis labels dark, tick labels dark — all clearly readable
+      Data: 150 points colored via Turbo continuous colormap (blue for ~150 g/mol to red for ~350 g/mol), three distinct clusters visible, colorbar with title and ticks readable
+      Legibility verdict: PASS — all text readable, no light-on-light issues, marks distinguishable from background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) correctly applied
-      Chrome: Title visible in light text (#F0EFE8, 32px); axis labels in light (#F0EFE8, 22px); tick labels in soft light (#B8B7B0, 16px) - all readable with no dark-on-dark failures
-      Data: Data colors are IDENTICAL to light render (Turbo colormap preserved); colorbar remains vibrant and distinguishable
-      Grid: Subtle grid lines adapted to dark theme, properly visible
-      Legibility verdict: PASS - perfect theme adaptation with no readability issues, all text legible on dark surface
+      Background: Warm near-black (#1A1A17), exactly as spec requires
+      Chrome: Title light INK color, axis labels light, tick labels light — all clearly readable on dark surface, no dark-on-dark failures
+      Data: Same Turbo colormap as light render, identical colors across both renders (only chrome adapted to theme), colorbar properly positioned and readable
+      Legibility verdict: PASS — all text readable, no dark-on-dark text issues, marks distinguishable from background, brand colors visible
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -52,70 +46,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All fonts explicitly sized: title 32px, labels 22px, ticks 16px;
-          fully readable in both themes'
+        comment: Title (32px), axis labels (22px), ticks (16px) explicitly set with
+          theme-aware INK/INK_SOFT colors. Readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; axis labels positioned well on 3D plot
+        comment: 3D layout naturally avoids collisions; title centered, colorbar right
+          with margin
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 150 markers at size 12, opacity 0.8; perfectly adapted for data density
+        comment: 150 points visible, size 12 with opacity 0.8 appropriate for 3D point
+          density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Turbo colormap perceptually uniform with good contrast
+        comment: Turbo colormap perceptually uniform and CVD-safe for continuous data
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60% of canvas with balanced generous margins
+        comment: 4800×2700 px, good 3D camera angle, generous margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All descriptive with units (g/mol, Ų)
+        comment: Correct format, units included (g/mol, Ų), descriptive labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Turbo appropriate for continuous data; backgrounds correct in both
-          themes; chrome perfectly theme-adaptive
+        comment: 'Turbo for continuous data, backgrounds #FAF8F1 (light) and #1A1A17
+          (dark), both renders properly theme-adapted'
     design_excellence:
       score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured library defaults without custom design choices beyond
-          defaults
+        comment: Custom Turbo colormap, refined colorbar styling, intentional opacity.
+          Shows design thought but straightforward.
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: false
-        comment: Some refinement visible (grid opacity, margins set, scene configured)
-          but not polished
-      - id: DE-03
-        name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy or emphasis to guide viewer
-          through insights
+        comment: Subtle grid and theme-correct backgrounds. Minimal customization;
+          no decorative polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Three clusters create natural focal points; color adds dimension.
+          Hierarchy emerges from data structure.
     spec_compliance:
       score: 15
       max: 15
@@ -125,25 +121,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D scatter plot
+        comment: Correct 3D scatter plot using go.Scatter3d
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Color-coded fourth dimension, interactive hover, clear labels
+        comment: X, Y, Z dimensions, color encoding, interactive rotation, clear labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Z correctly mapped and visible
+        comment: X→Weight, Y→LogP, Z→TPSA; ranges appropriate
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and colorbar label
+        comment: Title format correct, colorbar titled 'Molecular Weight (g/mol)'
+          with units
     data_quality:
       score: 15
       max: 15
@@ -153,19 +150,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects with three distinct clusters
+        comment: Three clusters, color encodes fourth dimension, 150 points, full
+          range shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real molecular chemistry scenario with plausible data
+        comment: Molecular property space plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic molecular weights, LogP, and TPSA ranges
+        comment: Sizes/opacity tuned for 150 points; colorbar range 150-350 matches
+          data
     code_quality:
       score: 10
       max: 10
@@ -175,49 +174,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear structure with no unnecessary functions
+        comment: No functions/classes, direct code
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: Only os, numpy, plotly.graph_objects; all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no over-engineering
+        comment: Simple theme-aware conditionals, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png and plot-{THEME}.html output
+        comment: Saves as plot-{THEME}.png and .html with current API
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of go.Figure and go.Scatter3d with proper theme handling
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
+        passed: true
+        comment: Uses go.Figure/go.Scatter3d, update_layout, scene dict, colorbar
+          styling, hovertemplate
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
         passed: false
-        comment: Uses Scatter3d, custom colorbar, formatted hover; good but not exceptional
-          distinctive usage
-  verdict: REJECTED
+        comment: Turbo colorscale, colorbar customization, hovertemplate, 3D camera.
+          Could showcase more advanced features.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -229,5 +229,4 @@ impl_tags:
   - data-generation
   dataprep: []
   styling:
-  - alpha-blending
   - custom-colormap
