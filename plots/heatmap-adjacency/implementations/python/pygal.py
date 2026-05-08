@@ -1,7 +1,7 @@
 """ anyplot.ai
 heatmap-adjacency: Network Adjacency Matrix Heatmap
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 82/100 | Created: 2026-05-08
+Quality: 81/100 | Created: 2026-05-08
 """
 
 import importlib
