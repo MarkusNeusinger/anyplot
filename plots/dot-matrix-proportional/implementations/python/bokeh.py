@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 dot-matrix-proportional: Dot Matrix Chart for Proportional Counts
-Library: bokeh | Python 3.13
-Quality: pending | Created: 2026-05-08
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 89/100 | Created: 2026-05-08
 """
 
 import os as _os
