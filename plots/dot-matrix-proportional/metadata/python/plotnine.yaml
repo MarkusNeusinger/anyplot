@@ -1,0 +1,240 @@
+library: plotnine
+language: python
+specification_id: dot-matrix-proportional
+created: '2026-05-08T21:59:37Z'
+updated: '2026-05-08T22:14:36Z'
+generated_by: claude-sonnet
+workflow_run: 25581289342
+issue: 5241
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Perfect spec compliance: 10×10 grid, correct fill order, counts in legend, all
+    required features present'
+  - 'Proper Okabe-Ito palette with first series #009E73; both theme renders pass legibility
+    check'
+  - coord_fixed correctly ensures equal-aspect-ratio dot spacing — critical for dot
+    matrix accuracy
+  - Deterministic, clean, idiomatic plotnine code with explicit font sizes
+  - Legend labels include counts, adding an interpretation layer without cluttering
+    the plot
+  weaknesses:
+  - Upper-right canvas area above the legend is visually empty (~35% of canvas unused)
+    — could reduce figure dimensions or adjust legend position to improve canvas utilization
+  - 'Design Excellence limited: no visual focal point or hierarchy to emphasize the
+    dominant category (Partially Solar-Powered with 41 dots); all categories are visually
+    equal weight'
+  - 'LM-02 limited: coord_fixed and scale_color_manual are useful but not highly distinctive
+    to plotnine; the implementation does not leverage uniquely plotnine-specific features'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — cream/ivory tone, not pure white
+      Chrome: Title "dot-matrix-proportional · plotnine · anyplot.ai" in bold dark ink, large (24pt); subtitle in softer gray tone (18pt); legend text in muted dark gray (16pt); all clearly readable
+      Data: First series (Fully Solar-Powered) in #009E73 teal-green; second (Partially Solar-Powered) in #D55E00 vermillion-orange; third (No Solar Panels) in #0072B2 blue; 10x10 uniform dot grid filled left-right top-bottom; legend to the right with counts in parentheses
+      Legibility verdict: PASS — all text dark on light, no contrast failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — dark charcoal tone, not pure black
+      Chrome: Title and subtitle switch to off-white/light-gray tones; legend text is light-colored; no dark-on-dark failures detected; legend box background is elevated dark #242420 with subtle border
+      Data: Data colors identical to light render — same #009E73 green, #D55E00 orange, #0072B2 blue; dots are equally visible against the dark surface
+      Legibility verdict: PASS — all text light on dark, no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title 24pt bold, subtitle 18pt, legend 16pt — all explicitly set
+          and legible in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Uniform dot grid with no collisions; legend entries well-separated
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: size=9 dots render prominently; coord_fixed ensures circular shape;
+          three colors clearly distinct
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette; strong contrast on both backgrounds; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good composition but notable empty area in upper-right above legend
+          (~65% canvas utilization)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels needed; subtitle provides domain context with sample
+          size
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct; Okabe-Ito order followed; backgrounds
+          #FAF8F1/#1A1A17; data colors identical across themes'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: 'Well-configured: correct palette, bold title hierarchy, warm background
+          tokens. Polished library default level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_void removes all chrome; legend has elevated background with
+          INK_SOFT border; plot_margin adds breathing room
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Legend includes counts; subtitle states sample size. Slightly above
+          default but no distinct visual hierarchy or focal-point emphasis.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct dot matrix: uniform dots in 10x10 grid, filled left-to-right
+          top-to-bottom by category'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid matches total (10x10=100); each dot=one unit; color-coded; fill
+          order correct; legend with counts
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=i%cols, y=-(i//cols) correctly maps dots; coord_fixed ensures equal
+          spacing
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels include counts in parentheses
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three distinct categories with varying proportions (24/41/35) covering
+          all solar adoption states
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Household Solar Panel Adoption Survey, n=100 homes — real-world,
+          neutral, technology domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 24+41+35=100 exactly; proportions plausible for solar adoption statistics
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Tokens → Data → Plot → Save; no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic; hardcoded counts, no random elements
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Every import is used; sys/os for path and theme env var
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic; zip(strict=True) is a clean guard; loop-based label expansion
+          is clear
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via ggsave; current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Idiomatic plotnine grammar: ggplot+geom_point+scale_color_manual+coord_fixed+labs+theme;
+          theme_void is right base'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: coord_fixed for equal-aspect spacing; scale_color_manual with labels=
+          for combined color+label control; plotnine layered theme() system
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
