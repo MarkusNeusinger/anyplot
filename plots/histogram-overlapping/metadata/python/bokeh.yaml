@@ -1,174 +1,174 @@
 library: bokeh
+language: python
 specification_id: histogram-overlapping
 created: '2025-12-25T21:48:34Z'
-updated: '2025-12-25T21:50:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20511325043
+updated: '2026-05-08T07:05:36Z'
+generated_by: claude-haiku
+workflow_run: 25541657426
 issue: 2010
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/bokeh/plot.html
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/bokeh/plot-dark.html
 quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - alpha-blending
-    - hover-tooltips
-    - html-export
-  patterns:
-    - data-generation
-    - matrix-construction
-  dataprep:
-    - binning
-  styling:
-    - grid-styling
 review:
   strengths:
-  - Excellent use of aligned bins across all three distributions for accurate comparison
-  - Proper semi-transparent fills (alpha 0.5) allowing overlapping regions to be clearly
-    visible
-  - Well-chosen contrasting colors (blue, yellow, green) for the three departments
-  - Realistic data scenario with meaningful variation between groups
-  - Includes interactive tools and HTML export leveraging Bokeh strengths
-  - Text sizes appropriately scaled for the 4800x2700 canvas
-  - Clean, readable code following KISS principles
+  - Perfect visual quality across both themes with zero legibility failures
+  - Spec requirements fully met with aligned bins and semi-transparent styling
+  - Correct Okabe-Ito palette (positions 1-3) maintained consistently
+  - Clean, deterministic, reproducible code with proper seeding
+  - Professional theme-adaptive chrome using token-based approach
+  - Interactive Bokeh features (HoverTool) properly configured
+  - Both light and dark renders equally readable and visually correct
   weaknesses:
-  - Legend positioning leaves excessive whitespace on the right side of the plot
-  - Could use ColumnDataSource for more idiomatic Bokeh code
-  - HoverTool could be customized to show bin range and count information
-  image_description: 'The plot displays three overlapping histograms showing employee
-    response times (in milliseconds) by department. The Engineering distribution (blue,
-    #306998) is centered around 250ms with moderate spread. The Sales distribution
-    (yellow/gold, #FFD43B) is centered around 320ms with wider spread, showing some
-    values extending to 600ms. The Support distribution (green, #4CAF50) is centered
-    around 280ms with tighter spread. All three histograms use semi-transparent fills
-    (alpha 0.5) allowing overlapping regions to be visible. The title "histogram-overlapping
-    · bokeh · pyplots.ai" appears at the top left. Axis labels show "Response Time
-    (ms)" on x-axis and "Frequency" on y-axis. A legend in the top right identifies
-    all three departments. The grid uses subtle dashed lines. Interactive Bokeh toolbar
-    is visible in the top right corner.'
+  - Design Excellence could be elevated with spine customization or color emphasis
+    techniques
+  - Library Mastery is conservative; could showcase more Bokeh-specific advanced interaction
+    patterns
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - correct for light theme
+      Chrome: Title "histogram-overlapping · bokeh · anyplot.ai" in dark 28pt text, clearly readable; X-axis "Response Time (ms)" in 22pt dark text; Y-axis "Frequency" in 22pt dark text; tick labels in 18pt soft gray; legend "Engineering, Sales, Support" in top-left with colored squares; all text readable and well-positioned
+      Data: Three overlapping histogram distributions with semi-transparent bars (alpha=0.5); Engineering in #009E73 (brand green), Sales in #D55E00 (orange), Support in #0072B2 (blue); subtle light grid at alpha=0.10; all bars clearly distinguishable despite overlap
+      Legibility verdict: PASS - all elements readable in both normal and enlarged viewing; excellent contrast between dark text and light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 - correct for dark theme
+      Chrome: Title in light 28pt text, clearly readable on dark background; axis labels in light 22pt; tick labels in light 18pt; legend fully readable with proper contrast; NO dark-on-dark failures (tick labels are light colored, not dark); subtle light grid visible at alpha=0.10
+      Data: All three distributions maintain identical colors to light render (#009E73, #D55E00, #0072B2); semi-transparent bars preserve overlap visibility; chrome elements properly adapted (only backgrounds, text colors flip per theme tokens)
+      Legibility verdict: PASS - perfect dark theme adaptation; text clearly readable; no contrast failures; colors preserved across both renders
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 42pt, axis labels at 32pt, tick labels at 24pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All font sizes explicitly set; readable in both themes (28pt title,
+          22pt labels, 18pt ticks)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text clearly separated; intentional histogram overlap enables
+          comparison
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Histogram bars are well-sized with good transparency; slight deduction
-          as some overlapping regions are dense
+        comment: All three distributions clearly visible; semi-transparent bars (α=0.5)
+          show overlap regions
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, yellow, green are distinguishable and reasonably colorblind-safe,
-          though green-yellow proximity could be slightly better
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Response Time (ms)", "Frequency"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito positions 1-3; CVD-safe palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 landscape; clean proportions; all elements within bounds
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.3, dashed), but legend is placed in top-right
-          with excessive empty space on the right side of the plot; legend could be
-          positioned better
+        comment: Title correct format; axes labeled with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order; backgrounds #FAF8F1/#1A1A17;
+          both themes correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional Okabe-Ito palette; theme-adaptive design; semi-transparent
+          styling intentional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (α=0.10); proper spacing; legend styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Semi-transparency shows overlap; color coding aids comparison; could
+          add emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct overlapping histogram type
+        comment: Overlapping histograms on shared axes with semi-transparent fills
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Values correctly binned, groups properly distinguished
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Semi-transparent fills, distinct colors, legend, aligned bins - all
-          present
-      - id: SC-04
-        name: Data Range
+        comment: Multiple distributions; semi-transparent alpha; distinct colors;
+          legend; aligned bins
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: continuous response times; Y: frequency counts; axes span all
+          data'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Engineering, Sales, Support
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "histogram-overlapping · bokeh · pyplots.ai"'
+        comment: Title format correct; legend labels match groups
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows three distributions with different centers and spreads; overlapping
-          regions visible; slight deduction as distributions could show more distinct
-          separation
+        comment: All histogram aspects shown; demonstrates central tendency, spread,
+          shape comparison
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Employee response times by department is a plausible, comprehensible
-          scenario
+        comment: Employee response times by department; real-world plausible; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Response times in 100-600ms range are reasonable; slight deduction
-          as some extreme Sales values (>500ms) seem high
+        comment: Response times 150-450ms sensible; frequency 0-35 appropriate
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -176,42 +176,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: No unnecessary abstraction; straightforward flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: Only necessary imports; appropriate libraries
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: 'Minor: output_file/save is used but export_png already creates the
-          PNG'
+        comment: No fake UI; no AR-08 violations; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.html and .png; current bokeh 3.9.0 API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: figure(), ColumnDataSource, quad() used correctly; HoverTool configured;
+          theme-aware styling
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Bokeh's quad glyph appropriately, includes interactive tools
-          (pan, wheel_zoom, box_zoom, reset, hover), exports both PNG and HTML. Could
-          leverage ColumnDataSource or HoverTool customization for richer interactivity.
+        comment: Interactive hover tooltips and HTML export leverage Bokeh; standard
+          histogram approach
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - theme-adaptive
