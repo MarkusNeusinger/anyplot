@@ -1,77 +1,97 @@
-""" pyplots.ai
+"""anyplot.ai
 bar-diverging: Diverging Bar Chart
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 93/100 | Created: 2025-12-25
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2026-05-08
 """
 
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import seaborn as sns
-from matplotlib.patches import Patch
+import os
+import sys
 
 
-# Data - Net Promoter Score by Department
-np.random.seed(42)
-departments = [
-    "Customer Support",
-    "Sales",
-    "Engineering",
-    "Marketing",
-    "Finance",
-    "Human Resources",
-    "Operations",
-    "Legal",
-    "Research & Dev",
-    "Quality Assurance",
-    "IT Services",
-    "Product Management",
+sys.path = [p for p in sys.path if "implementations" not in p]  # noqa: E402
+
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+import seaborn as sns  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+PROFIT_COLOR = "#009E73"  # Position 1 (green) - always first series
+LOSS_COLOR = "#D55E00"  # Position 2 (orange)
+
+# Data - Quarterly profit/loss by business unit (in millions)
+units = [
+    "Cloud Services",
+    "Data Analytics",
+    "AI Solutions",
+    "DevOps Platform",
+    "Security Suite",
+    "Enterprise Integration",
+    "Mobile Apps",
+    "Edge Computing",
+    "Cybersecurity",
+    "Support Services",
 ]
 
-# Simulate NPS scores ranging from -60 to +80
-scores = np.array([45, 62, 28, -15, -32, 8, -45, -22, 55, 12, -8, 38])
+# Q1 profit/loss values (millions)
+values = np.array([42, -18, 65, -25, 38, -12, 28, 52, -8, 15])
 
 # Create DataFrame and sort by value
-df = pd.DataFrame({"Department": departments, "NPS Score": scores})
-df = df.sort_values("NPS Score", ascending=True).reset_index(drop=True)
+df = pd.DataFrame({"Unit": units, "Profit Loss (M)": values})
+df = df.sort_values("Profit Loss (M)", ascending=True).reset_index(drop=True)
 
-# Assign colors based on positive/negative values
-colors = ["#306998" if x >= 0 else "#FFD43B" for x in df["NPS Score"]]
+# Assign colors based on positive/negative
+colors = [PROFIT_COLOR if x >= 0 else LOSS_COLOR for x in df["Profit Loss (M)"]]
+
+# Configure seaborn theme
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+    },
+)
 
 # Create plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 
-# Horizontal bar chart using seaborn barplot
-sns.barplot(data=df, x="NPS Score", y="Department", hue="Department", palette=colors, legend=False, ax=ax, orient="h")
+# Horizontal bar chart
+sns.barplot(data=df, x="Profit Loss (M)", y="Unit", palette=colors, hue="Unit", legend=False, ax=ax, orient="h")
 
-# Add vertical line at zero baseline
-ax.axvline(x=0, color="black", linewidth=1.5, linestyle="-", zorder=0)
+# Add vertical baseline at zero
+ax.axvline(x=0, color=INK_SOFT, linewidth=2, zorder=2)
 
-# Style the plot
-ax.set_xlabel("Net Promoter Score", fontsize=20)
-ax.set_ylabel("Department", fontsize=20)
-ax.set_title("bar-diverging · seaborn · pyplots.ai", fontsize=24, fontweight="bold")
-ax.tick_params(axis="both", labelsize=16)
-ax.set_xlim(-70, 80)
+# Style
+ax.set_xlabel("Profit/Loss ($ Millions)", fontsize=20, color=INK)
+ax.set_ylabel("Business Unit", fontsize=20, color=INK)
+ax.set_title("bar-diverging · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
-# Add subtle grid on x-axis only
-ax.xaxis.grid(True, alpha=0.3, linestyle="--")
+# Grid on x-axis only
+ax.xaxis.grid(True, alpha=0.15, linewidth=0.8)
 ax.yaxis.grid(False)
 ax.set_axisbelow(True)
 
-# Add value labels at the end of each bar
-for i, (_idx, row) in enumerate(df.iterrows()):
-    value = row["NPS Score"]
-    ha = "left" if value >= 0 else "right"
-    offset = 2 if value >= 0 else -2
-    ax.text(value + offset, i, f"{value:+d}", va="center", ha=ha, fontsize=14, fontweight="bold")
-
-# Add legend for color meaning
-legend_elements = [
-    Patch(facecolor="#306998", label="Positive (Promoters)"),
-    Patch(facecolor="#FFD43B", label="Negative (Detractors)"),
-]
-ax.legend(handles=legend_elements, loc="lower right", fontsize=14, framealpha=0.9)
+# Spine styling
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for spine in ["left", "bottom"]:
+    ax.spines[spine].set_color(INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
