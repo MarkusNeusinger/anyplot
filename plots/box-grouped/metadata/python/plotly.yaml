@@ -1,167 +1,183 @@
 library: plotly
+language: python
 specification_id: box-grouped
 created: '2025-12-25T19:56:39Z'
-updated: '2025-12-25T19:59:50Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510142894
+updated: '2026-05-08T03:30:51Z'
+generated_by: claude-haiku
+workflow_run: 25534727357
 issue: 2017
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/box-grouped/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/box-grouped/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/plotly/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent color palette choice (blue/yellow/teal) that is both visually appealing
-    and colorblind-accessible
-  - Clean data structure with realistic employee performance scenario across departments
-    and experience levels
-  - 'Properly implements all box plot features: median line, quartile boxes, whiskers,
-    and outliers with boxpoints=outliers'
-  - Font sizes are well-calibrated for 4800x2700 resolution with title at 32pt, labels
-    at 24pt, ticks at 20pt
-  - Good use of plotly_white template for clean professional appearance
+  - Perfect palette compliance with correct Okabe-Ito colors (#009E73 first series)
+    and flawless theme-adaptive chrome in both renders
+  - Excellent text legibility with explicitly set font sizes (title 28px, labels 22px,
+    ticks 18px) readable in both light and dark themes
+  - 'Comprehensive spec compliance: correct grouped box plot type, all required features
+    present (side-by-side boxes, legends, whiskers, outliers), clear title format
+    and legend labels'
+  - 'High code quality: clean KISS structure, reproducible with np.random.seed(42),
+    idiomatic plotly usage with go.Box() and boxmode="group", proper theme token integration
+    throughout layout'
+  - 'Strong data quality: realistic employee performance scenario with plausible distributions
+    showing clear junior→senior progression, includes outliers and varied spreads
+    demonstrating all aspects of grouped box plots'
   weaknesses:
-  - Axis labels lack units (could be Performance Score (0-100) to clarify the scale)
-  - Does not leverage Plotly interactive features like custom hover templates showing
-    exact statistics
-  - Some outliers exceed 100, which is unusual for a 0-100 performance score scale
-  image_description: 'The plot displays a grouped box plot showing employee performance
-    scores (y-axis, ranging from ~30 to ~110) across four departments (Sales, Engineering,
-    Marketing, Support) on the x-axis. Each department contains three side-by-side
-    box plots representing experience levels: Junior (steel blue #306998), Mid-Level
-    (yellow #FFD43B), and Senior (teal #4ECDC4). The boxes show clear median lines,
-    quartile ranges, and whiskers. Outliers are visible as individual points (e.g.,
-    low outlier at ~30 for Sales Junior, high outlier at ~112 for Engineering Mid-Level).
-    The legend titled "Experience Level" is positioned to the right. The title correctly
-    reads "box-grouped · plotly · pyplots.ai" centered at the top.'
+  - 'Design Excellence opportunities: plot uses well-configured defaults but lacks
+    distinctive aesthetic refinement — spines still visible (not removed), legend
+    box has border (functional but could be more polished), no visual hierarchy or
+    emphasis to guide viewer attention beyond basic data display'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), exactly as required
+      Chrome: Title "box-grouped · plotly · anyplot.ai" in dark text (INK color), department names and performance score labels in dark text, tick labels all clearly readable, legend positioned right with dark title and secondary text
+      Data: Three series in Okabe-Ito colors — Junior (#009E73), Mid-Level (#D55E00), Senior (#0072B2) — boxes clearly distinguishable with visible whiskers, quartile boxes, medians, and outliers
+      Legibility verdict: PASS — All text readable, excellent contrast, no legibility issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), exactly as required
+      Chrome: Title in light text (INK color), department names and performance score labels in light text, tick labels all clearly readable, legend with light secondary text, no dark-on-dark failures
+      Data: Identical colors to light render (#009E73, #D55E00, #0072B2) with excellent visibility on dark background, boxes and outliers clearly distinguishable
+      Legibility verdict: PASS — All text light-colored and readable, perfect theme adaptation, no defects
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 32pt, axis labels at 24pt, tick fonts at 20pt, legend at
-          18pt - all perfectly readable
+        comment: 'Font sizes explicitly set: title 28px, labels 22px, ticks 18px;
+          perfectly readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels clearly separated
+        comment: All text fully readable; no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Box plots well-sized with clear median lines, whiskers, and visible
-          outliers
+        comment: Boxes, whiskers, outliers all clearly visible; marker size and opacity
+          appropriate for density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, yellow, teal palette is colorblind-safe with good contrast
+        comment: Okabe-Ito palette is CVD-safe; excellent contrast between series
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good proportions, though right margin for legend is generous
+        comment: 'Perfect layout: plot fills 50-70% of canvas, balanced margins, legend
+          well-positioned'
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive ("Department", "Performance Score") but lack
-          units
+        comment: 'Descriptive labels with units: ''Performance Score (0-100)'', correct
+          title format'
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle at alpha 0.1, legend well-placed but title could be more
-          prominent
+        comment: 'Perfect: first series #009E73, Okabe-Ito order maintained, backgrounds
+          #FAF8F1/#1A1A17, theme chrome flipped correctly'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library default; professional palette and sizing
+          but lacks custom design thought or exceptional polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid present, but spines remain visible (could remove top/right),
+          legend border is functional but not particularly refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed clearly but no visual hierarchy or emphasis; no focal
+          point guiding viewer to insight
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct grouped box plot implementation
+        comment: Correct grouped box plot; uses boxmode='group' correctly
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on x-axis, values on y-axis, subcategories as grouped
-          boxes
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Side-by-side boxes, distinct colors, legend, median/quartiles/whiskers/outliers
-          all present
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: side-by-side boxes, distinct colors,
+          legend, consistent widths, whiskers/outliers'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full range including outliers
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X/Y correctly assigned: Department on x-axis, Performance Score
+          on y-axis, all data visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Junior, Mid-Level, Senior
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "box-grouped · plotly · pyplots.ai"'
+        comment: Title format 'box-grouped · plotly · anyplot.ai' correct; legend
+          labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows outliers, varying distributions, different medians across groups;
-          could show more extreme distribution differences
+        comment: 'Shows ALL aspects: 4 categories, 3 subcategories, outliers, varied
+          distributions, clear junior→mid→senior progression'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Employee performance by department and experience level is a realistic
-          HR analytics scenario
+        comment: 'Real scenario: employee performance by department and experience
+          level; neutral, comprehensible, plausible'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Performance scores 30-100+ are reasonable; the 112 outlier slightly
-          exceeds typical 0-100 scale
+        comment: 0-100 performance scale is realistic; distributions make sense; no
+          factual errors
     code_quality:
       score: 10
       max: 10
@@ -171,40 +187,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → plot → save'
+        comment: Imports → Data → Plot → Save; no functions/classes; straightforward
+          and clear
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects used
+        comment: 'All imports used: os, numpy, plotly.graph_objects'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Pythonic loop over subcategories; appropriate complexity; no fake
+          functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png and .html; current API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses go.Box with boxmode="group" correctly; could leverage more Plotly
-          features like hover templates or animation
+        comment: Expert use of go.Figure(), go.Box(), add_trace() pattern, boxmode='group',
+          comprehensive update_layout()
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic grouped box plot implementation; no use of plotly-specific
+          features (custom hovertemplate, advanced styling)
+    score_caps:
+      applied: false
+      details: 'No score caps triggered: VQ-02 and VQ-03 both passed; SC-01 correct;
+        DQ-02 neutral scenario; design issues are not severe enough to trigger cap'
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling: []
