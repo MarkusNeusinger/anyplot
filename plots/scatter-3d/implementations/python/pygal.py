@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-3d: 3D Scatter Plot
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 40/100 | Created: 2026-05-08
+Quality: 83/100 | Created: 2026-05-08
 """
 
 import os
