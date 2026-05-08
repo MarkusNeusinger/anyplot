@@ -1,179 +1,177 @@
 library: altair
+language: python
 specification_id: scatter-3d
 created: '2025-12-26T10:30:41Z'
-updated: '2025-12-26T10:38:00Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520860044
+updated: '2026-05-08T22:44:29Z'
+generated_by: claude-haiku
+workflow_run: 25582938771
 issue: 1945
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/altair/plot.html
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-    - hover-tooltips
-    - html-export
-    - custom-legend
-  patterns:
-    - data-generation
-    - iteration-over-groups
-  dataprep:
-    - normalization
-  styling:
-    - alpha-blending
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-3d/python/altair/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Creative isometric 3D projection technique that works excellently within Altair
-    2D constraints
-  - Depth-based opacity creates effective sense of 3D depth perception
-  - Order encoding implements painter's algorithm for proper point layering
-  - Interactive pan/zoom and comprehensive tooltips showing original 3D coordinates
-  - Colorblind-safe palette with good visual distinction between clusters
-  - Clean, well-documented code structure with clear separation of concerns
+  - Excellent theme-adaptive implementation with no dark-on-dark or light-on-light
+    failures
+  - Professional 3D visualization with proper isometric projection and depth perception
+  - All text elements properly sized and readable at high resolution
+  - Correct Okabe-Ito palette implementation with data colors identical across themes
+  - Clean, simple code with proper seeding for reproducibility
+  - Good use of Altair's native interactivity (.interactive(), tooltips) without fake
+    UI
   weaknesses:
-  - Axis labels Projected X and Projected Z are generic; could reference the original
-    3D axes more clearly
-  - Uses deprecated selection_interval(bind=scales) API; should use chart.interactive()
-    for simpler approach
-  image_description: "The plot displays a 3D scatter plot projected into 2D using\
-    \ an isometric projection. It shows three distinct clusters of points:\n- **Cluster\
-    \ 1** (blue, #306998): Located in the upper-right area of the canvas, containing\
-    \ approximately 50 points\n- **Cluster 2** (yellow, #FFD43B): Located in the upper-left\
-    \ area of the canvas, containing approximately 50 points  \n- **Cluster 3** (orange,\
-    \ #E07B39): Located in the lower-center to lower-right area, containing approximately\
-    \ 50 points\n\nThe title \"scatter-3d · altair · pyplots.ai\" is clearly displayed\
-    \ at the top with a subtitle \"Isometric projection with depth-based opacity\"\
-    . The X-axis is labeled \"Projected X\" and the Y-axis is labeled \"Projected\
-    \ Z\". Points have varying opacity based on depth, with white stroke borders.\
-    \ A legend is positioned in the top-right corner showing all three cluster labels.\
-    \ The grid is subtle with dashed lines."
+  - Design could be more polished with additional visual refinement and generous whitespace
+  - Data storytelling could be enhanced with annotations or emphasis techniques
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with appropriate contrast
+      Chrome: Title (28px), axis labels (22px), tick labels (18px) all clearly visible in dark text
+      Data: Three clusters using Okabe-Ito palette (green #009E73, orange #D55E00, blue #0072B2), 150 points with white strokes for definition
+      Legibility verdict: PASS - All elements readable against light background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with appropriate contrast
+      Chrome: Title, axis labels in light text (#F0EFE8), tick labels in light gray (#B8B7B0), all clearly visible
+      Data: Identical colors to light render (only chrome changes themes), proper depth-based opacity variation (0.65-1.0)
+      Legibility verdict: PASS - All elements readable against dark background, no dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all clearly
-          readable
+        comment: Title=28px, axis labels=22px, tick labels=18px. All readable in both
+          themes.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels fully visible
+        comment: No overlapping elements. Legend positioned with adequate spacing.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points well-sized at 280 with white stroke for distinction; depth-based
-          opacity works well (-1 for some overlap in dense cluster areas)
+        comment: Markers visible (size=280) with strokes. Opacity variation maintains
+          visibility while showing depth.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, and orange palette is colorblind-safe (avoids red-green)
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization with three well-separated clusters, slight
-          gap in center (-1)
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Labels are descriptive ("Projected X", "Projected Z") but lack units
-          (-1)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid subtle with alpha=0.3 and dashed style, legend well-placed;
-          however axis title "X-Y Plane (Horizontal)" in code doesn't match rendered
-          "Projected X" (-1)
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct 3D scatter using isometric projection (appropriate for 2D
-          library)
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X, Y, Z correctly mapped and projected
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Has 3D visualization, color encoding (cluster), transparency for
-          depth; interactive pan/zoom in HTML; tooltips show original X/Y/Z values
-          (-1 no color encoding of fourth numeric variable as spec suggests optional)
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
         score: 2
         max: 2
         passed: true
-        comment: Legend correctly shows "Cluster 1/2/3" matching data
-      - id: SC-06
-        name: Title Format
-        score: 1
+        comment: Okabe-Ito palette (CVD-safe). Adequate contrast on both light and
+          dark backgrounds.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape 1600×900 proportions appropriate. Nothing cut off. Margins
+          generous.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: 'Uses correct format "scatter-3d · altair · pyplots.ai" with appropriate
-          separators; subtitle is a nice addition (-1 minor: subtitle adds complexity)'
-    data_quality:
-      score: 18
+        comment: Descriptive title and axis labels clearly indicate X and Z dimensions.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First color #009E73. Okabe-Ito order. Correct backgrounds (#FAF8F1
+          light, #1A1A17 dark). Theme-correct.'
+    design_excellence:
+      score: 14
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
         max: 8
         passed: true
-        comment: Shows three distinct 3D clusters with spatial separation, demonstrates
-          the purpose of 3D scatter; depth ordering visible (-1 could show more varied
-          cluster shapes)
-      - id: DQ-02
-        name: Realistic Context
-        score: 6
-        max: 7
+        comment: Thoughtful isometric projection with depth ordering and opacity variation
+          show design thought. Theme tokens properly applied. Could have more visual
+          polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
         passed: true
-        comment: Clustered data in 3D space is a plausible ML/statistics scenario
-          (-1 generic "Cluster 1/2/3" labels vs domain-specific)
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: Legend properly styled. Grid subtle and theme-appropriate. Marker
+          strokes provide definition. Could benefit from more generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Three clusters well-separated showing clustering pattern. Depth-based
+          opacity creates hierarchy. Could emphasize narrative with annotations.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Values in reasonable range (-5 to 6), typical for normalized/standardized
-          data
+        comment: Correct 3D scatter plot with isometric projection.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Has x, y, z dimensions, color encoding, tooltips, and interactive
+          pan/zoom.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y map to projected coordinates, color to cluster, opacity to depth.
+          All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format and descriptive legend.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: 150 points, three dimensions, cluster encoding,
+          depth perception.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic 3D cluster data, plausible for ML/scientific applications,
+          neutral content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible value ranges. 150 points within recommended 50-500 range.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -181,42 +179,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → projection → chart → save'
+        comment: Linear code, no unnecessary functions or classes. Clear variable
+          naming.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Uses np.random.seed(42) for deterministic generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports altair, numpy, pandas (all used)
+        comment: 'Only necessary imports: os, altair, numpy, pandas.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: '`alt.selection_interval` with `bind="scales"` is deprecated; should
-          use `alt.selection_point` or `chart.interactive()` instead'
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI. Uses native .interactive() for genuine pan/zoom.
       - id: CQ-05
-        name: Output Correct
-        score: 0
+        name: Output & API
+        score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html (correct)
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html with scale_factor=3.0.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent use of Altair''s declarative encoding: opacity encoding
-          for depth, order encoding for painter''s algorithm, tooltips, interactive
-          pan/zoom selection, subtitle in title, configure_axis for grid styling'
+        comment: Uses Altair high-level API correctly with proper encoding types and
+          configure methods.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Isometric projection with depth ordering and opacity encoding for
+          3D visualization. Shows library mastery.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - alpha-blending
