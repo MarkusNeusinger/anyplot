@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: dot-matrix-proportional
 created: '2026-05-08T22:00:30Z'
-updated: '2026-05-08T22:05:46Z'
+updated: '2026-05-08T22:13:41Z'
 generated_by: claude-sonnet
 workflow_run: 25581289005
 issue: 5241
@@ -15,34 +15,33 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matri
 quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: 10x10 grid, left-to-right fill, count annotations in
-    legend, correct title format'
-  - 'Excellent data choice: clinical trial risk communication is the canonical use
-    case for this chart type; the 72-green-dot mass immediately tells the safety story'
-  - Clean theme_void approach removes all chartjunk — exactly right for a dot matrix
-  - Fully theme-adaptive chrome with correct background colors and text tokens for
-    both light and dark renders
-  - Deterministic, reproducible code with clean KISS structure
+  - 'Perfect spec compliance: 10x10 grid, correct fill order, legend with counts,
+    all required features present'
+  - Medical risk communication context is an ideal use case that matches the specs
+    intent
+  - Both renders pass theme-readability checks with no dark-on-dark or light-on-light
+    failures
+  - Deterministic data with no seed needed; clean, flat code structure
+  - pd.Categorical with ordered=True correctly controls legend display order in lets-plot
   weaknesses:
-  - 'LM-02 low: geom_point for dots is not distinctive to letsplot — no letsplot-distinctive
-    features beyond HTML export. Add interactive tooltips via layer_tooltips() on
-    the HTML render'
-  - 'DE-01/DE-02: Title lacks visual weight (24pt minimum, no bold). Legend is functional
-    but plain — increase title to 28pt bold, legend text to 18pt'
-  - 'VQ-05: Gap between title and first dot row creates idle vertical space — tighten
-    top margin with plot_margin'
+  - DE-01 could be pushed higher with a slightly more refined typography treatment
+    such as a subtitle or percentage annotations alongside the legend counts
+  - Minor canvas whitespace at bottom of the dot grid — the plot area could be more
+    tightly centered in the square canvas
+  - LM-02 could demonstrate more lets-plot distinctive features such as using lets-plots
+    built-in tooltip configuration for the HTML export
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title "dot-matrix-proportional · letsplot · anyplot.ai" in dark ink at top-left, readable. No axis labels (intentionally removed). Legend on right with light-background box.
-      Data: 10x10 grid of 100 dots. First series (#009E73 teal) for "No Side Effects (n=72)" fills rows 1-7+. Second (#D55E00 orange) for "Mild Effects (n=18)" fills rows 8-9. Third (#0072B2 blue) for "Moderate Effects (n=7)" starts row 10. Fourth (#CC79A7 pink) for "Severe Effects (n=3)" closes row 10. Left-to-right top-to-bottom fill correct.
+      Background: Warm off-white approximately #FAF8F1 — correct theme surface
+      Chrome: Title "dot-matrix-proportional · letsplot · anyplot.ai" is dark ink, clearly readable; no axis labels (appropriate for dot matrix); legend labels in #4A4A44 (INK_SOFT) are readable against elevated bg #FFFDF6
+      Data: 10x10 grid of dots — brand green #009E73 (n=72, dominant), orange #D55E00 (n=18), blue #0072B2 (n=7), reddish-purple #CC79A7 (n=3); fill order is left-to-right, top-to-bottom
       Legibility verdict: PASS — all text readable against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title and legend text render in light tones against dark surface. Legend box uses elevated dark surface (#242420). All text clearly readable — no dark-on-dark failures detected.
-      Data: All four Okabe-Ito colors identical to light render — teal, orange, blue, pink unchanged. Theme-adaptive chrome flips correctly.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues
+      Background: Near-black approximately #1A1A17 — correct dark surface
+      Chrome: Title renders in light text (#F0EFE8), clearly visible; legend box uses elevated dark bg #242420; legend text uses #B8B7B0 (INK_SOFT dark token) — all readable
+      Data: Dot colors are identical to light render — #009E73, #D55E00, #0072B2, #CC79A7 unchanged across themes
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome correctly flips while data colors remain constant
   criteria_checklist:
     visual_quality:
       score: 28
@@ -53,45 +52,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title (24pt) and legend (16pt) explicitly set; both renders readable;
-          title at minimum recommended size
+        comment: Title explicitly set to 24pt, legend text to 16pt; both readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Evenly spaced dots, no collisions, legend clear
+        comment: Dots evenly spaced on grid, legend separated, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: size=8 dots scale to large visible circles at 3600x3600px
+        comment: size=8 with scale=3 results in visually prominent dots; all four
+          categories clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, CVD-safe, all colors distinguishable
+        comment: Okabe-Ito palette is CVD-safe; all four colors distinguishable without
+          hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: ~65% canvas utilization; gap between title and first dot row
+        comment: Dot grid and legend fill the square canvas well; minor wasted whitespace
+          at bottom of grid
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format; axis labels intentionally omitted for dot matrix
+        comment: No axis labels is correct for dot matrix chart; title follows spec
+          format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito in order, correct backgrounds, chrome
-          adaptive'
+        comment: 'First series is #009E73, Okabe-Ito order followed, correct backgrounds
+          #FAF8F1/#1A1A17, all chrome theme-correct'
     design_excellence:
       score: 13
       max: 20
@@ -101,22 +104,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: clean theme_void, correct palette, clinical context.
-          Not exceptional — no typographic hierarchy beyond title'
+        comment: Clean purposeful design using theme_void appropriately; Okabe-Ito
+          palette; medical risk context adds narrative weight; above configured-default
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_void removes chartjunk; consistent dots; subtle legend box.
-          Some additional polish possible
+        comment: Grid lines removed, axes hidden, no borders; panel and plot backgrounds
+          correctly use warm surface token
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Medical risk communication story is clear; 72-green-dot mass immediately
-          signals safety; ordered severity progression
+        comment: Dominant green field vs sparse orange/blue/pink creates strong visual
+          hierarchy; 72/100 immediately readable
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +129,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct dot matrix: 100 equal-sized dots in 10x10 grid'
+        comment: Correct dot matrix chart with one dot per unit
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid matches total, each dot=1 unit, left-to-right fill, color-coded,
-          legend with counts
+        comment: 10x10 grid for total=100, color-coded by category, fill order left-to-right
+          top-to-bottom, legend includes counts
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=column, Y=row, all 100 dots visible
+        comment: col->x, row->y (negative for top-to-bottom), color->category legend
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels with category names and counts
+        comment: Title is dot-matrix-proportional · letsplot · anyplot.ai; legend
+          labels include category name and count
     data_quality:
       score: 15
       max: 15
@@ -155,22 +159,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Four categories with varied counts (72/18/7/3) demonstrate full range
-          from dominant to rare
+        comment: 4 categories spanning full severity spectrum from dominant (72%)
+          to rare (3%)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Clinical trial side effect profile: real, neutral, medically plausible
-          scenario'
+        comment: Clinical trial side effect profile is a real-world neutral medical
+          scenario matching spec intent
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: n=100 natural total; 72/18/7/3 split is realistic for a drug trial
-          with acceptable safety profile
+        comment: Total=100 appropriate for grid size; proportions 72/18/7/3 plausible
+          for well-tolerated drug
     code_quality:
       score: 10
       max: 10
@@ -180,61 +184,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → data → theme → plot → save; no functions or classes
+        comment: 'Flat script: tokens -> data -> plot -> save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data; no random generation needed
+        comment: Data is fully deterministic (hardcoded counts), no RNG seed required
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; strict=True in zip() is idiomatic Python 3
+        comment: All imports used; wildcard import standard for lets-plot; explicit
+          imports for element_blank etc
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; pd.Categorical for ordering is elegant; no fake
-          UI
+        comment: Pythonic use of zip with strict=True, pd.Categorical for ordered
+          legend, clean theme composition
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html with scale=3
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via export_ggsave; correct
+          API usage
     library_mastery:
       score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert grammar-of-graphics: aes mapping, scale_color_manual, theme
-          layering, ggsize with scale'
+        comment: Uses ggplot2-style grammar correctly with layer composition; clean
+          and idiomatic
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: HTML export is letsplot-specific but geom_point dot-matrix is generic
-          across ggplot-style libraries; no interactive tooltips (layer_tooltips)
-          used
-  verdict: REJECTED
+        passed: true
+        comment: Leverages pd.Categorical with ordered=True to control legend ordering
+          in lets-plot; some library-specific feature use but not deeply distinctive
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
   - custom-legend
+  - html-export
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
+  - matrix-construction
   dataprep: []
   styling:
   - minimal-chrome
