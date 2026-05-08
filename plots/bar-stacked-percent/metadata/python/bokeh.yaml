@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: bar-stacked-percent
 created: '2025-12-25T22:50:38Z'
-updated: '2026-05-08T11:03:42Z'
+updated: '2026-05-08T11:11:37Z'
 generated_by: claude-haiku
 workflow_run: 25551720944
 issue: 2008
@@ -12,45 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stack
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/bokeh/plot-dark.html
-quality_score: 85
+quality_score: 95
 review:
   strengths:
-  - 'Perfect visual quality: all text sizes properly scaled for 4800×2700 canvas,
-    readable in both light and dark themes with no legibility issues'
-  - 'Flawless spec compliance: correct 100% stacked bar implementation, proper Okabe-Ito
-    palette usage (first series #009E73), accurate data normalization, title format
-    correct'
-  - 'Excellent theme implementation: background colors correct, all chrome (text,
-    axis lines, grid, legend) properly adapted with INK/INK_SOFT tokens, data colors
-    identical between renders'
-  - 'Clean code: idiomatic Bokeh usage with ColumnDataSource, proper styling approach
-    using theme tokens, pragmatic Selenium screenshot solution'
-  - 'Strong data presentation: percentage labels shown conditionally (only ≥10%),
-    market share data realistic and neutral, clear legend labeling'
-  - 'Library mastery: effective use of LabelSet for annotations, proper figure sizing
-    and font scaling, appropriate styling defaults'
+  - 'Perfect palette compliance with Okabe-Ito colors — first series is #009E73, multi-series
+    follows canonical order; theme-adaptive chrome (backgrounds, text, grid) is flawless
+    in both light and dark renders'
+  - 'Excellent text legibility with explicit font sizing (title 28pt, labels 22pt,
+    ticks 18pt); all text is clearly readable against both #FAF8F1 (light) and #1A1A17
+    (dark) backgrounds'
+  - Professional code quality with clean structure, idiomatic Bokeh patterns, and
+    proper ColumnDataSource usage; Selenium screenshot approach is correct for Bokeh
+    PNG export
+  - Perfect spec compliance — correct 100% stacked bar chart with all required features
+    (normalization, composition visualization, legend, percentage labels)
+  - Data quality is excellent — realistic smartphone market share scenario with plausible
+    values; normalized percentages and clear categorical mapping
   weaknesses:
-  - 'Design Excellence limited by spec requirements: no opportunities for custom palette
-    (Okabe-Ito mandated), no spine removal or visual hierarchy enhancement (standard
-    bar chart defaults sufficient for data-driven visualization)'
-  - 'Minimal visual refinement beyond specification: all four spines visible (standard
-    for categorical bar charts), no secondary visual effects, grid styling is basic
-    but appropriate'
+  - Design Excellence could be stronger — while professionally executed with good
+    typography and color choices, the implementation relies on library defaults without
+    custom aesthetic choices that would elevate it to publication-grade (FiveThirtyEight-level)
+    design
+  - Data storytelling lacks visual hierarchy or emphasis — the plot presents data
+    clearly but doesn't guide the reader to insights through color contrast, size
+    variation, or focal points; no visual indication of which quarters show interesting
+    market shifts
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, not pure white
-      Chrome: Title, axis labels, tick labels all in dark INK color - all clearly readable against light background; Y-axis grid subtle and visible
-      Data: 100% stacked bars with 5 categories (Q1 2024–Q1 2025) and 4 components using Okabe-Ito palette in order: #009E73 (Apple/base), #D55E00 (Samsung), #0072B2 (Xiaomi), #CC79A7 (Others); percentage labels (28%, 23%, 14%, 35% etc.) shown inside segments ≥10% with appropriate contrast
-      Legend: Top-right with component names, light font color for labels, light legend frame
-      Legibility verdict: PASS - all elements readable and properly contrasted
+      Background: Warm off-white (#FAF8F1) with appropriate contrast against dark text
+      Chrome: Title "bar-stacked-percent · bokeh · anyplot.ai" rendered at 28pt in dark ink (#1A1A17), clearly readable. Axis labels "Quarter" (x) and "Market Share (%)" (y) at 22pt in dark ink, fully visible. Tick labels at 18pt in INK_SOFT (#4A4A44), distinct from background. Legend in top-right shows four categories (Apple, Samsung, Xiaomi, Others) with soft gray background (#FFFDF6) and border — excellent readability.
+      Data: Five 100% stacked bars (Q1 2024–Q1 2025) with four color segments: Apple in #009E73 (brand green) at bottom, Samsung in #D55E00 (orange) above, Xiaomi in #0072B2 (blue) third, Others in #CC79A7 (reddish purple) at top. Percentage labels inside segments for values ≥10% (white text on green Apple segments, dark text on lighter segments). Y-axis grid (INK_SOFT, 10% alpha) subtle and non-intrusive. White bar edges (line_color=PAGE_BG, line_width=2) create visual separation between stacked components.
+      Legibility verdict: PASS — all text is crisp and readable; no "light on light" failures; data colors are vibrant and distinct; grid is subtle without competing with data.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, not pure black
-      Chrome: Title, axis labels in light INK (#F0EFE8), tick labels in INK_SOFT (#B8B7B0) - all clearly readable against dark background; no dark-on-dark failures; Y-axis grid visible; legend frame uses ELEVATED_BG (#242420)
-      Data: Data colors identical to light render - #009E73, #D55E00, #0072B2, #CC79A7 preserved exactly; percentage labels clearly visible with proper contrast in dark context
-      Legibility verdict: PASS - all text readable, proper theme adaptation, no dark-on-dark failures
+      Background: Warm near-black (#1A1A17) with strong contrast against light text
+      Chrome: Title rendered at 28pt in light ink (#F0EFE8), fully readable against dark background. Axis labels at 22pt in light ink, clearly visible. Tick labels at 18pt in INK_SOFT (#B8B7B0), excellent contrast. Legend background flipped to #242420 (elevated dark surface), border and text colors adjusted to light theme — all readable.
+      Data: **Colors are IDENTICAL to light render** — Apple #009E73, Samsung #D55E00, Xiaomi #0072B2, Others #CC79A7 (only chrome flipped, not data). Percentage labels present with same conditional logic. Bar edges now use dark theme colors (darker line_color) and remain visible. Y-axis grid now light-colored (INK_SOFT inverted) at 10% alpha — subtle and appropriate for dark surface.
+      Legibility verdict: PASS — no "dark on dark" failures; tick labels are light enough against near-black background; brand green #009E73 remains vibrant and readable on dark surface; data colors maintain their identity; no text contrast issues.
 
-    Comparison: Data colors are pixel-identical between renders, only chrome (background, text color, legend frame) adapts per theme as required.
+    Both renders pass legibility checks. Data color palette is consistent (Okabe-Ito positions 1–4 identical), only chrome adapts to theme. Perfect theme-adaptive implementation.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -61,76 +61,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text sizes properly scaled (28pt title, 22pt axis labels, 18pt
-          ticks), readable in both light (#FAF8F1) and dark (#1A1A17) renders with
-          appropriate color contrast
+        comment: 'All font sizes explicitly set: title 28pt, labels 22pt, ticks 18pt;
+          fully readable in both light and dark renders'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; percentage labels shown only for segments
-          ≥10% to avoid crowding
+        comment: No overlapping elements; all text fully readable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars, segments, and labels clearly visible and distinguishable;
-          stacking clear and readable
+        comment: Bars perfectly sized for clarity; segments are visually distinct;
+          percentage labels visible and well-positioned
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; adequate contrast throughout; no red-green
-          sole signal
+        comment: Okabe-Ito palette is colorblind-safe; adequate contrast between all
+          segments
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions (4800×2700), nothing cut off, generous margins,
-          proper whitespace
+        comment: Plot fills canvas well with balanced margins; legend positioned appropriately;
+          nothing cut-off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct (bar-stacked-percent · bokeh · anyplot.ai),
-          axis labels descriptive with units (Market Share %)
+        comment: Title format correct; axis labels descriptive with units (Market
+          Share %)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓, follows Okabe-Ito order ✓, backgrounds #FAF8F1
-          (light) and #1A1A17 (dark) ✓, both renders theme-correct ✓'
+        comment: 'Perfect: first series #009E73 (brand green), multi-series follows
+          Okabe-Ito order; backgrounds #FAF8F1 (light) and #1A1A17 (dark); theme-adaptive
+          chrome flawless; data colors identical across both renders'
     design_excellence:
-      score: 9
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
         passed: false
-        comment: Generic defaults with Okabe-Ito palette applied; no custom palette
-          or design sophistication beyond spec requirements
+        comment: Strong professional design with intentional color choices and explicit
+          typography; uses Okabe-Ito thoughtfully but doesn't introduce custom aesthetic
+          innovations beyond library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: All four spines visible (standard for categorical bar charts), basic
-          grid styling, minimal customization
+        passed: true
+        comment: Subtle grid styling (y-axis only, 10% alpha), bar edges provide visual
+          separation, legend has custom background; good attention to detail
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Chart naturally shows market share evolution, but no additional visual
-          hierarchy or emphasis techniques to create focal point
+        comment: Plot displays data clearly and is interpretable, but lacks visual
+          hierarchy or emphasis to guide reader to insights; no highlighting of quarterly
+          trends or market share shifts
     spec_compliance:
       score: 15
       max: 15
@@ -140,28 +141,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 100% stacked bar chart implementation
+        comment: Correct 100% stacked bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: composition proportions, percentage labels,
-          multi-component segments, clear legend'
+        comment: 'All features present: normalized composition, legend, percentage
+          labels for visible segments, clear category distinction'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: categories (quarters), Y-axis: normalized percentages (0-100),
-          all data visible'
+        comment: Categories on x-axis, market share percentages on y-axis (0–100),
+          components stacked correctly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows spec format, legend clearly labeled with component
-          names
+        comment: 'Title: ''bar-stacked-percent · bokeh · anyplot.ai''; legend labels
+          correct (Apple, Samsung, Xiaomi, Others)'
     data_quality:
       score: 15
       max: 15
@@ -171,22 +172,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Comprehensive 100% stacked bar: shows proportion breakdown across
-          multiple components and categories'
+        comment: 'Shows all aspects of stacked percent: variation across quarters,
+          segment size differences, labels for large segments, unlabeled segments
+          for small values'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Market share data is real-world plausible and neutral (smartphone
-          brands, quarterly periods)
+        comment: Smartphone market share data is real, comprehensible, and neutral;
+          genuine business context with recognizable brands
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sensible for market share domain (0-100%), realistic component
-          distribution
+        comment: Market share values are plausible (Apple 22–31%, Samsung 22–26%,
+          etc.) and sum to 100% correctly; no factual impossibilities
     code_quality:
       score: 10
       max: 10
@@ -196,50 +198,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, straightforward script
+        comment: 'Clean structure: imports → data setup → figure → rendering; no unnecessary
+          functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data, same output each run
+        comment: Data is deterministic (hardcoded values); same output every execution
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: pandas, bokeh.*, selenium'
+        comment: 'Only used imports: pandas, bokeh modules, selenium; no extraneous
+          imports'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity for stacked bar implementation
+        comment: Clean and Pythonic; proper variable naming; Selenium import is legitimate
+          for Bokeh PNG export (no fake functionality)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.html and plot-{THEME}.png, correct naming
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current Bokeh API
+          (3.9.0)
     library_mastery:
-      score: 6
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: 'Good use of Bokeh patterns: ColumnDataSource, figure API, proper
-          property styling, sys.path workaround is pragmatic; could explore more advanced
-          features'
+        passed: true
+        comment: 'Expert use of high-level API: figure(), vbar(), LabelSet(); ColumnDataSource
+          for data management; theme-aware styling; Bokeh-idiomatic patterns throughout'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 5
         max: 5
-        passed: false
-        comment: Uses LabelSet for text annotations and theme-adaptive styling, Selenium
-          for export; basic application of library features
+        passed: true
+        comment: Uses LabelSet with calculated midpoints and conditional logic (≥10%
+          threshold); ColumnDataSource with computed fields; theme-aware rendering
+          via environment variables; Selenium-based screenshot (Bokeh-specific export
+          pattern)
+    score_caps:
+      applied: false
+      notes: No caps triggered. VQ-02, VQ-03, SC-01, DQ-02, CQ-04 all pass; DE-01
+        and DE-02 not both ≤2.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -249,8 +260,11 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - columndatasource
   - iteration-over-groups
-  dataprep: []
+  - columndatasource
+  dataprep:
+  - normalization
   styling:
   - publication-ready
+  - grid-styling
+  - edge-highlighting
