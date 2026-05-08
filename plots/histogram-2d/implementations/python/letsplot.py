@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-2d: 2D Histogram Heatmap
-Library: letsplot | Python 3.13
-Quality: pending | Created: 2025-12-25
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 82/100 | Updated: 2026-05-08
 """
 
 import os
