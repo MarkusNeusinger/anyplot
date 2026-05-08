@@ -1,203 +1,233 @@
 library: highcharts
+language: python
 specification_id: scatter-color-mapped
 created: '2025-12-26T09:48:48Z'
-updated: '2025-12-26T09:51:06Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520225388
+updated: '2026-05-08T13:08:14Z'
+generated_by: claude-haiku
+workflow_run: 25556745436
 issue: 2004
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - colorbar
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/highcharts/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent viridis colormap implementation that is colorblind-safe
-  - Custom colorbar with gradient rendering demonstrates advanced Highcharts usage
-  - Clean tooltip showing all three data dimensions (X, Y, Temperature)
-  - Appropriate marker sizing with subtle outlines for point visibility
-  - Good use of Highcharts renderer API for the colorbar
+  - Perfect visual quality with all text readable in both themes
+  - Flawless spec compliance with proper formatting and all requirements met
+  - Perceptually uniform viridis colormap correctly chosen for continuous data
+  - Theme-adaptive styling seamlessly adapts chrome between light and dark
+  - Clean data presentation with 150 points and clear spatial distribution
+  - Custom colorbar implementation demonstrates JavaScript renderer mastery
   weaknesses:
-  - Code contains a helper function (interpolate_color) instead of pure sequential
-    KISS structure
-  - Axis labels could include units (e.g., X Position (km) for the geographic scenario)
-  image_description: The plot displays a color-mapped scatter plot with approximately
-    150 data points distributed across the canvas. Points are colored using the viridis
-    colormap, transitioning from dark purple (~0°C) in the bottom-left to bright yellow
-    (~68°C) in the upper-right region. The title "scatter-color-mapped · highcharts
-    · pyplots.ai" appears at the top. The X-axis is labeled "X Position" (range 0-98)
-    and Y-axis "Y Position" (range 0-84). A colorbar on the right shows "Temperature
-    (°C)" with tick marks at 0, 14, 27, 41, 55, and 68. The scatter points have subtle
-    dark outlines and are appropriately sized for the data density. Grid lines are
-    visible but subtle.
+  - Design excellence is moderate and lacks distinctive aesthetic refinement beyond
+    defaults
+  - Generic styling approach while functional could benefit from more visual polish
+  - Colorbar implementation is over-engineered when Highcharts colorAxis could provide
+    simpler alternative
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct per style guide
+      Chrome: Title, axis labels (X Position (km), Y Position (km)), tick labels, and colorbar labels all clearly readable in dark text (INK and INK_SOFT colors)
+      Data: 150 scatter points colored with viridis gradient from dark purple (0°C) to bright yellow (80°C); colorbar shows gradient with labeled ticks 0-80 and title "Temperature (°C)"
+      Grid: Subtle (10% opacity) gridlines visible but not dominant
+      Legibility verdict: PASS - all elements fully readable, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct per style guide
+      Chrome: All text (title, axis labels, ticks, colorbar labels) rendered in light colors (INK_SOFT #B8B7B0) and clearly visible against dark background - NO dark-on-dark failures
+      Data: 150 scatter points with IDENTICAL viridis colors to light render (only chrome changes between themes) - color consistency verified
+      Grid: Subtle gridlines visible and appropriately styled for dark theme
+      Legibility verdict: PASS - excellent theme adaptation with zero accessibility failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, tick marks, and colorbar text all clearly readable
-          at full resolution
+        comment: All text readable in both themes; appropriate font sizing (28px title,
+          22px axis, 18px ticks)
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels well-spaced
+        comment: Well-spaced labels, colorbar positioned without interference
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers well-sized for 150 points with good alpha, slight overlap
-          in dense regions
+        comment: 150 scatter points clearly visible with proper radius and white edges
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good overall layout, colorbar slightly compressed vertically
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Labels are descriptive ("X Position", "Y Position") but lack units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid is subtle and appropriate, legend disabled (appropriate for
-          colorbar usage)
-    spec_compliance:
-      score: 24
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct scatter plot type
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X, Y, and color correctly mapped to three variables
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'All spec features present: scatter, color encoding, colorbar with
-          labels'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Axes show all data points appropriately
-      - id: SC-05
-        name: Legend Accuracy
         score: 2
         max: 2
         passed: true
-        comment: Colorbar correctly labeled with "Temperature (°C)"
-      - id: SC-06
-        name: Title Format
-        score: 1
+        comment: Viridis colormap is colorblind-safe; good contrast across range
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off, generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Uses correct format but missing decorative separator style
-    data_quality:
-      score: 19
+        comment: Standard format with descriptive units (km, °C)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis for continuous data; backgrounds #FAF8F1/#1A1A17; theme-adaptive
+          chrome'
+    design_excellence:
+      score: 11
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
         max: 8
         passed: true
-        comment: Shows full range of color values with clear gradient pattern
-      - id: DQ-02
-        name: Realistic Context
-        score: 6
-        max: 7
+        comment: Polished viridis colormap with clean colorbar; custom JavaScript
+          renderer shows technical sophistication
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
         passed: true
-        comment: Temperature across geographic region is plausible, though generic
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: Subtle grid, clean layout, proper whitespace; colorbar border styling
+          refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Clear visualization of spatial distribution with temperature intensity;
+          viridis creates visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Temperature range 0-68°C is reasonable for the scenario
+        comment: Correct scatter plot with color-mapped markers
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: X/Y axes, third variable as color, colorbar with labels
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y ranges (0-100 km, 0-80 km), color range (0-80°C) properly scaled
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct format; colorbar serves as legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 150 points comprehensively demonstrate color-mapped scatter with
+          spatial distribution
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Geographic coordinates (km), temperature values (°C), realistic sensor-like
+          noise
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible ranges, no extreme outliers
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Contains helper function (interpolate_color) which deviates from
-          pure KISS
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Straightforward, no helper functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic with seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used, no bloat
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current APIs
+        comment: No fake UI; appropriate complexity for Highcharts
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 4
-      max: 5
+        comment: Correct plot-{THEME}.png and plot-{THEME}.html naming
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts renderer API for custom colorbar, tooltip formatting,
-          and chart events
+        comment: Standard Highcharts scatter API; correct Selenium headless export
+          pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom colorbar via JavaScript renderer API shows technical knowledge
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - colorbar
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
