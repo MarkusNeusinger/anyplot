@@ -1,0 +1,252 @@
+library: highcharts
+language: python
+specification_id: bar-spine
+created: '2026-05-08T15:26:56Z'
+updated: '2026-05-08T15:47:48Z'
+generated_by: claude-sonnet
+workflow_run: 25563123074
+issue: 5249
+python_version: 3.13.13
+library_version: unknown
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/highcharts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Excellent implementation of spine plot using Highcharts pointWidth per data point
+    for variable-width columns — idiomatic and technically sophisticated
+  - Perfect Okabe-Ito palette compliance across both light and dark themes; all theme-adaptive
+    chrome tokens correctly applied
+  - Storytelling subtitle explicitly identifies key insight (Technology leads satisfaction,
+    Manufacturing has highest Fair rate)
+  - Fully descriptive axis labels with units; correct title format bar-spine · highcharts
+    · anyplot.ai
+  - Clean KISS code structure with deterministic hardcoded data and correct plot-{THEME}.png
+    + plot-{THEME}.html output
+  weaknesses:
+  - 'Thin 1px background-colored border between bars (borderWidth: 1, borderColor:
+    PAGE_BG) creates slight visual gaps — spec requires adjacent bars with no gaps;
+    fix by setting borderWidth: 0'
+  - Chart border frame (all four sides) still visible — removing it would improve
+    aesthetic sophistication and visual refinement
+  - Percentage data labels inside bars are slightly small at full canvas scale; increasing
+    to 16-18px would improve readability
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "Customer Satisfaction by Industry · bar-spine · highcharts · anyplot.ai" in dark ink (#1A1A17), bold and clearly readable. Subtitle below in smaller dark text. Y-axis label "Proportion of Respondents (%)" and x-axis label "Industry Sector (bar width proportional to survey count)" both dark and readable at axis-label size. Tick labels (0%, 20%, 40%, 60%, 80%, 100%) in INK_SOFT (#4A4A44). Sector labels (e.g., "Technology (n=1,200)") at bottom in INK_SOFT, readable. Legend with "Satisfaction Level" header in dark ink, items in INK_SOFT.
+      Data: Five variable-width stacked bars. Top-to-bottom: green (#009E73 Excellent), orange (#D55E00 Good), blue (#0072B2 Fair), pink (#CC79A7 Poor). First series is #009E73 — correct. Percentage labels inside bars (e.g., 32%, 43%) visible in white text. Bar widths proportional to marginal counts (Technology widest, Manufacturing narrowest).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title, subtitle, axis labels, tick labels, and sector labels all render in light off-white/cream tones against the dark background. No dark-on-dark failures observed — all text is clearly distinguishable. Legend box uses elevated dark background (#242420) with a light border. Grid lines are subtle (low-opacity light lines on dark surface).
+      Data: All data colors are identical to the light render — green (#009E73), orange (#D55E00), blue (#0072B2), pink (#CC79A7). The brand green #009E73 is clearly visible on the dark surface. White percentage labels inside bars remain readable.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set (28px title, 22px axis, 18px ticks/legend,
+          20px sector labels); readable in both themes. Percentage data labels inside
+          bars slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All bars and segment labels clearly visible; widths and heights well-proportioned
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette; CVD-safe, good luminance contrast between segments
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Bars fill plot area well; minor unused whitespace at outer edges
+          of x-axis range
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis 'Proportion of Respondents (%)' with units; X-axis 'Industry
+          Sector (bar width proportional to survey count)' fully descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct; Okabe-Ito order maintained; backgrounds
+          #FAF8F1/#1A1A17; all chrome theme-adaptive in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above library defaults: Okabe-Ito correctly applied, subtitle adds
+          editorial voice, careful margin tuning. Not publication-level: chart frame
+          still visible, limited typography variation.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis-only subtle grid; bar border color matches background for
+          clean edge separation; generous margins. Chart frame could be hidden.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle explicitly highlights key insight. Variable-width bars encode
+          sector sizes. Viewer guided toward comparison.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct spine plot: variable bar widths proportional to marginal
+          counts, normalized to 100%, conditional distributions as stacked segments'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'All key features present. Minor: borderColor: PAGE_BG creates 1px
+          visible gaps between bars; spec requires adjacent bars with no gaps.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X encodes sector position proportional to marginal count; Y encodes
+          conditional proportion 0-100%; all data correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title contains 'bar-spine · highcharts · anyplot.ai' in correct format;
+          legend labels match fill categories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Five sectors (within 3-8 spec range), four satisfaction levels (within
+          2-5 spec range); clear variation in both conditional proportions and bar
+          widths
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Customer satisfaction survey across industry sectors is realistic,
+          comprehensible, and neutral. Sample sizes n=800-1200 plausible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sector counts realistic; satisfaction proportions plausible (Technology
+          higher satisfaction, Manufacturing more mixed)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports, theme tokens, data, chart config, export.
+          No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded deterministic data; no random seed needed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imported modules are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; clever use of pointWidth per data point; zip(...,
+          strict=True) is good practice
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API throughout
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper Chart(container='container'), HighchartsOptions, series via
+          add_series(), Selenium export. Good use of stacking + grouping:false for
+          spine layout.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Highcharts-specific pointWidth per data point for variable-width
+          columns, plotLines for centered x-axis labels, and grouping:false — a Highcharts-specific
+          spine plot technique
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - edge-highlighting
