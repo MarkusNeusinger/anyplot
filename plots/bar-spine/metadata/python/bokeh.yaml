@@ -1,0 +1,258 @@
+library: bokeh
+language: python
+specification_id: bar-spine
+created: '2026-05-08T15:15:56Z'
+updated: '2026-05-08T15:40:35Z'
+generated_by: claude-sonnet
+workflow_run: 25563122960
+issue: 5249
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/bokeh/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - 'Correct spine plot: bar widths proportional to marginal counts, stacked segments
+    normalized to 100%'
+  - Proper Okabe-Ito palette in canonical order with fully theme-adaptive chrome for
+    both light/dark renders
+  - '"★ Best: 85% on-time" focal-point annotation creates genuine data storytelling'
+  - 'Idiomatic Bokeh: ColumnDataSource, FixedTicker + major_label_overrides, NumeralTickFormatter,
+    HoverTool with rich segment-level tooltips'
+  - Clean flat script with seed, all font sizes explicitly set to spec values
+  weaknesses:
+  - 'Screenshot cropped: figure is 4800x2700 but screenshot is only 4800x2561 — x-axis
+    tick labels (department names) and x-axis label are likely cut off; fix by injecting
+    document.body.style.margin=''0'' before screenshot or setting p.min_border_bottom
+    = 150'
+  - 'Excessive top whitespace: Bokeh adds default padding to a [0.0, 1.0] y-range,
+    leaving ~15% of the canvas empty above the 100% line; fix with p.y_range = Range1d(-0.01,
+    1.03)'
+  - 'Visible gaps between adjacent bars: line_color=PAGE_BG, line_width=2 creates
+    divider lines; the spec requires ''no gaps'' — set line_color=None'
+  - Thin 'Cancelled' segments (2.5-8%) are barely visible at the top of each bar and
+    have no labels; consider making the minimum segment height more visually distinct
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "Project Completion Status by Department · bar-spine · bokeh · anyplot.ai" in dark ink (#1A1A17), readable. Y-axis label "Proportion of Projects" visible. Y-axis tick labels (20%-100%) in gray (#4A4A44), readable. X-axis tick labels (department names) and x-axis label likely cut off — screenshot is 4800x2561 vs. 4800x2700 figure height.
+      Data: Four variable-width bars (Engineering ~30%, Marketing ~16%, Sales ~35%, Operations ~19%). Segments: teal/green (#009E73) for On Time, orange (#D55E00) for Delayed, blue (#0072B2) for Cancelled. White percentage labels inside larger segments (65%, 27%, 71%, 21%, 73%, 20%, 85%, 12%). Star annotation "Best: 85% on-time" near legend.
+      Legibility verdict: PARTIAL PASS — all visible text readable, but bottom x-axis area (department names + axis label) appears cut off due to screenshot height discrepancy
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct
+      Chrome: Title in light (#F0EFE8), readable. Axis labels and tick labels in light gray (#B8B7B0), readable. Legend uses elevated dark (#242420). No dark-on-dark failures. Same screenshot height concern as light render.
+      Data: Colors identical to light render — teal (#009E73), orange (#D55E00), blue (#0072B2). White percentage labels readable on colored bars. Star annotation visible in teal.
+      Legibility verdict: PASS — all visible text readable against dark background; no dark-on-dark issues found
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (28pt/22pt/18pt); all visible text readable
+          in both themes. Screenshot 4800x2561 vs 4800x2700 figure likely clips bottom
+          x-axis labels.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions; percentage labels inside bars well-placed.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars and labels clearly visible. Thin Cancelled segments (2.5-8%
+          height) barely distinguishable at bar tops.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; segments clearly distinguished by
+          hue and luminance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Large top whitespace above 100% line (~15% canvas wasted) and screenshot
+          height shorter than figure suggests bottom clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: Y-axis label visible and descriptive. X-axis label 'Department (bar
+          width proportional to project count)' likely cut off in screenshot.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order (teal/orange/blue), backgrounds
+          #FAF8F1/#1A1A17 correct, all chrome theme-adaptive.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Professional Okabe-Ito colors, thoughtful percentage labels, star
+          annotation shows design intent. Held below 6: Bokeh frame outline retained,
+          top whitespace unpolished.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Y-only grid at 10% alpha is tasteful, legend properly styled. Outer
+          frame outline and top whitespace reduce refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Star annotation creates focal point, percentage labels guide viewer,
+          variable widths add data depth. Story is implicit rather than guided by
+          clear visual hierarchy.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct spine plot: variable-width stacked bars normalized to 100%.'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'All main features present. Deduction: line_color=PAGE_BG creates
+          visible gaps between bars violating no-gaps spec; x-axis labels potentially
+          cut off.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X encodes departments via proportional widths; Y encodes conditional
+          proportions 0-100%. All four departments shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows correct format. Legend labels match status categories.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Demonstrates all spine plot aspects: variable widths, 100%-height
+          stacks, 3+ fill categories, percentage labels, highlighted insight.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Project completion status by department is a neutral, real-world
+          business scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Project counts 70-150 per dept, on-time rates 65-85%, delayed/cancelled
+          proportions internally consistent and realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: imports, data, plot, save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (numpy, bokeh, selenium) are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Iterating over statuses for quads is clean and Pythonic.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.html + plot-{THEME}.png correctly.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ColumnDataSource per series, FixedTicker, NumeralTickFormatter, HoverTool,
+          Selenium screenshot pattern. Fully idiomatic Bokeh.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool with per-segment tooltips, NumeralTickFormatter 0%, FixedTicker
+          + major_label_overrides for custom categorical x-axis on numeric range are
+          distinctly Bokeh.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - hover-tooltips
+  - html-export
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  - columndatasource
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - edge-highlighting

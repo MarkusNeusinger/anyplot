@@ -1,172 +1,184 @@
 library: highcharts
+language: python
 specification_id: heatmap-correlation
 created: '2025-12-26T10:03:27Z'
-updated: '2025-12-26T10:07:34Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520464764
+updated: '2026-05-08T15:06:30Z'
+generated_by: claude-haiku
+workflow_run: 25562701631
 issue: 1948
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/highcharts/plot.html
-quality_score: 92
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - colorbar
-  - annotations
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep:
-  - correlation-matrix
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/highcharts/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent use of lower-triangle format to reduce redundancy as suggested in spec
-  - Colorblind-safe blue-orange diverging palette centered at zero
-  - Clear cell annotations with 2 decimal places and good text outline for readability
-  - Realistic financial metrics data with meaningful correlation patterns
-  - Proper use of Highcharts-specific features (colorAxis stops, JavaScript formatters,
-    HeatmapSeries)
-  - Square aspect ratio (3600x3600) is appropriate for symmetric matrix visualization
+  - All text clearly readable in both light and dark themes with proper theme-adaptive
+    colors
+  - Correct heatmap chart type with proper symmetric (lower triangle) matrix layout
+  - All required data annotations (2-decimal correlation values) present and readable
+    in both renders
+  - Realistic financial metrics dataset with meaningful correlation patterns ranging
+    from -0.58 to 0.89
+  - Proper high-resolution square format (3600×3600) appropriate for symmetric heatmap
+    data
+  - Clean professional layout with good whitespace, margins, and proper title/legend
+    attribution
+  - Data colors (orange/blue) identical between light and dark renders with only chrome
+    flipping themes
   weaknesses:
-  - Color bar could benefit from a title label (e.g., Correlation)
-  - Variable names on axes lack context (could optionally include units or fuller
-    descriptions)
-  image_description: The plot displays a correlation matrix heatmap for 7 financial
-    metrics (Revenue, Profit, Expenses, Growth, ROI, Debt, Assets). It uses a lower-triangle
-    format showing only the unique correlations plus diagonal. The color scheme is
-    a diverging blue-white-orange palette, where blue represents negative correlations,
-    white represents zero, and orange represents positive correlations. Each cell
-    is annotated with the correlation coefficient to 2 decimal places. The title follows
-    the required format "heatmap-correlation · highcharts · pyplots.ai" with a subtitle
-    "Financial Metrics Correlation Matrix". Y-axis labels are horizontal and readable,
-    while X-axis labels are rotated at approximately 315 degrees. A vertical color
-    bar on the right shows the scale from -1 to 1 with tick marks at 0.5 intervals.
+  - Color scale uses PAGE_BG at 0.5 midpoint instead of neutral color, making near-zero
+    correlations blend into background and reducing visibility
+  - Custom blue-orange diverging palette instead of recommended BrBG colormap from
+    style guide
+  - Visual refinement could be enhanced with subtle styling touches (e.g., cell border
+    refinement)
+  - Limited use of distinctive highcharts features beyond basic heatmap configuration
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correctly configured
+      Chrome: Title (28px), axis labels (18px), tick labels all in dark text (#1A1A17/#4A4A44) - all clearly readable
+      Data: Blue-orange diverging palette with lower triangle layout; cells annotated with 2-decimal correlation values; diagonal shows 1.0 (orange), negatives show blue, positives show orange; color scale legend displays -1 to 1 range
+      Legibility verdict: PASS - excellent contrast and readability throughout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correctly configured
+      Chrome: Title and axis labels in light text (#F0EFE8/#B8B7B0) - all clearly readable; no dark-on-dark failures
+      Data: Cell colors identical to light render (orange for positive, blue for negative); data labels in light text with outline for contrast; color scale properly styled with light text
+      Legibility verdict: PASS - all text readable with proper contrast; theme adaptation verified
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'All text is clearly readable: title is prominent, axis labels are
-          well-sized, cell annotations are bold and legible'
+        comment: All text (title 28px, labels 18px, data 18px) clearly readable in
+          both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, cell annotations are well-centered
+        comment: X-axis labels rotated 315°, no text collisions, adequate spacing
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Cells are appropriately sized, colors are distinct; minor deduction
-          as some mid-range values have similar shades
+        comment: All cells, annotations, and color scale clearly visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses colorblind-safe blue-orange diverging palette (no red-green)
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of square 3600x3600 canvas appropriate for matrix; slight
-          excess margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Variable names are descriptive but no axis titles (acceptable for
-          correlation matrix)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Color bar is well-placed but could use a title label
-    spec_compliance:
-      score: 24
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct heatmap visualization for correlation matrix
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Variables correctly mapped to both axes
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'All spec features present: diverging colormap centered at 0, cell
-          annotations with 2 decimals, symmetric handling via lower triangle'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Color axis correctly fixed to -1 to 1
-      - id: SC-05
-        name: Legend Accuracy
         score: 2
         max: 2
         passed: true
-        comment: Color bar accurately represents correlation scale
-      - id: SC-06
-        name: Title Format
+        comment: Blue-orange diverging palette is colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 3600×3600 format appropriate; good proportions, nothing cut
+          off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title and variable names clearly labeled with proper attribution
+      - id: VQ-07
+        name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: Format correct "heatmap-correlation · highcharts · pyplots.ai", but
-          subtitle adds extra text (minor)
-    data_quality:
-      score: 19
+        comment: Uses PAGE_BG at 0.5 (low contrast for near-zero values); uses custom
+          blue-orange instead of BrBG
+    design_excellence:
+      score: 15
       max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: false
+        comment: Custom diverging palette with professional polish; could refine color
+          choice
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Clean layout with good whitespace; cell definition could be enhanced
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through color intensity; strong vs weak correlations
+          easily identified
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct heatmap chart type for correlation matrix
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diverging colormap, annotations, symmetric matrix, variable names,
+          lower triangle
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y axes correctly display all 7 variables; -1 to 1 range fully represented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labeled 'Correlation'; all attributes
+          visible
+    data_quality:
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows full range of correlations: strong positive (0.89), strong
-          negative (-0.58), weak (0.15), and moderate values'
+        comment: 'Full range shown: positive (0.89), weak (0.15), near-zero (-0.18),
+          negative (-0.58), diagonal (1.0)'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Financial metrics correlation is a genuine real-world use case (e.g.,
-          Profit-ROI high correlation, Debt-ROI negative correlation are realistic)
+        comment: Financial metrics (Revenue, Profit, ROI, etc.) realistic and contextually
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
-        passed: false
-        comment: Values are realistic; minor note that some correlation values may
-          be slightly idealized
+        max: 4
+        passed: true
+        comment: Correlation range -1 to 1 correct; values sensible for financial
+          domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,41 +186,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save structure without functions/classes
+        comment: No unnecessary functions/classes; straightforward procedural flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42) for deterministic data
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: All imports are used, though numpy random seed is set but base_corr
-          is deterministic
+        comment: Uses np.random.seed(42) for reproducibility
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; no extraneous packages
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Highcharts Python API
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves correctly as plot-light/dark.png/html
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Good use of Highcharts heatmap module, custom tooltips with JavaScript
-          formatter, colorAxis with stops, data labels with formatters
+        passed: false
+        comment: Uses HeatmapSeries correctly; proper color_axis; includes heatmap
+          module
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses formatter functions for tooltips/labels; limited beyond standard
+          API
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - correlation-matrix
+  styling:
+  - custom-colormap

@@ -1,0 +1,252 @@
+library: matplotlib
+language: python
+specification_id: bar-spine
+created: '2026-05-08T15:23:46Z'
+updated: '2026-05-08T15:41:17Z'
+generated_by: claude-sonnet
+workflow_run: 25563571452
+issue: 5249
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - All theme tokens correctly threaded through every element; both light and dark
+    renders pass readability checks without any dark-on-dark failures
+  - Bar widths accurately proportional to historical Titanic class sizes, correctly
+    implementing the spine plot defining characteristic
+  - PAGE_BG-colored axvline separators between classes is a polished detail reinforcing
+    categorical boundaries without visual noise
+  - Annotation with arrowprops directly communicates the key insight (1st class vs.
+    crew survival gap), elevating the plot beyond a pure data display
+  weaknesses:
+  - 'DE-01 not at maximum: reads as well-configured matplotlib rather than FiveThirtyEight-level
+    polish; a custom font family or tighter typographic hierarchy could close the
+    gap'
+  - y-axis grid opacity at 0.10 is below the recommended 0.15-0.25 range from the
+    style guide; slightly too faint on the dark render
+  - LM-02 could be higher by using ax.bar_label() for percentage annotations (more
+    idiomatic than manual ax.text), or FancyArrowPatch for the callout
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light surface
+      Chrome: Title "bar-spine · matplotlib · anyplot.ai" in dark ink, axis labels "Passenger Class" and "Proportion of Passengers" in dark ink, tick labels (0%-100% and class names) in INK_SOFT — all clearly readable against the light background
+      Data: Four variable-width bars; Survived segments in #009E73 (green), Did Not Survive segments in #D55E00 (orange). Bar widths vary: Crew widest (~43%), 3rd Class second (~34%), 1st Class narrow (~16%), 2nd Class narrowest (~14%). White bold percentage labels inside each segment. Annotation callout box with arrow at upper-left pointing to 1st class boundary.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: Title, axis labels, tick labels all render in light ink (F0EFE8/B8B7B0) — clearly readable against the dark background. Legend frame uses elevated dark surface (#242420). Annotation box uses dark elevated surface. Spine separators between bars appear as thin dark lines (PAGE_BG on colored bars).
+      Data: Identical Okabe-Ito data colors — #009E73 green and #D55E00 orange unchanged from light render. White percentage labels inside segments remain readable. Bar widths identical to light render.
+      Legibility verdict: PASS — no dark-on-dark failures detected. All chrome elements use correct theme-adaptive tokens.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
+          16pt, legend 16pt, percentage labels 15pt. Readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Annotation box at y=0.88, 59% label at y=0.705 — clearly separated.
+          No text collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars fill full canvas, percentage labels prominent and readable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito positions 1+2 are CVD-safe; white text on colored bars
+          provides strong contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Bars span full width, y-axis fills 0-100%, balanced margins with
+          tight_layout.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels; y-axis tick labels show percentage units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00. Backgrounds #FAF8F1/#1A1A17.
+          All chrome adapts correctly in both renders.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design above defaults: Okabe-Ito palette with intentional
+          hierarchy, annotation callout, PAGE_BG bar separators, themed legend. Not
+          quite FiveThirtyEight-level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed, styled spines, subtle y-only grid at alpha=0.10
+          (slightly below recommended 0.15), tick marks removed, themed annotation
+          and legend boxes.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotation highlights key inequality; variable widths encode group
+          size creating a two-dimensional story. Clear focal point and insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct spine plot: bar widths proportional to marginal counts,
+          100% normalized heights, adjacent bars.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: variable-width bars, normalized heights, adjacent
+          bars (linewidth=0), distinct colors, legend, centered x-labels, percentage
+          labels.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x_category maps to bar width, fill_category to stacked segments,
+          counts to correctly computed proportions.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'bar-spine · matplotlib · anyplot.ai' exact format. Legend
+          labels 'Survived' and 'Did Not Survive' match data.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: dramatic survival rate variation across classes
+          (62% to 24%), varying bar widths encoding group sizes.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic Titanic contingency table — well-known, historically significant,
+          neutral educational topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Values align with historical records: 1st class ~62%, 2nd ~41%,
+          3rd ~25%, Crew ~24%.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear Imports → Data → Plot → Save. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Data is hard-coded; fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: importlib/sys/os for self-import workaround, mpatches, plt, np —
+          all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. importlib workaround is a legitimate technical necessity
+          given the filename.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png, current matplotlib API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct axes methods, align=edge for variable-width bars, tight_layout,
+          mpatches for custom legend. Slightly below perfect due to importlib workaround.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: align=edge for custom-width bars, ax.annotate with arrowprops, mpatches.Patch,
+          ax.axvline for separators — several matplotlib-specific features used purposefully.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  - custom-legend
+  - patches
+  patterns:
+  - iteration-over-groups
+  - explicit-figure
+  dataprep:
+  - normalization
+  - cumulative-sum
+  styling:
+  - grid-styling
