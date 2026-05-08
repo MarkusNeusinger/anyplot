@@ -1,171 +1,170 @@
 library: pygal
+language: python
 specification_id: histogram-overlapping
 created: '2025-12-25T21:47:04Z'
-updated: '2025-12-25T21:49:18Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20511325026
+updated: '2026-05-08T07:07:10Z'
+generated_by: claude-haiku
+workflow_run: 25541892097
 issue: 2010
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - alpha-blending
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep:
-  - binning
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/pygal/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent choice of real-world data scenario (human heights by gender) with realistic
-    statistical parameters
-  - Proper use of pygal native Histogram class with correct tuple format (height,
-    start, end)
-  - Good transparency setting (opacity=0.5) allows overlapping regions to be clearly
-    visible
-  - Title follows the exact required format
-  - Clean KISS code structure with appropriate comments
-  - Font sizes well-calibrated for the 4800x2700 canvas
+  - Perfect visual quality across both themes with explicit font sizing and flawless
+    theme compliance
+  - Excellent data representation using semi-transparency to show overlap regions
+    effectively
+  - Correct color palette (Okabe-Ito) with proper first-series assignment (#009E73)
+  - Strong spec compliance with all required features present
+  - Clean, reproducible code with proper random seeding
+  - Realistic, neutral data scenario with factually correct proportions
+  - Professional styling and generous margins
   weaknesses:
-  - Legend text Female collides with X-axis title Height (cm) - needs increased margin_bottom
-    or adjusted legend positioning
-  - Does not leverage pygal distinctive interactive features (tooltips, value formatters,
-    custom hover effects) that differentiate it from static libraries
-  image_description: 'The plot displays two overlapping histograms comparing height
-    distributions by gender. The Male distribution (blue/steel color) is centered
-    around 175cm with a peak frequency of ~42, while the Female distribution (yellow/gold
-    color) is centered around 160cm with a peak frequency of ~40. Both distributions
-    use semi-transparent fills (approximately 50% opacity), allowing the overlapping
-    region (around 160-175cm) to show a darker olive/brown blend color. The title
-    "histogram-overlapping · pygal · pyplots.ai" appears at the top in a clean sans-serif
-    font. The X-axis is labeled "Height (cm)" ranging from 140-200, and the Y-axis
-    shows "Frequency" from 0-40+. A legend at the bottom identifies "Male" and "Female"
-    series. The plot has subtle horizontal grid lines and uses the pyplots color scheme
-    (blue #306998 and yellow #FFD43B).'
+  - Design Excellence could be elevated with more distinctive visual polish beyond
+    defaults
+  - Library Mastery could be strengthened by exploring more pygal-specific features
+    (interactive tooltips, callbacks)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color, excellent contrast
+      Chrome: Title "histogram-overlapping · pygal · anyplot.ai" in dark text (28px), axis labels "Height (cm)" and "Frequency" in dark text (22px), tick labels in dark text (18px), subtle grid lines. All elements fully readable.
+      Data: Male distribution (green #009E73, centered ~175cm) and Female distribution (orange #D55E00, centered ~162cm) with semi-transparent bars (opacity 0.5). Overlapping regions blend into muted olive tone, clearly showing distribution intersection.
+      Legibility verdict: PASS - All text crisp and readable, excellent contrast against warm background, data colors distinct and clear
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color, excellent contrast
+      Chrome: Same title and axis labels rendered in light text (light colors for visibility on dark background). Subtle grid lines visible. No dark-on-dark contrast failures - all elements are legible.
+      Data: Data colors identical to light render - Male (green #009E73) and Female (orange #D55E00) distributions maintain same visual appearance and overlap patterns. Only chrome (background, text, grid) flips to light colors.
+      Legibility verdict: PASS - All text clearly visible in light color, no dark-on-dark failures, data visualization equally effective as light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at full
-          size. Font sizes are well-scaled for 4800x2700.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements. Legend is positioned at bottom, separate
-          from data.
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements; clean label placement
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Histogram bars are clearly visible. The overlapping region shows
-          both distributions well due to good transparency. Minor deduction: the overlap
-          blend color could be slightly more distinct.'
+        comment: Bars clearly visible with appropriate sizing; overlapping regions
+          blend visibly
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow are colorblind-safe and provide excellent contrast.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with appropriate margins. Good use of space.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Height (cm)" includes units, "Frequency" is descriptive.'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette ensures CVD safety; good luminance contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout with generous margins; plot fills 50-70% of canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend text "Female" overlaps with X-axis title "Height (cm)". The
-          legend placement at bottom causes a collision.
+        comment: Title in correct format; axis labels include units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds correct; all chrome theme-correct
+          in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured styling with custom Style object; polished default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: generous margins, subtle grid, appropriate spacing'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through color; effective communication of
+          gender height differences
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct histogram chart type using pygal.Histogram()
+        comment: Correct overlapping histograms
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Height values correctly binned on X-axis, frequency on Y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Semi-transparent fills, distinct colors, legend, aligned bin edges
-          - all present
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: transparency, colors, legend, aligned bins'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show full range of data (140-200cm covers both distributions)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X and Y axes correctly assigned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Male and Female groups
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "{spec-id} · {library} · pyplots.ai"
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows overlapping distributions with clear separation of means, different
-          spreads visible
+        comment: 'Shows all aspects: two complete distributions with different means
+          and spreads'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Human height by gender is a classic, relatable example with realistic
-          parameters
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Male ~175cm (σ=7), Female ~162cm (σ=6) are realistic anthropometric
-          values
+        comment: Real-world scenario; neutral, non-controversial topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All values factually correct; biologically sound proportions
     code_quality:
       score: 10
       max: 10
@@ -175,42 +174,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → histogram calculation → style → chart
-          → save'
+        comment: Direct linear flow; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pygal, and Style are imported, all used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API
+        comment: Clean, Pythonic code; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 0
-      max: 5
+        comment: Correct output files
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses basic pygal.Histogram() without leveraging pygal-specific features
-          like tooltips, custom formatters, or interactive configurations that would
-          enhance the SVG output.
+        passed: true
+        comment: Expert use of pygal.Histogram and Style pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses opacity setting and custom Style; could explore more features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
