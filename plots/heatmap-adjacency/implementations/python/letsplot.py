@@ -1,7 +1,7 @@
 """ anyplot.ai
 heatmap-adjacency: Network Adjacency Matrix Heatmap
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 89/100 | Created: 2026-05-08
+Quality: 85/100 | Created: 2026-05-08
 """
 
 import os

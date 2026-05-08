@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: heatmap-adjacency
 created: '2026-05-08T07:13:38Z'
-updated: '2026-05-08T07:20:51Z'
+updated: '2026-05-08T07:31:29Z'
 generated_by: claude-sonnet
 workflow_run: 25541909133
 issue: 5240
@@ -12,36 +12,33 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/letsplot/plot-dark.html
-quality_score: 89
+quality_score: 85
 review:
   strengths:
-  - Elegant use of na_value=PAGE_BG in scale_fill_viridis — absent edges disappear
-    seamlessly into the background in both themes
-  - 'Perfect spec compliance: symmetric matrix, viridis colormap, colorbar legend,
-    node name labels, cluster-ordered nodes, block-diagonal structure all present'
-  - 'Flawless theme adaptation in both renders: warm off-white/near-black backgrounds,
-    theme-adaptive INK tokens throughout, no dark-on-dark or light-on-light failures'
-  - 'Full code quality: KISS structure, reproducible seed, clean imports, correct
-    output format'
+  - 'Perfect spec compliance: symmetric adjacency matrix with block-diagonal community
+    structure, colorbar, NaN-as-background absent-edge encoding'
+  - 'Clean theme adaptation: both light and dark renders pass legibility checks with
+    all text elements properly tokenized'
+  - 'Excellent data quality: realistic research collaboration context with plausible
+    within-/cross-department weight distributions and clear 3-community structure'
   weaknesses:
-  - Tick label size is 11pt, below the 16pt guideline for DPI-based libraries; increase
-    axis_text size to 16pt in both axis_text and axis_text_x theme elements
-  - No cluster boundary lines — add geom_hline and geom_vline at department boundaries
-    (after position 10 and 20) to make community structure explicit and improve visual
-    refinement
-  - Design excellence held back by absence of explicit community delineation; boundary
-    lines at cluster edges would elevate DE-01 and DE-02 to publication quality
+  - Tick label size (11pt) is below the recommended 16pt — for a 30-node matrix at
+    3600x3600px output, labels are legible but smaller than optimal
+  - 'Design excellence is basic: no annotations highlighting key findings (most collaborative
+    pairs, cross-department links), no dendrogram for hierarchical ordering context'
+  - 'LM-02 limited: no letsplot-distinctive interactive features (hover tooltips,
+    dynamic filtering) used beyond the standard HTML export'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "heatmap-adjacency · letsplot · anyplot.ai" in dark ink, clearly readable; "Researcher" axis labels in dark ink; tick labels (30 node names) rotated 90° on x-axis, visible but slightly small (11pt below 16pt guideline); legend "Collaboration Strength" in INK_SOFT — all readable
-      Data: Viridis colormap from deep purple (low collaboration) to yellow (high collaboration); three block-diagonal community clusters visible (Alice-Jack top-left, Kate-Tina center, Uma-Derek bottom-right); absent edges match off-white background via na_value=PAGE_BG
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "heatmap-adjacency · letsplot · anyplot.ai" in dark ink, clearly readable. Both "Researcher" axis labels readable. Y-axis names in dark soft ink readable; X-axis names rotated 90deg at size=11, readable but slightly below recommended 16pt. Legend "Collaboration Strength" readable.
+      Data: Viridis colormap (deep purple → teal → yellow) encodes collaboration strength. Three block-diagonal clusters clearly visible (Dept A: Alice-Jack, Dept B: Kate-Tina, Dept C: Uma-Derek). Absent edges render as background (#FAF8F1), creating clean absence encoding. Sparse cross-department connections visible as isolated colored tiles.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title and axis labels in light INK (#F0EFE8) — clearly readable; tick labels in INK_SOFT (#B8B7B0) — readable; legend text in light color — readable; no dark-on-dark failures detected
-      Data: Viridis colors identical to light render — same three block-diagonal clusters at same positions; absent edges match dark background via na_value=PAGE_BG=#1A1A17
+      Background: Near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title, axis labels, and tick labels all render in light-colored text, clearly readable against the dark background. No dark-on-dark failures. Legend frame and text render correctly in dark theme. Colorbar tick labels are light and readable.
+      Data: Viridis palette colors are identical to the light render — only background, empty cells, and chrome flip to dark. Block-diagonal community structure equally clear. Empty cells become near-black background, maintaining the absence signal.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -53,21 +50,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set; title 24pt, axis labels 20pt, legend 16pt
-          — tick labels at 11pt below 16pt guideline but readable via scale=3
+        comment: Title 24pt and axis labels 20pt are correct; tick labels at size=11
+          below recommended 16pt but legible at 3x scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap; x-axis labels rotated 90°, all 30 node names readable
+        comment: X-axis labels rotated 90deg, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap tiles clearly visible with distinct viridis coloring; block
-          structure prominent in both themes
+        comment: Tiles clearly visible; viridis range well-differentiated; NaN cells
+          cleanly blend into background
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -79,23 +76,23 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Square 3600x3600 canvas; heatmap fills ~80% of area; legend well-positioned
-          on right
+        comment: Square 3600x3600 px format appropriate for symmetric heatmap; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes labeled 'Researcher'; title format correct
+        comment: Researcher on both axes; correct spec-id title format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis for continuous weight data; na_value=PAGE_BG for absent
-          edges; light #FAF8F1 / dark #1A1A17 backgrounds; all chrome theme-adaptive'
+        comment: 'Viridis for continuous weight data (correct); backgrounds #FAF8F1/#1A1A17
+          correct in both themes'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -103,23 +100,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful na_value trick to make absent edges disappear; proper
-          theming; clean heatmap above library defaults; no cluster boundary lines
-          or focal emphasis to reach publication-ready tier
+        comment: Intentional categorical ordering exposes block-diagonal structure;
+          NaN-as-background creates clean absence encoding; no dendrogram or community
+          annotation to further elevate
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Grid removed, axis lines removed, x-axis rotation applied, absent-edge
-          fill matched to background; missing explicit community dividing lines
+        comment: Panel grid removed, axis lines removed, subtle legend border; stops
+          short of full minimalism
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Three-community block-diagonal structure immediately visible; viridis
-          gradient shows collaboration strength; good visual hierarchy
+        comment: Block-diagonal structure tells community story; no annotation or
+          callout to highlight key findings
     spec_compliance:
       score: 15
       max: 15
@@ -135,22 +132,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Symmetric matrix, weight color mapping, absent edges as background,
-          colorbar legend, node name labels, cluster ordering all present
+        comment: Symmetric matrix, weight-to-color, absent edges as background, colorbar,
+          node names on axes, block-diagonal via reordering
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Source on x, target on y, weight mapped to fill; ordering exposes
-          block-diagonal structure
+        comment: Source on X, target on Y reversed for top-left origin, weight to
+          fill; all 30 nodes shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'heatmap-adjacency · letsplot · anyplot.ai'; legend 'Collaboration
-          Strength' with 0.2-0.8 scale
+        comment: Correct title format; Collaboration Strength legend with scale
     data_quality:
       score: 15
       max: 15
@@ -160,22 +156,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Dense within-community and sparse cross-community connections; varying
-          weights; symmetric structure; three distinct clusters
+        comment: Weighted edges, symmetric matrix, community clustering, absent-edge
+          encoding, full weight range covered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 30 named researchers in a collaboration network; three implicit departments;
-          plausible real-world scenario; neutral scientific context
+        comment: Research collaboration network with 3 departments, 30 researchers
+          — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30 nodes (within 20-200 spec range); within-dept weights 0.4-1.0;
-          cross-dept 0.05-0.35; connection probabilities 70%/12% realistic
+        comment: 30 nodes within 20-200 spec range; intra-dept weights 0.4-1.0, cross-dept
+          0.05-0.35
     code_quality:
       score: 10
       max: 10
@@ -185,51 +181,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → data → plot → save; no functions or classes'
+        comment: No functions or classes; clean linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unused imports
+        comment: All imported symbols are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; elegant na_value approach for absent edges
+        comment: Appropriate complexity; symmetric matrix construction is clean
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with scale=3
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expertly uses ggplot grammar: aes mapping, geom_tile, scale_fill_viridis,
-          layered theme(), ggsize, ggsave with scale; highly idiomatic lets-plot'
+        comment: Correct grammar-of-graphics usage; geom_tile + scale_fill_viridis
+          + aes(fill=) is idiomatic; theme() chaining correct; pd.Categorical for
+          axis ordering
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses scale_fill_viridis na_value parameter (elegant for absent edges),
-          pd.Categorical for axis ordering, HTML export; core pattern replicable in
-          plotnine with minor changes
-  verdict: REJECTED
+        passed: false
+        comment: HTML export used; no letsplot-distinctive features like tooltip aesthetics,
+          interactive layers, or coordinate_flip
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
