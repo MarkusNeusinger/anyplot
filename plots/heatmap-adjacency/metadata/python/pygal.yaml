@@ -1,0 +1,252 @@
+library: pygal
+language: python
+specification_id: heatmap-adjacency
+created: '2026-05-08T07:29:11Z'
+updated: '2026-05-08T08:01:40Z'
+generated_by: claude-sonnet
+workflow_run: 25542577908
+issue: 5240
+python_version: 3.13.13
+library_version: 3.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/python/pygal/plot-dark.html
+quality_score: 81
+review:
+  strengths:
+  - 'Perfect spec compliance: symmetric 24-node matrix with block-diagonal community
+    structure, colorbar, department boundary lines, and node labels all present'
+  - 'Excellent visual quality in both themes: warm off-white/near-black backgrounds
+    correct, viridis colormap appropriate for continuous edge weights, absent-cell
+    colors correctly theme-adaptive'
+  - 'Strong data storytelling: block-diagonal structure clearly exposes the three
+    research departments, absent-cell contrast immediately shows sparse cross-department
+    links'
+  - 'Correct file outputs: plot-{THEME}.png and plot-{THEME}.html both generated'
+  - Reproducible with np.random.seed(42) and realistic research-collaboration context
+  weaknesses:
+  - 'Zero pygal API usage: the implementation does not import pygal at all — it manually
+    constructs SVG and calls cairosvg.svg2png() directly. While pygal lacks a built-in
+    heatmap type, the code should at minimum use pygal''s SVG rendering infrastructure
+    or Style object rather than bypassing the library entirely.'
+  - The sys.path manipulation and importlib dance in _get_viridis() is a necessary
+    but complex workaround; a cleaner approach would be a standalone helper module
+    or using the matplotlib import after adjusting path only when needed.
+  - Column labels (rotated 90°) are slightly harder to read than the row labels due
+    to rotation; a small increase in font-size or a different rotation approach would
+    improve legibility.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "heatmap-adjacency · pygal · anyplot.ai" bold dark ink, clearly readable. Subtitle in muted ink readable. Row labels (A1–A8, B1–B8, C1–C8) in monospace dark ink on left, clearly legible. Column labels rotated 90° at bottom, same size, readable with minor effort due to rotation.
+      Data: Viridis colormap (purple→yellow) for edge weights 0.1–1.0. Absent edges in light gray (#DEDBD4). Three dense block-diagonal clusters clearly visible. Department boundary lines at 50% opacity. Colorbar on right with "Strength" label and ticks at 0.00/0.25/0.50/0.75/1.00.
+      Legibility verdict: PASS — all text readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and subtitle in light ink (#F0EFE8 / #A8A79F), clearly readable against dark surface. Row and column labels in secondary ink (#B8B7B0), readable — no dark-on-dark issues detected. Colorbar ticks and labels readable. Department boundary lines visible at lower contrast but still clear.
+      Data: Viridis colormap colors are identical to light render (yellow=high, purple=low). Absent edges in dark gray (#2E2E2A) correctly distinguishes empty cells from near-black background. Block-diagonal structure equally visible.
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome correctly flipped
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, subtitle, and row labels clearly readable in both themes.
+          Column labels (rotated 90°) are readable but slightly harder to parse due
+          to rotation.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements — cells are uniform, labels spaced correctly
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All matrix cells, colorbar, and boundary lines clearly visible in
+          both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis is perceptually uniform and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 3600x3600 canvas appropriate for symmetric matrix, generous
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches required format; node identifiers serve as axis labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis for continuous edge weights (correct). Light bg #FAF8F1,
+          dark bg #1A1A17 — both correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): monospace font for node labels, absent-cell theme-adaptive
+          colors, dept boundary lines, professional colorbar placement'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No spines/axes, subtle semi-transparent boundary lines, clean margin
+          layout
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Block-diagonal structure clearly exposes community clustering; absent-cell
+          contrast highlights sparse cross-group links
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct network adjacency matrix heatmap
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Nodes reordered by community, symmetric matrix, color=weight, colorbar,
+          axis tick labels with node names
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Source/target nodes as rows/columns, weight as color intensity
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''heatmap-adjacency · pygal · anyplot.ai'' correct; colorbar
+          shows weight scale 0.00–1.00'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Covers all aspects: symmetric matrix, weighted edges, absent-edge
+          distinction, block-diagonal structure, 24 nodes in 3 communities'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Research collaboration network is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 24 nodes, weights 0.1–1.0, within-dept prob 0.78 vs cross-dept 0.07
+          — realistic community structure
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: _get_viridis() helper function is a necessary import workaround but
+          technically introduces a function
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (cairosvg, numpy, importlib, os, sys) are actually used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: sys.path manipulation and importlib usage is hacky; SVG string construction
+          is verbose but functional
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 1
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 1
+        max: 5
+        passed: false
+        comment: No pygal API calls — the library is not imported. Only cairosvg (pygal's
+          backend dependency) is used directly. Pygal's Style object, chart types,
+          and rendering pipeline are all bypassed.
+      - id: LM-02
+        name: Distinctive Features
+        score: 0
+        max: 5
+        passed: false
+        comment: 'No pygal-distinctive features: no chart type instantiation, no Style
+          object, no interactive SVG/JS output via pygal.render()'
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - cairosvg
+  techniques:
+  - colorbar
+  - html-export
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - minimal-chrome
