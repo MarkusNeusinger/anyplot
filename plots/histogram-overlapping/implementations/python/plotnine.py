@@ -1,13 +1,31 @@
-""" pyplots.ai
+"""pyplots.ai
 histogram-overlapping: Overlapping Histograms
 Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-25
 """
 
-import numpy as np
-import pandas as pd
-from plotnine import aes, element_text, geom_histogram, ggplot, labs, scale_fill_manual, theme, theme_minimal
+import os
 
+# Add site-packages to path before current directory to avoid local plotnine.py shadowing
+import site
+import sys
+
+
+site_packages = site.getsitepackages()
+sys.path = site_packages + [p for p in sys.path if p not in site_packages and p not in ("", ".")]
+
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+import plotnine as pn  # noqa: E402
+
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data - Response times (ms) for three user groups
 np.random.seed(42)
@@ -31,25 +49,35 @@ df = pd.DataFrame(
     }
 )
 
+# Theme-adaptive elements
+anyplot_theme = pn.theme(
+    plot_background=pn.element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=pn.element_rect(fill=PAGE_BG, color=None),
+    panel_grid_major=pn.element_line(color=INK, size=0.3, alpha=0.10),
+    panel_grid_minor=pn.element_line(color=INK, size=0.2, alpha=0.05),
+    panel_border=pn.element_rect(color=INK_SOFT, fill=None, size=0.8),
+    axis_title=pn.element_text(color=INK, size=20),
+    axis_text=pn.element_text(color=INK_SOFT, size=16),
+    axis_line=pn.element_line(color=INK_SOFT, size=0.8),
+    plot_title=pn.element_text(color=INK, size=24, face="bold"),
+    legend_background=pn.element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.8),
+    legend_text=pn.element_text(color=INK_SOFT, size=16),
+    legend_title=pn.element_text(color=INK, size=18),
+    figure_size=(16, 9),
+    text=pn.element_text(size=14, family="sans"),
+)
+
 # Plot
 plot = (
-    ggplot(df, aes(x="response_time", fill="user_group"))
-    + geom_histogram(alpha=0.5, bins=30, position="identity")
-    + labs(
+    pn.ggplot(df, pn.aes(x="response_time", fill="user_group"))
+    + pn.geom_histogram(alpha=0.6, bins=30, position="identity")
+    + pn.scale_fill_manual(values=OKABE_ITO)
+    + pn.labs(
         x="Response Time (ms)", y="Frequency", title="histogram-overlapping · plotnine · pyplots.ai", fill="User Group"
     )
-    + scale_fill_manual(values=["#306998", "#FFD43B", "#E74C3C"])
-    + theme_minimal()
-    + theme(
-        figure_size=(16, 9),
-        text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24),
-        legend_text=element_text(size=16),
-        legend_title=element_text(size=18),
-    )
+    + pn.theme_minimal()
+    + anyplot_theme
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
