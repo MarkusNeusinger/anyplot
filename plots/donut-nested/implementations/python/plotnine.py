@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" anyplot.ai
 donut-nested: Nested Donut Chart
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: pending | Created: 2025-12-25
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-08
 """
 
 import os
