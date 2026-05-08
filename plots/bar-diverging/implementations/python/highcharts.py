@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 bar-diverging: Diverging Bar Chart
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-25
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2026-05-08
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -14,8 +15,19 @@ from highcharts_core.options import HighchartsOptions
 from highcharts_core.options.series.bar import BarSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
 
+
+# Theme-adaptive chrome tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+POSITIVE = "#009E73"  # bluish green (brand, position 1)
+NEGATIVE = "#D55E00"  # vermillion (position 2)
 
 # Data - Customer satisfaction survey results by department
 categories = [
@@ -35,7 +47,7 @@ categories = [
 values = [45, 32, 28, 15, 8, -5, -12, -18, -25, -38]
 
 # Separate positive and negative for different colors
-positive_data = [{"y": v, "color": "#306998"} if v >= 0 else {"y": v, "color": "#FFD43B"} for v in values]
+positive_data = [{"y": v, "color": POSITIVE} if v >= 0 else {"y": v, "color": NEGATIVE} for v in values]
 
 # Create chart
 chart = Chart(container="container")
@@ -46,35 +58,33 @@ chart.options.chart = {
     "type": "bar",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginLeft": 280,
     "marginRight": 100,
 }
 
 # Title
-chart.options.title = {
-    "text": "bar-diverging · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
-}
-
-chart.options.subtitle = {"text": "Department Net Satisfaction Scores", "style": {"fontSize": "32px"}}
+chart.options.title = {"text": "bar-diverging · highcharts · anyplot.ai", "style": {"fontSize": "28px", "color": INK}}
 
 # X-axis (categories)
 chart.options.x_axis = {
     "categories": categories,
     "title": {"text": None},
-    "labels": {"style": {"fontSize": "28px"}},
-    "lineWidth": 0,
-    "tickWidth": 0,
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": GRID,
 }
 
 # Y-axis (values) - note: in horizontal bar, y_axis shows values
 chart.options.y_axis = {
-    "title": {"text": "Net Satisfaction Score", "style": {"fontSize": "28px"}, "margin": 20},
-    "labels": {"style": {"fontSize": "24px"}},
+    "title": {"text": "Net Satisfaction Score", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": GRID,
     "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
-    "plotLines": [{"value": 0, "width": 3, "color": "#333333", "zIndex": 5}],
+    "plotLines": [{"value": 0, "width": 2, "color": INK_SOFT, "zIndex": 5, "dashStyle": "Solid"}],
     "min": -50,
     "max": 60,
 }
@@ -89,19 +99,30 @@ chart.options.credits = {"enabled": False}
 series = BarSeries()
 series.name = "Net Satisfaction"
 series.data = positive_data
-series.data_labels = {"enabled": True, "style": {"fontSize": "22px", "fontWeight": "bold"}, "format": "{y}"}
+series.data_labels = {"enabled": True, "style": {"fontSize": "18px", "color": INK}, "format": "{y}"}
 series.border_width = 0
-series.point_width = 60
+series.point_width = 80
 
 chart.add_series(series)
 
 # Plot options
 chart.options.plot_options = {"bar": {"groupPadding": 0.1, "pointPadding": 0.05}}
 
-# Download Highcharts JS
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+
+# Download Highcharts JS (with fallback CDN)
+def fetch_js(urls):
+    for url in urls:
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                return resp.read().decode("utf-8")
+        except Exception:
+            continue
+    raise RuntimeError(f"Failed to download JS from: {urls}")
+
+
+hc_urls = ["https://code.highcharts.com/highcharts.js", "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js"]
+highcharts_js = fetch_js(hc_urls)
 
 # Generate HTML with inline scripts
 html_str = chart.to_js_literal()
@@ -111,14 +132,14 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0; padding:0; background:#ffffff;">
+<body style="margin:0; padding:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
 # Save HTML
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
 # Screenshot with Selenium
@@ -131,16 +152,14 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2800")
+chrome_options.add_argument("--window-size=4800,2700")
 chrome_options.add_argument("--force-device-scale-factor=1")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
 
-# Get the container element and screenshot it at exact dimensions
-container = driver.find_element(By.ID, "container")
-container.screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
