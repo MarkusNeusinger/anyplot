@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-diverging: Diverging Bar Chart
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2026-05-08
+Library: highcharts unknown | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-08
 """
 
 import os
