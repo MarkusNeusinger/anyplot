@@ -1,7 +1,7 @@
-"""anyplot.ai
-City Commute Survey · dot-matrix-proportional: Dot Matrix Chart for Proportional Counts
-Library: plotly | Python 3.13
-Quality: pending | Created: 2026-05-08
+""" anyplot.ai
+dot-matrix-proportional: Dot Matrix Chart for Proportional Counts
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 88/100 | Created: 2026-05-08
 """
 
 import os
