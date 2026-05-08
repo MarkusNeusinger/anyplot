@@ -1,16 +1,29 @@
-""" pyplots.ai
+"""pyplots.ai
 scatter-3d: 3D Scatter Plot
 Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Quality: regeneration | Created: 2025-12-26
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png, save
+from bokeh.io import output_file, save
 from bokeh.models import ColorBar, ColumnDataSource, Label, LinearColorMapper, Range1d
 from bokeh.palettes import Viridis256
 from bokeh.plotting import figure
 from bokeh.resources import CDN
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens (read from environment, default light)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - create 3D clustered data demonstrating spatial relationships
 np.random.seed(42)
@@ -61,8 +74,8 @@ z_proj_sorted = z_proj[sort_idx]
 z_sorted = z[sort_idx]
 depth_sorted = depth_normalized[sort_idx]
 
-# Scale marker size based on depth (15-35 for visibility at 4800x2700)
-sizes = 15 + (1 - depth_sorted) * 20
+# Scale marker size based on depth (25-50 for improved visibility at 4800x2700)
+sizes = 25 + (1 - depth_sorted) * 25
 
 # Color mapping using Z value (fourth dimension via color)
 z_min, z_max = z.min(), z.max()
@@ -80,7 +93,7 @@ source = ColumnDataSource(
     data={"x": x_proj_sorted, "y": z_proj_sorted, "size": sizes, "color": colors, "z_value": z_sorted}
 )
 
-# Create Bokeh figure with interactive tools (Bokeh strength)
+# Create Bokeh figure with interactive tools
 p = figure(
     width=4800,
     height=2700,
@@ -89,8 +102,8 @@ p = figure(
     tools="pan,wheel_zoom,box_zoom,reset,save",
 )
 
-# Draw scatter points with size variation for depth perception
-p.scatter(x="x", y="y", size="size", color="color", alpha=0.8, line_color="#306998", line_width=1, source=source)
+# Draw scatter points with improved size for depth perception
+p.scatter(x="x", y="y", size="size", color="color", alpha=0.8, line_color=INK_SOFT, line_width=1, source=source)
 
 # Set appropriate ranges with padding - balanced layout
 x_min, x_max = x_proj.min(), x_proj.max()
@@ -113,8 +126,8 @@ origin_y_rot = origin_3d_x * np.sin(azim_rad) + origin_3d_y * np.cos(azim_rad)
 origin_x = origin_x_rot
 origin_y = origin_y_rot * np.sin(elev_rad) + origin_3d_z * np.cos(elev_rad)
 
-# Axis styling
-axis_color = "#444444"
+# Axis styling - theme-adaptive
+axis_color = INK_SOFT
 axis_width = 5
 axis_length = 3.0
 
@@ -200,13 +213,13 @@ p.patch(
     line_color=axis_color,
 )
 
-# Add descriptive axis labels with units
+# Add descriptive axis labels with units - theme-adaptive text
 x_label = Label(
     x=x_axis_end_x + 0.3,
     y=x_axis_end_y - 0.2,
     text="X-Axis (units)",
     text_font_size="44pt",
-    text_color="#333333",
+    text_color=INK,
     text_font_style="bold",
 )
 p.add_layout(x_label)
@@ -216,7 +229,7 @@ y_label = Label(
     y=y_axis_end_y - 0.5,
     text="Y-Axis (units)",
     text_font_size="44pt",
-    text_color="#333333",
+    text_color=INK,
     text_font_style="bold",
 )
 p.add_layout(y_label)
@@ -226,17 +239,17 @@ z_label = Label(
     y=z_axis_end_y + 0.15,
     text="Z-Axis (units)",
     text_font_size="44pt",
-    text_color="#333333",
+    text_color=INK,
     text_font_style="bold",
 )
 p.add_layout(z_label)
 
-# Add color bar for elevation scale (distinct from Z-axis label)
+# Add color bar for Z-value scale (clarified title)
 color_bar = ColorBar(
     color_mapper=color_mapper,
     width=60,
     location=(0, 0),
-    title="Color: Elevation",
+    title="Z-Value",
     title_text_font_size="32pt",
     major_label_text_font_size="24pt",
     title_standoff=20,
@@ -245,26 +258,45 @@ color_bar = ColorBar(
 )
 p.add_layout(color_bar, "right")
 
-# Title styling for large canvas
+# Title styling for large canvas - theme-adaptive
 p.title.text_font_size = "48pt"
 p.title.text_font_style = "bold"
+p.title.text_color = INK
 
-# Grid styling - subtle
-p.xgrid.grid_line_color = "#dddddd"
-p.ygrid.grid_line_color = "#dddddd"
-p.xgrid.grid_line_alpha = 0.25
-p.ygrid.grid_line_alpha = 0.25
+# Grid styling - much more subtle to not conflict with 3D axes
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.05
+p.ygrid.grid_line_alpha = 0.05
 p.xgrid.grid_line_dash = [6, 4]
 p.ygrid.grid_line_dash = [6, 4]
 
-# Background styling
-p.background_fill_color = "#f9f9f9"
-p.border_fill_color = "white"
-p.outline_line_color = None
+# Background and border styling - theme-adaptive
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 p.min_border_right = 220
 
-# Save PNG
-export_png(p, filename="plot.png")
+# Save HTML output
+output_file(f"plot-{THEME}.html")
+save(p, resources=CDN, title="scatter-3d · bokeh · pyplots.ai")
 
-# Save HTML for interactive version
-save(p, filename="plot.html", resources=CDN, title="scatter-3d · bokeh · pyplots.ai")
+# Screenshot with Selenium/Chrome for PNG export
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)  # Let Bokeh's JS render the canvas
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
