@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-correlation: Correlation Matrix Heatmap
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-08
@@ -8,6 +8,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.patches import Rectangle
 
 
 # Theme configuration
@@ -17,6 +18,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+EMPHASIS_COLOR = "#E67E22" if THEME == "light" else "#F39C12"
 
 # Data - Realistic weather variables correlation matrix
 np.random.seed(42)
@@ -88,10 +90,16 @@ ax.set_facecolor(PAGE_BG)
 # Create heatmap with diverging colormap centered at zero
 im = ax.imshow(masked_corr, cmap="BrBG", vmin=-1, vmax=1, aspect="equal")
 
-# Add colorbar
+# Add subtle grid lines for visual hierarchy
+ax.set_xticks(np.arange(n_vars) - 0.5, minor=True)
+ax.set_yticks(np.arange(n_vars) - 0.5, minor=True)
+ax.grid(which="minor", color=INK_MUTED, linestyle="-", linewidth=0.5, alpha=0.3)
+
+# Add colorbar with enhanced styling
 cbar = ax.figure.colorbar(im, ax=ax, shrink=0.8, pad=0.02)
-cbar.ax.set_ylabel("Correlation Coefficient", fontsize=18, labelpad=15, color=INK)
+cbar.ax.set_ylabel("Correlation Coefficient", fontsize=18, labelpad=15, color=INK, fontweight="medium")
 cbar.ax.tick_params(labelsize=14, colors=INK_SOFT, labelcolor=INK_SOFT)
+cbar.ax.set_facecolor(PAGE_BG)
 
 # Set ticks and labels with theme-adaptive coloring
 ax.set_xticks(np.arange(n_vars))
@@ -100,22 +108,32 @@ ax.set_xticklabels(variables, fontsize=16, rotation=45, ha="right", rotation_mod
 ax.set_yticklabels(variables, fontsize=16, color=INK_SOFT)
 
 # Add axis labels with theme-adaptive coloring
-ax.set_xlabel("Weather Variables", fontsize=20, labelpad=15, color=INK)
-ax.set_ylabel("Weather Variables", fontsize=20, labelpad=15, color=INK)
+ax.set_xlabel("Weather Variables", fontsize=20, labelpad=15, color=INK, fontweight="medium")
+ax.set_ylabel("Weather Variables", fontsize=20, labelpad=15, color=INK, fontweight="medium")
+
+# Add visual emphasis to strong correlations via borders
+for i in range(n_vars):
+    for j in range(n_vars):
+        if not mask[i, j]:
+            value = abs(correlation_matrix[i, j])
+            if value > 0.75 and i != j:
+                rect = Rectangle(
+                    (j - 0.45, i - 0.45), 0.9, 0.9, linewidth=2, edgecolor=EMPHASIS_COLOR, facecolor="none", alpha=0.5
+                )
+                ax.add_patch(rect)
 
 # Annotate cells with correlation values
 for i in range(n_vars):
     for j in range(n_vars):
-        if not mask[i, j]:  # Only annotate lower triangle and diagonal
+        if not mask[i, j]:
             value = correlation_matrix[i, j]
-            # Choose text color based on background brightness
             text_color = "white" if abs(value) > 0.5 else INK_SOFT
             ax.text(j, i, f"{value:.2f}", ha="center", va="center", color=text_color, fontsize=14, fontweight="bold")
 
-# Title with theme-adaptive coloring
+# Title with theme-adaptive coloring and enhanced styling
 ax.set_title("heatmap-correlation · matplotlib · pyplots.ai", fontsize=24, pad=20, fontweight="bold", color=INK)
 
-# Remove spines
+# Remove spines for clean look
 for spine in ax.spines.values():
     spine.set_visible(False)
 
