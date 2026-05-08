@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: histogram-overlapping
 created: '2025-12-25T21:47:46Z'
-updated: '2026-05-08T07:02:57Z'
+updated: '2026-05-08T07:08:28Z'
 generated_by: claude-haiku
 workflow_run: 25541736989
 issue: 2010
@@ -12,37 +12,33 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/altair/plot-dark.html
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - 'Perfect technical execution: All visual quality criteria met with explicit font
-    sizing and theme-correct rendering in both light and dark modes'
-  - 'Spec compliance: Implements all required features (semi-transparent bars, aligned
-    bins, legend, correct mapping)'
-  - 'Theme adaptation: Flawless theme switching—data colors identical, chrome perfectly
-    adapted'
-  - 'Reproducible code: Clean, simple structure with deterministic seed for consistency'
-  - 'Real-world data: Response times by department is a realistic, neutral business
-    scenario demonstrating histogram utility'
+  - Perfect visual quality with all text legible in both themes and no overlap
+  - Flawless theme adaptation with consistent data colors and theme-correct chrome
+    across light/dark renders
+  - Complete spec compliance with proper semi-transparent overlapping, distinct colors,
+    and aligned bins
+  - Clean, reproducible code with proper theme tokens and structure
+  - Realistic business data context with meaningful variation across departments
   weaknesses:
-  - 'Generic design: Uses library defaults without aesthetic customization or visual
-    hierarchy to emphasize insight'
-  - 'Missing visual emphasis: Data storytelling relies on data choice alone; no color
-    contrast, size variation, or focal points guide the viewer to key insight'
-  - 'Minimal library-specific features: Doesn''t leverage Altair''s distinctive capabilities
-    (interactions, selections, transforms, faceting)'
+  - Generic design aesthetic driven by defaults rather than distinctive styling
+  - Limited Altair-specific features—doesn't leverage interactive selections or advanced
+    encoding patterns
+  - Visual hierarchy relies on data choice rather than intentional design emphasis
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct light theme surface
-      Chrome: Title "histogram-overlapping · altair · anyplot.ai" in dark text (28px), axis labels "Response Time (ms)" and "Frequency" in dark text (22px), tick labels readable (18px), legend "Department" on right side - all clearly visible
-      Data: Three overlapping histograms - Engineering in #009E73 (brand green), Sales in #D55E00 (orange), Support in #0072B2 (blue). Semi-transparent bars (opacity=0.5) reveal overlaps. Bins aligned across all groups (25 bins).
-      Legibility verdict: PASS - All text readable, no overlaps, no contrast failures
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title (28px dark text), axis labels (22px dark text), tick labels (18px dark text) - all clearly readable against light background
+      Data: Three semi-transparent overlapping histograms in Okabe-Ito colors (Engineering green #009E73, Sales orange #D55E00, Support blue #0072B2); bars show response time distributions with distinct central tendencies and spreads
+      Legibility verdict: PASS - All text is fully readable; grid is subtle but visible; bars are clearly distinguishable
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title rendered in light text (#F0EFE8), axis labels and tick labels in light secondary text (#B8B7B0), legend box uses elevated dark background (#242420) - all clearly visible against dark background
-      Data: Colors identical to light render - #009E73 Engineering, #D55E00 Sales, #0072B2 Support. No color shift between themes. Semi-transparent bars maintain same opacity.
-      Legibility verdict: PASS - All text readable, no dark-on-dark failures, no contrast issues. Grid lines remain subtle but visible using light-colored strokes with low opacity.
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title and all labels rendered in light text for proper contrast against dark background; all elements clearly readable
+      Data: Same colors as light render (green #009E73, orange #D55E00, blue #0072B2) - data colors are identical, only chrome has flipped to dark theme as expected
+      Legibility verdict: PASS - No dark-on-dark failures; text is light and readable; legend background is theme-adapted (elevated dark color); grid lines are visible
   criteria_checklist:
     visual_quality:
       score: 30
@@ -235,8 +231,10 @@ impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
+  - publication-ready
