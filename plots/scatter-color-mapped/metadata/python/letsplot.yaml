@@ -1,15 +1,226 @@
 library: letsplot
+language: python
 specification_id: scatter-color-mapped
 created: '2025-12-26T09:45:48Z'
-updated: '2025-12-26T09:48:07Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520225379
+updated: '2026-05-08T13:03:51Z'
+generated_by: claude-haiku
+workflow_run: 25556837975
 issue: 2004
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/letsplot/plot.html
-quality_score: 92
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/letsplot/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Perfect theme adaptation: text colors and backgrounds correctly adapt to light/dark
+    without legibility loss'
+  - 'Clean, effective data representation: 150 points clearly show temperature variation
+    across spatial coordinates'
+  - 'Proper palette choice: viridis is the correct selection for continuous color
+    mapping per style guide'
+  - 'Complete feature implementation: all required elements (axes, labels, colorbar,
+    tooltips) working correctly'
+  - Correct title format and descriptive axis labels with units
+  - 'High code quality: reproducible, simple, clean imports, no over-engineering'
+  weaknesses:
+  - 'Design Excellence moderate: relies on theme_minimal() base without extensive
+    custom styling enhancements'
+  - Limited exploration of letsplot-specific features beyond standard ggplot2 API
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified in style guide
+      Chrome: Title "scatter-color-mapped · letsplot · anyplot.ai" clearly visible at top. Axis labels "X Coordinate (m)" and "Y Coordinate (m)" are dark text (INK #1A1A17) and easily readable. Tick labels rendered at 16pt in INK_SOFT (#4A4A44), all legible. Grid lines are subtle and don't compete with data.
+      Data: 150 scatter points with viridis color mapping showing temperature gradient (purple ~20°C to yellow ~40°C). Points are well-sized (6.5) with alpha=0.8 for clarity. Colorbar legend on right shows "Temperature (°C)" with clear scale markings.
+      Legibility verdict: PASS - All text is highly readable, good contrast, no legibility issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified in style guide
+      Chrome: Title clearly visible in light text (INK #F0EFE8). Axis labels in same light INK color, clearly readable. Tick labels in INK_SOFT (#B8B7B0), all distinct against dark background. Grid lines are visible but subtle.
+      Data: Identical viridis colors to light render (purple to yellow gradient for temperature), confirming data colors remain constant. Only chrome (text, background, grid) changed. Colorbar legend equally readable.
+      Legibility verdict: PASS - No dark-on-dark failures, all text is light-colored and clearly visible against near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
+          All perfectly readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap despite 150 scatter points; all elements fully readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers (size 6.5, alpha 0.8) perfectly adapted to data density;
+          all points clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis is perceptually uniform and CVD-safe; good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 px with balanced margins and generous whitespace.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units ("X Coordinate (m)", "Temperature (°C)").
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis for continuous data, backgrounds #FAF8F1 (light) / #1A1A17
+          (dark), theme tokens applied correctly in both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom theme with theme tokens well-applied. Uses theme_minimal()
+          base with explicit customization. Professional appearance but not exceptional.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid styling, legend box with elevated background, good whitespace
+          management.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color gradient effectively communicates temperature variation across
+          spatial regions; visual hierarchy guides interpretation.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter plot with continuous color mapping.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: X/Y axes, color encoding, colorbar legend, and interactive tooltips
+          all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped; all data visible across appropriate ranges.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; colorbar labeled "Temperature (°C)".
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows full temperature range (20–40°C) with clear spatial variation.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Temperature measurements across spatial coordinates; realistic scientific
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible coordinate ranges and temperature values.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports → data → plot → save. No unnecessary functions.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set for deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Only necessary imports: numpy, pandas, lets_plot, os.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic code. No over-engineering or fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct API: exports as plot-{THEME}.png and plot-{THEME}.html.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert ggplot2-style composition with proper aes(), geom_point(),
+          scale_color_viridis() patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses layer_tooltips() for interactive hover details; leverages letsplot
+          theme system with element_* functions.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -19,193 +230,5 @@ impl_tags:
   - data-generation
   dataprep: []
   styling:
-  - alpha-blending
+  - custom-colormap
   - grid-styling
-review:
-  strengths:
-  - Excellent use of viridis colormap which is perceptually uniform and colorblind-accessible
-  - Well-implemented interactive tooltips showing X, Y coordinates and temperature
-    on hover
-  - Clean data generation with realistic spatial clustering pattern that demonstrates
-    correlation between position and temperature
-  - Proper text sizing for high-resolution output (4800x2700 px)
-  - Good use of theme_minimal with customized grid styling
-  weaknesses:
-  - Point size (size=5) could be slightly larger (size=6-7) for 150 data points to
-    improve visibility
-  - Grid styling uses dashed lines which appear somewhat busy; solid subtle lines
-    might be cleaner
-  image_description: 'The plot displays a color-mapped scatter plot with approximately
-    150 data points spread across a 2D coordinate system. The X-axis ranges from 5
-    to 90 meters, and the Y-axis from 10 to 110 meters. Points are colored using the
-    viridis colormap (purple to yellow), representing temperature values from approximately
-    17°C to 42°C. The colorbar on the right clearly shows "Temperature (°C)" with
-    a gradient scale. The title reads "scatter-color-mapped · lets-plot · pyplots.ai".
-    The plot uses a minimal theme with light gray dashed grid lines. Points show three
-    visible clusters: one in the lower-left (cooler purple/blue tones ~15-25°C), one
-    in the center-upper region (mid-range teal/green ~30-35°C), and scattered points
-    on the right (warmer yellow/green ~35-42°C). The temperature clearly correlates
-    with spatial position.'
-  criteria_checklist:
-    visual_quality:
-      score: 37
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick marks, and legend text are all clearly readable
-          at full resolution
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Points are well-sized with appropriate alpha (0.8), though slightly
-          small for the data density
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is perceptually uniform and colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions, plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Both axes have descriptive labels with units: "X Coordinate (m)",
-          "Y Coordinate (m)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: Grid dashes visible but legend label uses wrong case for "lets-plot"
-          in title (minor)
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct scatter plot with color mapping
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X, Y coordinates correctly mapped, color encodes third variable (temperature)
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorbar present with label, perceptually uniform colormap (viridis),
-          moderate point size, transparency for overlap
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Colorbar correctly labeled "Temperature (°C)"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Title follows format "{spec-id} · {library} · pyplots.ai"
-    data_quality:
-      score: 18
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows color mapping across full range, clustering visible, correlation
-          between position and temperature evident
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Temperature readings across spatial coordinates is a real-world scenario
-          (environmental monitoring, spatial analysis)
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 5
-        passed: true
-        comment: Temperature range 17-42°C is realistic for ambient/surface measurements;
-          coordinates in meters are sensible
-    code_quality:
-      score: 9
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Linear flow: imports → data → plot → save, no functions/classes'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html (correct)
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses interactive tooltips (layer_tooltips), theme customization,
-          scale_color_viridis, but could leverage more lets-plot features
-  verdict: APPROVED
