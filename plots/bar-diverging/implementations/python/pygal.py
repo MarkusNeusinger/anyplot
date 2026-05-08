@@ -1,12 +1,29 @@
-""" pyplots.ai
+""" anyplot.ai
 bar-diverging: Diverging Bar Chart
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-25
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-08
 """
+
+import os
+import sys
+
+
+if sys.path[0] == os.path.dirname(os.path.abspath(__file__)):
+    sys.path.pop(0)
 
 import pygal
 from pygal.style import Style
 
+
+# Theme tokens from prompts/default-style-guide.md
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette: brand green for positive, vermillion for negative
+OKABE_ITO = ("#009E73", "#D55E00")
 
 # Data - Customer satisfaction survey scores by department
 # Positive = satisfied, Negative = dissatisfied (scale -100 to +100)
@@ -23,7 +40,6 @@ departments = [
     "Overall Experience",
 ]
 
-# Survey scores (positive = satisfied, negative = dissatisfied)
 scores = [72, 45, -23, 58, -45, 31, -12, -38, 64, 52]
 
 # Sort by value for better pattern recognition
@@ -31,22 +47,22 @@ sorted_data = sorted(zip(departments, scores, strict=True), key=lambda x: x[1])
 sorted_departments = [d[0] for d in sorted_data]
 sorted_scores = [d[1] for d in sorted_data]
 
-# Custom style for pyplots
-# Using blue for positive and red/coral for negative (better contrast for diverging)
+# Custom style with theme-adaptive colors and proper font sizing
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998", "#E07A5F"),  # Python Blue for positive, Coral for negative
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=42,
-    legend_font_size=42,
-    value_font_size=36,
-    value_label_font_size=36,
-    tooltip_font_size=36,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    value_label_font_size=14,
+    tooltip_font_size=14,
+    stroke_width=2,
 )
 
 # Create horizontal bar chart (better for long labels)
@@ -54,7 +70,7 @@ chart = pygal.HorizontalBar(
     width=4800,
     height=2700,
     style=custom_style,
-    title="Customer Satisfaction Survey · bar-diverging · pygal · pyplots.ai",
+    title="Customer Satisfaction Survey · bar-diverging · pygal · anyplot.ai",
     x_title="Satisfaction Score",
     show_legend=True,
     legend_at_bottom=True,
@@ -80,6 +96,7 @@ chart.add("Dissatisfied", negative_scores)
 # Set category labels
 chart.x_labels = sorted_departments
 
-# Save outputs
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Save outputs with theme-suffixed filenames
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
