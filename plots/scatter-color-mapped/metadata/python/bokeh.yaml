@@ -1,165 +1,179 @@
 library: bokeh
+language: python
 specification_id: scatter-color-mapped
 created: '2025-12-26T09:45:17Z'
-updated: '2025-12-26T09:47:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520225349
+updated: '2026-05-08T12:58:27Z'
+generated_by: claude-haiku
+workflow_run: 25556383538
 issue: 2004
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - html-export
-  patterns:
-  - columndatasource
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/python/bokeh/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent use of Bokeh ColumnDataSource and color mapping system with LinearColorMapper
-  - Clean well-structured code following KISS principles
-  - Appropriate font sizes scaled for the 4800x2700 canvas
-  - Good use of Viridis colormap for accessibility
-  - Proper colorbar with title and well-configured label sizes
-  - Subtle grid styling with dashed lines and low alpha
-  - Both PNG and HTML outputs generated correctly
+  - Perfect Visual Quality (30/30) with all text explicitly sized and readable in
+    both light and dark themes
+  - 'Flawless theme compliance: both renders perfectly themed with identical data
+    colors and appropriate chrome adaptation'
+  - 'Complete spec adherence: scatter plot with continuous viridis colormap, colorbar
+    legend, and interactive hover tooltips'
+  - Clean, reproducible code with proper theme tokenization for light/dark rendering
+  - Perceptually uniform viridis colormap appropriate for scientific intensity visualization
   weaknesses:
-  - Axis labels are generic (X Value, Y Value) rather than descriptive with units
-  - Could add HoverTool for interactive tooltips in HTML output
-  - Points could be slightly larger (size=35-40) given the data density
-  image_description: The plot displays a color-mapped scatter plot with approximately
-    150 data points on a light gray background (#fafafa). The X-axis ("X Value") ranges
-    from approximately 25 to 75, and the Y-axis ("Y Value") ranges from approximately
-    25 to 85. Points are colored using the Viridis colormap (purple/blue for low values
-    through green to yellow for high values), representing an "Intensity" variable
-    shown in the colorbar on the right side. The colorbar ranges from 0 to approximately
-    35. The title "scatter-color-mapped · bokeh · pyplots.ai" appears in the top-left.
-    Points show a positive correlation between X and Y, with intensity values increasing
-    for points farther from the center (around 50,50). The grid uses subtle dashed
-    lines with low alpha. Point sizes are uniform and appropriately sized for the
-    data density.
+  - Design Excellence (12/20) relies on library defaults without custom aesthetic
+    sophistication
+  - Could leverage more bokeh-specific advanced features (callbacks, interactive selection
+    tools) for higher Library Mastery score
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), clean and neutral
+      Chrome: Title, axis labels, tick labels all in dark text (INK #1A1A17, INK_SOFT #4A4A44), clearly readable at 28pt, 22pt, 18pt respectively
+      Data: 150 scatter points with viridis colormap gradient (purple to yellow), size=35, alpha=0.8, well-differentiated
+      Grid: Subtle (alpha=0.10), visible but non-intrusive
+      Colorbar: Clear label "Intensity (magnitude)", positioned right, readable
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), high contrast
+      Chrome: Title, axis labels, tick labels all in light text (INK #F0EFE8, INK_SOFT #B8B7B0), clearly visible against dark background
+      Data: Identical viridis colormap progression as light render (purple to yellow) - confirming theme-independent data colors
+      Grid: Subtle, visible
+      Colorbar: Light-colored frame and text, readable
+      Legibility verdict: PASS - No dark-on-dark failures. All text readable. Data colors identical to light render.
+
+    Both renders pass theme-readability check. Chrome correctly flips between light/dark while data remains consistent.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are readable but could be slightly
-          larger for the 4800x2700 canvas
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All font sizes explicitly set (28pt, 22pt, 18pt); perfect readability
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero text collisions; all elements well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points are well-sized (size=30) with good alpha (0.8), though slightly
-          on the smaller side for 150 points
+        comment: Markers optimally sized for 150-point density; colormap gradient
+          clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Viridis colormap is perceptually uniform and colorblind-safe
+        comment: Viridis is perceptually uniform and colorblind-safe
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of canvas space, colorbar well-positioned
+        comment: Plot fills 65% of canvas; generous balanced margins; colorbar positioned
+          cleanly
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive ("X Value", "Y Value") but lack units
+        comment: Title format correct; axes labeled with units
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with alpha 0.3 and dashed style, colorbar serves as
-          legend
+        comment: 'Viridis256 for continuous data; backgrounds #FAF8F1/#1A1A17; all
+          chrome properly themed in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults; viridis is appropriate but standard; no
+          exceptional design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (alpha=0.10); clean outline; generous whitespace; thoughtful
+          styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color gradient creates visual hierarchy; correlation pattern visible;
+          clear focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct scatter plot with color mapping
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X, Y, and color (intensity) correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: scatter points, colormap, colorbar with
-          label'
-      - id: SC-04
-        name: Data Range
+        comment: Scatter, viridis colormap, colorbar, hover tooltips all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y axes correctly mapped; all data visible; intensity encoded in
+          color
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar accurately labeled "Intensity"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "scatter-color-mapped · bokeh · pyplots.ai"'
+        comment: Title format correct; colorbar properly labeled
     data_quality:
-      score: 17
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows color variation across the range, demonstrates correlation
-          pattern, though could show more extreme outliers
+        comment: Demonstrates intensity variation and x-y relationship; could show
+          more extremes
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Plausible scenario (distance-based intensity), but generic "X Value"/"Y
-          Value" labels reduce realism
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Values are sensible and within reasonable ranges
+        comment: Plausible scientific measurement scenario; neutral, non-controversial
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Factually correct values; logical proportions
     code_quality:
       score: 10
       max: 10
@@ -169,41 +183,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Linear flow; no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no unused dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Pythonic; proper theme token usage
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly saves as plot-{THEME}.png and .html
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, LinearColorMapper, linear_cmap transform,
-          and ColorBar which are Bokeh-specific, but doesn't leverage Bokeh's interactive
-          features like hover tooltips
+        comment: Proper use of figure, scatter, ColumnDataSource, linear_cmap, ColorBar,
+          HoverTool
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages linear_cmap, ColorBar customization, HoverTool; could use
+          more advanced features
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - colorbar
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep: []
+  styling:
+  - custom-colormap
