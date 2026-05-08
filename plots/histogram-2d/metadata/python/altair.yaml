@@ -1,163 +1,183 @@
 library: altair
+language: python
 specification_id: histogram-2d
 created: '2025-12-25T20:09:09Z'
-updated: '2025-12-25T20:12:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20510277928
+updated: '2026-05-08T21:28:12Z'
+generated_by: claude-haiku
+workflow_run: 25538405466
 issue: 2012
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/python/altair/plot-dark.html
+quality_score: 82
 review:
   strengths:
-  - Excellent use of Altair declarative syntax with mark_rect and bin encoding for
-    2D histogram
-  - Clean, well-structured code following KISS principle
-  - Proper use of viridis colormap for perceptual uniformity and colorblind accessibility
-  - Well-configured font sizes for high-resolution output
-  - Colorbar legend properly configured with appropriate sizing
-  - Both PNG and HTML outputs generated as expected
+  - 'Full theme-adaptive chrome: background, axis text, legend, and border all switch
+    correctly between light (#FAF8F1) and dark (#1A1A17) renders'
+  - Correct viridis colormap for continuous density data with well-styled colorbar
+    (sized font, filled/bordered legend box)
+  - 'Font hierarchy properly set: title 28px, axis labels 22px, tick labels 18px,
+    legend 16px — readable at full resolution in both themes'
+  - 'Clean Altair API usage: mark_rect with alt.Bin(maxbins=40) and count() aggregation
+    is the idiomatic approach'
+  - 'Excellent code quality: flat script, seed fixed, all imports used, dual PNG+HTML
+    output with theme suffix'
   weaknesses:
-  - Axis labels are generic (X Value, Y Value) rather than contextual with units
-  - Could enhance with Altair interactivity features (tooltips showing bin range and
-    count)
-  - Minor layout imbalance with slightly more whitespace on left side
-  image_description: The plot displays a 2D histogram heatmap showing a bivariate
-    normal distribution with positive correlation. The visualization uses rectangular
-    bins colored with the viridis colormap (dark purple for low counts, through blue/teal,
-    to bright yellow for high counts ~20+). The X axis ranges from approximately -4.0
-    to 3.2 and is labeled "X Value". The Y axis ranges from approximately -3.4 to
-    3.6 and is labeled "Y Value". A vertical colorbar on the right shows the "Count"
-    scale from ~1 to ~22. The title reads "histogram-2d · altair · pyplots.ai" at
-    the top center. The density pattern clearly shows the positive correlation (0.7)
-    with the highest concentration (yellow bins) near the origin, gradually decreasing
-    outward in an elliptical pattern along the diagonal.
+  - 'Poor density gradient: with n=2000 and maxbins=40 most bins hold 1–10 counts,
+    collapsing viridis to a nearly uniform mid-teal; the primary storytelling goal
+    of a 2D histogram (revealing density variation) is largely invisible'
+  - 'White/black ''holes'' inside the distribution cluster: empty bins (count=0) within
+    the correlated blob create a fragmented pixel pattern instead of a smooth density
+    field — reduce maxbins to ~20 or increase n to 5000+'
+  - Colorbar title 'Count' is slightly clipped at the right canvas edge — add padding
+    or reduce chart width by ~50px to avoid truncation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white. ✓
+      Chrome: Title "histogram-2d · altair · anyplot.ai" in dark ink, clearly readable. Axis labels "Variable X" and "Variable Y" visible. Tick labels (values from -4.0 to 3.6 on Y, -4.00 to 3.20 on X) are legible. Colorbar legend labeled "Count" with viridis gradient — the "Count" title appears slightly clipped at the right canvas edge.
+      Data: 2D heatmap of a bivariate normal distribution (ρ=0.7) showing a diagonal elongated cluster. Bins rendered in a nearly uniform mid-teal (mid-viridis) color. Very little density gradient is visible — outer sparse bins and dense inner bins appear almost identical in color. Empty bins within the cluster show as white (background) holes, creating a fragmented appearance.
+      Legibility verdict: PASS — all text is readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black. ✓
+      Chrome: Title and axis labels rendered in light ink (F0EFE8), clearly readable against dark background. Tick labels light-colored and legible. Colorbar "Count" title also light. No dark-on-dark failures detected.
+      Data: Identical teal/cyan bin colors as light render — data colors consistent across themes. ✓ Empty bins now appear as near-black (background) holes. Same poor density gradient as light render — the correlated elliptical shape is clear but internal density variation is invisible.
+      Legibility verdict: PASS — all text readable against the dark background, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all clearly
-          readable
+        comment: Font sizes set correctly (28/22/18/16px), all text readable in both
+          themes; minor deduction for colorbar 'Count' title slightly clipped at right
+          edge
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: No overlapping elements; tick labels well spaced
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Bins are appropriately sized with 40 bins per axis, density patterns
-          clearly visible
+        score: 3
+        max: 6
+        passed: false
+        comment: Bins are rendered but nearly uniform mid-teal; no visible density
+          gradient between high-density center and low-density edges — core purpose
+          of 2D histogram is compromised
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Viridis colormap is perceptually uniform and colorblind-safe
+        comment: Viridis is perceptually uniform and CVD-safe; single continuous variable
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 3
-        max: 5
+        max: 4
         passed: true
-        comment: Good layout overall but some wasted space on left edge; plot fills
-          ~60% of canvas
+        comment: Proportions good (1600x900); colorbar 'Count' title slightly clipped
+          at right canvas edge
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels ("X Value", "Y Value") but without units
+        comment: Title correct format; axis labels 'Variable X' / 'Variable Y' clear
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
+        passed: true
+        comment: 'Viridis correct for continuous density data; light bg #FAF8F1 and
+          dark bg #1A1A17 both correct'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Genuine theme-adaptation effort, styled colorbar with custom font
+          sizes and border. Raised from default 4 for documented work; limited by
+          uniform-color visual failure.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No grid (gridOpacity=0.0), no tick marks (tickSize=0), clean border
+          stroke — above default 2.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
         passed: false
-        comment: Colorbar well placed, but no grid visible (acceptable for heatmaps,
-          minor deduction)
+        comment: Correlated ellipse shape is visible, but density variation within
+          the distribution is not — the main storytelling goal of a 2D histogram is
+          unmet.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 2D histogram heatmap using mark_rect with binning
+        comment: 2D histogram as rectangular heatmap — correct
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X and Y correctly mapped to quantitative axes
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Colorbar present, viridis colormap as recommended, appropriate bin
-          count
-      - id: SC-04
-        name: Data Range
+        comment: Colorbar present, viridis colormap, bins parameter (maxbins=40)
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full data range visible on both axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Bivariate normal data mapped to X/Y with count encoding
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled as "Count"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "histogram-2d · altair · pyplots.ai"'
+        comment: 'Title: ''histogram-2d · altair · anyplot.ai''; colorbar labeled
+          ''Count'''
     data_quality:
-      score: 17
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows correlation pattern well; density variation visible; could
-          benefit from more distinct clusters or edge cases
+        comment: Shows 2D density concept; slight deduction for poor density discrimination
+          with 2000pts/40bins
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Bivariate normal is appropriate for demonstrating 2D histograms;
-          generic but plausible
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Standard normal scale values are sensible
+        comment: Bivariate normal with ρ=0.7 is a classic, realistic and neutral dataset
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 2000 points, standard normal scale ±3-4 — appropriate
     code_quality:
       score: 10
       max: 10
@@ -167,40 +187,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → chart → save'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas - all used
+        comment: os, altair, numpy, pandas — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Clean, appropriate complexity, no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with scale_factor=3.0
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: mark_rect + alt.Bin + count() aggregation is the canonical Altair
+          2D histogram pattern; configure_* API used correctly
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses declarative encoding with bin aggregation and count(); could
-          add interactivity with .interactive() or tooltips
+        comment: Interactive tooltips (bin range + count), HTML export, theme-adaptive
+          configure_axis/legend/title — good Altair-specific features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
