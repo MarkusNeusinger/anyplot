@@ -1,0 +1,248 @@
+library: highcharts
+language: python
+specification_id: dot-matrix-proportional
+created: '2026-05-08T22:02:55Z'
+updated: '2026-05-08T22:25:02Z'
+generated_by: claude-sonnet
+workflow_run: 25581288911
+issue: 5241
+python_version: 3.13.13
+library_version: unknown
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/python/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Outstanding annotation callout using Highcharts SVG renderer — surfaces the key
+    insight in-chart with brand-green styling and semi-transparent fill
+  - 'Perfect spec compliance: 10x10 grid, correct fill order, count+percentage in
+    legend, uniform dots'
+  - Full palette and theme compliance in both renders; INK token correctly applied
+    to annotation text for dark-mode readability
+  - Realistic developer-survey data with recognizable editor names; proportions are
+    plausible and factually grounded
+  - Zero-chrome axes (transparent lines, no ticks, no labels) create a clean infographic-style
+    look appropriate for dot matrices
+  weaknesses:
+  - Title font size at minimum 28px reads small relative to the 4800px canvas; bumping
+    to 36-40px would improve visual hierarchy
+  - Right margin (650px) has some residual empty space between the annotation callout
+    and the legend box; tightening vertical placement would improve balance
+  - LM-02 limited by the scatter-series implementation of dot matrix; a Highcharts-native
+    approach (e.g., item chart type or tile map) would score higher on library mastery
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — correct theme surface
+      Chrome: title "dot-matrix-proportional · highcharts · anyplot.ai" in dark ink (#1A1A17) at 28px; subtitle in INK_SOFT (#4A4A44) at 22px; legend text in INK_SOFT at 22px — all readable
+      Data: 10x10 grid of circular dots; ~52 teal-green (#009E73) top rows, ~28 orange (#D55E00) middle band, ~12 blue (#0072B2) next rows, ~8 pink (#CC79A7) bottom rows; radius-85 dots well-spaced; annotation callout in top-right margin with green border and "52% prefer VS Code" text
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 — correct dark theme surface
+      Chrome: title and subtitle in light cream (#F0EFE8 / #B8B7B0) — clearly readable against dark background; legend text in light INK_SOFT (#B8B7B0); annotation "prefer VS Code" text uses adaptive INK (#F0EFE8)
+      Data: identical dot colors to light render — teal, orange, blue, pink — data colors unchanged across themes (only chrome flips)
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures detected
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28px, subtitle 22px, legend
+          22px, annotation 52px/30px); all readable; title at minimum could be more
+          prominent
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Dots, legend, and annotation occupy distinct regions; no text collision
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Radius-85 dots are large and well-spaced for 10x10 grid; excellent
+          density adaptation
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette; green/orange/blue/pink well-differentiated for
+          CVD
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Dot matrix fills most canvas; right margin holds legend + callout
+          well; some blank space between elements
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title with spec-id format; subtitle provides survey context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order; PAGE_BG #FAF8F1/#1A1A17;
+          INK/INK_SOFT/ELEVATED_BG all theme-adaptive'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Annotation callout with green border and semi-transparent fill adds
+          genuine design sophistication; styled legend with rounded corners; clearly
+          above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes fully hidden, no grid; legend has border, border-radius, generous
+          padding; solid refinement, stops short of perfect
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotation directly surfaces key insight; brand-green dots dominate
+          visually; viewer lands on insight immediately
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct dot matrix: equal-sized dots in grid, one dot = one unit,
+          color-coded by category'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 10x10 grid, left-to-right fill, legend with counts, percentage annotations,
+          uniform dot size
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 52+28+12+8=100 dots; correct category assignment confirmed visually
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'dot-matrix-proportional · highcharts · anyplot.ai';
+          legend entries show count/total/pct%
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Four categories spanning wide range (52%, 28%, 12%, 8%); shows dominant
+          majority, minority, and tail
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Developer code-editor survey; named editors VS Code, JetBrains, Vim/Neovim;
+          neutral technology domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 52/28/12/8 proportions match real developer survey distributions;
+          sum to 100
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports -> theme tokens -> data -> chart build -> HTML export
+          -> screenshot'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic; no random numbers
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; no unused packages
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic; annotation uses legitimate Highcharts SVG renderer (not
+          fake UI); no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct Chart/HighchartsOptions/ScatterSeries pattern; chart.renderer.label()
+          for annotation is idiomatic Highcharts SVG API
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: chart.renderer.label() with styled callout box is distinctively Highcharts
+          SVG renderer API; dot-matrix-as-scatter-series not a Highcharts-native pattern
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
