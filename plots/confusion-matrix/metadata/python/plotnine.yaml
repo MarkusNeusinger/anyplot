@@ -1,167 +1,169 @@
 library: plotnine
+language: python
 specification_id: confusion-matrix
 created: '2025-12-26T17:37:40Z'
-updated: '2025-12-26T17:46:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20526592005
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/plotnine/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - colorbar
-  - layer-composition
-  patterns:
-  - data-generation
-  - wide-to-long
-  dataprep: []
-  styling: []
+updated: '2026-05-09T16:42:59Z'
+generated_by: claude-haiku
+workflow_run: 25606182292
+issue: 2272
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent text contrast with adaptive color (white on dark, dark blue on light
-    cells)
-  - Clean grammar of graphics implementation with proper layer ordering
-  - Realistic sentiment analysis scenario with plausible confusion patterns
-  - Square aspect ratio (coord_fixed) perfect for confusion matrix
-  - Good use of categorical ordering to control axis display
-  - Cell borders (white, size=2) provide clear separation
+  - 'Perfect visual quality: all text readable, no overlap, excellent contrast in
+    both themes'
+  - 'Flawless theme adaptation: warm backgrounds correct, text colors theme-adaptive,
+    data colors consistent across themes'
+  - 'Complete spec compliance: all required features present with correct labels and
+    format'
+  - 'Excellent code quality: clean KISS structure, reproducible with seed, no extraneous
+    code'
+  - 'Strong data storytelling: diagonal/off-diagonal color contrast guides viewer
+    to model performance patterns'
   weaknesses:
-  - Could benefit from displaying percentages alongside or instead of raw counts for
-    easier interpretation
-  - Legend colorbar title could be more descriptive (e.g., Sample Count)
-  image_description: 'The plot displays a 3×3 confusion matrix heatmap for a sentiment
-    analysis classifier with three classes: Negative, Neutral, and Positive. The matrix
-    uses a sequential blue colormap (light blue to dark blue) from the Blues palette.
-    The diagonal cells (correct predictions) show high values (85, 72, 81) in dark
-    blue, while off-diagonal cells show lower misclassification counts in lighter
-    shades. Cell values are annotated with bold numbers - white text on dark cells
-    and dark blue text on light cells for contrast. The y-axis shows "True Label"
-    and x-axis shows "Predicted Label". A colorbar on the right indicates the count
-    scale (0-80+). The title follows the required format. The layout is square (1:1
-    aspect ratio) with good proportions.'
+  - 'Design excellence is generic: well-configured library defaults without exceptional
+    custom touches or sophisticated palette work'
+  - 'Library mastery is competent but not distinctive: could leverage more plotnine-specific
+    patterns or features unique to the library'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct per style guide
+      Chrome: Title "confusion-matrix · plotnine · anyplot.ai" in bold dark text; axis labels "True Label" and "Predicted Label" in dark text; class names (Negative, Neutral, Positive) clearly visible; all readable with excellent contrast
+      Data: Blues gradient from #e8f4f8 (light) to #08519c (dark); diagonal cells darker, off-diagonal lighter; cell borders in subtle dark gray; numbers in cells with adaptive coloring (white on dark cells, dark on light cells)
+      Legibility verdict: PASS — all text fully readable, no contrast issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct per style guide
+      Chrome: Title and all labels in light text (white/light gray) on dark background; all readable with strong contrast; cell borders visible in light color
+      Data: Blues gradient adapted for dark theme (light teal #2a3f4f to cyan #56b4e9); diagonal/off-diagonal color distribution identical to light render; numbers colored adaptively
+      Legibility verdict: PASS — all text fully readable, no dark-on-dark failures, data colors match light render exactly
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 26pt, axis titles at 22pt bold, axis text at 18pt, cell
-          annotations at size 20 bold - all clearly readable
+        comment: All sizes explicitly set; perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, clean layout
+        comment: Zero overlapping text; all elements clearly spaced
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Tiles well-sized with good white borders, annotations highly visible
+        comment: Heatmap cells optimally sized for 3x3 grid
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Sequential Blues colormap is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Square 1:1 ratio appropriate for matrix, good canvas utilization
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels "True Label" and "Predicted Label" but no units
-          (expected for categorical)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: Grid is removed (element_blank), which is appropriate, but legend
-          title "Count" could be more descriptive; colorbar well-placed
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct confusion matrix heatmap
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: True labels on y-axis, Predicted on x-axis as specified
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Has cell annotations, colorbar, clear axes; missing normalization
-          option display but raw counts shown well
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible, appropriate scale
-      - id: SC-05
-        name: Legend Accuracy
         score: 2
         max: 2
         passed: true
-        comment: Colorbar accurately represents count scale
-      - id: SC-06
-        name: Title Format
-        score: 1
+        comment: High contrast; adaptive text ensures readability
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Fills ~60% of canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Uses "confusion-matrix · plotnine · pyplots.ai" format (correct but
-          missing capitalization for consistency)
-    data_quality:
-      score: 20
+        comment: Descriptive labels with context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Blues gradient appropriate for count data; backgrounds and text colors
+          theme-correct in both renders
+    design_excellence:
+      score: 13
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
         max: 8
+        passed: false
+        comment: Well-configured defaults; not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
         passed: true
-        comment: Shows diagonal dominance (correct predictions), off-diagonal confusion,
-          varying accuracy by class (Neutral harder to classify)
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
+        comment: Grid removed, spines removed, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
         passed: true
-        comment: Sentiment analysis is a real, relatable ML scenario; class confusion
-          patterns are realistic
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: Diagonal/off-diagonal contrast guides viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Count values (3-85) are realistic for a test dataset
+        comment: Correct heatmap format
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All features present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: True/Predicted labels correctly assigned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title and legend correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all confusion matrix aspects
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Sentiment classification is neutral and plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values factually sound
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,41 +171,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save, no functions/classes'
+        comment: Clean imports → data → plot → save
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42), though data is actually deterministic
+        comment: Seed set to 42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as "plot.png" ✓ but verbose=False may hide useful output
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=300
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Good use of ggplot grammar (aes, geom_tile, geom_text, scale_fill_gradient,
-          coord_fixed, theme_minimal). Could use scale_fill_brewer for more distinctive
-          plotnine styling, but current approach is clean.
+        comment: Idiomatic plotnine with ggplot, geom_tile, scale_fill_gradient
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses scale_color_identity with adaptive coloring; competent but not
+          particularly distinctive
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - colorbar
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
