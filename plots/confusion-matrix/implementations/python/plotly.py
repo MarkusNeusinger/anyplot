@@ -1,7 +1,7 @@
 """ anyplot.ai
 confusion-matrix: Confusion Matrix Heatmap
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 75/100 | Updated: 2026-05-09
+Quality: 87/100 | Updated: 2026-05-09
 """
 
 import os

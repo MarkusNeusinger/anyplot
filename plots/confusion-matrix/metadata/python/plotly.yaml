@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: confusion-matrix
 created: '2025-12-26T17:36:58Z'
-updated: '2026-05-09T16:41:40Z'
+updated: '2026-05-09T16:47:29Z'
 generated_by: claude-haiku
 workflow_run: 25606115412
 issue: 2272
@@ -12,88 +12,81 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/confusion
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/plotly/plot-dark.html
-quality_score: 75
+quality_score: 87
 review:
   strengths:
-  - Perfect spec compliance with all required features
-  - Excellent light-mode rendering with clear visual hierarchy
-  - Clean, reproducible code with explicit font sizing
-  - Realistic and neutral data example showing all confusion patterns
-  - Well-balanced layout and proportions
+  - Perfect theme adaptation with no dark-on-dark or light-on-light legibility failures
+  - All text sizes explicitly set and readable at full resolution
+  - Clean, maintainable code following KISS principles
+  - Professional appearance with proper spacing and margins
+  - Correct palette compliance and theme-correct chrome in both renders
   weaknesses:
-  - 'Dark render: light gray annotations (INK_SOFT) on pale blue cells create light-on-light
-    legibility failure'
-  - Blues colorscale is not theme-adaptive—pale cells on dark background make low-count
-    values unreadable
-  - Generic design using default colorscale with no custom styling or aesthetic refinement
-  - Missing distinctive library features beyond basic Heatmap and annotations
+  - 'Design Excellence is moderate (generic styling): consider adding refined visual
+    touches like custom annotations or conditional cell highlighting for the diagonal'
+  - 'Library Mastery could be deeper: explore plotly''s distinctive features like
+    custom colorbar styling or interactive cell selection'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title, axis labels, tick labels all clearly readable with dark text (#1A1A17)
-      Data: Blues colorscale gradient from white (low values) to dark blue (high values); diagonal shows correct predictions in darkest blue; off-diagonal shows misclassifications in lighter shades
-      Annotations: Dark text on light cells, white text on dark cells - excellent contrast and readability
-      Legibility verdict: PASS - all elements readable
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title "confusion-matrix · plotly · anyplot.ai" centered, Y-axis label "True Class" dark text, X-axis label "Predicted Class" dark text, all class names (Defective, Poor, Average, Good, Excellent) readable on both axes
+      Data: Blues colorscale with cell counts annotated in white text (high values >50) and light gray text INK_SOFT (low values), colorbar with "Count" label on right side
+      Legibility verdict: PASS - all text fully readable with no overlap, perfect contrast against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title, axis labels (True Class, Predicted Class), tick labels all readable with light text
-      Data: Blues colorscale produces pale/light blue cells for low values (0-30) and dark blue for high values (70-92); diagonal values (92, 78, 71, 75, 87) clearly visible in white text on dark blue
-      Annotations: CRITICAL ISSUE - Cell values in low-count cells (1-30) use light gray text (INK_SOFT #B8B7B0) on pale blue backgrounds, creating severe light-on-light contrast failure. Numbers like 1, 2, 3, 4, 5, 6 are nearly illegible
-      Legibility verdict: FAIL - Low-count cell annotations are unreadable due to light-on-light problem. The Blues colorscale is not theme-adaptive and produces poor contrast in dark mode
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title in light text, axis labels in light text (#F0EFE8), tick labels in light gray (#B8B7B0), all readable against dark background
+      Data: Blues colorscale identical to light render - diagonal values (92, 78, 71, 75, 87) show clear correct predictions; off-diagonal confusion patterns consistent with light render; colorbar with light text
+      Legibility verdict: PASS - no dark-on-dark failures, all text light-colored with proper contrast, data colors identical to light render confirming theme-adaptive approach works correctly
   criteria_checklist:
     visual_quality:
-      score: 19
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 4
+        score: 8
         max: 8
-        passed: false
-        comment: Explicitly sized text; light render fully readable; dark render cell
-          annotations nearly illegible (light-on-light)
+        passed: true
+        comment: Title 28px, labels 22px, ticks 18px, all explicit and perfectly readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Excellent spacing; no overlapping elements
+        comment: All text fully readable with no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 2
+        score: 6
         max: 6
-        passed: false
-        comment: 'Light render: optimal visibility. Dark render: low-value cells (pale
-          blue) have poor contrast against dark background'
+        passed: true
+        comment: Heatmap cells and colorbar optimally sized and visible
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Blues is sequential but not theme-adaptive; dark render has poor
-          contrast
+        passed: true
+        comment: Blues scale perceptually uniform, white/gray text contrast works
+          well
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-balanced margins; excellent proportions; plot fills 60-70% of
-          canvas
+        comment: Plot fills 60-70% of canvas with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: True Class, Predicted Class; correct title format'
+        comment: Descriptive labels with proper formatting
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL FAILURE: Blues colorscale is not theme-adaptive. Dark render
-          produces light cells that cause light-on-light text failure. Chrome is wrong-theme
-          in dark render'
+        passed: true
+        comment: 'Blues colorscale correct; backgrounds #FAF8F1 light/#1A1A17 dark;
+          all chrome theme-adaptive; both renders theme-correct'
     design_excellence:
       score: 10
       max: 20
@@ -103,21 +96,20 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library defaults; no custom design or refinement
-          beyond standard Plotly
+        comment: Well-configured defaults but no exceptional design choices
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Minimal customization; library defaults with no extra polish
+        comment: Some refinement but mostly library defaults
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Visual hierarchy through color intensity; diagonal emphasis shows
-          correct predictions
+        passed: false
+        comment: Visual hierarchy guides eye to diagonal through color intensity;
+          generic but effective presentation
     spec_compliance:
       score: 15
       max: 15
@@ -133,19 +125,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: annotations, colorbar, axis labels'
+        comment: 'All spec requirements met: axes labeled, cells annotated, colorbar
+          present'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: True labels Y-axis, predicted X-axis; correct mapping; all data visible
+        comment: Y-axis (True Class) and X-axis (Predicted Class) correctly assigned
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; colorbar legend with Count label
+        comment: Title format correct, colorbar legend present
     data_quality:
       score: 15
       max: 15
@@ -155,21 +148,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 5 classes shown with complete confusion patterns
+        comment: 'Shows all aspects: true positives, false positives/negatives, all
+          5 classes'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Product quality classification (Defective/Poor/Average/Good/Excellent)
-          is realistic and neutral
+        comment: Product quality classification, realistic domain, plausible patterns
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 0-92 are realistic for 100-sample classification; factually
-          sound
+        comment: Values 0-92 appropriate for counts, factually sound
     code_quality:
       score: 10
       max: 10
@@ -179,33 +171,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean import → data → plot → save structure
+        comment: Imports → theme → data → figure → save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Straightforward Pythonic code; no fake functionality
+        comment: Clean and Pythonic
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output: plot-{THEME}.png and .html'
+        comment: Correct output format
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -213,24 +205,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct go.Heatmap(), colorbar, and update_layout() usage; missing
-          advanced patterns
+        comment: Good high-level API usage with theme-adaptive colors and hovertemplate
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Uses hover tooltips; otherwise generic usage that could apply to
-          any library
-  verdict: REJECTED
+        comment: Uses hovertemplate and HTML export; could leverage more distinctive
+          plotly features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - annotations
+  - colorbar
   - hover-tooltips
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
-  styling: []
+  styling:
+  - custom-colormap
