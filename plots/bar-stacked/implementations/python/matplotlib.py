@@ -1,68 +1,79 @@
-""" pyplots.ai
+""" anyplot.ai
 bar-stacked: Stacked Bar Chart
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 94/100 | Created: 2025-12-26
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-09
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 
-# Seed for reproducibility (data is deterministic but seed documents intent)
-np.random.seed(42)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (positions 1-4)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Data: Quarterly revenue by product category (in millions USD)
 categories = ["Q1", "Q2", "Q3", "Q4"]
 products = ["Software", "Hardware", "Services", "Support"]
 
-# Revenue data showing realistic business patterns
-software = np.array([45, 52, 48, 68])  # Growing, spike in Q4
-hardware = np.array([32, 28, 35, 42])  # Variable with Q4 boost
-services = np.array([28, 31, 38, 35])  # Steady growth
-support = np.array([15, 18, 20, 22])  # Consistent increase
+software = np.array([45, 52, 48, 68])
+hardware = np.array([32, 28, 35, 42])
+services = np.array([28, 31, 38, 35])
+support = np.array([15, 18, 20, 22])
 
-# Colors: Python blue primary, then colorblind-safe palette
-colors = ["#306998", "#FFD43B", "#4ECDC4", "#FF6B6B"]
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Create figure (4800 x 2700 px at 300 dpi = 16 x 9 inches)
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Calculate bar positions
 x = np.arange(len(categories))
 bar_width = 0.6
 
 # Create stacked bars
 bottom = np.zeros(len(categories))
 for i, (product, values) in enumerate(zip(products, [software, hardware, services, support], strict=True)):
-    ax.bar(x, values, bar_width, label=product, bottom=bottom, color=colors[i], edgecolor="white", linewidth=1.5)
+    ax.bar(x, values, bar_width, label=product, bottom=bottom, color=OKABE_ITO[i], edgecolor=PAGE_BG, linewidth=1.5)
     bottom += values
 
 # Add total labels above each stacked bar
 totals = software + hardware + services + support
 for i, total in enumerate(totals):
-    ax.text(i, total + 3, f"${total}M", ha="center", va="bottom", fontsize=18, fontweight="bold", color="#333333")
+    ax.text(i, total + 3, f"${total}M", ha="center", va="bottom", fontsize=18, fontweight="bold", color=INK)
 
-# Styling
-ax.set_xlabel("Quarter", fontsize=20)
-ax.set_ylabel("Revenue (Millions USD)", fontsize=20)
-ax.set_title("bar-stacked · matplotlib · pyplots.ai", fontsize=24)
+# Style
+ax.set_xlabel("Quarter", fontsize=20, color=INK)
+ax.set_ylabel("Revenue (Millions USD)", fontsize=20, color=INK)
+ax.set_title("bar-stacked · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
 ax.set_xticks(x)
 ax.set_xticklabels(categories)
-ax.tick_params(axis="both", labelsize=16)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT, labelcolor=INK_SOFT)
 
-# Legend (outside plot area to avoid overlap with data)
-ax.legend(fontsize=16, loc="upper left", bbox_to_anchor=(1.02, 1), framealpha=0.95)
+# Legend
+leg = ax.legend(fontsize=16, loc="upper left", bbox_to_anchor=(1.02, 1))
+if leg:
+    leg.get_frame().set_facecolor(ELEVATED_BG)
+    leg.get_frame().set_edgecolor(INK_SOFT)
+    plt.setp(leg.get_texts(), color=INK_SOFT)
 
-# Grid (subtle, horizontal only for bar charts)
-ax.yaxis.grid(True, alpha=0.3, linestyle="--")
+# Grid (subtle, y-axis only)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.set_axisbelow(True)
 
-# Clean up spines
+# Spines
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
 
-# Set y-axis to start at 0 and add headroom for labels
+# Y-axis limits with headroom for labels
 ax.set_ylim(0, max(totals) + 20)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
