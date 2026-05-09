@@ -1,0 +1,219 @@
+library: pygal
+language: python
+specification_id: polar-scatter
+created: '2026-05-09T10:46:29Z'
+updated: '2026-05-09T10:55:55Z'
+generated_by: claude-haiku
+workflow_run: 25599151151
+issue: 2023
+python_version: 3.13.13
+library_version: 3.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/pygal/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - Perfect visual quality with all text legible and no overlaps
+  - Excellent spec compliance with all requirements correctly implemented
+  - Clean, reproducible code with proper theme-adaptive handling
+  - Realistic wind data with meaningful categorical grouping
+  - Perfect palette compliance with theme-correct chrome in both light and dark renders
+  weaknesses:
+  - Generic aesthetic design without custom visual polish
+  - Minimal visual refinement beyond gridlines
+  - Limited library mastery without distinctive pygal feature usage
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface (#FAF8F1) as required
+      Chrome: Title "polar-scatter · pygal · anyplot.ai" in dark text, axis labels and tick labels all clearly readable in dark (#1A1A17)
+      Data: Morning series in #009E73 (green), Afternoon in #D55E00 (orange), Evening in #0072B2 (blue); clear scattered points connected across categories
+      Legibility verdict: PASS - all text readable with good contrast; no "light on light" issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface (#1A1A17) as required
+      Chrome: Title and labels in light text (#F0EFE8) with good visibility; tick labels in muted tone (#A8A79F) with adequate contrast
+      Data: Same color scheme as light render - Morning green, Afternoon orange, Evening blue all identical to light
+      Legibility verdict: PASS - all text maintains proper contrast; no dark-on-dark failures; data colors consistent with light render
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=28, labels=22, ticks=18); fully
+          readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements; clean layout
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 110 data points with 8px markers, well-adapted to density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette, good contrast, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot fills 50-70% of canvas, legend well-positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order; backgrounds correct; text
+          colors theme-correct'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults but lacks exceptional design polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Gridlines present but minimal additional refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear narrative through time-of-day categorization with visual hierarchy
+          via color
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct polar scatter plot using pygal.XY
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec requirements present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct X/Y mapping from polar conversion
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Demonstrates wind variation across three time periods
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Wind observations with realistic speeds and directions
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Factually correct proportions
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow, no over-engineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) for deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only necessary imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic code
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-{THEME} format
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: false
+        comment: Correct usage but could leverage more advanced features
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Uses standard pygal capabilities
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling: []
