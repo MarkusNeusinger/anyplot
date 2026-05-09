@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" anyplot.ai
 line-confidence: Line Plot with Confidence Interval
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Regenerated: 2025-05-09
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-09
 """
 
 import os
