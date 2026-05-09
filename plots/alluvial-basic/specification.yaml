@@ -6,7 +6,7 @@ title: Basic Alluvial Diagram
 
 # Specification tracking
 created: 2025-12-24T22:10:11Z
-updated: null
+updated: 2026-05-09T00:52:49Z
 issue: 1878
 suggested: MarkusNeusinger
 
@@ -16,7 +16,6 @@ tags:
   plot_type:
     - alluvial
     - sankey
-    - flow
   data_type:
     - categorical
     - numeric
@@ -27,6 +26,6 @@ tags:
     - politics
   features:
     - basic
-    - flow-visualization
+    - flow
     - temporal
     - proportional
