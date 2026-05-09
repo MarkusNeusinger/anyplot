@@ -1,220 +1,243 @@
 library: letsplot
+language: python
 specification_id: heatmap-clustered
 created: '2025-12-25T19:24:08Z'
-updated: '2025-12-25T19:26:18Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20509770819
+updated: '2026-05-09T09:05:42Z'
+generated_by: claude-haiku
+workflow_run: 25597102413
 issue: 2021
-python_version: 3.13.11
-library_version: 4.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - scipy
-  techniques:
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  - wide-to-long
-  dataprep:
-  - hierarchical-clustering
-  styling:
-  - minimal-chrome
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/letsplot/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent implementation of composite plot using ggbunch to combine dendrograms
-    with heatmap
-  - Creative solution using scipy for hierarchical clustering since lets-plot lacks
-    native clustermap
-  - Proper diverging colormap (blue-white-red) centered at zero for expression data
-  - Good visual separation between cluster groups reveals biological patterns
-  - Dendrograms properly aligned with heatmap through careful coordinate transformation
-  - Realistic gene expression scenario perfect for demonstrating clustered heatmaps
+  - Perfect theme-adaptive rendering across both light and dark themes with identical
+    data colors and properly theme-flipped chrome
+  - Sophisticated dendrogram visualization using hierarchical clustering (Ward method)
+    with proper coordinate scaling and alignment
+  - Correct diverging colormap (BrBG-style) for z-score data representation with clear
+    semantic meaning (brown=negative, teal=positive)
+  - Excellent data organization showing clear cluster structure with 20×15 density
+    at good visual legibility
+  - Clean, reproducible code with proper seed and minimal dependencies (only scipy.cluster
+    beyond plotting stack)
+  - Idiomatic lets-plot usage with proper geom composition and ggbunch multi-panel
+    layout
   weaknesses:
-  - Contains a helper function get_dendrogram_segments() which violates the KISS no-functions
-    principle
-  - Gene labels on y-axis are slightly small (size=10) for optimal readability at
-    full resolution
-  - Legend is positioned somewhat far from the main heatmap due to ggbunch layout
-    constraints
-  image_description: The plot displays a clustered heatmap with gene expression data
-    (20 genes × 15 samples). A column dendrogram at the top shows the hierarchical
-    clustering of samples, with clear branching structure. A row dendrogram on the
-    left shows the hierarchical clustering of genes. The heatmap uses a diverging
-    red-white-blue colormap (RdBu) where red indicates high expression (up to ~4),
-    white indicates neutral (0), and blue indicates low expression (down to ~-4).
-    Gene labels (Gene_01 through Gene_20) appear on the y-axis, and sample labels
-    (Sample_A through Sample_O) are shown on the x-axis rotated at 45 degrees. The
-    title "heatmap-clustered · letsplot · pyplots.ai" is displayed at the top. A legend
-    on the right shows "Expression (z-score)" with the color scale. The clustering
-    reveals clear patterns with distinct gene groups showing correlated expression
-    patterns across sample clusters.
+  - Design uses correct defaults but lacks distinctive customization beyond compliance
+    — could include more visual emphasis for cluster boundaries or refined color palette
+    transitions
+  - Tight margins reduce visual breathing room between dendrograms and heatmap — minor
+    refinement could improve spatial hierarchy
+  - Limited exploration of lets-plot's advanced features like custom interactive callbacks
+    or theme customization beyond standard tokens
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme background
+      Chrome: Title "heatmap-clustered · letsplot · anyplot.ai" in bold dark text (INK #1A1A17), axis labels "Samples" and "Genes" in dark text (size 20), tick labels in dark text (size 16 INK_SOFT #4A4A44). All text clearly readable without contrast issues.
+      Data: Heatmap shows 20 genes × 15 samples with diverging colormap (brown #A6611A for negative z-scores, light #F5F5F5 for zero, teal #018571 for positive). Dendrograms on left (row, rotated) and top (column) in black lines. Legend shows "Expression (z-score)" scale. All tiles (0.95×0.95) clearly distinguishable.
+      Legibility verdict: PASS — all text readable, no contrast failures, data colors vivid against background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme background
+      Chrome: Title in light text (INK #F0EFE8), axis labels in light text, tick labels in light gray (INK_SOFT #B8B7B0). All text clearly readable against dark surface. No dark-on-dark failures detected.
+      Data: Identical heatmap colors to light render (brown, light, teal) — confirms data colors are theme-independent. Dendrograms in light gray (INK_SOFT #B8B7B0) clearly visible against dark background. Legend text in light color, readable.
+      Legibility verdict: PASS — both renders achieve proper theme adaptation with data colors preserved and chrome correctly inverted
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title is bold and readable at 24pt, axis labels readable, gene labels
-          at 10pt are slightly small but legible
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text, x-axis labels rotated appropriately
+        comment: Font sizes explicitly set (title 24pt, axis 20pt, ticks 16pt) and
+          readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Sample labels rotated 45°, no text collisions, good spacing
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Heatmap tiles clearly visible with good spacing (0.95 width/height),
-          colors distinguishable
+        comment: All heatmap tiles, dendrograms, and legend visible at good density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Diverging blue-white-red colormap is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of ggbunch for layout, dendrograms properly positioned;
-          slight margin imbalance
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Samples" and "Genes" descriptive labels'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: BrBG-style diverging colormap is colorblind-safe for z-score data
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600×900 base (4800×2700 at 3x scale) appropriate, balanced proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid disabled as appropriate for heatmap, legend positioned well
-          but slightly far from plot
+        comment: Title includes spec-id, library, site; axis labels descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Diverging colormap correct for z-score data; plot backgrounds (#FAF8F1
+          light / #1A1A17 dark) theme-correct in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Theme-adaptive chrome correct, colormap appropriate. Styling is minimalist
+          rather than distinctive.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid removed, theme_void used, margins tight. Could benefit from
+          refined spacing between elements.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Dendrograms show hierarchy clearly, color gradient guides viewer.
+          Strong narrative through clustering.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct clustered heatmap with dendrograms
+        comment: Correct clustermap with dendrograms on rows and columns
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Genes on rows, samples on columns, expression as fill
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has dendrograms on both axes, reordered by clustering, diverging
-          colormap, colorbar legend
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec requirements: dendrograms, Ward clustering, Euclidean distance,
+          row/column reordering, diverging colormap, colorbar'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within heatmap bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Samples, Y=Genes, fill=Expression. All data shown correctly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows "Expression (z-score)"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: `heatmap-clustered · letsplot · pyplots.ai`'
+        comment: Title format correct, legend label matches data semantics
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear cluster structure with 3 gene groups and 3 sample groups,
-          demonstrates clustering well; could show more variation in cluster sizes
+        comment: Shows gene expression patterns, sample clusters, gene clusters, full
+          value range, multiple distinct clusters
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Gene expression analysis is a perfect real-world scenario for clustered
-          heatmaps
+        comment: Gene expression analysis is real-world plausible and neutrally presented
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Z-score range of approximately -4 to 4 is realistic for expression
-          data
+        comment: 20×15 within spec range, optimal visual density, appropriate tile
+          proportions
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Contains a helper function `get_dendrogram_segments()` which violates
-          KISS principle
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses `np.random.seed(42)`
+        comment: No functions/classes, straightforward procedural code
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports used; no dead code
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Dendrogram coordinate transformation appropriate, no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as `plot.png` and `plot.html`
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html, correct naming
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Creative use of `ggbunch` for composite layout, `geom_tile` for heatmap,
-          `geom_segment` for dendrograms, `scale_fill_gradient2` for diverging colors;
-          demonstrates advanced lets-plot composition
+        comment: High-level ggplot API, geom_tile, scale_fill_gradient2, ggbunch,
+          theme_void, proper theme tokens
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Uses ggbunch and scale parameter effectively, but limited exploration
+          of advanced callbacks or custom themes
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - subplots
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - hierarchical-clustering
+  styling:
+  - minimal-chrome
+  - custom-colormap
