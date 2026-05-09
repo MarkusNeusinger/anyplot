@@ -1,19 +1,49 @@
-""" pyplots.ai
+""" anyplot.ai
 heatmap-clustered: Clustered Heatmap
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-09
 """
 
+import os
+import sys
+import time
+from pathlib import Path
+
+
+# Fix import shadowing: import from site-packages first
+# Python automatically adds the script directory to sys.path[0], so we remove it
+if sys.path[0] in ("", ".") or sys.path[0].endswith("/python"):
+    sys.path.pop(0)
+
 import numpy as np
-from bokeh.io import export_png, save
+from bokeh.io import output_file, save
 from bokeh.layouts import column
 from bokeh.layouts import row as bokeh_row
-from bokeh.models import BasicTicker, ColorBar, ColumnDataSource, Label, LinearColorMapper, PrintfTickFormatter, Spacer
+from bokeh.models import (
+    BasicTicker,
+    ColorBar,
+    ColumnDataSource,
+    HoverTool,
+    Label,
+    LinearColorMapper,
+    PrintfTickFormatter,
+    Spacer,
+)
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 from scipy.cluster.hierarchy import dendrogram, leaves_list, linkage
 from scipy.spatial.distance import pdist
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+# Theme colors
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Data: Gene expression analysis (20 genes x 15 samples)
 np.random.seed(42)
@@ -102,8 +132,6 @@ row_dendro = dendrogram(row_linkage, no_plot=True)
 col_dendro = dendrogram(col_linkage, no_plot=True)
 
 # Layout dimensions - target 4800x2700 total
-# Width: dendro_size + heatmap_width + label_space = 4800
-# Height: 100 (title) + dendro_size + heatmap_height + label_space = 2700
 heatmap_width = 4000
 heatmap_height = 1800
 dendro_size = 400
@@ -116,13 +144,19 @@ mapper = LinearColorMapper(palette="RdBu11", low=-3, high=3)
 x_data = []
 y_data = []
 value_data = []
+gene_name_data = []
+sample_name_data = []
 for i in range(n_genes):
     for j in range(n_samples):
         x_data.append(j)
         y_data.append(n_genes - 1 - i)  # Flip y so first row is at top
         value_data.append(data_ordered[i, j])
+        gene_name_data.append(row_labels_ordered[i])
+        sample_name_data.append(col_labels_ordered[j])
 
-heatmap_source = ColumnDataSource(data={"x": x_data, "y": y_data, "value": value_data})
+heatmap_source = ColumnDataSource(
+    data={"x": x_data, "y": y_data, "value": value_data, "gene": gene_name_data, "sample": sample_name_data}
+)
 
 # Create main heatmap figure with extra space for labels
 heatmap = figure(
@@ -135,7 +169,7 @@ heatmap = figure(
 )
 
 # Render heatmap rectangles
-heatmap.rect(
+heatmap_rects = heatmap.rect(
     x="x",
     y="y",
     width=1,
@@ -145,6 +179,12 @@ heatmap.rect(
     line_color="white",
     line_width=0.5,
 )
+
+# Add hover tooltip
+hover = HoverTool(
+    renderers=[heatmap_rects], tooltips=[("Gene", "@gene"), ("Sample", "@sample"), ("Expression", "@value{0.00}")]
+)
+heatmap.add_tools(hover)
 
 # Add column labels (samples) at bottom - angled for readability
 for j, label in enumerate(col_labels_ordered):
@@ -157,6 +197,7 @@ for j, label in enumerate(col_labels_ordered):
             text_align="right",
             angle=0.785,  # 45 degrees
             angle_units="rad",
+            text_color=INK_SOFT,
         )
     )
 
@@ -170,6 +211,7 @@ for i, label in enumerate(row_labels_ordered):
             text_font_size="18pt",
             text_align="left",
             text_baseline="middle",
+            text_color=INK_SOFT,
         )
     )
 
@@ -177,6 +219,8 @@ for i, label in enumerate(row_labels_ordered):
 heatmap.axis.visible = False
 heatmap.grid.grid_line_color = None
 heatmap.outline_line_color = None
+heatmap.background_fill_color = PAGE_BG
+heatmap.border_fill_color = PAGE_BG
 
 # Add axis labels as text (since axis is hidden)
 heatmap.add_layout(
@@ -188,6 +232,7 @@ heatmap.add_layout(
         text_align="center",
         text_baseline="top",
         text_font_style="bold",
+        text_color=INK,
     )
 )
 heatmap.add_layout(
@@ -201,6 +246,7 @@ heatmap.add_layout(
         angle=1.5708,  # 90 degrees in radians
         angle_units="rad",
         text_font_style="bold",
+        text_color=INK,
     )
 )
 
@@ -210,11 +256,13 @@ color_bar = ColorBar(
     ticker=BasicTicker(desired_num_ticks=7),
     formatter=PrintfTickFormatter(format="%.1f"),
     label_standoff=20,
-    border_line_color=None,
+    border_line_color=INK_SOFT,
     location=(0, 0),
     title="Expression (z-score)",
     title_text_font_size="18pt",
+    title_text_color=INK,
     major_label_text_font_size="16pt",
+    major_label_text_color=INK_SOFT,
     width=30,
 )
 heatmap.add_layout(color_bar, "right")
@@ -237,11 +285,13 @@ col_dendro_fig = figure(
 for i in range(len(col_icoord)):
     # Scale x coordinates: dendrogram uses 5, 15, 25, ... for leaves
     x_coords = [(x - 5) / 10 for x in col_icoord[i]]
-    col_dendro_fig.line(x_coords, col_dcoord[i], line_color="#306998", line_width=2)
+    col_dendro_fig.line(x_coords, col_dcoord[i], line_color=INK_SOFT, line_width=2)
 
 col_dendro_fig.axis.visible = False
 col_dendro_fig.grid.grid_line_color = None
 col_dendro_fig.outline_line_color = None
+col_dendro_fig.background_fill_color = PAGE_BG
+col_dendro_fig.border_fill_color = PAGE_BG
 
 # Create row dendrogram (left)
 row_icoord = np.array(row_dendro["icoord"])
@@ -261,11 +311,13 @@ row_dendro_fig = figure(
 for i in range(len(row_icoord)):
     # Scale y coordinates to match heatmap, flip to match y-axis direction
     y_coords = [(y - 5) / 10 for y in row_icoord[i]]
-    row_dendro_fig.line(row_dcoord[i], y_coords, line_color="#306998", line_width=2)
+    row_dendro_fig.line(row_dcoord[i], y_coords, line_color=INK_SOFT, line_width=2)
 
 row_dendro_fig.axis.visible = False
 row_dendro_fig.grid.grid_line_color = None
 row_dendro_fig.outline_line_color = None
+row_dendro_fig.background_fill_color = PAGE_BG
+row_dendro_fig.border_fill_color = PAGE_BG
 
 # Create title
 title_fig = figure(
@@ -283,11 +335,13 @@ title_fig.text(
     text_font_size="28pt",
     text_align="center",
     text_baseline="middle",
-    text_color="#333333",
+    text_color=INK,
 )
 title_fig.axis.visible = False
 title_fig.grid.grid_line_color = None
 title_fig.outline_line_color = None
+title_fig.background_fill_color = PAGE_BG
+title_fig.border_fill_color = PAGE_BG
 
 # Spacer for top-left corner
 spacer = Spacer(width=dendro_size, height=dendro_size)
@@ -297,6 +351,25 @@ top_row = bokeh_row(spacer, col_dendro_fig)
 bottom_row = bokeh_row(row_dendro_fig, heatmap)
 layout = column(title_fig, top_row, bottom_row)
 
-# Save outputs
-export_png(layout, filename="plot.png")
-save(layout, filename="plot.html", resources=CDN, title="heatmap-clustered · bokeh · pyplots.ai")
+# Save outputs - HTML first
+output_file(f"plot-{THEME}.html")
+save(layout, resources=CDN, title="heatmap-clustered · bokeh · pyplots.ai")
+
+# Screenshot with headless Chrome — Selenium 4 / Selenium Manager
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)  # let bokeh's JS render the canvas
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
