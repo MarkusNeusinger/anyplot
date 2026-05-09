@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: confusion-matrix
 created: '2025-12-26T17:37:13Z'
-updated: '2026-05-09T16:48:41Z'
+updated: '2026-05-09T16:57:31Z'
 generated_by: claude-haiku
 workflow_run: 25606138740
 issue: 2272
@@ -12,117 +12,116 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/confusion
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/altair/plot-dark.html
-quality_score: 79
+quality_score: 72
 review:
   strengths:
-  - Excellent readability in both light and dark themes
-  - Correct heatmap implementation with appropriate sequential colormap
-  - Well-sized typography at high resolution (explicit font sizes)
-  - Clear data representation showing model performance patterns
-  - Proper cell-level annotations making counts immediately visible
+  - Correct confusion matrix heatmap implementation
+  - Clear cell annotations with counts
+  - Appropriate blues sequential colormap for continuous data
+  - Good cell separation with white grid lines
+  - Realistic and diverse example data showing classification patterns
+  - Seed-based reproducibility
+  - Light render is visually readable
   weaknesses:
-  - Code does not read ANYPLOT_THEME environment variable despite images showing correct
-    theming
-  - Output filenames should be plot-{THEME}.png and plot-{THEME}.html (not plot.png)
-  - 'Text color for low-count cells uses hardcoded #306998 instead of theme-aware
-    variables'
-  - Minimal design sophistication beyond library defaults
-  - No visual emphasis on diagonal correct predictions - missing visual storytelling
-    and hierarchy
+  - 'Output filenames wrong: saves ''plot.png'' instead of ''plot-light.png'' and
+    ''plot-dark.png'' - breaks pipeline'
+  - 'No theme-adaptive chrome: code doesn''t read ANYPLOT_THEME environment variable
+    or use theme tokens'
+  - 'Title domain incorrect: says ''pyplots.ai'' instead of ''anyplot.ai'''
+  - 'Dark render fails theme-readability: background is pure black not warm #1A1A17,
+    axis labels barely readable'
+  - 'Hardcoded text colors #306998 and ''white'' don''t adapt to themes - text has
+    poor contrast in dark mode'
+  - 'VQ-07 critical failure: wrong background colors (pure white/black instead of
+    theme-adaptive #FAF8F1/#1A1A17)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1 equivalent) - correct for light theme
-      Chrome: Title (32px), axis labels (20-24px), tick labels all dark and clearly readable against light background
-      Data: Blue sequential colormap ranging from light cyan to dark navy; cell borders white (2px) for clarity
-      Text annotations: 28px bold font, white on dark cells (counts >50), dark navy on light cells (<50)
-      Legend: Colorbar present with "Count" label, properly positioned
-      Legibility verdict: PASS - All elements readable and appropriately sized
+      Background: Appears to be off-white, acceptable for light theme (should be #FAF8F1)
+      Chrome: Title, axis labels, tick labels are clearly visible against the light background
+      Data: Blue sequential colormap appropriately shows confusion matrix values; white text on dark cells readable; brown text (#306998) on light cells readable
+      Legibility verdict: PASS - all text readable on light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17 equivalent) - correct for dark theme
-      Chrome: Title, axis labels, tick labels all light-colored and clearly readable against dark background
-      Data: Blue colors identical to light render (only chrome adapted, not data colors) - appropriate
-      Text annotations: 28px bold font; numbers on light cells appear in tan/beige (indicating color adaptation), still readable
-      Legend: Colorbar properly styled for dark surface with light text
-      Legibility verdict: PASS - All elements readable in both themes; data colors consistent across themes
+      Background: Appears to be pure black or very near black, NOT the warm near-black (#1A1A17) specified in style guide
+      Chrome: Title is readable (white), but axis labels and tick labels are rendered in tan/brown color with poor contrast on dark background - HARD TO READ
+      Data: Colors identical to light render (correct), white text on dark cells readable, but brown text (#306998) on light blue cells barely visible - poor contrast
+      Legibility verdict: FAIL - dark render has serious theme-adaptation failures: wrong background color, unreadable axis labels due to dark-on-dark text, text color not theme-aware
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 22
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 3
         max: 8
-        passed: true
-        comment: All font sizes explicitly set (title 32px, axis 20-24px, annotation
-          28px), perfectly readable in both themes
+        passed: false
+        comment: 'Light render readable but dark render has serious issues: dark text
+          on dark background, axis labels barely visible. Font sizes not explicitly
+          customized.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero text overlap, clean separation of all elements
+        comment: All text properly spaced, no overlaps
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap cells, text, and legend all clearly visible and appropriately
-          sized
+        comment: All rectangles and text clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blues sequential colormap provides good perceptual uniformity, no
-          CVD issues
+        comment: Blues colormap is accessible, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions, square format appropriate for symmetric matrix,
-          excellent canvas utilization
+        comment: Good proportions, balanced use of canvas
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
-        max: 2
-        passed: true
-        comment: Clear descriptive labels (True Label, Predicted Label), complete
-          title with spec-id and domain
-      - id: VQ-07
-        name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: Blues colormap allowed, but text color hardcoded (#306998) instead
-          of theme-adaptive variable
+        comment: Axes labeled correctly but title has wrong domain (pyplots.ai vs
+          anyplot.ai)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'Critical failure: background is pure black/white not warm theme
+          colors; no theme-adaptive chrome; text colors hardcoded'
     design_excellence:
-      score: 7
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 4
         max: 8
         passed: false
-        comment: Uses default blues with no custom palette; white borders functional
-          but not distinctive
+        comment: Generic default styling with blues colormap, no customization
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: White cell borders add clarity; minimal other refinement beyond defaults
+        comment: White cell borders provide some refinement, otherwise minimal customization
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Accurate data display but no visual emphasis of patterns or hierarchy
+        comment: Diagonal naturally emphasized by darker colors, but no intentional
+          visual hierarchy
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -130,25 +129,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct confusion matrix heatmap
+        comment: Correct heatmap for confusion matrix
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Cell annotations, colorbar legend, axis labels all present
+        passed: false
+        comment: Has annotations, colorbar, and clear axes but title domain is wrong
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: True labels on y-axis, predicted on x-axis, counts in cells
+        comment: X/Y correctly mapped, all data visible
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Correct title format with spec-id, library, and domain
+        passed: false
+        comment: Format close but wrong domain in title
     data_quality:
       score: 15
       max: 15
@@ -158,21 +157,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: diagonal correct predictions and off-diagonal
-          error patterns'
+        comment: 'Shows all aspects: TP (diagonal), FP/FN (off-diagonal), realistic
+          patterns'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic animal classification scenario with plausible confusion
-          patterns
+        comment: Realistic classification results with sensible patterns
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 4 classes appropriate, count values sensible for model performance
+        comment: Sensible values for 4-class classification
     code_quality:
       score: 8
       max: 10
@@ -182,7 +180,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save'
+        comment: Simple linear structure, no unnecessary complexity
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -194,43 +192,44 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All imports are used
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Uses alt.condition() but with hardcoded colors instead of theme-aware
-          variables
+        comment: Code is clean and Pythonic but doesn't follow theme-adaptive pattern
+          from altair.md guide
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: Saves as plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html'
+        comment: 'CRITICAL: Saves as plot.png instead of plot-light.png and plot-dark.png,
+          breaks pipeline'
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Proper use of mark_rect and mark_text with encoding approach
+        passed: false
+        comment: Uses Altair mark_rect and conditional encoding properly, but doesn't
+          leverage theme customization
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Uses alt.condition() but applied generically; limited leverage of
-          altair-specific capabilities
-  verdict: APPROVED
+        comment: Generic heatmap with no library-specific features
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - annotations
+  - colorbar
   patterns:
   - data-generation
   - matrix-construction
