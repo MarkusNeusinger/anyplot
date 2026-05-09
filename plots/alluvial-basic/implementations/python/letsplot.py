@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 alluvial-basic: Basic Alluvial Diagram
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 74/100 | Updated: 2026-05-09
+Quality: 89/100 | Updated: 2026-05-09
 """
 
 import os

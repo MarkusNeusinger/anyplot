@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: alluvial-basic
 created: '2025-12-26T10:37:09Z'
-updated: '2026-05-09T01:21:32Z'
+updated: '2026-05-09T01:28:40Z'
 generated_by: claude-haiku
 workflow_run: 25587359879
 issue: 1878
@@ -12,113 +12,112 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/letsplot/plot-dark.html
-quality_score: 74
+quality_score: 89
 review:
   strengths:
-  - Correct alluvial diagram type effectively showing voter transitions across election
-    cycles
-  - Good data representation with realistic, neutral scenario (US voter migration)
-  - Clean layout with clear time points and category labels; good visual hierarchy
-    in light theme
-  - Light render is visually polished and readable with proper transparency to show
-    overlapping flows
-  - Accurate title format and appropriate legend omission with direct category labeling
+  - Perfect visual quality in both light and dark themes; all text readable against
+    correct backgrounds
+  - Excellent palette compliance; Okabe-Ito colors identical between renders (chrome
+    only flips)
+  - Accurate alluvial diagram implementation with proper flow visualization and transparency
+  - Clean, reproducible code; no fake functionality
+  - Proper theme-adaptive color tokens applied throughout (PAGE_BG, INK, INK_SOFT)
+  - Correct output filenames and formats (plot-light/dark.png/html)
   weaknesses:
-  - Dark render flows are not clearly visible - colors lack contrast on dark background
-    and transparency exacerbates readability
-  - No theme-aware color or background adaptation - code doesn't read ANYPLOT_THEME
-    or use theme tokens
-  - Wrong output filenames - saves to plot.png instead of plot-{THEME}.png, breaking
-    pipeline
-  - Color hex values in code do not match Okabe-Ito palette or rendered output
-  - No use of letsplot-specific interactive features; implementation is generic
+  - 'Title domain error: says ''pyplots.ai'' instead of ''anyplot.ai'' (line 302)
+    — simple 1-line fix required'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title, time headers (2016, 2020, 2024), party labels (left), value labels with counts (right) all clearly visible in black/dark text
-      Data: Alluvial flows colored by destination (green #009E73 Democrats, orange #D55E00 Republicans, blue #0072B2 Independents, pink #CC79A7 Non-Voters). Node rectangles are solid colored and clearly defined. Flows use alpha=0.55 for transparency to show overlapping.
-      Legibility verdict: PASS - all elements clearly readable
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "alluvial-basic · letsplot · pyplots.ai" is bold and dark (INK #1A1A17); time headers (2016, 2020, 2024) are bold and clearly visible; party names on left and value labels on right are gray (INK_SOFT #4A4A44) and readable
+      Data: Uses Okabe-Ito palette - Democrats (#009E73), Republicans (#D55E00), Independents (#0072B2), Non-Voters (#CC79A7); flows use destination color with 0.55 alpha; node borders use INK color for definition
+      Legibility verdict: PASS - all elements readable; no light-on-light contrast issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color
-      Chrome: Title and all labels remain readable in light text with good contrast
-      Data: CRITICAL ISSUE - The alluvial flows are very dark and difficult to distinguish against the dark background. Colors are unchanged from light theme (green, orange, blue, pink) but lack sufficient contrast on #1A1A17. Combined with 55% transparency, the dark blue in particular is nearly invisible, and the green/orange flows are also obscured. Node rectangles are somewhat difficult to see. The data colors are IDENTICAL to light render (correct per style guide), but the RENDERING lacks adequate contrast for readability in dark theme.
-      Legibility verdict: FAIL - dark-on-dark contrast failure makes flows unreadable. This is a critical usability issue for an alluvial diagram where flow visibility is essential.
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title and headers are light text (#F0EFE8); party and value labels are light gray (#B8B7B0) - all readable against dark background; no dark-on-dark failures
+      Data: Colors identical to light render - data colors are theme-independent as required; only chrome flipped. Brand green (#009E73) is vibrant and clearly distinguishable
+      Legibility verdict: PASS - all text legible; proper theme adaptation throughout
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
-        passed: false
-        comment: Title, headers, labels readable in both themes, but color-based data
-          identification compromised in dark render
+        passed: true
+        comment: All text explicitly set with appropriate colors and font sizes; readable
+          in both light and dark
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean text layout with no collisions between elements
+        comment: Labels well-positioned; no collisions between elements
       - id: VQ-03
         name: Element Visibility
-        score: 2
+        score: 6
         max: 6
-        passed: false
-        comment: Light render flows visible; dark render flows very hard to distinguish
-          - critical issue for alluvial
+        passed: true
+        comment: Nodes, flows, and borders all clearly visible; transparency (0.55
+          alpha) manages overlap
       - id: VQ-04
         name: Color Accessibility
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Dark render has severe dark-on-dark contrast failure
+        passed: true
+        comment: Okabe-Ito palette (positions 1–4) is colorblind-safe; no red-green
+          as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, well-balanced, nothing cut off
+        comment: Proper 4800×2700px dimensions; good proportions and margins; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title descriptive and properly formatted
+        comment: Clear time-point headers, party names, value labels; appropriate
+          for alluvial type
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Colors appear Okabe-Ito in renders but dark render readability fails
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order 1→4; backgrounds #FAF8F1/#1A1A17;
+          data colors theme-independent'
     design_excellence:
       score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Good design in light render; dark render incompleteness suggests
-          incomplete theme adaptation
+        comment: Uses standard Okabe-Ito; follows minimal design; no extra polish
+          beyond requirements
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Minimal customization; generic transparency value
+        passed: true
+        comment: Removes clutter (theme_minimal); subtle node borders; could add more
+          refinement
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear hierarchy showing voter transitions; good focal point in light
-          render
+        comment: Alluvial naturally guides eye left-to-right; color consistency aids
+          tracking; missing emphasis on key transitions
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -126,25 +125,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct alluvial diagram
+        comment: Correct alluvial diagram; shows flows between categories across time
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present
+        comment: Time points, categories, flow magnitudes, transparency all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct axes and proportions
+        comment: 'X: time points; Y: proportions; flows show transitions'
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Correct title format, legend appropriately omitted
+        passed: false
+        comment: Title says 'pyplots.ai' instead of 'anyplot.ai' (line 302); legend
+          correctly omitted
     data_quality:
       score: 15
       max: 15
@@ -154,82 +154,82 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete representation of all transitions
+        comment: All 4 parties across 3 time points; multiple transition types shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic voter migration scenario
+        comment: US election voter migration is real-world plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible values for electoral data
+        comment: Voter counts in millions are realistic; proportions sensible
     code_quality:
-      score: 6
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: No functions, but flow calculation is somewhat complex
+        passed: true
+        comment: No classes/unnecessary functions; straightforward procedural logic
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data generation
+        comment: Hardcoded, deterministic data; identical output on every run
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All imports used; no dead code
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL: No theme adaptation. Doesn''t read ANYPLOT_THEME or use
-          theme tokens'
+        passed: true
+        comment: Well-organized; no fake UI or simulated interactivity
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: 'CRITICAL: Wrong filenames - saves plot.png instead of plot-{THEME}.png'
+        passed: true
+        comment: Saves as plot-{THEME}.png/html correctly; uses current API
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Proper use of geoms and ggplot syntax
+        comment: ggplot2-style grammar with aes(), geoms, scales, theme; high-level
+          API
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Generic usage without letsplot-specific features
-  verdict: REJECTED
+        comment: Custom polygon flows with bezier-like easing; good use of letsplot;
+          could leverage more library-specific features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
-  - layer-composition
   - annotations
+  - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
   - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - minimal-chrome
+  - edge-highlighting
