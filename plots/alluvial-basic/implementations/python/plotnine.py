@@ -1,7 +1,7 @@
 """ anyplot.ai
 alluvial-basic: Basic Alluvial Diagram
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 49/100 | Updated: 2026-05-09
+Quality: 67/100 | Updated: 2026-05-09
 """
 
 import os
