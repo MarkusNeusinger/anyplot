@@ -1,168 +1,174 @@
 library: bokeh
+language: python
 specification_id: line-timeseries
 created: '2025-12-26T08:30:44Z'
-updated: '2025-12-26T08:33:00Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20519152409
+updated: '2026-05-09T03:28:58Z'
+generated_by: claude-haiku
+workflow_run: 25590342116
 issue: 2006
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - hover-tooltips
-  - html-export
-  - columndatasource
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/bokeh/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent text sizing for 4800x2700 canvas - all text is highly readable
-  - Smart date formatting with automatic month labels and rotation prevents overlap
-  - Realistic stock price simulation with trend, seasonality, and noise components
-  - Uses Bokeh-specific ColumnDataSource pattern correctly
-  - Generates both static PNG and interactive HTML output
-  - Clean, well-organized code structure following KISS principles
-  - Good use of grid styling with dashed lines and appropriate alpha
+  - Flawless text legibility and theme adaptation—both renders perfectly readable
+    with no dark-on-dark or light-on-light failures
+  - Perfect Okabe-Ito palette compliance with brand green (#009E73) consistent across
+    themes
+  - 'Excellent spec compliance: datetime axis, proper date formatting, 365-point dataset
+    with clear temporal story'
+  - Clean, reproducible code with explicit font sizing and theme-token styling throughout
+  - Bokeh's interactive features (pan, zoom, reset) exported correctly via Selenium
+  - Realistic stock price data with trend, seasonality, and volatility all visible
   weaknesses:
-  - Legend text size (28pt) appears small relative to other text elements on the canvas
-  - HoverTool adds code complexity but provides no benefit in the static PNG output
-  image_description: The plot displays a time series line chart showing stock price
-    data over one year (January 2024 to January 2025). The line is rendered in a blue
-    color (#306998) on a light gray background (#fafafa). The title "line-timeseries
-    · bokeh · pyplots.ai" appears in the top-left corner. The y-axis is labeled "Stock
-    Price (USD)" with values ranging from approximately 140 to 180. The x-axis is
-    labeled "Date" with month labels (Jan 2024, Mar 2024, May 2024, Jul 2024, Sep
-    2024, Nov 2024, Jan 2025) displayed at a slight angle. The chart shows a realistic
-    stock price pattern with an initial sideways movement, a dip around May 2024,
-    a strong recovery through August, and continued volatility through year-end. A
-    legend labeled "Stock Price" appears in the top-left area. Grid lines are present
-    with dashed styling on both axes.
+  - 'Design Excellence is moderate (11/20): plot looks like a well-configured default
+    rather than a sophisticated, custom design'
+  - Limited visual hierarchy or emphasis—the data story is present but viewer must
+    find it rather than being guided
+  - Could leverage more of bokeh's distinctive features (e.g., custom glyphs, hover
+    tooltips, selections) to raise Library Mastery
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title, axis labels, and tick labels are dark text, clearly readable against light background
+      Data: Single line in brand green (#009E73) connects 365 daily stock prices over one year; shows upward trend with seasonality and volatility
+      Legibility verdict: PASS - All text perfectly readable, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title and axis labels are light text (#F0EFE8 and #B8B7B0), clearly readable against dark background; legend background switched to elevated dark (#242420)
+      Data: Data line is identical brand green (#009E73) to light render, confirming perfect theme-independent color handling
+      Legibility verdict: PASS - All text clearly readable in light colors, no dark-on-dark failures; data colors identical across themes
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 48pt, axis labels at 36pt, tick labels at 28pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: Date labels are rotated at 0.8 radians preventing overlap, no text
-          collision
+        comment: Font sizes explicitly set (28pt title, 22pt labels, 18pt ticks).
+          All readable at 4800×2700px in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. X-axis labels rotated appropriately.
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Line width of 6 is visible but could be slightly thicker for optimal
-          visibility at 4800x2700
+        comment: Line width (3px) optimal for density. Clear visibility.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color (#306998) with good contrast on light background
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Stock Price (USD)" and "Date" are descriptive with units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito brand green provides excellent contrast and CVD safety.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 50-60% of canvas with generous, balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid alpha at 0.3 is good, but legend is quite small relative to
-          the canvas size
+        comment: Stock Price (USD) with units. Date is descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73. Backgrounds correct. Theme-adaptive chrome
+          correct in both renders.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured default. Professional but not publication-ready custom
+          design.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid, generous whitespace. Good attention but minimal customization
+          beyond defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Data story present (trend, seasonality) but no explicit visual hierarchy
+          or emphasis.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct time series line chart with datetime x-axis
+        comment: Time series line plot with datetime x-axis.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on x-axis, price on y-axis correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Grid lines on both axes, smart date formatting with month labels,
-          rotated tick labels
-      - id: SC-04
-        name: Data Range
+        comment: Datetime axis, line plot, 365 points, grid lines.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, no clipping
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Dates on x-axis, prices on y-axis. All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows "Stock Price"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "{spec-id} · {library} · pyplots.ai"
+        comment: Title format correct. Legend label matches data.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows trend, seasonality, and volatility; could show multiple series
-          for comparison
+        comment: Shows trend, seasonality, noise, full year.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price simulation is a classic time series use case with realistic
-          patterns
+        comment: Stock prices real-world, neutral, comprehensible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Price range 140-180 USD is realistic for a stock, though the variation
-          could be slightly more dramatic
+        comment: Realistic stock prices, trend, volatility.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -170,41 +176,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: Imports → data → plot → save. No functions/classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: HoverTool imported and used, but hover functionality not visible
-          in static PNG
+        comment: np.random.seed(42) ensures deterministic data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used. No dead code.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: All APIs are current
+        comment: No over-engineering, no fake functionality.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html. Current API.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource and HoverTool (bokeh-specific), but hover not
-          visible in static output; saves both PNG and HTML
+        comment: Proper figure(), ColumnDataSource, line(), Selenium export per guidelines.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Uses ColumnDataSource, datetime axis, interactive tools. Could explore
+          more advanced features.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - time-series
+  styling:
+  - dark-theme
+  - grid-styling
