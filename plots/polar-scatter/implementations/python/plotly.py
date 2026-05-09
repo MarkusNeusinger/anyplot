@@ -1,12 +1,25 @@
-""" pyplots.ai
+"""anyplot.ai
 polar-scatter: Polar Scatter Plot
 Library: plotly 6.5.0 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-26
+Quality: 92/100 | Updated: 2026-05-09
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data - synthetic wind measurements with prevailing directions
 np.random.seed(42)
@@ -40,8 +53,8 @@ time_labels = np.array(["Morning" if h <= 9 else "Afternoon" if h <= 15 else "Ev
 # Create figure
 fig = go.Figure()
 
-# Color mapping for time of day
-colors = {"Morning": "#306998", "Afternoon": "#FFD43B", "Evening": "#E07B39"}
+# Color mapping for time of day using Okabe-Ito
+colors = {"Morning": OKABE_ITO[0], "Afternoon": OKABE_ITO[1], "Evening": OKABE_ITO[2]}
 
 # Add traces for each time period
 for period in ["Morning", "Afternoon", "Evening"]:
@@ -52,56 +65,55 @@ for period in ["Morning", "Afternoon", "Evening"]:
             theta=angles[mask],
             mode="markers",
             name=period,
-            marker={"size": 14, "color": colors[period], "opacity": 0.75, "line": {"width": 1, "color": "white"}},
+            marker={"size": 14, "color": colors[period], "opacity": 0.75, "line": {"width": 1, "color": PAGE_BG}},
         )
     )
 
 # Update layout for 4800x2700 px canvas
 fig.update_layout(
     title={
-        "text": "Wind Observations · polar-scatter · plotly · pyplots.ai",
-        "font": {"size": 32},
+        "text": "Wind Observations · polar-scatter · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
-    font={"size": 18},
+    font={"size": 18, "color": INK},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
     polar={
-        "bgcolor": "white",
+        "bgcolor": PAGE_BG,
         "angularaxis": {
             "tickmode": "array",
             "tickvals": [0, 45, 90, 135, 180, 225, 270, 315],
             "ticktext": ["N (0°)", "NE", "E (90°)", "SE", "S (180°)", "SW", "W (270°)", "NW"],
-            "tickfont": {"size": 18},
+            "tickfont": {"size": 18, "color": INK_SOFT},
             "direction": "clockwise",
-            "rotation": 90,  # North at top
-            "gridcolor": "rgba(0,0,0,0.15)",
-            "linecolor": "rgba(0,0,0,0.3)",
+            "rotation": 90,
+            "gridcolor": GRID,
+            "linecolor": INK_SOFT,
         },
         "radialaxis": {
-            "title": {"text": "Wind Speed (m/s)", "font": {"size": 20}},
-            "tickfont": {"size": 16},
-            "gridcolor": "rgba(0,0,0,0.15)",
-            "linecolor": "rgba(0,0,0,0.3)",
+            "title": {"text": "Wind Speed (m/s)", "font": {"size": 22, "color": INK}},
+            "tickfont": {"size": 16, "color": INK_SOFT},
+            "gridcolor": GRID,
+            "linecolor": INK_SOFT,
             "range": [0, max(speeds) * 1.1],
         },
     },
     legend={
-        "title": {"text": "Time of Day", "font": {"size": 20}},
-        "font": {"size": 18},
-        "bgcolor": "rgba(255,255,255,0.9)",
-        "bordercolor": "rgba(0,0,0,0.2)",
+        "title": {"text": "Time of Day", "font": {"size": 20, "color": INK}},
+        "font": {"size": 18, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
         "x": 1.02,
         "y": 0.98,
         "xanchor": "left",
         "yanchor": "top",
     },
-    template="plotly_white",
     margin={"l": 80, "r": 180, "t": 100, "b": 80},
 )
 
-# Save as PNG (4800 x 2700 px)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save as HTML for interactivity
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save as PNG and HTML with theme suffix
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
