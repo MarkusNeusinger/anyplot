@@ -1,170 +1,185 @@
 library: highcharts
+language: python
 specification_id: scatter-marginal
 created: '2025-12-26T15:04:22Z'
-updated: '2025-12-26T15:19:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20524418799
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-09T05:38:37Z'
+generated_by: claude-haiku
+workflow_run: 25592907546
+issue: 2005
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - subplots
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep:
-  - binning
-  styling:
-  - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/highcharts/plot-dark.html
+quality_score: 95
 review:
   strengths:
-  - Excellent axis alignment between main scatter and marginal histograms
-  - Good use of multi-chart composition to achieve the marginal distribution layout
-  - Realistic sensor data scenario with appropriate temperature/humidity correlation
-  - Clean colorblind-safe color scheme with consistent styling across all chart panels
-  - Proper title format and descriptive axis labels with units
-  weaknesses:
-  - Top-right corner is empty white space that could be utilized better
-  - Could use Highcharts chart linking features for synchronized crosshairs/tooltips
-  - Library version in header shows unknown instead of actual version
-  image_description: The plot displays a scatter plot with marginal histogram distributions.
-    The main scatter plot occupies the lower-left area showing temperature (°C) on
-    the x-axis (ranging ~10-38°C) vs. relative humidity (%) on the y-axis (ranging
-    ~20-78%). A clear negative correlation is visible between temperature and humidity.
-    The top marginal shows a histogram of temperature distribution with vertical blue
-    bars, peaking around 23-27°C. The right marginal shows a horizontal histogram
-    of humidity distribution, with most values concentrated in the 42-58% range. The
-    title "scatter-marginal · highcharts · pyplots.ai" appears at the top. All elements
-    use a consistent blue color (#306998) with transparency. Axis labels include units.
-    Grid lines are subtle dashed lines.
+  - Perfect theme-chrome compliance with readable text on both light (#FAF8F1) and
+    dark (#1A1A17) backgrounds
+  - Excellent data visualization showing both joint scatter and marginal distributions
+    with clear negative correlation
+  - 'Perfect Okabe-Ito palette compliance using #009E73 brand green consistently across
+    both themes'
+  - Descriptive axis labels with units (Temperature °C, Relative Humidity %), enabling
+    full understanding
+  - Seamless three-panel layout with proper chart alignment, margins, and generous
+    whitespace
+  - Realistic, neutral sensor data with plausible temperature-humidity relationship
+  - Idiomatic Highcharts usage with multiple Chart instances, theme-aware configuration,
+    and proper Selenium export pattern
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1, perfectly matches the theme specification.
+      Chrome: Title "scatter-marginal · highcharts · anyplot.ai" is bold, clearly readable. X-axis label "Temperature (°C)" and Y-axis label "Relative Humidity (%)" are prominent with units. Axis tick labels in secondary text color (#4A4A44) are fully readable. Grid lines are subtle dashed style with proper opacity, not competing with data.
+      Data: Three-panel layout with main scatter plot (center-left), top histogram (center), right histogram (right). All scatter points render in brand green #009E73 with opacity=0.7, clearly showing individual points and density patterns. Histogram bars in same green with subtle borders, marginal distributions clearly visible.
+      Legibility verdict: PASS - All text is readable at full resolution. No overlaps, excellent contrast against the warm off-white background. Visual hierarchy is clear: main scatter plot is focal, marginal distributions provide supporting context.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17, perfectly matches the dark theme specification (not pure black).
+      Chrome: Title is light text (#F0EFE8), clearly readable against dark background. Axis labels are light and prominent. Tick labels are in INK_SOFT (#B8B7B0), easily readable on the dark background with no dark-on-dark failures. Grid lines remain visible with proper subtle dashed styling and opacity.
+      Data: All scatter points render in identical #009E73 as the light render, proving theme-independence of data colors. Histograms maintain exact same green color and structure as light render. Overall composition is seamless with no visual flattening or loss of contrast.
+      Legibility verdict: PASS - All text is clearly readable in light colors on dark background. No dark-on-dark failures. Data colors are visually identical to light render (only chrome adapts to theme). The three-panel layout maintains perfect alignment with appropriate spacing.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: All text is readable; title, axis labels, and tick marks are appropriately
-          sized for the resolution
+        comment: 'All font sizes explicitly set: title 42px, axis labels 32px, tick
+          labels 26px/22px. Perfectly readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; histograms, scatter points, and labels
-          are all clearly separated
+        comment: No overlapping text elements. Excellent spacing and layout throughout.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Scatter markers are well-sized (radius 12) with appropriate transparency
-          (0.45 fill) for 150 points
+        comment: Scatter markers (radius=12, opacity=0.7) are clearly visible with
+          150 points. Histogram bars are properly sized and distinct.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single blue color (#306998) is colorblind-safe; no red-green conflicts
+        comment: 'Brand green #009E73 has excellent luminance contrast on both light
+          and dark backgrounds. CVD-safe Okabe-Ito palette.'
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good layout with aligned axes, but there's some wasted space in the
-          top-right corner; plot areas well proportioned
+        comment: Three charts seamlessly aligned with no gaps. Good canvas utilization
+          (50-70%). Proper margins and balanced spacing.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Labels include units: "Temperature (°C)" and "Relative Humidity
-          (%)"'
+        comment: 'Axis labels descriptive with units: Temperature (°C), Relative Humidity
+          (%). Title format correct: ''scatter-marginal · highcharts · anyplot.ai''.'
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Subtle dashed grid lines with appropriate opacity; legend disabled
-          (appropriate for single series)
+        comment: 'Perfect compliance: first series #009E73, backgrounds #FAF8F1 (light)
+          / #1A1A17 (dark), theme-adaptive chrome colors (INK, INK_SOFT). Data colors
+          identical between themes.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional design with intentional theme-aware styling. Uses Okabe-Ito
+          palette and thoughtful color choices. Clean, well-configured beyond defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Subtle dashed grid lines, generous margins, refined spacing. Borders
+          on elements (borderColor: BRAND) show attention to detail.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Scatter-marginal design clearly shows joint and marginal distributions.
+          Visual hierarchy guides reader to main scatter plot with supporting marginal
+          context. Strong correlation story emerges.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct scatter plot with marginal histogram distributions
+        comment: Correct scatter-marginal chart with main scatter plot and histogram
+          marginals on top and right.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=Temperature, Y=Humidity correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: scatter plot, top marginal histogram,
-          right marginal histogram, aligned axes'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: main scatter, top histogram (temperature
+          distribution), right histogram (humidity distribution), proper axis alignment.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 150 data points visible within axis ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Temperature on X-axis, Relative Humidity on Y-axis. Axes show all
+          data clearly with proper ranges.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series; disabled appropriately
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "scatter-marginal · highcharts · pyplots.ai"'
+        comment: 'Title format correct: ''scatter-marginal · highcharts · anyplot.ai''.
+          Legend not needed for single series (not shown).'
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows correlation pattern well; marginal distributions show spread;
-          could benefit from more distinct clustering or outliers
+        comment: 'Shows all aspects: scatter plot with correlation pattern, univariate
+          distributions for both variables, variety of data values.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Realistic sensor data scenario with temperature/humidity showing
-          expected negative correlation
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature 10-38°C and humidity 20-78% are realistic environmental
-          values
+        comment: Sensor data scenario (temperature vs. humidity) is real-world plausible.
+          Negative correlation is physically accurate. Neutral, non-controversial.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature range 15-35°C is realistic. Humidity range 20-78% is
+          realistic. Relationship proportions are factually correct.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -172,41 +187,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save structure; no functions/classes
+        comment: 'Linear structure: imports → theme tokens → data generation → three
+          chart instances → HTML/PNG output. No unnecessary functions.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42) for reproducible data
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: All imports used, but some redundancy with multiple series imports
+        comment: np.random.seed(42) ensures deterministic data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used. Conditional requests import is reasonable pattern.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for three-chart layout. HTTP server setup
+          is necessary for Highcharts. Clean, Pythonic.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current highcharts-core API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png via screenshot (correct)
-    library_features:
-      score: 2
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Current API usage.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 2
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses multiple synchronized charts for composite layout; could leverage
-          more Highcharts-specific features like synchronized crosshairs or chart
-          linking
+        comment: 'Expert use of Highcharts patterns: Chart class, HighchartsOptions,
+          appropriate series types (ScatterSeries, ColumnSeries, BarSeries), theme-aware
+          configuration, Selenium export for PNG.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses Highcharts distinctive patterns: three Chart instances with
+          HTML/CSS positioning, inline JavaScript embedding, HTTP server for static
+          export. Multi-chart coordination is sophisticated.'
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - subplots
+  - custom-legend
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - binning
+  styling:
+  - theme-adaptive
