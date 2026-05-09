@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-marginal: Scatter Plot with Marginal Distributions
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-09
@@ -77,7 +77,13 @@ fig.add_trace(
     )
 )
 
-# Update layout
+# Enhanced hover tooltips for better data storytelling
+fig.update_traces(
+    hovertemplate="<b>Measurement</b><br>Temperature: %{x:.1f}°C<br>Humidity: %{y:.1f}%<extra></extra>",
+    selector=dict(mode="markers"),
+)
+
+# Update layout with refined design: spine removal, subtle grid, publication-grade styling
 fig.update_layout(
     title=dict(text="scatter-marginal · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
     xaxis=dict(
@@ -87,7 +93,11 @@ fig.update_layout(
         gridcolor=GRID,
         linecolor=INK_SOFT,
         showgrid=True,
-        gridwidth=1,
+        gridwidth=0.5,
+        showline=True,
+        linewidth=1.5,
+        mirror=False,
+        side="bottom",
     ),
     yaxis=dict(
         domain=[0, 0.85],
@@ -96,10 +106,18 @@ fig.update_layout(
         gridcolor=GRID,
         linecolor=INK_SOFT,
         showgrid=True,
-        gridwidth=1,
+        gridwidth=0.5,
+        showline=True,
+        linewidth=1.5,
+        mirror=False,
+        side="left",
     ),
-    xaxis2=dict(domain=[0.85, 1], showticklabels=False, gridcolor=GRID, linecolor=INK_SOFT),
-    yaxis2=dict(domain=[0.85, 1], showticklabels=False, gridcolor=GRID, linecolor=INK_SOFT),
+    xaxis2=dict(
+        domain=[0.85, 1], showticklabels=False, gridcolor=GRID, linecolor=INK_SOFT, showgrid=False, showline=False
+    ),
+    yaxis2=dict(
+        domain=[0.85, 1], showticklabels=False, gridcolor=GRID, linecolor=INK_SOFT, showgrid=False, showline=False
+    ),
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font=dict(family="Arial, sans-serif", color=INK),
@@ -107,6 +125,7 @@ fig.update_layout(
     margin=dict(l=120, r=80, t=100, b=100),
     height=900,
     width=1600,
+    hovermode="closest",
 )
 
 # Save
