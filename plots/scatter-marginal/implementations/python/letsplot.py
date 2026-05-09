@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-marginal: Scatter Plot with Marginal Distributions
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-09
+Quality: 95/100 | Updated: 2026-05-09
 """
 
 import os
