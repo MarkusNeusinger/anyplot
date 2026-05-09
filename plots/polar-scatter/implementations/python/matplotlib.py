@@ -1,24 +1,35 @@
-""" pyplots.ai
+"""anyplot.ai
 polar-scatter: Polar Scatter Plot
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: matplotlib | Python 3.13
+Quality: pending | Created: 2025-12-26
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.lines import Line2D
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+COLORS = ["#009E73", "#D55E00", "#0072B2"]
+
 # Data - Wind measurement data with prevailing directions
 np.random.seed(42)
 
-# Generate 120 wind observations with realistic prevailing wind patterns
 n_points = 120
 
 # Create clusters around prevailing wind directions (SW and NW winds common)
 # Cluster 1: Southwest winds (around 225 degrees) - morning observations
 morning_angles = np.random.normal(225, 30, 40)
-morning_speeds = np.random.gamma(2, 3, 40)  # Wind speeds in m/s (typical 5-15 m/s)
+morning_speeds = np.random.gamma(2, 3, 40)
 
 # Cluster 2: Northwest winds (around 315 degrees) - afternoon observations
 afternoon_angles = np.random.normal(315, 25, 40)
@@ -39,53 +50,64 @@ angles_deg = angles_deg % 360
 # Convert to radians for polar plot
 angles_rad = np.deg2rad(angles_deg)
 
-# Create polar plot with square aspect ratio (better for polar)
-fig, ax = plt.subplots(figsize=(12, 12), subplot_kw={"projection": "polar"})
+# Plot
+fig, ax = plt.subplots(figsize=(12, 12), subplot_kw={"projection": "polar"}, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Color mapping for categories
-colors = {"Morning": "#306998", "Afternoon": "#FFD43B", "Evening": "#8B4513"}
-color_list = [colors[cat] for cat in categories]
+# Color mapping for categories using Okabe-Ito palette
+color_map = {"Morning": COLORS[0], "Afternoon": COLORS[1], "Evening": COLORS[2]}
+color_list = [color_map[cat] for cat in categories]
 
-# Plot scatter with size based on data density considerations (100-120 points)
-# Use s=150 for visibility, alpha=0.7 for overlap handling
-scatter = ax.scatter(angles_rad, speeds, c=color_list, s=150, alpha=0.7, edgecolors="white", linewidths=0.5)
+# Plot scatter with size based on data density considerations (120 points)
+ax.scatter(angles_rad, speeds, c=color_list, s=150, alpha=0.7, edgecolors=PAGE_BG, linewidths=0.5)
 
 # Configure angular axis (theta)
-ax.set_theta_zero_location("N")  # 0 degrees at top (North)
-ax.set_theta_direction(-1)  # Clockwise direction (compass-like)
+ax.set_theta_zero_location("N")
+ax.set_theta_direction(-1)
 ax.set_thetagrids(
-    [0, 45, 90, 135, 180, 225, 270, 315], labels=["N", "NE", "E", "SE", "S", "SW", "W", "NW"], fontsize=18
+    [0, 45, 90, 135, 180, 225, 270, 315],
+    labels=["N", "NE", "E", "SE", "S", "SW", "W", "NW"],
+    fontsize=18,
+    color=INK_SOFT,
 )
 
-# Configure radial axis - use 10 unit intervals to avoid crowded labels
-max_speed = np.ceil(speeds.max() / 10) * 10  # Round up to nearest 10
+# Configure radial axis
+max_speed = np.ceil(speeds.max() / 10) * 10
 ax.set_rlim(0, max_speed)
 ax.set_rticks(np.arange(0, max_speed + 1, 10))
-ax.tick_params(axis="y", labelsize=14)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
-# Add radial label
-ax.set_ylabel("Wind Speed (m/s)", fontsize=18, labelpad=35)
+# Radial gridlines
+ax.grid(True, alpha=0.2, linewidth=0.8, color=INK_SOFT)
+
+# Radial label
+ax.set_ylabel("Wind Speed (m/s)", fontsize=20, color=INK, labelpad=35)
 
 # Title
-ax.set_title("polar-scatter · matplotlib · pyplots.ai", fontsize=24, pad=20)
+ax.set_title("polar-scatter · matplotlib · anyplot.ai", fontsize=24, color=INK, pad=20)
 
 # Create custom legend
 legend_elements = [
-    Line2D([0], [0], marker="o", color="w", markerfacecolor="#306998", markersize=14, label="Morning"),
-    Line2D([0], [0], marker="o", color="w", markerfacecolor="#FFD43B", markersize=14, label="Afternoon"),
-    Line2D([0], [0], marker="o", color="w", markerfacecolor="#8B4513", markersize=14, label="Evening"),
+    Line2D([0], [0], marker="o", color="w", markerfacecolor=COLORS[0], markersize=14, label="Morning"),
+    Line2D([0], [0], marker="o", color="w", markerfacecolor=COLORS[1], markersize=14, label="Afternoon"),
+    Line2D([0], [0], marker="o", color="w", markerfacecolor=COLORS[2], markersize=14, label="Evening"),
 ]
-ax.legend(
+leg = ax.legend(
     handles=legend_elements,
     loc="upper left",
-    bbox_to_anchor=(1.05, 1.0),
+    bbox_to_anchor=(1.02, 1.0),
     fontsize=16,
     title="Time of Day",
     title_fontsize=18,
 )
-
-# Grid styling
-ax.grid(True, alpha=0.3, linestyle="--")
+if leg:
+    leg.get_frame().set_facecolor(ELEVATED_BG)
+    leg.get_frame().set_edgecolor(INK_SOFT)
+    leg.get_frame().set_linewidth(0.8)
+    leg.get_frame().set_alpha(0.95)
+    for text in leg.get_texts():
+        text.set_color(INK_SOFT)
+    leg.get_title().set_color(INK)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
