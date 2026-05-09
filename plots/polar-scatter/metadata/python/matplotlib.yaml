@@ -1,167 +1,170 @@
 library: matplotlib
+language: python
 specification_id: polar-scatter
 created: '2025-12-26T16:15:40Z'
-updated: '2025-12-26T16:19:50Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20525458718
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/matplotlib/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - polar-projection
-  - custom-legend
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-05-09T10:35:51Z'
+generated_by: claude-haiku
+workflow_run: 25598914355
+issue: 2023
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 95
 review:
   strengths:
-  - Excellent use of compass-style polar configuration (North at top, clockwise direction)
-    making the wind data intuitive to interpret
-  - Good color-coded time-of-day categorization with realistic clustering patterns
-    showing prevailing wind directions
-  - Clean, readable code following KISS principles with proper random seed for reproducibility
-  - Appropriate marker sizing and alpha for the data density (120 points)
-  - Proper axis labeling with units and correct title format
-  weaknesses:
-  - Legend positioned too far from plot (bbox_to_anchor=(1.05, 1.0)) creating unnecessary
-    whitespace; could be positioned closer or inside the plot
-  - Could use matplotlib distinctive features more (e.g., colorbar for continuous
-    third variable, custom tick formatters, or annotation capabilities)
-  image_description: 'The plot displays a polar scatter plot for wind measurement
-    data with a compass-style orientation (North at top, clockwise direction). Data
-    points are positioned by wind direction (angle) and wind speed (radius, 0-20 m/s).
-    Three categories are shown: Morning (blue circles) clustered around SW direction,
-    Afternoon (yellow circles) clustered around NW direction, and Evening (brown circles)
-    distributed across all directions. The title "polar-scatter · matplotlib · pyplots.ai"
-    appears at top center. A "Time of Day" legend is positioned in the upper right.
-    Radial gridlines appear at 10 and 20 m/s intervals. The axis label "Wind Speed
-    (m/s)" appears on the left side.'
+  - Perfect theme adaptation with excellent readability in both light and dark renders
+  - Ideal use of polar projection for directional wind data
+  - Excellent visual hierarchy through color encoding and data clustering
+  - Professional code with explicit font sizing and clean structure
+  - Complete spec compliance with all required features
+  - Proper theme-aware chrome that maintains readability across both renders
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title, compass labels (N, NE, E, SE, S, SW, W, NW), radial axis label "Wind Speed (m/s)", and tick labels all rendered in dark ink and clearly readable
+      Data: Three categories encoded in Okabe-Ito colors: Morning (#009E73), Afternoon (#D55E00), Evening (#0072B2). Markers are well-sized (s=150) with alpha=0.7 and clear edge definition. All 120 points are distinguishable.
+      Legend: Positioned outside plot area in upper right, with theme-appropriate frame and background
+      Legibility verdict: PASS - All text is dark, clear, and perfectly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title and all labels rendered in light text (#F0EFE8 for primary text, #B8B7B0 for secondary), clearly readable against dark background. Grid lines (color=INK_SOFT) are subtle but visible. No dark-on-dark failures.
+      Data: Markers show identical colors to light render - green (#009E73), orange (#D55E00), blue (#0072B2). This confirms data colors are theme-independent as required.
+      Legend: Frame and text color properly adapted to dark theme with good contrast
+      Legibility verdict: PASS - All text is light-colored, readable against dark background, with no contrast failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, direction labels at 18pt, tick labels at 14pt, legend
-          at 16pt - all clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; legend positioned outside plot area
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
+          Perfectly readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Compass labels, radial label, and legend
+          are all well-spaced.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Marker size (s=150) and alpha (0.7) appropriate for 120 points; slight
-          deduction as some brown/blue overlap makes individual points harder to distinguish
+        comment: 120 scatter points with s=150 and alpha=0.7 perfectly adapted for
+          density. All clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue (#306998), Yellow (#FFD43B), and Brown (#8B4513) are distinguishable;
-          minor concern that blue and brown could be confused in some colorblind conditions
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Square 12x12 figure appropriate for polar plot; good canvas utilization
-          with legend outside
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Wind Speed (m/s)" includes units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe. No contrast failures.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 12×12 figure fills canvas well with balanced margins and proper legend
+          placement.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid has alpha=0.3 which is good, but legend is positioned quite
-          far from the plot (bbox_to_anchor=(1.05, 1.0))
+        comment: Descriptive labels with units. Title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito 1–3 used correctly. Backgrounds are #FAF8F1 (light) and
+          #1A1A17 (dark). Theme-correct chrome in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful design with custom legend and theme-aware styling. Professional
+          but not exceptional.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, polished legend frame, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Wind clustering by time visible through color and position. Good
+          visual hierarchy.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct polar scatter plot
+        comment: Correct polar scatter plot with all subtypes.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Angle = wind direction, Radius = wind speed correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec requirements met: 120 points, angle/radius encoding, color
-          for third variable (time of day), compass-style labels, radial gridlines'
-      - id: SC-04
-        name: Data Range
+        comment: Theta, radius, gridlines, compass labels, color encoding, legend,
+          realistic wind data all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Radial axis starts at 0 and extends to 20 (max data ~22)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Angles correctly converted to radians. Radius shows wind speed. All
+          data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Morning, Afternoon, Evening
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "polar-scatter · matplotlib · pyplots.ai"
+        comment: Title format correct. Legend labels match data.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows prevailing wind directions (SW morning, NW afternoon) and variable
-          evening winds; good clustering patterns; minor deduction as data is perhaps
-          too clustered, limiting spread demonstration
+        comment: Shows wind patterns across three time categories with different prevailing
+          directions.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Wind measurement scenario with time-of-day variation is realistic
-          and comprehensible
+        comment: Wind direction/speed data is scientifically realistic and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Wind speeds 0-22 m/s are realistic; minor point that most speeds
-          cluster 0-10 m/s with only a few outliers reaching 20+
+        comment: Wind speeds and directions follow physical reality.
     code_quality:
       score: 10
       max: 10
@@ -171,41 +174,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: 'Linear structure: imports → tokens → data → plot → save.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at start
+        comment: Uses np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib.pyplot, numpy, Line2D)
+        comment: All imports are used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: No deprecated functions
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, no fake UI or over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png using current API.
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses matplotlib's polar projection and compass configuration (set_theta_zero_location,
-          set_theta_direction, set_thetagrids), but these are standard polar features
-          rather than distinctive matplotlib strengths
+        passed: true
+        comment: High-level API with proper use of set_thetagrids, set_rticks, custom
+          legend via Line2D.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper use of matplotlib's polar projection with meteorological convention
+          (theta at North, clockwise direction).
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
