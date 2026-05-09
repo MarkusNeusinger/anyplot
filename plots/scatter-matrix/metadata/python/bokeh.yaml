@@ -1,171 +1,188 @@
 library: bokeh
+language: python
 specification_id: scatter-matrix
 created: '2025-12-26T16:14:32Z'
-updated: '2025-12-26T16:17:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20525445915
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/bokeh/plot.html
+updated: '2026-05-09T14:53:12Z'
+generated_by: claude-haiku
+workflow_run: 25603731782
+issue: 2035
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/bokeh/plot-dark.html
 quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - subplots
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  - columndatasource
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
-  - edge-highlighting
-  - grid-styling
 review:
   strengths:
-  - Excellent use of Bokeh ColumnDataSource and factor_cmap for color mapping by species
-  - Clean 4x4 grid layout with histograms on diagonal and scatter plots off-diagonal
-  - Colorblind-safe palette (blue/yellow/teal) with good contrast
-  - Proper axis labels with units on all edges
-  - Correct title format placement in top-left cell
-  - Well-sized text for the 3600x3600 canvas (20pt axis labels, 16pt ticks)
-  - Dashed grid lines at appropriate alpha for subtlety
+  - Perfect theme adaptation — no dark-on-dark failures; all colors use correct tokens
+    (INK, INK_SOFT, PAGE_BG, ELEVATED_BG)
+  - 'Professional, idiomatic Bokeh: ColumnDataSource, factor_cmap for categorical
+    binding, gridplot, Selenium screenshot (not broken export_png)'
+  - Text legibility across both themes — 28pt title, 20pt/16pt labels precisely sized
+    for 3600×3600 canvas; zero readability issues
+  - 'Okabe-Ito palette correctly applied: first series #009E73 (brand green), 3-color
+    order preserved, data colors identical light↔dark'
+  - 'Strong spec compliance: 4×4 matrix, histograms on diagonal, scatter off-diagonal,
+    50 points/species, proper axis labels and title format'
   weaknesses:
-  - Legend only visible in top-left histogram cell; could be more prominent or placed
-    outside the grid
-  - Output includes both PNG and HTML; while HTML is appropriate for Bokeh, it is
-    extra output
-  image_description: 'The scatter matrix displays a 4×4 grid of plots comparing four
-    Iris dataset variables: Sepal Length (cm), Sepal Width (cm), Petal Length (cm),
-    and Petal Width (cm). The diagonal cells show overlapping stacked histograms for
-    three species distributions, while off-diagonal cells show scatter plots for each
-    variable pair. Colors used are Python Blue (#306998) for Setosa, Python Yellow
-    (#FFD43B) for Versicolor, and teal (#2AA198) for Virginica. The title "scatter-matrix
-    · bokeh · pyplots.ai" appears at the top-left corner. A legend in the top-left
-    histogram cell identifies the three species. Variable names with units appear
-    along the left (y-axis) and bottom (x-axis) edges. Grid lines are subtle and dashed.
-    All plots have consistent dark gray outlines.'
+  - 'Design Excellence (DE-01) score capped at 5/8: styling is clean and professional
+    but lacks distinctive visual refinement — could emphasize key relationships with
+    size variation or color intensity contrast'
+  - 'Visual storytelling (DE-03) at 3/6: matrix structure is clear but lacks hierarchy
+    or focal points to guide viewer through correlations; histograms could be more
+    visually prominent'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface.
+      Chrome: Title "scatter-matrix · bokeh · anyplot.ai" in dark #1A1A17, axis labels (Sepal Length/Width, Petal Length/Width) in dark, tick labels in soft gray (#4A4A44). All readable with 28pt/20pt/16pt sizing. Legend in top-left cell with species names (Setosa, Versicolor, Virginica).
+      Data: Okabe-Ito colors — green (#009E73) setosa, orange (#D55E00) versicolor, blue (#0072B2) virginica. Scatter points 14px with white edges, alpha=0.65. Histograms on diagonal with stacked colors, ~50 points per species. Grid lines subtle (alpha=0.08), no spines.
+      Legibility verdict: PASS — all elements clearly readable, strong contrast, no overlap, professional composition.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface.
+      Chrome: Title, axis labels in light #F0EFE8 (high contrast on dark). Tick labels in soft light gray (#B8B7B0). All readable. Legend text light. No dark-on-dark failures.
+      Data: **Colors identical to light render** (#009E73 green, #D55E00 orange, #0072B2 blue preserved). Scatter edges adapted to #2A2A27 for definition on dark. Histograms properly displayed with full color contrast.
+      Legibility verdict: PASS — all text readable against dark background, data colors unchanged, theme tokens correctly applied throughout. Zero accessibility failures.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: 'All text clearly readable: title at 28pt, axis labels at 20pt, tick
-          labels at 16pt'
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere in the grid
+        comment: All text readable in both themes; 28pt title, 20pt/16pt labels properly
+          sized for 3600×3600 canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Grid layout prevents collisions; all 16 cells clearly separated with
+          good spacing
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: 'Scatter markers sized well (14px), histograms visible. Minor: some
-          scatter cells have slightly dense overlap'
+        comment: 14px markers with white/dark edges and alpha=0.65 handle density;
+          histograms prominent with clear stacking
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/Yellow/Teal palette is colorblind-safe, good contrast
+        comment: Okabe-Ito palette (CVD-safe); no red-green sole signal; species distinction
+          via color + marker position
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: 4x4 grid fills canvas well, but square format means some wasted space
-          around edges
+        comment: Square 3600×3600 format ideal for symmetric matrix; generous cell
+          size (900px); nothing cut off
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Sepal Length (cm)", "Petal Width
-          (cm)", etc.'
+        comment: Descriptive labels (Sepal Length, Width, Petal Length, Width); title
+          format correct (scatter-matrix · bokeh · anyplot.ai)
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Grid subtle (alpha=0.3, dashed), legend well-placed in top-left cell
+        comment: 'First series #009E73; Okabe-Ito order (1→3); data colors identical
+          light↔dark; backgrounds #FAF8F1/#1A1A17 correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Clean professional styling with proper tokens; lacks distinctive
+          visual refinement or emphasis to elevate beyond functional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed (outline_line_width=0), grid subtle (alpha=0.08),
+          whitespace generous; could push further with more polished details
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Matrix structure clear but lacks visual hierarchy or focal points;
+          categorical coloring helps but no emphasis to guide viewer through key insights
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct scatter matrix / pairplot implementation
+        comment: 'Correct scatter matrix: 4×4 grid, histograms diagonal, scatter off-diagonal,
+          symmetric layout'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Variables correctly assigned to rows/columns
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Diagonal histograms, off-diagonal scatters, color encoding for groups
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: pairwise scatter, diagonal KDE-equiv (histograms),
+          categorical grouping (setosa/versicolor/virginica), variable names, density
+          handling'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 0
-        max: 2
+        comment: X/Y axes correct; all 4 variables represented; ranges appropriate;
+          50 points/species shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend shows only in top-left cell; labels correct but could be more
-          prominent
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "scatter-matrix · bokeh · pyplots.ai"
+        comment: Title 'scatter-matrix · bokeh · anyplot.ai' correct format; legend
+          shows Setosa/Versicolor/Virginica in top-left
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows correlations between petal/sepal measurements, species clustering
-          clearly visible
+        comment: Iris-like dataset with 4 continuous variables; all aspects of plot
+          type demonstrated (distributions, correlations, clusters)
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Iris dataset is classic ML/statistics example, measurements are plausible
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values in realistic botanical measurement ranges (cm)
+        comment: Iris dataset well-known, plausible, neutral; synthetic generation
+          with realistic means/stdevs per species
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sensible for iris (sepal ~5-7cm, width ~2-4cm, petal ~1-7cm,
+          width ~0-3cm); domain appropriate
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,40 +190,69 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → grid construction → save'
+        comment: Simple loop-based grid construction; no unnecessary functions; direct,
+          readable code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output across runs
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: os, time, Path, numpy, bokeh modules, selenium'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake interactivity; clean styling application
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current Bokeh API used
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but also outputs plot.html (correct but minor)
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly outputs plot-{THEME}.html + .png; current Selenium/Bokeh
+          API; no deprecated methods
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, factor_cmap, gridplot properly. Could leverage
-          more Bokeh-specific interactivity features
+        comment: 'Bokeh best practices: ColumnDataSource for binding, figure() with
+          proper config, gridplot for layout, factor_cmap for categorical, Selenium
+          for screenshot (not broken export_png)'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Uses factor_cmap, gridplot, Title objects well; doesn't explore more
+          advanced Bokeh features (hovers, callbacks, selection), though may be out
+          of scope for static render
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - subplots
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - columndatasource
+  - matrix-construction
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
+  - minimal-chrome
