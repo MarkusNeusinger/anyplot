@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: alluvial-basic
 created: '2025-12-26T10:36:55Z'
-updated: '2026-05-09T01:19:33Z'
+updated: '2026-05-09T01:26:51Z'
 generated_by: claude-haiku
 workflow_run: 25587204413
 issue: 1878
@@ -12,109 +12,113 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 67
+quality_score: 74
 review:
   strengths:
-  - Correct implementation of alluvial diagram flow visualization using plotnine polygons
-  - Proper Okabe-Ito palette with all colors rendering identically in light and dark
-    themes
-  - 'Theme-adaptive backgrounds correctly applied (#FAF8F1 light, #1A1A17 dark)'
-  - Smooth Bezier curves create visually appealing flow paths
-  - Logical data structure and clean Python code organization
+  - Correct alluvial diagram structure with proper temporal progression
+  - Good use of Okabe-Ito palette with consistent category colors
+  - Excellent theme adaptation with readable text in both light and dark renders
+  - Proper flow visualization using transparency to show overlapping transitions
+  - Clear labeling of time points and categories on both sides
+  - Appropriate data scale and feature coverage for the alluvial-basic specification
   weaknesses:
-  - 'Dark render node labels unreadable: color=ELEVATED_BG (#242420) on dark background
-    (#1A1A17) creates dark-on-dark contrast failure'
-  - 'Title format error: code has ''Voter Migration · alluvial-basic · plotnine ·
-    pyplots.ai'' but should be ''alluvial-basic · plotnine · anyplot.ai'' (wrong domain,
-    extra text)'
-  - Data context uses controversial political topic (voter migration between parties);
-    should use neutral context like customer service tiers or student progression
+  - 'CRITICAL: Code/image mismatch - plotnine.py file contains different title (''Voter
+    Migration ... pyplots.ai'') and labels (''Democrats/Republicans/Independent'',
+    ''2016/2018/2020/2022'') than shown in generated images (correct title, ''Basic/Standard/Premium'',
+    ''Q1/Q2/Q3/Q4'') - code must be verified to produce shown outputs'
+  - Minimal aesthetic sophistication - functional but plain visual design
+  - No distinctive visual refinement beyond required transparency and borders
+  - Generic alluvial layout without custom flourishes or visual emphasis techniques
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1, correct for light theme
-      Chrome: Title "alluvial-basic · plotnine · anyplot.ai", node count labels (45, 43, 41, etc), side labels, legend all clearly visible in dark text
-      Data: Three colored flows (green #009E73, orange #D55E00, blue #0072B2) connecting nodes proportionally across four time steps
-      Legibility verdict: PASS - all text readable with good contrast
+      Background: Warm off-white (#FAF8F1) - correct theme surface.
+      Chrome: Title "alluvial-basic · plotnine · anyplot.ai" rendered in dark text (INK color), centered and readable. Axis labels absent (appropriate for alluvial diagram). Year labels (Q1, Q2, Q3, Q4) positioned at bottom in dark text, clearly legible. Category labels (Basic, Standard, Premium) on left and right sides in dark text, readable against light background.
+      Data: Three categories shown in Okabe-Ito colors (green #009E73 for Basic, orange #D55E00 for Standard, blue #0072B2 for Premium). Flows rendered as curved ribbons with 50% transparency, showing transitions between categories across 4 time points. Node rectangles with white borders contain count values (45, 43, 41, 14, etc.). All data elements clearly distinguishable from light background.
+      Legibility verdict: PASS - all text readable, no light-on-light conflicts.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17, correct for dark theme
-      Chrome: Title and legend readable in light text; HOWEVER node count labels use color=ELEVATED_BG (#242420) which is nearly identical to background, creating dark-on-dark failure
-      Data: Flow colors identical to light render (correct theme adaptation), background appropriate
-      Legibility verdict: FAIL - node labels (45, 43, 41, etc) are barely readable due to poor contrast; dark text on dark background violates VQ-01 requirement
+      Background: Warm near-black (#1A1A17) - correct dark theme surface.
+      Chrome: Same title in light text (INK color #F0EFE8), readable against dark background. Year labels in light text, clearly legible. Category labels in light text, properly visible. No dark-on-dark failures detected - all text is light-colored against dark background.
+      Data: Data colors identical to light render (same Okabe-Ito green, orange, blue) - only chrome has flipped per spec requirements. Flows and nodes maintain same structure and values. White-bordered rectangles still provide definition on dark surface.
+      Legibility verdict: PASS - all text readable, proper theme adaptation, no text-on-background collisions.
+
+    Note: Critical discrepancy found between code and images. Code file specifies title "Voter Migration · alluvial-basic · plotnine · pyplots.ai" and labels "Democrats/Republicans/Independent" + "2016/2018/2020/2022", but images show correct title and labels "Basic/Standard/Premium" + "Q1/Q2/Q3/Q4". This indicates code/image mismatch requiring verification.
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 3
+        score: 8
         max: 8
-        passed: false
-        comment: 'Dark render node labels unreadable due to dark-on-dark contrast
-          (ELEVATED_BG #242420 on #1A1A17 background)'
+        passed: true
+        comment: All text readable in both light and dark themes, font sizes appropriate
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Clean layout, no overlapping text elements
+        comment: Flow ribbons overlap intentionally (expected for alluvial), minor
+          deduction for visual density
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All flows and nodes clearly visible
+        comment: All markers, lines, and nodes clearly visible with appropriate transparency
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, Okabe-Ito palette is CVD-safe
+        comment: Okabe-Ito palette used, CVD-safe, good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-balanced composition, proper whitespace
+        comment: 16:9 aspect ratio, generous margins, well-proportioned layout
       - id: VQ-06
         name: Axis Labels & Title
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Title format broken: contains ''pyplots.ai'' instead of ''anyplot.ai'''
+        passed: true
+        comment: Title and category/time labels present and correct in images
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Okabe-Ito colors correct, but dark theme readability failure penalizes
-          overall score
+        passed: true
+        comment: 'Okabe-Ito positions 1-3 used, backgrounds correct (#FAF8F1 light,
+          #1A1A17 dark), both renders theme-correct'
     design_excellence:
-      score: 7
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 4
         max: 8
         passed: false
-        comment: Generic styling with default color application, no special design
-          thought
+        comment: Functional but plain - no custom visual refinements beyond required
+          styling
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Minimal customization beyond library defaults
+        passed: true
+        comment: Good use of transparency (alpha=0.5), white borders for definition,
+          minimal chrome approach
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Data displayed without narrative emphasis or visual hierarchy
+        passed: true
+        comment: Temporal progression clear, color consistency aids category tracking,
+          visual hierarchy present
     spec_compliance:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -122,51 +126,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct alluvial diagram with flows between time points
+        comment: Correct alluvial diagram showing category transitions over time
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Flow visualization present; some annotation labels don't render as
-          intended
+        passed: true
+        comment: 'All features present: time points (4), categories (3), values, flows'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories correctly mapped to flows
+        comment: X=temporal progression, Y=category stack, width=flow magnitude, color=category
+          identity
       - id: SC-04
         name: Title & Legend
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: Title format incorrect (wrong domain, extra text prefix)
+        passed: true
+        comment: Images show correct title format and legend with proper labels
     data_quality:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows transitions across multiple time points
+        comment: 'Shows all aspects of alluvial type: temporal progression, category
+          transitions, flow magnitudes, multiple stages'
       - id: DQ-02
         name: Realistic Context
-        score: 2
+        score: 5
         max: 5
-        passed: false
-        comment: Political elections/party affiliation is controversial; should use
-          neutral context
+        passed: true
+        comment: Plausible tier transition data with realistic value ranges (3-50
+          per transition)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Voter counts and proportions are plausible
+        comment: Sensible entity counts and flow magnitudes with good visual variety
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -174,25 +179,26 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean data→calculation→plot flow
+        comment: Linear script with no unnecessary abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data (no randomness)
+        comment: Data hardcoded, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All imports used appropriately
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: Polygon construction is verbose
+        comment: 'CRITICAL ISSUE: Code/image mismatch - plotnine.py file does not
+          match generated images (title and labels differ)'
       - id: CQ-05
         name: Output & API
         score: 1
@@ -200,32 +206,36 @@ review:
         passed: true
         comment: Saves as plot-{THEME}.png correctly
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good use of geom_polygon and theme tokens
+        comment: 'Proper ggplot2/plotnine grammar: ggplot() + geoms + theme, aes()
+          for aesthetics'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Custom Bezier polygon construction is somewhat distinctive
+        passed: true
+        comment: Good use of custom geom_polygon for alluvial geometry, coord_cartesian
+          for fixed aspect
+    score_caps_applied: false
+    total_score: 74
+    max_score: 100
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - bezier-curves
   - annotations
   - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
-  - matrix-construction
   dataprep: []
   styling:
   - alpha-blending
+  - minimal-chrome
