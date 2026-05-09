@@ -1,173 +1,180 @@
 library: seaborn
+language: python
 specification_id: heatmap-clustered
 created: '2025-12-26T15:21:35Z'
-updated: '2025-12-26T15:23:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20524719409
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-09T08:49:46Z'
+generated_by: claude-haiku
+workflow_run: 25596823940
+issue: 2021
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/seaborn/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - subplots
-  patterns:
-  - data-generation
-  - groupby-aggregation
-  dataprep:
-  - hierarchical-clustering
-  styling:
-  - custom-colormap
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 96
 review:
   strengths:
-  - Excellent use of seaborn clustermap function with all key parameters (method,
-    metric, row_colors, col_colors)
-  - Well-designed synthetic data with three distinct gene clusters showing different
-    response patterns to treatment
-  - Clean diverging colormap (RdBu_r) centered at zero, appropriate for expression
-    data
-  - Informative legends for both gene groups and experimental conditions
-  - Proper dendrogram display on both axes demonstrating hierarchical relationships
-  - Realistic gene expression analysis context with Control/Treatment experimental
-    design
+  - Perfect visual quality score (30/30) with all text legible and properly spaced
+  - Flawless spec compliance (15/15) implementing all required features including
+    dendrograms, proper clustering method, and diverging colormap
+  - Perfect code quality (10/10) with clean, reproducible code and no fake interactivity
+  - Excellent theme adaptation in both light and dark renders with proper color token
+    usage
+  - Professional data storytelling through row/column color annotations and dendrograms
+    that guide visual discovery
+  - Realistic, biologically plausible synthetic data showcasing meaningful clustering
+    patterns
   weaknesses:
-  - The Condition legend placement partially overlaps with the Genes y-axis label,
-    creating visual clutter
-  - The two separate legends (Gene Group and Condition) could potentially be better
-    positioned
-  image_description: 'The plot displays a clustered heatmap showing gene expression
-    data with hierarchical clustering dendrograms on both rows (left side) and columns
-    (top). The heatmap uses a diverging RdBu_r colormap ranging from -3 (blue) to
-    +3 (red), centered at 0 (white). There are 30 genes (rows) and 20 samples (columns).
-    Row annotations show three gene groups: Immune (blue), Metabolic (yellow), and
-    Signaling (green). Column annotations show two conditions: Control (pink/coral)
-    and Treatment (light blue). The title "heatmap-clustered · seaborn · pyplots.ai"
-    appears at the top. A colorbar labeled "Expression (z-score)" is positioned on
-    the left. Two legends appear on the right side - one for Gene Group and one for
-    Condition. The clustering has successfully grouped Treatment samples (T12-T19)
-    together on the left and Control samples (C01-C10) on the right, and genes are
-    reorganized showing distinct expression patterns.'
+  - 'Minor: DE-01 and DE-02 could push higher with additional dendrogram styling refinement'
+  - 'Minor: Custom legend positioning via bbox_to_anchor is somewhat brittle and could
+    be improved for future robustness'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — not pure white, properly themed
+      Chrome: Title "heatmap-clustered · seaborn · anyplot.ai" in dark text (#1A1A17); axis labels "Samples" (x) and "Genes" (y) in dark text; tick labels at 45° rotation readable; colorbar label "Expression (z-score)" in dark text
+      Data: RdBu_r diverging colormap (-3 dark blue to +3 dark red, centered white); row/column color annotations visible (blue/yellow/green for gene groups, red/light-blue for conditions); dendrogram structures prominent; all cells clearly distinguishable
+      Legibility verdict: PASS — all elements readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — not pure black, properly themed
+      Chrome: Title in light text (#F0EFE8) clearly visible; axis labels in light text (#F0EFE8); tick labels in secondary light text (#B8B7B0); colorbar label in light text — no dark-on-dark failures
+      Data: RdBu_r colormap identical to light render (data colors unchanged, only chrome adapted); row/column color annotations match light render exactly; dendrograms equally visible
+      Legibility verdict: PASS — all elements readable against dark background; data colors identical to light render; no theme adaptation failures
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt is clear, axis labels at 20pt readable, tick labels
-          at 12pt legible
+        comment: Font sizes explicitly set (24pt title, 20pt labels, 12pt ticks);
+          all readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: All text elements are well separated with rotated x-axis labels
+        comment: No text collisions; 45° label rotation is appropriate for heatmap
+          axis labels
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Heatmap cells clearly visible with white gridlines, optimal sizing
-          for 30x20 matrix
+        comment: 'All elements visible: dendrograms, matrix cells, colorbars, row/column
+          annotations, legends'
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: RdBu_r is a standard colorblind-safe diverging colormap
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good layout but the two legends on the right side create slight imbalance;
-          Condition legend overlaps with Genes y-axis label
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Samples" and "Genes" are descriptive labels'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: RdBu_r is perceptually uniform and CVD-safe; adequate contrast throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions (16:12 figsize); nothing cut off; generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: White gridlines work well; legends are functional but Condition legend
-          placement partially overlaps with y-axis label
+        comment: Descriptive labels with units; title format 'spec-id · library ·
+          anyplot.ai' correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'RdBu_r for diverging data; backgrounds #FAF8F1 (light) / #1A1A17
+          (dark); both renders theme-correct'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom row/column color bars for group annotations; thoughtful dendrogram
+          inclusion; theme-adaptive tokens; professional polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean styling without embellishment; subtle grid; generous margins;
+          spines appropriate for heatmap
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy (dendrograms guide to clusters); color magnitude
+          tells expression story; annotations support discovery
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct clustered heatmap with dendrograms
+        comment: 'Correct chart type: hierarchical clustered heatmap with dendrograms
+          on both axes'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Matrix properly displayed with genes on rows, samples on columns
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Dendrograms on both axes, row/column color annotations, diverging
-          colormap, colorbar present, Ward's method used
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: dendrograms, Ward''s clustering, Euclidean
+          distance, reordering, diverging colormap, colorbar, row/column color bars'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within -3 to +3 range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Samples on x-axis, genes on y-axis, expression values color-coded,
+          colorbar labeled correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Both Gene Group and Condition legends correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "{spec-id} · {library} · pyplots.ai"
+        comment: Title format correct; legends for gene groups and conditions properly
+          labeled
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows distinct gene clusters with different expression patterns,
-          demonstrates hierarchical relationships
+        comment: 'All plot aspects shown: clustering dendrograms, reordered matrix,
+          group annotations; patterns clearly visible'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Gene expression analysis is a perfect real-world application; Control
-          vs Treatment experimental design is standard
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Z-score values from -3 to +3 are realistic for normalized expression
-          data
+        comment: Gene expression data is biologically plausible; Control/Treatment
+          conditions sensible; gene groups realistic; no controversial data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Matrix size (30×20) is readable within spec; z-scores (-3 to +3)
+          realistic; clustering is meaningful
     code_quality:
       score: 10
       max: 10
@@ -177,42 +184,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save, no functions/classes'
+        comment: No unnecessary functions or classes; straightforward data generation
+          and plotting
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility
+        comment: Uses np.random.seed(42) for reproducible synthetic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib.pyplot, numpy, pandas, seaborn,
-          Patch)
+        comment: Only necessary imports (os, matplotlib, numpy, pandas, seaborn);
+          no unused packages
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Appropriate complexity; no fake UI or simulated interactivity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png; uses current API with ANYPLOT_THEME environment
+          variable
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Excellent use of sns.clustermap() which is seaborn's signature function
-          for this plot type; includes row_colors, col_colors, Ward linkage, dendrogram_ratio
-          customization
+        comment: Uses sns.clustermap() (canonical seaborn method); proper parameters
+          (method='ward', metric='euclidean', cmap, center, vmin, vmax); high-level
+          API
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages seaborn's clustermap and custom row_colors/col_colors parameters;
+          theme-adaptive tokens threaded through matplotlib rc
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - hierarchical-clustering
+  styling:
+  - publication-ready

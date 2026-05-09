@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 heatmap-clustered: Clustered Heatmap
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 96/100 | Updated: 2026-05-09
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
@@ -10,6 +12,15 @@ from plotly.subplots import make_subplots
 from scipy.cluster.hierarchy import dendrogram, linkage
 from scipy.spatial.distance import pdist
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+DENDROGRAM_COLOR = "#306998" if THEME == "light" else "#6BA3D4"
+PATHWAY_COLORS = ["#E8CCCC", "#CCE8CC", "#CCCCFF", "#FFCCCC"]
 
 # Data: Gene expression analysis (20 genes x 12 samples)
 np.random.seed(42)
@@ -40,6 +51,10 @@ gene_labels = [
     "VEGFA",  # Cancer-related
 ]
 
+# Gene pathway annotations (0=cell cycle, 1=metabolism, 2=immune, 3=cancer)
+gene_pathway = [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3]
+pathway_names = ["Cell Cycle", "Metabolism", "Immune", "Cancer"]
+
 # Sample names (tumor vs normal comparisons)
 sample_labels = [
     "T1_A",
@@ -55,6 +70,11 @@ sample_labels = [
     "N2_B",
     "N2_C",  # Normal
 ]
+
+# Sample type annotations (0=tumor, 1=normal)
+sample_type = [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1]
+sample_type_names = ["Tumor", "Normal"]
+sample_type_colors = ["#FFE8E8", "#E8E8FF"]
 
 # Generate expression data with cluster structure
 data = np.random.randn(n_genes, n_samples) * 0.5
@@ -91,16 +111,18 @@ col_order = col_dendro["leaves"]
 data_ordered = data[row_order, :][:, col_order]
 row_labels_ordered = [gene_labels[i] for i in row_order]
 col_labels_ordered = [sample_labels[i] for i in col_order]
+row_pathway_ordered = [gene_pathway[i] for i in row_order]
+col_type_ordered = [sample_type[i] for i in col_order]
 
 # Create subplots: top dendrogram, left dendrogram, main heatmap, colorbar space
 fig = make_subplots(
     rows=2,
-    cols=2,
-    column_widths=[0.15, 0.85],
+    cols=3,
+    column_widths=[0.08, 0.02, 0.90],
     row_heights=[0.15, 0.85],
-    horizontal_spacing=0.005,
+    horizontal_spacing=0.003,
     vertical_spacing=0.005,
-    specs=[[None, {}], [{}, {}]],
+    specs=[[None, None, {}], [{}, {}, {}]],
 )
 
 # Add top dendrogram (column clustering)
@@ -112,30 +134,44 @@ for i in range(len(col_icoord)):
             x=col_icoord[i],
             y=col_dcoord[i],
             mode="lines",
-            line={"color": "#306998", "width": 1.5},
+            line={"color": DENDROGRAM_COLOR, "width": 1.5},
             showlegend=False,
             hoverinfo="skip",
         ),
         row=1,
-        col=2,
+        col=3,
     )
 
-# Add left dendrogram (row clustering) - rotated
+# Add left dendrogram (row clustering)
 row_icoord = np.array(row_dendro["icoord"])
 row_dcoord = np.array(row_dendro["dcoord"])
 for i in range(len(row_icoord)):
     fig.add_trace(
         go.Scatter(
-            x=row_dcoord[i],  # Swap x/y for left orientation
+            x=row_dcoord[i],
             y=row_icoord[i],
             mode="lines",
-            line={"color": "#306998", "width": 1.5},
+            line={"color": DENDROGRAM_COLOR, "width": 1.5},
             showlegend=False,
             hoverinfo="skip",
         ),
         row=2,
         col=1,
     )
+
+# Add row pathway color bar
+fig.add_trace(
+    go.Heatmap(
+        z=[[row_pathway_ordered]],
+        x=["Pathway"],
+        y=row_labels_ordered,
+        colorscale=[(i / 3, PATHWAY_COLORS[i]) for i in range(4)],
+        showscale=False,
+        hoverinfo="skip",
+    ),
+    row=2,
+    col=2,
+)
 
 # Add heatmap
 fig.add_trace(
@@ -146,16 +182,17 @@ fig.add_trace(
         colorscale="RdBu_r",
         zmid=0,
         colorbar={
-            "title": {"text": "Expression (z-score)", "font": {"size": 20}},
-            "tickfont": {"size": 16},
+            "title": {"text": "Expression<br>(z-score)", "font": {"size": 20, "color": INK}},
+            "tickfont": {"size": 16, "color": INK_SOFT},
             "len": 0.75,
             "thickness": 25,
             "x": 1.02,
+            "bgcolor": PAGE_BG,
         },
         hovertemplate="%{y}<br>%{x}<br>Value: %{z:.2f}<extra></extra>",
     ),
     row=2,
-    col=2,
+    col=3,
 )
 
 # Update axes for top dendrogram
@@ -166,7 +203,7 @@ fig.update_xaxes(
     showline=False,
     range=[0, max(col_dendro["icoord"][-1])],
     row=1,
-    col=2,
+    col=3,
 )
 fig.update_yaxes(
     showticklabels=False,
@@ -175,7 +212,7 @@ fig.update_yaxes(
     showline=False,
     range=[0, max(col_dendro["dcoord"][-1]) * 1.05],
     row=1,
-    col=2,
+    col=3,
 )
 
 # Update axes for left dendrogram
@@ -198,18 +235,42 @@ fig.update_yaxes(
     col=1,
 )
 
-# Update heatmap axes
-fig.update_xaxes(tickfont={"size": 16}, tickangle=45, side="bottom", row=2, col=2)
-fig.update_yaxes(tickfont={"size": 16}, row=2, col=2)
+# Update axes for row pathway color bar
+fig.update_xaxes(showticklabels=False, showgrid=False, zeroline=False, showline=False, row=2, col=2)
+fig.update_yaxes(showticklabels=False, showgrid=False, zeroline=False, showline=False, row=2, col=2)
+
+# Update heatmap axes with labels
+fig.update_xaxes(
+    title={"text": "Samples", "font": {"size": 22, "color": INK}},
+    tickfont={"size": 16, "color": INK_SOFT},
+    tickangle=45,
+    side="bottom",
+    row=2,
+    col=3,
+)
+fig.update_yaxes(
+    title={"text": "Genes", "font": {"size": 22, "color": INK}},
+    tickfont={"size": 16, "color": INK_SOFT},
+    row=2,
+    col=3,
+)
 
 # Update layout
 fig.update_layout(
-    title={"text": "heatmap-clustered · plotly · pyplots.ai", "font": {"size": 32}, "x": 0.5, "xanchor": "center"},
-    template="plotly_white",
+    title={
+        "text": "heatmap-clustered · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK, "family": "sans-serif"},
     showlegend=False,
-    margin={"l": 100, "r": 120, "t": 120, "b": 120},
+    margin={"l": 150, "r": 120, "t": 120, "b": 120},
+    hovermode="closest",
 )
 
 # Save outputs
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
