@@ -1,207 +1,226 @@
 library: plotnine
+language: python
 specification_id: scatter-marginal
 created: '2025-12-26T15:03:57Z'
-updated: '2025-12-26T15:06:07Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20524418181
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - subplots
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-05-09T05:41:41Z'
+generated_by: claude-haiku
+workflow_run: 25592916886
+issue: 2005
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
 review:
   strengths:
-  - Excellent use of plotnine composition API with | and / operators for arranging
-    multiple plots
-  - Clean, realistic dataset showing study hours vs exam score correlation
-  - Proper axis alignment between scatter plot and marginal histograms
-  - Good color contrast between blue scatter/top histogram and yellow right histogram
-  - Correct title format and well-labeled axes with units
+  - Perfect theme adaptation with both renders visually correct and zero legibility
+    issues
+  - Clean intentional L-shaped composite layout demonstrating design thinking
+  - Proper Okabe-Ito palette usage with excellent color hierarchy
+  - Well-structured reproducible code with deterministic seed
+  - Complete spec compliance with all required features perfectly implemented
+  - Excellent axis alignment between scatter plot and marginal distributions
   weaknesses:
-  - Grid styling inconsistent between main scatter plot and marginal histograms
-  - Top-right spacer creates slight visual imbalance in the layout
-  image_description: The plot displays a scatter plot with marginal distributions
-    in a 2x2 grid layout. The main scatter plot (bottom-left) shows blue data points
-    representing the correlation between Study Hours per Week (x-axis, 0-50) and Exam
-    Score (%, y-axis, 30-100). Above it, a blue histogram shows the distribution of
-    study hours, centered around 25 hours with a roughly normal distribution. On the
-    right side, a yellow/gold histogram shows the exam score distribution in a flipped
-    orientation (horizontal bars), displaying a roughly normal distribution. The title
-    "scatter-marginal · plotnine · pyplots.ai" appears at the top. The top-right corner
-    is an empty spacer. The data shows a clear positive correlation between study
-    hours and exam scores.
+  - Design could show more sophistication or custom refinement beyond standard plotnine
+    defaults
+  - Code uses straightforward library patterns without pushing plotnine's more distinctive
+    features
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct for light theme
+      Chrome: Title "scatter-marginal · plotnine · anyplot.ai" in bold dark text (24pt), axis labels "Study Hours per Week" and "Exam Score (%)" in dark (20pt), tick labels in softer gray (#4A4A44, 16pt) - all clearly readable against light surface
+      Data: Main scatter plot with 200 teal-green points (#009E73) showing positive correlation with alpha=0.6, top histogram showing study hours distribution in orange bars (#D55E00), right histogram showing exam score distribution in orange bars; subtle horizontal grid lines (alpha=0.10) provide reference without competition
+      Grid: Subtle horizontal grid lines only on scatter plot (alpha=0.10, light gray)
+      Legibility verdict: PASS - All text and data elements clearly readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct for dark theme
+      Chrome: Title and axis labels now rendered in light colors (#F0EFE8) while maintaining same 24pt/20pt sizing, tick labels in appropriate soft gray for dark (#B8B7B0, 16pt) - all clearly readable against dark surface; no dark-on-dark text issues
+      Data: Scatter points remain identical teal-green (#009E73), histogram bars remain identical orange (#D55E00) - confirming only chrome adapted while data colors stayed constant; same alpha transparency patterns maintained
+      Grid: Identical subtle horizontal grid lines maintained with appropriate opacity for dark theme
+      Legibility verdict: PASS - All text and data elements clearly readable with perfect theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All text properly sized and colored for both themes, no readability
+          issues
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: L-shaped layout prevents all overlaps, proper spacing between elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers well-sized with appropriate alpha=0.6, good visibility for
-          200 points
+        comment: All 200 scatter points visible with density-appropriate alpha, histograms
+          clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) are colorblind-safe and provide
-          good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout but top-right spacer creates some visual imbalance
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Study Hours per Week", "Exam Score
-          (%)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette, CVD-safe, adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Well-proportioned 16:9 landscape, nothing cropped, balanced composition
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid lines visible on scatter plot but marginal histograms have no
-          grid; slight inconsistency
+        passed: true
+        comment: Proper format, descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds correct, both renders theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional L-shaped layout with custom sizing, clear hierarchy,
+          straightforward execution
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal spines, subtle grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy, correlation visually apparent
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct scatter plot with marginal distributions
+        comment: Correct scatter plot with marginals
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly mapped to study hours and exam score
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: scatter plot, top histogram, right histogram,
-          proper alignment'
-      - id: SC-04
-        name: Data Range
+        comment: Main scatter, top/right histograms, aligned axes
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis limits
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X and Y correctly mapped, full data range visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed, N/A (full points)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "scatter-marginal · plotnine · pyplots.ai"'
+        comment: Proper title format, no legend needed
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows correlation pattern, different distributions for each variable,
-          outliers visible
+        comment: Complete scatter-marginal visualization
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Study hours vs exam score is a real, comprehensible educational scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Study hours 5-45, exam scores 30-100 are realistic ranges
+        comment: Study hours vs exam scores, realistic values and correlation
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible axis ranges and data density
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Uses proper structure but has some complexity with theme definitions
+        passed: true
+        comment: Direct code, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: All imports used, but element_text imported with other unused ones
-          initially listed
+        passed: true
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: No fake interactivity, plotnine composition used idiomatically
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Grammar of graphics syntax, proper theme composition, figure sizing
+          per panel
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Good use of plotnine's composition API (plot_spacer, | and / operators),
-          grammar of graphics approach. Could have used faceting or additional ggplot2-like
-          features.
+        passed: true
+        comment: Uses composition operators and plot_spacer, straightforward patterns
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - alpha-blending
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
