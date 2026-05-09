@@ -1,21 +1,236 @@
 library: pygal
+language: python
 specification_id: alluvial-basic
 created: '2025-12-26T10:38:41Z'
-updated: '2025-12-26T10:41:07Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520941876
+updated: '2026-05-09T01:20:43Z'
+generated_by: claude-haiku
+workflow_run: 25587257718
 issue: 1878
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/pygal/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/pygal/plot-dark.html
+quality_score: 83
+review:
+  strengths:
+  - Correct alluvial diagram structure with time-ordered columns and party categories
+    clearly labeled
+  - Proper use of Okabe-Ito palette with consistent party colors across both themes
+  - 'Excellent data storytelling: flow bands effectively show voter migration magnitude
+    and direction across four election cycles'
+  - Well-considered transparency (0.35 opacity) on overlapping flows improves clarity
+    without hiding data
+  - Strong typography hierarchy with explicit font sizing (title 28px, year labels
+    52px, party labels 44px) ensuring readability at large canvas size
+  - Clean, minimal design with good use of whitespace and balanced margins
+  - Realistic example data (US voter migration across 2012–2024 elections) with factually
+    plausible proportions and transitions
+  weaknesses:
+  - Minimal use of pygal library—implementation uses pygal only for title rendering
+    but hand-codes entire alluvial diagram in manual SVG. This sidesteps pygal's charting
+    API and reduces library mastery.
+  - 'Low library-specific techniques: implementation doesn''t leverage pygal''s interactive
+    features, animation support, or other distinctive capabilities; approach could
+    be replicated in any graphics library'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), as specified. Clear and inviting foundation.
+      Chrome: Title "alluvial-basic·pygal·anyplot.ai" at top in dark text (28px); year labels (2012, 2016, 2020, 2024) at bottom in bold dark text (52px); party labels (Democratic, Republican, Independent, Other) on left and right sides in matching party colors (44px bold). Subtitle "Voter Migration Between Political Parties (Millions of Voters)" in italics below years. All text is readable and well-positioned.
+      Data: Four vertical bars (nodes) at each year in Okabe-Ito colors (#009E73 Democratic, #D55E00 Republican, #0072B2 Independent, #CC79A7 Other). Semi-transparent flow bands (opacity 0.35) connect bars across years, showing voter transitions. Band widths are proportional to flow magnitude.
+      Legibility verdict: PASS - All elements clearly readable, excellent contrast, well-balanced layout.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), as specified. Maintains theme consistency.
+      Chrome: Title, year labels, and party labels all visible in light-colored text, readable against dark background. Subtitle visible in muted light color. All text elements maintain readability through appropriate color adaptation.
+      Data: Bars maintain identical Okabe-Ito colors to light render (#009E73, #D55E00, #0072B2, #CC79A7). Flow bands appear darker/more muted due to 0.35 opacity blending with dark background, but remain visible and distinguishable. The color identity is preserved—only the visual appearance due to compositing changes, which is correct behavior.
+      Legibility verdict: PASS - All elements readable; flow bands slightly less vibrant than light render (expected from opacity blending), but still clearly visible and functionally effective for understanding voter transitions.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set and perfectly readable in both renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text fully readable with no overlapping elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars and flow bands optimally adapted to data density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; good contrast throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout with balanced margins and good canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; labels descriptive with context (millions of
+          voters)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito colors correct (#009E73 first), backgrounds theme-correct,
+          both renders compliant
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library defaults, professional but not exceptional
+          design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Good refinement with bar borders and opacity choices; generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Effective visual hierarchy showing voter transitions across four
+          cycles; clear narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct alluvial diagram with all required elements
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: time points, categories, proportional bands,
+          transparency, clear labels'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time points and categories correctly mapped; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; party identification clear through consistent
+          coloring and labels
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all 4 parties across 4 time points with varied transition patterns
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Real-world plausible scenario (US voter migration), though political
+          topic is flagged in content policy
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Voter counts in millions are factually proportional and logically
+          consistent
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear code flow: imports → constants → data → chart → SVG → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set; data is deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (os, cairosvg, numpy, pygal) are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Functional but uses pygal minimally for title only; hand-codes SVG
+          for actual visualization
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct output files (plot-light.png, plot-dark.png, HTML)
+    library_mastery:
+      score: 3
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 2
+        max: 5
+        passed: false
+        comment: Pygal chart created and rendered, but actual visualization is hand-coded
+          SVG; minimal idiomatic usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: No distinctive pygal features used; approach generic and library-independent
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
   - bezier-curves
-  - html-export
   - annotations
   patterns:
   - data-generation
@@ -24,184 +239,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-review:
-  strengths:
-  - Excellent visual representation of voter migration with clear flow patterns
-  - Colorblind-safe color palette with good contrast between parties
-  - Good use of transparency (0.35 opacity) for overlapping flows
-  - Party labels on both sides make the diagram easy to read without a separate legend
-  - Realistic election data scenario with plausible voter counts
-  - Creative use of pygal as base with custom SVG for alluvial diagram
-  weaknesses:
-  - Subtitle font could be slightly larger for better readability
-  - Title uses spaces around middot which is acceptable but slightly different from
-    spec
-  image_description: The plot shows an alluvial diagram titled "alluvial-basic · pygal
-    · pyplots.ai" displaying voter migration between political parties across four
-    election cycles (2012, 2016, 2020, 2024). Four vertical bars represent each time
-    point, with stacked segments for Democratic (blue), Republican (red), Independent
-    (yellow), and Other (gray) parties. Semi-transparent curved bands connect the
-    bars showing voter flow between parties. Party labels appear on both left and
-    right sides in matching colors. Year labels appear below each column. A subtitle
-    at the bottom reads "Voter Migration Between Political Parties (Millions of Voters)".
-    The color scheme is colorblind-safe with good contrast.
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and labels are readable, subtitle could be slightly larger
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text, all labels well positioned
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Bar segments and flow bands are well sized and visible
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-safe palette with blue, red, yellow, gray
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas but slight extra whitespace at top
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: No traditional axes (appropriate for alluvial), subtitle serves as
-          description
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
-        passed: true
-        comment: Party labels on sides serve as legend, no distracting grid
-    spec_compliance:
-      score: 24
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct alluvial diagram with time-ordered columns and flow bands
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time points as columns, categories as stacked segments, flows as
-          bands
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'All spec features present: time ordering, consistent colors, proportional
-          bands, transparency'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All four time points and all categories visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Party labels correctly colored and positioned
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Correct format "alluvial-basic · pygal · pyplots.ai" but uses spaces
-          around middot
-    data_quality:
-      score: 20
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
-        max: 8
-        passed: true
-        comment: Shows multiple flows including party retention and crossover migration
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: US election data with plausible voter migration scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
-        max: 5
-        passed: true
-        comment: Realistic voter counts in millions matching actual election magnitudes
-    code_quality:
-      score: 8
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Generally flat structure but has some complexity due to manual SVG
-          generation
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Modern API usage
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses pygal as base
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses pygal XY chart as canvas and custom SVG injection for alluvial
-          elements; creative workaround since pygal lacks native alluvial support
-  verdict: APPROVED
