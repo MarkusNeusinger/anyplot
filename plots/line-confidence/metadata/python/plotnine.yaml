@@ -1,163 +1,165 @@
 library: plotnine
+language: python
 specification_id: line-confidence
 created: '2025-12-26T16:14:35Z'
-updated: '2025-12-26T16:18:10Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20525434299
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-confidence/plotnine/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-09T12:47:19Z'
+generated_by: claude-haiku
+workflow_run: 25601352956
+issue: 2007
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent use of plotnine grammar of graphics with proper layering (ribbon under
-    line)
-  - Confidence interval correctly widens over time demonstrating forecast uncertainty
-  - Clean readable code following KISS principles
-  - Proper figure sizing (16x9) and font scaling for high-resolution output
-  - Legend clearly identifies both the confidence band and forecast line
-  - Realistic business context (monthly sales forecast)
+  - Excellent theme-adaptive implementation with proper color tokens in both light
+    and dark renders
+  - 'Perfect palette compliance: brand green used correctly, backgrounds and text
+    colors properly adapted'
+  - 'Strong data choice: revenue forecast with widening CI effectively demonstrates
+    plot type purpose'
+  - All text explicitly sized and fully readable in both themes—zero legibility issues
+  - Clean, minimal code structure following KISS principles with deterministic output
   weaknesses:
-  - Legend shows two separate entries due to using both fill and color aesthetics
-    - could be combined into single legend item
-  - X-axis label Month lacks temporal context
-  image_description: The plot displays a line chart with a confidence interval band
-    showing monthly sales forecast data over 24 months. The central trend line is
-    a solid dark blue (#306998) line that shows an upward trend with seasonal fluctuations,
-    starting around 55 and ending near 105 thousand. The confidence interval is rendered
-    as a semi-transparent light blue shaded band (alpha 0.3) surrounding the central
-    line. The band widens progressively as months increase, correctly representing
-    growing uncertainty in forecasts over time. The title "line-confidence · plotnine
-    · pyplots.ai" appears at the top in large text. Axis labels show "Month" (x-axis,
-    0-25 range) and "Sales (thousands)" (y-axis, 60-120 range). A legend on the right
-    side displays "95% CI" for the shaded band and "Forecast" for the line. The plot
-    uses a clean minimal theme with subtle grid lines.
+  - 'Design could be elevated: consider removing top/right spines per style guide
+    for cleaner aesthetic'
+  - Visual refinement at library-default level—could add more distinctive polish through
+    spine removal or legend positioning
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title "line-confidence · plotnine · anyplot.ai", axis labels "Quarter (year-over-year)" and "Revenue ($ millions)", tick labels 5/10/15/20 and 50/60/70/80 all dark and clearly readable against light surface
+      Data: Green line (#009E73 brand color) and semi-transparent green ribbon band (alpha=0.25) showing quarterly revenue forecast with confidence intervals; all colors visible and distinct
+      Legibility verdict: PASS - all text readable, no dark-on-dark issues, strong contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Title and axis labels now light-colored (#F0EFE8) and clearly readable against dark background; tick labels light and visible; legend text light-colored and readable; grid lines subtle
+      Data: Green line and ribbon band colors are IDENTICAL to light render, confirming proper theme-independent data color preservation; only chrome has flipped to dark theme
+      Legibility verdict: PASS - all text readable, no dark-on-dark failures, excellent contrast maintained
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is large and clear at 24pt, axis labels at 20pt, tick labels
-          at 16pt - all perfectly readable
+        comment: All font sizes explicitly set; perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, clean layout throughout
+        comment: No overlapping text; all elements fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line is clearly visible with size=1.5, confidence band appropriately
-          sized
+        comment: Ribbon and line optimally adapted to data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single color scheme (blue) with transparency variation - no colorblind
-          issues
+        comment: Good contrast; CVD-safe brand color
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins, legend positioned cleanly
-          on right
+        comment: Perfect layout; plot fills 50-70% with balanced margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Y-axis has units "(thousands)" but X-axis "Month" could specify the
-          unit context better
+        passed: true
+        comment: Descriptive labels with units
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
+        passed: true
+        comment: 'Perfect: brand green, correct backgrounds, proper theme chrome in
+          both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is subtle with minimal theme but legend has empty string labels
-          for fill/color which is acceptable but shows two separate legend items
+        comment: Well-configured default with professional polish; not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace; could refine by removing spines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear story: widening bands show increasing uncertainty over time'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line plot with confidence interval band
+        comment: Correct line plot with confidence interval
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=Month, Y=Sales, y_lower/y_upper correctly mapped to ribbon
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Central line, shaded confidence band, legend identifying both elements
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: line, band, legend, grid'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 24 data points visible, axes show full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies "95% CI" and "Forecast"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "line-confidence · plotnine · pyplots.ai"'
+        comment: Exact format; precise legend labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows trend with seasonality and widening CI over time, demonstrates
-          key features well
+        comment: Shows central trend, CI band, realistic widening
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Monthly sales forecast is a real, comprehensible business scenario
+        comment: 'Real business scenario: quarterly revenue forecast'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
-        passed: false
-        comment: Values are reasonable for sales in thousands, though starting at
-          ~55k and ending at ~105k is plausible
+        max: 4
+        passed: true
+        comment: Realistic revenue values, plausible growth, realistic CI widths
     code_quality:
       score: 10
       max: 10
@@ -167,40 +169,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Clean import-data-plot-save structure
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current plotnine API
+        comment: Clean Pythonic code; no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent use of plotnine''s grammar of graphics: ggplot + aes +
-          geom_ribbon + geom_line + scale_manual + theme_minimal + theme customization'
+        comment: Expert use of ggplot + geom, theme system
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses geom_ribbon and theme tokens; mostly standard patterns
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
