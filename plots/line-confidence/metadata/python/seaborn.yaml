@@ -1,161 +1,186 @@
 library: seaborn
+language: python
 specification_id: line-confidence
 created: '2025-12-26T16:12:46Z'
-updated: '2025-12-26T16:14:59Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20525432896
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-09T12:37:46Z'
+generated_by: claude-haiku
+workflow_run: 25601191068
+issue: 2007
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-confidence/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep: []
-  styling:
-  - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
 review:
   strengths:
-  - Excellent visual clarity with properly sized text elements (24/20/16pt)
-  - 'Perfect spec compliance: shows central line with shaded confidence band exactly
-    as specified'
-  - Realistic data scenario (monthly sales forecast) with growing uncertainty over
-    time
-  - Clean, readable code following KISS principles
-  - Good use of contrasting but related colors (dark blue line, light blue band)
+  - Perfect visual quality across both light and dark renders with excellent legibility
+    and proper color application
+  - Flawless spec compliance with all required features correctly implemented
+  - Excellent theme adaptation with proper background and text color switching between
+    light and dark
+  - Clean, reproducible code with proper KISS structure and deterministic seeding
+    via np.random.seed(42)
+  - Professional data quality with realistic, neutral context (temperature forecasting
+    with growing uncertainty)
   weaknesses:
-  - Uses matplotlib fill_between instead of seaborn native confidence interval features
-    (sns.lineplot can compute CI automatically from raw data)
-  - Legend position slightly overlaps with early confidence band data
-  image_description: The plot displays a 24-month sales forecast with a 95% confidence
-    interval. A dark blue (#306998) solid line shows the central forecast trend, exhibiting
-    an upward trajectory with clear seasonal oscillations. The forecast is surrounded
-    by a semi-transparent light blue shaded band representing the confidence interval,
-    which visibly widens as months progress (demonstrating growing uncertainty over
-    time). The title "line-confidence · seaborn · pyplots.ai" is positioned at the
-    top. The X-axis is labeled "Month" (ranging 0-25), and the Y-axis is labeled "Sales
-    (Units)" (ranging approximately 80-200). A legend in the upper left corner identifies
-    the confidence interval and forecast line. Subtle dashed grid lines aid readability.
+  - Design sophistication is functional but not distinctive — uses solid defaults
+    without custom visual elevations or accent colors
+  - Library mastery could be deeper — seaborn offers more sophisticated aesthetic
+    abstractions and patterns that aren't fully explored beyond basic set_theme usage
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "Temperature Forecast · line-confidence · seaborn · anyplot.ai" is bold and dark (#1A1A17); X-axis label "Day" and Y-axis label "Temperature (°C)" are clearly readable at 20pt; tick labels are in secondary text color (#4A4A44) at 16pt; all have strong dark-on-light contrast
+      Data: Central line uses brand green (#009E73) with linewidth=3 and small circular markers (markersize=5); confidence band is same green with alpha=0.25 semi-transparency; band widens from ~4°C at day 1 to ~14°C at day 30, visually communicating growing forecast uncertainty; 30-day trend shows warming from 21°C to 29°C with weekly cyclical pattern
+      Grid: Y-axis grid only, subtle with alpha=0.10, solid lines — visible but not dominant
+      Legend: Lower right, identifies "95% Confidence Interval" and "Forecast"; positioned to avoid data overlap
+      Legibility verdict: PASS — all text is readable, no contrast failures, proper sizing for 4800×2700px canvas
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface, not pure black
+      Chrome: Title, axis labels, and tick labels are now in light colors (#F0EFE8 for title, #B8B7B0 for secondaries); light-on-dark contrast is excellent; NO dark-on-dark failures; all text remains clearly readable
+      Data: Central line and confidence band are identical green (#009E73) to light render — data colors DO NOT change between themes, only chrome flips ✓; uncertainty widening pattern is identical to light render; upward trend is identical
+      Grid: Y-axis grid visible and subtle, same as light render
+      Legend: Identical position and labels to light render
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures, data colors correctly preserved, proper theme-chrome flip
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt - all clearly readable
+        comment: All text (title 24pt, labels 20pt, ticks 16pt) properly sized and
+          readable in both themes with correct color adaptation
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Title, axis labels, legend all well-positioned with no collisions
+          or overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width (3) appropriate, confidence band alpha (0.3) well-balanced
+        comment: Central line (linewidth=3) and confidence band (alpha=0.25) clearly
+          distinguishable from background and each other across density variations
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single color scheme, colorblind-safe
+        comment: 'Okabe-Ito brand green #009E73 is colorblind-safe and has strong
+          contrast on both light and dark backgrounds'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins
+        comment: 16:9 aspect at 4800×2700px with generous margins; proper use of tight_layout
+          and bbox_inches; nothing cut off
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: '"Month" and "Sales (Units)" are descriptive, but "Month" could include
-          context (e.g., "Month (from Jan 2024)")'
+        passed: true
+        comment: Title includes spec/library/site; Y-axis labeled with units (°C);
+          all descriptive and clear
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
+        passed: true
+        comment: 'Single series uses #009E73; backgrounds #FAF8F1 (light) and #1A1A17
+          (dark); data colors identical between renders, chrome correctly flips'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: false
-        comment: Grid is subtle (alpha 0.3, dashed), but legend overlaps slightly
-          with the confidence band at months 1-4
+        comment: Clean, professional theme-aware styling with proper token application;
+          solid defaults but lacks custom visual elevations or distinctive touches
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed (L-shape), y-axis grid subtle (alpha=0.10),
+          generous whitespace, legend well-positioned; very clean overall
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Confidence band widening visualizes growing uncertainty; upward trend
+          clear; weekly cycle readable; strong narrative but could be enhanced with
+          annotations
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line plot with confidence interval
+        comment: Correct line plot with confidence interval using fill_between
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=months, Y=forecast values, bounds correctly computed
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Central line, shaded confidence band, legend identifying both elements
-      - id: SC-04
-        name: Data Range
+        comment: Central line present, semi-transparent band (alpha=0.25, within 0.2-0.4
+          spec range), legend identifying both elements
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: days 0–31 correct; Y-axis: ~5–45°C range with proper padding;
+          bounds correctly shown'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies "95% Confidence Interval" and "Forecast"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Exact format: "line-confidence · seaborn · pyplots.ai"'
+        comment: Title format matches spec; legend labels clear and accurate
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows upward trend, seasonality, and growing uncertainty; could demonstrate
-          more variation in confidence band width
+        comment: Realistic warming trend, weekly cycle, growing uncertainty band,
+          30 data points (within 20-200 spec range)
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Monthly sales forecast is a realistic, comprehensible scenario
+        comment: Temperature forecast with confidence intervals is real-world plausible;
+          15–42°C range reasonable; neutral context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
-        passed: false
-        comment: Values (80-200 units) are plausible, though units could be more specific
+        max: 4
+        passed: true
+        comment: Sensible x/y ranges for temperature domain; data not cramped or stretched
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -163,41 +188,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script structure: imports → data → plot → save'
+        comment: No functions or classes; straightforward linear script flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic output across runs
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib, numpy, seaborn used
+        comment: Only used imports (os, matplotlib, numpy, seaborn); no unused dependencies
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or unnecessary complexity; idiomatic matplotlib/seaborn
+          patterns
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current seaborn/matplotlib APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as "plot.png" correctly ✓ (actually correct)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with facecolor=PAGE_BG; current API usage
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: sns.set_theme() + rc dict, proper axes-level APIs, theme tokens applied
+          consistently
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
         max: 5
         passed: false
-        comment: Uses sns.lineplot and sns.set_style, but fill_between is matplotlib.
-          Could use seaborn's native confidence interval support (e.g., sns.lineplot
-          with ci parameter or sns.regplot)
+        comment: Solid matplotlib integration; could explore seaborn figure-level
+          APIs, aesthetic abstractions, or alternative patterns
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
