@@ -1,19 +1,32 @@
-""" pyplots.ai
+""" anyplot.ai
 bar-stacked: Stacked Bar Chart
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-09
 """
 
+import os
+
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
 
 
-# Data - Monthly sales by product category (realistic business scenario)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
+# Data - Monthly sales by product category
+np.random.seed(42)
 categories = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
 products = ["Electronics", "Clothing", "Home & Garden", "Sports"]
 
-# Create realistic sales data (in thousands)
 data = {
     "Month": categories * len(products),
     "Product": [p for p in products for _ in categories],
@@ -58,24 +71,32 @@ product_totals = df.groupby("Product")["Sales"].sum().sort_values(ascending=Fals
 ordered_products = product_totals.index.tolist()
 df["Product"] = pd.Categorical(df["Product"], categories=ordered_products, ordered=True)
 
-# Create plot with seaborn styling
-sns.set_style("whitegrid")
+# Set theme and styling
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 sns.set_context("talk", font_scale=1.2)
 
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 
-# Python-themed color palette with distinct colors (avoiding similar yellows)
-# Map colors to original product order, then reorder based on totals
-original_colors = {
-    "Electronics": "#306998",  # Python Blue
-    "Clothing": "#FFD43B",  # Python Yellow
-    "Home & Garden": "#4B8BBE",  # Light Blue
-    "Sports": "#E57373",  # Coral/Salmon for contrast
-}
-colors = [original_colors[p] for p in ordered_products]
+# Create color map for products
+product_colors = {p: OKABE_ITO[i] for i, p in enumerate(ordered_products)}
+colors = [product_colors[p] for p in ordered_products]
 
-# Use seaborn's histplot with weights for stacked bar chart
-# This is seaborn's native approach for stacked categorical bars
+# Plot stacked bar chart using histplot
 sns.histplot(
     data=df,
     x="Month",
@@ -84,7 +105,7 @@ sns.histplot(
     multiple="stack",
     palette=colors,
     shrink=0.7,
-    edgecolor="white",
+    edgecolor=PAGE_BG,
     linewidth=1.5,
     ax=ax,
 )
@@ -92,34 +113,40 @@ sns.histplot(
 # Calculate totals for labels on top of stacks
 totals = df.groupby("Month", observed=True)["Sales"].sum()
 for i, (_month, total) in enumerate(totals.items()):
-    ax.text(i, total + 8, f"${int(total)}K", ha="center", va="bottom", fontsize=16, fontweight="bold")
+    ax.text(i, total + 8, f"${int(total)}K", ha="center", va="bottom", fontsize=16, fontweight="bold", color=INK)
 
 # Styling
-ax.set_xlabel("Month", fontsize=20)
-ax.set_ylabel("Sales (Thousands $)", fontsize=20)
-ax.set_title("bar-stacked · seaborn · pyplots.ai", fontsize=24, fontweight="bold")
-ax.tick_params(axis="both", labelsize=16)
+ax.set_xlabel("Month", fontsize=20, color=INK)
+ax.set_ylabel("Sales (Thousands $)", fontsize=20, color=INK)
+ax.set_title("bar-stacked · seaborn · anyplot.ai", fontsize=24, fontweight="bold", color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
-# Legend - move to right and adjust styling
+# Legend
 legend = ax.get_legend()
 legend.set_title("Product Category")
 legend.get_title().set_fontsize(18)
+legend.get_title().set_color(INK)
 for text in legend.get_texts():
     text.set_fontsize(16)
+    text.set_color(INK)
 legend.set_bbox_to_anchor((1.02, 1))
 legend.set_loc("upper left")
-legend.get_frame().set_edgecolor("gray")
+legend.get_frame().set_facecolor(ELEVATED_BG)
+legend.get_frame().set_edgecolor(INK_SOFT)
 
 # Grid styling
-ax.yaxis.grid(True, alpha=0.3, linestyle="--")
+ax.yaxis.grid(True, alpha=0.10, linewidth=0.8)
 ax.xaxis.grid(False)
 ax.set_axisbelow(True)
 
-# Remove top and right spines
-sns.despine()
+# Spine styling
+for spine in ["top", "right"]:
+    ax.spines[spine].set_visible(False)
+for spine in ["left", "bottom"]:
+    ax.spines[spine].set_color(INK_SOFT)
 
 # Adjust y-axis to accommodate total labels
 ax.set_ylim(0, totals.max() * 1.15)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
