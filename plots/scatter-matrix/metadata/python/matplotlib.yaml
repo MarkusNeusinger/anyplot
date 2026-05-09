@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: scatter-matrix
 created: '2025-12-26T16:13:20Z'
-updated: '2026-05-09T14:39:52Z'
+updated: '2026-05-09T14:45:01Z'
 generated_by: claude-haiku
 workflow_run: 25603606426
 issue: 2035
@@ -12,115 +12,109 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 94
 review:
   strengths:
-  - Pixel-perfect theme adaptation with no chrome legibility issues in either render
-  - All text sizes explicitly set and readable (title 24pt, labels 18pt, ticks 14pt)
-  - Perfect spec compliance - all scatter matrix features implemented correctly
-  - Excellent data quality with realistic Iris dataset showing full feature coverage
-  - Clean, reproducible code with proper seed and deterministic data generation
-  - Thoughtful Okabe-Ito palette usage with proper species color assignment
-  - Generous whitespace and well-balanced grid layout with proper margins
+  - Excellent theme adaptation with no dark-on-dark or light-on-light failures
+  - Professional matplotlib usage with GridSpec for complex panel layout
+  - 'Thoughtful visual design: diagonal cells subtly distinguished via background
+    color'
+  - Perfect font sizing for 4800×2700px canvas; all text clearly readable in both
+    themes
+  - Clean, straightforward code structure; reproducible with seed
+  - Realistic, well-chosen data (Iris measurements); demonstrates all plot features
+  - Okabe-Ito palette correctly applied; strong categorical separation by species
+  - Symmetric matrix layout properly implemented; clear legend with species labels
   weaknesses:
-  - 'Generic design - looks like a well-configured library default rather than publication-quality
-    (DE-01: 5/8)'
-  - 'Top and right spines not removed - could improve visual refinement (DE-02: 4/6)'
-  - 'No visual hierarchy or emphasis - plot displays data but doesn''t tell a story
-    (DE-03: 2/6)'
-  - 'Library mastery is correct but not distinctive - GridSpec usage is straightforward
-    (LM-02: 2/5)'
+  - 'Minor: DE-01 could be higher (8/8) with additional aesthetic refinements such
+    as custom title styling or more pronounced spine/grid subtlety'
+  - 'Minor: LM-02 at 3/5 — while GridSpec usage is excellent, implementation doesn''t
+    explore other distinctive matplotlib features for extreme visual polish'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct and clean
-      Chrome: Title "scatter-matrix · matplotlib · anyplot.ai" clearly visible in dark ink (fontsize=24). Axis labels on edges ("Sepal Length (cm)", etc.) are legible (fontsize=18). Tick labels are readable (labelsize=14). Grid lines subtle but visible (alpha=0.12). Legend on right side with clear species labels. All text readable against light background.
-      Data: Three species color-coded using Okabe-Ito palette - Setosa (#009E73 green), Versicolor (#D55E00 orange), Virginica (#0072B2 blue). Histograms on diagonal show univariate distributions; off-diagonal cells show scatter plots with all species overlayed. Marker edges subtle (white on green background). Alpha=0.7 allows overlapping points to show through.
-      Legibility verdict: PASS - All text clearly readable, good contrast, well-organized grid
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Chrome: Title "scatter-matrix · matplotlib · anyplot.ai" in dark (#1A1A17), axis labels with units on left/bottom edges, tick labels dark and clearly visible
+      Data: Diagonal histograms with stacked Okabe-Ito colors (green #009E73, orange #D55E00, blue #0072B2); off-diagonal scatter plots with same colors showing clear species separation
+      Legibility verdict: PASS — all text is readable; no light-on-light failures; grid subtle (alpha=0.12) but visible
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct and matches theme
-      Chrome: Title and all labels appear in light colors (INK and INK_SOFT tokens). Tick labels light gray (#B8B7B0). Grid lines are subtle and visible. Legend frame background (#242420) is elevated from page background. All text readable against dark background with no "dark-on-dark" failures.
-      Data: Data colors are identical to light render (#009E73 green, #D55E00 orange, #0072B2 blue) - only chrome flipped. Histogram bars and scatter markers maintain clarity and distinctness on dark background. Alpha blending shows overlaps without compromising visibility.
-      Legibility verdict: PASS - All elements readable, proper theme adaptation, no dark-on-dark text issues
-
-    Both renders pass theme-readability check with flying colors.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title in light color (#F0EFE8), axis labels and tick labels in light color (#B8B7B0) — all clearly readable, no dark-on-dark failures
+      Data: Histograms and scatter plot colors are pixel-identical to light render (green, orange, blue); only chrome changes color
+      Legibility verdict: PASS — all text is readable; no dark-on-dark failures; legend frame background is elevated dark (#242420) with appropriate contrast
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable; could maximize clarity
-          with slightly larger tick labels
+        comment: All font sizes explicitly set (24pt, 18pt, 14pt); readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Edge-only labeling prevents overlap completely
+        comment: No overlapping text; axis labels on edges only
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size (s=120) and alpha (0.7) well-adapted to 150-point-per-species
-          density
+        comment: Marker sizing (s=140) optimal for 50 points per species
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe with good contrast and alpha
-          blending
+        comment: Okabe-Ito palette CVD-safe; no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect ratio with 60-70% plot fill, balanced margins, proper
-          GridSpec spacing
+        comment: Perfect proportions; balanced margins; 16:9 canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All labels include units; title follows spec format
+        comment: Descriptive with units (Sepal Length (cm), etc.)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct Okabe-Ito order (#009E73 first), backgrounds #FAF8F1/#1A1A17,
-          theme-correct chrome throughout'
+        comment: 'First series #009E73; Okabe-Ito order 1,2,3; backgrounds #FAF8F1/#1A1A17;
+          both renders theme-correct'
     design_excellence:
-      score: 11
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful color use and typography hierarchy, but looks like a well-configured
-          default rather than exceptional design
+        passed: true
+        comment: Professional execution with intentional design; diagonal cells visually
+          distinguished via background color
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle grid and generous whitespace, but spines not removed - could
-          improve polish
+        passed: true
+        comment: Spines removed (top/right); subtle grid (alpha=0.12); generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Displays data clearly but creates no visual hierarchy or narrative
-          emphasis
+        passed: true
+        comment: Clear visual hierarchy through background distinction; color coding
+          shows species story
     spec_compliance:
       score: 15
       max: 15
@@ -130,27 +124,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter matrix with histograms on diagonal and scatter plots
-          off-diagonal
+        comment: Correct scatter matrix with diagonal histograms
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: univariate distributions, pairwise relationships,
-          edge labels, color encoding, symmetry'
+        comment: 'All features present: 4 variables, 3 species, symmetric layout'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, all data visible, axes properly scaled
+        comment: X/Y correctly mapped; axes show full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match species names
+        comment: Title format correct; legend labels match species
     data_quality:
       score: 15
       max: 15
@@ -160,21 +152,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Iris-like data shows all scatter matrix aspects: varied correlations,
-          different distributions, clear and overlapping clusters'
+        comment: 'Shows all aspects: distributions, correlations, multiple groups'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Based on classic Iris dataset - real, scientific, neutral scenario
+        comment: Iris-like flower measurements; real-world plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually correct flower measurements with proper proportions and
-          relationships
+        comment: Values factually correct for iris flowers
     code_quality:
       score: 10
       max: 10
@@ -184,61 +174,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → constants → data → plot → save, no functions/classes'
+        comment: Straightforward script flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for deterministic output
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: os, plt, np, GridSpec'
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity, no over-engineering
+        comment: No fake functionality or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format plot-{THEME}.png, current API usage
+        comment: Saves as plot-{THEME}.png
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Correct matplotlib patterns (explicit figure, axes methods, GridSpec)
-          but doesn't leverage library's full potential
+        passed: true
+        comment: GridSpec is idiomatic pattern; uses high-level API correctly
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses GridSpec and theme-adaptive tokens, but these are standard techniques
-          for matplotlib
-  verdict: REJECTED
+        passed: true
+        comment: GridSpec and custom legend are matplotlib-specific; could explore
+          more distinctive features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - custom-legend
-  - grid-styling
   patterns:
   - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
   - edge-highlighting
