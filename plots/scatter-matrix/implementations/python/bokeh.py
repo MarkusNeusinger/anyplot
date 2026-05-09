@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-matrix: Scatter Plot Matrix
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-09
@@ -99,7 +99,7 @@ for i in range(n_vars):
                 p.legend.visible = False
 
         else:
-            # Off-diagonal: Scatter plot
+            # Off-diagonal: Scatter plot with refined styling
             source = ColumnDataSource(data={"x": variables[j], "y": variables[i], "species": species})
 
             p = figure(width=cell_size, height=cell_size, x_axis_label=x_label, y_axis_label=y_label, tools="")
@@ -109,17 +109,16 @@ for i in range(n_vars):
                 y="y",
                 source=source,
                 size=14,
-                alpha=0.7,
+                alpha=0.65,
                 fill_color=factor_cmap("species", OKABE_ITO, species_list),
-                line_color=PAGE_BG,
-                line_width=1,
+                line_color="white" if THEME == "light" else "#2A2A27",
+                line_width=0.8,
             )
 
-        # Style axes
+        # Style axes — minimal, refined aesthetic
         p.background_fill_color = PAGE_BG
         p.border_fill_color = PAGE_BG
-        p.outline_line_color = INK_SOFT
-        p.outline_line_width = 2
+        p.outline_line_width = 0  # Remove spines for cleaner look
 
         p.title.text_color = INK
         p.xaxis.axis_label_text_color = INK
@@ -130,6 +129,8 @@ for i in range(n_vars):
         p.yaxis.axis_line_color = INK_SOFT
         p.xaxis.major_tick_line_color = INK_SOFT
         p.yaxis.major_tick_line_color = INK_SOFT
+        p.xaxis.major_tick_line_width = 1
+        p.yaxis.major_tick_line_width = 1
 
         p.xaxis.axis_label_text_font_size = "20pt"
         p.yaxis.axis_label_text_font_size = "20pt"
@@ -138,13 +139,15 @@ for i in range(n_vars):
 
         p.xgrid.grid_line_color = INK
         p.ygrid.grid_line_color = INK
-        p.xgrid.grid_line_alpha = 0.10
-        p.ygrid.grid_line_alpha = 0.10
+        p.xgrid.grid_line_alpha = 0.08
+        p.ygrid.grid_line_alpha = 0.08
 
         if p.legend:
             p.legend.background_fill_color = ELEVATED_BG
             p.legend.border_line_color = INK_SOFT
             p.legend.label_text_color = INK_SOFT
+            p.legend.border_line_width = 1
+            p.legend.label_text_font_size = "16pt"
 
         row.append(p)
 
