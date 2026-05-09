@@ -1,170 +1,161 @@
 library: highcharts
+language: python
 specification_id: roc-curve
 created: '2025-12-26T17:41:05Z'
-updated: '2025-12-26T17:52:23Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20526595882
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-09T22:56:05Z'
+generated_by: claude-haiku
+workflow_run: 25613652724
+issue: 2273
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/roc-curve/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/roc-curve/highcharts/plot.html
-quality_score: 92
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/highcharts/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent use of AreaSeries with gradient fill to visually represent the AUC area
-    under the ROC curve
-  - Clean implementation following the library rules for Highcharts with inline JS
-    embedding
-  - Proper manual ROC curve calculation demonstrating the algorithm
-  - Good colorblind-safe color choices (Python Blue and olive yellow)
-  - Correctly formatted title following pyplots.ai convention
+  - Perfect visual quality with all text legible in both themes
+  - Correct spec implementation with all required features
+  - Clean reproducible code with proper theme adaptation
+  - Strong data quality with realistic classifier simulation
+  - Professional polish with gradient fills and careful legend positioning
   weaknesses:
-  - Legend position causes slight overlap with the x-axis 1 tick label
-  - Could leverage Highcharts tooltip feature to show threshold values at each point
-    on the curve
-  - Example data shows only one high-performing classifier; could include comparison
-    with a second model to better demonstrate ROC curve usage
-  image_description: 'The plot shows a ROC curve on a white background. The main ROC
-    curve is displayed as a blue area chart (Python Blue #306998) with a gradient
-    fill from darker blue at the top to lighter blue at the bottom, representing the
-    area under the curve. The curve shows excellent classifier performance, starting
-    near the top-left and reaching the top quickly. A dashed olive/yellow diagonal
-    line represents the random classifier reference (y=x). The title "roc-curve ·
-    highcharts · pyplots.ai" appears at the top in bold. The subtitle "Binary Classifier
-    Performance" is shown below. The X-axis is labeled "False Positive Rate" (0 to
-    1), Y-axis is labeled "True Positive Rate" (0 to 1). A legend in the bottom-right
-    shows "ROC Curve (AUC = 0.967)" and "Random Classifier (AUC = 0.5)". Grid lines
-    are subtle light gray. The layout fills the canvas well with proper margins.'
+  - 'Design excellence is moderate: gradient and styling are present but somewhat
+    standard for highcharts'
+  - 'Library mastery could be stronger: doesn''t fully leverage unique highcharts
+    capabilities like custom markers or advanced styling'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with proper contrast
+      Chrome: Title, axis labels, and tick labels all dark text (#1A1A17, #4A4A44), clearly readable against light surface
+      Data: ROC curve in brand green (#009E73) with gradient opacity fill, diagonal reference line in neutral color with dashed style
+      Legibility verdict: PASS - all elements readable, strong contrast, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with proper contrast
+      Chrome: Title, axis labels, and tick labels all light text (#F0EFE8, #B8B7B0), clearly readable against dark surface. No dark-on-dark failures.
+      Data: ROC curve color identical to light render (#009E73), diagonal reference line same neutral styling
+      Legibility verdict: PASS - all text readable, no dark-on-dark, theme adaptation correct
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 48px, axis labels at 36px, tick labels at 28px, all perfectly
-          readable at full size
+        comment: All text readable in both themes with proper sizing and contrast
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: Clean layout with legend positioned to avoid interference
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: ROC curve line is thick (6px), diagonal line visible with dashed
-          style, gradient fill clearly shows AUC area
+        comment: ROC curve and reference line both distinct and prominent
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and olive/yellow (#8B8000) are colorblind-safe, no
-          red-green combinations
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good margins but legend is positioned in bottom-right corner slightly
-          overlapping the "1" tick mark, could be better positioned
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"False Positive Rate" and "True Positive Rate" are descriptive (units
-          not applicable for rates 0-1)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, generous margins, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.1), but legend partially overlaps plot area
-          and the "1" tick label on x-axis
+        comment: Descriptive labels with ranges and units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, backgrounds theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Gradient fill shows thought but mostly standard styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean but minimal customization beyond defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point with ROC curve, context via reference line
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct ROC curve visualization
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: FPR on X-axis, TPR on Y-axis correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Includes diagonal reference line, AUC score in legend, both required
-          per spec
-      - id: SC-04
-        name: Data Range
+        comment: All required features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes range from 0 to 1 as specified
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct X/Y mapping with proper ranges
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows ROC Curve with AUC value and Random Classifier
-          reference
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "roc-curve · highcharts · pyplots.ai"
+        comment: Title and legend correctly formatted
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows a good classifier (AUC=0.967) but doesn't show variation like
-          comparing multiple models or a poor classifier
+        comment: Full ROC curve coverage
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Binary classification scenario with beta distributions simulating
-          positive/negative class score separation is realistic
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 500 samples, 200 thresholds, AUC ~0.97 all sensible values
+        comment: Realistic binary classifier simulation
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard 0-1 scales
     code_quality:
       score: 10
       max: 10
@@ -174,40 +165,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save, no functions/classes'
+        comment: No unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current numpy and highcharts APIs
+        comment: No fake interactivity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good idiom, theme-adaptive approach correct
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses AreaSeries with gradient fill which is nice, but doesn't leverage
-          Highcharts' interactive features like tooltips with threshold values
+        passed: false
+        comment: Uses gradient and styling, could explore more
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - gradient-fill
+  - alpha-blending
