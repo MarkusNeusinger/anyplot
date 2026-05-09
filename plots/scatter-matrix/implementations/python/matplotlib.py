@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-matrix: Scatter Plot Matrix
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-09
@@ -18,8 +18,8 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+# Okabe-Ito palette (3 colors for 3 species)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data: Iris-like flower measurements (4 variables, 3 species)
 np.random.seed(42)
@@ -60,31 +60,42 @@ for i in range(n_vars):
         ax.set_facecolor(PAGE_BG)
 
         if i == j:
-            # Diagonal: histograms for each species
+            # Diagonal: histograms with enhanced visual hierarchy
             for species_idx, (_species, color) in enumerate(zip(species_names, OKABE_ITO, strict=True)):
                 mask = species_indices == species_idx
                 species_data = data_arrays[i][mask]
-                ax.hist(species_data, bins=12, alpha=0.7, color=color, edgecolor=PAGE_BG, linewidth=0.5)
+                ax.hist(species_data, bins=12, alpha=0.85, color=color, edgecolor=INK_SOFT, linewidth=1.0)
         else:
-            # Off-diagonal: scatter plots with species colors
+            # Off-diagonal: scatter plots with enhanced marker definition
             for species_idx, (_species, color) in enumerate(zip(species_names, OKABE_ITO, strict=True)):
                 mask = species_indices == species_idx
                 ax.scatter(
                     data_arrays[j][mask],
                     data_arrays[i][mask],
                     c=color,
-                    s=120,
-                    alpha=0.7,
-                    edgecolors=PAGE_BG,
-                    linewidth=0.5,
+                    s=140,
+                    alpha=0.8,
+                    edgecolors=INK_SOFT,
+                    linewidth=0.8,
                 )
 
         # Grid styling
         ax.grid(True, alpha=0.12, linestyle="-", color=INK_SOFT, linewidth=0.6)
         ax.tick_params(axis="both", labelsize=14, colors=INK_SOFT)
-        for spine in ax.spines.values():
-            spine.set_color(INK_SOFT)
-            spine.set_linewidth(0.8)
+
+        # Remove top and right spines for refined look
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.spines["left"].set_color(INK_SOFT)
+        ax.spines["left"].set_linewidth(0.8)
+        ax.spines["bottom"].set_color(INK_SOFT)
+        ax.spines["bottom"].set_linewidth(0.8)
+
+        # Visual distinction: subtle background for diagonal (histogram) cells
+        if i == j:
+            ax.set_facecolor(ELEVATED_BG)
+        else:
+            ax.set_facecolor(PAGE_BG)
 
         # Axis labels only on edges
         if i == n_vars - 1:
