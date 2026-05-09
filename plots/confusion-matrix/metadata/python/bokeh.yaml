@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: confusion-matrix
 created: '2025-12-26T17:37:19Z'
-updated: '2026-05-09T16:40:59Z'
+updated: '2026-05-09T16:46:01Z'
 generated_by: claude-haiku
 workflow_run: 25606095716
 issue: 2272
@@ -12,44 +12,34 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/confusion
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/bokeh/plot-dark.html
-quality_score: 85
+quality_score: 84
 review:
   strengths:
-  - Perfect visual quality with all text crisp and readable in both light and dark
-    themes
-  - Perfect spec compliance with all required confusion matrix features correctly
-    implemented
-  - Excellent theme adaptation with data colors remaining identical across themes
-    and chrome properly flipped
-  - Smart cell annotation logic automatically contrasting with cell backgrounds
-  - Clean, reproducible code with proper seed setting and deterministic data generation
-  - Ideal square format (3600×3600) appropriate for symmetric confusion matrix
-  - Realistic sentiment analysis example data with natural class imbalance and confusion
-    patterns
+  - 'Perfect visual quality: text legible in both themes, no overlap or accessibility
+    issues'
+  - 'Strong data quality: realistic sentiment classification scenario with plausible
+    confusion patterns'
+  - 'Clean code: deterministic with seed, KISS structure, all imports justified'
+  - 'Theme compliance: Blues colormap data identical across renders, chrome correctly
+    theme-adaptive'
   weaknesses:
-  - Generic design using standard Blues sequential palette without custom enhancements
-  - No visual emphasis on insights or key patterns (e.g., highlighting most-confused
-    class pairs or diagonal dominance)
-  - Limited use of Bokeh's distinctive features like HoverTool for interactive cell
-    information
-  - Minimal visual storytelling with data presented correctly but without visual hierarchy
-    or focal points
+  - 'Design generic: lacks visual emphasis on key insight (strong diagonal = good
+    classification)'
+  - 'Limited styling sophistication: clean defaults but no custom palette or visual
+    hierarchy'
+  - 'Missing spec features: no diagonal highlighting, no normalization UI options'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct and not pure white
-      Chrome: Title in bold 36pt dark text, axis labels in 28pt dark text, tick labels in 24pt medium-gray text - all clearly readable
-      Data: Sequential Blues palette from light (#f7fbff) to dark navy (#08306b) showing confusion matrix values; diagonal shows strong true positives in dark colors
-      Annotations: Cell values annotated with smart text colors (white on dark cells, dark blue on light cells) - excellent readability
-      Colorbar: Present with "Count" label, properly integrated
-      Legibility verdict: PASS - all elements crisp and readable with excellent contrast
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title "confusion-matrix · bokeh · anyplot.ai" in bold, axis labels "True Label" (y) and "Predicted Label" (x) at 28pt, class names (Negative, Neutral, Positive, Very Positive) at 24pt. All text dark and clearly visible.
+      Data: Blues sequential colormap from near-white (#f7fbff) to deep navy (#08306b). Strong diagonal shows correct classifications (142, 98, 156, 86). Cell values annotated at 32pt bold with smart contrast (white on dark cells, dark text on light cells).
+      Legibility verdict: PASS - All text and elements clearly readable against light background, no overlap, no contrast issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct and not pure black
-      Chrome: Title and axis labels in light text (#F0EFE8), tick labels in light gray (#B8B7B0) - all clearly readable against dark background
-      Data: Data cell colors identical to light render (Blues palette unchanged) - confirms proper theme adaptation with only chrome changing
-      Annotations: Cell annotation text maintains same contrast logic and remains readable in dark theme
-      Colorbar: Properly adapted to dark theme
-      Legibility verdict: PASS - no dark-on-dark failures, all text clearly visible and properly themed
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Title and axis labels now in light cream/off-white, tick labels in light gray. All text light-colored and clearly visible against dark background.
+      Data: Blues colormap identical to light render - same cell values (142, 23, 8, 2... etc.), same blue gradients. Only chrome colors flipped between themes, not data colors.
+      Legibility verdict: PASS - All text clearly visible; no dark-on-dark failures; cell borders provide clear definition; color contrast maintained; colorbar readable. Both renders legible and theme-compliant.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -60,53 +50,53 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title 36pt, labels 28pt, ticks 24pt,
-          annotations 32pt; perfectly readable in both themes
+        comment: All font sizes explicitly set (title 36pt, labels 28pt, ticks 24pt,
+          cell text 32pt); perfectly readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; cell annotations fit cleanly; proper
-          spacing throughout
+        comment: All text fully separated; cell values, axis labels, title clearly
+          distinguished with no collision
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All heatmap cells clearly visible; color gradient distinguishable;
-          cell values prominently annotated
+        comment: 16 cells optimally visible; Blues gradient from near-white to deep
+          navy clearly shows all cell values
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Strong contrast between cells and background; text colors excellent;
-          sequential Blues palette appropriate for numeric data
+        comment: Blues sequential is perceptually uniform and colorblind-safe; good
+          contrast across density range
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect 3600×3600 square format; plot fills canvas well; balanced
-          margins; nothing cut off
+        comment: Square format (3600×3600) ideal for symmetric heatmap; plot fills
+          60-70% of canvas with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title with correct spec format; axis labels descriptive (True Label,
-          Predicted Label)
+        comment: 'Descriptive labels: ''True Label'', ''Predicted Label''; colorbar
+          labeled ''Count'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Sequential Blues palette correct for continuous data; backgrounds
-          exactly right (#FAF8F1 light, #1A1A17 dark); data colors identical across
-          themes; theme-adaptive text working correctly'
+        comment: 'Blues sequential correct for count heatmap per spec; data colors
+          identical in both renders; backgrounds #FAF8F1 (light) and #1A1A17 (dark)
+          correct; text colors theme-adaptive'
     design_excellence:
-      score: 8
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -114,23 +104,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default; uses standard Blues palette without
-          custom enhancements; professional but generic
+        comment: Well-configured library default with clean Blues palette; professional
+          but lacks custom enhancements or intentional visual hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Grid removed (good); minimal customization; mostly default styling
+        comment: 'Good: no grid (appropriate for heatmap), clean spacing, balanced
+          margins; could benefit from more sophisticated styling'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Plot displays data clearly but with minimal emphasis on insights;
-          no visual hierarchy or focal points
+        comment: Data displayed clearly (strong diagonal shows correct predictions);
+          no visual emphasis or hierarchy to guide viewer to insight
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -138,26 +129,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct confusion matrix heatmap structure
+        comment: 'Correct: 4×4 confusion matrix heatmap for multi-class sentiment
+          classifier'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Axes labeled, cells annotated, colorbar included, proper orientation
+        passed: false
+        comment: 'Present: cell counts, axis labels, Blues colormap, colorbar; missing:
+          normalization UI options and diagonal highlighting'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: True labels on y-axis, predicted on x-axis, diagonal shows correct
-          predictions
+        comment: 'Correct: rows=true labels, columns=predicted labels; all four classes
+          visible; axes complete'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; colorbar titled Count
+        comment: 'Format correct: ''confusion-matrix · bokeh · anyplot.ai''; colorbar
+          labeled ''Count'''
     data_quality:
       score: 15
       max: 15
@@ -167,22 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all confusion matrix aspects with realistic patterns including
-          class imbalance
+        comment: 'All aspects shown: strong diagonal (correct predictions), off-diagonal
+          confusion, class imbalance, adjacent-class confusion patterns'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sentiment analysis scenario is realistic and neutral; class names
-          natural and comprehensible
+        comment: Real scenario (sentiment classifier); plausible confusion patterns;
+          neutral, non-controversial topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values proportionate (~400 samples); proportions realistic; no logical
-          inconsistencies
+        comment: Realistic scale (~400 samples); sensible proportions; 4×4 matrix
+          within spec bounds of 2-20 classes
     code_quality:
       score: 10
       max: 10
@@ -192,33 +186,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → figure → save; no unnecessary functions'
+        comment: 'Linear flow: imports → theme → data → plot → styling → save; no
+          functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic data generation
+        comment: np.random.seed(42) set; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used appropriately
+        comment: 'All imports justified: os, time, Path, numpy, bokeh.*, selenium'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; idiomatic patterns; no fake functionality
+        comment: Clean, Pythonic, appropriate complexity; no fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png; current API
+        comment: 'Correct format: plot-light.png, plot-dark.png, plot-light.html,
+          plot-dark.html'
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -226,14 +222,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ColumnDataSource, rect glyphs, LabelSet, LinearColorMapper;
-          follows conventions; fairly standard patterns
+        comment: 'Correct bokeh patterns: figure(), ColumnDataSource, rect glyph,
+          LabelSet, LinearColorMapper, ColorBar; follows library guide'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: Uses Bokeh-specific features; could leverage more (HoverTool, CustomJS)
+        passed: false
+        comment: Generic usage; limited distinctive bokeh features (e.g., hover tooltips,
+          linked selection) leveraged; limited by static output context
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -241,8 +238,11 @@ impl_tags:
   techniques:
   - colorbar
   - annotations
+  - html-export
   patterns:
   - data-generation
+  - matrix-construction
   - columndatasource
   dataprep: []
-  styling: []
+  styling:
+  - publication-ready

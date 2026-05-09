@@ -1,7 +1,7 @@
 """ anyplot.ai
 confusion-matrix: Confusion Matrix Heatmap
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-09
+Quality: 84/100 | Updated: 2026-05-09
 """
 
 import os
