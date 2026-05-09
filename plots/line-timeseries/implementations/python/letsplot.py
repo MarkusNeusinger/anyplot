@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-timeseries: Time Series Line Plot
-Library: letsplot | Python 3.13
-Quality: pending | Created: 2025-12-21
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-09
 """
 
 import os
