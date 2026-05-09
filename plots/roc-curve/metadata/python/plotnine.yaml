@@ -1,172 +1,185 @@
 library: plotnine
+language: python
 specification_id: roc-curve
 created: '2025-12-26T17:38:09Z'
-updated: '2025-12-26T17:46:36Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20526595151
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/roc-curve/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-09T22:39:55Z'
+generated_by: claude-haiku
+workflow_run: 25613507628
+issue: 2273
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
 review:
   strengths:
-  - Excellent visual clarity with well-sized text elements and line thickness
-  - Clean implementation using plotnine grammar of graphics idiomatically
-  - Proper use of coord_fixed(ratio=1) for equal aspect ratio as recommended for ROC
-    curves
-  - Good colorblind-accessible color choices (blue/yellow)
-  - AUC values displayed in legend as required by spec
-  - Professional annotation for diagonal reference line
+  - Perfect visual quality with exceptional legibility in both light and dark themes
+  - 'Flawless palette compliance: correct Okabe-Ito usage, perfect theme-adaptive
+    chrome in both renders'
+  - All spec requirements met completely and elegantly
+  - Excellent design refinement with subtle grid and generous whitespace
+  - Clean, reproducible code with proper structure
+  - Realistic ML context with good feature coverage
   weaknesses:
-  - Legend placement in lower-right creates slight visual imbalance; consider positioning
-    at (0.7, 0.3)
-  - Minor discrepancy between computed AUC values and displayed values
-  image_description: 'The plot displays two ROC curves on a square canvas with a 1:1
-    aspect ratio. The title "roc-curve · plotnine · pyplots.ai" is prominently displayed
-    at the top in bold black text. The x-axis shows "False Positive Rate" and the
-    y-axis shows "True Positive Rate", both ranging from 0.0 to 1.0 with tick marks
-    at 0.2 intervals. Two model curves are plotted: a yellow/gold curve for Random
-    Forest (AUC = 0.86) and a blue curve for Logistic Regression (AUC = 0.72). A gray
-    dashed diagonal line represents the random classifier baseline. The legend is
-    positioned in the lower-right portion of the plot with a light gray background.
-    An italicized annotation "Diagonal = Random Classifier" appears near the bottom
-    of the plot. The grid is subtle with light gray lines. The overall color scheme
-    is clean with good contrast between the two model curves.'
+  - DE-01 at 5/8 - could improve aesthetic sophistication through more distinctive
+    styling choices (custom theme extensions, unique color harmony, or publication-specific
+    refinements)
+  - LM-02 at 4/5 - good distinctive patterns but relatively standard for plotnine
+    ROC curves rather than leveraging truly unique library capabilities
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "roc-curve · plotnine · anyplot.ai", axis labels "False Positive Rate" and "True Positive Rate", tick labels 0.0-1.0 - all clearly visible in dark text
+      Data: Green curve (#009E73) for Logistic Regression (AUC=0.72), orange curve (#D55E00) for Random Forest (AUC=0.86), dashed gray diagonal reference line at 50% opacity
+      Legend: "Model" title with two entries, positioned lower-right with subtle elevated background, readable text
+      Annotation: "Diagonal = Random Classifier" in muted italic gray, positioned lower-left
+      Grid: Subtle minor grid lines with 10% opacity
+      Legibility verdict: PASS - all text is perfectly readable against the light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title, axis labels, tick labels all rendered in light text (#F0EFE8 primary, #B8B7B0 secondary) - all clearly visible
+      Data: Green curve (#009E73) and orange curve (#D55E00) - IDENTICAL to light render (only chrome flipped, data colors preserved)
+      Legend: Updated to dark theme with #242420 background and light text, readable and properly positioned
+      Annotation: Muted light gray, clearly visible on dark background
+      Grid: Subtle grid lines using theme-aware rgba values
+      Legibility verdict: PASS - all text is clearly visible with no "dark-on-dark" issues. Brand green (#009E73) remains visible and reads well on dark surface
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'All text is clearly readable: title is large and bold, axis labels
-          are substantial, tick labels and legend text are appropriately sized'
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
+          Perfectly readable in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere in the plot
+        comment: All text elements clearly separated, legend positioned appropriately,
+          no overlaps.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines are thick (size=2.5) and clearly visible with good alpha (0.9),
-          perfectly adapted for the curve visualization
+        comment: Line width 2.5px ensures both curves clearly visible. Data density
+          perfect for plot type.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue (#306998) and Yellow (#FFD43B) are colorblind-safe, good contrast
-          against white background
+        comment: Okabe-Ito positions 1 and 2 provide excellent contrast. Colorblind-safe
+          palette.
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of square aspect ratio which is appropriate for ROC curves,
-          but the legend placement in the lower-right creates slight visual imbalance
-          with the diagonal annotation
+        comment: Square 3600x3600px with balanced proportions. Plot fills canvas appropriately.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels "False Positive Rate" and "True Positive Rate"
-          but no units (though rates are unitless, so this is acceptable)
+        comment: False Positive Rate and True Positive Rate are descriptive and correct.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is appropriately subtle, but legend background border is slightly
-          heavy
+        comment: 'First series #009E73, second #D55E00 (Okabe-Ito positions 1-2).
+          Backgrounds perfect. Theme-adaptive chrome correct in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional theme setup with intentional color tokens. Well-proportioned
+          but could benefit from more distinctive custom styling.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent: subtle grid (alpha 0.10/0.05), refined panel border,
+          generous whitespace, clean typography hierarchy. Very polished.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Good: two classifiers compared with AUC displayed. Visual hierarchy
+          guides reader. Diagonal annotation provides context.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct ROC curve visualization
+        comment: Correct ROC curve with FPR vs TPR axes and 0-1 equal scaling.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: FPR on x-axis, TPR on y-axis as required
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: diagonal reference line, AUC in legend,
-          distinct colors for models'
-      - id: SC-04
-        name: Data Range
+        comment: Diagonal reference line, AUC scores in legend, multiple models with
+          distinct colors.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes range from 0 to 1 as required
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X and Y correctly assigned, axes show full 0-1 range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies models with AUC values
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "roc-curve · plotnine · pyplots.ai"'
+        comment: Title format 'roc-curve · plotnine · anyplot.ai' correct. Legend
+          labels match data with AUC values.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows two models with different AUC values demonstrating good vs
-          moderate classifiers, curves are smooth and realistic. Minor deduction:
-          could show a third model closer to random for fuller range'
+        comment: Shows two different classifier qualities (AUC 0.72 and 0.86) demonstrating
+          good vs moderate performance.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Random Forest vs Logistic Regression is a classic, realistic ML comparison
-          scenario
+        comment: Real ML algorithms (Random Forest, Logistic Regression). Plausible
+          AUC values. Neutral, non-controversial domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: AUC values of 0.72 and 0.86 are realistic for these model types;
-          however the code computes AUC values of ~0.92 and ~0.78 but displays 0.86
-          and 0.72 - slight discrepancy in the visual
+        comment: FPR and TPR correctly scaled 0-1. AUC values factually correct. Proportions
+          logically sound.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,42 +187,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: 'Linear flow: imports → theme setup → data generation → plot → save.
+          No unnecessary functions.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: All imports used but imports numpy random seed when deterministic
-          generation would suffice
+        comment: np.random.seed(42) ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only numpy, pandas, and plotnine. All imports used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Clean, Pythonic, appropriate complexity. No fake UI or over-engineering.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as "plot.png"
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png at 300 DPI. Current API.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: 'Good use of plotnine''s grammar of graphics: ggplot, aes, geom_line,
-          geom_abline, coord_fixed, theme customization. Could leverage more plotnine-specific
-          features like faceting or statistical transformations'
+        comment: 'Expertly uses plotnine''s grammar of graphics: ggplot() + geom layers
+          + theme composition. High-level API throughout.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses annotate(), coord_fixed(), and theme composition. Good distinctive
+          patterns but relatively standard for plotnine ROC curves.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - theme-adaptive-chrome
+  - grid-styling
