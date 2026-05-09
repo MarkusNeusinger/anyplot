@@ -1,187 +1,188 @@
-""" pyplots.ai
+"""anyplot.ai
 alluvial-basic: Basic Alluvial Diagram
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: seaborn | Python 3.13
+Quality: 91/100 | Updated: 2025-05-09
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
-from matplotlib.path import Path
 
 
-# Set seaborn style for consistent aesthetics
-sns.set_style("whitegrid")
-sns.set_context("talk", font_scale=1.2)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data: Voter migration across 4 election cycles
+# Okabe-Ito palette - first series always #009E73
+OKABE_ITO = [
+    "#009E73",  # 1. bluish green (brand)
+    "#D55E00",  # 2. vermillion
+    "#0072B2",  # 3. blue
+    "#CC79A7",  # 4. reddish purple
+]
+
+# Data: Employment sector transitions across 4 years
 np.random.seed(42)
 
-# Define time points (election years) and political parties
-years = ["2012", "2016", "2020", "2024"]
-parties = ["Democratic", "Republican", "Independent", "Other"]
+years = ["2021", "2022", "2023", "2024"]
+sectors = ["Technology", "Finance", "Healthcare", "Manufacturing"]
 
-# Colors for each party - using seaborn's colorblind-safe palette
-palette = sns.color_palette("colorblind", n_colors=8)
-party_colors = {
-    "Democratic": palette[0],  # Blue
-    "Republican": palette[3],  # Red
-    "Independent": palette[2],  # Green
-    "Other": palette[7],  # Gray
-}
-
-# Voter counts (millions) at each time point
-# Rows = parties, Columns = years
-voter_counts = np.array(
+# Employment counts (thousands) at each time point
+sector_counts = np.array(
     [
-        [65.9, 65.8, 81.3, 72.0],  # Democratic
-        [60.9, 63.0, 74.2, 77.0],  # Republican
-        [8.5, 7.8, 5.2, 6.5],  # Independent
-        [3.0, 4.5, 2.8, 3.5],  # Other
+        [450, 520, 580, 620],  # Technology
+        [280, 290, 310, 315],  # Finance
+        [320, 340, 360, 380],  # Healthcare
+        [250, 230, 210, 190],  # Manufacturing
     ]
 )
 
-# Flow matrix between consecutive years (transitions between parties)
-# This represents how voters moved between parties
+# Flow transitions between consecutive years
 flows = [
-    # 2012 -> 2016
+    # 2021 -> 2022
     {
-        ("Democratic", "Democratic"): 58.0,
-        ("Democratic", "Republican"): 4.5,
-        ("Democratic", "Independent"): 2.5,
-        ("Democratic", "Other"): 0.9,
-        ("Republican", "Republican"): 55.0,
-        ("Republican", "Democratic"): 3.0,
-        ("Republican", "Independent"): 1.5,
-        ("Republican", "Other"): 1.4,
-        ("Independent", "Democratic"): 3.2,
-        ("Independent", "Republican"): 2.8,
-        ("Independent", "Independent"): 2.0,
-        ("Independent", "Other"): 0.5,
-        ("Other", "Democratic"): 1.6,
-        ("Other", "Republican"): 0.7,
-        ("Other", "Independent"): 0.3,
-        ("Other", "Other"): 0.4,
+        ("Technology", "Technology"): 400,
+        ("Technology", "Finance"): 25,
+        ("Technology", "Healthcare"): 15,
+        ("Technology", "Manufacturing"): 10,
+        ("Finance", "Technology"): 20,
+        ("Finance", "Finance"): 250,
+        ("Finance", "Healthcare"): 5,
+        ("Finance", "Manufacturing"): 5,
+        ("Healthcare", "Technology"): 10,
+        ("Healthcare", "Finance"): 5,
+        ("Healthcare", "Healthcare"): 300,
+        ("Healthcare", "Manufacturing"): 5,
+        ("Manufacturing", "Technology"): 70,
+        ("Manufacturing", "Finance"): 10,
+        ("Manufacturing", "Healthcare"): 40,
+        ("Manufacturing", "Manufacturing"): 130,
     },
-    # 2016 -> 2020
+    # 2022 -> 2023
     {
-        ("Democratic", "Democratic"): 60.0,
-        ("Democratic", "Republican"): 2.5,
-        ("Democratic", "Independent"): 2.0,
-        ("Democratic", "Other"): 1.3,
-        ("Republican", "Republican"): 58.0,
-        ("Republican", "Democratic"): 3.5,
-        ("Republican", "Independent"): 1.0,
-        ("Republican", "Other"): 0.5,
-        ("Independent", "Democratic"): 5.5,
-        ("Independent", "Republican"): 1.5,
-        ("Independent", "Independent"): 0.5,
-        ("Independent", "Other"): 0.3,
-        ("Other", "Democratic"): 2.0,
-        ("Other", "Republican"): 1.5,
-        ("Other", "Independent"): 0.5,
-        ("Other", "Other"): 0.5,
+        ("Technology", "Technology"): 480,
+        ("Technology", "Finance"): 15,
+        ("Technology", "Healthcare"): 20,
+        ("Technology", "Manufacturing"): 5,
+        ("Finance", "Technology"): 35,
+        ("Finance", "Finance"): 245,
+        ("Finance", "Healthcare"): 5,
+        ("Finance", "Manufacturing"): 5,
+        ("Healthcare", "Technology"): 30,
+        ("Healthcare", "Finance"): 10,
+        ("Healthcare", "Healthcare"): 295,
+        ("Healthcare", "Manufacturing"): 5,
+        ("Manufacturing", "Technology"): 50,
+        ("Manufacturing", "Finance"): 5,
+        ("Manufacturing", "Healthcare"): 25,
+        ("Manufacturing", "Manufacturing"): 150,
     },
-    # 2020 -> 2024
+    # 2023 -> 2024
     {
-        ("Democratic", "Democratic"): 65.0,
-        ("Democratic", "Republican"): 10.0,
-        ("Democratic", "Independent"): 4.5,
-        ("Democratic", "Other"): 1.8,
-        ("Republican", "Republican"): 62.0,
-        ("Republican", "Democratic"): 5.5,
-        ("Republican", "Independent"): 1.2,
-        ("Republican", "Other"): 0.5,
-        ("Independent", "Democratic"): 1.0,
-        ("Independent", "Republican"): 3.0,
-        ("Independent", "Independent"): 0.7,
-        ("Independent", "Other"): 0.5,
-        ("Other", "Democratic"): 0.5,
-        ("Other", "Republican"): 2.0,
-        ("Other", "Independent"): 0.1,
-        ("Other", "Other"): 0.7,
+        ("Technology", "Technology"): 550,
+        ("Technology", "Finance"): 10,
+        ("Technology", "Healthcare"): 15,
+        ("Technology", "Manufacturing"): 5,
+        ("Finance", "Technology"): 30,
+        ("Finance", "Finance"): 280,
+        ("Finance", "Healthcare"): 3,
+        ("Finance", "Manufacturing"): 2,
+        ("Healthcare", "Technology"): 50,
+        ("Healthcare", "Finance"): 8,
+        ("Healthcare", "Healthcare"): 295,
+        ("Healthcare", "Manufacturing"): 7,
+        ("Manufacturing", "Technology"): 25,
+        ("Manufacturing", "Finance"): 3,
+        ("Manufacturing", "Healthcare"): 30,
+        ("Manufacturing", "Manufacturing"): 152,
     },
 ]
 
+# Create mapping from sector to color
+sector_colors = {sector: OKABE_ITO[i] for i, sector in enumerate(sectors)}
 
 # Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Calculate positions for each time point
 n_years = len(years)
 x_positions = np.linspace(0, 10, n_years)
 bar_width = 0.6
-total_height = 100  # Normalize to percentage
+total_height = 100
 
-# Track positions for each node (party at each time point)
-node_positions = {}  # {(year_idx, party): (y_bottom, y_top)}
+# Track positions for each node
+node_positions = {}
 
 # Draw nodes (stacked bars) at each time point
 for year_idx, year in enumerate(years):
     x = x_positions[year_idx]
-    year_total = voter_counts[:, year_idx].sum()
+    year_total = sector_counts[:, year_idx].sum()
 
     y_bottom = 0
-    for party_idx, party in enumerate(parties):
-        height = (voter_counts[party_idx, year_idx] / year_total) * total_height
+    for sector_idx, sector in enumerate(sectors):
+        height = (sector_counts[sector_idx, year_idx] / year_total) * total_height
         y_top = y_bottom + height
 
-        # Store position for flow drawing
-        node_positions[(year_idx, party)] = (y_bottom, y_top)
+        node_positions[(year_idx, sector)] = (y_bottom, y_top)
 
-        # Draw the bar segment using seaborn's color palette styling
+        # Draw the bar segment
         rect = mpatches.Rectangle(
             (x - bar_width / 2, y_bottom),
             bar_width,
             height,
-            facecolor=party_colors[party],
-            edgecolor="white",
-            linewidth=2,
+            facecolor=sector_colors[sector],
+            edgecolor=PAGE_BG,
+            linewidth=1.5,
         )
         ax.add_patch(rect)
 
-        # Add party labels with voter counts on both first and last columns
-        vote_millions = voter_counts[party_idx, year_idx]
-        # Use compact format: "Party (XM)" on single line
-        label_text = f"{party} ({vote_millions:.0f}M)"
-        font_size = 13
+        # Add sector labels on first and last columns
+        count = sector_counts[sector_idx, year_idx]
+        label_text = f"{sector} ({count}k)"
+        font_size = 14
 
         if year_idx == 0:
             ax.text(
-                x - bar_width / 2 - 0.15,
+                x - bar_width / 2 - 0.2,
                 (y_bottom + y_top) / 2,
                 label_text,
                 ha="right",
                 va="center",
                 fontsize=font_size,
                 fontweight="bold",
-                color=party_colors[party],
+                color=sector_colors[sector],
             )
         elif year_idx == n_years - 1:
             ax.text(
-                x + bar_width / 2 + 0.15,
+                x + bar_width / 2 + 0.2,
                 (y_bottom + y_top) / 2,
                 label_text,
                 ha="left",
                 va="center",
                 fontsize=font_size,
                 fontweight="bold",
-                color=party_colors[party],
+                color=sector_colors[sector],
             )
 
         y_bottom = y_top
 
-    # Add year labels with total voters at top
-    year_total_display = voter_counts[:, year_idx].sum()
+    # Add year labels
+    year_total_display = sector_counts[:, year_idx].sum()
     ax.text(
         x,
         total_height + 3,
-        f"{year}\n({year_total_display:.1f}M total)",
+        f"{year}\n({year_total_display}k total)",
         ha="center",
         va="bottom",
         fontsize=18,
         fontweight="bold",
+        color=INK,
     )
 
 # Draw flows between consecutive time points
@@ -189,30 +190,25 @@ for flow_idx, flow_dict in enumerate(flows):
     x0 = x_positions[flow_idx]
     x1 = x_positions[flow_idx + 1]
 
-    # Calculate totals for normalization
-    year0_total = voter_counts[:, flow_idx].sum()
-    year1_total = voter_counts[:, flow_idx + 1].sum()
+    year0_total = sector_counts[:, flow_idx].sum()
+    year1_total = sector_counts[:, flow_idx + 1].sum()
 
-    # Track cumulative offsets for each source and target
-    source_offsets = {party: node_positions[(flow_idx, party)][0] for party in parties}
-    target_offsets = {party: node_positions[(flow_idx + 1, party)][0] for party in parties}
+    source_offsets = {sector: node_positions[(flow_idx, sector)][0] for sector in sectors}
+    target_offsets = {sector: node_positions[(flow_idx + 1, sector)][0] for sector in sectors}
 
-    # Draw each flow
-    for (source_party, target_party), flow_value in flow_dict.items():
+    for (source_sector, target_sector), flow_value in flow_dict.items():
         if flow_value <= 0:
             continue
 
-        # Calculate normalized heights
         source_height = (flow_value / year0_total) * total_height
         target_height = (flow_value / year1_total) * total_height
 
-        # Get current positions
-        y0_bot = source_offsets[source_party]
+        y0_bot = source_offsets[source_sector]
         y0_top = y0_bot + source_height
-        y1_bot = target_offsets[target_party]
+        y1_bot = target_offsets[target_sector]
         y1_top = y1_bot + target_height
 
-        # Draw the curved band with source color using Bezier curves
+        # Draw curved band
         band_x0 = x0 + bar_width / 2
         band_x1 = x1 - bar_width / 2
         cx0 = band_x0 + 0.4 * (band_x1 - band_x0)
@@ -230,58 +226,71 @@ for flow_idx, flow_dict in enumerate(flows):
             (band_x0, y0_bot),
         ]
         codes = [
-            Path.MOVETO,
-            Path.CURVE4,
-            Path.CURVE4,
-            Path.CURVE4,
-            Path.LINETO,
-            Path.CURVE4,
-            Path.CURVE4,
-            Path.CURVE4,
-            Path.CLOSEPOLY,
+            mpatches.Path.MOVETO,
+            mpatches.Path.CURVE4,
+            mpatches.Path.CURVE4,
+            mpatches.Path.CURVE4,
+            mpatches.Path.LINETO,
+            mpatches.Path.CURVE4,
+            mpatches.Path.CURVE4,
+            mpatches.Path.CURVE4,
+            mpatches.Path.CLOSEPOLY,
         ]
-        path = Path(verts, codes)
-        # Increase alpha for smaller flows to improve visibility
+        path = mpatches.Path(verts, codes)
         min_height = min(source_height, target_height)
-        alpha = 0.55 if min_height < 3 else 0.40
+        alpha = 0.5 if min_height < 3 else 0.35
         patch = mpatches.PathPatch(
-            path, facecolor=party_colors[source_party], edgecolor=party_colors[source_party], linewidth=0.5, alpha=alpha
+            path,
+            facecolor=sector_colors[source_sector],
+            edgecolor=sector_colors[source_sector],
+            linewidth=0.5,
+            alpha=alpha,
         )
         ax.add_patch(patch)
 
-        # Update offsets
-        source_offsets[source_party] = y0_top
-        target_offsets[target_party] = y1_top
+        source_offsets[source_sector] = y0_top
+        target_offsets[target_sector] = y1_top
+
+# Add legend
+legend_patches = [
+    mpatches.Patch(facecolor=sector_colors[sector], edgecolor=PAGE_BG, label=sector) for sector in sectors
+]
+ax.legend(
+    handles=legend_patches,
+    loc="upper right",
+    fontsize=14,
+    frameon=True,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
+    framealpha=0.95,
+)
 
 # Styling
 ax.set_xlim(-2.8, 13.3)
 ax.set_ylim(-8, 120)
 ax.set_aspect("auto")
 
-# Remove axes
 ax.set_xticks([])
 ax.set_yticks([])
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 ax.spines["bottom"].set_visible(False)
 ax.spines["left"].set_visible(False)
-ax.set_facecolor("white")
-fig.patch.set_facecolor("white")
 
-# Title (strictly following spec-id · library · pyplots.ai format)
-ax.set_title("alluvial-basic · seaborn · pyplots.ai", fontsize=24, fontweight="bold", pad=25)
+# Title
+ax.set_title("alluvial-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=25)
 
-# Add subtitle with data context and scale information
+# Subtitle with data context
 ax.text(
     5,
     -5,
-    "US Voter Migration 2012-2024 | Values in millions | Flow width proportional to transitions",
+    "Employment Sector Transitions 2021-2024 | Values in thousands | Flow width proportional to transitions",
     ha="center",
     va="top",
     fontsize=14,
-    color="#666666",
+    color=INK_SOFT,
     style="italic",
 )
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
