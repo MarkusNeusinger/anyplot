@@ -1,95 +1,80 @@
-""" pyplots.ai
+""" anyplot.ai
 roc-curve: ROC Curve with AUC
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-09
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.metrics import auc, roc_curve
 
 
-# Generate synthetic classification data for ROC curve
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
+# Data
 np.random.seed(42)
-
-# Simulate three models with different performances
 n_samples = 1000
 
-# Ground truth labels
+# Generate classification data with three models of different quality
 y_true = np.random.binomial(1, 0.5, n_samples)
+y_scores_1 = y_true * np.random.beta(5, 2, n_samples) + (1 - y_true) * np.random.beta(2, 6, n_samples)
+y_scores_2 = y_true * np.random.beta(4, 2, n_samples) + (1 - y_true) * np.random.beta(2, 4, n_samples)
+y_scores_3 = y_true * np.random.beta(2.5, 2, n_samples) + (1 - y_true) * np.random.beta(2, 2.5, n_samples)
 
-# Model 1: Excellent classifier (AUC ~ 0.94)
-y_scores_model1 = y_true * np.random.beta(5, 2, n_samples) + (1 - y_true) * np.random.beta(2, 6, n_samples)
+# Compute ROC curves using sklearn
+fpr1, tpr1, _ = roc_curve(y_true, y_scores_1)
+auc1 = auc(fpr1, tpr1)
 
-# Model 2: Good classifier (AUC ~ 0.82)
-y_scores_model2 = y_true * np.random.beta(4, 2, n_samples) + (1 - y_true) * np.random.beta(2, 4, n_samples)
+fpr2, tpr2, _ = roc_curve(y_true, y_scores_2)
+auc2 = auc(fpr2, tpr2)
 
-# Model 3: Fair classifier (AUC ~ 0.68)
-y_scores_model3 = y_true * np.random.beta(2.5, 2, n_samples) + (1 - y_true) * np.random.beta(2, 2.5, n_samples)
+fpr3, tpr3, _ = roc_curve(y_true, y_scores_3)
+auc3 = auc(fpr3, tpr3)
 
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Compute ROC curve from threshold sweeping
-def compute_roc(y_true, y_scores, n_thresholds=200):
-    thresholds = np.linspace(0, 1, n_thresholds)
-    tpr_list = []
-    fpr_list = []
+ax.plot(fpr1, tpr1, color=OKABE_ITO[0], linewidth=3.5, label=f"Random Forest (AUC = {auc1:.2f})")
+ax.plot(fpr2, tpr2, color=OKABE_ITO[1], linewidth=3.5, label=f"Logistic Regression (AUC = {auc2:.2f})")
+ax.plot(fpr3, tpr3, color=OKABE_ITO[2], linewidth=3.5, label=f"Decision Tree (AUC = {auc3:.2f})")
 
-    for thresh in thresholds:
-        y_pred = (y_scores >= thresh).astype(int)
-        tp = np.sum((y_pred == 1) & (y_true == 1))
-        fp = np.sum((y_pred == 1) & (y_true == 0))
-        fn = np.sum((y_pred == 0) & (y_true == 1))
-        tn = np.sum((y_pred == 0) & (y_true == 0))
+ax.plot([0, 1], [0, 1], color=INK_SOFT, linewidth=2.5, linestyle="--", label="Random Classifier (AUC = 0.50)")
 
-        tpr = tp / (tp + fn) if (tp + fn) > 0 else 0
-        fpr = fp / (fp + tn) if (fp + tn) > 0 else 0
-        tpr_list.append(tpr)
-        fpr_list.append(fpr)
+ax.fill_between(fpr1, tpr1, alpha=0.12, color=OKABE_ITO[0])
+ax.fill_between(fpr2, tpr2, alpha=0.08, color=OKABE_ITO[1])
 
-    return np.array(fpr_list), np.array(tpr_list)
-
-
-def compute_auc(fpr, tpr):
-    # Sort by FPR for proper integration
-    sorted_indices = np.argsort(fpr)
-    fpr_sorted = fpr[sorted_indices]
-    tpr_sorted = tpr[sorted_indices]
-    return np.trapezoid(tpr_sorted, fpr_sorted)
-
-
-# Compute ROC curves for all models
-fpr1, tpr1 = compute_roc(y_true, y_scores_model1)
-auc1 = compute_auc(fpr1, tpr1)
-
-fpr2, tpr2 = compute_roc(y_true, y_scores_model2)
-auc2 = compute_auc(fpr2, tpr2)
-
-fpr3, tpr3 = compute_roc(y_true, y_scores_model3)
-auc3 = compute_auc(fpr3, tpr3)
-
-# Create figure (16:9 landscape format)
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Plot ROC curves - using Python colors and accessible palette
-ax.plot(fpr1, tpr1, color="#306998", linewidth=3.5, label=f"Random Forest (AUC = {auc1:.2f})")
-ax.plot(fpr2, tpr2, color="#FFD43B", linewidth=3.5, label=f"Logistic Regression (AUC = {auc2:.2f})")
-ax.plot(fpr3, tpr3, color="#2E8B57", linewidth=3.5, label=f"Decision Tree (AUC = {auc3:.2f})")
-
-# Diagonal reference line (random classifier)
-ax.plot([0, 1], [0, 1], color="#888888", linewidth=2.5, linestyle="--", label="Random Classifier (AUC = 0.50)")
-
-# Fill area under curves for visual emphasis
-ax.fill_between(fpr1, tpr1, alpha=0.12, color="#306998")
-ax.fill_between(fpr2, tpr2, alpha=0.08, color="#FFD43B")
-
-# Styling
-ax.set_xlabel("False Positive Rate", fontsize=20)
-ax.set_ylabel("True Positive Rate", fontsize=20)
-ax.set_title("roc-curve · matplotlib · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
+# Style
+ax.set_xlabel("False Positive Rate", fontsize=20, color=INK)
+ax.set_ylabel("True Positive Rate", fontsize=20, color=INK)
+ax.set_title("roc-curve · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 ax.set_xlim([-0.02, 1.0])
 ax.set_ylim([0.0, 1.02])
-ax.grid(True, alpha=0.3, linestyle="--")
-ax.legend(loc="lower right", fontsize=16, framealpha=0.95)
+
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+
+ax.grid(True, alpha=0.15, linewidth=0.8, color=INK, axis="y")
+
+leg = ax.legend(loc="lower right", fontsize=16)
+if leg:
+    leg.get_frame().set_facecolor(ELEVATED_BG)
+    leg.get_frame().set_edgecolor(INK_SOFT)
+    leg.get_frame().set_linewidth(0.8)
+    plt.setp(leg.get_texts(), color=INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
