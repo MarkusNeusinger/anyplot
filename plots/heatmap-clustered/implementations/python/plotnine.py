@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 heatmap-clustered: Clustered Heatmap
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2025-05-09
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,13 +12,14 @@ from plotnine import (
     aes,
     coord_cartesian,
     element_blank,
+    element_rect,
     element_text,
     geom_segment,
     geom_text,
     geom_tile,
     ggplot,
     labs,
-    scale_fill_gradient2,
+    scale_fill_cmap,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -24,6 +27,13 @@ from plotnine import (
 )
 from scipy.cluster.hierarchy import dendrogram, linkage
 
+
+# Theme tokens (see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Gene expression data (12 genes x 8 samples)
 np.random.seed(42)
@@ -165,40 +175,37 @@ plot = (
     # Heatmap tiles
     + geom_tile(aes(x="x", y="y", fill="value"), data=tile_df, width=cell_width * 0.95, height=cell_height * 0.95)
     # Row dendrogram
-    + geom_segment(aes(x="x", xend="xend", y="y", yend="yend"), data=row_seg_df, color="#306998", size=1.2)
+    + geom_segment(aes(x="x", xend="xend", y="y", yend="yend"), data=row_seg_df, color=INK_SOFT, size=1.2)
     # Column dendrogram
-    + geom_segment(aes(x="x", xend="xend", y="y", yend="yend"), data=col_seg_df, color="#306998", size=1.2)
+    + geom_segment(aes(x="x", xend="xend", y="y", yend="yend"), data=col_seg_df, color=INK_SOFT, size=1.2)
     # Row labels
-    + geom_text(aes(x="x", y="y", label="label"), data=row_labels, ha="left", size=9, color="black")
+    + geom_text(aes(x="x", y="y", label="label"), data=row_labels, ha="left", size=11, color=INK_SOFT)
     # Column labels
     + geom_text(
-        aes(x="x", y="y", label="label"), data=col_labels, ha="center", va="top", size=9, color="black", angle=45
+        aes(x="x", y="y", label="label"), data=col_labels, ha="center", va="top", size=11, color=INK_SOFT, angle=45
     )
-    # Color scale
-    + scale_fill_gradient2(
-        low="#306998",  # Python Blue for low expression
-        mid="white",
-        high="#FFD43B",  # Python Yellow for high expression
-        midpoint=0,
-        name="Expression\nLevel",
-    )
+    # Color scale (BrBG diverging colormap for data centered at zero)
+    + scale_fill_cmap(cmap_name="BrBG", name="Expression Level")
     # Remove axes
     + scale_x_continuous(breaks=[], expand=(0.02, 0))
     + scale_y_continuous(breaks=[], expand=(0.02, 0))
     + coord_cartesian(xlim=(-5, 120), ylim=(-8, 82))
-    + labs(x="", y="", title="heatmap-clustered · plotnine · pyplots.ai")
+    + labs(x="", y="", title="heatmap-clustered · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
         text=element_text(size=14),
-        plot_title=element_text(size=24, ha="center"),
-        axis_text=element_blank(),
-        axis_ticks=element_blank(),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
-        legend_title=element_text(size=14),
-        legend_text=element_text(size=12),
+        plot_title=element_text(size=24, ha="center", color=INK),
+        axis_text=element_blank(),
+        axis_ticks=element_blank(),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_title=element_text(size=14, color=INK),
+        legend_text=element_text(size=12, color=INK_SOFT),
     )
 )
 
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
