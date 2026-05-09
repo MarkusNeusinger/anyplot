@@ -1,163 +1,176 @@
 library: matplotlib
+language: python
 specification_id: line-timeseries
 created: '2025-12-26T08:28:27Z'
-updated: '2025-12-26T08:30:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20519152368
+updated: '2026-05-09T03:21:59Z'
+generated_by: claude-haiku
+workflow_run: 25590208590
 issue: 2006
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/matplotlib/plot.png
-preview_html: null
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
 review:
   strengths:
-  - Excellent use of matplotlib.dates module with MonthLocator and DateFormatter for
-    intelligent date tick handling
-  - Clean seasonal temperature simulation with realistic sinusoidal pattern and daily
-    noise
-  - Proper axis label rotation (45°) prevents overlap on date labels
-  - Good visual hierarchy with major/minor grid lines at different alpha levels
-  - Title follows the required pyplots.ai format perfectly
+  - Perfect visual quality with all text legible in both light and dark themes
+  - Proper use of matplotlib.dates (MonthLocator, DateFormatter) for intelligent temporal
+    tick handling—distinctive to matplotlib
+  - Complete theme-adaptation with correct token usage throughout (backgrounds, text
+    colors, grid, spines)
+  - All specification requirements met with intelligent label rotation to prevent
+    overlap
+  - Realistic, plausible data demonstrating temporal trend visualization
+  - Clean code structure with reproducibility seed (np.random.seed(42))
   weaknesses:
-  - Line could be slightly thicker (3.0 instead of 2.5) for better visibility at full
-    resolution with 366 data points
-  image_description: The plot displays a time series line chart showing daily temperature
-    data for the year 2024. A single blue line (#306998) with linewidth 2.5 connects
-    daily temperature readings ranging from approximately -5°C to +35°C. The x-axis
-    shows monthly date labels (Jan 2024 through Dec 2024) rotated 45 degrees for readability.
-    The y-axis shows "Temperature (°C)" with values from roughly -5 to 35. The title
-    reads "Daily Temperature 2024 · line-timeseries · matplotlib · pyplots.ai". A
-    light gray dashed grid (major and minor) aids readability. The plot shows a clear
-    seasonal sinusoidal pattern with peak temperatures in summer (June-August) and
-    lowest temperatures in winter months.
+  - Design Excellence moderate (12/20)—design follows library defaults without distinctive
+    aesthetic polish or visual hierarchy beyond data shape
+  - DE-03 could be elevated by emphasizing specific insights (e.g., highlighting summer
+    peak or winter lows through color/size variation or subtle annotations)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct light theme surface
+      Chrome: Title "Daily Temperature 2024 · line-timeseries · matplotlib · anyplot.ai" in dark 24pt, axis labels "Date" and "Temperature (°C)" in dark 20pt, tick labels in secondary dark gray 16pt - all clearly readable
+      Data: Brand green line (#009E73) showing seasonal variation (summer peak ~33°C, winter low 0°C) across 365 data points; line width 3.0 with alpha 0.9
+      Grid: Subtle grid lines (alpha 0.10 major, 0.05 minor) on both axes, visible but not dominant
+      Legibility verdict: PASS - no text collisions, proper label rotation, all elements readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title, axis labels, tick labels all adapted to light text colors (INK and INK_SOFT tokens); all clearly visible against dark background; no dark-on-dark failures
+      Data: Brand green line (#009E73) identical to light render - confirms proper color consistency, only chrome has adapted
+      Grid: Grid lines remain visible with proper contrast against dark background
+      Legibility verdict: PASS - no dark-on-dark text issues, proper theme-adaptive chrome, all elements readable and correctly styled
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: Rotated x-axis labels prevent overlap, no text collisions
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: X-axis labels rotated 45° with ha='right'; no overlapping text
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line is clearly visible with good linewidth (2.5), alpha 0.9 provides
-          good contrast; minor deduction for slightly thin line for 366 data points
+        comment: Line width 3.0 with alpha 0.9; 365 data points optimally visible
+          against background
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins, tight_layout ensures
-          good proportions
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Both axes have descriptive labels with units ("Date", "Temperature
-          (°C)")
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Brand green (#009E73) is Okabe-Ito position 1; CVD-safe palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: figsize (16,9) with tight_layout; plot fills 50-70% of canvas with
+          balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.3/0.15) with good styling; no legend needed
-          for single series
+        comment: Labels include units ('Temperature (°C)'); descriptive title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1 (light)/#1A1A17 (dark);
+          all chrome colors theme-adapted'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults, clean brand color usage, professional but
+          not exceptional—lacks distinctive design polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, subtle grid with appropriate alpha, good
+          whitespace management
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear seasonal pattern (summer peak, winter trough) tells a story;
+          visual hierarchy through data itself, but no explicit emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct time series line plot
+        comment: Correct line plot over datetime x-axis
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on x-axis, temperature on y-axis correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Smart date formatting with MonthLocator, rotated labels, grid lines
-          on both axes
-      - id: SC-04
-        name: Data Range
+        comment: Smart date formatting (MonthLocator), rotated labels, grid on both
+          axes, datetime parsing
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full year of data shown with appropriate axis limits
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis is dates, Y-axis is temperature; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series (N/A)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "Daily Temperature 2024 · line-timeseries · matplotlib
-          · pyplots.ai"'
+        comment: Title format correct; no legend needed for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows seasonal variation, daily noise, full year cycle; could benefit
-          from showing trend or anomalies
+        comment: Realistic seasonal variation, daily fluctuations, 365 days of data
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Daily temperature readings over a year is a perfect real-world scenario
+        comment: Plausible daily temperature readings for temperate climate; neutral
+          science context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Temperature range (-5°C to 35°C) is realistic for temperate climates;
-          baseline of 12°C with ±15° seasonal swing is plausible
+        comment: Temperature range 0-35°C factually correct for Northern Hemisphere
     code_quality:
       score: 10
       max: 10
@@ -167,40 +180,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Linear: imports → tokens → data → plot → save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures reproducibility
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib.dates, pyplot, numpy, pandas)
+        comment: 'All imports used: os, mdates, pyplot, numpy, pandas'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Clean, Pythonic, idiomatic usage of theme tokens
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches='tight'
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Excellent use of matplotlib.dates with MonthLocator, DateFormatter,
-          and minor locators - these are matplotlib-specific date handling features
+        comment: High-level API (plt.subplots, Axes methods); idiomatic patterns throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses matplotlib.dates (MonthLocator, DateFormatter) for intelligent
+          temporal tick handling—distinctive to matplotlib
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - grid-styling
