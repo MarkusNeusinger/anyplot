@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 alluvial-basic: Basic Alluvial Diagram
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: highcharts unknown | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-09
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -16,55 +17,56 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+
 # Data - Voter migration between political parties across 3 elections
 # Format: [from_node, to_node, flow_count]
-# Node naming: "{Party}_{Year}" to create vertical time columns
-
 flows = [
     # 2016 -> 2020 flows
-    ["Conservative_2016", "Conservative_2020", 3200],
-    ["Conservative_2016", "Moderate_2020", 800],
-    ["Conservative_2016", "Progressive_2020", 200],
-    ["Moderate_2016", "Conservative_2020", 600],
-    ["Moderate_2016", "Moderate_2020", 2800],
-    ["Moderate_2016", "Progressive_2020", 900],
-    ["Progressive_2016", "Conservative_2020", 150],
-    ["Progressive_2016", "Moderate_2020", 700],
-    ["Progressive_2016", "Progressive_2020", 2600],
+    ["Democratic_2016", "Democratic_2020", 3200],
+    ["Democratic_2016", "Independent_2020", 800],
+    ["Democratic_2016", "Republican_2020", 200],
+    ["Independent_2016", "Democratic_2020", 600],
+    ["Independent_2016", "Independent_2020", 2800],
+    ["Independent_2016", "Republican_2020", 900],
+    ["Republican_2016", "Democratic_2020", 150],
+    ["Republican_2016", "Independent_2020", 700],
+    ["Republican_2016", "Republican_2020", 2600],
     # 2020 -> 2024 flows
-    ["Conservative_2020", "Conservative_2024", 3100],
-    ["Conservative_2020", "Moderate_2024", 650],
-    ["Conservative_2020", "Progressive_2024", 200],
-    ["Moderate_2020", "Conservative_2024", 500],
-    ["Moderate_2020", "Moderate_2024", 2700],
-    ["Moderate_2020", "Progressive_2024", 1100],
-    ["Progressive_2020", "Conservative_2024", 100],
-    ["Progressive_2020", "Moderate_2024", 550],
-    ["Progressive_2020", "Progressive_2024", 3050],
+    ["Democratic_2020", "Democratic_2024", 3100],
+    ["Democratic_2020", "Independent_2024", 650],
+    ["Democratic_2020", "Republican_2024", 200],
+    ["Independent_2020", "Democratic_2024", 500],
+    ["Independent_2020", "Independent_2024", 2700],
+    ["Independent_2020", "Republican_2024", 1100],
+    ["Republican_2020", "Democratic_2024", 100],
+    ["Republican_2020", "Independent_2024", 550],
+    ["Republican_2020", "Republican_2024", 3050],
 ]
 
-# Colorblind-safe party colors (consistent across years)
+# Party colors using Okabe-Ito palette
 party_colors = {
-    "Conservative": "#306998",  # Python Blue
-    "Moderate": "#9467BD",  # Purple
-    "Progressive": "#FFD43B",  # Python Yellow
+    "Democratic": OKABE_ITO[0],  # #009E73
+    "Independent": OKABE_ITO[1],  # #D55E00
+    "Republican": OKABE_ITO[2],  # #0072B2
 }
 
-# Column positions for time ordering (key for alluvial structure)
+# Column positions for time ordering
 column_positions = {"2016": 0, "2020": 1, "2024": 2}
 
-# Create nodes with column positions for strict vertical ordering
+# Create nodes with column positions
 nodes_data = []
 for year in ["2016", "2020", "2024"]:
-    for party in ["Conservative", "Moderate", "Progressive"]:
+    for party in ["Democratic", "Independent", "Republican"]:
         node_id = f"{party}_{year}"
         nodes_data.append(
-            {
-                "id": node_id,
-                "name": party,  # Display just party name
-                "column": column_positions[year],
-                "color": party_colors[party],
-            }
+            {"id": node_id, "name": party, "column": column_positions[year], "color": party_colors[party]}
         )
 
 # Create links data
@@ -79,33 +81,35 @@ chart.options.chart = {
     "type": "sankey",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginLeft": 200,
     "marginRight": 200,
     "marginTop": 200,
     "marginBottom": 150,
 }
 
-# Title
+# Title - proper format without descriptive prefix
 chart.options.title = {
-    "text": "Voter Migration · alluvial-basic · highcharts · pyplots.ai",
-    "style": {"fontSize": "64px", "fontWeight": "bold", "color": "#333333"},
+    "text": "alluvial-basic · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "fontWeight": "normal", "color": INK},
 }
 
 # Subtitle with context
 chart.options.subtitle = {
-    "text": "Tracking voter transitions between political affiliations across election cycles (thousands of voters)",
-    "style": {"fontSize": "40px", "color": "#666666"},
+    "text": "Tracking voter transitions between political affiliations across election cycles",
+    "style": {"fontSize": "22px", "color": INK_SOFT},
 }
 
 # Tooltip with units
 chart.options.tooltip = {
-    "style": {"fontSize": "36px"},
-    "nodeFormat": "{point.name} ({point.column}): {point.sum:,.0f}K voters",
-    "pointFormat": "{point.fromNode.name} → {point.toNode.name}: {point.weight:,.0f}K voters",
+    "style": {"fontSize": "18px", "color": INK},
+    "nodeFormat": "{point.name} ({point.column}): {point.sum:,.0f} voters",
+    "pointFormat": "{point.fromNode.name} → {point.toNode.name}: {point.weight:,.0f} voters",
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
 }
 
-# Alluvial/Sankey series configuration with larger node labels
+# Alluvial/Sankey series configuration
 series_config = {
     "type": "sankey",
     "name": "Voter Flow",
@@ -114,7 +118,7 @@ series_config = {
     "data": links_data,
     "dataLabels": {
         "enabled": True,
-        "style": {"fontSize": "52px", "fontWeight": "bold", "color": "#333333", "textOutline": "4px #ffffff"},
+        "style": {"fontSize": "22px", "fontWeight": "normal", "color": INK},
         "nodeFormat": "{point.name}",
     },
     "nodeWidth": 60,
@@ -127,46 +131,47 @@ series_config = {
 
 chart.options.series = [series_config]
 
-# Add annotations for time point labels (x-axis doesn't work with sankey)
+# Add annotations for time point labels
 chart.options.annotations = [
     {
         "labels": [
             {
-                "point": {"x": 200 + 30, "y": 2550},  # Left column (2016)
+                "point": {"x": 200 + 30, "y": 2550},
                 "text": "2016",
                 "backgroundColor": "transparent",
                 "borderWidth": 0,
-                "style": {"fontSize": "48px", "fontWeight": "bold", "color": "#333333"},
+                "style": {"fontSize": "24px", "fontWeight": "normal", "color": INK},
             },
             {
-                "point": {"x": 2400, "y": 2550},  # Middle column (2020)
+                "point": {"x": 2400, "y": 2550},
                 "text": "2020",
                 "backgroundColor": "transparent",
                 "borderWidth": 0,
-                "style": {"fontSize": "48px", "fontWeight": "bold", "color": "#333333"},
+                "style": {"fontSize": "24px", "fontWeight": "normal", "color": INK},
             },
             {
-                "point": {"x": 4600 - 30, "y": 2550},  # Right column (2024)
+                "point": {"x": 4600 - 30, "y": 2550},
                 "text": "2024",
                 "backgroundColor": "transparent",
                 "borderWidth": 0,
-                "style": {"fontSize": "48px", "fontWeight": "bold", "color": "#333333"},
+                "style": {"fontSize": "24px", "fontWeight": "normal", "color": INK},
             },
         ],
         "labelOptions": {"useHTML": True},
     }
 ]
 
-# Enable legend for quick color reference
+# Legend for color reference
 chart.options.legend = {
     "enabled": True,
     "layout": "horizontal",
     "align": "center",
     "verticalAlign": "bottom",
     "floating": False,
-    "backgroundColor": "#ffffff",
-    "borderWidth": 0,
-    "itemStyle": {"fontSize": "36px", "fontWeight": "normal", "color": "#333333"},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
+    "itemStyle": {"fontSize": "18px", "fontWeight": "normal", "color": INK_SOFT},
     "symbolRadius": 0,
     "symbolWidth": 40,
     "symbolHeight": 30,
@@ -175,46 +180,48 @@ chart.options.legend = {
     "y": 50,
 }
 
-# Add custom legend items via a dummy series for each party
-# Since sankey doesn't generate legend items by default, we use colorAxis legend simulation
-# Instead, we'll add the legend data through plotOptions
 chart.options.plot_options = {"sankey": {"showInLegend": True}}
 
 # Disable credits
 chart.options.credits = {"enabled": False}
 
-# Download Highcharts JS, sankey module, and annotations module
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-sankey_url = "https://code.highcharts.com/modules/sankey.js"
-annotations_url = "https://code.highcharts.com/modules/annotations.js"
+# Download Highcharts JS modules from jsdelivr CDN
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.js"
+sankey_url = "https://cdn.jsdelivr.net/npm/highcharts@11/modules/sankey.js"
+annotations_url = "https://cdn.jsdelivr.net/npm/highcharts@11/modules/annotations.js"
 
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+headers = {"User-Agent": "Mozilla/5.0"}
+
+req_hc = urllib.request.Request(highcharts_url, headers=headers)
+with urllib.request.urlopen(req_hc, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-with urllib.request.urlopen(sankey_url, timeout=30) as response:
+req_sankey = urllib.request.Request(sankey_url, headers=headers)
+with urllib.request.urlopen(req_sankey, timeout=30) as response:
     sankey_js = response.read().decode("utf-8")
 
-with urllib.request.urlopen(annotations_url, timeout=30) as response:
+req_anno = urllib.request.Request(annotations_url, headers=headers)
+with urllib.request.urlopen(req_anno, timeout=30) as response:
     annotations_js = response.read().decode("utf-8")
 
 # Generate HTML with inline scripts
 html_str = chart.to_js_literal()
 
-# Create custom legend HTML since sankey doesn't support native legends well
-legend_html = """
+# Create custom legend HTML
+legend_html = f"""
 <div id="custom-legend" style="position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%);
-     display: flex; gap: 60px; font-family: Arial, sans-serif; font-size: 36px; color: #333;">
+     display: flex; gap: 60px; font-family: Arial, sans-serif; font-size: 18px; color: {INK_SOFT};">
     <div style="display: flex; align-items: center; gap: 15px;">
-        <div style="width: 40px; height: 30px; background-color: #306998;"></div>
-        <span>Conservative</span>
+        <div style="width: 40px; height: 30px; background-color: {OKABE_ITO[0]};"></div>
+        <span>Democratic</span>
     </div>
     <div style="display: flex; align-items: center; gap: 15px;">
-        <div style="width: 40px; height: 30px; background-color: #9467BD;"></div>
-        <span>Moderate</span>
+        <div style="width: 40px; height: 30px; background-color: {OKABE_ITO[1]};"></div>
+        <span>Independent</span>
     </div>
     <div style="display: flex; align-items: center; gap: 15px;">
-        <div style="width: 40px; height: 30px; background-color: #FFD43B;"></div>
-        <span>Progressive</span>
+        <div style="width: 40px; height: 30px; background-color: {OKABE_ITO[2]};"></div>
+        <span>Republican</span>
     </div>
 </div>
 """
@@ -227,7 +234,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{sankey_js}</script>
     <script>{annotations_js}</script>
 </head>
-<body style="margin:0; position: relative;">
+<body style="margin:0; position: relative; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     {legend_html}
     <script>{html_str}</script>
@@ -243,14 +250,14 @@ standalone_html = f"""<!DOCTYPE html>
     <script src="https://code.highcharts.com/modules/sankey.js"></script>
     <script src="https://code.highcharts.com/modules/annotations.js"></script>
 </head>
-<body style="margin:0; overflow:auto; position: relative;">
+<body style="margin:0; overflow:auto; position: relative; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     {legend_html}
     <script>{html_str}</script>
 </body>
 </html>"""
 
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(standalone_html)
 
 # Write temp HTML and take screenshot
@@ -267,14 +274,14 @@ chrome_options.add_argument("--window-size=4800,2900")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
+time.sleep(5)
 driver.save_screenshot("plot_raw.png")
 driver.quit()
 
 # Crop to exact 4800x2700 dimensions
 img = Image.open("plot_raw.png")
 img_cropped = img.crop((0, 0, 4800, 2700))
-img_cropped.save("plot.png")
+img_cropped.save(f"plot-{THEME}.png")
 Path("plot_raw.png").unlink()
 
-Path(temp_path).unlink()  # Clean up temp file
+Path(temp_path).unlink()
