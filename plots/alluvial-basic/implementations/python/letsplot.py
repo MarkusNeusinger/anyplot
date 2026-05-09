@@ -1,14 +1,17 @@
-""" anyplot.ai
+"""anyplot.ai
 alluvial-basic: Basic Alluvial Diagram
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 74/100 | Updated: 2026-05-09
 """
+
+import os
 
 import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
     element_blank,
+    element_rect,
     element_text,
     geom_polygon,
     geom_rect,
@@ -26,6 +29,15 @@ from lets_plot.export import ggsave
 
 
 LetsPlot.setup_html()
+
+# Theme-adaptive colors
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (positions 1-4)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Voter migration data across three election cycles
 elections = ["2016", "2020", "2024"]
@@ -92,21 +104,13 @@ node_width = 0.03
 node_gap = 0.02
 total_flow = sum(totals_2016.values())
 
-# Colors for parties - used for both nodes and flows
-party_colors = {"Democrats": "#306998", "Republicans": "#DC2626", "Independents": "#FFD43B", "Non-Voters": "#9CA3AF"}
-
-# Blended colors for transitions (source -> destination)
-# Create color mapping for each flow combination
-blend_colors = {}
-for src in parties:
-    for dst in parties:
-        if src == dst:
-            # Same party - use solid color
-            blend_colors[f"{src}_{dst}"] = party_colors[src]
-        else:
-            # Different parties - use destination color with lower saturation
-            # to indicate the transition direction
-            blend_colors[f"{src}_{dst}"] = party_colors[dst]
+# Colors for parties - Okabe-Ito palette (positions 1-4)
+party_colors = {
+    "Democrats": OKABE_ITO[0],
+    "Republicans": OKABE_ITO[1],
+    "Independents": OKABE_ITO[2],
+    "Non-Voters": OKABE_ITO[3],
+}
 
 
 # Calculate node positions at each time point
@@ -264,18 +268,29 @@ plot = (
     + geom_polygon(
         aes(x="x", y="y", group="flow_id", fill="to_party"), data=df_flows, alpha=0.55, color="white", size=0.1
     )
-    + geom_rect(
-        aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="party"), data=df_nodes, color="#1A1A1A", size=1
-    )
+    + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="party"), data=df_nodes, color=INK, size=1)
     + geom_text(
         aes(x="x", y="y", label="label"),
         data=df_labels[df_labels["type"] == "header"],
         size=18,
         hjust=0.5,
         fontface="bold",
+        color=INK,
     )
-    + geom_text(aes(x="x", y="y", label="label"), data=df_labels[df_labels["type"] == "party_left"], size=13, hjust=1)
-    + geom_text(aes(x="x", y="y", label="label"), data=df_labels[df_labels["type"] == "party_right"], size=12, hjust=0)
+    + geom_text(
+        aes(x="x", y="y", label="label"),
+        data=df_labels[df_labels["type"] == "party_left"],
+        size=13,
+        hjust=1,
+        color=INK_SOFT,
+    )
+    + geom_text(
+        aes(x="x", y="y", label="label"),
+        data=df_labels[df_labels["type"] == "party_right"],
+        size=12,
+        hjust=0,
+        color=INK_SOFT,
+    )
     + scale_fill_manual(
         values={
             "Democrats": party_colors["Democrats"],
@@ -287,7 +302,9 @@ plot = (
     + labs(title="alluvial-basic · letsplot · pyplots.ai")
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=28, face="bold"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        plot_title=element_text(size=28, face="bold", color=INK),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
@@ -300,7 +317,7 @@ plot = (
 )
 
 # Save as PNG (scale 3x for 4800 × 2700 px)
-ggsave(plot, "plot.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
 
 # Save as HTML for interactivity
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
