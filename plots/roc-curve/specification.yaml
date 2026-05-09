@@ -6,7 +6,7 @@ title: ROC Curve with AUC
 
 # Specification tracking
 created: 2025-12-26T17:27:56Z
-updated: 2025-12-26T17:27:56Z
+updated: 2026-05-09T22:20:56Z
 issue: 2273
 suggested: MarkusNeusinger
 
@@ -15,8 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - line
-    - roc
-    - curve
   data_type:
     - numeric
     - continuous
@@ -26,6 +24,7 @@ tags:
     - healthcare
   features:
     - basic
-    - evaluation
+    - model-evaluation
     - classification
     - comparison
+    - diagnostic
