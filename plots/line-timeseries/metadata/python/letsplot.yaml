@@ -1,160 +1,164 @@
 library: letsplot
+language: python
 specification_id: line-timeseries
 created: '2025-12-26T08:30:51Z'
-updated: '2025-12-26T08:33:09Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20519152510
+updated: '2026-05-09T03:50:13Z'
+generated_by: claude-haiku
+workflow_run: 25590562472
 issue: 2006
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/letsplot/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent seasonal temperature pattern with realistic daily variation using sine
-    wave + noise
-  - Perfect title format and axis labeling with units
-  - Smart date formatting with scale_x_datetime adapts well to year-long timeframe
-  - Rotated x-axis labels prevent overlap while maintaining readability
-  - Clean minimal theme with appropriate grid styling
-  - Correct figure sizing for 4800x2700 output
+  - Excellent theme-adaptive chrome implementation with proper use of theme tokens
+    across both light and dark renders
+  - Clean visual hierarchy through layered geoms (line → smooth → extremes)
+  - Proper handling of datetime data with intelligent date formatting
+  - All text elements explicitly sized and fully readable in both themes
+  - Realistic, well-chosen example data that meaningfully demonstrates the plot type
+  - Solid color palette compliance with Okabe-Ito standards
   weaknesses:
-  - Could leverage more lets-plot specific features like tooltips or interactivity
-  - Line thickness slightly heavy for 365 data points - could be reduced to 1.0
-  image_description: The plot displays a time series line chart showing daily temperature
-    data over one year (January 2024 to January 2025). The line is rendered in a blue
-    color (#306998) with good visibility. The x-axis shows dates formatted as "Mon
-    YYYY" (e.g., "Jan 2024", "Feb 2024") with labels rotated at 45 degrees for readability.
-    The y-axis shows "Temperature (°C)" ranging from approximately -7 to 35 degrees.
-    The title "line-timeseries · letsplot · pyplots.ai" appears at the top in bold.
-    The data shows a clear seasonal pattern with cold temperatures in winter (around
-    0°C or below), rising through spring, peaking in summer (around 25-35°C), and
-    declining again in fall/winter. Grid lines are visible in light gray. The plot
-    fills the canvas well with balanced margins.
+  - Design excellence could be elevated through additional visual refinement (e.g.,
+    more sophisticated grid styling, slightly refined typography choices)
+  - DE-02 and DE-03 leave room for enhanced visual polish and emphasis techniques
+    to create even stronger data storytelling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct and properly set
+      Chrome: Title, axis labels, and tick labels all dark-colored and clearly readable against light background
+      Data: Primary line in teal-green (#009E73), brownish-tan LOESS smoothing overlay, larger points highlighting extremes
+      Legibility verdict: PASS - All text clearly readable, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct and properly set
+      Chrome: Title, axis labels, and tick labels all light-colored and clearly readable; no dark-on-dark failures observed
+      Data: Primary line remains teal-green (#009E73, identical to light render), smoothing curve identical, extreme points matching
+      Legibility verdict: PASS - All text clearly readable, no theme adaptation failures
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is bold and large (24pt), axis labels are 20pt, tick text is
-          16pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: X-axis labels are rotated 45° preventing overlap, no text collisions
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Line width of 1.5 with alpha 0.9 is appropriate for 365 data points,
-          though slightly thick for this density
+        comment: Font sizes explicitly set (24/20/16pt); all readable across themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: X-axis labels rotated 45°; no overlapping text
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All data elements clearly visible and well-adapted to density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color, no colorblind issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Temperature (°C)" with units, "Date" is descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito colorblind-safe; strong contrast throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins; plot fills 60-70% of canvas appropriately
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is visible but no legend (not needed for single line)
+        comment: Title includes spec-id/library/site; Y-axis includes units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; theme-correct backgrounds and chrome'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful design with LOESS overlay; theme-adaptive tokens; well-configured
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid; generous whitespace; polished presentation
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear seasonal narrative; LOESS emphasizes trend; visual hierarchy
+          guides viewer
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct time series line plot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on x-axis, temperature values on y-axis correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Smart date formatting ("%b %Y"), rotated tick labels, grid lines
-          on both axes
-      - id: SC-04
-        name: Data Range
+        comment: Intelligent date formatting; grid on both axes; datetime handling
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 365 days visible, y-axis range appropriate
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis dates, Y-axis temperature; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series (N/A, full points)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format "line-timeseries · letsplot · pyplots.ai"
+        comment: Title format correct; no legend needed (single series)
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows temporal patterns well (seasonal cycle, daily variation), but
-          could demonstrate more time series features like trends or anomalies
+        comment: Shows seasonal pattern, daily variation, peak/trough extremes
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Daily temperature readings over a year is a perfect real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature range -7 to 35°C is realistic for temperate climate
+        comment: Year-long temperature readings; realistic and comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible values; correct proportions for real-world temperatures
     code_quality:
       score: 10
       max: 10
@@ -164,40 +168,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: Clean structure; imports → data → theme → plot → save
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) used
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, lets_plot used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Current API usage
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct PNG and HTML output
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses ggplot grammar correctly with scale_x_datetime, but doesn't
-          leverage lets-plot specific interactive features or tooltips
+        passed: true
+        comment: ggplot2-style grammar; proper datetime handling
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses geom_smooth (LOESS); theme-adaptive styling
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
+  - publication-ready
