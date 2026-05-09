@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 alluvial-basic: Basic Alluvial Diagram
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-24
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-09
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -10,18 +12,27 @@ import numpy as np
 from matplotlib.path import Path
 
 
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette — use positions 1→N in order
+OKABE_ITO = [
+    "#009E73",  # 1: bluish green (brand)
+    "#D55E00",  # 2: vermillion
+    "#0072B2",  # 3: blue
+    "#CC79A7",  # 4: reddish purple
+]
+
 # Data: Voter migration across 4 election cycles
-# Categories: Party A, Party B, Party C, Independent
 np.random.seed(42)
 
 time_points = ["2012", "2016", "2020", "2024"]
 categories = ["Party A", "Party B", "Party C", "Independent"]
-colors = {
-    "Party A": "#306998",  # Python Blue
-    "Party B": "#FFD43B",  # Python Yellow
-    "Party C": "#4ECDC4",  # Teal
-    "Independent": "#95A5A6",  # Gray
-}
+colors = {cat: OKABE_ITO[i] for i, cat in enumerate(categories)}
 
 # Node values at each time point (thousands of voters)
 node_values = {
@@ -93,7 +104,8 @@ flows = [
 ]
 
 # Plot setup
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Layout parameters
 x_positions = [2.0, 4.0, 6.0, 8.0]
@@ -188,51 +200,40 @@ for tp in time_points:
         x = node["x"]
 
         rect = mpatches.Rectangle(
-            (x - node_width / 2, y_start), node_width, height, facecolor=colors[cat], edgecolor="white", linewidth=2
+            (x - node_width / 2, y_start), node_width, height, facecolor=colors[cat], edgecolor=INK_SOFT, linewidth=1.5
         )
         ax.add_patch(rect)
 
-        # Add category label (abbreviated for small nodes)
+        # Add category label
         value = node_values[tp][cat]
-        short_name = "Indep." if cat == "Independent" else cat
-        label = f"{short_name}\n({value}K)"
-        ax.text(
-            x,
-            y_start + height / 2,
-            label,
-            ha="center",
-            va="center",
-            fontsize=13,
-            fontweight="bold",
-            color="white" if cat != "Party B" else "black",
-        )
+        label = f"{cat}\n({value}K)"
+        ax.text(x, y_start + height / 2, label, ha="center", va="center", fontsize=15, fontweight="bold", color=INK)
 
 # Add time point labels
 for t_idx, tp in enumerate(time_points):
     ax.text(
-        x_positions[t_idx],
-        total_height + 0.8,
-        tp,
-        ha="center",
-        va="bottom",
-        fontsize=22,
-        fontweight="bold",
-        color="#333333",
+        x_positions[t_idx], total_height + 0.8, tp, ha="center", va="bottom", fontsize=22, fontweight="bold", color=INK
     )
 
 # Create legend
 legend_handles = [mpatches.Patch(color=colors[cat], label=cat) for cat in categories]
-ax.legend(
-    handles=legend_handles, loc="lower left", bbox_to_anchor=(0.01, 0.02), fontsize=16, framealpha=0.9, edgecolor="none"
-)
+leg = ax.legend(handles=legend_handles, loc="lower left", bbox_to_anchor=(0.01, 0.02), fontsize=16, framealpha=0.95)
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+leg.get_frame().set_linewidth(1)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
 # Styling
 ax.set_xlim(0.8, 9.2)
 ax.set_ylim(-0.5, total_height + 1.5)
 ax.set_title(
-    "Voter Migration 2012-2024 · alluvial-basic · matplotlib · pyplots.ai", fontsize=24, fontweight="bold", pad=20
+    "Voter Migration 2012-2024 · alluvial-basic · matplotlib · anyplot.ai",
+    fontsize=24,
+    fontweight="medium",
+    color=INK,
+    pad=20,
 )
 ax.axis("off")
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)

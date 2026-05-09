@@ -1,227 +1,253 @@
 library: altair
+language: python
 specification_id: alluvial-basic
 created: '2025-12-26T10:39:03Z'
-updated: '2025-12-26T10:41:34Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520941866
+updated: '2026-05-09T01:10:57Z'
+generated_by: claude-haiku
+workflow_run: 25587146325
 issue: 1878
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/altair/plot.html
-quality_score: 95
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - bezier-curves
-  - hover-tooltips
-  - html-export
-  - custom-legend
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/altair/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent implementation of a complex alluvial diagram using Altairs declarative
-    grammar
-  - Creative use of mark_line with filled=True and order encoding to render flow polygons
-  - Smooth curve interpolation using smoothstep function for visually appealing flow
-    bands
-  - Well-designed colorblind-accessible color scheme (Python blue, yellow, green,
-    purple)
-  - Proper layer composition with flows, nodes, node labels, and time labels clearly
-    separated
-  - Interactive features enabled with .interactive() and comprehensive tooltips on
-    nodes
-  - Good transparency (0.5 opacity) on flows allowing visual tracking of crossing
-    streams
-  - Realistic voter migration data demonstrating all features of alluvial diagrams
+  - Perfect visual quality and readability in both light and dark themes
+  - Flawless theme adaptation with data colors identical across themes and chrome
+    correctly inverted
+  - Excellent specification compliance with all required features implemented correctly
+  - Professional color palette and layout with intentional hierarchy and visual balance
+  - Sophisticated geometry and smooth bezier-curve rendering using Altair's capabilities
+  - Clean, idiomatic Altair code that leverages library strengths effectively
   weaknesses:
-  - Node labels are abbreviated (Con, Lib, Prog, Ind) which slightly reduces immediate
-    comprehension; full names would be preferable if space permits
-  image_description: 'The plot displays an alluvial diagram visualizing voter migration
-    between political parties across 4 U.S. election cycles (2012, 2016, 2020, 2024).
-    Four vertical columns represent time points with year labels positioned below.
-    Each column contains four stacked rectangular nodes representing parties: Conservative
-    (steel blue), Liberal (golden yellow), Progressive (green), and Independent (purple).
-    Curved semi-transparent flow bands connect nodes between consecutive time points,
-    showing voter transitions with width proportional to flow magnitude. Node labels
-    are abbreviated (Con, Lib, Prog, Ind) in white bold text centered on each node.
-    A legend on the right side identifies the party colors. The title "alluvial-basic
-    · altair · pyplots.ai" appears centered at the top.'
+  - Data storytelling could be enhanced with visual emphasis on particular insights
+    or narrative focus
+  - Design, while professional and polished, stops short of the exceptional publication-ready
+    level
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with dark text elements
+      Chrome: Title "alluvial-basic · altair · anyplot.ai" (28px) clearly visible; year labels (24px) below plot area; party names inside nodes (16px); legend with "Party" title and category labels (20-22px); all text readable with no light-on-light failures
+      Data: Four colored nodes per time point showing voter counts; ribbons with 0.5 opacity connecting nodes across years; Conservative (green #009E73), Liberal (orange #D55E00), Progressive (blue #0072B2), Independent (reddish purple #CC79A7)
+      Legibility verdict: PASS - all elements clearly readable against light background, proper contrast and sizing
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with light text elements
+      Chrome: Title, year labels, party labels, and legend all rendered in light text and clearly readable; no dark-on-dark failures; legend box uses dark elevated background
+      Data: Identical colors to light render (Conservative green, Liberal orange, Progressive blue, Independent reddish purple remain unchanged); nodes and ribbons render with same proportions and visual relationships
+      Legibility verdict: PASS - all chrome is light-colored and readable on dark background, data colors unchanged from light render, no theme adaptation issues
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, year labels, and legend are clearly readable. Node labels
-          are readable but slightly small due to abbreviation.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; flows use transparency to handle visual
-          overlap well
+        comment: 'All font sizes explicitly set: title 28px, years 24px, labels 16px,
+          legend 20-22px; perfectly readable at full resolution in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Perfect spacing throughout; year labels, node labels, and legend
+          items do not overlap
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Nodes and flows are well-sized; flow transparency at 0.5 works well
-          for showing crossings
+        comment: Nodes and flow ribbons optimally sized and clearly distinguishable;
+          opacity 0.5 on flows is perfect for showing overlap
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, green, purple palette is colorblind-safe with good
-          differentiation
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins; legend positioned appropriately
-          on right
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: No axis labels (expected for alluvial diagrams, but year labels serve
-          as column headers)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Clean background, legend well-styled with border and appropriate
-          sizing
+        comment: Okabe-Ito palette with excellent contrast; CVD-safe colors; no reliance
+          on red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas with perfectly balanced margins and generous
+          whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title format correct: ''alluvial-basic · altair · anyplot.ai'';
+          years (2012-2024) and party names descriptive'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green); subsequent colors follow Okabe-Ito
+          order; backgrounds #FAF8F1 (light) and #1A1A17 (dark); text colors perfectly
+          theme-adaptive in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with intentional hierarchy and custom polygon geometry
+          using bezier curves; professional polish throughout; theme-adaptive chrome
+          handled elegantly
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle node strokes, elegant legend styling with fillColor and strokeColor,
+          generous whitespace, clean composition with no unnecessary elements
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Data relationships are clearly displayed (node sizes show voter counts,
+          flows show transitions), but lacks visual emphasis or narrative focus on
+          particular insights
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct alluvial diagram with vertical time ordering and flow bands
+        comment: Correct alluvial diagram with time points as columns, categories
+          as nodes, flows as connecting ribbons
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time points as columns, categories as nodes, flows showing transitions
-          correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has time point headers, category labels, proportional band widths,
-          transparency for overlaps
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: 4 time points (2012-2024), 4 categories
+          (parties), voter counts (node heights), transitions (ribbon widths), labels'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within the canvas
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis correct (time left-to-right), Y-axis correct (parties stacked),
+          node heights and ribbon widths proportional to data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all four parties
-      - id: SC-06
-        name: Title Format
-        score: 0
-        max: 2
-        passed: false
-        comment: Title format is correct "alluvial-basic · altair · pyplots.ai" ✓
-          (restoring 2 points)
+        comment: Title follows spec format; legend labels match data categories; both
+          positioned appropriately
     data_quality:
-      score: 20
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows multiple flow types: party retention (large flows staying
-          within category), party switching (cross-flows), and varying proportions
-          over time'
+        comment: 'Shows all aspects of alluvial diagram type: multiple time points,
+          categories, transitions between categories, persistence, and variation in
+          voter migration'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Election voter migration is a highly realistic scenario mentioned
-          in the spec applications
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Values in hundreds/thousands of voters are plausible; transitions
-          show realistic patterns (most voters stay, some switch)
+        comment: Real election scenario with plausible voter counts and migration
+          patterns; data presented educationally and neutrally; follows spec example
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Voter counts in thousands are factually plausible; proportions and
+          transitions logically consistent with realistic election behavior
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Generally flat structure but uses multiple loops for data transformation
-          which is acceptable for this complex chart type
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Data is deterministic (hardcoded flow values), no random elements
+        comment: 'Clean flow: imports → theme setup → data definition → position calculations
+          → visualization layers → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded deterministic data; no randomness; produces identical output
+          on every run
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both used
+        comment: Only three imports (os, altair, pandas) and all are used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured variable names, appropriate complexity for custom
+          polygon geometry, no over-engineering, no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as both plot.png and plot.html correctly ✓ (restoring 1 point)
-    library_features:
-      score: 5
-      max: 5
+        comment: Correctly saves as plot-{THEME}.png (scale_factor=3.0) and plot-{THEME}.html
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent use of Altair features: layered chart composition, mark_line
-          with filled polygons, mark_rect for nodes, mark_text for labels, declarative
-          encoding with detail and order for proper polygon rendering, tooltips on
-          nodes, interactive() for zoom/pan, proper scale configuration'
+        comment: 'Expert use of Altair''s high-level API: Chart(), mark_line(filled=True),
+          mark_rect(), mark_text(), layer(), encode(), interactive(), configure_*()
+          methods'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Sophisticated use of layer composition for multiple marks, filled
+          line marks for polygon rendering with bezier curves, comprehensive theme-adaptive
+          configuration, and tooltip integration
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - bezier-curves
+  - html-export
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - theme-adaptive
