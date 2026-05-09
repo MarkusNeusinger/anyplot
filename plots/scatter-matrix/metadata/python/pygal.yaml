@@ -1,212 +1,228 @@
 library: pygal
+language: python
 specification_id: scatter-matrix
 created: '2025-12-26T16:17:50Z'
-updated: '2025-12-26T16:35:12Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20525448000
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-09T15:15:07Z'
+generated_by: claude-haiku
+workflow_run: 25603857606
+issue: 2035
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/pygal/plot.html
-quality_score: 90
-impl_tags:
-  dependencies:
-  - pillow
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/pygal/plot-dark.html
+quality_score: 66
 review:
   strengths:
-  - Creative solution using PIL composite to build a scatter matrix from individual
-    pygal charts
-  - Excellent use of pygal.Histogram for diagonal cells showing univariate distributions
-  - Good transparency handling (opacity=0.55) makes overlapping points distinguishable
-  - Clean Iris-like dataset with visible positive and negative correlations
-  - Proper title format following pyplots convention
-  - Variable labels positioned on both left (rotated) and bottom edges as per spec
-  - Square 3600x3600 format is appropriate for matrix visualization
+  - Correct scatter plot matrix layout with diagonal histograms
+  - Good data quality showing positive and negative correlations
+  - Clean layout with minimal text overlap
+  - Realistic iris-like dataset with plausible values
+  - Proper distinction between diagonal and off-diagonal cells
   weaknesses:
-  - Axis tick labels within cells are somewhat small relative to the overall image
-    size
-  - Could benefit from subtle grid lines within scatter cells for reference
-  image_description: 'The plot displays a 4×4 scatter matrix visualization using the
-    Iris-like dataset variables: Sepal Length, Sepal Width, Petal Length, and Petal
-    Width. The title "scatter-matrix · pygal · pyplots.ai" is centered at the top
-    in dark text. Each diagonal cell shows a histogram with blue bars representing
-    the univariate distribution of that variable. Off-diagonal cells display scatter
-    plots with blue dots (approximately dots_size=7) showing pairwise relationships
-    between variables. The scatter points have good transparency (opacity ~0.55),
-    making overlapping points distinguishable. Variable names appear as rotated labels
-    on the left edge and horizontal labels along the bottom. The cells have a light
-    gray (#f8f8f8) background. Clear correlation patterns are visible: positive correlations
-    between Sepal Length, Petal Length, and Petal Width; negative correlation between
-    Sepal Width and the others. The overall layout uses a 3600×3600 square format.'
+  - 'Palette failure: Uses Python Blue (#306998) instead of Okabe-Ito (#009E73)'
+  - 'No theme adaptation: Hard-coded colors ignore ANYPLOT_THEME environment variable'
+  - 'Chrome failure: Dark-gray text (#333) on dark background creates dark-on-dark
+    readability issue'
+  - 'Wrong output filename: Saves as plot.png instead of plot-{THEME}.png'
+  - 'Title domain typo: pyplots.ai instead of anyplot.ai'
+  - 'Dark background appears pure black instead of warm #1A1A17'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Off-white/beige consistent with #FAF8F1 specification
+      Chrome: Title and variable names clearly visible in dark text (#333); excellent contrast against light background
+      Data: Scatter points and histograms render in teal/turquoise color (Python Blue palette, not Okabe-Ito); good color saturation for visibility
+      Legibility verdict: PASS - all text fully readable with good contrast
+
+    Dark render (plot-dark.png):
+      Background: Appears to be pure black or near-black, NOT the warm #1A1A17 specified in style guide
+      Chrome: Title and variable labels attempt light rendering but text color (#333 dark gray) does not adapt for dark theme, creating dark-on-dark readability issues
+      Data: Scatter points and histograms identical teal color to light render (correctly theme-independent), but hard to see against dark background due to chrome failure
+      Legibility verdict: FAIL - text uses dark-on-dark rendering (#333 gray on near-black background); dark theme chrome not properly adapted; requires environment-based color swapping
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 22
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and variable labels are clearly readable; some axis tick labels
-          are slightly small but acceptable
+        score: 5
+        max: 8
+        passed: false
+        comment: Readable but not explicitly sized for theme adaptation; lacks dynamic
+          styling
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; labels are well-positioned
+        comment: No overlapping text elements; good spacing throughout
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Scatter dots well-sized for 100 points; histograms clearly visible;
-          transparency handles overlapping well
+        comment: Points, histograms, and grid all clearly visible; markers well-sized
+          for density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color (#306998) is accessible; no colorblind issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas; slight asymmetry in margins but overall well-balanced
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Variable names present but no units (which is appropriate for Iris-like
-          data)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: No explicit grid lines; no legend needed for single series
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct scatter matrix with histograms on diagonal
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: All pairwise combinations correctly shown
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Diagonal histograms present; off-diagonal scatter plots present;
-          variable labels on edges
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 0
-        max: 2
-        passed: true
-        comment: No legend, but not needed for single-color data
-      - id: SC-06
-        name: Title Format
         score: 2
         max: 2
         passed: true
-        comment: 'Correct format: "scatter-matrix · pygal · pyplots.ai"'
-    data_quality:
-      score: 19
+        comment: Good contrast between elements (separate from palette choice)
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization with balanced margins; minor space inefficiency
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: Descriptive variable names but lacks units (e.g., no measurement
+          units)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'CRITICAL FAILURE: Uses Python Blue (#306998) instead of Okabe-Ito
+          (#009E73); no theme-adaptive chrome; dark background pure black not #1A1A17'
+    design_excellence:
+      score: 6
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 2
         max: 8
-        passed: true
-        comment: Shows correlations (positive and negative); shows distributions;
-          100 points is appropriate
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Iris-like dataset is a classic real-world example
-      - id: DQ-03
-        name: Appropriate Scale
+        passed: false
+        comment: Generic default styling with wrong color palette; no design sophistication
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization; library defaults with crude PIL text overlay
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed but no visual hierarchy or emphasis
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Values are realistic for flower measurements
+        comment: Correct scatter matrix with diagonal histograms
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: scatter plots, histograms, variable labels'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped; axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 1
+        max: 3
+        passed: false
+        comment: 'Title format error: ''pyplots.ai'' instead of ''anyplot.ai''; domain
+          typo'
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: correlations (positive/negative) and distributions'
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Iris-like dataset is realistic, plausible, and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and proportions align with real iris dataset
     code_quality:
       score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Uses functions/classes implicitly through PIL composite approach;
-          more complex than typical but necessary for pygal
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) set
+        comment: 'Linear structure: imports → data → plot → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seed set for deterministic output (np.random.seed(42))
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports utilized
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Current APIs used
+        max: 2
+        passed: false
+        comment: Functional but manual PIL compositing is verbose
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 0
         max: 1
-        passed: true
-        comment: Saves as 'plot.png' correctly but uses PIL composite approach
-    library_features:
-      score: 5
-      max: 5
+        passed: false
+        comment: 'CRITICAL: Saves as plot.png instead of plot-{THEME}.png'
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 2
         max: 5
-        passed: true
-        comment: Excellent use of pygal.XY for scatter and pygal.Histogram for diagonal;
-          creative composite approach with cairosvg and PIL to overcome pygal's single-chart
-          limitation
+        passed: false
+        comment: Uses pygal.XY() and .Histogram() but non-idiomatic PIL composite
+          approach
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Limited leveraging of pygal-specific capabilities
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pillow
+  techniques:
+  - subplots
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling: []
