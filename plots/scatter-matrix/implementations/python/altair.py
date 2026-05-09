@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-matrix: Scatter Plot Matrix
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 83/100 | Updated: 2026-05-09
+Quality: 82/100 | Updated: 2026-05-09
 """
 
 import os
