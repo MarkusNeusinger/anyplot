@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" anyplot.ai
 line-timeseries: Time Series Line Plot
-Library: highcharts | Python 3.13.11
-Quality: Regen from 92
+Library: highcharts unknown | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-09
 """
 
 import math
