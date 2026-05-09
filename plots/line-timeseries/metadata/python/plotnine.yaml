@@ -1,165 +1,164 @@
 library: plotnine
+language: python
 specification_id: line-timeseries
 created: '2025-12-26T08:30:32Z'
-updated: '2025-12-26T08:32:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20519152453
+updated: '2026-05-09T03:32:56Z'
+generated_by: claude-haiku
+workflow_run: 25590428403
 issue: 2006
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/plotnine/plot.png
-preview_html: null
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 92
-impl_tags:
-  dependencies:
-  - mizani
-  techniques:
-  - layer-composition
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - grid-styling
 review:
   strengths:
-  - Excellent use of plotnine grammar of graphics pattern with proper layering (geom_line
-    + geom_point)
-  - Smart date formatting using mizani breaks_date and label_date for intelligent
-    x-axis labeling
-  - Properly rotated x-axis labels (45 degrees) to prevent overlap
-  - Realistic stock price simulation with 252 business days (one trading year)
-  - Clean minimal theme with appropriate font sizes for high-resolution output
-  - Subtle grid lines with appropriate alpha values
+  - Excellent theme adaptation with proper INK/INK_SOFT token usage throughout; fully
+    readable in both light and dark modes
+  - Intelligent date formatting using mizani breaks and labels adapts naturally to
+    monthly scale
+  - Realistic Bitcoin price data with clear trend + volatility modeling; compelling
+    temporal narrative
+  - Clean, idiomatic plotnine code with appropriate element sizing and styling choices
   weaknesses:
-  - 'Grid scoring: VQ-07 should be 2/2 since no legend is needed and grid is well-configured
-    (correcting my assessment)'
-  image_description: The plot displays a time series line chart showing stock price
-    data over the year 2024 (January through December). The chart uses a blue line
-    (#306998) connecting daily price points, starting around $100 in January, peaking
-    above $105 in early February, then declining through mid-year to approximately
-    $81-82, before recovering to around $95-100 by December. The x-axis shows dates
-    in "Mon YYYY" format (Feb 2024, Apr 2024, Jun 2024, Aug 2024, Oct 2024, Dec 2024)
-    with rotated labels at 45 degrees. The y-axis shows "Stock Price ($)" ranging
-    from approximately 80 to just above 100. The title "line-timeseries · plotnine
-    · pyplots.ai" appears at the top. The plot has a minimal theme with subtle gray
-    grid lines on both axes, and the overall layout is clean with good use of the
-    canvas space.
+  - 'Design could be more distinctive: uses standard theme_minimal() defaults without
+    additional visual polish'
+  - No annotations or emphasis of key temporal features (peak, trough); could enhance
+    storytelling with targeted annotations
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct per spec
+      Chrome: Title, axis labels, tick labels all dark (INK #1A1A17); grid lines subtle with low opacity
+      Data: Line in Okabe-Ito brand green (#009E73) with overlaid point markers; clear bitcoin price progression
+      Legibility verdict: PASS - All text readable, date labels rotated to prevent overlap
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct per spec
+      Chrome: Title, axis labels, tick labels now light (INK #F0EFE8); secondary text in INK_SOFT (#B8B7B0); grid subtle and visible
+      Data: Same line color (#009E73), clearly distinguishable against dark background; point markers visible
+      Legibility verdict: PASS - No dark-on-dark failures, all elements readable; theme adaptation proper
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis titles at 20pt, tick labels at 16pt, all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: X-axis labels are rotated 45° to prevent overlap, all text clearly
-          readable
+        comment: All fonts explicitly sized; readable in both themes; 45° rotation
+          appropriate
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Rotated date labels prevent collision; clean spacing
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line is well-sized (1.5), points at 0.8 are subtle but the line is
-          the focus for time series
+        comment: Line (1.5) and markers (0.8, alpha=0.5) clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color (#306998) with good contrast, no accessibility
-          issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, good proportions
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Stock Price ($)" includes units, "Date" is descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Okabe-Ito #009E73 is CVD-safe with strong contrast'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16x9 @ 300dpi = 4800x2700px; well-proportioned margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.3), but no legend needed for single series
+        comment: Spec format title; Y-axis includes units (USD)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct backgrounds and chrome colors; both themes correct
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Theme tokens properly applied; thoughtful but somewhat standard
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, panel border, practical date rotation
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear temporal pattern (rise→peak→dip→recovery) tells realistic story
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct time series line plot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, value (price) on Y-axis correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Smart date formatting with month-year labels, grid lines on both
-          axes, rotated tick labels
-      - id: SC-04
-        name: Data Range
+        comment: 365 points, line+points, grid, intelligent date formatting
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Datetime parsing correct, numeric range appropriate
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A (single series, no legend needed)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "line-timeseries · plotnine · pyplots.ai"'
+        comment: Correct spec format and axis labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows uptrend, downtrend, and recovery patterns; could show more
-          pronounced features
+        comment: 365 daily points with trend and volatility
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Stock price simulation is realistic with random walk pattern
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 252 business days, price range $80-$105 is realistic
+        comment: Bitcoin 2023 plausible; seed=42; neutral subject
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic Bitcoin range and balanced tick spacing
     code_quality:
       score: 10
       max: 10
@@ -169,40 +168,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no classes/functions
+        comment: Single script, no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures reproducibility
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports, all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API with mizani for date handling
+        comment: No fake UI; clear token naming
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 4
-      max: 5
+        comment: Correct plot-{THEME}.png format, 300dpi
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper ggplot + geom + scale + theme pattern
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses plotnine's grammar of graphics with geom_line, geom_point, scale_x_datetime
-          with mizani breaks/labels
+        comment: Effective mizani use for date formatting
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - mizani
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - grid-styling
