@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-stacked: Stacked Bar Chart
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 97/100 | Updated: 2026-05-09
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-09
 """
 
 import os
