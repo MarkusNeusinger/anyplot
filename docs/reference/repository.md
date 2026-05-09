@@ -65,7 +65,6 @@ anyplot/
 │   ├── plot-generator.md              # Base rules for code generation
 │   ├── quality-criteria.md            # Quality evaluation criteria
 │   ├── quality-evaluator.md           # AI quality evaluation prompt
-│   ├── spec-validator.md              # Validates plot requests
 │   ├── spec-id-generator.md           # Assigns spec IDs
 │   ├── default-style-guide.md         # Default visual style rules
 │   ├── library/                       # Library-specific rules (9 files)
@@ -140,8 +139,7 @@ anyplot/
 │   ├── backfill_review_metadata.py    # One-time migration
 │   ├── fix_library_versions.py        # One-time fix
 │   ├── migrate_metadata_format.py     # One-time migration
-│   ├── migrate_to_new_structure.py    # One-time migration
-│   └── upgrade_specs*.py              # Spec upgrade utilities
+│   └── migrate_to_new_structure.py    # One-time migration
 │
 ├── docs/                              # Documentation
 │   ├── concepts/
@@ -406,7 +404,6 @@ plt.savefig('plot.png', dpi=300)
 - `plot-generator.md` - Base rules for all implementations
 - `quality-criteria.md` - Definition of quality
 - `quality-evaluator.md` - AI quality evaluation
-- `spec-validator.md` - Validates plot requests
 - `spec-id-generator.md` - Assigns spec IDs
 - `default-style-guide.md` - Default visual style rules
 
@@ -446,7 +443,6 @@ plt.savefig('plot.png', dpi=300)
 - `regenerate-thumbnails.py` - Image processing utilities
 - `backfill_review_metadata.py` - One-time backfill migration
 - `migrate_*.py` - One-time structure migrations
-- `upgrade_specs*.py` - Spec upgrade utilities
 
 **Principle**: Scripts that are not part of automated workflows. Used for maintenance, migrations, and manual operations.
 

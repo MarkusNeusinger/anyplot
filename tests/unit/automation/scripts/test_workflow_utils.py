@@ -9,7 +9,6 @@ from automation.scripts.workflow_utils import (
     extract_sub_issue,
     get_attempt_count,
     is_valid_library,
-    parse_plot_path,
 )
 
 
@@ -128,41 +127,6 @@ class TestExtractIssueReference:
     def test_empty_or_none(self):
         assert extract_issue_reference("") is None
         assert extract_issue_reference(None) is None
-
-
-class TestParsePlotPath:
-    """Tests for parse_plot_path function."""
-
-    def test_valid_path(self):
-        result = parse_plot_path("plots/scatter-basic/implementations/matplotlib.py")
-        assert result == {
-            "spec_id": "scatter-basic",
-            "library": "matplotlib",
-        }
-
-    def test_complex_spec_id(self):
-        result = parse_plot_path("plots/heatmap-correlation-annotated/implementations/seaborn.py")
-        assert result["spec_id"] == "heatmap-correlation-annotated"
-        assert result["library"] == "seaborn"
-
-    def test_all_libraries(self):
-        for lib in VALID_LIBRARIES:
-            result = parse_plot_path(f"plots/bar-grouped/implementations/{lib}.py")
-            assert result is not None
-            assert result["spec_id"] == "bar-grouped"
-            assert result["library"] == lib
-
-    def test_invalid_path(self):
-        assert parse_plot_path("invalid/path.py") is None
-        assert parse_plot_path("plots/scatter-basic/matplotlib.py") is None  # missing implementations/
-        assert parse_plot_path("plots/matplotlib/scatter.py") is None  # old format
-        assert parse_plot_path("") is None
-        assert parse_plot_path(None) is None
-
-    def test_invalid_library(self):
-        # Valid path format but invalid library name
-        assert parse_plot_path("plots/scatter-basic/implementations/invalid-lib.py") is None
-        assert parse_plot_path("plots/scatter-basic/implementations/pandas.py") is None
 
 
 class TestIsValidLibrary:

@@ -162,9 +162,7 @@ export function PlotsPage() {
   }, [handleRandom, handleRemoveGroup, activeFilters.length]);
 
   const specFilter = activeFilters.find((f) => f.category === 'spec');
-  const libFilter = activeFilters.find((f) => f.category === 'lib');
   const selectedSpec = specFilter?.values[0] || '';
-  const selectedLibrary = libFilter?.values[0] || '';
 
   return (
     <Box onClick={handleContainerClick}>
@@ -202,7 +200,6 @@ export function PlotsPage() {
         images={displayedImages}
         viewMode={noFilters ? 'library' : 'spec'}
         selectedSpec={selectedSpec}
-        selectedLibrary={selectedLibrary}
         loading={loading}
         hasMore={hasMore}
         isLoadingMore={false}

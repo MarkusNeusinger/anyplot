@@ -347,6 +347,7 @@ class TestWorkflowTriggers:
             "pull_request_target",
             "pull_request_review",
             "pull_request_review_comment",
+            "merge_group",
             "workflow_dispatch",
             "workflow_call",
             "workflow_run",

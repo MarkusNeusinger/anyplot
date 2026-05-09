@@ -24,7 +24,6 @@ EXPECTED_BASE_PROMPTS = [
     "plot-generator.md",
     "quality-criteria.md",
     "quality-evaluator.md",
-    "spec-validator.md",
     "spec-id-generator.md",
     "default-style-guide.md",
 ]

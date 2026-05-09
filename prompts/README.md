@@ -16,7 +16,6 @@ Git history shows all changes (`git log -p prompts/plot-generator.md`).
 | `library/*.md` | Plot Generator | Library-specific rules (9 files) |
 | `quality-criteria.md` | All | Definition of what "good code" means |
 | `quality-evaluator.md` | Quality Checker | AI quality evaluation |
-| `spec-validator.md` | Spec Validator | Validates plot request issues |
 | `spec-id-generator.md` | Spec ID Generator | Assigns unique spec IDs |
 | `spec-tags-generator.md` | Spec ID Generator | AI rules for spec-level tag assignment |
 | `impl-tags-generator.md` | Quality Checker | AI rules for impl-level tag assignment |
@@ -36,6 +35,8 @@ Variables are passed as plain text in the workflow's `prompt:` body (no
 | `impl-repair-claude.md` | `impl-repair.yml` | Repair after a rejected AI review (max 4 attempts) |
 | `ai-quality-review.md` | `impl-review.yml` | Quality evaluation of a generated implementation |
 | `report-analysis.md` | `report-validate.yml` | Triage and structure user-submitted issue reports |
+| `spec-polish-claude.md` | `daily-regen.yml` | Daily light-touch spec quality polish |
+| `impl-similarity-claude.md` | `daily-regen.yml` | Daily impl-similarity dedup analysis |
 
 See `workflow-prompts/README.md` for the wiring pattern + per-variable reference.
 

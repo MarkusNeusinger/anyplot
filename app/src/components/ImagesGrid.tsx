@@ -11,7 +11,6 @@ interface ImagesGridProps {
   images: PlotImage[];
   viewMode: 'spec' | 'library';
   selectedSpec: string;
-  selectedLibrary: string;
   loading: boolean;
   hasMore: boolean;
   isLoadingMore: boolean;
@@ -24,14 +23,12 @@ interface ImagesGridProps {
   onTooltipToggle: (id: string | null) => void;
   onCardClick: (image: PlotImage) => void;
   onTrackEvent?: (name: string, props?: Record<string, string | undefined>) => void;
-  onImageLoad?: () => void;
 }
 
 export function ImagesGrid({
   images,
   viewMode,
   selectedSpec,
-  selectedLibrary: _selectedLibrary,
   loading,
   hasMore,
   isLoadingMore,
@@ -44,11 +41,7 @@ export function ImagesGrid({
   onTooltipToggle,
   onCardClick,
   onTrackEvent,
-  onImageLoad: _onImageLoad,
 }: ImagesGridProps) {
-  void _selectedLibrary; // Preserved for API compatibility
-  void _onImageLoad; // Removed for performance - was causing re-renders per image load
-
   // Grid columns: normal = max 3 cols, compact = max 6 cols
   const gridColumns = useMemo(() =>
     imageSize === 'compact'

@@ -38,7 +38,6 @@ interface DefaultProps {
   images: PlotImage[];
   viewMode: 'spec' | 'library';
   selectedSpec: string;
-  selectedLibrary: string;
   loading: boolean;
   hasMore: boolean;
   isLoadingMore: boolean;
@@ -57,7 +56,6 @@ function getDefaultProps(overrides: Partial<DefaultProps> = {}): DefaultProps {
     images: [],
     viewMode: 'library',
     selectedSpec: '',
-    selectedLibrary: '',
     loading: false,
     hasMore: false,
     isLoadingMore: false,

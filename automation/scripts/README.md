@@ -13,7 +13,6 @@ from automation.scripts.workflow_utils import (
     extract_sub_issue,      # Extract sub-issue from PR body
     extract_parent_issue,   # Extract parent issue with fallback
     get_attempt_count,      # Count ai-attempt-X labels
-    parse_plot_path,        # Parse plots/{spec-id}/implementations/{library}.py
     is_valid_library,       # Validate library name
 )
 ```
@@ -86,7 +85,6 @@ CLI interface for use in GitHub Actions shell steps.
 | `extract-sub-issue` | Get sub-issue from PR body | `extract-sub-issue "Sub-Issue: #42"` |
 | `extract-parent-issue` | Get parent issue | `extract-parent-issue "Parent: #100"` |
 | `get-attempt-count` | Count attempts | `get-attempt-count "ai-attempt-1,testing"` |
-| `parse-plot-path` | Parse plot file path | `parse-plot-path "plots/matplotlib/..."` |
 | `status-transition` | Get label change args | `status-transition "generating" "testing"` |
 | `quality-label` | Get quality label | `quality-label 95` |
 
