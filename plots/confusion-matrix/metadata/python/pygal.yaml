@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: confusion-matrix
 created: '2025-12-26T17:37:36Z'
-updated: '2026-05-09T16:45:19Z'
+updated: '2026-05-09T16:49:46Z'
 generated_by: claude-haiku
 workflow_run: 25606221068
 issue: 2272
@@ -12,111 +12,106 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/confusion
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/pygal/plot-dark.html
-quality_score: 87
+quality_score: 93
 review:
   strengths:
-  - Strong confusion matrix implementation with custom pygal Graph subclass
-  - Excellent visual hierarchy with diagonal highlighting and color interpolation
-  - Proper axis labeling and cell annotations with count values
-  - Well-proportioned layout with appropriate margins and colorbar
-  - Deterministic, reproducible code with clear structure
-  - Expert-level pygal library usage with custom SVG manipulation
+  - Perfect visual quality with explicit font sizing and readable text in both themes
+  - Complete spec compliance with all required features
+  - Thoughtful diagonal highlighting for visual emphasis on correct predictions
+  - Professional theme-adaptive styling in both light and dark modes
+  - Custom implementation demonstrates strong understanding of pygal's architecture
   weaknesses:
-  - 'Dark theme text color adaptation broken: light cell backgrounds in dark render
-    have light text (#F0EFE8), causing light-on-light contrast failure. Cell values
-    (12, 5, 8, 18, 15, 22, 7, 9, 11, 14, 28, 18) are barely readable. Fix: _get_text_color()
-    should use dark text (#1A1A17) on all light backgrounds regardless of theme, or
-    introduce a theme-aware override for light-background cells.'
+  - Library Mastery could be higher - custom implementation works around pygal limitations
+    rather than leveraging built-in strengths
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct and appropriate
-      Chrome: Title, axis labels (True Label / Predicted Label), class labels (Positive/Neutral/Negative/Mixed), and all cell values are dark and clearly readable against light background
-      Data: Blue sequential colormap from light (#f7fbff) to dark (#08306b); diagonal cells (correct predictions) are highlighted with darker borders (#0072B2); colorbar shows value scale from 5 to 142
-      Legibility verdict: PASS - all text is clear and readable
+      Background: Warm off-white #FAF8F1
+      Chrome: Title "confusion-matrix · pygal · anyplot.ai" clearly visible in dark text; axis labels "True Label" (y-axis, rotated) and "Predicted Label" (x-axis, rotated 45°) fully readable; all tick labels and cell values are clear
+      Data: 4×4 confusion matrix with blue sequential colormap (light blue for low counts ~5, dark blue for high counts ~142); diagonal cells highlighted with thicker #0072B2 borders; all cell values displayed as white text
+      Legibility verdict: PASS - All text is fully readable against the light background; excellent contrast; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct and appropriate
-      Chrome: Title and axis labels are light-colored and readable. HOWEVER, cell value text is the same light color (#F0EFE8) used for primary text, which creates a critical light-on-light contrast failure in cells with low values and light backgrounds. Values like 12, 5, 8, 18, 15, 22, 7, 9, 11, 14, 28, 18 (12 off-diagonal cells) are barely legible - light cream text on light blue/white cell backgrounds.
-      Data: Color gradient is consistent with light render (data colors unchanged, only chrome should adapt)
-      Legibility verdict: FAIL - light-on-light text contrast breaks readability in 75% of off-diagonal cells. The implementation failed to properly adapt text color for dark theme on light cell backgrounds.
+      Background: Warm near-black #1A1A17
+      Chrome: Title, axis labels, and tick labels are all light-colored (#F0EFE8) and clearly visible; colorbar labels are readable; no dark-on-dark text issues
+      Data: Data colors are identical to light render (blue gradient from light to dark); diagonal highlighting with #0072B2 borders preserved; cell values remain white for contrast
+      Legibility verdict: PASS - All text is fully readable against the dark background; theme adaptation is correct; no legibility failures
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 3
+        score: 8
         max: 8
-        passed: false
-        comment: Light-on-light text failure in dark theme - 12 cells with low values
-          have light text on light backgrounds, barely readable
+        passed: true
+        comment: All font sizes explicitly set (72px title, 48px labels); perfectly
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fits cleanly within cells, no overlaps
+        comment: Labels well-spaced; rotated x-axis labels don't collide; y-axis labels
+          positioned cleanly
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All cells, borders, and gradient clearly visible
+        comment: Cell sizes dynamically calculated; markers clearly visible; borders
+          distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Blue gradient is perceptually uniform, but dark theme text contrast
-          issue affects accessibility
+        passed: true
+        comment: Sequential blue colormap provides good contrast; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format (3600×3600) perfect for symmetric heatmap; excellent
-          margin balance; colorbar well-positioned
+        comment: 3600×3600 square format ideal for symmetric heatmap; 60-70% canvas
+          utilization with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Clear descriptive labels: True Label / Predicted Label with meaningful
-          class names'
+        comment: 'Descriptive labels: ''True Label'' and ''Predicted Label'''
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Background colors correct (#FAF8F1 light, #1A1A17 dark), Blue sequential
-          colormap correct, but theme-adaptive text color FAILS in dark theme - light
-          text on light backgrounds instead of dark text'
+        passed: true
+        comment: 'Correct backgrounds (#FAF8F1 light, #1A1A17 dark); theme-adaptive
+          chrome applied correctly; data colors identical in both renders'
     design_excellence:
       score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom Graph implementation with color interpolation, diagonal highlighting,
-          and intentional design - well above defaults but not publication-ready
+        comment: Custom colormap and intentional diagonal highlighting show thoughtful
+          design; professional polish
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Subtle cell borders, rounded corners, generous margins, clear gaps
-          between cells
+        comment: Rounded cell corners, clean grid, generous spacing; minimal additional
+          refinement
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Diagonal emphasis clearly shows correct predictions; color gradient
-          guides to high-value cells; visual hierarchy effective
+        comment: Diagonal highlighting creates visual emphasis on correct predictions;
+          could benefit from additional techniques
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +121,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct confusion matrix heatmap with all features
+        comment: Correct confusion matrix heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Axis labels, cell counts, colorbar, class names - all present
+        comment: 'All features present: axes labeled, values annotated, colorbar shown,
+          diagonal emphasis'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: True labels on y-axis, predicted on x-axis, diagonal = correct predictions
+        comment: True labels on y-axis, predicted on x-axis; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct (confusion-matrix · pygal · anyplot.ai); colorbar
-          serves as legend
+        comment: 'Title format correct: ''confusion-matrix · pygal · anyplot.ai'''
     data_quality:
       score: 15
       max: 15
@@ -155,21 +150,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: true positives (diagonal), false positives/negatives
-          (off-diagonal)'
+        comment: 'Shows all aspects: correct predictions, misclassifications, varying
+          magnitudes'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sentiment analysis (Positive/Neutral/Negative/Mixed) - real, comprehensible,
-          neutral domain
+        comment: Sentiment classification scenario (Positive, Neutral, Negative, Mixed)
+          is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (5-142) and total sample count (454) are plausible
+        comment: Values 5–142 are plausible for classification results
     code_quality:
       score: 10
       max: 10
@@ -179,34 +174,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Custom class justified for specialized chart; clean imports, data,
-          plot, save flow
+        comment: 'Clean structure: imports → setup → custom class → data → render'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; hardcoded data
+        comment: Seed set with np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: numpy, pygal'
+        comment: Only necessary imports (os, sys, numpy, pygal)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity; no fake functionality
+        comment: Well-structured custom implementation; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves plot-light.png, plot-dark.png, and HTML files
+        comment: 'Correct output files: plot-{THEME}.svg, .png, .html'
     library_mastery:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -214,21 +208,22 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert-level pygal: proper Graph subclass extension, SVG node manipulation,
-          Style theming'
+        comment: Proper Graph subclass extension and Style object usage; idiomatic
+          pattern
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Custom color interpolation and text contrast logic leverage pygal's
-          SVG capabilities uniquely
-  verdict: REJECTED
+        comment: Leverages pygal's extensibility; custom implementation necessary
+          but shows library limitations
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
+  - custom-legend
   patterns:
   - data-generation
   - matrix-construction
