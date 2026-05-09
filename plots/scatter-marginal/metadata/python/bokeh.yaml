@@ -1,168 +1,166 @@
 library: bokeh
+language: python
 specification_id: scatter-marginal
 created: '2025-12-26T14:59:10Z'
-updated: '2025-12-26T15:01:15Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20524417329
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-    - subplots
-    - layer-composition
-  patterns:
-    - columndatasource
-    - data-generation
-    - matrix-construction
-  dataprep:
-    - binning
-  styling:
-    - alpha-blending
+updated: '2026-05-09T05:26:23Z'
+generated_by: claude-haiku
+workflow_run: 25592742758
+issue: 2005
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/bokeh/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent axis alignment between scatter and marginal plots using shared x_range/y_range
-  - Clean visual design with Python blue/yellow color scheme that is colorblind-safe
-  - Well-proportioned layout with marginals at ~20% of dimensions
-  - Proper use of ColumnDataSource pattern
-  - Appropriate transparency (alpha=0.65) for scatter points revealing density patterns
-  - Subtle grid styling (alpha=0.3, dashed) that does not distract from data
-  weaknesses:
-  - Axis labels are generic (X Value, Y Value) without units or meaningful context
-  - Scatter point size (18) could be slightly larger for better visibility on this
+  - Excellent theme-adaptive styling with no readability issues in either render
+  - Proper use of Bokeh layouts and composition patterns for multi-panel visualization
+  - Clean, professional typography hierarchy with correct font sizing for 4800×2700px
     canvas
-  - Empty corner placeholder could be utilized for annotation or removed more elegantly
-  image_description: The plot displays a scatter plot with marginal distributions
-    using Bokeh. The main scatter plot (lower-left) shows approximately 200 blue data
-    points (#306998 Python blue) with moderate transparency (alpha ~0.65) displaying
-    a positive correlation. The top marginal shows a histogram of the X distribution
-    in yellow bars (#FFD43B Python yellow) with blue outlines, roughly bell-shaped
-    and centered around 50. The right marginal shows a horizontal histogram of the
-    Y distribution, also in yellow with blue outlines. The title "scatter-marginal
-    · bokeh · pyplots.ai" appears at the top-left of the main scatter plot. Axes are
-    labeled "X Value" and "Y Value" with "Count" labels on the marginals. Grid lines
-    are subtle with dashed styling. There's an empty corner placeholder in the top-right.
+  - 'Data colors (Okabe-Ito #009E73) are consistently applied and accessible'
+  - Well-aligned marginal histograms that enhance understanding of distributions
+  - Deterministic data generation with clear structure and proper Selenium export
+    setup
+  weaknesses:
+  - Design excellence is solid but not exceptional—meets all requirements without
+    distinctive refinement
+  - 'Minor domain realism consideration: Height values (20-80cm range) are unconventional
+    for Height(cm) variable'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "scatter-marginal · bokeh · anyplot.ai" in dark ink (28pt), axis labels in dark primary text (22pt), tick labels in soft secondary text (18pt) - all clearly readable
+      Data: 200 scatter points in Okabe-Ito green (#009E73) with alpha=0.65, top histogram showing X distribution, right histogram showing Y distribution, both in matching green
+      Grid: Subtle grid lines at 0.10 alpha
+      Legibility verdict: PASS - all text readable, no light-on-light issues, professional appearance
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title in light ink (#F0EFE8), axis labels in light primary text, tick labels in light secondary text (#B8B7B0) - all clearly readable, no dark-on-dark failures
+      Data: Identical scatter points and histogram colors as light render (Okabe-Ito green #009E73), properly maintained across theme flip
+      Grid: Subtle grid lines visible at 0.10 alpha
+      Legibility verdict: PASS - all text readable, brand green visible and accessible, proper theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and axis labels are readable, font sizes are appropriate for
-          the canvas size (28pt title, 22pt labels, 18pt ticks)
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: All text properly sized and colored for both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean spacing, no colliding elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Scatter points (size=18) are well-sized for 200 points with good
-          alpha=0.65, slightly on the smaller side for this canvas
+        comment: Scatter points, histograms, and grid all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Python blue and yellow are colorblind-safe and provide good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout with marginals properly aligned, though there's some
-          unused space in the corner area
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Labels are descriptive ("X Value", "Y Value") but lack units
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3) with dashed styling, no legend needed
+        comment: Okabe-Ito brand green, single series, accessible
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Well-proportioned marginal layout, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct, labels descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds correct for both themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Solid default implementation with clear design intent
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid, removed spines, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Marginal distributions support narrative of joint relationships
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: 'Correct composite visualization: scatter with marginal histograms'
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X/Y correctly assigned and aligned between scatter and marginals
-      - id: SC-03
+        comment: Correct scatter plot with marginal distributions
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has scatter + marginal histograms; spec mentions KDE as option but
-          histograms are acceptable
-      - id: SC-04
-        name: Data Range
+        comment: Top/right marginals, proper alignment
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes properly auto-scaled
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: X/Y axes correct, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend present (not strictly needed but marginals could benefit
-          from labels)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "scatter-marginal · bokeh · pyplots.ai"'
+        comment: Title format correct, no legend needed for single series
     data_quality:
-      score: 19
-      max: 20
+      score: 13
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows correlation clearly, distributions visible; could show more
-          varied distribution shapes
+        comment: Shows scatter, X-distribution, Y-distribution
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Bivariate normal with correlation is a realistic, comprehensible
-          scenario
+        score: 4
+        max: 5
+        passed: false
+        comment: Height/Weight domain with minor scale consideration
       - id: DQ-03
         name: Appropriate Scale
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Values are sensible (X: ~10-90, Y: ~10-95), 200 points is good for
-          this visualization'
+        score: 3
+        max: 4
+        passed: false
+        comment: 200 points adequate, value ranges slightly unconventional
     code_quality:
       score: 10
       max: 10
@@ -172,41 +170,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: Simple procedural script, no unnecessary abstraction
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Deterministic with np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: No fake functionality, idiomatic patterns
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format and current API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, figure range linking for axis alignment, quad
-          glyphs for histograms. Could leverage more Bokeh-specific features like
-          hover tools or linked selections.
+        comment: Proper figure creation, ColumnDataSource, layout composition
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Good use of layouts and range linking
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - subplots
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
