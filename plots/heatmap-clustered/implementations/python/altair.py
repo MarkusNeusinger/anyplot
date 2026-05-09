@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 heatmap-clustered: Clustered Heatmap
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-25
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-09
 """
+
+import os
 
 import altair as alt
 import numpy as np
@@ -10,6 +12,13 @@ import pandas as pd
 from scipy.cluster.hierarchy import dendrogram, linkage
 from scipy.spatial.distance import pdist
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Gene expression analysis with 20 genes and 15 samples
 np.random.seed(42)
@@ -22,7 +31,6 @@ gene_labels = [f"Gene_{i + 1:02d}" for i in range(n_genes)]
 sample_labels = [f"Sample_{i + 1:02d}" for i in range(n_samples)]
 
 # Generate realistic gene expression data with natural clusters
-# Create 4 gene clusters with correlated expression patterns
 base_expression = np.random.randn(n_genes, n_samples)
 
 # Cluster 1: Genes 0-4 (upregulated in samples 0-4)
@@ -44,7 +52,7 @@ base_expression[15:20, 10:15] += 1.0
 
 expression_data = base_expression
 
-# Perform hierarchical clustering on rows (genes) and columns (samples)
+# Perform hierarchical clustering
 row_linkage = linkage(pdist(expression_data, metric="euclidean"), method="ward")
 col_linkage = linkage(pdist(expression_data.T, metric="euclidean"), method="ward")
 
@@ -70,7 +78,7 @@ for i, gene in enumerate(ordered_gene_labels):
 
 df_heatmap = pd.DataFrame(heatmap_data)
 
-# Create row dendrogram data (left side, vertical orientation)
+# Create row dendrogram data
 row_lines = []
 for i in range(len(row_dendro["icoord"])):
     xs = row_dendro["icoord"][i]
@@ -91,7 +99,7 @@ row_dendro_lines["x2"] = row_max_height - row_dendro_lines["x2"]
 row_dendro_lines["y"] = row_dendro_lines["y"] / 10 - 0.5
 row_dendro_lines["y2"] = row_dendro_lines["y2"] / 10 - 0.5
 
-# Create column dendrogram data (top, horizontal orientation)
+# Create column dendrogram data
 col_lines = []
 for i in range(len(col_dendro["icoord"])):
     xs = col_dendro["icoord"][i]
@@ -107,7 +115,7 @@ col_dendro_lines["x2"] = col_dendro_lines["x2"] / 10 - 0.5
 # Row dendrogram chart (left side)
 row_dendro_chart = (
     alt.Chart(row_dendro_lines)
-    .mark_rule(strokeWidth=2, color="#333333")
+    .mark_rule(strokeWidth=1.5, color=INK_SOFT)
     .encode(
         x=alt.X("x:Q", axis=None, scale=alt.Scale(domain=[0, row_max_height])),
         y=alt.Y("y:Q", axis=None, scale=alt.Scale(domain=[-0.5, n_genes - 0.5])),
@@ -121,7 +129,7 @@ row_dendro_chart = (
 col_max_height = col_dendro_lines["y"].max()
 col_dendro_chart = (
     alt.Chart(col_dendro_lines)
-    .mark_rule(strokeWidth=2, color="#333333")
+    .mark_rule(strokeWidth=1.5, color=INK_SOFT)
     .encode(
         x=alt.X("x:Q", axis=None, scale=alt.Scale(domain=[-0.5, n_samples - 0.5])),
         y=alt.Y("y:Q", axis=None, scale=alt.Scale(domain=[0, col_max_height])),
@@ -131,7 +139,7 @@ col_dendro_chart = (
     .properties(width=800, height=120)
 )
 
-# Heatmap
+# Heatmap with interactive features
 heatmap = (
     alt.Chart(df_heatmap)
     .mark_rect()
@@ -139,20 +147,34 @@ heatmap = (
         x=alt.X(
             "Sample:N",
             sort=ordered_sample_labels,
-            axis=alt.Axis(title="Samples", labelFontSize=14, titleFontSize=18, labelAngle=-45),
+            axis=alt.Axis(
+                title="Samples", labelFontSize=18, titleFontSize=22, labelAngle=-45, labelColor=INK_SOFT, titleColor=INK
+            ),
         ),
-        y=alt.Y("Gene:N", sort=ordered_gene_labels, axis=alt.Axis(title="Genes", labelFontSize=14, titleFontSize=18)),
+        y=alt.Y(
+            "Gene:N",
+            sort=ordered_gene_labels,
+            axis=alt.Axis(title="Genes", labelFontSize=18, titleFontSize=22, labelColor=INK_SOFT, titleColor=INK),
+        ),
         color=alt.Color(
             "Expression:Q",
-            scale=alt.Scale(scheme="redblue", domainMid=0, reverse=True),
-            legend=alt.Legend(title="Expression", titleFontSize=16, labelFontSize=14, gradientLength=400),
+            scale=alt.Scale(scheme="brownbluegreen", domainMid=0),
+            legend=alt.Legend(
+                title="Expression",
+                titleFontSize=18,
+                labelFontSize=16,
+                gradientLength=400,
+                fillColor=ELEVATED_BG,
+                strokeColor=INK_SOFT,
+            ),
         ),
         tooltip=["Gene:N", "Sample:N", alt.Tooltip("Expression:Q", format=".2f")],
     )
     .properties(width=800, height=600)
+    .interactive()
 )
 
-# Create empty corner space for composition
+# Empty corner space for layout
 empty_corner = (
     alt.Chart(pd.DataFrame({"x": [0]}))
     .mark_point(opacity=0)
@@ -166,11 +188,15 @@ bottom_row = alt.hconcat(row_dendro_chart, heatmap, spacing=0)
 
 chart = (
     alt.vconcat(top_row, bottom_row, spacing=0)
-    .properties(title=alt.Title("heatmap-clustered · altair · pyplots.ai", fontSize=28, anchor="middle"))
-    .configure_view(strokeWidth=0)
+    .properties(
+        title=alt.Title("heatmap-clustered · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
+        background=PAGE_BG,
+    )
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
     .configure_concat(spacing=0)
+    .configure_axis(domainColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK)
 )
 
 # Save outputs
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
