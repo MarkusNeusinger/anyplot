@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-stacked: Stacked Bar Chart
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91 | Updated: 2025-05-09
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-09
 """
 
 import os
