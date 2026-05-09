@@ -14,20 +14,17 @@ A scatter plot displayed in polar coordinates where data points are positioned u
 
 ## Data
 
-Generate synthetic wind measurement data with the following characteristics:
-- 100-150 data points representing wind observations
-- Angle (theta): Wind direction in degrees (0-360)
-- Radius: Wind speed in appropriate units (e.g., m/s or knots)
-- Optional: Color encoding for a third variable (e.g., temperature or time of day)
-- Use realistic distributions (wind often has prevailing directions)
+- `theta` (numeric) - Wind direction in degrees (0-360)
+- `radius` (numeric) - Wind speed in m/s or knots
+- `category` (categorical, optional) - Time of day or temperature for color encoding
+- Size: 100-150 data points representing wind observations
+- Example: Wind observations with realistic prevailing directions
 
-Example structure:
-```
-angle (degrees) | radius (speed) | category (optional)
-45              | 12.5           | morning
-180             | 8.3            | afternoon
-270             | 15.2           | morning
-```
+| angle (degrees) | radius (speed) | category   |
+|-----------------|----------------|-----------|
+| 45              | 12.5           | morning   |
+| 180             | 8.3            | afternoon |
+| 270             | 15.2           | morning   |
 
 ## Notes
 
