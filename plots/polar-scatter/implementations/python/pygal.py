@@ -1,7 +1,7 @@
 """ anyplot.ai
 polar-scatter: Polar Scatter Plot
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 40/100 | Created: 2026-05-09
+Quality: 84/100 | Created: 2026-05-09
 """
 
 # Ensure we import the installed pygal package, not this file
