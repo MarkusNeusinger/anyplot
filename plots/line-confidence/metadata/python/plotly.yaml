@@ -1,160 +1,177 @@
 library: plotly
+language: python
 specification_id: line-confidence
 created: '2025-12-26T16:13:30Z'
-updated: '2025-12-26T16:16:18Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20525432844
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-confidence/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-confidence/plotly/plot.html
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - manual-ticks
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-09T12:45:10Z'
+generated_by: claude-haiku
+workflow_run: 25601232519
+issue: 2007
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/plotly/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent visual clarity with well-sized fonts and clear color contrast
-  - Realistic temperature forecast scenario that demonstrates the plot type perfectly
-  - Widening confidence interval over time shows thoughtful data modeling
-  - Clean implementation following KISS principles
-  - Proper use of toself fill for creating the confidence band polygon
-  - Good use of semi-transparent fill (alpha 0.25) as recommended in spec
+  - Perfect visual quality with legible text in both light and dark themes
+  - Excellent theme-adaptation with proper chrome tokens throughout
+  - Realistic, scientifically plausible data showing seasonality and uncertainty growth
+  - Clean code structure with idiomatic Plotly patterns
+  - Descriptive axis labels with units
+  - Effective use of transparency to show relationship between mean and confidence
+    band
   weaknesses:
-  - Legend in upper-left overlaps slightly with the confidence band at its peak
-  - Could leverage Plotly-specific features like custom hover templates to show exact
-    values on mouseover
-  image_description: The plot displays a line chart showing monthly temperature data
-    over 50 months. A dark blue solid line represents the mean temperature, oscillating
-    between approximately 7°C and 25°C with clear seasonal periodicity (annual cycles).
-    The line is surrounded by a light blue semi-transparent shaded band representing
-    the 95% confidence interval. The confidence band widens slightly over time, demonstrating
-    increasing uncertainty. The title "line-confidence · plotly · pyplots.ai" is centered
-    at the top. The x-axis is labeled "Month" (ranging 0-50), and the y-axis is labeled
-    "Temperature (°C)" (ranging 0-30). A legend in the upper-left corner identifies
-    "95% Confidence Interval" and "Mean Temperature". Grid lines are subtle gray.
-    The overall layout is clean with a white background.
+  - 'Minor: Design Excellence could be elevated with slightly more visual sophistication
+    or unique styling choices beyond brand defaults'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) provides ideal contrast for all elements
+      Chrome: Title and axis labels in dark INK (#1A1A17), tick labels in INK_SOFT (#4A4A44) - all fully readable
+      Data: Mean line in brand green (#009E73), confidence band in semi-transparent light green - excellent visual relationship
+      Grid: Subtle gridlines enhance readability without dominating
+      Legend: Clear identification of both series in upper right with appropriate styling
+      Legibility verdict: PASS - all text explicitly sized (title 28px, labels 22px, ticks 18px) and perfectly readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) provides ideal contrast for light elements
+      Chrome: Title and axis labels in light INK (#F0EFE8), tick labels in INK_SOFT (#B8B7B0) - all fully readable against dark background
+      Data: Mean line remains identical brand green (#009E73), confirming theme-independent colors; confidence band maintains semi-transparent appearance
+      Grid: Subtle gridlines with theme-appropriate opacity
+      Legend: Light text with elevated dark background (#242420) and border - excellent theme adaptation
+      No dark-on-dark failures detected - all elements properly contrast with background
+      Legibility verdict: PASS - theme-adaptation is flawless, all chrome properly threads theme tokens
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at large
-          font sizes
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px),
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere in the plot
+        comment: No overlapping text elements, all readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width is appropriate (width=4), confidence band clearly visible
-          with good alpha
+        comment: Line width 4 and band transparency optimally adapted to 50-point
+          dataset
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue color scheme is colorblind-safe; single-hue approach works well
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, legend positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Temperature (°C)" includes units; "Month" is descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Good contrast between mean line and band, CVD-safe Okabe-Ito palette,
+          brand green distinct on both backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced layout with good canvas utilization (50-80%), legend well-positioned
+          in upper right
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.3), but legend placement in upper-left slightly
-          overlaps with confidence band
+        comment: 'Descriptive labels with units: ''Temperature (°C)'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect: first series #009E73, backgrounds #FAF8F1 light/#1A1A17
+          dark, theme-adaptive chrome flawless in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful transparency use, clean lines, professional styling above
+          defaults but not publication-ready artistry
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, clean layout with generous whitespace, well-polished
+          presentation
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with mean line prominent against band, tells
+          story of uncertainty growth over time
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct line plot with confidence interval
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X (months) and Y (temperature) correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Central line, shaded confidence band, legend identifying both elements
-      - id: SC-04
-        name: Data Range
+        comment: Central line, confidence band, legend all present and functional
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Months on x-axis, temperature on y with bounds correctly shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies "Mean Temperature" and "95% Confidence
-          Interval"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "line-confidence · plotly · pyplots.ai"'
+        comment: Title format correct, legend labels accurate
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows seasonal variation, widening uncertainty over time, realistic
-          temperature range
+        comment: Shows realistic seasonality, warming trend, and widening confidence
+          intervals over time
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly temperature forecast is a perfect real-world application
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature values (7-25°C) are realistic for a temperate climate
+        comment: Monthly temperature forecast scenario is scientifically plausible
+          and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature range 0-30°C and confidence widths realistic and properly
+          proportioned
     code_quality:
       score: 10
       max: 10
@@ -164,40 +181,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: 'Clean linear flow: imports → tokens → data → figure creation → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Random seed set to 42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used
+        comment: Only numpy, plotly, os imported and used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Pythonic, idiomatic confidence band pattern, no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with scale=3
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Does not leverage Plotly's interactivity features in the static output;
-          could use hover templates or annotations
+        passed: true
+        comment: High-level API with go.Figure and go.Scatter, idiomatic filled scatter
+          for confidence band, proper theme-adaptive colors
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom hover templates, HTML export with CDN, theme token architecture
+          shows library mastery
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
