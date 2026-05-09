@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-clustered: Clustered Heatmap
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-05-09
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-09
 """
 
 import os
