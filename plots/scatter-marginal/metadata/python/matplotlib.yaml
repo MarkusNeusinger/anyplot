@@ -1,167 +1,174 @@
 library: matplotlib
+language: python
 specification_id: scatter-marginal
 created: '2025-12-26T14:58:58Z'
-updated: '2025-12-26T15:01:18Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20524416349
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/matplotlib/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - subplots
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-05-09T05:24:41Z'
+generated_by: claude-haiku
+workflow_run: 25592616567
+issue: 2005
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent GridSpec layout with proper axis alignment between main scatter and
-    marginal histograms
-  - Clean bimodal data generation showing correlation structure
-  - Appropriate transparency (alpha=0.65) reveals density patterns without obscuring
-    points
-  - Consistent styling throughout (colors, edge colors, spine visibility)
-  - Subtle grid styling that aids readability without distraction
+  - 'Excellent theme adaptation: data colors (#009E73) identical in both renders;
+    chrome properly flips with no legibility issues'
+  - Strong visual hierarchy through GridSpec multi-panel layout with properly aligned
+    marginals
+  - 'High code quality: clean KISS structure, all imports used, idiomatic matplotlib
+    patterns'
+  - 'Perfect specification compliance: all required features present and correctly
+    implemented'
+  - 'Refined visual polish: subtle grid, removed spines, generous whitespace, edge
+    highlighting'
   weaknesses:
-  - Generic axis labels (X Value, Y Value) rather than domain-specific labels with
-    units
-  - Could overlay KDE curves on histograms as spec suggests this is an option
-  - Marker size (s=120) slightly larger than optimal for 200 points per guidelines
-    (should be ~50-100)
-  image_description: The plot displays a scatter plot with marginal distributions
-    using matplotlib GridSpec layout. The central scatter plot shows 200 blue data
-    points (#306998) with white edges and alpha=0.65, revealing a clear positive linear
-    correlation (r≈0.7). Two clusters are visible in the data corresponding to the
-    bimodal X distribution. The top marginal histogram shows the X distribution with
-    two distinct peaks (around 30 and 60), while the right marginal histogram displays
-    the Y distribution (roughly unimodal, centered ~45). All elements use consistent
-    blue coloring. The title "scatter-marginal · matplotlib · pyplots.ai" appears
-    in the top-right corner. Axis labels show "X Value", "Y Value" for the main plot
-    and "Count" for marginals. A subtle dashed grid (alpha=0.3) aids readability.
+  - Axis labels lack units (Feature A/B should specify measured quantities)
+  - 'Design Excellence: well-executed but appears as refined defaults rather than
+    distinctive design; could benefit from custom color harmony'
+  - 'Data storytelling: bimodal structure visible but lacks visual emphasis or annotations
+    to highlight key insights'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "scatter-marginal · matplotlib · anyplot.ai" in dark ink; axis labels (Feature A / Feature B) and tick labels all clearly readable in dark text against light background
+      Data: Scatter points and histogram bars in brand green (#009E73); 200 points show clear positive correlation with bimodal structure (clusters at Feature A ~30 and ~60); top marginal histogram shows bimodal distribution; right marginal histogram shows Feature B distribution; all elements well-spaced, no overlap
+      Legibility verdict: PASS - All text readable; no light-on-light issues; excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title and all axis/tick labels rendered in light ink tones (#F0EFE8 primary, #B8B7B0 secondary); all text clearly readable against dark background
+      Data: Scatter points and histogram bars remain brand green (#009E73) - identical to light render, confirming proper theme independence for data colors; bimodal structure and positive correlation equally clear
+      Legibility verdict: PASS - No dark-on-dark failures; tick labels and axis labels are light and visible; excellent theme contrast
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 14-16pt, all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: All sizes explicitly set (title 24pt, labels 20pt, ticks 16pt); readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text fully readable, no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers at s=120 with alpha=0.65 are well-sized for 200 points, though
-          slightly large for optimal density visualization
+        comment: Scatter points optimally adapted (s=100, α=0.65 for 200 points);
+          histograms clear
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Single blue color (#306998) with good contrast, fully colorblind-safe
+        comment: Brand green is colorblind-safe; good contrast on both surfaces
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: GridSpec creates well-proportioned layout with main plot and aligned
-          marginals
+        comment: Perfect proportions, balanced margins, nothing cut off
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 1
         max: 2
         passed: false
-        comment: Descriptive labels ("X Value", "Y Value") but no units
+        comment: Generic labels (Feature A/B) lack units
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds correct; both renders theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: false
-        comment: Grid is subtle (alpha=0.3) but no legend needed for single-series
-          plot
+        comment: Thoughtful layout and color harmony, but resembles well-configured
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, spines removed, generous whitespace, edge highlighting;
+          nearly perfect
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Bimodal structure and correlation clear; could emphasize insights
+          more
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct scatter plot with marginal distributions
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned to axes
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Main scatter + top histogram + right histogram, all aligned as specified
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: scatter, top marginal, right marginal, alignment'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes auto-scaled appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped; marginals aligned with axes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single-series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "scatter-marginal · matplotlib · pyplots.ai"'
+        comment: Title format correct; no legend needed
     data_quality:
-      score: 17
-      max: 20
+      score: 13
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows correlation and bimodal X distribution, but the two-cluster
-          structure could be more pronounced in the visualization
+        comment: 'Shows all aspects: bimodal univariate + positive bivariate correlation'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Plausible correlated bivariate data, but generic "X Value"/"Y Value"
-          labels reduce realism
+        score: 3
+        max: 5
+        passed: false
+        comment: Plausible but generic labels; no real-world scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Values in sensible ranges (10-90 for X, 0-80 for Y)
+        comment: Proportional relationships realistic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,42 +176,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save pattern, no functions/classes
+        comment: Clean imports → data → plot → save
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (matplotlib.pyplot, numpy, GridSpec)
+        comment: All imports used; no extraneous dependencies
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic, appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: All current matplotlib API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as "plot.png" (correct) but file path is relative, not showing
-          full plots/{spec-id}/ structure
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of matplotlib (Axes methods, GridSpec, spine/grid manipulation)
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Good use of GridSpec for complex layout, sharex/sharey for axis alignment,
-          but could leverage more advanced matplotlib features like KDE overlay or
-          Axes insets
+        comment: Uses GridSpec for multi-panel layout (distinctive to matplotlib)
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - manual-ticks
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
