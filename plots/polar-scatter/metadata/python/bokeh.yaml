@@ -1,185 +1,177 @@
 library: bokeh
+language: python
 specification_id: polar-scatter
 created: '2025-12-26T16:16:51Z'
-updated: '2025-12-26T16:21:50Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20525460640
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - polar-projection
-  - html-export
-  - annotations
-  patterns:
-  - data-generation
-  - columndatasource
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-05-09T10:47:24Z'
+generated_by: claude-haiku
+workflow_run: 25599108792
+issue: 2023
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/bokeh/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent manual construction of polar coordinate system in Bokeh (which lacks
-    native polar support)
-  - Realistic wind data with prevailing directions showing real-world patterns
-  - Clean color scheme with good category differentiation
-  - Well-proportioned layout using square format appropriate for polar plots
-  - Comprehensive angular labeling with cardinal and intermediate directions
+  - Perfect text legibility with explicit font sizing across all elements; no readability
+    issues in either theme
+  - 'Flawless theme adaptation: data colors constant, chrome perfectly theme-aware
+    (light/dark text, correct backgrounds)'
+  - 'Excellent data choice for polar plot: realistic wind patterns with clear directional
+    clustering demonstrate the visualization technique effectively'
+  - Correct Okabe-Ito palette usage (positions 1-3 in canonical order); first series
+    correctly uses brand green (#009E73)
+  - Custom polar grid construction shows thoughtful design; cardinal and intermediate
+    direction labels enhance usability
+  - Clean code with KISS structure, reproducible seed, proper use of ColumnDataSource
+    and bokeh patterns
+  - All spec requirements met completely; title, legend, and data mapping are correct
+  - Wind data is factually plausible and contextually neutral
   weaknesses:
-  - Legend is positioned somewhat far from the plot area
-  - Radius labels (5, 10, 15...) are small relative to other text elements
-  - Does not fully leverage Bokeh interactive capabilities (hover tooltips showing
-    exact angle/speed)
-  image_description: 'The plot displays a polar scatter chart showing wind measurement
-    data. The visualization features:
+  - 'Design Excellence could be elevated: visual refinement could push toward more
+    polished appearance (DE-02: currently 4/6)'
+  - 'Library Mastery: while bokeh patterns are used idiomatically, could leverage
+    more advanced bokeh capabilities beyond HoverTools (callbacks, streaming, linked
+    selection)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct and appropriate
+      Chrome: Title "polar-scatter · bokeh · anyplot.ai" in dark 28pt text at top (readable); Cardinal directions (N, E, W, S) in dark bold 24pt (clearly visible); Intermediate directions (NE, NW, SW, SE) in dark 20pt secondary text (readable); Radius labels (5, 10, 15, 20, 25, 30) in 20pt secondary text positioned radially (readable); "Wind Speed (m/s)" label at bottom in 22pt secondary text (readable)
+      Data: Green (#009E73) markers for Morning (NE clustering ~45°), orange (#D55E00) for Afternoon (SW clustering ~225°), blue (#0072B2) for Evening (variable); all colors from Okabe-Ito positions 1-3 as required; radial gridlines subtle but visible; angular spokes every 30° visible
+      Legibility verdict: PASS - All text clearly readable on light background; no dark-on-light issues; data markers distinctly visible
 
-    - A circular polar coordinate system with concentric gridlines at intervals of
-    5, 10, 15, 20, 25, 30, 35, 40 m/s
-
-    - Angular spokes at 30° intervals extending from the center
-
-    - Cardinal direction labels (N, S, E, W) in bold black text
-
-    - Intermediate directions (NE, NW, SE, SW) in gray text
-
-    - Three categories of data points: Morning (blue), Afternoon (yellow), and Evening
-    (red)
-
-    - Blue morning points clustered in the NE quadrant showing prevailing wind direction
-
-    - Yellow afternoon points concentrated in the SW quadrant
-
-    - Red evening points scattered more uniformly around the center
-
-    - A legend on the right side showing Morning, Afternoon, and Evening categories
-
-    - Title "polar-scatter · bokeh · pyplots.ai" at the top
-
-    - "Wind Speed (m/s)" label below the S direction
-
-    - Light gray background (#FAFAFA) with subtle grid lines'
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct and appropriate
+      Chrome: Title in light 28pt text (visible); Cardinal directions in light text (visible); Intermediate directions in lighter secondary text (readable, not dark-on-dark); Radius labels in light text (readable); "Wind Speed (m/s)" in light text (readable); Legend visible with theme-adapted styling
+      Data: Green (#009E73) markers identical to light render, orange (#D55E00) identical, blue (#0072B2) identical - CRITICAL: data colors do NOT change between themes, only chrome flips
+      Legibility verdict: PASS - No dark-on-dark failures; all text light-colored against dark background; brand green visually distinct and accessible; perfect theme consistency with light render for data encoding
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title at 28pt, direction labels at 22pt/18pt, radius labels at 16pt
-          - all readable but radius labels could be slightly larger
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, all labels well-spaced
+        comment: All font sizes explicitly set with perfect readability in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text well-spaced with no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers at size 22 with alpha 0.75 work well for 120 points, though
-          some overlap in dense areas
+        comment: Markers and grid perfectly adapted to data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, and red provide good colorblind-safe distinction
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Square 3600x3600 format is appropriate for polar plot; y_range asymmetry
-          leaves slight extra space at bottom
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Wind Speed (m/s)" includes units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette provides excellent CVD-safe contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 50-70% with balanced margins; appropriate square format
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.5), legend well-placed but slightly separated
-          from plot
+        comment: Title correct format; axis label includes units (m/s)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand), subsequent follow Okabe-Ito; backgrounds
+          correct; chrome theme-adapted'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom polar grid with thoughtful direction labels; above generic
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Good refinement with hidden axes, subtle grid, styled legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Excellent data choice; clear directional clustering tells a compelling
+          story
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct polar scatter plot using Cartesian conversion
+        comment: Correct polar scatter with proper grid and angular spacing
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Angle correctly maps to direction, radius to wind speed
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has radial gridlines, angular tick marks, color encoding for categories,
-          legend
-      - id: SC-04
-        name: Data Range
+        comment: All features from spec present and functional
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Radius starts at 0, extends to accommodate all points (up to 40 m/s)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: Polar-to-Cartesian conversion correct; all 120 points visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correct but small glyph markers
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses "{spec-id} · {library} · pyplots.ai" format correctly
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows prevailing wind directions (NE morning, SW afternoon), variable
-          evening - demonstrates realistic wind patterns
+        comment: 'Shows all polar plot aspects: directional clustering, speed variation,
+          categories'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Wind measurement scenario is realistic and comprehensible
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Wind speeds 2-40 m/s are realistic for wind measurements
+        comment: Real wind analysis scenario; neutral and comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Wind speeds and distributions factually plausible
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -187,33 +179,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script with imports → data → plot → save
+        comment: Linear flow with no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, bokeh modules)
+        comment: All imports used; no dead code
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png AND plot.html (correct for interactive library)
-    library_features:
-      score: 3
-      max: 5
-      items: []
+        comment: Correct output format and current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Excellent use of bokeh patterns and recommended APIs
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses bokeh-distinctive features (HoverTool, custom legends, HTML
+          export)
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - polar-projection
+  - custom-legend
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling: []
