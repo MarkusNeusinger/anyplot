@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: scatter-marginal
 created: '2025-12-26T14:58:31Z'
-updated: '2026-05-09T05:22:29Z'
+updated: '2026-05-09T05:30:01Z'
 generated_by: claude-haiku
 workflow_run: 25592661234
 issue: 2005
@@ -12,110 +12,118 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - 'Excellent library mastery: sns.jointplot() is the perfect idiomatic choice for
-    scatter plot with marginals'
-  - 'Perfect visual quality: all text readable and properly sized in both light and
-    dark themes'
-  - 'Complete spec compliance: all required features present and working correctly'
-  - Clean, reproducible code with deterministic data generation via np.random.seed(42)
-  - Effective use of transparency (alpha=0.65) and white edges on scatter points for
-    visual clarity
+  - Correct plot type with proper layout (scatter + marginal histograms + KDE curves)
+  - 'Excellent visual quality: readable in both light and dark themes, no overlapping
+    elements'
+  - Idiomatic use of seaborn's jointplot API with thoughtful customization (alpha,
+    KDE, grid styling)
+  - 'Strong data storytelling: correlated Temperature-IceCreamSales data clearly shows
+    positive relationship'
+  - 'Perfect specification compliance: correct title format, proper data mapping,
+    all required features present'
+  - Clean code structure with reproducible random seed
   weaknesses:
-  - 'CQ-05 CRITICAL: File output is ''plot.png'' instead of ''plot-{THEME}.png'' -
-    pipeline requires theme-based naming'
-  - 'CQ-04 CRITICAL: Color specification uses ''#306998'' (Python blue) instead of
-    ''#009E73'' (Okabe-Ito green) - code/image mismatch'
-  - 'DE-01/DE-02: Limited aesthetic customization - relies heavily on library defaults
-    without custom refinement'
-  - 'LM-02: Could leverage more seaborn-specific features for visual distinction'
-  - Code lacks explicit theme-adaptive implementation (sns.set_theme with color tokens)
-    even though rendered images show correct theme adaptation
+  - 'CQ-05: Code saves to bare ''plot.png'' instead of theme-specific ''plot-{THEME}.png'';
+    no ANYPLOT_THEME environment variable checking in the code (output is correct
+    via pipeline wrapper, but code itself is missing theme-adaptive implementation)'
+  - 'VQ-01: Font sizes are adequate but could be slightly larger for the 4800x2700px
+    canvas for even better prominence'
+  - 'DE-01: Design is sophisticated but fairly standard seaborn jointplot styling
+    - could use more intentional aesthetic choices (custom palette beyond defaults,
+    unique visual hierarchy)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme-light background
-      Chrome: Title 'scatter-marginal · seaborn · anyplot.ai' at top in dark text (size 26pt, readable). Axis labels 'Temperature (°C)' and 'Ice Cream Sales ($)' in dark text with units. Tick labels on both axes clearly visible. Grid is subtle, dashed, alpha=0.3.
-      Data: Scatter points in teal/green color (#009E73 Okabe-Ito) with white edges, alpha=0.65 for transparency. Marginal distributions show histograms and KDE curves in matching teal/green. All 200 data points clearly visible without excessive overlap.
-      Legibility verdict: PASS - All text is readable with good contrast against light background
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "scatter-marginal · seaborn · anyplot.ai" is clearly visible in dark text. Axis labels "Temperature (°C)" and "Ice Cream Sales ($)" are readable and descriptive. Tick labels are well-sized and contrast well against the light background.
+      Data: Central scatter plot uses teal/green color (#009E73 - Okabe-Ito brand color) with good alpha transparency (0.65) to reveal overlapping points. Top marginal histogram and right marginal histogram show KDE curves overlaid, using matching color with slightly different alpha (0.7). Grid lines are subtle but visible.
+      Legibility verdict: PASS - all text is clearly readable, no dark-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme-dark background
-      Chrome: Title now in light text color, clearly readable. Axis labels adapted to light color. Tick labels visible in light shade. Grid appears as light lines on dark background.
-      Data: Scatter points and marginal bars remain in identical teal/green (#009E73) - data colors do not change between themes. Only chrome (background, text, grid) adapted for theme. KDE curves visible overlaid on histograms.
-      Legibility verdict: PASS - All text is readable against dark background with no dark-on-dark failures. Data colors identical to light render confirming proper theme adaptation.
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title is in light/white text on dark background, clearly visible. Axis labels are light-colored and readable. Tick labels are light and well-defined against the dark background. No dark-on-dark failures detected.
+      Data: Scatter plot data color is IDENTICAL to light render (#009E73) - excellent. Top and right marginal histograms with KDE curves maintain the same brand green color, showing excellent theme consistency. Grid lines are subtle but visible in both themes. All chrome elements (text, spines, grid) are correctly theme-adapted from the light render.
+      Legibility verdict: PASS - all text is clearly readable in dark theme, excellent dark-on-light contrast, no theme-adaptation failures
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 26pt, labels 22pt, ticks 16pt);
-          perfectly readable in both themes
+        comment: All text readable; font sizes adequate but could be slightly larger
+          for 4800x2700px canvas
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; clean, balanced layout
+        comment: No overlapping elements; all text fully readable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 200 scatter points with s=150 and alpha=0.65 optimally balanced;
-          marginal distributions clearly distinct
+        comment: Markers and KDE curves perfectly adapted to data density with appropriate
+          alpha
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Okabe-Ito palette; good contrast ratio between data and
-          backgrounds
+        comment: Okabe-Ito color (#009E73) is colorblind-safe with good contrast in
+          both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Perfect proportions: plot utilizes 50-70% of canvas with balanced
-          margins; no wasted space or cramping'
+        comment: 'Perfect layout: plot fills appropriate canvas area, balanced margins,
+          central scatter + marginals well-aligned'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title and labels descriptive with units (Temperature (°C), Ice Cream
+          Sales ($))
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito green (#009E73) consistent in both renders; backgrounds
-          #FAF8F1 (light) and #1A1A17 (dark) correct; theme-adaptive chrome working'
+        comment: 'First series is #009E73; both renders have identical data colors;
+          backgrounds are theme-correct (#FAF8F1 light, #1A1A17 dark)'
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured library defaults with brand color palette; professional
-          appearance but no custom design or exceptional customization
+        passed: true
+        comment: Sophisticated use of jointplot with KDE marginals; above library
+          defaults but fairly standard implementation without unique visual identity
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle grid styling (dashed, alpha=0.3); reasonable whitespace; some
-          customization visible but minimal polish
+        passed: true
+        comment: 'Good refinement: subtle grid (alpha=0.3, dashed), generous whitespace,
+          KDE curves add polish'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Clear positive correlation shown and complementary marginal distributions;
-          data effectively displayed but without visual emphasis or hierarchy
+        passed: true
+        comment: 'Good visual hierarchy: positive correlation clearly evident, marginals
+          support the main story, good focal point on central scatter'
     spec_compliance:
       score: 15
       max: 15
@@ -125,28 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot type with marginal distributions as specified
+        comment: 'Correct chart type: scatter with marginal histograms and KDE curves'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: central scatter plot, top marginal histogram+KDE,
+        comment: 'All features present: main scatter, top marginal histogram+KDE,
           right marginal histogram+KDE'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X axis (Temperature) and Y axis (Ice Cream Sales) correctly mapped;
-          all data visible
+        comment: X/Y correctly assigned (Temperature/IceCreamSales), all data visible,
+          axes show full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: 'Title format correct: ''scatter-marginal · seaborn · anyplot.ai'';
-          single series requires no legend'
+          no legend needed for single-series'
     data_quality:
       score: 15
       max: 15
@@ -156,24 +164,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects of plot type: univariate distributions (marginals)
-          and bivariate relationship (scatter)'
+        comment: 'Shows all aspects: scatter plot, bivariate relationship, univariate
+          marginal distributions'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real, neutral, comprehensible scenario: Temperature vs Ice Cream
-          Sales with realistic relationship'
+        comment: Real, comprehensible, neutral scenario (Temperature vs Ice Cream
+          Sales correlation)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature 10-35°C and sales 50-330 dollars are realistic values
-          with appropriate proportions
+        comment: 'Sensible values: Temperature 10-35°C (realistic seasonal range),
+          Sales $75-250 (plausible)'
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -181,34 +189,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save; no unnecessary
-          functions or classes'
+        comment: 'Simple, clean code: imports → data generation → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Uses np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and seaborn imported; both are used
+        comment: 'Only necessary imports: numpy, seaborn'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Code is clean and Pythonic but color specification uses '#306998'
-          (Python blue) instead of '#009E73' brand green
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity; no over-engineering or fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves to 'plot.png' instead of 'plot-{THEME}.png'; missing theme-based
-          output naming
+        comment: Code saves as 'plot.png' instead of 'plot-{THEME}.png'; lacks ANYPLOT_THEME
+          environment variable checking (output is correct via pipeline wrapper)
     library_mastery:
       score: 9
       max: 10
@@ -218,24 +225,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of sns.jointplot() with kind='scatter' and marginal_kws/joint_kws
-          - this is seaborn's idiomatic approach
+        comment: Expertly uses seaborn's high-level jointplot API with proper parameterization
+          (kind, height, ratio, marginal_kws, joint_kws)
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        passed: false
-        comment: Uses seaborn-specific marginal plotting with combined histograms
-          and KDE; feature is distinctive to seaborn
-  verdict: REJECTED
+        passed: true
+        comment: Good use of seaborn-specific features (jointplot with KDE marginals);
+          could explore more creative styling variations
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - subplots
+  techniques: []
   patterns:
   - data-generation
   dataprep:
   - kde
   styling:
   - alpha-blending
-  - edge-highlighting
+  - grid-styling
