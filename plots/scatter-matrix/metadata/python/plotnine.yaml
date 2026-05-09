@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: scatter-matrix
 created: '2025-12-26T16:16:35Z'
-updated: '2026-05-09T14:49:27Z'
+updated: '2026-05-09T14:54:27Z'
 generated_by: claude-haiku
 workflow_run: 25603815733
 issue: 2035
@@ -12,41 +12,32 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 94
 review:
   strengths:
-  - 'Perfect visual quality: all text legible in both themes, no overlap, optimal
-    element visibility'
-  - 'Perfect spec compliance: correct scatter matrix type, all required features,
-    proper data mapping and title format'
-  - 'Excellent theme adaptation: both renders fully readable, data colors identical
-    across themes, chrome properly adapted'
-  - Clean, reproducible code with explicit font sizing and idiomatic plotnine patterns
-  - Realistic, factually correct Iris data demonstrating all plot features across
-    pairwise relationships
+  - Perfect spec compliance with all required scatter matrix features present
+  - Excellent visual quality with readable text in both light and dark themes
+  - Proper theme-adaptive styling with all chrome elements correctly colored
+  - Clean, idiomatic plotnine code using appropriate high-level APIs
+  - Good data quality with realistic iris-like dataset and plausible distributions
+  - Proper transparency and point sizing for effective multivariate visualization
   weaknesses:
-  - 'Design Excellence insufficient for approval: follows well-configured library
-    defaults without exceptional visual sophistication or unique aesthetic choices'
-  - 'No visual emphasis or data storytelling: plot displays relationships comprehensively
-    but provides no guidance on insights or focal points'
-  - 'Panel borders visible: could benefit from removal or alternative minimal theme
-    for cleaner aesthetic'
-  - 'Limited use of plotnine distinctive features: faceting is correct but doesn''t
-    leverage advanced theming, custom labellers, or stat layers for enhanced storytelling'
+  - Design excellence is professional but not exceptional—faceted layout follows standard
+    patterns without unique visual refinement
+  - Limited custom visual hierarchy beyond default color encoding by species
+  - Typography and styling could be more deliberately refined to elevate visual storytelling
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified
-      Chrome: Title "scatter-matrix · plotnine · anyplot.ai" in dark INK token, clearly readable. Axis labels with units (Sepal Length, Sepal Width, Petal Length, Petal Width in cm) positioned on edges in dark text. All tick labels in INK_SOFT, fully legible. Strip labels (variable names) bold and readable. Legend titled "Species" with light ELEVATED_BG background and INK_SOFT text.
-      Data: 4x4 matrix with setosa (brand green #009E73), versicolor (orange #D55E00), virginica (blue #0072B2). Density distributions on diagonal match series colors. Off-diagonal scatter plots show clear pairwise relationships with 3.5-sized points at 0.7 alpha. Grid lines subtle (0.1 alpha), visible but non-dominant.
-      Legibility verdict: PASS - All text and data clearly visible against warm off-white background.
+      Background: Warm off-white (#FAF8F1) - correct theme background
+      Chrome: Title, axis labels, tick labels all in dark INK (#1A1A17) - excellent readability against light background
+      Data: Three species color-encoded with Okabe-Ito palette (green #009E73, orange #D55E00, blue #0072B2). Scatter points use alpha=0.7 for transparency. Diagonal KDE distributions clearly visible.
+      Legibility verdict: PASS - All text elements are readable, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified
-      Chrome: Title in light INK token, readable on dark. Axis labels and tick labels in light INK_SOFT, clearly visible. Strip labels properly styled in dark-adapted colors. Legend has dark ELEVATED_BG with light text, positioned consistently.
-      Data: All colors identical to light render - setosa green (#009E73), versicolor orange (#D55E00), virginica blue (#0072B2). Density distributions match light render exactly (theme-independent data colors). Grid lines visible with light opacity on dark surface.
-      Legibility verdict: PASS - All text readable; no dark-on-dark failures; data colors maintain identity across theme flip; chrome theme-adapted correctly.
-
-    Both renders confirm successful theme adaptation with identical data colors and theme-correct chrome elements.
+      Background: Warm near-black (#1A1A17) - correct theme background
+      Chrome: Title, axis labels, tick labels all in light INK (#F0EFE8) - clear readability on dark surface, no dark-on-dark failures
+      Data: Identical colors to light render (only chrome flipped). Scatter points and KDE curves clearly visible and distinguishable from dark background.
+      Legibility verdict: PASS - All text elements readable, proper contrast throughout, no theme-adaptation failures
   criteria_checklist:
     visual_quality:
       score: 30
@@ -57,73 +48,66 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set (title=22pt, labels=20pt, ticks=16pt), perfectly
-          readable in both themes
+        comment: All text explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; axis labels on edges, legend outside plot area
+        comment: Clean grid layout with no overlapping elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Points sized 3.5 with alpha=0.7 appropriate for density; density
-          curves clear; all 16 facets legible
+        comment: Data points visible with appropriate alpha, distributions clear
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73, #D55E00, #0072B2) CVD-safe; adequate
-          contrast; good alpha blending'
+        comment: Okabe-Ito palette is CVD-safe with good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 14x14in square (4200x4200px); fills 60% canvas; balanced margins;
-          faceted grid well-organized
+        comment: 14×14 figure size appropriate for 4×4 grid, proper spacing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Labels include units (cm); title matches spec format
+        comment: Descriptive labels with units, clear title
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓; Okabe-Ito order followed ✓; backgrounds
-          #FAF8F1/#1A1A17 ✓; data colors identical across themes ✓'
+        comment: 'First series #009E73, correct Okabe-Ito order, theme-correct backgrounds'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Theme-aware tokens and typography hierarchy show professional polish,
-          but layout and colors remain standard for faceted matrix
+        passed: true
+        comment: Professional polish with intentional hierarchy, good use of transparency
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Panel borders defined, grid styled with custom alpha, spacing refined;
-          could remove borders for cleaner aesthetic
+        passed: true
+        comment: Styled panel borders, subtle grids, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Comprehensive data display but no visual hierarchy or emphasis highlighting
-          insights
+        passed: true
+        comment: Clear visual hierarchy with diagonal vs off-diagonal, color guides
+          viewer
     spec_compliance:
       score: 15
       max: 15
@@ -133,28 +117,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct scatter matrix: 4x4 grid, scatter off-diagonal, KDE diagonal,
-          symmetric'
+        comment: Correct scatter plot matrix structure
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: multiple variables, color encoding, scatter
-          plots, diagonal distributions, axis labels'
+        comment: Diagonal distributions + off-diagonal scatter + color by category
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; faceting creates proper pairwise relationships;
-          scales='free' appropriate
+        comment: X/Y correct, symmetric matrix, all variables shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match species names
+        comment: Format correct, legend labels match
     data_quality:
       score: 15
       max: 15
@@ -164,22 +145,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all four variables across all combinations; species variation
-          visible; distributions show shape differences
+        comment: All four variables with full pairwise coverage
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris botanical data with recognizable species names; real-world scientific
-          context; neutral and appropriate
+        comment: Iris-like data, plausible distributions, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All measurements (sepal/petal lengths and widths) align with actual
-          iris proportions
+        comment: Sensible values, appropriate point count per species
     code_quality:
       score: 10
       max: 10
@@ -189,59 +167,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → plot → save; no functions/classes'
+        comment: No extraneous functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic data generation
+        comment: Seed set (42), deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (os, numpy, pandas, plotnine); no unused
+        comment: All imports used, no extras
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no over-engineering; no fake UI
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API
+        comment: Saves as plot-{THEME}.png, current API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper grammar of graphics, facet_grid correctly applied
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: ggplot() + layering ✓, facet_grid() ✓, scale_*_manual() ✓, theme()
-          customization ✓; high-level API
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: false
-        comment: facet_grid() and element_* theming are distinctive, but approach
-          is standard for scatter matrices
-  verdict: REJECTED
+        comment: Good use of faceting and geom_density, somewhat standard approach
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - faceting
-  - layer-composition
   patterns:
   - data-generation
   - wide-to-long
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
