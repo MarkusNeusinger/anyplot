@@ -1,160 +1,174 @@
 library: plotly
+language: python
 specification_id: line-timeseries
 created: '2025-12-26T14:59:10Z'
-updated: '2025-12-26T15:01:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20524418995
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-09T03:32:51Z'
+generated_by: claude-haiku
+workflow_run: 25590297718
+issue: 2006
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/plotly/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent seasonal temperature model with realistic sinusoidal pattern peaking
-    in late July
-  - Clean, professional visual design with well-chosen font sizes for 4800x2700 output
-  - Custom hovertemplate provides good interactivity with formatted date and temperature
-  - Proper use of plotly_white template for clean appearance
-  - Both PNG and HTML outputs generated correctly
+  - Perfectly readable in both light and dark themes with zero adaptation failures
+  - Clean, professional design with thoughtful use of Okabe-Ito palette and theme-adaptive
+    tokens
+  - 'Excellent specification compliance: intelligent date formatting, grid on both
+    axes, proper temporal data handling'
+  - 'Strong library mastery: range slider, custom hover templates, and month-based
+    ticking demonstrate idiomatic plotly usage'
+  - Realistic, neutral data with full feature coverage (uptrend, volatility, noise)
   weaknesses:
-  - Missing plotly-specific features like range slider (rangeslider), zoom buttons
-    (rangeselector), or spike lines that are distinctive for time series
-  - 'Grid/legend scoring: legend disabled but could optionally show the series name'
-  - Line width could be slightly increased (3.0) for better visibility at high resolution
-  image_description: 'The plot displays a time series line chart showing daily temperature
-    readings throughout 2024. The line is a medium blue color (#306998), plotted against
-    a clean white background with subtle gray gridlines. The x-axis shows months from
-    January 2024 to December 2024 with monthly tick marks (format: "Mon YYYY"). The
-    y-axis shows temperature in degrees Celsius ranging from approximately -5°C to
-    35°C. The title "Daily Temperature 2024 · line-timeseries · plotly · pyplots.ai"
-    is centered at the top. The data shows a clear sinusoidal seasonal pattern with
-    temperatures lowest in winter (around -5°C to 5°C in Jan/Dec) and highest in summer
-    (around 25°C to 35°C in Jul/Aug), with realistic daily noise variation.'
+  - Design Excellence adequate but not exceptional; DE-01 relies on defaults (5/8)
+    and DE-03 lacks visual storytelling or hierarchy (2/6)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "line-timeseries · plotly · anyplot.ai" in dark text, centered and prominent; x-axis label "Date" and y-axis label "Stock Price ($)" both descriptive with units; tick labels (Jan 2024 through Dec 2024, price values 20-180) cleanly spaced with no overlap; all text dark and crisp against light background
+      Data: Thick brand-green line (#009E73) connects 365 daily points showing uptrend from ~100 to ~160 over 2024; subtle light green fill beneath the line adds visual interest; grid lines visible but subtle on both axes; range slider visible at bottom
+      Legibility verdict: PASS - All text perfectly readable; no dark-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title in light text, axis labels and tick labels all light-colored; grid lines visible and appropriate; no dark-on-dark text failures present; all labels clearly readable against dark background
+      Data: Data line remains identical brand-green (#009E73) - confirms correct theme-independent color for categorical data; fill area maintains light green visibility; theme-adaptive chrome (text, background, grid) correctly flipped while data colors stayed constant
+      Legibility verdict: PASS - All text readable; no dark-on-dark failures; data colors identical to light render proving correct theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 32pt, axis titles at 24pt, ticks at 18pt - all clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: Monthly tick labels well-spaced, no overlapping text
+        comment: Title 28px, axis labels 22px, ticks 18px; all explicitly sized and
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; clean spacing throughout all tick labels and
+          titles
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width 2.5 is appropriate for 366 data points; could be slightly
-          thicker
+        comment: Line width 3px perfectly visible; 365 data points handled without
+          clutter
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color, no colorblind issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good proportions; slight excess margin on right side
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Temperature (°C)" includes units, "Date" is descriptive'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Okabe-Ito brand green #009E73; good contrast on both backgrounds;
+          colorblind-safe'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas; balanced margins; range slider integrated
+          cleanly
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.3), but legend is disabled when it could
-          show "Temperature"
+        comment: Stock Price ($) and Date both descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1 light / #1A1A17 dark;
+          theme-adaptive chrome perfect in both renders'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Clean professional design with filled-area accent; relies on plotly
+          defaults rather than custom refinements
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid, clean layout, range slider adds polish; minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Displays uptrend clearly but lacks visual hierarchy or emphasis to
+          guide viewer
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct time series line plot
+        comment: Correct time-series line plot with datetime x-axis
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Dates on x-axis, temperatures on y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Smart date formatting ("%b %Y"), gridlines on both axes, datetime
-          x-axis
-      - id: SC-04
-        name: Data Range
+        comment: Intelligent date formatting (%b %Y), monthly ticking (dtick=M1),
+          grid on both axes, proper temporal handling
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full year visible, y-axis encompasses all values
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date on x, price on y; all 365 points visible and mapped correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend disabled (single series, acceptable)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "line-timeseries · plotly · pyplots.ai"
+        comment: Title format line-timeseries · plotly · anyplot.ai correct; legend
+          appropriately hidden for single-series
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows seasonal variation with noise; could show more dramatic events
-          (e.g., cold snaps)
+        comment: Full year of daily data; shows trend, volatility, and noise; realistic
+          stock-price behavior
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Daily temperature for a temperate climate is a perfect real-world
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature range (-7°C to 35°C) is realistic for temperate regions
+        comment: Real-world stock scenario; neutral and comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Daily prices over one year realistic; ~55% annual growth plausible;
+          values factually sound
     code_quality:
       score: 10
       max: 10
@@ -164,41 +178,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: 'Linear flow: imports → tokens → data → plot → save; no unnecessary
+          functions'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (numpy, pandas, plotly.graph_objects)
+        comment: All imports (os, numpy, pandas, plotly) actively used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; theme-token pattern elegant; no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct filenames plot-{THEME}.png/html; target 4800×2700 via 1600×900×scale=3
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses custom hovertemplate for interactivity, but does not leverage
-          other plotly strengths like range slider, range selector buttons, or spike
-          lines
+        comment: High-level go.Figure() and go.Scatter() API; proper update_layout()
+          pattern; custom hovertemplate with date formatting
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Range slider is distinctive; custom hover formatting; unified hover
+          mode; plotly-specific dtick for month ticking
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling: []
