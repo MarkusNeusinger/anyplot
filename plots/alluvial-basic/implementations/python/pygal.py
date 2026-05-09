@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 alluvial-basic: Basic Alluvial Diagram
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 83/100 | Updated: 2026-05-09
 """
+
+import os
 
 import cairosvg
 import numpy as np
@@ -10,19 +12,27 @@ import pygal
 from pygal.style import Style
 
 
-# Set seed for reproducibility
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+
 np.random.seed(42)
 
 # Data: Voter migration between political parties across 4 election cycles
 years = ["2012", "2016", "2020", "2024"]
 parties = ["Democratic", "Republican", "Independent", "Other"]
 
-# Colors for each party - colorblind-safe palette
+# Map parties to Okabe-Ito colors
 party_colors = {
-    "Democratic": "#306998",  # Python Blue
-    "Republican": "#D64541",  # Red (distinct from blue)
-    "Independent": "#FFD43B",  # Python Yellow
-    "Other": "#7F8C8D",  # Gray
+    "Democratic": OKABE_ITO[0],  # #009E73 (brand green)
+    "Republican": OKABE_ITO[1],  # #D55E00 (vermillion)
+    "Independent": OKABE_ITO[2],  # #0072B2 (blue)
+    "Other": OKABE_ITO[3],  # #CC79A7 (reddish purple)
 }
 
 # Voter counts (millions) at each time point
@@ -98,12 +108,15 @@ flows = [
 
 # Custom style for text elements
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    title_font_size=72,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
 )
 
 # Create minimal chart just for title rendering
@@ -111,8 +124,8 @@ chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="alluvial-basic · pygal · pyplots.ai",
-    show_legend=False,  # Remove redundant legend - party labels on sides are clearer
+    title="alluvial-basic·pygal·anyplot.ai",
+    show_legend=False,
     show_x_guides=False,
     show_y_guides=False,
     show_x_labels=False,
@@ -144,7 +157,7 @@ bar_width = 150
 total_height = chart_height
 
 # Track node positions
-node_positions = {}  # {(year_idx, party): (y_top, y_bottom)}
+node_positions = {}
 
 # Build SVG elements for nodes and flows
 alluvial_svg = '<g id="alluvial-diagram">'
@@ -159,29 +172,29 @@ for year_idx, year in enumerate(years):
         height = (voter_counts[party_idx, year_idx] / year_total) * total_height
         y_bottom = y_top + height
 
-        # Store position for flow drawing (SVG y increases downward)
+        # Store position for flow drawing
         node_positions[(year_idx, party)] = (y_top, y_bottom)
 
         # Draw rectangle for this party at this year
         alluvial_svg += f'''
     <rect x="{x - bar_width / 2:.0f}" y="{y_top:.0f}" width="{bar_width:.0f}" height="{height:.0f}"
-          fill="{party_colors[party]}" stroke="white" stroke-width="3"/>'''
+          fill="{party_colors[party]}" stroke="{PAGE_BG}" stroke-width="3"/>'''
 
         y_top = y_bottom
 
     # Add year label at bottom
     alluvial_svg += f'''
     <text x="{x:.0f}" y="{margin_top + total_height + 80:.0f}" text-anchor="middle"
-          font-size="52" font-weight="bold" font-family="DejaVu Sans, sans-serif"
-          fill="#333333">{year}</text>'''
+          font-size="52" font-weight="bold" font-family="sans-serif"
+          fill="{INK}">{year}</text>'''
 
-# Add party labels on left side (primary labels - no legend needed)
+# Add party labels on left side
 for party in parties:
     y_top, y_bottom = node_positions[(0, party)]
     y_center = (y_top + y_bottom) / 2
     alluvial_svg += f'''
     <text x="{x_positions[0] - bar_width / 2 - 30:.0f}" y="{y_center:.0f}" text-anchor="end"
-          font-size="44" font-weight="bold" font-family="DejaVu Sans, sans-serif"
+          font-size="44" font-weight="bold" font-family="sans-serif"
           fill="{party_colors[party]}" dominant-baseline="middle">{party}</text>'''
 
 # Add party labels on right side
@@ -190,7 +203,7 @@ for party in parties:
     y_center = (y_top + y_bottom) / 2
     alluvial_svg += f'''
     <text x="{x_positions[-1] + bar_width / 2 + 30:.0f}" y="{y_center:.0f}" text-anchor="start"
-          font-size="44" font-weight="bold" font-family="DejaVu Sans, sans-serif"
+          font-size="44" font-weight="bold" font-family="sans-serif"
           fill="{party_colors[party]}" dominant-baseline="middle">{party}</text>'''
 
 # Draw flows between consecutive time points
@@ -247,38 +260,39 @@ for flow_idx, flow_dict in enumerate(flows):
 subtitle_y = margin_top + total_height + 150
 alluvial_svg += f'''
     <text x="2400" y="{subtitle_y:.0f}" text-anchor="middle"
-          font-size="36" font-style="italic" font-family="DejaVu Sans, sans-serif"
-          fill="#666666">Voter Migration Between Political Parties (Millions of Voters)</text>'''
+          font-size="42" font-style="italic" font-family="sans-serif"
+          fill="{INK_SOFT}">Voter Migration Between Political Parties (Millions of Voters)</text>'''
 
 alluvial_svg += "\n</g>"
 
 # Insert alluvial elements before closing </svg> tag
 svg_with_alluvial = base_svg.replace("</svg>", f"{alluvial_svg}\n</svg>")
 
-# Save SVG
-with open("plot.svg", "w") as f:
-    f.write(svg_with_alluvial)
+# Save outputs
+cairosvg.svg2png(bytestring=svg_with_alluvial.encode("utf-8"), write_to=f"plot-{THEME}.png")
 
-# Render to PNG
-cairosvg.svg2png(bytestring=svg_with_alluvial.encode("utf-8"), write_to="plot.png")
-
-# Save HTML for interactive version
-with open("plot.html", "w") as f:
-    f.write("""<!DOCTYPE html>
+with open(f"plot-{THEME}.html", "w") as f:
+    f.write(
+        """<!DOCTYPE html>
 <html>
 <head>
-    <title>alluvial-basic · pygal · pyplots.ai</title>
+    <title>alluvial-basic·pygal·anyplot.ai</title>
     <style>
-        body { margin: 0; padding: 20px; background: #f5f5f5; font-family: sans-serif; }
+        body { margin: 0; padding: 20px; background: """
+        + ("#f5f5f5" if THEME == "light" else "#2a2a2a")
+        + """; font-family: sans-serif; }
         .container { max-width: 100%; margin: 0 auto; }
         object { width: 100%; height: auto; }
     </style>
 </head>
 <body>
     <div class="container">
-        <object type="image/svg+xml" data="plot.svg">
+        <object type="image/svg+xml" data="plot-"""
+        + THEME
+        + """.svg">
             Alluvial diagram not supported
         </object>
     </div>
 </body>
-</html>""")
+</html>"""
+    )
