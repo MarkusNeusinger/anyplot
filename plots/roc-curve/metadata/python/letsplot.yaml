@@ -1,215 +1,234 @@
 library: letsplot
+language: python
 specification_id: roc-curve
 created: '2025-12-26T17:39:54Z'
-updated: '2025-12-26T17:50:14Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20526599354
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/roc-curve/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/roc-curve/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-09T22:45:06Z'
+generated_by: claude-haiku
+workflow_run: 25613620041
+issue: 2273
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/letsplot/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent visual clarity with properly sized text elements and colorblind-safe
-    palette
-  - Correct implementation of ROC curve with all required features (diagonal reference,
-    AUC in legend, multiple models)
-  - Uses coord_fixed(ratio=1) for equal aspect ratio as recommended in spec
-  - Clean ggplot grammar of graphics approach with appropriate theme customization
-  - Proper scale 3x export for 4800x2700 resolution
-  weaknesses:
-  - Code contains a function definition (compute_roc) which violates the KISS principle
-    - should be inline calculations
-  - Grid alpha not explicitly set (could be more subtle)
-  image_description: 'The plot displays an ROC curve visualization with three curves
-    on a 16:9 aspect ratio canvas. The plot uses a clean minimal theme with a light
-    gray grid. The title "roc-curve · letsplot · pyplots.ai" is displayed at the top.
-    The X-axis shows "False Positive Rate" (0 to 1) and the Y-axis shows "True Positive
-    Rate" (0 to 1). Three curves are shown:
-
-    - **Model A (AUC = 0.97)** - Blue curve (#306998) showing excellent classifier
-    performance, hugging the top-left corner
-
-    - **Model B (AUC = 0.71)** - Yellow/gold curve (#FFD43B) showing moderate classifier
+  - Perfect visual quality with all text legible in both themes and no overlap
+  - Correct theme adaptation with Okabe-Ito data colors identical across renders and
+    proper chrome flipping
+  - Strong spec compliance with all ROC curve requirements including reference line
+    and AUC display
+  - Professional code with deterministic data generation and clean theme token usage
+  - Clear data storytelling with visual hierarchy effectively communicating classifier
     performance
+  weaknesses:
+  - Design sophistication relies on library defaults without additional visual refinement
+    such as removed spines, grid-only styling, or custom legend styling
+  - Library distinctiveness uses idiomatic letsplot but lacks uniquely distinctive
+    features beyond standard grammar of graphics approach
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correctly set
+      Chrome: Title "roc-curve · letsplot · anyplot.ai" in dark ink (#1A1A17) is clearly visible. Axis labels "False Positive Rate" and "True Positive Rate" are readable in dark text. Tick labels (0, 0.1, 0.2, ... 1.0) are in soft gray ink and fully legible.
+      Data: Three curves shown - Model A in green (#009E73, first Okabe-Ito position), Model B in orange (#D55E00, second position), Random in adaptive gray. All lines are clearly distinguishable.
+      Legibility verdict: PASS
 
-    - **Random (AUC = 0.50)** - Gray diagonal line (#888888) representing the random
-    baseline
-
-    The legend is positioned at the bottom with the label "Classifier". The plot has
-    equal 1:1 aspect ratio for the axes (coord_fixed). All text is legible and appropriately
-    sized. Lines are thick enough (size=2) to be clearly visible.'
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correctly set
+      Chrome: Title, axis labels, and tick labels rendered in light text (#F0EFE8 and #B8B7B0) with excellent contrast against dark background. All text is fully readable. No dark-on-dark failures detected.
+      Data: Data colors are identical to light render - Model A green (#009E73), Model B orange (#D55E00), Random gray. Chrome has properly adapted to dark theme while data colors remain constant.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt, axis titles 20pt, axis text 16pt, legend text 16pt -
-          all perfectly readable
+        comment: All font sizes explicitly set (title 24pt, axis labels 20pt, ticks
+          16pt), perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, clean layout
+        comment: All text elements clearly separated with no overlapping labels or
+          collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line size=2 is optimal, curves clearly distinguishable
+        comment: Three data lines optimally visible with appropriate line width for
+          canvas size
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/Yellow/Gray palette is colorblind-safe, excellent contrast
+        comment: Okabe-Ito palette is CVD-safe with no red-green-only signal
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good canvas utilization with coord_fixed, legend at bottom well positioned
+        comment: Plot fills 60-70% of canvas with balanced margins and well-proportioned
+          16:9 aspect ratio
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no units (FPR/TPR are unitless ratios, so
-          acceptable)
+        comment: Axes descriptively labeled with domain context (False Positive Rate,
+          True Positive Rate)
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle but could be lighter (alpha not explicitly set)
+        comment: 'First series is #009E73, follows Okabe-Ito order, backgrounds are
+          correct (#FAF8F1 light, #1A1A17 dark), both renders theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Theme-adaptive styling with intentional color hierarchy; professional
+          polish but lacks some refinement beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Uses theme_minimal() with theme-adaptive legend; grid is appropriately
+          subtle but could be further customized
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Visual hierarchy effectively guides viewer; color-coded performance
+          levels with clear focal points
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct ROC curve visualization
+        comment: Correct ROC curve with two classifiers and reference line
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: FPR on X-axis, TPR on Y-axis correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Diagonal reference line present, AUC scores in legend, multiple models
-          compared with distinct colors
-      - id: SC-04
-        name: Data Range
+        comment: ROC curves for multiple models, diagonal reference line, AUC scores
+          in legend
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes range from 0 to 1 as specified
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis FPR, Y-axis TPR, both [0,1] with equal aspect ratio
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly show model names and AUC values
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "roc-curve · letsplot · pyplots.ai"
+        comment: Correct title format and legend with AUC values displayed
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows good vs moderate classifier, plus random baseline - demonstrates
-          range of performance but could show a poor classifier too
+        comment: Demonstrates full range of classifier performance from excellent
+          to random
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Binary classification scenario is realistic, synthetic data from
-          beta distributions is appropriate
+        comment: Plausible synthetic data with realistic AUC values, neutral non-controversial
+          domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: AUC values plausible (0.97 is very good, 0.71 moderate) though 0.97
-          is quite high
+        comment: Data correctly ranges [0,1], AUC values are factually sound
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Has a function `compute_roc` which violates KISS principle (no functions/classes
-          rule)
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Simple procedural code with clear flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic behavior
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: All imports are used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current numpy trapezoid function
+        comment: Straightforward implementation with no over-engineering or fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct plot-{THEME}.png and plot-{THEME}.html output
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert ggplot2-style grammar with proper ggsize(), theme_minimal(),
+          and theme tokens
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot grammar (ggplot, aes, geom_line), coord_fixed for aspect
-          ratio, scale_color_manual, theme_minimal, ggsize - good library usage but
-          nothing particularly unique to lets-plot
+        comment: Uses coord_fixed() and theme-adaptive styling appropriately but lacks
+          highly distinctive advanced features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
