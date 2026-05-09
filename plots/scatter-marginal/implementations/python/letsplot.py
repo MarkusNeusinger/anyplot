@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-marginal: Scatter Plot with Marginal Distributions
-Library: letsplot | Python 3.13
-Quality: pending | Created: 2025-05-09
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-09
 """
 
 import os
