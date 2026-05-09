@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 confusion-matrix: Confusion Matrix Heatmap
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-09
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,6 +13,7 @@ from lets_plot import (
     aes,
     coord_fixed,
     element_blank,
+    element_rect,
     element_text,
     geom_text,
     geom_tile,
@@ -18,7 +21,6 @@ from lets_plot import (
     ggsave,
     ggsize,
     labs,
-    scale_color_identity,
     scale_fill_gradient,
     theme,
     theme_minimal,
@@ -26,6 +28,13 @@ from lets_plot import (
 
 
 LetsPlot.setup_html()
+
+# Theme tokens (see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Multi-class classification results for image classifier
 np.random.seed(42)
@@ -65,30 +74,38 @@ df["Label"] = df.apply(lambda r: f"{r['Count']}\n({r['Percentage']}%)", axis=1)
 df["True Label"] = pd.Categorical(df["True Label"], categories=class_names[::-1], ordered=True)
 df["Predicted Label"] = pd.Categorical(df["Predicted Label"], categories=class_names, ordered=True)
 
-# Determine text color based on count (white for dark cells, black for light)
+# Determine text color based on count (theme-adaptive)
 max_count = df["Count"].max()
-df["text_color"] = df["Count"].apply(lambda c: "white" if c > max_count * 0.4 else "black")
+if THEME == "light":
+    df["text_color"] = df["Count"].apply(lambda c: "#1A1A17" if c > max_count * 0.4 else "#4A4A44")
+else:
+    df["text_color"] = df["Count"].apply(lambda c: "#F0EFE8" if c > max_count * 0.4 else "#B8B7B0")
+
+# Color gradient for sequential data (Blues)
+if THEME == "light":
+    low_color = "#E7F0F9"
+    high_color = "#08519C"
+else:
+    low_color = "#1F3D5C"
+    high_color = "#74B3E5"
 
 # Create confusion matrix heatmap
 plot = (
     ggplot(df, aes(x="Predicted Label", y="True Label", fill="Count"))
-    + geom_tile(color="white", size=1.5, tooltips="none")
-    + geom_text(
-        aes(label="Label", color="text_color"),
-        size=14,
-        fontface="bold",
-        tooltips={"lines": ["True: @{True Label}", "Pred: @{Predicted Label}", "Count: @Count"]},
-    )
-    + scale_color_identity()
-    + scale_fill_gradient(low="#c6dbef", high="#306998", name="Count")
-    + labs(x="Predicted Label", y="True Label", title="confusion-matrix · letsplot · pyplots.ai")
+    + geom_tile(color=INK_SOFT, size=1.5, tooltips="none")
+    + geom_text(aes(label="Label", color="text_color"), size=14, fontface="bold")
+    + scale_fill_gradient(low=low_color, high=high_color, name="Count")
+    + labs(x="Predicted Label", y="True Label", title="confusion-matrix · letsplot · anyplot.ai")
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=28, face="bold"),
-        axis_title=element_text(size=22),
-        axis_text=element_text(size=18),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=14),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        plot_title=element_text(size=28, face="bold", color=INK),
+        axis_title=element_text(size=22, color=INK),
+        axis_text=element_text(size=18, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=14, color=INK_SOFT),
         panel_grid=element_blank(),
     )
     + ggsize(1200, 1200)
@@ -96,7 +113,7 @@ plot = (
 )
 
 # Save as PNG (scale 3x for 3600x3600 px)
-ggsave(plot, "plot.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
 
 # Save interactive HTML
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
