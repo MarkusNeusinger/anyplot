@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-timeseries: Time Series Line Plot
-Library: plotnine | Python 3.13
-Quality: 92/100 | Updated: 2025-05-09
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-09
 """
 
 import os
