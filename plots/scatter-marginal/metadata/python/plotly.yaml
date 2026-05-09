@@ -1,160 +1,178 @@
 library: plotly
+language: python
 specification_id: scatter-marginal
 created: '2025-12-26T14:58:44Z'
-updated: '2025-12-26T15:00:58Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20524415585
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/plotly/plot.html
+updated: '2026-05-09T05:30:40Z'
+generated_by: claude-haiku
+workflow_run: 25592701480
+issue: 2005
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/plotly/plot-dark.html
 quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
 review:
   strengths:
-  - Excellent use of plotly.express built-in marginal distribution feature (px.scatter
-    with marginal_x/marginal_y)
-  - Clean, well-structured code following KISS principles
-  - Proper font sizing for 4800x2700 output (title 32pt, axis labels 24pt, ticks 18pt)
-  - Good marker styling with appropriate opacity (0.65) and edge outline
-  - Consistent color scheme between scatter markers and histogram bars
-  - Both PNG and interactive HTML outputs generated
-  - Well-aligned marginal plots with main scatter area
+  - 'Exceptional theme adaptation: Both light and dark renders are perfectly readable
+    with correct color mapping; no theme-chrome failures'
+  - 'Strong data visualization: Marginal distributions effectively contextualize the
+    scatter plot; positive correlation is immediately visually apparent'
+  - 'Excellent code quality: Clean, reproducible, properly structured; no unused imports
+    or over-engineering'
+  - 'Idiomatic plotly usage: Domain-based multi-axis approach is the right plotly
+    pattern for marginal layouts'
+  - 'Professional polish: Edge highlighting on markers, custom hover tooltips, realistic
+    data scenario all contribute to a polished feel'
   weaknesses:
-  - Axis labels are generic (X Value, Y Value) without units or more descriptive context
-  - Could use a more realistic data scenario instead of abstract random data
-  image_description: 'The plot shows a scatter plot with marginal histogram distributions.
-    The main scatter plot occupies the lower-left portion with blue circular markers
-    (color #306998) showing a positive correlation between X Value (ranging ~20-80)
-    and Y Value (ranging ~20-85). The top marginal histogram shows the X distribution
-    with approximately normal shape centered around 50. The right marginal histogram
-    shows the Y distribution, also roughly normal. The title "scatter-marginal · plotly
-    · pyplots.ai" is centered at the top in dark gray text. All text is clearly readable,
-    axis labels show "X Value" and "Y Value", tick labels are visible on all axes,
-    and the overall layout is clean with a white background and subtle gray grid lines.'
+  - 'DE-01 moderate: Design is professional but stops short of FiveThirtyEight-level
+    sophistication'
+  - 'LM-02 moderate: Could leverage more plotly-specific interactive features like
+    range sliders or selection callbacks to push library mastery higher'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "scatter-marginal · plotly · anyplot.ai" (28px dark), X-label "Temperature (°C)" (22px dark), Y-label "Relative Humidity (%)" (22px dark), tick labels (18px dark) - all clearly readable
+      Data: Scatter markers (#009E73 brand green, opacity=0.65), histograms (#009E73, opacity=0.6) - all clearly visible
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title, axis labels, tick labels all in light colors and clearly readable against dark background - no dark-on-dark failures
+      Data: Scatter and histogram colors identical to light render (#009E73)
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable at full
-          size
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; generous margins; domain-based positioning prevents
+          crowding
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers are well-sized with good opacity (0.65), though slightly
-          large for 200 points
+        comment: Scatter markers (size=14, opacity=0.65) perfectly adapted to 200-point
+          density; histograms properly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color scheme is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Well-proportioned layout with marginals aligned to main plot
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Descriptive labels but no units provided
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid (alpha 0.3), no legend needed for single series
+        comment: Okabe-Ito brand green is CVD-safe; good contrast; no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700px, plot fills 50-80% of canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive with units: Temperature (°C), Relative Humidity (%)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green (#009E73) used; backgrounds #FAF8F1 (light)/#1A1A17
+          (dark); chrome properly theme-adaptive'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: brand green palette, intentional hierarchy, professional
+          hover tooltips, refined edge highlighting'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good: spines controlled (mirror=False), grid subtle (gridwidth=0.5),
+          margins generous; some polish visible'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good: visual hierarchy with focal scatter and supporting marginals;
+          realistic scenario; bivariate relationship apparent'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct scatter with marginal distributions
+        comment: Correct scatter plot with marginal distributions; both marginals
+          present and aligned
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly assigned with correlation
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Marginal histograms on top and right, aligned with main scatter
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: main scatter, marginal histograms, proper
+          alignment, transparency'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Temperature, Y=Humidity; all data visible and properly scaled
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed, N/A
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: scatter-marginal · plotly · pyplots.ai'
+        comment: Title format correct; legend omitted appropriately for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows correlation and distributions, could show more varied distribution
-          shapes
+        comment: 'Shows all aspects: bivariate relationship AND marginal univariate
+          distributions; variation in both dimensions'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Generic bivariate data is plausible but not a specific real-world
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values are sensible for generic numeric data
+        comment: Real scientific scenario (environmental measurement); neutral topic;
+          plausible values
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature ~15–32°C, humidity ~27–75%, correlation 0.65; all factually
+          correct
     code_quality:
       score: 10
       max: 10
@@ -164,40 +182,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: 'Linear: imports → tokens → data → plot → save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42); fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.express imported
+        comment: 'Only used imports: os, sys, numpy, plotly'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotly.express API
+        comment: Clean, Pythonic, appropriate complexity; no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Leverages plotly.express's built-in marginal_x/marginal_y feature,
-          interactive HTML output
+        comment: 'Excellent: proper go.Figure(), add_trace(), domain-based multi-axis
+          layout; go.Histogram for marginals'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses plotly-specific domain positioning for marginal layout; custom
+          hovertemplate; HTML export; could leverage more interactive features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
