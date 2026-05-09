@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-matrix: Scatter Plot Matrix
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 90 | Updated: 2025-12-26
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-09
 """
 
 import os
