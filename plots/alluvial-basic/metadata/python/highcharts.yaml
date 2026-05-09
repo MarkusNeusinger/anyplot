@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: alluvial-basic
 created: '2025-12-26T10:37:34Z'
-updated: '2026-05-09T01:21:46Z'
+updated: '2026-05-09T01:29:23Z'
 generated_by: claude-haiku
 workflow_run: 25587380388
 issue: 1878
@@ -12,36 +12,36 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Solid visual quality with all text readable and properly sized in both themes
-  - Perfect spec compliance with all alluvial features correctly implemented
-  - Excellent color palette application using Okabe-Ito with proper theme-adaptive
-    chrome
-  - Clean, Pythonic code structure with proper module organization and reproducibility
-  - Effective data storytelling showing voter transitions with proportional flow widths
+  - Perfect theme adaptation with correct color preservation and chrome adaptation
+  - Excellent visual quality and readability in both light and dark renders
+  - Flawless spec compliance with all required features implemented correctly
+  - Clean, well-structured code with proper theme-token usage throughout
+  - Effective use of Highcharts sankey capabilities with appropriate semi-transparent
+    flows
+  - Professional presentation with descriptive subtitle and clear labels for all elements
   weaknesses:
-  - Design Excellence is generic—improve visual sophistication beyond well-configured
-    defaults (DE-01)
-  - Limited visual refinement—add subtle styling touches to distinguish from library
-    defaults (DE-02)
-  - Library Mastery underutilizes Highcharts distinctive features—consider leveraging
-    interactive features or advanced formatting (LM-02)
-  - Data uses political party affiliations which may warrant topic review at spec
-    level (DQ-02 context)
+  - Design lacks sophistication beyond defaults—no distinctive styling choices or
+    visual enhancements
+  - Minimal visual refinement—could enhance with custom grid opacity, typography hierarchy,
+    or refined whitespace
+  - Conservative use of Highcharts features—doesn't showcase library's interactive
+    capabilities or advanced formatting
+  - Node labels could be slightly larger for improved readability at full resolution
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct tone and not pure white
-      Chrome: Title "alluvial-basic · highcharts · anyplot.ai" and subtitle "Tracking voter transitions between political affiliations across election cycles" are clearly readable in dark text; year labels "2016", "2020", "2024" at bottom are crisp and well-positioned
-      Data: Three parties shown in Okabe-Ito colors—Democratic (#009E73 green), Independent (#D55E00 orange), Republican (#0072B2 blue). Sankey flows show transitions with semi-transparent bands (opacity 0.4) allowing visibility of overlaps. Node widths and flow heights proportional to voter counts.
-      Legibility verdict: PASS - all text, labels, and data elements clearly visible and readable against the light surface
+      Background: Warm off-white #FAF8F1 with excellent contrast for text
+      Chrome: Title "alluvial-basic · highcharts · anyplot.ai" clearly visible at top in dark INK color; subtitle below in lighter INK_SOFT gray; year labels (2016, 2020, 2024) at bottom in dark text; legend at bottom center with party color references
+      Data: Three Okabe-Ito colors perfectly applied—Democratic (green #009E73), Independent (orange #D55E00), Republican (blue #0072B2); flow bands semi-transparent (opacity 0.4) showing voter transitions; node widths proportional to population
+      Legibility verdict: PASS - all text readable with proper contrast and spacing
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct tone and not pure black
-      Chrome: Title and subtitle visible with light text color; year labels readable. All text has adequate contrast against dark background
-      Data: Party colors remain identical to light render (Democratic #009E73, Independent #D55E00, Republican #0072B2)—no color shift between themes, only chrome adapted. Sankey structure, node labels, and flows match light render
-      Legibility verdict: PASS - all text and elements readable; dark-on-dark issues avoided with proper INK token application
+      Background: Warm near-black #1A1A17, not pure black, providing appropriate dark surface
+      Chrome: Title in light color (#F0EFE8) readable against dark background; subtitle in INK_SOFT gray; year labels in light text; legend symbols and text clearly visible in medium gray
+      Data: Identical Okabe-Ito colors to light render (green #009E73, orange #D55E00, blue #0072B2)—no color shift, confirming proper theme-independent data coloring; flow bands retain opacity and proportional sizing; only background and chrome adapted to theme
+      Legibility verdict: PASS - no dark-on-dark failures; all text readable with appropriate light/gray tokens; theme adaptation correct
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,51 +52,43 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, subtitle 22px, labels
-          22px, ticks 18px); perfectly readable in both light and dark renders
+        comment: All font sizes explicitly set; perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping text; node labels, year labels, and legend entries
-          all have adequate spacing
+        comment: All text and elements properly spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All nodes, flows, and labels clearly visible; node sizing and flow
-          transparency optimized for 4800x2700 canvas
+        comment: Nodes and flow bands optimally visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette used (colorblind-safe); flow opacity 0.4 provides
-          adequate separation for overlapping elements
+        comment: Okabe-Ito palette is colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-balanced margins (200px left/right, 200px top, 150px bottom);
-          plot fills appropriate portion of canvas with good whitespace
+        comment: Well-balanced margins and spacing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title 'alluvial-basic · highcharts · anyplot.ai' correct format;
-          subtitle provides helpful context; year labels descriptive
+        comment: Proper format with descriptive subtitle
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Democratic) correct; multi-series follows
-          Okabe-Ito order; backgrounds #FAF8F1 (light) and #1A1A17 (dark); text colors
-          theme-adaptive'
+        comment: 'First series #009E73; theme-correct in both renders'
     design_excellence:
       score: 12
       max: 20
@@ -106,23 +98,19 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Thoughtful Okabe-Ito palette application and clean layout, but lacks
-          distinctive design touches beyond well-configured library defaults
+        comment: Competent but lacks distinctive visual touches
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Some refinement visible (proper color theming, clean margins, functional
-          legend), but minimal customization beyond standard Highcharts styling
+        comment: Minimal customization beyond defaults
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good visual hierarchy: color guides category identity, flow width
-          represents magnitude, left-to-right progression shows temporal flow; subtitle
-          adds context'
+        comment: Subtitle and flow visualization guide viewer
     spec_compliance:
       score: 15
       max: 15
@@ -132,29 +120,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sankey/alluvial diagram implementation with strict vertical
-          ordering
+        comment: Correct sankey/alluvial diagram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: time points (2016/2020/2024), categories (3
-          parties), flows with magnitude, consistent colors, all required labels'
+        comment: All features present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Flows correctly mapped (from/to nodes with weights); categories assigned
-          to parties; time points ordered chronologically
+        comment: Time points, categories, flows all correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format 'alluvial-basic · highcharts · anyplot.ai' correct;
-          legend shows all three party categories with matching colors
+        comment: Proper format and legend
     data_quality:
       score: 14
       max: 15
@@ -164,23 +148,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects of alluvial diagrams: multiple time points, transitions
-          in all directions, varying flow magnitudes, category persistence'
+        comment: All alluvial aspects covered
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: 'Voter migration data is realistic and plausible; based on real-world
-          scenario. Note: political party data may warrant review at spec level per
-          content policy'
+        comment: Plausible voter migration data; minor flag on political affiliation
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Vote counts (100-3200 range) are realistic; proportional relationships
-          between categories plausible
+        comment: Realistic values and scale
     code_quality:
       score: 10
       max: 10
@@ -190,36 +170,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → chart creation → configuration → export;
-          no unnecessary functions or classes'
+        comment: No unnecessary complexity
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data hardcoded; deterministic and reproducible
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (highcharts_core, PIL, selenium, urllib);
-          all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code; no fake UI or over-engineering; custom legend
-          HTML is pragmatic solution
+        comment: No fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Outputs plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Correct output files
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -227,27 +204,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correctly uses Chart class, HighchartsOptions, and sankey series
-          type; proper module downloads for headless export; theme-adaptive styling
-          shows good API knowledge
+        comment: Proper highcharts_core API usage
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Uses sankey module and annotations (Highcharts-specific), but these
-          are standard features; doesn't leverage unique Highcharts capabilities like
-          interactive features or advanced formatting
-  verdict: REJECTED
+        comment: Standard features; could showcase more capabilities
+    score_caps_applied: []
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
-  - annotations
   - html-export
+  - annotations
   patterns:
   - data-generation
   dataprep: []
-  styling:
-  - alpha-blending
+  styling: []
