@@ -1,16 +1,30 @@
-""" pyplots.ai
+"""anyplot.ai
 polar-scatter: Polar Scatter Plot
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2025-12-26
 """
 
+import os
+import sys
 
 import numpy as np
 import pandas as pd
-from plotnine import (
+
+
+# Work around naming conflict with plotnine.py script and plotnine package
+script_dir = os.path.dirname(os.path.abspath(__file__))
+if script_dir in sys.path:
+    sys.path.remove(script_dir)
+if "" in sys.path:
+    sys.path.remove("")
+if "." in sys.path:
+    sys.path.remove(".")
+
+from plotnine import (  # noqa: E402
     aes,
     coord_fixed,
     element_blank,
+    element_rect,
     element_text,
     geom_path,
     geom_point,
@@ -24,6 +38,16 @@ from plotnine import (
     theme,
 )
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Data - Wind measurements with prevailing directions
 np.random.seed(42)
@@ -95,24 +119,28 @@ radius_labels.append({"label": "25 m/s", "x": 25 * np.cos(label_angle) + 1, "y":
 
 radius_label_df = pd.DataFrame(radius_labels)
 
-# Color palette for time of day
-colors = {"Morning": "#306998", "Afternoon": "#FFD43B", "Evening": "#E74C3C"}
+# Color palette for time of day (Okabe-Ito colors)
+colors = {
+    "Morning": OKABE_ITO[0],  # #009E73 brand green
+    "Afternoon": OKABE_ITO[1],  # #D55E00 vermillion
+    "Evening": OKABE_ITO[2],  # #0072B2 blue
+}
 
 # Plot
 plot = (
     ggplot()
     # Circular gridlines (speed circles)
     + geom_path(
-        aes(x="x", y="y", group="radius"), data=grid_df, color="#CCCCCC", size=0.5, alpha=0.5, linetype="dashed"
+        aes(x="x", y="y", group="radius"), data=grid_df, color=INK_SOFT, size=0.5, alpha=0.15, linetype="dashed"
     )
     # Radial spokes (direction lines)
-    + geom_segment(aes(x="x1", y="y1", xend="x2", yend="y2"), data=spoke_df, color="#CCCCCC", size=0.5, alpha=0.5)
+    + geom_segment(aes(x="x1", y="y1", xend="x2", yend="y2"), data=spoke_df, color=INK_SOFT, size=0.5, alpha=0.15)
     # Wind data points with color by time of day
     + geom_point(aes(x="x", y="y", color="time"), data=df, size=5, alpha=0.75)
     # Compass direction labels
-    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=16, color="#333333", fontweight="bold")
+    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=16, color=INK, fontweight="bold")
     # Speed labels (m/s)
-    + geom_text(aes(x="x", y="y", label="label"), data=radius_label_df, size=10, color="#666666", ha="left")
+    + geom_text(aes(x="x", y="y", label="label"), data=radius_label_df, size=10, color=INK_SOFT)
     # Custom colors for time of day
     + scale_color_manual(values=colors, name="Time of Day")
     # Equal coordinate system for proper circles
@@ -121,24 +149,26 @@ plot = (
     + scale_x_continuous(limits=(-35, 35))
     + scale_y_continuous(limits=(-35, 35))
     # Labels
-    + labs(title="Wind Direction and Speed · polar-scatter · plotnine · pyplots.ai")
-    # Clean polar-style theme
+    + labs(title="polar-scatter · plotnine · anyplot.ai")
+    # Theme with proper backgrounds and colors
     + theme(
         figure_size=(12, 12),
-        plot_title=element_text(size=24, ha="center"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_grid_major=element_blank(),
+        panel_grid_minor=element_blank(),
+        panel_border=element_blank(),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         axis_line=element_blank(),
-        panel_grid_major=element_blank(),
-        panel_grid_minor=element_blank(),
-        panel_background=element_blank(),
-        plot_background=element_blank(),
-        legend_title=element_text(size=16),
-        legend_text=element_text(size=14),
+        plot_title=element_text(size=24, ha="center", color=INK),
+        legend_title=element_text(size=16, color=INK),
+        legend_text=element_text(size=14, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_position="right",
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=300, width=12, height=12)
