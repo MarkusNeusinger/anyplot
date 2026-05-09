@@ -1,12 +1,13 @@
-""" pyplots.ai
+""" anyplot.ai
 heatmap-clustered: Clustered Heatmap
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-25
+Library: highcharts unknown | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-09
 """
 
+import os
+import subprocess
 import tempfile
 import time
-import urllib.request
 from pathlib import Path
 
 import numpy as np
@@ -18,6 +19,14 @@ from scipy.spatial.distance import pdist
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Data - Gene expression data (simulated microarray experiment)
 np.random.seed(42)
@@ -95,7 +104,7 @@ chart.options.chart = {
     "type": "heatmap",
     "width": 3600,
     "height": 3600,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginTop": 380,
     "marginBottom": 320,
     "marginLeft": 380,
@@ -104,44 +113,53 @@ chart.options.chart = {
 
 # Title
 chart.options.title = {
-    "text": "Gene Expression Clusters \u00b7 heatmap-clustered \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "42px", "fontWeight": "bold"},
+    "text": "Gene Expression Clusters · heatmap-clustered · highcharts · anyplot.ai",
+    "style": {"fontSize": "42px", "fontWeight": "bold", "color": INK},
     "y": 40,
 }
 
 # Subtitle
 chart.options.subtitle = {
     "text": "Hierarchical clustering reveals drug-specific expression patterns",
-    "style": {"fontSize": "28px", "color": "#666666"},
+    "style": {"fontSize": "28px", "color": INK_SOFT},
     "y": 90,
 }
 
 # X-axis (samples)
 chart.options.x_axis = {
     "categories": reordered_sample_labels,
-    "title": {"text": "Samples", "style": {"fontSize": "36px"}, "y": 20},
-    "labels": {"style": {"fontSize": "24px"}, "rotation": 315},
+    "title": {"text": "Samples", "style": {"fontSize": "36px", "color": INK}, "y": 20},
+    "labels": {"style": {"fontSize": "24px", "color": INK_SOFT}, "rotation": 315},
     "opposite": False,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": GRID,
 }
 
 # Y-axis (genes) - reversed so Gene_01 is at top visually
 chart.options.y_axis = {
     "categories": list(reversed(reordered_gene_labels)),
-    "title": {"text": "Genes", "style": {"fontSize": "36px"}, "x": -30},
-    "labels": {"style": {"fontSize": "22px"}},
+    "title": {"text": "Genes", "style": {"fontSize": "36px", "color": INK}, "x": -30},
+    "labels": {"style": {"fontSize": "22px", "color": INK_SOFT}},
     "reversed": False,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": GRID,
 }
 
-# Color axis - diverging colormap (blue-white-red for expression data)
+# Color axis - diverging colormap (BrBG diverging palette, data colors stay consistent)
 vmin = float(np.min(reordered_data))
 vmax = float(np.max(reordered_data))
 vabs = max(abs(vmin), abs(vmax))
 
+# BrBG colormap from ColorBrewer (data colors stay identical across themes)
+color_stops = [[0, "#8C510A"], [0.25, "#D8B365"], [0.5, "#F5F5F5"], [0.75, "#ABD9E9"], [1, "#01665E"]]
+
 chart.options.color_axis = {
     "min": -vabs,
     "max": vabs,
-    "stops": [[0, "#306998"], [0.5, "#FFFFFF"], [1, "#B40426"]],
-    "labels": {"style": {"fontSize": "24px"}},
+    "stops": color_stops,
+    "labels": {"style": {"fontSize": "24px", "color": INK_SOFT}},
 }
 
 # Legend (colorbar)
@@ -150,8 +168,11 @@ chart.options.legend = {
     "layout": "vertical",
     "verticalAlign": "middle",
     "symbolHeight": 500,
-    "itemStyle": {"fontSize": "22px"},
-    "title": {"text": "Expression", "style": {"fontSize": "24px"}},
+    "itemStyle": {"fontSize": "22px", "color": INK_SOFT},
+    "title": {"text": "Expression", "style": {"fontSize": "24px", "color": INK}},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
 }
 
 # Tooltip
@@ -162,7 +183,7 @@ series = HeatmapSeries()
 series.name = "Expression"
 series.data = heatmap_data
 series.border_width = 1
-series.border_color = "#ffffff"
+series.border_color = PAGE_BG
 series.data_labels = {"enabled": False}
 
 chart.add_series(series)
@@ -224,21 +245,27 @@ plot_area = {
 col_paths = get_dendro_paths(col_linkage, n_samples, "top", plot_area)
 row_paths = get_dendro_paths(row_linkage, n_genes, "left", plot_area)
 
-# Download Highcharts JS and heatmap module
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Dendrogram color (theme-adaptive)
+dendro_color = INK_SOFT
 
-heatmap_url = "https://code.highcharts.com/modules/heatmap.js"
-with urllib.request.urlopen(heatmap_url, timeout=30) as response:
-    heatmap_js = response.read().decode("utf-8")
+# Download Highcharts JS and heatmap module
+# Use unpkg CDN which is more friendly to automated requests
+highcharts_url = "https://unpkg.com/highcharts/highcharts.js"
+result = subprocess.run(["curl", "-sL", highcharts_url], capture_output=True, timeout=30, check=False)
+highcharts_js = result.stdout.decode("utf-8")
+
+heatmap_url = "https://unpkg.com/highcharts/modules/heatmap.js"
+result = subprocess.run(["curl", "-sL", heatmap_url], capture_output=True, timeout=30, check=False)
+heatmap_js = result.stdout.decode("utf-8")
 
 # Generate base chart JS
 html_str = chart.to_js_literal()
 
 # Create SVG elements for dendrograms as inline SVG overlay
 all_paths = col_paths + row_paths
-svg_path_elements = "\n".join([f'<path d="{p}" stroke="#306998" stroke-width="3" fill="none"/>' for p in all_paths])
+svg_path_elements = "\n".join(
+    [f'<path d="{p}" stroke="{dendro_color}" stroke-width="3" fill="none"/>' for p in all_paths]
+)
 
 # Generate HTML with inline scripts and SVG overlay for dendrograms
 html_content = f"""<!DOCTYPE html>
@@ -258,7 +285,7 @@ html_content = f"""<!DOCTYPE html>
         }}
     </style>
 </head>
-<body style="margin:0; background-color: #ffffff; position: relative;">
+<body style="margin:0; background-color: {PAGE_BG}; position: relative;">
     <div id="container" style="width: 3600px; height: 3600px;"></div>
     <svg id="dendro-overlay" viewBox="0 0 3600 3600">
         {svg_path_elements}
@@ -272,8 +299,8 @@ with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encodin
     f.write(html_content)
     temp_path = f.name
 
-# Save interactive HTML version
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save interactive HTML version with theme suffix
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     standalone_html = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -291,7 +318,7 @@ with open("plot.html", "w", encoding="utf-8") as f:
         }}
     </style>
 </head>
-<body style="margin:0; background-color: #ffffff; position: relative;">
+<body style="margin:0; background-color: {PAGE_BG}; position: relative;">
     <div id="container" style="width: 100%; height: 100vh;"></div>
     <svg id="dendro-overlay" viewBox="0 0 3600 3600" preserveAspectRatio="xMidYMid meet">
         {svg_path_elements}
@@ -313,7 +340,7 @@ chrome_options.add_argument("--window-size=3600,3600")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(6)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 # Clean up temp file

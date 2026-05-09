@@ -1,227 +1,248 @@
 library: highcharts
+language: python
 specification_id: heatmap-clustered
 created: '2025-12-25T19:26:52Z'
-updated: '2025-12-25T19:29:18Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20509770793
+updated: '2026-05-09T09:16:01Z'
+generated_by: claude-haiku
+workflow_run: 25597123156
 issue: 2021
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - scipy
-  - selenium
-  techniques:
-  - hover-tooltips
-  - html-export
-  - colorbar
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep:
-  - hierarchical-clustering
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/highcharts/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent implementation of hierarchical clustering with Ward's method and Euclidean
-    distance as specified
-  - Both row and column dendrograms properly displayed and aligned with the heatmap
-  - Diverging blue-white-red colormap perfectly centered around zero for expression
-    data
-  - Realistic gene expression context with meaningful cluster structure (drug-specific
-    responses)
-  - Clean integration of dendrograms via SVG overlay technique
-  - Good use of square 1:1 aspect ratio appropriate for clustered heatmaps
-  - Properly saves both PNG and interactive HTML versions
+  - 'Excellent theme-adaptive implementation: backgrounds, text colors, and dendrogram
+    strokes correctly flip between light and dark themes while data colors remain
+    constant.'
+  - Dendrograms clearly visualize hierarchical clustering structure; reordered heatmap
+    reveals drug-specific expression patterns.
+  - Proper use of diverging colormap (BrBG) for signed data centered on zero with
+    good scale centering.
+  - Clean code with deterministic seeding; all imports justified; proper output format.
+  - Bioinformatics-appropriate color choices and scientifically plausible gene expression
+    patterns.
+  - All text legible in both renders with excellent visual hierarchy.
   weaknesses:
-  - The helper function get_dendro_paths() breaks the KISS principle (imports → data
-    → plot → save)
-  - Row dendrogram lines could be slightly thicker for better visibility at the rendered
-    size
-  - Minor excess whitespace at bottom of the chart
-  image_description: The plot displays a clustered heatmap showing gene expression
-    data across 20 genes (y-axis) and 12 samples (x-axis). The heatmap uses a diverging
-    blue-white-red colormap where blue indicates low/negative expression values (-4
-    to -2) and red indicates high/positive expression values (2 to 4). A column dendrogram
-    is displayed above the heatmap showing hierarchical clustering of samples, which
-    groups the Drug_A, Drug_C, Drug_B, and Control samples into distinct clusters.
-    A row dendrogram is displayed on the left side showing hierarchical clustering
-    of genes. The title reads "Gene Expression Clusters · heatmap-clustered · highcharts
-    · pyplots.ai" with a subtitle "Hierarchical clustering reveals drug-specific expression
-    patterns". The colorbar legend on the right shows the "Expression" scale from
-    -4 to 4. Sample labels are rotated at the bottom, and gene labels (Gene_01 through
-    Gene_20) are displayed on the left y-axis. The layout uses a square 1:1 aspect
-    ratio.
+  - Dendrogram rendering via SVG overlay is somewhat unconventional; could explore
+    Highcharts modules for native support.
+  - Design excellence is solid but conservative—could innovate with custom typography,
+    accent colors, or refined spacing to elevate aesthetic sophistication.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white color at #FAF8F1 as expected. Clean, neutral surface.
+      Chrome: Title "Gene Expression Clusters · heatmap-clustered · highcharts · anyplot.ai" in bold dark text (42px) is clearly visible. Subtitle explaining clustering insight is legible (28px dark). X-axis labels (sample names Control_1-3, Drug_A_1-3, Drug_B_1-3, Drug_C_1-3) rotated 315° and readable in 24px dark text. Y-axis labels (Gene_01-20) displayed vertically in 22px dark text, fully legible. Axis titles "Samples" and "Genes" in 36px dark text. Colorbar legend titled "Expression" in 24px dark text.
+      Data: BrBG diverging colormap applied consistently—brown/tan colors for positive values (upregulated genes), light cream for near-zero, light blue for negative values (downregulated genes). Data colors are vibrant and distinguishable. Dendrograms displayed as light gray tree diagrams at top and left margins.
+      Legibility verdict: PASS — All text is crisp, dark, and highly readable against the light background. No "light on light" issues. Dendrogram strokes are visible. Heatmap cells are clearly distinguishable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black color at #1A1A17 as expected. Subtle warmth, not harsh pure black.
+      Chrome: Title, subtitle, axis labels, and tick labels all displayed in light tones for readability against dark background. Text is clearly visible and legible in light cream/off-white (confirming INK and INK_SOFT tokens applied correctly). Dendrograms rendered in light gray/cream color, contrasting well against dark background.
+      Data: Heatmap data colors are IDENTICAL to light render (BrBG colormap unchanged)—brown/tan, cream, and light blue in same positions. This confirms proper theme-adaptive implementation where only chrome flips, not data representation.
+      Legibility verdict: PASS — All text is light-colored and clearly readable against dark background. No "dark on dark" issues detected. Dendrogram strokes are visible. Heatmap cells are clearly distinguishable. The warm near-black background is not harsh and complements the color palette well.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick labels are clearly readable. Gene labels
-          on left side are slightly small but still legible.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements. Rotated x-axis labels are well spaced.
+        comment: Title (42px), subtitle (28px), axis labels (36px), tick labels (24px/22px)
+          all explicitly sized and clearly readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean layout with no collision; x-axis labels rotated 315° to avoid
+          overlap; dendrograms positioned without interference.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Heatmap cells are clearly visible with good sizing. The dendrogram
-          lines are visible but could be slightly thicker for better visibility.
+        comment: All heatmap cells clearly distinguishable; dendrograms visible and
+          distinct from data grid.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue-white-red diverging colormap is colorblind-safe and provides
-          excellent contrast.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of square format for clustered heatmap. Margins accommodate
-          dendrograms well, though there's slight excess whitespace at bottom.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Samples" and "Genes" are descriptive axis titles.'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: BrBG diverging colormap is colorblind-safe; no red-green sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format (3600×3600) ideal for symmetric heatmap; generous margins;
+          nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Colorbar is well-placed with "Expression" title. White cell borders
-          provide visual separation. No grid needed for heatmap.
+        comment: Descriptive title with spec-id; subtitle explains clustering insight;
+          axes labeled 'Genes' and 'Samples'; colorbar titled 'Expression'.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'BrBG diverging colormap per spec; backgrounds #FAF8F1 (light) /
+          #1A1A17 (dark); theme-adaptive chrome correct; data colors identical across
+          themes.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Dendrograms add scholarly refinement; BrBG colormap is bioinformatics-appropriate;
+          professional composition. Slightly conservative (not highly innovative).
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean layout, proper spacing, well-integrated dendrograms, generous
+          margins; theme-adaptive chrome applied throughout.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Visual hierarchy clearly shows clustering structure; dendrograms
+          guide viewer; color gradients reveal expression magnitude; sample groupings
+          visible through reordering.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct clustered heatmap with dendrograms.
+        comment: 'Correct: clustered heatmap with dendrograms on both axes.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Genes on rows, samples on columns, correctly mapped.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has dendrograms on both rows and columns, reordered data based on
-          clustering, diverging colormap, colorbar legend.
-      - id: SC-04
-        name: Data Range
+        comment: Dendrograms on rows and columns; rows/columns reordered by clustering;
+          diverging colormap; colorbar legend—all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Expression values centered around zero, scale from -4 to 4 visible
-          in colorbar.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Matrix values correctly mapped to heatmap cells; gene labels on Y-axis;
+          sample labels on X-axis; correct orientation.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled "Expression".
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "heatmap-clustered · highcharts · pyplots.ai"
-          in title.
+        comment: Title includes spec-id; subtitle descriptive; colorbar titled 'Expression'.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear cluster structure with genes responding differently to
-          Drug_A, Drug_B, Drug_C, and Control. Multiple gene groups visible. Could
-          have slightly more variation in cluster patterns.
+        comment: 'Shows all aspects: heatmap values, clustering dendrograms, reordered
+          structure, magnitude colorbar.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Gene expression microarray experiment is an excellent, realistic
-          application for clustered heatmaps.
+        comment: Gene expression with drug treatment is realistic; patterns plausible
+          and scientifically sound.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Expression values in reasonable range (-4 to +4 log-fold change).
-          Sample and gene counts (12 samples, 20 genes) are appropriate for the visualization.
+        comment: 20 genes × 12 samples within spec range (10-100 rows, 10-50 cols);
+          values (-2 to +2.5) typical for log-scaled expression.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Mostly follows KISS pattern but includes a helper function `get_dendro_paths()`
-          which adds complexity. Understandable given the need for custom dendrogram
-          SVG generation.
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses `np.random.seed(42)` for reproducible data generation.
+        comment: No unnecessary functions/classes; straightforward linear flow.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used appropriately.
+        comment: All imports used; no cruft.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Highcharts and scipy APIs.
+        comment: Appropriate complexity; no fake UI; dendrogram path generation is
+          clear.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as `plot.png` and `plot.html`.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-light.png + plot-light.html and plot-dark.png + plot-dark.html;
+          uses current API.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses Highcharts heatmap module with custom SVG overlay for dendrograms.
-          Creative solution but dendrograms are not native Highcharts feature - implemented
-          via custom SVG overlay which works but is a workaround.
+        comment: Proper Chart + HighchartsOptions + HeatmapSeries; Selenium for headless
+          export is idiomatic. SVG overlay is slightly unconventional but practical.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages Highcharts heatmap module and interactive tooltips. Dendrogram
+          SVG overlay is creative. Could explore more library-specific features.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - hierarchical-clustering
+  styling:
+  - custom-colormap
