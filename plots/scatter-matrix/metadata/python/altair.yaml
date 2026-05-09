@@ -1,35 +1,239 @@
 library: altair
+language: python
 specification_id: scatter-matrix
 created: '2025-12-26T16:13:43Z'
-updated: '2025-12-26T16:37:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20525446227
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/altair/plot.html
-quality_score: 85
+updated: '2026-05-09T14:54:52Z'
+generated_by: claude-haiku
+workflow_run: 25603773391
+issue: 2035
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/altair/plot-dark.html
+quality_score: 82
+review:
+  strengths:
+  - Perfect palette compliance with all three Okabe-Ito colors in correct order and
+    brand green as first series
+  - Excellent theme-adaptive chrome implementation with both renders fully readable
+  - Complete scatter matrix specification with histograms on diagonal and all pairwise
+    relationships
+  - Interactive tooltips on scatter plots for exploring exact values
+  - Clean, deterministic code with proper random seed
+  - Proper title format and descriptive axis labels with units
+  weaknesses:
+  - 'Font sizes don''t match style guide: tick labels 14px (should be 18px), axis
+    titles 18px (should be 22px)'
+  - Limited design sophistication without custom visual enhancements beyond standard
+    library defaults
+  - No distinctive library features beyond basic hconcat/vconcat grid patterns
+  - Generic design without visual storytelling or explicit emphasis on data insights
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title, axis labels, tick labels all clearly visible in dark text against light background
+      Data: Three Okabe-Ito colors correctly used (green #009E73, orange #D55E00, blue #0072B2) - first series is brand green
+      Diagonal: Stacked histograms showing species distributions
+      Off-diagonal: Scatter plots showing pairwise relationships with interactive tooltips
+      Legend: Right-positioned with proper color coding for three species
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title and axis labels visible in light color (INK #F0EFE8, INK_SOFT #B8B7B0), no dark-on-dark failures
+      Data: Colors identical to light render (green, orange, blue remain #009E73, #D55E00, #0072B2)
+      Grid: Subtle at opacity 0.10, visible but not dominant
+      Legend background: Elevated (#242420) with light text on dark surface
+      All text readable against dark background with proper theme adaptation
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Readable in both themes; title 28px correct, but tick labels 14px
+          and axis titles 18px smaller than style guide (18px and 22px recommended)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text well-spaced, no overlapping elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Scatter points (size=120, opacity=0.7) and histogram bars (opacity=0.8)
+          optimally sized
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette with colorblind-safe colors and good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout with scatter matrix filling 60-70% of canvas and balanced
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format, axis labels include units (cm)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct, secondary colors in Okabe-Ito order,
+          backgrounds and theme chrome perfect'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library defaults without custom enhancements
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtle grid and styled legend background; minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed clearly but no visual interpretation or emphasis
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter matrix with histograms on diagonal
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: distributions, pairwise plots, variable names,
+          color encoding'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned in each cell
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format and legend labels correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all scatter matrix aspects with visible correlations
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Iris dataset is realistic, well-known, and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 150 points with realistic iris measurements
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Simple data generation → plotting → save flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Only used imports: os, sys, altair, numpy, pandas'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity with clean nested loops
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Excellent idiomatic usage with alt.Chart, mark_*, hconcat/vconcat,
+          alt.Color, alt.Tooltip
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Standard Altair patterns without distinctive features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - faceting
+  - subplots
+  - custom-legend
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling: []
-review:
-  strengths:
-  - Excellent use of Altair's declarative repeat() pattern for idiomatic SPLOM construction
-  - Colorblind-safe palette (blue/orange/green) provides clear species distinction
-  - Clean data generation with realistic Iris-like measurements and proper random
-    seed
-  - All axis labels include units (cm) for clarity
-  - Interactive tooltips enhance usability in HTML version
-  weaknesses:
-  - Diagonal cells show scatter (x=y lines) instead of required histograms/KDE for
-    univariate distributions as specified
-  - Legend could be larger or more prominently positioned for better visual balance
+  styling:
+  - alpha-blending

@@ -1,169 +1,169 @@
 library: highcharts
+language: python
 specification_id: scatter-matrix
 created: '2025-12-26T16:14:21Z'
-updated: '2025-12-26T16:33:35Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20525448092
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-09T14:53:50Z'
+generated_by: claude-haiku
+workflow_run: 25603898765
+issue: 2035
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
-  - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/highcharts/plot-dark.html
+quality_score: 95
 review:
   strengths:
-  - Excellent colorblind-safe color palette (blue/yellow/purple) for clear species
-    differentiation
-  - Proper symmetric scatter matrix layout with histograms on diagonal showing distributions
-  - Clean 3600×3600 square canvas appropriate for matrix visualization
-  - Good use of Iris dataset with realistic variable names and units
-  - Species clustering clearly visible especially in petal measurements
+  - Perfect theme adaptation with correct color tokens in both light and dark renders
+  - Proper Okabe-Ito color palette implementation ensuring colorblind-safe visualization
+  - Symmetric scatter-matrix grid layout with effective diagonal histograms and off-diagonal
+    scatter plots
+  - Clean, deterministic code with proper numpy seeding and efficient species-based
+    loops
+  - Professional visual refinement with custom legend styling, generous margins, and
+    subtle grid lines
   weaknesses:
-  - 'Grid lines could be slightly more subtle (alpha 0.2-0.3 instead of #e0e0e0)'
-  - Bottom-row x-axis tick labels are partially cut off/difficult to read
-  - Uses raw Highcharts JS generation instead of highcharts-core Python library
-  image_description: 'The scatter matrix displays a 4×4 grid showing pairwise relationships
-    between four Iris dataset variables: Sepal Length (cm), Sepal Width (cm), Petal
-    Length (cm), and Petal Width (cm). The diagonal cells contain stacked histograms
-    showing distributions per species. The off-diagonal cells show scatter plots with
-    data points colored by species. Three species are shown: Setosa (blue), Versicolor
-    (yellow/gold), and Virginica (purple). The title "scatter-matrix · highcharts
-    · pyplots.ai" appears at the top. Variable names appear along the top row and
-    left column as axis labels. A legend at the bottom identifies the three species
-    with colored circular markers. The colorblind-safe palette uses distinct blue,
-    yellow, and purple colors.'
+  - Could leverage more distinctive Highcharts features (custom marker symbols, interactive
+    hover states, advanced tooltips) to demonstrate library mastery beyond standard
+    usage
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correctly specified
+      Chrome: Title in dark text clearly visible. Axis labels with variable names and units properly positioned on edges. Tick labels in INK_SOFT (#4A4A44) readable against light background.
+      Data: Diagonal histograms show distributions per variable, stacked by species with Okabe-Ito colors (green #009E73, orange #D55E00, blue #0072B2). Off-diagonal scatter plots show pairwise relationships with semi-transparent markers (opacity 0.75). Legend below matrix with circular color indicators and species names.
+      Grid: Subtle grid lines at appropriate opacity
+      Legibility verdict: PASS - All text readable, no light-on-light issues, data colors distinct
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correctly specified
+      Chrome: Title in light text (INK #F0EFE8) clearly visible against dark background. Axis labels and tick labels in light INK_SOFT (#B8B7B0) provide proper contrast - no dark-on-dark failures. Grid lines remain subtle and visible.
+      Data: Identical data colors to light render (same three species colors - only chrome theme flipped). Markers and bars maintain visibility and contrast.
+      Brand color (#009E73) remains visible and readable on dark surface
+      Legibility verdict: PASS - All text readable, correct dark-theme chrome, data colors identical to light render, no contrast issues
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick labels are readable, font sizes scaled
-          for high-res canvas
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text, labels well positioned along edges
+        comment: All text readable in both themes, no legibility failures
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Well-spaced layout, no element collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Scatter markers visible with alpha 0.75, appropriate sizing for 50
-          points per species
+        comment: Points, bars, and grid all clearly visible with appropriate sizing
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent colorblind-safe palette (blue/yellow/purple), no red-green
-          issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of 3600×3600 canvas, matrix fills most of the space with
-          title and legend
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Sepal Length (cm)", "Petal Width (cm)",
-          etc.'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette ensures colorblind safety
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Symmetric 4x4 grid with square format, well-proportioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: 'Grid subtle (alpha via #e0e0e0), legend well placed at bottom'
+        comment: Descriptive labels with units, clear title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct Okabe-Ito order, correct backgrounds, theme-correct in both
+          renders
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Polished design with intentional color and theme choices, refined
+          legend styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, transparent markers reduce overplotting
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy via color, matrix layout guides understanding
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct scatter plot matrix with histograms on diagonal
+        comment: Correct scatter-matrix with diagonal histograms
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Variables correctly mapped to axes in symmetric grid
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Histograms on diagonal, scatter plots off-diagonal, color by category
-      - id: SC-04
-        name: Data Range
+        comment: All 4 variables shown with complete pairwise relationships
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: Axes correctly mapped, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Species names correct but legend could be larger/more prominent
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "scatter-matrix · highcharts · pyplots.ai"'
+        comment: Proper title format and species legend
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear species separation in petal measurements, overlap in
-          sepal measurements, different distribution shapes
+        comment: All 4 variables with full pairwise relationships
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Classic Iris dataset scenario, perfect for demonstrating scatter
-          matrix
+        comment: Iris dataset is standard, real-world, and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values match real Iris ranges, though synthetic data slightly varies
-          from actual dataset
+        comment: Sensible botanical measurement values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,41 +171,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → plot generation → save'
+        comment: Straightforward code, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at start
+        comment: Deterministic with np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only necessary packages imported
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Modern Highcharts API via raw JS
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html (correct)
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly generates plot-{THEME}.png and .html
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Highcharts via Selenium rendering with multiple chart containers,
-          stacked column histograms, but doesn't use highcharts-core Python library
-          as recommended
+        comment: Proper Highcharts JSON config, correct series types, Selenium export
+          follows best practices
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses scatter/column series effectively but could leverage more advanced
+          Highcharts features
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - subplots
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - publication-ready
+  - alpha-blending

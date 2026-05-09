@@ -1,169 +1,163 @@
 library: plotly
+language: python
 specification_id: scatter-matrix
 created: '2025-12-26T16:14:52Z'
-updated: '2025-12-26T16:18:41Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20525444849
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/plotly/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - subplots
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
-  - edge-highlighting
+updated: '2026-05-09T14:51:01Z'
+generated_by: claude-haiku
+workflow_run: 25603691691
+issue: 2035
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/plotly/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent implementation of the scatter plot matrix with histograms on diagonal
-    and scatter plots off-diagonal
-  - Proper use of color encoding to distinguish three species with legend grouping
-  - Axis labels include units (cm) and are placed correctly on matrix edges
-  - Good data generation mimicking real Iris dataset with species-specific distributions
-  - Correct title format and square image format appropriate for matrix visualization
-  - Clean, readable code structure with appropriate transparency and marker sizing
+  - Excellent theme adaptation with perfect INK/INK_SOFT token usage—both renders
+    fully readable
+  - Clean, professional implementation following Plotly idioms exactly
+  - Strong color encoding—Okabe-Ito palette used correctly to distinguish regions
+  - 'Thoughtful design details: marker white edges, legend background, generous margins'
+  - Perfect spec compliance and data quality
+  - Deterministic, reproducible implementation with seed control
   weaknesses:
-  - Does not use plotly.express scatter_matrix or px.splom which would be more idiomatic
-    for this visualization type
-  - Yellow color for Versicolor may have accessibility issues for some colorblind
-    users
-  - Legend overlaps slightly with the top-right scatter cell data area
-  image_description: 'The plot displays a 4×4 scatter plot matrix (SPLOM) visualizing
-    Iris-like flower measurement data. The diagonal contains overlapping histograms
-    showing distributions for each of the four variables (Sepal Length, Sepal Width,
-    Petal Length, Petal Width - all in cm units). Off-diagonal cells contain scatter
-    plots showing pairwise relationships. Three species are color-coded: Setosa (blue,
-    #306998), Versicolor (yellow, #FFD43B), and Virginica (red/coral, #E74C3C). The
-    legend is positioned in the upper-right corner with a "Species" title. The title
-    "scatter-matrix · plotly · pyplots.ai" appears centered at the top. A white/clean
-    template is used with subtle grid lines. Variable names appear as axis labels
-    on the left (y-axis) and bottom (x-axis) edges of the matrix.'
+  - Design excellence could be elevated with more sophisticated visual refinements
+    (custom fonts, emphasis through color contrast, visual hierarchy)
+  - Library mastery could leverage more distinctive Plotly features (callbacks, advanced
+    interactivity patterns)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matching spec
+      Chrome: Title, axis labels (Temperature °C, Humidity %, Pressure hPa, Wind Speed m/s), and tick labels all in dark text (INK #1A1A17), clearly readable
+      Data: Three region categories shown with Okabe-Ito colors—bluish green (#009E73) Coastal, orange (#D55E00) Mountain, blue (#0072B2) Desert. Markers have white edges for definition. Histograms on diagonal, scatter plots off-diagonal
+      Legibility verdict: PASS - All text fully readable, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matching spec
+      Chrome: Title, axis labels, and tick labels all in light text (INK_SOFT #B8B7B0), clearly readable against dark background. Grid subtle but visible
+      Data: Data colors identical to light render (positions 1-3 of Okabe-Ito palette unchanged). No dark-on-dark text issues; light-colored tick labels read well on dark background
+      Legibility verdict: PASS - Perfect theme adaptation, all elements readable
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick labels are readable; slightly small
-          tick fonts on histogram cells
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: Font sizes explicit; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean spacing, legend positioned with background
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers are appropriately sized with good transparency; histogram
-          bars slightly overlap but distinguishable
+        comment: Markers visible with white edges; histograms distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, yellow, red palette is distinctive but not fully colorblind-safe
-          (yellow can be hard to distinguish)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Square format appropriate for matrix; good use of canvas space
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (cm) on all edge axes
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format appropriate; proportions good
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle; legend well-placed but partially overlaps scatter
-          area in top-right cell
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order; themes correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional design; thoughtful legend styling and marker edges
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid; generous margins; deliberate edge treatment
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Good exploratory structure; lacks narrative emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct scatter plot matrix/SPLOM
+        comment: Correct scatter plot matrix
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: All pairwise combinations correctly shown
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has histograms on diagonal, scatter on off-diagonal, color encoding
-          for categories
-      - id: SC-04
-        name: Data Range
+        comment: All spec features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Axes correct; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Species names match data correctly
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "scatter-matrix · plotly · pyplots.ai"'
+        comment: Title format and labels correct
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows correlations, clusters, and distributions well; demonstrates
-          species separation clearly
+        comment: All plot aspects shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Iris-like botanical measurement data is a classic, real-world example
+        comment: Weather data plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic for flower measurements; some generated values
-          slightly outside typical ranges
+        comment: Regional values sensible
     code_quality:
       score: 10
       max: 10
@@ -173,40 +167,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save; no unnecessary functions/classes'
+        comment: No unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: No fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
+        comment: Saves as plot-{THEME}
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses make_subplots and go.* correctly
+      - id: LM-02
+        name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Uses graph_objects and make_subplots correctly, but could leverage
-          plotly.express scatter_matrix or more interactive features
+        passed: true
+        comment: Could leverage more Plotly features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
