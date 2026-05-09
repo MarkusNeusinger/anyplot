@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 polar-scatter: Polar Scatter Plot
 Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Quality: 91/100 | Updated: 2025-12-26
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,6 +13,16 @@ from lets_plot.export import ggsave
 
 
 LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (categorical)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Generate synthetic wind measurement data
 np.random.seed(42)
@@ -34,7 +46,7 @@ direction_factor = 1 + 0.4 * np.sin(np.radians(directions - 240))
 speeds = base_speed * direction_factor
 speeds = np.clip(speeds, 1, 22)
 
-# Time of day for color encoding (morning: 6-12, afternoon: 12-18, evening: 18-24, night: 0-6)
+# Time of day for color encoding (morning: 6-12, afternoon: 12-18, evening: 18-24)
 hour = np.random.choice([6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21], size=n_points)
 time_of_day = np.where(hour < 12, "Morning", np.where(hour < 18, "Afternoon", "Evening"))
 
@@ -43,9 +55,6 @@ df = pd.DataFrame({"direction": directions, "speed": speeds, "time_of_day": time
 
 # Order time of day for legend
 df["time_of_day"] = pd.Categorical(df["time_of_day"], categories=["Morning", "Afternoon", "Evening"], ordered=True)
-
-# Colors for time of day - Python Blue, Yellow, and an evening color (accessible)
-time_colors = ["#306998", "#FFD43B", "#9B59B6"]
 
 # Create polar scatter plot
 # coord_polar: start=0 means 12 o'clock (North), direction=1 is clockwise
@@ -60,22 +69,26 @@ plot = (
         expand=[0, 0],
     )
     + scale_y_continuous(limits=[0, None], expand=[0, 0.05])
-    + scale_color_manual(values=time_colors, name="Time of Day")
-    + labs(title="Wind Observations · polar-scatter · letsplot · pyplots.ai", x="", y="Wind Speed (m/s)")
+    + scale_color_manual(values=OKABE_ITO, name="Time of Day")
+    + labs(title="polar-scatter · letsplot · anyplot.ai", x="", y="Wind Speed (m/s)")
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24, hjust=0.5),
-        axis_text=element_text(size=16),
-        axis_title_y=element_text(size=18),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK_SOFT, size=0.3),
+        panel_grid_minor=element_line(color=INK_SOFT, size=0.2),
+        plot_title=element_text(size=24, hjust=0.5, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_title_y=element_text(size=20, color=INK),
+        axis_line=element_line(color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=16, color=INK_SOFT),
         legend_position="right",
-        panel_grid_major=element_line(color="#CCCCCC", size=0.5),
-        panel_grid_minor=element_line(color="#EEEEEE", size=0.3),
     )
     + ggsize(1200, 1200)  # Square format for polar plot, scaled 3x = 3600x3600
 )
 
 # Save as PNG and HTML
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.html", path=".")
