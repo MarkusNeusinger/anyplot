@@ -1,174 +1,173 @@
 library: letsplot
+language: python
 specification_id: scatter-marginal
 created: '2025-12-26T15:01:12Z'
-updated: '2025-12-26T15:10:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20524419893
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/letsplot/plot.html
-quality_score: 90
-impl_tags:
-  dependencies: []
-  techniques:
-  - subplots
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-05-09T05:43:43Z'
+generated_by: claude-haiku
+workflow_run: 25592948372
+issue: 2005
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/letsplot/plot-dark.html
+quality_score: 95
 review:
   strengths:
-  - Excellent use of ggbunch to combine three separate plots into a cohesive composite
-    visualization
-  - Clean axis alignment between main scatter and marginal plots using shared limits
-  - Both histogram and KDE overlay in marginals provides comprehensive distribution
-    view
-  - Good color scheme with colorblind-safe blue points and contrasting red KDE curves
-  - Proper text sizing for high-resolution output (24/20/16 pt hierarchy)
-  - Reproducible with fixed seed
-  weaknesses:
-  - Title placement is unconventional - appears between top histogram and main scatter
-    rather than at very top
-  - Axis labels are generic (X Value, Y Value) without real-world context or units
-  - Right marginal histogram extends slightly past main plot area creating minor misalignment
-    at bottom
-  image_description: The plot displays a scatter plot with marginal distributions
-    arranged in a composite layout. The main scatter plot occupies the lower-left
-    area showing ~200 blue points (#306998) with positive correlation between X Value
-    (range 4-16) and Y Value (range 3-17). The top marginal shows a horizontal histogram
-    with blue/gray bars and a red KDE curve overlaid, displaying the X distribution.
-    The right marginal shows a vertical (rotated) histogram with blue/gray bars and
-    red KDE curve for the Y distribution. The title "scatter-marginal · letsplot ·
-    pyplots.ai" appears between the top histogram and main plot. Axis labels are "X
-    Value" and "Y Value". The layout uses ggbunch to combine three separate plots.
+  - 'Perfect visual quality: all text legible in both light and dark themes, no overlap,
+    optimal element visibility'
+  - 'Exemplary palette compliance: correct Okabe-Ito colors (#009E73 primary), perfect
+    theme adaptation, backgrounds correct (#FAF8F1 light, #1A1A17 dark)'
+  - 'Complete specification compliance: all required features (main scatter, top/right
+    marginals, histograms with KDE) present and correctly implemented'
+  - 'Expert idiomatic letsplot usage: ggplot2-style grammar, proper aesthetics, geom
+    composition, theme customization throughout'
+  - 'Theme-aware architecture: theme tokens (INK, INK_SOFT, PAGE_BG) used consistently,
+    both light and dark renders render correctly'
+  - 'Strong visual storytelling: clear hierarchy guides viewer from title to main
+    scatter plot to supporting marginals'
+  - 'Reproducible and deterministic: np.random.seed(42) ensures consistent output
+    across runs'
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme
+      Chrome: Title "scatter-marginal · letsplot · anyplot.ai" in dark ink (#1A1A17, 24pt), axis labels "Measurement A"/"Measurement B" in dark ink (20pt), tick labels in softer ink (#4A4A44, 16pt) — all clearly readable
+      Data: Main scatter plot with 200 points in bluish green (#009E73 — Okabe-Ito position 1), alpha=0.65 showing density; top marginal histogram in green with orange KDE curve (#D55E00); right marginal with same styling
+      Legibility verdict: PASS — excellent contrast, all text readable, no dark-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme
+      Chrome: Title and axis labels in light ink (#F0EFE8), tick labels in softer light (#B8B7B0) — all clearly readable against dark background, no dark-on-dark failures
+      Data: Scatter points remain identical bluish green (#009E73), confirming data colors are theme-independent; marginals maintain identical green histograms and orange KDE curves
+      Legibility verdict: PASS — excellent contrast on dark background, no text legibility issues, data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick marks are clearly readable. Title uses
-          size=24, axis titles size=20, tick text size=16 - all appropriate for the
-          4800×2700 output.
+        comment: All sizes explicitly set (title 24pt, labels 20pt, ticks 16pt), perfectly
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements. The layout cleanly separates all components.
+        comment: No overlapping elements, all text fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points are well-sized (size=4) with good alpha (0.65) for 200 data
-          points. The scatter pattern and correlation are clearly visible.
+        comment: 200 markers with alpha=0.65 perfectly adapted for density, KDE curves
+          visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses colorblind-safe blue (#306998) for points and red (#DC2626)
-          for KDE curves - good contrast and distinction.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Good use of ggbunch for layout. The title placement between top
-          histogram and main plot is unusual but functional. Minor: margins could
-          be slightly tighter.'
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels "X Value" and "Y Value" but without units (acceptable
-          for generic example data).
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Minimal theme with subtle grid. No legend needed for single-series
-          plot. Grid visible but unobtrusive.
-    spec_compliance:
-      score: 24
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: 'Correct composite plot: scatter with marginal distributions (histograms
-          + KDE).'
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X and Y correctly mapped to axes, marginals correctly aligned.
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Has all required features: scatter plot, marginal histograms, KDE
-          overlays, proper axis alignment via shared limits.'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible, axes properly scaled with 0.5 padding.
-      - id: SC-05
-        name: Legend Accuracy
         score: 2
         max: 2
         passed: true
-        comment: N/A - no legend needed, single series.
-      - id: SC-06
-        name: Title Format
-        score: 1
+        comment: Okabe-Ito palette CVD-safe, good contrast, no red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect composition with marginals aligned via ggbunch, balanced
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Uses correct format "scatter-marginal · letsplot · pyplots.ai" but
-          placed in unusual position (title of main plot appears between histograms).
-    data_quality:
-      score: 18
+        comment: Title format correct, axis labels descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Primary #009E73 correct, backgrounds #FAF8F1/#1A1A17 correct, theme-adaptive
+          chrome perfect'
+    design_excellence:
+      score: 16
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
         max: 8
         passed: true
-        comment: Shows positive correlation clearly. Both marginal distributions show
-          roughly normal shape. Could show more interesting distribution features
-          (bimodality, outliers).
-      - id: DQ-02
-        name: Realistic Context
-        score: 6
-        max: 7
+        comment: Theme tokens throughout, intentional hierarchy, professional polish
+          — above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
         passed: true
-        comment: Generic but plausible bivariate data with correlation coefficient
-          ~0.8. Labels are generic "X Value"/"Y Value".
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: Spines removed, subtle grid, generous whitespace, clean minimal aesthetic
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point, visual hierarchy guides reader, correlation pattern
+          evident
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Sensible numeric ranges, appropriate data count (200 points) for
-          this visualization type.
+        comment: Correct scatter plot with marginal distributions
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: main scatter, marginals, histogram+KDE, transparency'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend appropriately omitted
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: bivariate relationship, x/y distributions with
+          histogram+KDE'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real-world plausible bivariate measurements, neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Sensible values (x: ~4-16, y: ~2-17), realistic correlation'
     code_quality:
       score: 10
       max: 10
@@ -178,41 +177,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plots → combine → save.'
+        comment: No functions/classes, straightforward flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42).
+        comment: Seed set (np.random.seed(42))
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, pandas, lets_plot, export).
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API.
+        comment: Pythonic, appropriate complexity, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png (and plot.html for interactive version).
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format (plot-{THEME}.png/html)
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ggbunch for combining plots (lets-plot specific), coord_flip
-          for right histogram, proper theme customization. Good use of ggplot2-style
-          grammar. Could use more advanced features like flavor themes or tooltips.
+        comment: Expert ggplot2-style grammar, proper API usage throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses ggbunch() for composition, theme tokens for adaptive rendering
+    summary:
+      total_score: 95
+      max_score: 100
+      verdict: APPROVED
+      attempt: 2
+      notes: Publication-quality implementation with excellent technical execution
+        and thoughtful design choices. All requirements met, all criteria excellently
+        satisfied.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - subplots
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
