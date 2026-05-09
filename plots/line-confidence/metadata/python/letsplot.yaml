@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: line-confidence
 created: '2025-12-26T16:14:16Z'
-updated: '2026-05-09T12:53:06Z'
+updated: '2026-05-09T18:30:17Z'
 generated_by: claude-haiku
 workflow_run: 25601475860
 issue: 2007
@@ -12,34 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-conf
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/letsplot/plot-dark.html
-quality_score: 8
+quality_score: 13
 review:
   strengths:
-  - Clean code structure with simple, focused implementation
-  - Data generation realistic with growing confidence intervals over time
-  - Theme tokens correctly defined for light/dark adaptation
-  - Deterministic output with seed(42)
+  - Clean KISS code structure - straightforward Imports → Data → Plot → Save flow
+  - Correct theme token definitions (PAGE_BG, ELEVATED_BG, INK, INK_SOFT, RULE) for
+    light/dark adaptation
+  - 'Realistic and neutral data scenario: monthly sales forecast with growing confidence
+    intervals'
+  - Deterministic output via np.random.seed(42)
+  - Correct Okabe-Ito BRAND color (#009E73) chosen for single-series use
   weaknesses:
-  - 'CRITICAL: ggsave() uses incorrect parameters (w/h/unit/dpi) instead of scale=3
-    - results in blank PNG files'
-  - PNG output files are ~13KB instead of expected multi-MB for 4800x2700px resolution
-  - Both light and dark renders completely empty - no plot content visible
-  - shutil.move() call unnecessary and potentially problematic with ggsave() return
-    value
+  - 'CRITICAL: geom_ribbon uses fill=''95% Confidence Interval'' inside aes() - lets-plot
+    treats this as a column name lookup, not a label, causing ''Variable not found''
+    error and blank render'
+  - 'CRITICAL: geom_line uses color=''Sales Forecast'' inside aes() - same column-name
+    lookup error prevents plot from rendering'
+  - 'CRITICAL: ggsave() called with w=4800, h=2700, unit=''px'', dpi=100 instead of
+    the correct scale=3 parameter - results in wrong dimensions or blank PNG'
+  - shutil.move() is unnecessary and incorrect - ggsave() already saves to the working
+    directory; the move path is the same as the source
+  - shutil import should be removed once move() is eliminated
+  - Both plot-light.png and plot-dark.png are ~13KB and visually blank - pipeline
+    failure in attempt 2 same as attempt 1
   image_description: |-
     Light render (plot-light.png):
-      Background: #FAF8F1 (correct warm off-white)
-      Chrome: No title, axis labels, or ticks visible
-      Data: No line, confidence band, or points rendered
-      Legibility verdict: FAIL - Plot is completely blank
+      Background: Pure white (#FFFFFF) - NOT the expected warm off-white #FAF8F1
+      Chrome: No title, axis labels, or tick labels visible; only a tiny fragment of text in the very top-left corner
+      Data: No line, confidence band, or data points rendered
+      Legibility verdict: FAIL - Plot is essentially blank. The lets-plot HTML output confirms the error: "Variable not found: '95% Confidence Interval'. Variables in data frame: ['Month', 'Sales', 'Lower', 'Upper']" — the aes() fill/color string literals were treated as column name lookups, causing a full render failure.
 
     Dark render (plot-dark.png):
-      Background: #1A1A17 (correct warm near-black)
-      Chrome: No title, axis labels, or ticks visible
-      Data: No data elements rendered
-      Legibility verdict: FAIL - Plot is completely blank
-
-    CRITICAL ISSUE: Both renders are empty canvases with no plot content. This is a rendering pipeline failure caused by incorrect ggsave() parameters.
+      Background: Pure white (#FFFFFF) - NOT the expected warm near-black #1A1A17; same blank white as light render
+      Chrome: No title, axis labels, or tick labels visible
+      Data: No data elements rendered; plot is indistinguishable from the light render
+      Legibility verdict: FAIL - Plot is completely blank. The dark theme tokens were not applied because the plot never rendered. Both files are identical (~13KB, all white), confirming a pipeline rendering failure. The ggsave() parameters (w=4800, h=2700, unit='px', dpi=100) are also incorrect and contribute to the failure.
   criteria_checklist:
     visual_quality:
       score: 0
@@ -50,31 +57,32 @@ review:
         score: 0
         max: 8
         passed: false
-        comment: No text visible - title and axis labels not rendered
+        comment: No text visible in either render — plot failed to render due to aes()
+          column-name error
       - id: VQ-02
         name: No Overlap
         score: 0
         max: 6
         passed: false
-        comment: N/A - no elements present
+        comment: N/A — no elements present to overlap
       - id: VQ-03
         name: Element Visibility
         score: 0
         max: 6
         passed: false
-        comment: Plot, line, confidence band, points all invisible
+        comment: Line, ribbon, and points are all invisible — render failure
       - id: VQ-04
         name: Color Accessibility
         score: 0
         max: 2
         passed: false
-        comment: Cannot assess - no colors rendered
+        comment: Cannot assess — no colors rendered
       - id: VQ-05
         name: Layout & Canvas
         score: 0
         max: 4
         passed: false
-        comment: Plot area empty
+        comment: Empty canvas — no plot area visible
       - id: VQ-06
         name: Axis Labels & Title
         score: 0
@@ -86,7 +94,8 @@ review:
         score: 0
         max: 2
         passed: false
-        comment: Background colors correct but plot content missing
+        comment: 'Background is pure white (#FFFFFF) not #FAF8F1/#1A1A17; data colors
+          not rendered'
     design_excellence:
       score: 0
       max: 20
@@ -118,13 +127,13 @@ review:
         score: 0
         max: 5
         passed: false
-        comment: Cannot verify - nothing rendered
+        comment: Cannot verify — nothing rendered
       - id: SC-02
         name: Required Features
         score: 0
         max: 4
         passed: false
-        comment: No line, confidence band, or legend visible
+        comment: No line, ribbon, or legend visible
       - id: SC-03
         name: Data Mapping
         score: 0
@@ -138,7 +147,7 @@ review:
         passed: false
         comment: Title and legend not rendered
     data_quality:
-      score: 5
+      score: 7
       max: 15
       items:
       - id: DQ-01
@@ -146,21 +155,23 @@ review:
         score: 0
         max: 6
         passed: false
-        comment: No features visible
+        comment: No features visible in render
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Data source plausible (forecast sales) - pass by code inspection
+        comment: 'By code inspection: monthly sales forecast with growing CI is realistic
+          and neutral'
       - id: DQ-03
         name: Appropriate Scale
-        score: 0
+        score: 2
         max: 4
-        passed: false
-        comment: Cannot assess
+        passed: true
+        comment: 'By code inspection: sales starting ~50k growing to ~110k is plausible,
+          but cannot fully verify visually'
     code_quality:
-      score: 3
+      score: 6
       max: 10
       items:
       - id: CQ-01
@@ -168,33 +179,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, no extraneous functions
+        comment: 'Clean linear structure: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set (42), deterministic
+        comment: np.random.seed(42) set correctly
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: All imports used
+        passed: false
+        comment: shutil imported but its use (shutil.move) is incorrect/unnecessary
       - id: CQ-04
         name: Code Elegance
         score: 0
         max: 2
         passed: false
-        comment: ggsave parameters incorrect
+        comment: Incorrect API usage (wrong aes() legend pattern, wrong ggsave params)
+          causes blank output
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Files saved but plots are empty
+        comment: ggsave uses w/h/unit/dpi instead of scale=3; output files are blank
     library_mastery:
-      score: 5
+      score: 0
       max: 10
       items:
       - id: LM-01
@@ -202,21 +214,22 @@ review:
         score: 0
         max: 5
         passed: false
-        comment: ggsave() call uses wrong parameters - should use scale=3
+        comment: 'Two lets-plot API errors: (1) string literals in aes() for legend
+          labels, (2) wrong ggsave parameters'
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 0
         max: 5
-        passed: true
-        comment: Correctly structures geoms (ribbon, line, point)
+        passed: false
+        comment: Cannot evaluate — plot does not render
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - ribbon
-  - confidence-interval
+  - layer-composition
+  - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - theme-adaptive-chrome
+  - alpha-blending
