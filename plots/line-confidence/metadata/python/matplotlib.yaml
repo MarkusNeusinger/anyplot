@@ -1,148 +1,169 @@
 library: matplotlib
+language: python
 specification_id: line-confidence
 created: '2025-12-26T16:13:23Z'
-updated: '2025-12-26T16:15:56Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20525432952
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-confidence/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-05-09T12:42:26Z'
+generated_by: claude-haiku
+workflow_run: 25601147815
+issue: 2007
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
 review:
   strengths:
-  - Clean KISS structure with no functions or classes
-  - Excellent use of fill_between for confidence band with appropriate alpha transparency
-  - Realistic temperature forecast scenario with widening uncertainty over time
-  - Well-formatted title following the required spec-id · library · pyplots.ai format
-  - Good legend placement and clear labeling of both central line and confidence interval
-  weaknesses:
-  - Could use contrasting colors for line vs band as suggested in spec (e.g., dark
-    blue line with lighter blue band - currently same color)
-  image_description: The plot displays a 30-day temperature forecast with a confidence
-    interval. A dark blue solid line (labeled "Forecast Mean") shows the central temperature
-    trend, ranging from approximately 16°C to 23°C over 30 days with an overall upward
-    trend and sinusoidal variation. A semi-transparent light blue shaded band (labeled
-    "95% Confidence Interval") surrounds the central line, widening progressively
-    as days increase to reflect growing forecast uncertainty. The title "line-confidence
-    · matplotlib · pyplots.ai" appears at the top. X-axis is labeled "Days Ahead"
-    (1-30), Y-axis is labeled "Temperature (°C)" (approximately 14-29). A legend in
-    the upper left corner identifies both elements. A subtle dashed grid aids readability.
+  - Perfect visual quality with excellent text readability in both light and dark
+    themes
+  - Clear visual hierarchy with intentional color design (green trend line, blue confidence
+    band)
+  - Effective use of annotation to highlight peak uncertainty - demonstrates data
+    storytelling
+  - Proper theme-adaptive styling throughout with no legibility failures in either
+    render
+  - Clean, well-structured code with proper reproducibility (seed set) and idiomatic
+    matplotlib usage
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface (#FAF8F1), consistent with style guide
+      Chrome: Title "Temperature Forecast with 95% Confidence Interval", axis labels "Days Ahead" and "Temperature (°C)", tick labels all clearly visible in dark text (#1A1A17). Y-axis grid subtle but visible. Legend in upper left with proper styling.
+      Data: Central trend line in brand green (#009E73) with marker points clearly visible. Confidence band in sky blue (#56B4E9) with 25% alpha fill, showing widening uncertainty over time. Band boundaries are clean and well-defined.
+      Annotation: "Peak Uncertainty" label with arrow pointing to the widest portion of the confidence interval around day 27-28
+      Legibility verdict: PASS - All text is fully readable with excellent contrast against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface (#1A1A17), properly implemented without pure black
+      Chrome: Title, axis labels, and tick labels all clearly visible in light text colors (INK=#F0EFE8 for primary, INK_SOFT=#B8B7B0 for secondary). Y-axis grid subtle but visible. Legend properly styled with dark theme.
+      Data: Central trend line in identical green (#009E73) as light render. Confidence band in same sky blue (#56B4E9), appearing more saturated due to dark background but color value is unchanged. Widening pattern clearly visible.
+      Annotation: "Peak Uncertainty" label and arrow properly visible with theme-adaptive colors
+      Legibility verdict: PASS - All text is fully readable with no dark-on-dark failures. Data colors are identical to light render
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt - all perfectly readable
+        comment: All text readable at full size in both light and dark themes, proper
+          font sizes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: All elements properly spaced, legend and annotation don't overlap
+          data
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width 3 is appropriate, confidence band clearly visible
+        comment: Trend line, confidence band, and marker points all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color scheme is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Temperature (°C)" and "Days Ahead" are descriptive with units'
+        comment: Okabe-Ito colors used, good contrast, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 format appropriate for time series, nothing cut off, generous
+          whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units (°C), clear title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 for primary line, sky blue #56B4E9 for band,
+          proper background colors for both themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional color design with annotation showing thoughtful data
+          communication
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, subtle grid, theme-adaptive legend styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Annotation guides viewer to peak uncertainty, clear visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line plot with confidence interval (fill_between)
+        comment: Correct line plot with confidence interval
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=days, Y=temperature, lower/upper bounds correct
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Central line, shaded band, legend identifying both elements
-      - id: SC-04
-        name: Data Range
+        comment: Central line, confidence band, legend all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis limits
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y axes correct, all data visible, bounds properly applied
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies "Forecast Mean" and "95% Confidence Interval"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "line-confidence · matplotlib · pyplots.ai"
+        comment: Title descriptive, legend labels clear
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows widening confidence interval over time, sinusoidal variation
-          in trend
+        comment: Shows trend, uncertainty, and realistic widening over time
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Temperature forecast is realistic; values plausible for spring weather
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Temperature range 14-29°C is realistic for weather forecasting
+        comment: Temperature forecast with plausible values and interval growth
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 30-day forecast range and 14-28°C temperature range appropriate
     code_quality:
       score: 10
       max: 10
@@ -152,40 +173,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: No unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility
+        comment: Random seed set for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy, both used
+        comment: Only matplotlib and numpy imported, both used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Using current matplotlib API
+        comment: Straightforward, no simulated UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves as plot-{THEME}.png correctly
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of fill_between for confidence band, Axes methods properly
-          used; could explore additional matplotlib features
+        comment: Proper Axes methods, theme-adaptive styling with environment variables
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Effective use of fill_between, theme-adaptive legend, annotations
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - theme-adaptive
+  - publication-ready
