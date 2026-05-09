@@ -1,12 +1,24 @@
-""" pyplots.ai
+"""anyplot.ai
 alluvial-basic: Basic Alluvial Diagram
 Library: altair 6.0.0 | Python 3.13.11
-Quality: 95/100 | Created: 2025-12-26
+Quality: 95/100 | Updated: 2025-05-09
 """
+
+import os
 
 import altair as alt
 import pandas as pd
 
+
+# Theme-adaptive colors
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series must be #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Data: Voter migration between political parties across 4 election cycles
 # Time points: 2012, 2016, 2020, 2024
@@ -57,12 +69,12 @@ height = 900
 node_width = 60
 node_padding = 20
 
-# Colors for each category (consistent across time points)
+# Colors for each category (using Okabe-Ito palette)
 category_colors = {
-    "Conservative": "#306998",  # Python Blue
-    "Liberal": "#FFD43B",  # Python Yellow
-    "Progressive": "#2CA02C",  # Green
-    "Independent": "#9467BD",  # Purple
+    "Conservative": OKABE_ITO[0],  # #009E73 (brand green)
+    "Liberal": OKABE_ITO[1],  # #D55E00 (vermillion)
+    "Progressive": OKABE_ITO[2],  # #0072B2 (blue)
+    "Independent": OKABE_ITO[3],  # #CC79A7 (reddish purple)
 }
 
 # Calculate totals at each time point for each category
@@ -229,15 +241,7 @@ links_chart = (
         color=alt.Color(
             "source_cat:N",
             scale=alt.Scale(domain=list(category_colors.keys()), range=list(category_colors.values())),
-            legend=alt.Legend(
-                title="Party",
-                titleFontSize=22,
-                labelFontSize=20,
-                orient="right",
-                titleColor="#333333",
-                labelColor="#333333",
-                symbolSize=300,
-            ),
+            legend=alt.Legend(title="Party", titleFontSize=22, labelFontSize=20, orient="right"),
         ),
         detail="flow_id:N",
         order="order:Q",
@@ -247,7 +251,7 @@ links_chart = (
 # Create node rectangles layer
 nodes_chart = (
     alt.Chart(nodes_df)
-    .mark_rect(stroke="#333333", strokeWidth=2)
+    .mark_rect(stroke=INK_SOFT, strokeWidth=2)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[0, width])),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[0, height])),
@@ -262,17 +266,14 @@ nodes_chart = (
     )
 )
 
-# Create node labels (directly on nodes) - abbreviate for readability
-label_abbrev = {"Conservative": "Con", "Liberal": "Lib", "Progressive": "Prog", "Independent": "Ind"}
-nodes_df["label"] = nodes_df["name"].map(label_abbrev)
-
+# Create node labels (full names, centered on nodes)
 node_labels = (
     alt.Chart(nodes_df)
-    .mark_text(fontSize=14, fontWeight="bold", color="#FFFFFF", baseline="middle", align="center")
+    .mark_text(fontSize=16, fontWeight="bold", color=INK, baseline="middle", align="center")
     .encode(
         x=alt.X("label_x:Q", scale=alt.Scale(domain=[0, width])),
         y=alt.Y("label_y:Q", scale=alt.Scale(domain=[0, height])),
-        text="label:N",
+        text="name:N",
     )
 )
 
@@ -284,7 +285,7 @@ time_labels_df = pd.DataFrame(time_labels_data)
 
 time_labels = (
     alt.Chart(time_labels_df)
-    .mark_text(fontSize=24, fontWeight="bold", color="#333333", baseline="bottom")
+    .mark_text(fontSize=24, fontWeight="bold", color=INK, baseline="bottom")
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[0, width])),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[0, height])),
@@ -298,15 +299,21 @@ chart = (
     .properties(
         width=width,
         height=height,
+        background=PAGE_BG,
         title=alt.Title(
-            text="alluvial-basic · altair · pyplots.ai", fontSize=28, anchor="middle", color="#333333", offset=20
+            text="alluvial-basic · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK, offset=20
         ),
     )
-    .configure_view(strokeWidth=0)
-    .configure_legend(padding=15, cornerRadius=5, fillColor="#FFFFFF", strokeColor="#DDDDDD")
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
+    .configure_legend(
+        padding=15, cornerRadius=5, fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK
+    )
+    .configure_axis(
+        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK
+    )
     .interactive()
 )
 
 # Save as PNG and HTML
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
