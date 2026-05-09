@@ -1,162 +1,168 @@
 library: pygal
+language: python
 specification_id: roc-curve
 created: '2025-12-26T17:38:43Z'
-updated: '2025-12-26T17:48:17Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20526595911
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-09T22:41:39Z'
+generated_by: claude-haiku
+workflow_run: 25613545490
+issue: 2273
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/roc-curve/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/roc-curve/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/pygal/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent spec compliance with all required ROC curve features (diagonal reference,
-    AUC in legend, multiple model comparison)
-  - Clean, readable visualization with appropriate font sizing for the large canvas
-  - Well-structured KISS code with proper reproducibility (seed 42)
-  - Good use of pygal custom Style for branding consistency
-  - Dashed reference line provides clear visual distinction from model curves
+  - Perfect visual quality with zero legibility failures across both light and dark
+    themes
+  - 'All specification requirements met: diagonal reference line, AUC scores, multi-model
+    comparison'
+  - Reproducible code with realistic ML data generation using seed-based approach
+  - Proper theme adaptation using correct color tokens from style guide
+  - First categorical series correctly uses brand green (#009E73)
+  - Professional, clean layout with appropriate sizing and spacing for large canvas
   weaknesses:
-  - Legend placement in top-left corner outside plot creates slight visual imbalance
-  - ROC curves for two models only; adding a third classifier would demonstrate more
-    variation
-  - Model A AUC of 0.98 is unrealistically high for most real-world scenarios
-  image_description: 'The plot displays an ROC curve visualization on a white background
-    with a clean layout. Three series are shown: Model A (blue line, AUC = 0.98) which
-    rises steeply near FPR=0 and plateaus near TPR=1.0, Model B (yellow line, AUC
-    = 0.72) which shows a more gradual curve, and a gray diagonal reference line for
-    Random classification (AUC = 0.50). The title "roc-curve · pygal · pyplots.ai"
-    appears at the top center. The X-axis is labeled "False Positive Rate" (0 to 1)
-    and Y-axis is labeled "True Positive Rate" (0 to 1). The legend is positioned
-    in the top-left corner outside the plot area. Grid lines are subtle and aid readability.'
+  - Design excellence is standard rather than distinctive—relies on defaults without
+    custom refinements
+  - Limited exploration of pygal-specific advanced styling features beyond basic configuration
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct for light theme
+      Chrome: Title "roc-curve · pygal · anyplot.ai" is large and clear. Axis labels "False Positive Rate" (x) and "True Positive Rate" (y) are readable in dark text. Tick labels (0, 0.1, 0.2, ..., 1.0) are well-sized and fully readable. Grid lines are subtle and visible. Legend positioned at bottom-left with AUC scores, no overlap.
+      Data: Four curves clearly distinguished—green curve (Excellent) uses #009E73, orange/vermillion for Moderate/Poor models, blue for reference comparison. Dashed diagonal reference line (Random, AUC = 0.50) is clearly visible.
+      Legibility verdict: PASS — All text contrasts properly against light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct for dark theme
+      Chrome: Title, axis labels, and tick labels are rendered in light text (#F0EFE8) and are clearly readable. No "dark-on-dark" failures. Grid is visible and subtle. Legend is clear and accessible.
+      Data: Four curves maintain identical colors to light render (only chrome adapted). Green, orange, blue curves plus dashed reference line all clearly visible against dark background.
+      Legibility verdict: PASS — Perfect theme adaptation with no visibility or contrast issues in dark mode.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and legend text are all readable. Font sizes
-          are well-scaled for the 4800x2700 canvas.
+        comment: All titles, labels, tick marks readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere in the plot.
+        comment: Clean layout with legend positioned without conflict
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line widths are appropriate; all three curves are clearly distinguishable.
+        comment: Curves and reference line clearly distinct and visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, yellow, and gray provide good contrast. Blue/yellow distinction
-          works for most colorblind types but not ideal for tritanopia.
+        comment: Okabe-Ito palette ensures CVD safety; no red-green-only signal
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins; legend placement is
-          sensible.
+        comment: 4800×2700 proportions appropriate; no clipping
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive ("False Positive Rate", "True Positive Rate")
-          but lack units (though unitless 0-1 is standard for ROC).
+        comment: Descriptive axes with standard units; spec-format title
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle and helpful; legend is functional but placed outside
-          plot area which creates some empty space in top-left.
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; both renders
+          theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional palette and dashed reference line; primarily standard
+          without distinctive customizations
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean appearance with subtle grid and appropriate stroke width
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Multiple curves enable comparison; excellent model prominent; diagonal
+          reference provides context
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct XY line chart for ROC curve visualization.
+        comment: Correct XY chart for ROC curves
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: FPR on X-axis, TPR on Y-axis as specified.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Includes diagonal reference line, AUC scores in legend, multiple
-          models with distinct colors.
-      - id: SC-04
-        name: Data Range
+        comment: Diagonal reference line, AUC scores in legend, multiple classifiers
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Both axes range from 0 to 1 as required.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: FPR (x) and TPR (y) correctly mapped to [0,1]
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows model names with AUC values.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Title follows exact format: "roc-curve · pygal · pyplots.ai".'
+        comment: Spec-format title; legend with AUC values
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows good vs average model comparison with clear AUC difference.
-          Could benefit from a third model to show more variation.
+        comment: Comprehensive ROC visualization with three classifiers and reference
+          line
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Binary classification model comparison is a realistic ML scenario.
+        comment: Binary classification scenario; realistic AUC values; sound data
+          generation
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: AUC values (0.98 and 0.72) are realistic. Model A at 0.98 is perhaps
-          slightly too perfect.
+        comment: '[0,1] axes standard for ROC; 100 threshold points appropriate'
     code_quality:
       score: 10
       max: 10
@@ -166,41 +172,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save structure without functions/classes.
+        comment: Procedural, straightforward, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses `np.random.seed(42)` for reproducible results.
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pygal, and Style are imported; all are used.
+        comment: Only os, numpy, pygal; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API.
+        comment: No fake interactivity; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves both plot.png and plot.html.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and .html correctly
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses pygal XY chart with custom Style, dashed line for reference.
-          Could leverage more pygal-specific features like tooltips or better interactivity
-          in the HTML output.
+        comment: Proper XY chart, Style configuration, render APIs
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Dashed line shows feature awareness; limited exploration of advanced
+          pygal capabilities
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - reference-line
+  patterns:
+  - data-generation
+  - threshold-computation
+  dataprep: []
+  styling:
+  - theme-adaptive-colors
+  - custom-style-object
