@@ -6,7 +6,7 @@ title: Time Series Line Plot
 
 # Specification tracking
 created: 2025-12-25T08:58:56Z
-updated: null
+updated: 2026-05-09T03:14:24Z
 issue: 2006
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - line
-    - timeseries
   data_type:
     - timeseries
     - datetime
