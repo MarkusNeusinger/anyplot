@@ -10,7 +10,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from core.constants import SUPPORTED_LIBRARIES, is_valid_library as _is_valid_library
+from core.constants import SUPPORTED_LIBRARIES
+from core.constants import is_valid_library as _is_valid_library
 
 
 @dataclass
@@ -171,43 +172,6 @@ def extract_issue_reference(text: str) -> int | None:
     match = re.search(r"#(\d+)", text)
     if match:
         return int(match.group(1))
-
-    return None
-
-
-def parse_plot_path(file_path: str) -> dict[str, str] | None:
-    """
-    Parse plot file path to extract spec_id and library.
-
-    Expected format: plots/{spec-id}/implementations/{library}.py
-
-    Args:
-        file_path: Path to a plot implementation file
-
-    Returns:
-        Dict with spec_id and library keys, or None if invalid
-
-    Examples:
-        >>> parse_plot_path('plots/scatter-basic/implementations/matplotlib.py')
-        {'spec_id': 'scatter-basic', 'library': 'matplotlib'}
-
-        >>> parse_plot_path('invalid/path.py')
-        None
-    """
-    if not file_path:
-        return None
-
-    # Match: plots/{spec-id}/implementations/{library}.py
-    match = re.match(r"plots/([^/]+)/implementations/([^/]+)\.py$", file_path)
-    if match:
-        library = match.group(2)
-        # Validate library name
-        if library.lower() not in [lib.lower() for lib in SUPPORTED_LIBRARIES]:
-            return None
-        return {
-            "spec_id": match.group(1),
-            "library": library,
-        }
 
     return None
 

@@ -40,6 +40,8 @@ Example (from `.github/workflows/impl-review.yml`):
 | `impl-repair-claude.md` | `impl-repair.yml` | Repair after a rejected AI review (max 4 attempts) |
 | `ai-quality-review.md` | `impl-review.yml` | Quality evaluation of a generated implementation |
 | `report-analysis.md` | `report-validate.yml` | Triage and structure user-submitted issue reports |
+| `spec-polish-claude.md` | `daily-regen.yml` | Daily light-touch spec quality polish |
+| `impl-similarity-claude.md` | `daily-regen.yml` | Daily impl-similarity dedup analysis |
 
 ## Variable Reference
 

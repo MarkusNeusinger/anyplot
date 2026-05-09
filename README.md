@@ -2,7 +2,7 @@
 
 **→ [anyplot.ai](https://anyplot.ai)**
 
-[![Python 3.14+](https://img.shields.io/badge/python-3.14+-blue.svg)](https://www.python.org/)
+[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tests](https://github.com/MarkusNeusinger/anyplot/actions/workflows/ci-tests.yml/badge.svg?branch=main)](https://github.com/MarkusNeusinger/anyplot/actions/workflows/ci-tests.yml)
 [![Ruff](https://github.com/MarkusNeusinger/anyplot/actions/workflows/ci-lint.yml/badge.svg?branch=main)](https://github.com/MarkusNeusinger/anyplot/actions/workflows/ci-lint.yml)
@@ -45,13 +45,15 @@ plots/scatter-basic/
 ├── specification.md     # Library-agnostic specification
 ├── specification.yaml   # Tags, created, issue, suggested
 ├── metadata/            # Per-library metadata (quality scores, preview URLs)
-│   ├── matplotlib.yaml
-│   └── ...
+│   └── python/
+│       ├── matplotlib.yaml
+│       └── ...
 └── implementations/
-    ├── matplotlib.py
-    ├── seaborn.py
-    ├── plotly.py
-    └── ... (6 more)
+    └── python/
+        ├── matplotlib.py
+        ├── seaborn.py
+        ├── plotly.py
+        └── ... (6 more)
 ```
 
 **Issue-based workflow**: GitHub Issues as state machine for plot lifecycle. Status tracked via live-updating table (no sub-issues). Each library generates in parallel, creating PRs to a feature branch.
@@ -64,7 +66,7 @@ See [docs/reference/](docs/reference/) for details.
 
 ## Tech Stack
 
-**Backend**: FastAPI • PostgreSQL • SQLAlchemy • Python 3.14+
+**Backend**: FastAPI • PostgreSQL • SQLAlchemy • Python 3.13+
 
 **Frontend**: React 19 • Vite • TypeScript • MUI
 

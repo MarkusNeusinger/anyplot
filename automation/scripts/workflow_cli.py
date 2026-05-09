@@ -24,7 +24,6 @@ from automation.scripts.workflow_utils import (
     extract_parent_issue,
     extract_sub_issue,
     get_attempt_count,
-    parse_plot_path,
 )
 
 
@@ -65,16 +64,6 @@ def cmd_get_attempt_count(args: argparse.Namespace) -> int:
     labels = args.labels.split(",") if args.labels else []
     count = get_attempt_count(labels)
     print(count)
-    return 0
-
-
-def cmd_parse_plot_path(args: argparse.Namespace) -> int:
-    """Parse plot file path."""
-    info = parse_plot_path(args.path)
-    if info is None:
-        print("null")
-        return 1
-    print(json.dumps(info))
     return 0
 
 
@@ -123,11 +112,6 @@ def main() -> int:
     p = subparsers.add_parser("get-attempt-count", help="Get attempt count from labels")
     p.add_argument("labels", help="Comma-separated list of labels")
     p.set_defaults(func=cmd_get_attempt_count)
-
-    # parse-plot-path
-    p = subparsers.add_parser("parse-plot-path", help="Parse plot file path")
-    p.add_argument("path", help="Plot file path")
-    p.set_defaults(func=cmd_parse_plot_path)
 
     # status-transition
     p = subparsers.add_parser("status-transition", help="Calculate label changes for status transition")
