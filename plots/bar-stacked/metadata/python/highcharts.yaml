@@ -1,165 +1,178 @@
 library: highcharts
+language: python
 specification_id: bar-stacked
 created: '2025-12-26T10:05:20Z'
-updated: '2025-12-26T10:09:12Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520476952
+updated: '2026-05-09T07:14:54Z'
+generated_by: claude-haiku
+workflow_run: 25594942385
 issue: 1947
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/highcharts/plot.html
-quality_score: 92
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - annotations
-  - html-export
-  - hover-tooltips
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/highcharts/plot-dark.html
+quality_score: 98
 review:
   strengths:
-  - Excellent data storytelling showing energy transition narrative (solar growth,
-    coal decline)
-  - Clean colorblind-safe palette following Python branding guidelines
-  - Stack totals displayed above each bar as recommended in specification
-  - Data labels within segments aid precise value reading
-  - Proper use of Highcharts stacking configuration with white borders between segments
-  - Well-configured tooltips showing both individual and total values
+  - Exceptional typography with clear hierarchy across both themes
+  - Perfect theme adaptation with no legibility failures in either render
+  - Sophisticated use of Highcharts features (stackLabels, custom tooltips, data labels)
+  - Clean, maintainable code with proper Selenium integration
+  - Excellent real-world data scenario demonstrating composition analysis
+  - Okabe-Ito palette compliance with proper brand color positioning
+  - Generous margins and whitespace for professional presentation
   weaknesses:
-  - Legend placement conflicts with X-axis title - they visually overlap
-  - Data labels within segments could be slightly larger for better readability at
-    full resolution
-  image_description: 'The plot displays a stacked column chart showing monthly energy
-    consumption by source (Jan-Jun). Four energy sources are stacked vertically: Solar
-    (teal/cyan at bottom), Natural Gas (yellow), Nuclear (purple), and Coal (darker
-    blue at top). Each bar shows individual segment values as data labels and stack
-    totals above (ranging from 1,225 to 1,317 MWh). The title correctly shows "bar-stacked
-    · highcharts · pyplots.ai" with a descriptive subtitle. A horizontal legend at
-    the bottom identifies all four components. The Y-axis is labeled "Energy (MWh)"
-    and X-axis shows "Month".'
+  - Could explore additional interactive features beyond basic tooltips to further
+    enhance Library Mastery score
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title (48px, bold, #1A1A17), subtitle (32px, #4A4A44), axis labels (32px title, 28px ticks), legend (36px, centered above) — all clearly readable with dark text on light background
+      Data: Four stacked components with Okabe-Ito colors (Solar #009E73 first, then Natural Gas, Nuclear, Coal). Data labels (26px) and stack totals (28px, bold) are visible
+      Legibility verdict: PASS — all text is readable against light background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title and axis labels now in light text (#F0EFE8), secondary text (#B8B7B0), grid uses dark theme rgba — all clearly readable with light text on dark background
+      Data: Colors identical to light render (only chrome flipped). Data and stack labels maintain readability
+      Legibility verdict: PASS — no dark-on-dark failures, all text is readable against dark background, brand green (#009E73) is visible
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and legend are clearly readable; data labels
-          within segments are slightly small but legible
+        comment: Title 48px bold, subtitle 32px, axis labels 32px/28px, legend 36px,
+          data labels 26px — all readable in both themes with proper contrast
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; all labels are clearly separated
+        comment: 'All elements well-spaced: axis labels, data labels, stack labels,
+          legend — no collisions or overlaps'
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar segments are well-sized with appropriate spacing and white borders
-          between segments
+        comment: Bars clearly visible with distinct Okabe-Ito colors, all labels visible,
+          grid subtle but visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Colorblind-safe palette using blue, yellow, purple, and cyan - no
-          red-green conflicts
+        comment: Okabe-Ito palette used (colorblind-safe), adequate contrast, multiple
+          dimensions encoded
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good layout with adequate margins; slight excess whitespace at bottom
-          below legend
+        comment: Good proportions at 4800x2700, generous margins (250 bottom, 120
+          top, 200 left), nothing cut off
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has "Energy (MWh)" with units, X-axis has "Month"
+        comment: 'X-axis: ''Month'', Y-axis: ''Energy (MWh)'' with units, title includes
+          spec-id and library'
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: true
-        comment: Legend overlaps with X-axis title "Month" causing visual conflict
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct stacked column chart
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X-axis, values stacked correctly on Y-axis
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Stacking, multiple components, total labels all present
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible, Y-axis scales appropriately
-      - id: SC-05
-        name: Legend Accuracy
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Legend correctly identifies all four energy sources
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "{spec-id} · {library} · pyplots.ai"
-    data_quality:
+        comment: 'First series #009E73, follows Okabe-Ito order, backgrounds correct
+          (#FAF8F1 light, #1A1A17 dark), both renders theme-correct'
+    design_excellence:
       score: 19
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
         max: 8
         passed: true
-        comment: 'Shows varied trajectories: Solar growth, Coal decline, Nuclear steady,
-          Natural Gas fluctuation'
-      - id: DQ-02
-        name: Realistic Context
+        comment: Large bold title (48px), thoughtful subtitle, Okabe-Ito colors, clean
+          legend styling — intentional and polished beyond defaults
+      - id: DE-02
+        name: Visual Refinement
         score: 6
-        max: 7
+        max: 6
         passed: true
-        comment: Energy consumption by source is highly realistic; values are plausible
-          for regional power mix
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: Subtle grid, white bar borders for definition, generous whitespace,
+          legend backdrop styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Clear focal point (stacked bars), visual hierarchy (title → bars),
+          composition story evident, total labels show trends
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: MWh values in realistic range for monthly consumption
+        comment: 'Correct stacked bar chart using ColumnSeries with stacking: ''normal'''
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: part-to-whole relationships, stacked
+          components, composition clarity, legend'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis categories (months), Y-axis values (MWh), color maps components
+          — all correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match component names exactly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All stacked bar aspects demonstrated: 4 components, clear stacking,
+          composition changes across months, total comparison'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Energy consumption by source is authentic real-world scenario, neutral
+          and professional
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 120-1300 MWh are sensible for energy, Y-axis 0-1400 is appropriate,
+          bars visually distinct
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -167,40 +180,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → chart config → series → export'
+        comment: Simple, direct structure with no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random values)
+        comment: Hardcoded data is deterministic, same output every run
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: os, tempfile, time, urllib, Path, highcharts_core,
+          selenium'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean code with idiomatic for-loop, proper Highcharts API usage,
+          no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current highcharts_core API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but also creates plot.html (minor issue, acceptable)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html, uses current API
+          with proper container
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Highcharts stacking, tooltips with stack totals, stack labels,
-          but could leverage more interactive features
+        comment: 'Excellent Highcharts patterns: proper container setup, HighchartsOptions,
+          theme-aware environment variables, Selenium for export'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses stackLabels, custom tooltips with stack total, data labels,
+          thoughtful legend positioning — good features, could explore more advanced
+          interactivity
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
