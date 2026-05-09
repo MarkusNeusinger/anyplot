@@ -1,16 +1,18 @@
-""" pyplots.ai
+"""anyplot.ai
 scatter-matrix: Scatter Plot Matrix
 Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 90/100 | Created: 2025-12-26
+Quality: 90 | Updated: 2025-12-26
 """
 
-import warnings
+import os
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
     element_blank,
+    element_line,
+    element_rect,
     element_text,
     facet_grid,
     geom_density,
@@ -24,14 +26,21 @@ from plotnine import (
 )
 
 
-warnings.filterwarnings("ignore")
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data - Iris-like data for multivariate visualization
 np.random.seed(42)
 
 species = np.repeat(["setosa", "versicolor", "virginica"], 50)
 
-# Generate correlated data for each species with realistic iris measurements
 data = {
     "Sepal Length (cm)": np.concatenate(
         [np.random.normal(5.0, 0.35, 50), np.random.normal(5.9, 0.5, 50), np.random.normal(6.6, 0.6, 50)]
@@ -50,11 +59,9 @@ data = {
 
 df = pd.DataFrame(data)
 
-# Variables for the matrix
 variables = ["Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Petal Width (cm)"]
 
 # Create long-form data for faceted scatter matrix
-# Use consistent ordering for both rows and columns
 scatter_data = []
 for var_y in variables:
     for var_x in variables:
@@ -79,8 +86,29 @@ plot_df["var_y"] = pd.Categorical(plot_df["var_y"], categories=variables, ordere
 scatter_df = plot_df[~plot_df["is_diag"]]
 diag_df = plot_df[plot_df["is_diag"]]
 
-# Colors - Python Blue, Python Yellow, and complementary coral
-colors = ["#306998", "#FFD43B", "#E07A5F"]
+# Theme-adaptive styling
+anyplot_theme = theme(
+    figure_size=(14, 14),
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+    panel_grid_minor=element_blank(),
+    panel_border=element_rect(color=INK_SOFT, fill=None, size=0.4),
+    axis_title=element_text(size=20, color=INK),
+    axis_text=element_text(size=16, color=INK_SOFT),
+    axis_line=element_line(color=INK_SOFT, size=0.4),
+    axis_ticks=element_line(color=INK_SOFT, size=0.3),
+    plot_title=element_text(size=22, face="bold", ha="center", color=INK),
+    strip_text_x=element_text(size=13, face="bold", color=INK),
+    strip_text_y=element_text(size=13, face="bold", angle=0, color=INK),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.4),
+    legend_text=element_text(size=13, color=INK_SOFT),
+    legend_title=element_text(size=14, color=INK),
+    legend_position="right",
+    panel_spacing=0.12,
+    axis_title_x=element_blank(),
+    axis_title_y=element_blank(),
+)
 
 # Create scatter matrix using facet_grid
 plot = (
@@ -88,25 +116,12 @@ plot = (
     + geom_point(size=3.5, alpha=0.7)
     + geom_density(aes(x="x", fill="Species", color="Species"), data=diag_df, alpha=0.4)
     + facet_grid("var_y ~ var_x", scales="free", labeller="label_value")
-    + scale_color_manual(values=colors)
-    + scale_fill_manual(values=colors)
-    + labs(title="scatter-matrix · plotnine · pyplots.ai", x="", y="")
+    + scale_color_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=OKABE_ITO)
+    + labs(title="scatter-matrix · plotnine · anyplot.ai", x="", y="")
     + theme_minimal()
-    + theme(
-        figure_size=(14, 14),
-        plot_title=element_text(size=22, face="bold", ha="center"),
-        strip_text_x=element_text(size=13, face="bold"),
-        strip_text_y=element_text(size=13, face="bold", angle=0),
-        axis_text=element_text(size=10),
-        axis_text_x=element_text(size=9),
-        legend_title=element_text(size=14),
-        legend_text=element_text(size=13),
-        legend_position="right",
-        panel_spacing=0.12,
-        axis_title_x=element_blank(),
-        axis_title_y=element_blank(),
-    )
+    + anyplot_theme
 )
 
 # Save the plot
-plot.save("plot.png", dpi=300, width=14, height=14, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, width=14, height=14, verbose=False)
