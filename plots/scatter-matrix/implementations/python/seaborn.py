@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-matrix: Scatter Plot Matrix
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-09
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,86 +12,112 @@ import pandas as pd
 import seaborn as sns
 
 
-# Data: Simulated iris-like measurements for 4 variables
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+
+# Data: Financial metrics across market segments
 np.random.seed(42)
-n_samples = 150
+n_samples = 120
 
-# Three species with different characteristics
-species = np.repeat(["Setosa", "Versicolor", "Virginica"], n_samples // 3)
+# Three market segments
+segments = np.repeat(["Growth", "Value", "Dividend"], n_samples // 3)
 
-# Generate realistic measurements for each species
+# Generate financial metrics with realistic distributions
 data = {
-    "Sepal Length (cm)": np.concatenate(
+    "Annual Return (%)": np.concatenate(
         [
-            np.random.normal(5.0, 0.35, n_samples // 3),
-            np.random.normal(5.9, 0.52, n_samples // 3),
-            np.random.normal(6.6, 0.64, n_samples // 3),
+            np.random.exponential(8, n_samples // 3) + 15,  # Growth: high return
+            np.random.exponential(5, n_samples // 3) + 8,  # Value: moderate return
+            np.random.exponential(4, n_samples // 3) + 5,  # Dividend: steady return
         ]
     ),
-    "Sepal Width (cm)": np.concatenate(
+    "Volatility (%)": np.concatenate(
         [
-            np.random.normal(3.4, 0.38, n_samples // 3),
-            np.random.normal(2.8, 0.31, n_samples // 3),
-            np.random.normal(3.0, 0.32, n_samples // 3),
+            np.random.exponential(3, n_samples // 3) + 18,  # Growth: high volatility
+            np.random.exponential(2, n_samples // 3) + 12,  # Value: medium volatility
+            np.random.exponential(1.5, n_samples // 3) + 8,  # Dividend: low volatility
         ]
     ),
-    "Petal Length (cm)": np.concatenate(
+    "P/E Ratio": np.concatenate(
         [
-            np.random.normal(1.5, 0.17, n_samples // 3),
-            np.random.normal(4.3, 0.47, n_samples // 3),
-            np.random.normal(5.6, 0.55, n_samples // 3),
+            np.random.exponential(5, n_samples // 3) + 22,  # Growth: high multiples
+            np.random.exponential(3, n_samples // 3) + 12,  # Value: low multiples
+            np.random.exponential(2, n_samples // 3) + 16,  # Dividend: moderate multiples
         ]
     ),
-    "Petal Width (cm)": np.concatenate(
+    "Dividend Yield (%)": np.concatenate(
         [
-            np.random.normal(0.2, 0.1, n_samples // 3),
-            np.random.normal(1.3, 0.2, n_samples // 3),
-            np.random.normal(2.0, 0.27, n_samples // 3),
+            np.random.exponential(0.4, n_samples // 3) + 0.5,  # Growth: low yield
+            np.random.exponential(0.6, n_samples // 3) + 1.5,  # Value: moderate yield
+            np.random.exponential(0.8, n_samples // 3) + 3.5,  # Dividend: high yield
         ]
     ),
-    "Species": species,
+    "Segment": segments,
 }
 
 df = pd.DataFrame(data)
 
-# Plot: Scatter matrix with pairplot (square format for grid-based plot)
-sns.set_context("talk", font_scale=1.4)
-sns.set_style("whitegrid")
+# Set theme for the entire figure
+sns.set_theme(
+    style="whitegrid",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "grid.linewidth": 0.8,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
+sns.set_context("talk", font_scale=1.2)
+
+# Create pairplot with scatter matrices
 g = sns.pairplot(
     df,
-    hue="Species",
-    palette=["#306998", "#FFD43B", "#4B8BBE"],
+    hue="Segment",
+    palette=OKABE_ITO,
     diag_kind="kde",
-    plot_kws={"s": 80, "alpha": 0.7, "edgecolor": "white", "linewidth": 0.5},
+    plot_kws={"s": 60, "alpha": 0.7, "edgecolor": PAGE_BG, "linewidth": 0.5},
     diag_kws={"linewidth": 2.5, "fill": True, "alpha": 0.4},
     corner=False,
-    height=3.0,
+    height=2.8,
     aspect=1.0,
 )
 
-# Adjust title
-g.figure.suptitle("scatter-matrix \u00b7 seaborn \u00b7 pyplots.ai", fontsize=28, y=1.02, fontweight="bold")
+# Update title
+g.figure.suptitle("scatter-matrix · seaborn · anyplot.ai", fontsize=28, y=1.00, fontweight="medium")
 
-# Adjust legend
-g._legend.set_title("Species")
-g._legend.get_title().set_fontsize(18)
-for text in g._legend.get_texts():
-    text.set_fontsize(16)
+# Update legend using seaborn's move_legend (non-private API)
+if g._legend is not None:
+    g._legend.set_title("Segment")
+    g._legend.get_title().set_fontsize(16)
+    for text in g._legend.get_texts():
+        text.set_fontsize(14)
 
-# Position legend to avoid cutoff
-g._legend.set_bbox_to_anchor((0.85, 0.5))
-
-# Increase axis label sizes
+# Adjust label sizes
 for ax in g.axes.flatten():
     if ax is not None:
-        ax.tick_params(axis="both", labelsize=14)
+        ax.tick_params(axis="both", labelsize=13)
         xlabel = ax.get_xlabel()
         ylabel = ax.get_ylabel()
         if xlabel:
-            ax.set_xlabel(xlabel, fontsize=16)
+            ax.set_xlabel(xlabel, fontsize=16, color=INK)
         if ylabel:
-            ax.set_ylabel(ylabel, fontsize=16)
+            ax.set_ylabel(ylabel, fontsize=16, color=INK)
 
 plt.tight_layout()
-g.figure.savefig("plot.png", dpi=300, bbox_inches="tight")
+g.figure.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
