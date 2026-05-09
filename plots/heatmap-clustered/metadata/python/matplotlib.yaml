@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: heatmap-clustered
 created: '2025-12-25T19:20:03Z'
-updated: '2026-05-09T08:53:33Z'
+updated: '2026-05-09T08:59:35Z'
 generated_by: claude-haiku
 workflow_run: 25596784513
 issue: 2021
@@ -12,47 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 70
+quality_score: 45
 review:
   strengths:
-  - Correct plot type with both row and column dendrograms properly rendered
-  - Data realistically represents gene expression clustering with natural group structure
-  - RdBu_r diverging colormap is perceptually uniform and colorblind-safe
-  - Hierarchical clustering correctly applied with Euclidean distance and Ward linkage
-  - Grid layout using gridspec elegantly integrates dendrograms with heatmap and colorbar
-  - Dendrograms are rendered with appropriate sizing and visual integration
+  - Correct plot type (hierarchical clustered heatmap with dendrograms)
+  - All spec features present and implemented correctly
+  - Realistic, well-structured gene expression dataset with natural clusters
+  - Appropriate RdBu_r colormap for diverging, centered data
+  - Proper use of scipy.cluster.hierarchy for clustering
+  - Excellent gridspec layout with synchronized subplot sizing
+  - Clean, reproducible code with seed for data generation
+  - Readable in light theme
   weaknesses:
-  - 'CRITICAL: Title and all text (axis labels, tick labels, colorbar label) are dark/black
-    in dark theme, creating dark-on-dark unreadable text - must use ANYPLOT_THEME
-    environment variable with INK and INK_SOFT tokens'
-  - 'CRITICAL: Background is hard-coded to white instead of reading theme tokens -
-    should use PAGE_BG (#FAF8F1 light / #1A1A17 dark)'
-  - File output uses plot.png instead of plot-light.png and plot-dark.png - incompatible
-    with pipeline requirements
-  - 'Dendrogram line colors hard-coded to #306998 instead of being theme-adaptive'
-  - Implementation doesn't use os.getenv(ANYPLOT_THEME) to support both light and
-    dark rendering
-  - Design lacks visual hierarchy and refinement - uses default matplotlib styling
-    throughout
-  - Minimal design customization - no custom palette, no visual emphasis, no distinctive
-    styling
+  - 'CRITICAL: No theme-adaptive styling — does not read ANYPLOT_THEME environment
+    variable'
+  - 'CRITICAL: Dark render unreadable — axis labels, tick labels, colorbar label are
+    dark text on dark background (dark-on-dark text failure)'
+  - 'CRITICAL: Wrong output filename — saves plot.png instead of plot-{THEME}.png'
+  - 'Background colors hardcoded to pure white/black instead of theme tokens (#FAF8F1
+    light / #1A1A17 dark)'
+  - 'Title contains typo: pyplots.ai should be anyplot.ai'
+  - Text colors not theme-adaptive; missing INK, INK_SOFT, PAGE_BG token implementation
+  - Dendrogram axes not configured with theme-adaptive colors
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white at #FAF8F1 - correct theme surface
-      Chrome: Title, axis labels, tick labels, and colorbar label all use dark/black text
-      Data: RdBu_r diverging colormap correctly centered on zero; dendrograms visible in black
-      Legibility verdict: PASS - all elements clearly readable on light background
+      Background: WHITE (should be warm off-white #FAF8F1, but appears pure white)
+      Chrome: Title "heatmap-clustered · matplotlib · pyplots.ai" in dark text, readable. Gene names on y-axis in dark text (~14px), readable. Sample names on x-axis rotated 45°, dark text, readable. Colorbar label "Expression (z-score)" in dark text, readable.
+      Data: RdBu_r diverging colormap with red for positive values and blue for negative values. Dendrograms use bright blue (#306998) lines on white background, clearly visible.
+      Legibility verdict: PASS - All text is readable against the light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black at #1A1A17 - correct theme surface
-      Chrome: Title, axis labels, tick labels, and colorbar label STILL dark/black - creates dark-on-dark text
-      Data: RdBu_r colors identical to light render (correct); dendrograms appear with light/white lines
-      Legibility verdict: FAIL - critical dark-on-dark failure. Title, axis labels, tick labels, and colorbar label are unreadable on the near-black background. This is a mandatory theme-readiness violation.
-
-    Theme Comparison: Data colors correctly remain identical between renders, but chrome fails to adapt. Text should flip to INK (#F0EFE8) and INK_SOFT (#B8B7B0) in dark theme, not remain as dark defaults.
+      Background: DARK near-black (appropriate for dark theme, appears to be #1A1A17 or similar)
+      Chrome: Title remains light/white, readable. Gene names on y-axis appear in DARK TEXT on dark background - UNREADABLE. Sample names on x-axis appear in DARK TEXT on dark background - UNREADABLE. Colorbar label "Expression (z-score)" appears in DARK TEXT on dark background - UNREADABLE.
+      Data: RdBu_r colormap identical to light render (correct - only chrome should flip, not data colors). Dendrograms use blue lines, visible on dark background.
+      Legibility verdict: FAIL - CRITICAL dark-on-dark text failure. Axis labels, sample names, and colorbar label are unreadable. This is a mandatory theme-adaptation failure.
   criteria_checklist:
     visual_quality:
-      score: 20
+      score: 19.5
       max: 30
       items:
       - id: VQ-01
@@ -60,67 +56,67 @@ review:
         score: 0
         max: 8
         passed: false
-        comment: Dark text unreadable on dark background in dark render - theme not
-          adaptive
+        comment: FAILED - Dark render has unreadable dark-on-dark text (axis labels,
+          tick labels, colorbar label)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All elements clearly visible with good spacing
+        comment: Layout is well-organized, no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Dendrograms, heatmap, colorbar all clearly visible
+        comment: Heatmap cells, dendrograms, colorbar all clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: RdBu_r colormap is CVD-safe and perceptually uniform
+        comment: RdBu_r is perceptually uniform and CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent proportions with integrated layout
+        comment: Well-proportioned 16x12 figure, gridspec layout excellent
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1.5
         max: 2
-        passed: true
-        comment: Format matches spec requirements
+        passed: false
+        comment: Title has typo (pyplots.ai should be anyplot.ai)
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'Chrome not theme-adaptive: background hard-coded white, text colors
-          not adapted'
+        comment: FAILED - No theme-adaptive styling; text colors not theme-correct;
+          background colors wrong
     design_excellence:
       score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 3
         max: 8
         passed: false
-        comment: Default styling with no custom aesthetic choices
+        comment: Generic defaults, no custom refinement
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization beyond removing dendrogram spines
+        comment: Spines removed from dendrograms, gridspec well-used (minimal customization)
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Shows clustering but lacks visual hierarchy or emphasis
+        comment: Dendrograms communicate hierarchical patterns
     spec_compliance:
       score: 14
       max: 15
@@ -130,26 +126,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct clustered heatmap with dendrograms
+        comment: Correct clustermap with dendrograms on both axes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: dendrograms, reordering, diverging colormap,
-          colorbar'
+        comment: 'All spec features: clustering, dendrograms, reordered data, colorbar'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes correctly mapped, clustering properly applied
+        comment: X/Y correct, all data visible
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
-        passed: true
-        comment: Title format correct; colorbar legend present
+        passed: false
+        comment: Typo in title (pyplots.ai); colorbar legend present
     data_quality:
       score: 15
       max: 15
@@ -159,21 +154,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full clustering feature set demonstrated
+        comment: Gene expression data shows natural clusters (cell cycle, metabolism,
+          immune)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Gene expression data realistic and biologically plausible
+        comment: Tumor vs. normal samples, realistic z-score patterns
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Z-score scaling appropriate for expression data
+        comment: Value range (±2.5) sensible for z-scores
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -187,41 +183,41 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set (42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports present
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity
+        passed: false
+        comment: Missing theme-adaptation logic
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as plot.png instead of plot-light/dark.png; doesn't read ANYPLOT_THEME
+        comment: FAILED - Saves plot.png instead of plot-{THEME}.png
     library_mastery:
-      score: 4
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Uses gridspec, imshow correctly but missing theme-adaptive API patterns
+        passed: true
+        comment: scipy.cluster, gridspec, imshow — standard patterns
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Dendrograms present but implementation is generic
+        comment: Dendrograms are distinctive matplotlib technique (+1 over default)
   verdict: REJECTED
 impl_tags:
   dependencies:
