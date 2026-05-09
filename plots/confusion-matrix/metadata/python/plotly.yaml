@@ -1,165 +1,167 @@
 library: plotly
+language: python
 specification_id: confusion-matrix
 created: '2025-12-26T17:36:58Z'
-updated: '2025-12-26T17:40:52Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20526590160
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/plotly/plot.html
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-    - annotations
-    - colorbar
-    - hover-tooltips
-    - html-export
-    - manual-ticks
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - custom-colormap
+updated: '2026-05-09T16:47:29Z'
+generated_by: claude-haiku
+workflow_run: 25606115412
+issue: 2272
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/plotly/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent use of Plotly hovertemplate for interactive tooltips showing True/Predicted/Count
-  - Smart text color contrast logic - white text on dark cells, black text on light
-    cells
-  - Square cells using scaleanchor ensures proper matrix visualization
-  - Clean professional appearance with plotly_white template
-  - Realistic sentiment analysis data with believable misclassification patterns
+  - Perfect theme adaptation with no dark-on-dark or light-on-light legibility failures
+  - All text sizes explicitly set and readable at full resolution
+  - Clean, maintainable code following KISS principles
+  - Professional appearance with proper spacing and margins
+  - Correct palette compliance and theme-correct chrome in both renders
   weaknesses:
-  - Image dimensions use square format (3600x3600) instead of standard 4800x2700 landscape,
-    though appropriate for confusion matrices
-  - Axis labels could be more descriptive (e.g., True Sentiment Class vs True Label)
-  image_description: 'The plot displays a 4×4 confusion matrix heatmap for a sentiment
-    analysis classifier with four classes: Negative, Neutral, Positive, and Very Positive.
-    The matrix uses a sequential Blues colormap ranging from light (low values ~1-15)
-    to dark blue (high values ~70-85). The y-axis shows "True Label" and x-axis shows
-    "Predicted Label". Each cell contains white or black numeric annotations showing
-    the count values (white text on dark backgrounds, black text on light backgrounds).
-    The title "confusion-matrix · plotly · pyplots.ai" is centered at the top. A colorbar
-    on the right shows the "Count" scale from approximately 1-85. The diagonal cells
-    (correct predictions) are darker blue, clearly showing the model performs well
-    with most predictions on the diagonal. The matrix is square with equal cell dimensions,
-    and all text is clearly legible.'
+  - 'Design Excellence is moderate (generic styling): consider adding refined visual
+    touches like custom annotations or conditional cell highlighting for the diagonal'
+  - 'Library Mastery could be deeper: explore plotly''s distinctive features like
+    custom colorbar styling or interactive cell selection'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title "confusion-matrix · plotly · anyplot.ai" centered, Y-axis label "True Class" dark text, X-axis label "Predicted Class" dark text, all class names (Defective, Poor, Average, Good, Excellent) readable on both axes
+      Data: Blues colorscale with cell counts annotated in white text (high values >50) and light gray text INK_SOFT (low values), colorbar with "Count" label on right side
+      Legibility verdict: PASS - all text fully readable with no overlap, perfect contrast against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title in light text, axis labels in light text (#F0EFE8), tick labels in light gray (#B8B7B0), all readable against dark background
+      Data: Blues colorscale identical to light render - diagonal values (92, 78, 71, 75, 87) show clear correct predictions; off-diagonal confusion patterns consistent with light render; colorbar with light text
+      Legibility verdict: PASS - no dark-on-dark failures, all text light-colored with proper contrast, data colors identical to light render confirming theme-adaptive approach works correctly
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt, cell annotations
-          at 24pt - all perfectly readable
+        comment: Title 28px, labels 22px, ticks 18px, all explicit and perfectly readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all labels clearly separated
+        comment: All text fully readable with no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Cells are well-sized, colormap distinguishes values effectively
+        comment: Heatmap cells and colorbar optimally sized and visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blues colormap is colorblind-safe sequential palette
+        comment: Blues scale perceptually uniform, white/gray text contrast works
+          well
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Square layout with good margins, plot fills canvas well
+        comment: Plot fills 60-70% of canvas with balanced margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels ("True Label", "Predicted Label") but no units
-          needed for categorical data
+        comment: Descriptive labels with proper formatting
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Colorbar well placed with appropriate sizing, no grid needed for
-          heatmap
+        comment: 'Blues colorscale correct; backgrounds #FAF8F1 light/#1A1A17 dark;
+          all chrome theme-adaptive; both renders theme-correct'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults but no exceptional design choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Some refinement but mostly library defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Visual hierarchy guides eye to diagonal through color intensity;
+          generic but effective presentation
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct confusion matrix heatmap visualization
+        comment: Correct confusion matrix heatmap
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: True labels on Y-axis, Predicted labels on X-axis as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Annotated cells with counts, colorbar, sequential colormap, clear
-          axis labeling
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec requirements met: axes labeled, cells annotated, colorbar
+          present'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, appropriate scale
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Y-axis (True Class) and X-axis (Predicted Class) correctly assigned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar accurately shows count scale
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "confusion-matrix · plotly · pyplots.ai" format
+        comment: Title format correct, colorbar legend present
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows true positives on diagonal, off-diagonal misclassifications,
-          adjacent class confusion pattern
+        comment: 'Shows all aspects: true positives, false positives/negatives, all
+          5 classes'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Sentiment analysis is a real, comprehensible scenario with 4 classes
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Counts in realistic range (1-85), class sizes balanced
+        comment: Product quality classification, realistic domain, plausible patterns
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 0-92 appropriate for counts, factually sound
     code_quality:
       score: 10
       max: 10
@@ -169,40 +171,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: Imports → theme → data → figure → save, no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Clean and Pythonic
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Correct output format
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Custom hovertemplate for interactivity, graph_objects for fine control,
-          plotly_white template, scale anchoring for square cells
+        comment: Good high-level API usage with theme-adaptive colors and hovertemplate
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses hovertemplate and HTML export; could leverage more distinctive
+          plotly features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - colorbar
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap

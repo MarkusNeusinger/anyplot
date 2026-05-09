@@ -1,170 +1,175 @@
 library: highcharts
+language: python
 specification_id: confusion-matrix
 created: '2025-12-26T17:37:21Z'
-updated: '2025-12-26T17:45:03Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20526594255
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-09T16:57:45Z'
+generated_by: claude-haiku
+workflow_run: 25606335024
+issue: 2272
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/highcharts/plot.html
-quality_score: 92
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - annotations
-  - colorbar
-  - hover-tooltips
-  - html-export
-  - manual-ticks
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/highcharts/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent visual clarity with well-sized text and cell annotations
-  - Sequential blue colormap is colorblind-accessible and effectively shows magnitude
-  - Proper confusion matrix orientation with True Labels on y-axis and Predicted Labels
-    on x-axis
-  - 'Good use of Highcharts-specific features: custom tooltip showing correct/misclassified
-    status, color axis with gradient stops'
-  - White cell borders provide clean visual separation
-  - Realistic 4-class classification scenario with believable misclassification patterns
+  - 'Perfect theme adaptation with correct background colors (#FAF8F1 light, #1A1A17
+    dark) and all text using proper theme tokens (INK, INK_SOFT)'
+  - Excellent readability in both renders with no legibility issues, proper font sizes
+    (28px title, 22px axis labels, 18px tick labels)
+  - 'Complete spec compliance: 4x4 confusion matrix with proper axis labels, cell
+    annotations showing counts, sequential blue colormap, colorbar legend'
+  - Appropriate square format (3600x3600) for symmetric matrix with generous margins
+    and whitespace
+  - Clean code structure using proper highcharts_core API with HeatmapSeries, correct
+    Selenium integration for headless Chrome screenshot
   weaknesses:
-  - Layout could better utilize the square canvas - some wasted space around edges
-  - np.random.seed(42) is set but data is entirely hardcoded, making the seed unnecessary
-  - Colorbar scale goes to 100 but max value is 87, slightly misleading range
-  image_description: 'The plot displays a 4x4 confusion matrix heatmap for an image
-    classification model with classes: Cat, Dog, Bird, and Fish. The matrix uses a
-    sequential blue colormap ranging from light blue (low values ~0) to dark blue
-    (high values ~85-87). The diagonal shows strong correct predictions (87, 76, 82,
-    85) in dark blue, while off-diagonal misclassifications appear in lighter shades.
-    Each cell displays its count value in bold black text with white outline. The
-    title "confusion-matrix · highcharts · pyplots.ai" appears at the top with a subtitle
-    "Image Classification Model Performance". The y-axis is labeled "True Label" and
-    x-axis "Predicted Label". A vertical colorbar on the right shows the "Count" scale
-    from 0-100.'
+  - 'Design Excellence below average: generic sequential blue colormap without distinctive
+    styling choices or visual hierarchy enhancement'
+  - 'Library Mastery moderate: while HeatmapSeries and custom formatters are used
+    correctly, implementation doesn''t showcase advanced Highcharts features like
+    hover interactions beyond tooltip'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1, correct specification
+      Chrome: Title "confusion-matrix · highcharts · anyplot.ai" in bold dark INK, subtitle "Image Classification Model Performance" in soft INK_SOFT, axis labels "Predicted Label" (x) and "True Label" (y) in dark INK, tick labels (Cat, Dog, Bird, Fish) in INK_SOFT all clearly readable
+      Data: Sequential blues colormap with proper gradient, diagonal dominance (87, 76, 82, 85) clearly darker, off-diagonal misclassifications lighter, counts labeled in cells with white text outline for contrast, cell borders in white for definition
+      Legibility verdict: PASS - all elements readable and properly contrasted
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17, correct specification
+      Chrome: Title clearly readable in light INK color, subtitle in light INK_SOFT, axis labels in dark INK readable, tick labels in light INK_SOFT all clearly visible. No dark-on-dark failures detected. Grid lines subtle with 10% opacity.
+      Data: Blues colormap identical to light render (sequential data colors are theme-independent), cell borders visible, counts readable, colorbar distinguishable
+      Legibility verdict: PASS - all text readable, no dark-on-dark contrast issues, data colors preserved from light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'All text is clearly readable: title, subtitle, axis labels, class
-          names, and cell values are all appropriately sized'
+        comment: All text clearly readable in both themes with explicit font sizes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: Clean layout with no overlapping elements, generous spacing
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Heatmap cells are well-sized, values clearly visible with good contrast
+        comment: All heatmap cells clearly visible with color gradient and borders
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Sequential blue colormap is colorblind-safe, good contrast between
-          light/dark values
+        comment: Sequential blue colormap is colorblind-safe, adequate contrast
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of canvas but slight imbalance with colorbar placement;
-          plot is well-proportioned
+        comment: Square format appropriate for matrix, proper proportions and margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive ("True Label", "Predicted Label") but no units
-          (acceptable for categorical data)
+        comment: Title follows spec format, axes labeled correctly as Predicted/True
+          Label
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Colorbar well placed with "Count" title; white cell borders provide
-          good separation
+        comment: Sequential colormap correct for continuous data, backgrounds match
+          spec, both renders theme-correct
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Professional execution but generic sequential colormap without distinctive
+          styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Good use of cell borders and whitespace, legend styled with background/border
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Diagonal stands out as darker, but could have stronger visual hierarchy
+          emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct heatmap/confusion matrix visualization
+        comment: Correct confusion matrix heatmap visualization
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: True labels on y-axis, Predicted labels on x-axis as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Cell annotations, colorbar, proper axis labels all present
-      - id: SC-04
-        name: Data Range
+        comment: 'All features implemented: counts, labels, colorbar, annotations'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, colorbar scale 0-100 appropriate
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y axes correctly map predicted/true labels with all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled as "Count"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "confusion-matrix · highcharts · pyplots.ai"'
+        comment: Title matches spec format, colorbar legend present with Count title
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows diagonal dominance (correct predictions), varying accuracy
-          per class, realistic misclassification patterns (Cat↔Dog, Bird↔Fish confusion)
+        comment: Complete 4x4 matrix with all classes (Cat, Dog, Bird, Fish) and all
+          cells annotated
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Image classification with animal classes is a plausible ML scenario
+        comment: Image classification use case realistic with plausible class labels
+          and misclassification patterns
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are reasonable (76-87 correct predictions per class out of
-          100), though all classes have similar accuracy
+        comment: Count values (2-87) and 4-class scale appropriate for visualization
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -172,40 +177,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → chart config → export'
+        comment: No unnecessary functions, straightforward linear code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set (though data is hardcoded)
+        comment: Fixed confusion matrix data, deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used appropriately
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: Uses current API but includes unused seed
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 4
-      max: 5
+        comment: Outputs plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Good use of Highcharts heatmap series, custom tooltip formatter,
-          color axis with stops, data labels with formatter
+        comment: Proper highcharts_core API usage with Chart, HeatmapSeries, custom
+          formatters
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses color_axis with stops and custom tooltip formatter, but could
+          showcase more advanced Highcharts-specific features
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - colorbar
+  - annotations
+  - html-export
+  patterns:
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
