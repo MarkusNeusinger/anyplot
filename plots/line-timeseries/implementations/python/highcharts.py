@@ -1,10 +1,11 @@
-""" pyplots.ai
+""" anyplot.ai
 line-timeseries: Time Series Line Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-26
+Library: highcharts unknown | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-09
 """
 
 import math
+import os
 import random
 import tempfile
 import time
@@ -18,6 +19,19 @@ from highcharts_core.options.series.area import LineSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Read theme from environment
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+# Theme-adaptive color palette
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (first series must be #009E73)
+BRAND = "#009E73"
 
 # Data - Daily temperature readings over one year (365 days)
 random.seed(42)
@@ -45,88 +59,110 @@ data_points = list(zip(timestamps, temperatures, strict=True))
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration
+# Chart configuration - theme-adaptive background
 chart.options.chart = {
     "type": "line",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "spacingTop": 60,
     "spacingBottom": 100,
     "spacingLeft": 80,
     "spacingRight": 80,
 }
 
-# Title
+# Title - theme-adaptive color
 chart.options.title = {
     "text": "line-timeseries · highcharts · pyplots.ai",
-    "style": {"fontSize": "56px", "fontWeight": "bold"},
+    "style": {"fontSize": "56px", "fontWeight": "bold", "color": INK},
     "margin": 40,
 }
 
-chart.options.subtitle = {
-    "text": "Daily Temperature Readings - 2024",
-    "style": {"fontSize": "36px", "color": "#666666"},
-}
+# Subtitle - theme-adaptive color
+chart.options.subtitle = {"text": "Daily Temperature Readings - 2024", "style": {"fontSize": "36px", "color": INK_SOFT}}
 
 # X-axis (datetime) - with monthly tick intervals to prevent label overlap
 chart.options.x_axis = {
     "type": "datetime",
-    "title": {"text": "Date", "style": {"fontSize": "36px"}, "margin": 25},
-    "labels": {"style": {"fontSize": "28px"}},
+    "title": {"text": "Date", "style": {"fontSize": "36px", "color": INK}, "margin": 25},
+    "labels": {"style": {"fontSize": "28px", "color": INK_SOFT}},
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.1)",
+    "gridLineColor": GRID,
     "tickInterval": 30 * 24 * 3600 * 1000,  # Monthly ticks (30 days in ms)
     "dateTimeLabelFormats": {"month": "%b %Y"},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
 }
 
-# Y-axis
+# Y-axis - theme-adaptive colors
 chart.options.y_axis = {
-    "title": {"text": "Temperature (°C)", "style": {"fontSize": "36px"}, "margin": 25},
-    "labels": {"style": {"fontSize": "28px"}},
+    "title": {"text": "Temperature (°C)", "style": {"fontSize": "36px", "color": INK}, "margin": 25},
+    "labels": {"style": {"fontSize": "28px", "color": INK_SOFT}},
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.1)",
+    "gridLineColor": GRID,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
 }
 
-# Legend
-chart.options.legend = {"enabled": True, "itemStyle": {"fontSize": "32px"}, "margin": 30}
+# Legend - theme-adaptive styling with improved visibility
+chart.options.legend = {
+    "enabled": True,
+    "itemStyle": {"fontSize": "32px", "color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
+    "margin": 30,
+}
 
-# Tooltip
-chart.options.tooltip = {"xDateFormat": "%A, %b %d, %Y", "valueSuffix": " °C", "style": {"fontSize": "28px"}}
+# Tooltip - theme-adaptive styling
+chart.options.tooltip = {
+    "xDateFormat": "%A, %b %d, %Y",
+    "valueSuffix": " °C",
+    "style": {"fontSize": "28px", "color": INK},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderRadius": 4,
+}
 
 # Plot options
 chart.options.plot_options = {
     "line": {"lineWidth": 5, "marker": {"enabled": False}, "states": {"hover": {"lineWidth": 6}}}
 }
 
-# Add series
+# Add series with Okabe-Ito brand color
 series = LineSeries()
 series.name = "Temperature"
 series.data = data_points
-series.color = "#306998"  # Python Blue
+series.color = BRAND  # #009E73 - Okabe-Ito position 1
 
 chart.add_series(series)
 
-# Export to PNG via Selenium
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+# Download Highcharts JS (required for headless Chrome)
+highcharts_url = "https://unpkg.com/highcharts@11/highcharts.js"
+req = urllib.request.Request(
+    highcharts_url, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"}
+)
+with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
+# Generate chart JS
 html_str = chart.to_js_literal()
+
+# Create HTML content with proper theme-adaptive styling
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Save HTML version
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save HTML version with theme suffix
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     cdn_html = (
         """<!DOCTYPE html>
 <html>
@@ -134,7 +170,9 @@ with open("plot.html", "w", encoding="utf-8") as f:
     <meta charset="utf-8">
     <script src="https://code.highcharts.com/highcharts.js"></script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:"""
+        + PAGE_BG
+        + """;">
     <div id="container" style="width: 100%; height: 600px;"></div>
     <script>"""
         + html_str
@@ -162,7 +200,7 @@ time.sleep(5)
 
 # Screenshot the chart container element for exact dimensions
 container = driver.find_element("id", "container")
-container.screenshot("plot.png")
+container.screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()

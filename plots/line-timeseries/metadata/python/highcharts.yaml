@@ -1,171 +1,174 @@
 library: highcharts
+language: python
 specification_id: line-timeseries
 created: '2025-12-26T08:33:45Z'
-updated: '2025-12-26T08:35:59Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20519152426
+updated: '2026-05-09T03:41:48Z'
+generated_by: claude-haiku
+workflow_run: 25590583671
 issue: 2006
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/highcharts/plot.html
-quality_score: 92
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - html-export
-  - custom-legend
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/highcharts/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent seasonal temperature pattern with realistic daily variation demonstrates
-    time series data well
-  - Smart date formatting with monthly tick intervals prevents label overlap
-  - High-resolution output (4800x2700) with appropriately scaled fonts and line width
-  - Correct title format and proper axis labels with units
-  - Clean use of Highcharts datetime axis with millisecond timestamps
-  - Subtitle adds context about the data
+  - Perfect visual quality with excellent readability in both themes
+  - Flawless theme-adaptive chrome implementation (backgrounds, text, grid)
+  - Spec-compliant intelligent datetime formatting and proper axis labels
+  - Excellent realistic data showing complete seasonal temperature cycle
+  - Clean, reproducible code with proper Highcharts library usage
+  - Expert use of Chart() API with distinctive datetime features
   weaknesses:
-  - LineSeries imported from highcharts_core.options.series.area instead of highcharts_core.options.series.line
-  - Could leverage more Highcharts-specific features like zooming capability or data
-    grouping for large datasets
-  image_description: The plot displays a time series line chart showing daily temperature
-    readings throughout 2024. The chart has a white background with a clear title
-    "line-timeseries · highcharts · pyplots.ai" at the top in bold, with a subtitle
-    "Daily Temperature Readings - 2024" below it. The x-axis shows dates from Jan
-    2024 to Jan 2025 with monthly tick intervals, labeled as "Date". The y-axis displays
-    "Temperature (°C)" ranging from approximately -8 to 35 degrees. A single blue
-    line (#306998) traces the temperature throughout the year, showing a clear sinusoidal
-    seasonal pattern - cold winter temperatures around -6 to 5°C in January, rising
-    through spring, peaking around 27-33°C in summer (June-August), then declining
-    through autumn back to winter temperatures. The data shows realistic daily variation
-    (noise) overlaid on the seasonal trend. Grid lines are subtle and visible on both
-    axes. A legend at the bottom shows "Temperature" with a blue line indicator.
+  - Design Excellence is competent but not exceptionally innovative
+  - Library Mastery uses standard features well but not in uniquely distinctive ways
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct for light theme
+      Chrome: Title "line-timeseries · highcharts · pyplots.ai" is dark (INK color #1A1A17) and clearly readable. Subtitle "Daily Temperature Readings - 2024" visible in soft dark text (#4A4A44). X-axis labeled "Date" with monthly tick labels (Jan through Dec 2024) in soft dark text. Y-axis labeled "Temperature (°C)" with values from -10 to 35°C in soft dark text. All axis and tick labels are perfectly readable against the light background. Grid lines are subtle.
+      Data: Teal/green line (#009E73 - Okabe-Ito position 1, brand color) shows 365 daily temperature readings. Clear seasonal pattern: winter low (~0°C in Jan), spring warming, summer peak (~30°C in Jul), fall decline back to ~5°C in Dec. Line is 5px thick and clearly visible. Legend shows "Temperature" with light background box.
+      Legibility verdict: PASS - All text is readable against light background. No dark-on-light contrast issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct for dark theme
+      Chrome: Title is light text (INK_LIGHT color #F0EFE8) and clearly readable against dark background. Subtitle visible in slightly softer light text (#B8B7B0). X-axis and Y-axis labels both in light text and fully legible. Tick labels in soft light text (#B8B7B0) and clearly readable. No dark-on-dark failures present. Grid lines are subtle light lines visible on both axes.
+      Data: The teal/green line color (#009E73) is IDENTICAL to the light render, confirming proper theme handling. Data colors do not flip - only chrome (background, text, grid) flips between themes. Same seasonal temperature pattern visible and just as clear as in light render.
+      Legibility verdict: PASS - All text is readable against dark background. No dark-on-dark issues. Brand green (#009E73) is still visible and distinguishable.
+
+    Summary: Both renders pass legibility checks. The Okabe-Ito data color (#009E73) is identical between themes. Theme-adaptive chrome (backgrounds #FAF8F1 light / #1A1A17 dark, text colors properly light/dark) is flawlessly implemented in both renders. This is a proper theme-adaptive implementation.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick labels all clearly readable at high resolution
-          with appropriately scaled font sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: Monthly tick intervals prevent x-axis label overlap, no overlapping
-          elements
+        comment: All font sizes explicitly set (56px title, 36px axes, 28px ticks);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Monthly tick spacing prevents overlap; all labels fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width of 5px is appropriate for 365 data points, good visibility
-          without markers
+        comment: Line width 5px is clear; grid lines subtle but visible; 365 data
+          points well-adapted
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single color (#306998 Python blue) with high contrast against white
-          background
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with appropriate margins, good use of space
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has "Temperature (°C)" with units, X-axis has "Date"
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Uses #009E73 (Okabe-Ito colorblind-safe) with excellent contrast'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 70-80% of canvas; balanced margins; nothing cut-off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Y-axis includes units; X-axis descriptive; title correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Data #009E73 identical in both renders; backgrounds and text colors
+          properly theme-adaptive'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: false
-        comment: Grid is subtle (alpha 0.1), but legend placement at bottom is less
-          than ideal for this chart type
+        comment: Professional theme-adaptive design with good hierarchy; well-executed
+          but standard rather than distinctive
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Legend styling with box, generous margins, subtle grid; some refinement
+          but minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Clear seasonal narrative (winter low → summer peak); good visual
+          hierarchy through data selection
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct time series line plot with datetime x-axis
+        comment: Correct time series line chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Datetime on X, numeric values on Y correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Smart date formatting with monthly ticks, grid lines, proper datetime
-          axis
-      - id: SC-04
-        name: Data Range
+        comment: Datetime axis, intelligent date formatting, grid lines, proper spacing
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full year of data displayed, axes show complete range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Dates correctly map to X-axis, temperature to Y-axis, all 365 points
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labeled "Temperature"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: line-timeseries · highcharts · pyplots.ai'
+        comment: Title format correct, legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows seasonal variation and daily noise, demonstrates temporal patterns
-          well, but could show more complexity
+        comment: Complete seasonal cycle with winter low, summer peak, daily variations
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Temperature readings for Northern Hemisphere with realistic seasonal
-          pattern
+        comment: Daily temperature data is realistic; Northern Hemisphere pattern
+          is factually accurate
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values realistic (-6 to 33°C) for temperate climate, though extremes
-          are slightly high for a single location
+        comment: Values (-10 to 35°C) and seasonal amplitude realistic; no impossible
+          data
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,41 +176,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → chart config → export'
+        comment: Straightforward linear flow with no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: Uses random.seed(42) for deterministic data
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Import from highcharts_core.options.series.area for LineSeries is
-          unusual (should be from .line)
+        passed: true
+        comment: All imports used appropriately
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Highcharts API
+        comment: Clean, Pythonic, no over-engineering or fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct PNG and HTML output with theme suffixes
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of Chart(), HighchartsOptions, LineSeries; proper datetime
+          axis configuration
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses Highcharts datetime axis and tooltip formatting, but doesn't
-          leverage unique features like zooming, data grouping, or stock chart capabilities
+        comment: Uses Highcharts datetime features (dateTimeLabelFormats, xDateFormat)
+          but relatively standard across charting libraries
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
