@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" anyplot.ai
 line-confidence: Line Plot with Confidence Interval
-Library: matplotlib 3.10.8 | Python 3.13.11
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 82/100 | Updated: 2026-05-09
 """
 
 import sys
