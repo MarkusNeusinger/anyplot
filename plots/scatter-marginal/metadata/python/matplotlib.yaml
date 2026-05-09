@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: scatter-marginal
 created: '2025-12-26T14:58:58Z'
-updated: '2026-05-09T05:19:09Z'
+updated: '2026-05-09T05:24:41Z'
 generated_by: claude-haiku
 workflow_run: 25592616567
 issue: 2005
@@ -12,41 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 89
 review:
   strengths:
-  - 'Flawless theme adaptation: chrome inverts correctly, data colors remain constant
-    across light/dark renders'
-  - 'Excellent spec compliance: all required features implemented with proper positioning
-    and alignment'
-  - 'Clean architecture: GridSpec provides elegant multi-panel layout with automatic
-    axis alignment'
-  - 'Proper typography and sizing: all text readable at specified font sizes in both
-    themes'
-  - 'Data quality: bimodal correlated dataset effectively demonstrates the plot type''s
-    capability'
+  - 'Excellent theme adaptation: data colors (#009E73) identical in both renders;
+    chrome properly flips with no legibility issues'
+  - Strong visual hierarchy through GridSpec multi-panel layout with properly aligned
+    marginals
+  - 'High code quality: clean KISS structure, all imports used, idiomatic matplotlib
+    patterns'
+  - 'Perfect specification compliance: all required features present and correctly
+    implemented'
+  - 'Refined visual polish: subtle grid, removed spines, generous whitespace, edge
+    highlighting'
   weaknesses:
-  - 'Design is functionally correct but generic: relies on defaults without distinctive
-    visual choices (DE-01 = 4/8)'
-  - 'Limited library showcase: doesn''t leverage matplotlib''s more advanced features
-    like custom artist patches or KDE overlays (LM-02 = 1/5)'
-  - 'No visual hierarchy emphasis: marginal distributions could benefit from visual
-    distinction through edge contrast or opacity variation'
+  - Axis labels lack units (Feature A/B should specify measured quantities)
+  - 'Design Excellence: well-executed but appears as refined defaults rather than
+    distinctive design; could benefit from custom color harmony'
+  - 'Data storytelling: bimodal structure visible but lacks visual emphasis or annotations
+    to highlight key insights'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title, axis labels (Feature A, Feature B, Count), and tick labels all clearly visible with dark text (INK #1A1A17). Grid lines subtle (alpha 0.10) and visible. Spines properly L-shaped. No text-rendering issues.
-      Data: Scatter points and histogram bars use brand green (#009E73) with appropriate alpha values (0.65 for scatter, 0.5 for histograms). Bimodal bivariate pattern clearly visible with 200 points revealing positive correlation.
-      Legibility verdict: PASS — all elements readable with excellent contrast against light background
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "scatter-marginal · matplotlib · anyplot.ai" in dark ink; axis labels (Feature A / Feature B) and tick labels all clearly readable in dark text against light background
+      Data: Scatter points and histogram bars in brand green (#009E73); 200 points show clear positive correlation with bimodal structure (clusters at Feature A ~30 and ~60); top marginal histogram shows bimodal distribution; right marginal histogram shows Feature B distribution; all elements well-spaced, no overlap
+      Legibility verdict: PASS - All text readable; no light-on-light issues; excellent contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: Title, axis labels, and tick labels now use light text (INK #F0EFE8, INK_SOFT #B8B7B0) with perfect contrast against dark background. Grid lines inverted and visible. No dark-on-dark text failures. All chrome properly theme-adapted.
-      Data: Scatter points and histogram bars use identical brand green (#009E73) to light render — color invariance confirmed. Data representation and proportions identical to light render.
-      Legibility verdict: PASS — all elements readable, proper dark-theme adaptation confirmed. No chrome text rendering failures.
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title and all axis/tick labels rendered in light ink tones (#F0EFE8 primary, #B8B7B0 secondary); all text clearly readable against dark background
+      Data: Scatter points and histogram bars remain brand green (#009E73) - identical to light render, confirming proper theme independence for data colors; bimodal structure and positive correlation equally clear
+      Legibility verdict: PASS - No dark-on-dark failures; tick labels and axis labels are light and visible; excellent theme contrast
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -54,71 +53,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly colored using theme tokens; readable in both
-          renders at specified sizes
+        comment: All sizes explicitly set (title 24pt, labels 20pt, ticks 16pt); readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: GridSpec provides clean spatial separation; no text collisions; histograms
-          properly aligned
+        comment: All text fully readable, no overlapping elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Scatter points and histograms clearly visible; sized appropriately
-          for 200-point dataset
+        comment: Scatter points optimally adapted (s=100, α=0.65 for 200 points);
+          histograms clear
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito position 1 (#009E73); colorblind-safe; no red-green dependency
+        comment: Brand green is colorblind-safe; good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape aspect ratio appropriate; generous margins; main plot
-          dominates; nothing cut off
+        comment: Perfect proportions, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Descriptive labels; title format correct
+        passed: false
+        comment: Generic labels (Feature A/B) lack units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Data colors constant between themes; backgrounds correct; chrome
-          properly theme-adapted
+        comment: 'First series is #009E73; backgrounds correct; both renders theme-correct'
     design_excellence:
-      score: 8
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Generic defaults; no custom palette beyond brand green; no intentional
-          design hierarchy
+        comment: Thoughtful layout and color harmony, but resembles well-configured
+          defaults
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Spines removed, grid subtle, whitespace adequate; but minimal customization
+        passed: true
+        comment: Subtle grid, spines removed, generous whitespace, edge highlighting;
+          nearly perfect
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Clear focal point; reveals bimodal correlation; but no emphasis techniques
+        comment: Bimodal structure and correlation clear; could emphasize insights
+          more
     spec_compliance:
       score: 15
       max: 15
@@ -128,27 +126,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with marginal distributions; proper positioning
+        comment: Correct scatter plot with marginal distributions
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Bivariate relationship shown; univariate marginals visible
+        comment: 'All features present: scatter, top marginal, right marginal, alignment'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; axis ranges show all data
+        comment: X/Y correctly mapped; marginals aligned with axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct format; no legend needed
+        comment: Title format correct; no legend needed
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -156,19 +154,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bivariate scatter and marginal distributions complete
+        comment: 'Shows all aspects: bimodal univariate + positive bivariate correlation'
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Bimodal correlated data; realistic pattern with two clusters
+        passed: false
+        comment: Plausible but generic labels; no real-world scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible ranges; correlation ~0.7 visually apparent
+        comment: Proportional relationships realistic
     code_quality:
       score: 10
       max: 10
@@ -178,57 +176,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; direct procedural code
+        comment: Clean imports → data → plot → save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic with np.random.seed(42)
+        comment: np.random.seed(42) ensures determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports; all used
+        comment: All imports used; no extraneous dependencies
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake interactivity
+        comment: Pythonic, appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct file naming and DPI settings
+        comment: Saves as plot-{THEME}.png
     library_mastery:
-      score: 4
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Proper Axes methods; GridSpec idiomatically used; straightforward
-          approach
+        comment: Expert use of matplotlib (Axes methods, GridSpec, spine/grid manipulation)
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: GridSpec effectively used; could showcase more matplotlib-specific
-          techniques
+        comment: Uses GridSpec for multi-panel layout (distinctive to matplotlib)
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
+  - manual-ticks
   patterns:
   - data-generation
+  - explicit-figure
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
