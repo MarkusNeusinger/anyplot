@@ -1,164 +1,179 @@
 library: seaborn
+language: python
 specification_id: confusion-matrix
 created: '2025-12-26T17:36:54Z'
-updated: '2025-12-26T17:40:13Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20526590019
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-09T16:40:30Z'
+generated_by: claude-haiku
+workflow_run: 25606005975
+issue: 2272
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/seaborn/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-    - annotations
-    - colorbar
-  patterns:
-    - data-generation
-  dataprep: []
-  styling:
-    - custom-colormap
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 82
 review:
   strengths:
-  - Excellent visual clarity with well-sized annotations and contrasting text colors
-    on cells
-  - Properly follows specification with True/Predicted axis labels and Blues colormap
-  - Realistic sentiment analysis scenario with believable confusion patterns showing
-    systematic errors
-  - Clean, readable code following KISS principles
-  - Square format appropriate for symmetric confusion matrix
+  - Perfect visual quality with explicit font sizing and excellent readability in
+    both light and dark themes
+  - Flawless theme-adaptive styling using well-designed token system (PAGE_BG, INK,
+    INK_SOFT)
+  - All specification requirements met with clean, reproducible code
+  - Proper data mapping with realistic sentiment classification example
+  - Strong diagonal (correct predictions) naturally emphasizes model performance
   weaknesses:
-  - Minor colorbar label duplication (label set both in cbar_kws and manually)
-  - Data is deterministic but no explicit np.random.seed() for documentation purposes
-  image_description: 'The plot displays a 4x4 confusion matrix heatmap for sentiment
-    analysis classification with four classes: Negative, Neutral, Positive, and Mixed.
-    The matrix uses a sequential blue colormap ("Blues") where darker blues indicate
-    higher counts. Cell annotations show the raw count values in bold white/black
-    text. The diagonal cells (correct predictions) are prominently darker: Negative=156,
-    Neutral=142, Positive=168, Mixed=125. Off-diagonal cells show misclassification
-    patterns with lighter shading. The y-axis is labeled "True Label", x-axis is "Predicted
-    Label". A colorbar on the right shows the count scale from ~0 to 168. The title
-    reads "Sentiment Analysis Model · confusion-matrix · seaborn · pyplots.ai". White
-    gridlines separate cells clearly. X-axis labels are rotated 45° for readability.'
+  - No additional design sophistication beyond functional defaults (limits DE-01 to
+    4/8)
+  - Library usage is correct but straightforward without distinctive seaborn features
+    (limits LM-02 to 1/5)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - correct light theme surface
+      Chrome: Title (24pt dark), axis labels "True Label"/"Predicted Label" (22pt dark), tick labels "Negative"/"Neutral"/"Positive"/"Mixed" (18pt dark), colorbar label "Count" (18pt dark) - all readable on light background
+      Data: 4×4 confusion matrix with Blues colormap, cells annotated with bold white counts (156, 12, 5, 8, 18, 142, 15, 10, etc.), colorbar shows scale 0-160
+      Legibility verdict: PASS - all text readable, no light-on-light contrast issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 - correct dark theme surface
+      Chrome: Title (24pt light #F0EFE8), axis labels (22pt light), tick labels (18pt INK_SOFT #B8B7B0), colorbar label (18pt light) - all readable on dark background; NO dark-on-dark failures
+      Data: Identical 4×4 confusion matrix with Blues colormap colors unchanged from light render - data colors perfectly match light version (only chrome adapted)
+      Legibility verdict: PASS - all text readable, no dark-on-dark issues, data colors consistent across themes
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 22pt, tick labels at 18pt, annotations
-          at 20pt bold - all perfectly readable
+        comment: All font sizes explicitly set (24pt title, 22pt labels, 18pt ticks);
+          readable at full resolution in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text anywhere, rotated x-labels prevent collision
+        comment: No overlapping text; adequate padding (pad=20, labelpad=15); x-axis
+          labels rotated 45° with ha=right
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Cells are square, well-sized, annotations clearly visible with contrasting
-          colors
+        comment: All 16 cells clearly visible; colorbar prominent; white grid lines
+          provide clear separation
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blues sequential colormap is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Square format appropriate for matrix, good proportions but colorbar
-          could be slightly better integrated
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"True Label" and "Predicted Label" as specified'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Blues colormap is perceptually uniform; good contrast; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 3600×3600 px format appropriate for symmetric matrix; balanced
+          margins; tight_layout applied
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: True Label and Predicted Label are descriptive; title includes spec-id
+          and library
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Blues used for continuous count data; backgrounds correct (#FAF8F1
+          light, #1A1A17 dark); both renders theme-correct'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: No grid needed for heatmap, but colorbar label "Count" is duplicated
-          (in cbar_kws and manually set)
+        comment: Well-configured with proper theme tokens and white grid definition,
+          but follows straightforward functional approach without additional design
+          flourishes
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Library defaults with seaborn's ticks style; white cell separators;
+          generous margins; minimal additional customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Diagonal naturally stands out with darker blue (correct predictions);
+          clear focal point; data displayed without additional emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct confusion matrix heatmap
+        comment: Correct confusion matrix heatmap with proper axis arrangement
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: True labels on y-axis, Predicted on x-axis as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Annotations present, Blues colormap, colorbar included, clear axis
-          labels
-      - id: SC-04
-        name: Data Range
+        comment: Labeled axes, cell annotations with counts, sequential Blues colormap,
+          colorbar with scale
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 4 classes visible, full range shown
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; all classes visible; data fully mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly shows count scale
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Follows "{description} · {spec-id} · {library} · pyplots.ai" format
+        comment: Title format correct; colorbar label Count matches data semantics
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows strong diagonal (good model), asymmetric confusion patterns,
-          varied misclassification rates
+        comment: 'Shows all aspects: true positives (diagonal 156, 142, 168, 125),
+          false positives/negatives, per-class patterns'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Sentiment analysis is a real-world NLP task, 4 classes are realistic
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Counts are realistic for a test set (~700 samples total)
+        comment: Real-world sentiment analysis; plausible class imbalances; realistic
+          Neutral confusion patterns
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Count range 3-168; 4 classes; ~500 total samples; all sensible for
+          classification dataset
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -166,33 +181,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: No functions/classes; direct imports → tokens → data → plot → save
       - id: CQ-02
         name: Reproducibility
-        score: 0
-        max: 3
-        passed: false
-        comment: No random seed, though data is deterministic (hardcoded matrix)
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42); deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib, numpy, seaborn used
+        comment: 'Only used imports: os, matplotlib.pyplot, numpy, seaborn'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: No fake UI; proper API usage; clean code
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
-      items: []
+        comment: Saves as plot-{THEME}.png with correct current API
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses sns.heatmap() and sns.set_theme() idiomatically; correct rc
+          parameter pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic heatmap usage; could leverage clustermap or advanced features
+          (not required)
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
