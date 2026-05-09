@@ -1,18 +1,28 @@
-""" pyplots.ai
+""" anyplot.ai
 hive-basic: Basic Hive Plot
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 88/100 | Created: 2025-12-24
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 81/100 | Updated: 2026-05-09
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito for the 3 axes (positions 1, 2, 3)
+AXIS_COLORS = {"core": "#009E73", "utility": "#D55E00", "interface": "#0072B2"}
+
 # Data: Software module dependency network
 np.random.seed(42)
 
-# Define nodes with categories (axis assignment) and positions
-# Categories: core, utility, interface (3 axes)
 nodes = [
     # Core modules (axis 0)
     {"id": "engine", "category": "core", "degree": 8},
@@ -22,20 +32,19 @@ nodes = [
     {"id": "scheduler", "category": "core", "degree": 3},
     # Utility modules (axis 1)
     {"id": "logger", "category": "utility", "degree": 7},
+    {"id": "parser", "category": "utility", "degree": 6},
     {"id": "config", "category": "utility", "degree": 5},
     {"id": "cache", "category": "utility", "degree": 4},
-    {"id": "parser", "category": "utility", "degree": 6},
     {"id": "validator", "category": "utility", "degree": 3},
     {"id": "formatter", "category": "utility", "degree": 2},
     # Interface modules (axis 2)
     {"id": "api", "category": "interface", "degree": 9},
-    {"id": "cli", "category": "interface", "degree": 5},
     {"id": "web", "category": "interface", "degree": 6},
+    {"id": "cli", "category": "interface", "degree": 5},
     {"id": "rest", "category": "interface", "degree": 4},
     {"id": "grpc", "category": "interface", "degree": 3},
 ]
 
-# Define edges (dependencies between modules)
 edges = [
     ("api", "engine"),
     ("api", "logger"),
@@ -63,81 +72,65 @@ edges = [
     ("parser", "validator"),
 ]
 
-# Axis configuration
+# Axis layout: 3 axes evenly spaced
 categories = ["core", "utility", "interface"]
-axis_angles = [90, 210, 330]  # degrees, evenly spaced
-axis_colors = {"core": "#306998", "utility": "#FFD43B", "interface": "#4ECDC4"}
+axis_angles = [90, 210, 330]  # degrees
+inner_radius = 0.25
+outer_radius = 0.90
 
-# Create node lookup
 node_lookup = {n["id"]: n for n in nodes}
 
-# Group nodes by category and sort by degree
+# Group and sort by degree (descending → innermost = highest degree)
 nodes_by_category = {cat: [] for cat in categories}
 for node in nodes:
     nodes_by_category[node["category"]].append(node)
-
 for cat in categories:
     nodes_by_category[cat].sort(key=lambda x: x["degree"], reverse=True)
 
-# Hive plot parameters - scale up for better canvas utilization
-inner_radius = 0.25
-outer_radius = 0.95
-
-# Calculate all node positions inline (KISS - no functions)
+# Compute polar positions (inline, no functions)
 node_positions = {}
 for node in nodes:
     cat_idx = categories.index(node["category"])
-    angle_deg = axis_angles[cat_idx]
-    angle_rad = np.radians(angle_deg)
+    angle_rad = np.radians(axis_angles[cat_idx])
     cat_nodes = nodes_by_category[node["category"]]
     rank = cat_nodes.index(node)
     n_nodes = len(cat_nodes)
     t = rank / (n_nodes - 1) if n_nodes > 1 else 0.5
     radius = inner_radius + t * (outer_radius - inner_radius)
-    x = radius * np.cos(angle_rad)
-    y = radius * np.sin(angle_rad)
-    node_positions[node["id"]] = (x, y, radius)
+    node_positions[node["id"]] = (radius * np.cos(angle_rad), radius * np.sin(angle_rad))
 
-# Create figure
+# Plot
 fig = go.Figure()
 
-# Draw axes
+# Axes (radial spokes)
 for i, cat in enumerate(categories):
     angle_rad = np.radians(axis_angles[i])
-    x_start = inner_radius * 0.7 * np.cos(angle_rad)
-    y_start = inner_radius * 0.7 * np.sin(angle_rad)
-    x_end = outer_radius * 1.05 * np.cos(angle_rad)
-    y_end = outer_radius * 1.05 * np.sin(angle_rad)
-
+    x0 = inner_radius * 0.7 * np.cos(angle_rad)
+    y0 = inner_radius * 0.7 * np.sin(angle_rad)
+    x1 = outer_radius * 1.05 * np.cos(angle_rad)
+    y1 = outer_radius * 1.05 * np.sin(angle_rad)
     fig.add_trace(
         go.Scatter(
-            x=[x_start, x_end],
-            y=[y_start, y_end],
+            x=[x0, x1],
+            y=[y0, y1],
             mode="lines",
-            line={"color": axis_colors[cat], "width": 5},
+            line={"color": AXIS_COLORS[cat], "width": 5},
             showlegend=False,
             hoverinfo="skip",
         )
     )
 
-# Draw edges as curved paths (inline bezier calculation)
+# Edges (quadratic bezier curves, pulled toward center)
 for source, target in edges:
     if source not in node_positions or target not in node_positions:
         continue
-
-    x0, y0 = node_positions[source][0], node_positions[source][1]
-    x1, y1 = node_positions[target][0], node_positions[target][1]
-
-    # Inline quadratic bezier curve calculation
-    cx = (x0 + x1) / 2 * 0.25
-    cy = (y0 + y1) / 2 * 0.25
-    t = np.linspace(0, 1, 40)
-    curve_x = (1 - t) ** 2 * x0 + 2 * (1 - t) * t * cx + t**2 * x1
-    curve_y = (1 - t) ** 2 * y0 + 2 * (1 - t) * t * cy + t**2 * y1
-
-    source_cat = node_lookup[source]["category"]
-    edge_color = axis_colors[source_cat]
-
+    x0, y0 = node_positions[source]
+    x1, y1 = node_positions[target]
+    cx, cy = (x0 + x1) / 2 * 0.25, (y0 + y1) / 2 * 0.25
+    t_vals = np.linspace(0, 1, 40)
+    curve_x = (1 - t_vals) ** 2 * x0 + 2 * (1 - t_vals) * t_vals * cx + t_vals**2 * x1
+    curve_y = (1 - t_vals) ** 2 * y0 + 2 * (1 - t_vals) * t_vals * cy + t_vals**2 * y1
+    edge_color = AXIS_COLORS[node_lookup[source]["category"]]
     fig.add_trace(
         go.Scatter(
             x=curve_x,
@@ -150,79 +143,78 @@ for source, target in edges:
         )
     )
 
-# Draw nodes with adjusted label positions to avoid overlap
-label_offset_map = {"core": "top right", "utility": "bottom left", "interface": "bottom right"}
-
+# Nodes (per category for legend grouping)
+label_positions = {"core": "top center", "utility": "bottom left", "interface": "bottom right"}
 for cat in categories:
     cat_nodes = nodes_by_category[cat]
     xs = [node_positions[n["id"]][0] for n in cat_nodes]
     ys = [node_positions[n["id"]][1] for n in cat_nodes]
-    sizes = [n["degree"] * 5 + 18 for n in cat_nodes]  # Larger markers
     labels = [n["id"] for n in cat_nodes]
     degrees = [n["degree"] for n in cat_nodes]
-
+    sizes = [d * 5 + 18 for d in degrees]
     fig.add_trace(
         go.Scatter(
             x=xs,
             y=ys,
             mode="markers+text",
-            marker={"size": sizes, "color": axis_colors[cat], "line": {"color": "white", "width": 2.5}},
+            marker={"size": sizes, "color": AXIS_COLORS[cat], "line": {"color": PAGE_BG, "width": 2.5}},
             text=labels,
-            textposition=label_offset_map[cat],
-            textfont={"size": 18, "color": "#333333"},
+            textposition=label_positions[cat],
+            textfont={"size": 16, "color": INK_SOFT},
             name=cat.capitalize(),
             hovertemplate="<b>%{text}</b><br>Degree: %{customdata}<extra></extra>",
             customdata=degrees,
         )
     )
 
-# Add axis labels beyond the endpoints to avoid overlap with node labels
-# Include sorting context (by degree) as per spec requirement
+# Axis category labels — placed well beyond outermost nodes to avoid overlap
 for i, cat in enumerate(categories):
     angle_rad = np.radians(axis_angles[i])
-    # Position labels further out (1.35x) to clear node labels at endpoints
-    label_x = outer_radius * 1.35 * np.cos(angle_rad)
-    label_y = outer_radius * 1.35 * np.sin(angle_rad)
+    label_r = outer_radius * 1.6
     fig.add_annotation(
-        x=label_x,
-        y=label_y,
-        text=f"<b>{cat.upper()}</b><br><span style='font-size:14px'>(sorted by degree)</span>",
+        x=label_r * np.cos(angle_rad),
+        y=label_r * np.sin(angle_rad),
+        text=f"<b>{cat.upper()}</b><br><span style='font-size:13px'>sorted by degree</span>",
         showarrow=False,
-        font={"size": 22, "color": axis_colors[cat]},
+        font={"size": 20, "color": AXIS_COLORS[cat]},
     )
 
-# Layout - maximized canvas utilization
+# Style
 fig.update_layout(
     title={
-        "text": "hive-basic · plotly · pyplots.ai<br><sup>Software Dependency Network: nodes by module type, positioned by degree</sup>",
-        "font": {"size": 32, "color": "#333333"},
+        "text": (
+            "hive-basic · plotly · anyplot.ai"
+            "<br><sup>Software Dependency Network — nodes by module type, radius by degree</sup>"
+        ),
+        "font": {"size": 28, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     showlegend=True,
     legend={
-        "title": {"text": "Module Type", "font": {"size": 20}},
-        "font": {"size": 18},
+        "title": {"text": "Module Type", "font": {"size": 18, "color": INK}},
+        "font": {"size": 16, "color": INK_SOFT},
         "x": 0.01,
         "y": 0.99,
-        "bgcolor": "rgba(255,255,255,0.9)",
-        "bordercolor": "#cccccc",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
-    xaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "range": [-1.5, 1.5]},
+    xaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "range": [-2.0, 2.0]},
     yaxis={
         "showgrid": False,
         "zeroline": False,
         "showticklabels": False,
-        "range": [-1.5, 1.5],
+        "range": [-1.8, 1.8],
         "scaleanchor": "x",
         "scaleratio": 1,
     },
-    plot_bgcolor="white",
-    paper_bgcolor="white",
-    margin={"l": 40, "r": 40, "t": 120, "b": 40},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
+    margin={"l": 60, "r": 60, "t": 110, "b": 60},
 )
 
-# Save outputs
-fig.write_image("plot.png", width=1200, height=1200, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

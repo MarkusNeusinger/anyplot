@@ -1,220 +1,235 @@
 library: letsplot
+language: python
 specification_id: alluvial-basic
 created: '2025-12-26T10:37:09Z'
-updated: '2025-12-26T10:39:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520941938
+updated: '2026-05-09T01:28:40Z'
+generated_by: claude-haiku
+workflow_run: 25587359879
 issue: 1878
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - bezier-curves
-  - html-export
-  - annotations
-  patterns:
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/letsplot/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent choice of realistic voter migration data that perfectly demonstrates
-    alluvial diagram use case
-  - Clean visual design with good color choices and appropriate transparency for flow
-    bands
-  - Smooth curved flows using parametric interpolation with easing function
-  - Proper dual output (PNG + HTML) leveraging lets-plot interactivity
-  - Direct labeling strategy eliminates need for separate legend while maintaining
-    clarity
-  - Title follows required format exactly
+  - Perfect visual quality in both light and dark themes; all text readable against
+    correct backgrounds
+  - Excellent palette compliance; Okabe-Ito colors identical between renders (chrome
+    only flips)
+  - Accurate alluvial diagram implementation with proper flow visualization and transparency
+  - Clean, reproducible code; no fake functionality
+  - Proper theme-adaptive color tokens applied throughout (PAGE_BG, INK, INK_SOFT)
+  - Correct output filenames and formats (plot-light/dark.png/html)
   weaknesses:
-  - Helper functions (calculate_node_positions, add_flows) deviate slightly from pure
-    KISS flat script style
-  - Yellow (Independents) could be more distinguishable from gray (Non-Voters) in
-    certain viewing conditions
-  image_description: The plot displays an alluvial diagram showing voter migration
-    between four political affiliations (Democrats, Republicans, Independents, Non-Voters)
-    across three US election cycles (2016, 2020, 2024). Three vertical columns represent
-    each election year, with colored rectangular nodes indicating party/voter status.
-    Blue represents Democrats (bottom), red for Republicans, yellow for Independents,
-    and gray for Non-Voters (top). Curved bands flow between nodes showing voter transitions
-    - flows are colored by destination party with ~55% transparency. The left side
-    shows party labels, while the right side shows party names with final 2024 totals
-    in millions (Democrats 85M, Republicans 78M, Independents 10M, Non-Voters 58M).
-    Title follows the required format at top-left.
+  - 'Title domain error: says ''pyplots.ai'' instead of ''anyplot.ai'' (line 302)
+    — simple 1-line fix required'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "alluvial-basic · letsplot · pyplots.ai" is bold and dark (INK #1A1A17); time headers (2016, 2020, 2024) are bold and clearly visible; party names on left and value labels on right are gray (INK_SOFT #4A4A44) and readable
+      Data: Uses Okabe-Ito palette - Democrats (#009E73), Republicans (#D55E00), Independents (#0072B2), Non-Voters (#CC79A7); flows use destination color with 0.55 alpha; node borders use INK color for definition
+      Legibility verdict: PASS - all elements readable; no light-on-light contrast issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title and headers are light text (#F0EFE8); party and value labels are light gray (#B8B7B0) - all readable against dark background; no dark-on-dark failures
+      Data: Colors identical to light render - data colors are theme-independent as required; only chrome flipped. Brand green (#009E73) is vibrant and clearly distinguishable
+      Legibility verdict: PASS - all text legible; proper theme adaptation throughout
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, year headers, and party labels are clearly readable. Font
-          sizes are appropriate for the canvas size.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements. Labels are well-positioned outside
-          the plot area.
+        comment: All text explicitly set with appropriate colors and font sizes; readable
+          in both light and dark
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Labels well-positioned; no collisions between elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Nodes and flows are clearly visible. Flow bands have good alpha (0.55)
-          for overlap handling. Some minor flow crossings are hard to trace.
+        comment: Nodes, flows, and borders all clearly visible; transparency (0.55
+          alpha) manages overlap
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, red, yellow, gray palette is distinguishable. Red-blue distinction
-          works for most colorblind types, though red-green sensitive users may have
-          some difficulty with yellow-gray distinction.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, good margins, balanced whitespace.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for alluvial diagrams; party labels and year headers serve this
-          purpose and are descriptive with context (values in millions).
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette (positions 1–4) is colorblind-safe; no red-green
+          as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Proper 4800×2700px dimensions; good proportions and margins; nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No legend shown (legend_position="none"), but colors are identifiable
-          via labels. Grid appropriately hidden for this plot type.
+        comment: Clear time-point headers, party names, value labels; appropriate
+          for alluvial type
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order 1→4; backgrounds #FAF8F1/#1A1A17;
+          data colors theme-independent'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Uses standard Okabe-Ito; follows minimal design; no extra polish
+          beyond requirements
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Removes clutter (theme_minimal); subtle node borders; could add more
+          refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Alluvial naturally guides eye left-to-right; color consistency aids
+          tracking; missing emphasis on key transitions
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct alluvial diagram with vertical time ordering and flow bands
+        comment: Correct alluvial diagram; shows flows between categories across time
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time points as columns, categories as nodes, flow magnitudes as band
-          widths
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows transitions across 3 time points, 4 categories, proportional
-          band widths
-      - id: SC-04
-        name: Data Range
+        comment: Time points, categories, flow magnitudes, transparency all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, flows span full range between nodes
-      - id: SC-05
-        name: Legend Accuracy
+        comment: 'X: time points; Y: proportions; flows show transitions'
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Direct labeling replaces legend effectively
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses "alluvial-basic · letsplot · pyplots.ai" format correctly
+        max: 3
+        passed: false
+        comment: Title says 'pyplots.ai' instead of 'anyplot.ai' (line 302); legend
+          correctly omitted
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple flow directions (retention, migration between parties,
-          mobilization from non-voters). Could show more dramatic shifts for variety.
+        comment: All 4 parties across 3 time points; multiple transition types shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: US election voter migration is a perfect, comprehensible real-world
-          scenario
+        comment: US election voter migration is real-world plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values in millions are plausible for US electorate. Some totals seem
-          reasonable though exact numbers are illustrative.
+        comment: Voter counts in millions are realistic; proportions sensible
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Uses helper functions (calculate_node_positions, add_flows) which
-          slightly deviates from pure KISS style, but keeps code organized
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Deterministic data, no random seed needed (all values hardcoded)
+        comment: No classes/unnecessary functions; straightforward procedural logic
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded, deterministic data; identical output on every run
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no dead code
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Well-organized; no fake UI or simulated interactivity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct scaling
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png/html correctly; uses current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ggplot grammar with geom_polygon for custom shapes, scale_fill_manual,
-          theme customization. However, lets-plot does not have a native alluvial
-          geom, so manual polygon construction was necessary. Good use of ggsize and
-          ggsave with scale parameter.
+        comment: ggplot2-style grammar with aes(), geoms, scales, theme; high-level
+          API
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Custom polygon flows with bezier-like easing; good use of letsplot;
+          could leverage more library-specific features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
