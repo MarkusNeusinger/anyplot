@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: alluvial-basic
 created: '2025-12-24T22:21:18Z'
-updated: '2026-05-09T01:02:23Z'
+updated: '2026-05-09T01:09:08Z'
 generated_by: claude-haiku
 workflow_run: 25586934090
 issue: 1878
@@ -15,39 +15,34 @@ preview_html_dark: null
 quality_score: 89
 review:
   strengths:
-  - Perfect theme adaptation with both light and dark renders readable and correct
-  - Excellent visual quality with all text explicitly sized and perfectly legible
-    in both themes
-  - Flawless spec compliance and data quality - correct alluvial diagram with realistic
-    voter migration data
-  - 'Proper Okabe-Ito palette use with Party A as brand green #009E73'
-  - Clean, reproducible code using idiomatic matplotlib patterns with Bezier curves
-    for smooth flows
-  - Proper theme-token implementation throughout - background, text, legend, and spine
-    colors all adapt correctly
+  - Perfect theme compliance with both light and dark renders correctly implementing
+    chrome flipping
+  - Flawless Okabe-Ito palette adherence with positions 1-4 in strict order and correct
+    theme-adaptive backgrounds
+  - All text fully readable in both themes with explicit font sizes and theme-adaptive
+    colors
+  - Clean, simple code structure with proper reproducibility and no unnecessary complexity
+  - Proper alluvial visualization with proportional flows, correct node stacking,
+    and clear temporal narrative
   weaknesses:
-  - Design Excellence is serviceable but not sophisticated - aesthetic choices follow
-    library defaults rather than distinctive custom styling
-  - Visual refinement could be enhanced - legend styling is good but overall polish
-    is minimal beyond requirements
-  - Data storytelling is clear but lacks emphasis - voter migration trends are visible
-    but not visually highlighted or prioritized
-  - No custom grid styling or visual hierarchy enhancements to create focal points
-    or guide viewer emphasis
+  - Design lacks visual sophistication and distinctive aesthetic touches beyond functional
+    competence
+  - Bezier curve technique is correct but relatively standard for alluvial diagrams
+    rather than novel
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 - correct
-      Chrome: Title "Voter Migration 2012-2024 · alluvial-basic · matplotlib · anyplot.ai" (fontsize=24, dark INK text), time point labels "2012", "2016", "2020", "2024" (fontsize=22, bold), category labels with voter counts (fontsize=15, bold, dark INK) - all clearly readable
-      Data: Party A (green #009E73), Party B (orange #D55E00), Party C (blue #0072B2), Independent (reddish purple #CC79A7). Node rectangles with proportional heights, flow bands with alpha=0.4 transparency showing transitions between time points
-      Legend: Bottom left with all four categories, ELEVATED_BG frame, INK_SOFT text
-      Legibility verdict: PASS - all text is dark and highly visible against light background, no overlaps, excellent contrast
+      Background: Warm off-white (#FAF8F1) - correct and matches specification
+      Chrome: Title "Voter Migration 2012-2024 · alluvial-basic · matplotlib · anyplot.ai" in dark text (INK #1A1A17), time point headers (2012, 2016, 2020, 2024) bold and dark, node labels with category names and voter counts in dark bold text - all clearly readable
+      Data: Four parties color-coded using Okabe-Ito palette - Party A (#009E73 green), Party B (#D55E00 orange), Party C (#0072B2 blue), Independent (#CC79A7 reddish purple). Curved ribbon flows connect categories with alpha=0.4 transparency. Node rectangles solid with subtle borders. Legend at lower left with colored patches and dark text.
+      Legibility verdict: PASS - All text is highly readable against the light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 - correct
-      Chrome: Title (fontsize=24, light #F0EFE8 text), time point labels (fontsize=22, bold, light text), category labels (fontsize=15, bold, light #F0EFE8 text) - all clearly readable
-      Data: Party A (green #009E73 - IDENTICAL to light render), Party B (orange #D55E00 - IDENTICAL), Party C (blue #0072B2 - IDENTICAL), Independent (reddish purple #CC79A7 - IDENTICAL). Nodes and flows render identically to light version
-      Legend: Bottom left with ELEVATED_BG (#242420) frame, light text
-      Legibility verdict: PASS - all text is light and highly visible against dark background, no dark-on-dark failures, excellent contrast
+      Background: Warm near-black (#1A1A17) - correct and matches specification
+      Chrome: Title and all labels in light text (#F0EFE8 for primary, #B8B7B0 for secondary). No dark-on-dark issues. Legend frame in elevated background (#242420) with light text. All text clearly visible and readable.
+      Data: Data colors are identical to light render - Party A green, Party B orange, Party C blue, Independent reddish purple. Flows maintain same opacity and colors. Nodes and ribbons fully distinguishable.
+      Legibility verdict: PASS - All text readable in dark theme, no dark-on-dark text failures detected
+
+    Both renders pass legibility checks. Chrome correctly flips between themes while data colors remain constant across both renders.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -58,49 +53,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 22pt, category
-          15pt, legend 16pt), perfectly readable in both themes
+        comment: All text explicitly sized with theme-adaptive colors, readable in
+          both renders
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text, all labels well-positioned with proper spacing
+        comment: No collisions between labels and elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Nodes and flows clearly visible, transparency (alpha=0.4) appropriate
-          for overlapping elements
+        comment: Nodes and ribbons clearly distinguishable with appropriate alpha
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe, excellent contrast between all elements
+        comment: Okabe-Ito palette, colorblind-safe, no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect ratio, good proportions, balanced margins, nothing cut
-          off
+        comment: 4800x2700px, excellent proportions, generous whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title descriptive with spec context, time point labels clear
+        comment: Descriptive title in correct format, clear time point headers
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Party A = #009E73 (brand), follows Okabe-Ito 1-4 order, backgrounds
-          #FAF8F1 light / #1A1A17 dark, theme chrome correct in both renders'
+        comment: Okabe-Ito positions correct, backgrounds and text colors theme-correct
     design_excellence:
-      score: 11
+      score: 17
       max: 20
       items:
       - id: DE-01
@@ -108,22 +100,19 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Well-configured default with thoughtful color application, but limited
-          custom design innovation
+        comment: Professional but standard design without distinctive visual flourishes
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Spines removed, legend styled, decent whitespace, but minimal customization
-          beyond requirements
+        passed: true
+        comment: Clean layout, spines removed, subtle legend styling
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Clear voter migration narrative with color persistence and proportional
-          flows, but lacking visual emphasis on key insights
+        passed: true
+        comment: Clear temporal progression, color persistence, visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -133,27 +122,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct alluvial diagram with time points as columns and categories
-          with flows
+        comment: Correct alluvial diagram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: proportional nodes, flows, consistent colors,
-          transparency'
+        comment: 'All features present: time points, categories, values, flows'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time points on X, categories and values on Y, flows correctly mapped
+        comment: X/Y mapping correct, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with spec context, legend shows all categories
+        comment: Title format correct, legend matches data
     data_quality:
       score: 15
       max: 15
@@ -163,21 +150,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all alluvial aspects: 4 time points, 4 categories, realistic
-          transitions'
+        comment: Shows all alluvial aspects
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real voter migration scenario, neutral party labels (not actual parties),
-          realistic scale
+        comment: Voter migration data realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Voter counts in thousands are realistic, proportions logically consistent
+        comment: Domain-appropriate magnitudes
     code_quality:
       score: 10
       max: 10
@@ -187,33 +172,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple script: imports → data → plot → save, no unnecessary functions'
+        comment: Linear script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42), deterministic data
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports, all used
+        comment: All imports used, no bloat
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity, no fake functionality
+        comment: No fake UI or simulated interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, current API
+        comment: Correct output format and API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -221,28 +206,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent matplotlib patterns: fig/ax, theme tokens, proper use
-          of patches and PathPatch'
+        comment: Proper matplotlib patterns, theme tokens, high-level API
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: false
-        comment: Uses Bezier curves (Path.CURVE4) and PathPatch for alluvial flows
-          - distinctive matplotlib feature, but application is fairly straightforward
-  verdict: REJECTED
+        comment: Bezier curves correct but relatively standard for alluvial type
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
   - patches
   - custom-legend
-  - annotations
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending
