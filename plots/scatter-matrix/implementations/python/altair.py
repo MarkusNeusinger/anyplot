@@ -1,21 +1,37 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-matrix: Scatter Plot Matrix
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 85/100 | Created: 2025-12-26
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 82/100 | Updated: 2026-05-09
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import os
+import sys
 
 
-# Data - Iris dataset (classic multivariate data)
+# Handle module shadowing by removing current directory from path
+sys.path = [p for p in sys.path if os.path.abspath(p) != os.getcwd()]
+
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+
+# Data - Iris-like dataset with 4 variables and 3 species
 np.random.seed(42)
 
-# Generate realistic iris-like data with 4 variables and 3 species
 n_per_species = 50
-
 data = []
+
 # Setosa - smaller flowers
 for _ in range(n_per_species):
     data.append(
@@ -57,51 +73,91 @@ df = pd.DataFrame(data)
 # Variables for the scatter matrix
 variables = ["Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Petal Width (cm)"]
 
-# Color scheme - Distinct colorblind-safe palette (blue, orange, green)
-color_scale = alt.Scale(domain=["Setosa", "Versicolor", "Virginica"], range=["#306998", "#E69F00", "#009E73"])
+# Color scale using Okabe-Ito palette
+color_scale = alt.Scale(domain=["Setosa", "Versicolor", "Virginica"], range=OKABE_ITO)
 
-# Use Altair's native repeat() for declarative scatter matrix construction
-# This is the idiomatic Altair approach for creating SPLOM (scatter plot matrix)
-scatter_matrix = (
+# Build scatter matrix grid with histograms on diagonal
+charts = []
+
+for row_var in variables:
+    row_charts = []
+    for col_var in variables:
+        if row_var == col_var:
+            # Diagonal: histogram
+            hist = (
+                alt.Chart(df)
+                .mark_bar(opacity=0.8)
+                .encode(
+                    alt.X(f"{col_var}:Q", bin=alt.Bin(maxbins=20), axis=alt.Axis(labelFontSize=14, titleFontSize=18)),
+                    alt.Y("count():Q", axis=alt.Axis(labelFontSize=14, titleFontSize=18)),
+                    alt.Color("Species:N", scale=color_scale, legend=None),
+                )
+                .properties(width=280, height=280)
+            )
+            row_charts.append(hist)
+        else:
+            # Off-diagonal: scatter plot
+            scatter = (
+                alt.Chart(df)
+                .mark_circle(size=120, opacity=0.7)
+                .encode(
+                    alt.X(f"{col_var}:Q", axis=alt.Axis(labelFontSize=14, titleFontSize=18)),
+                    alt.Y(f"{row_var}:Q", axis=alt.Axis(labelFontSize=14, titleFontSize=18)),
+                    alt.Color("Species:N", scale=color_scale, legend=None),
+                    tooltip=[
+                        "Species:N",
+                        alt.Tooltip(f"{col_var}:Q", format=".2f"),
+                        alt.Tooltip(f"{row_var}:Q", format=".2f"),
+                    ],
+                )
+                .properties(width=280, height=280)
+            )
+            row_charts.append(scatter)
+
+    charts.append(alt.hconcat(*row_charts))
+
+# Combine rows
+scatter_matrix = alt.vconcat(*charts)
+
+# Add legend
+legend = (
     alt.Chart(df)
-    .mark_circle(size=100, opacity=0.7)
+    .mark_point(size=120)
     .encode(
-        alt.X(alt.repeat("column"), type="quantitative", axis=alt.Axis(labelFontSize=18, titleFontSize=22)),
-        alt.Y(alt.repeat("row"), type="quantitative", axis=alt.Axis(labelFontSize=18, titleFontSize=22)),
         alt.Color(
             "Species:N",
             scale=color_scale,
             legend=alt.Legend(
                 title="Species",
-                titleFontSize=28,
-                labelFontSize=24,
-                symbolSize=400,
+                titleFontSize=24,
+                labelFontSize=20,
+                symbolSize=350,
                 orient="right",
                 titlePadding=15,
-                labelPadding=10,
+                labelPadding=12,
             ),
-        ),
-        tooltip=[
-            "Species:N",
-            alt.Tooltip(alt.repeat("column"), type="quantitative"),
-            alt.Tooltip(alt.repeat("row"), type="quantitative"),
-        ],
+        )
     )
-    .properties(width=320, height=320)
-    .repeat(row=variables, column=variables)
+    .properties(width=100, height=280)
 )
 
-# Apply configuration and title
+# Combine scatter matrix with legend
+final_chart = alt.hconcat(scatter_matrix, legend)
+
+# Apply theme-adaptive styling and title
 chart = (
-    scatter_matrix.properties(
-        title=alt.Title(text="scatter-matrix · altair · pyplots.ai", fontSize=36, anchor="middle", offset=25)
+    final_chart.properties(
+        title=alt.Title(text="scatter-matrix · altair · anyplot.ai", fontSize=28, anchor="middle", offset=20),
+        background=PAGE_BG,
     )
-    .configure_axis(gridOpacity=0.3)
-    .configure_view(strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK
+    )
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
+    .configure_title(color=INK, fontSize=28)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save as PNG (scale_factor=3 gives us ~3840x3840 for square output close to 3600x3600 target)
-chart.save("plot.png", scale_factor=3.0)
-
-# Save interactive HTML version
-chart.save("plot.html")
+# Save outputs
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
