@@ -1,164 +1,171 @@
 library: altair
+language: python
 specification_id: bar-stacked
 created: '2025-12-26T10:04:02Z'
-updated: '2025-12-26T10:08:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520476835
+updated: '2026-05-09T07:17:52Z'
+generated_by: claude-haiku
+workflow_run: 25594890076
 issue: 1947
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/altair/plot.html
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  - wide-to-long
-  dataprep: []
-  styling:
-  - edge-highlighting
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/altair/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent use of Altair declarative grammar with proper encoding types (O, Q,
-    N)
-  - Colorblind-safe palette with good visual distinction between segments
-  - Total value labels above stacks as recommended in spec
-  - Clean white stroke separators between bar segments improve readability
-  - Tooltips add interactivity for HTML output
-  - Proper stacking order (largest category at bottom) using Order encoding
+  - Perfect text legibility with explicitly set font sizes in both light and dark
+    themes
+  - Flawless Okabe-Ito palette compliance with correct theme-adaptive chrome (backgrounds,
+    text, grid colors)
+  - Complete spec compliance with all required features implemented
+  - Realistic business data context with clear quarterly and product-level insights
+  - Clean, professional code with proper theme token management
+  - Total labels above stacks add valuable clarity without clutter
+  - Both light and dark renders are equally readable with no theme-specific issues
   weaknesses:
-  - Legend positioned slightly far from the chart area, creating visual separation
-  - Could use Altair selection features for interactive highlighting
-  image_description: 'The plot displays a stacked bar chart showing quarterly sales
-    (Q1-Q4) by product category. Four distinct stacked segments are visible per bar:
-    Electronics (blue, #306998) at the bottom, Clothing (orange, #E69F00), Home &
-    Garden (teal, #009E73), and Sports (yellow, #F0E442) at the top. Total value labels
-    appear above each stack (230, 259, 232, 321). The y-axis shows "Sales (Thousands
-    USD)" ranging from 0-340, and the x-axis shows "Quarter". A clear legend titled
-    "Product Category" is positioned on the right. The title reads "bar-stacked ·
-    altair · pyplots.ai" at the top center. White stroke separators between segments
-    enhance readability. The chart demonstrates clear growth in Q4.'
+  - Design Excellence could be elevated beyond well-configured defaults with more
+    distinctive aesthetic or compositional choices
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1)
+      Chrome: Title "bar-stacked · altair · anyplot.ai" (28px, dark), X-axis label "Quarter" (22px, dark), Y-axis label "Sales (Thousands USD)" (22px, dark), tick labels (18px, dark) - all readable
+      Data: Four product categories in Okabe-Ito order: Electronics (#009E73, bluish green at base), Clothing (#D55E00, vermillion), Home & Garden (#0072B2, blue), Sports (#CC79A7, reddish purple). Total labels (230, 259, 232, 321) above stacks in dark ink. All bars clearly visible against light background
+      Legibility verdict: PASS - All text perfectly readable, no overlaps, perfect contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17)
+      Chrome: Title, axis labels, and tick labels rendered in light color (#F0EFE8) - all readable against dark background. No dark-on-dark failures
+      Data: All four product colors remain identical to light render (#009E73, #D55E00, #0072B2, #CC79A7). Total labels (230, 259, 232, 321) in light ink. All bars clearly distinguishable from background
+      Legibility verdict: PASS - All text perfectly readable, excellent contrast, no theme-specific legibility issues
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all perfectly
-          readable
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px),
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, clean layout with proper spacing
+        comment: All text fully readable with no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar segments well-sized, white stroke separators make segments distinct
+        comment: All bar segments clearly visible and appropriately sized for canvas
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-safe palette (blue, orange, teal, yellow) with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good proportions, slight excess whitespace on left margin
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: "Sales (Thousands USD)", "Quarter"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette CVD-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect balance; plot uses 60-70% of canvas with generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid has good opacity (0.3) but legend is slightly far from chart
+        comment: Labels include units; title in correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; correct Okabe-Ito order; perfect theme-adaptive
+          chrome'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional styling with intentional hierarchy; well-configured
+          defaults but not distinctive
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid customization, white bar strokes, theme-adaptive legend styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Total labels and visual hierarchy guide viewer; quarterly trend clearly
+          visible
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct stacked bar chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on x-axis, values stacked correctly on y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: stacked components, total labels, legend,
-          consistent ordering'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: stacking, legend, total labels, consistent
+          ordering'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, y-axis extends appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y/Color/Order all correctly assigned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels match data categories exactly
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "bar-stacked · altair · pyplots.ai"'
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation across quarters, different component sizes, clear
-          Q4 growth trend
+        comment: 'Shows all aspects: quarterly variation, product composition, individual
+          and cumulative values'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Quarterly sales by product category is a real, comprehensible business
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Sales values in thousands USD are realistic for quarterly retail
-          data
+        comment: Real business scenario; neutral and comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Factually plausible values for sales in thousands USD
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -166,41 +173,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: Linear flow with no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Deterministic data (no random), but no explicit seed comment
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Clean, Pythonic, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format and current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of altair's declarative API and encoding patterns
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of Altair's declarative encoding with Order channel, tooltips,
-          and layered chart composition; could leverage more advanced features like
-          selections
+        comment: Uses order parameter and theme configuration; fairly standard patterns
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - grid-styling
+  - edge-highlighting

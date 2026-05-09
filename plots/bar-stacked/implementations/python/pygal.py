@@ -1,70 +1,92 @@
-""" pyplots.ai
+""" anyplot.ai
 bar-stacked: Stacked Bar Chart
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-09
 """
 
-import pygal
-from pygal.style import Style
+import os
+import sys
 
 
-# Data: Quarterly revenue by product category (in millions USD)
-categories = ["Q1", "Q2", "Q3", "Q4"]
-products = {
-    "Software": [12.5, 15.2, 18.1, 22.4],
-    "Hardware": [8.3, 9.1, 7.8, 10.2],
-    "Services": [5.2, 6.8, 8.5, 9.1],
-    "Cloud": [3.1, 5.5, 9.2, 14.3],
-}
+script_dir = os.path.dirname(os.path.abspath(__file__))
+for path in ("", ".", script_dir):
+    if path in sys.path:
+        sys.path.remove(path)
 
-# Custom style for 4800x2700 canvas with visible grid
-custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#888888",  # Lighter for more visible grid lines
-    guide_stroke_color="#CCCCCC",  # Visible grid line color
-    colors=("#306998", "#FFD43B", "#4ECDC4", "#E76F51"),
-    title_font_size=48,
-    label_font_size=38,
-    major_label_font_size=36,
-    legend_font_size=36,
-    value_font_size=24,
-    value_label_font_size=24,
-    stroke_width=2,
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
+
+
+# Theme tokens from default-style-guide.md
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette: first series always #009E73
+OKABE_ITO = (
+    "#009E73",  # bluish green (brand)
+    "#D55E00",  # vermillion
+    "#0072B2",  # blue
+    "#CC79A7",  # reddish purple
+    "#E69F00",  # orange
 )
 
-# Create stacked bar chart
+# Data: Energy consumption by source across quarters (in millions of kWh)
+categories = ["Q1", "Q2", "Q3", "Q4"]
+sources = {
+    "Solar": [45.2, 62.1, 78.5, 55.3],
+    "Wind": [72.3, 68.5, 51.2, 64.7],
+    "Hydro": [38.1, 45.6, 52.3, 48.9],
+    "Nuclear": [95.4, 96.2, 97.1, 98.3],
+}
+
+# Custom style for 4800x2700 canvas with proper theme-adaptive colors
+custom_style = Style(
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=3,
+)
+
+# Create stacked bar chart with visible grid lines
 chart = pygal.StackedBar(
     width=4800,
     height=2700,
     style=custom_style,
-    title="bar-stacked · pygal · pyplots.ai",
+    title="bar-stacked · pygal · anyplot.ai",
     x_title="Quarter",
-    y_title="Revenue (Million USD)",
+    y_title="Energy (Million kWh)",
     show_y_guides=True,
     show_x_guides=False,
-    legend_at_bottom=True,  # Legend at bottom, closer to chart
-    legend_box_size=28,
+    legend_at_bottom=True,
+    legend_box_size=24,
     spacing=80,
     margin=60,
     margin_top=120,
-    margin_bottom=180,  # More space for bottom legend
-    print_values=True,  # Show value labels on segments
+    margin_bottom=180,
+    print_values=True,
     print_values_position="center",
-    value_formatter=lambda x: f"{x:.1f}",  # Format values with 1 decimal
+    value_formatter=lambda x: f"{x:.1f}",
     show_legend=True,
-    truncate_legend=-1,  # Don't truncate legend text
+    truncate_legend=-1,
 )
 
 # Set x-axis labels
 chart.x_labels = categories
 
 # Add data series (stacked components)
-for product_name, values in products.items():
-    chart.add(product_name, values)
+for source_name, values in sources.items():
+    chart.add(source_name, values)
 
-# Save as PNG and HTML
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+os.chdir(script_dir)
+chart.render_to_png(f"plot-{THEME}.png")
+chart.render_to_file(f"plot-{THEME}.html")
