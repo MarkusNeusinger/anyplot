@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-marginal: Scatter Plot with Marginal Distributions
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-09
@@ -50,17 +50,18 @@ df = pd.DataFrame({"study_hours": study_hours, "exam_score": exam_score})
 main_w, main_h = 12, 6.5
 marg_w, marg_h = 4, 2.5
 
-# Shared theme
+# Shared theme - L-shaped spine (left + bottom only)
 base_theme = theme_minimal() + theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
     panel_grid_minor=element_blank(),
-    panel_border=element_rect(color=INK_SOFT, fill=None, size=0.4),
-    axis_title=element_text(color=INK, size=20),
+    panel_border=element_blank(),
+    axis_title=element_text(color=INK, size=20, weight="bold"),
     axis_text=element_text(color=INK_SOFT, size=16),
-    axis_line=element_line(color=INK_SOFT, size=0.4),
-    plot_title=element_text(color=INK, size=24, margin={"t": 10, "b": 10}),
+    axis_line=element_line(color=INK_SOFT, size=0.5),
+    axis_ticks=element_line(color=INK_SOFT, size=0.4),
+    plot_title=element_text(color=INK, size=24, weight="bold", margin={"t": 10, "b": 10}),
 )
 
 # Top histogram (x distribution)
@@ -74,9 +75,14 @@ top_hist = (
         figure_size=(main_w, marg_h),
         axis_text_x=element_blank(),
         axis_ticks_major_x=element_blank(),
+        axis_ticks_minor_x=element_blank(),
+        axis_line_x=element_blank(),
         axis_title_y=element_blank(),
         axis_text_y=element_blank(),
         axis_ticks_major_y=element_blank(),
+        axis_ticks_minor_y=element_blank(),
+        axis_line_y=element_blank(),
+        panel_grid_major=element_blank(),
     )
 )
 
@@ -92,9 +98,14 @@ right_hist = (
         figure_size=(marg_w, main_h),
         axis_text_y=element_blank(),
         axis_ticks_major_y=element_blank(),
+        axis_ticks_minor_y=element_blank(),
+        axis_line_y=element_blank(),
         axis_title_x=element_blank(),
         axis_text_x=element_blank(),
         axis_ticks_major_x=element_blank(),
+        axis_ticks_minor_x=element_blank(),
+        axis_line_x=element_blank(),
+        panel_grid_major=element_blank(),
     )
 )
 
