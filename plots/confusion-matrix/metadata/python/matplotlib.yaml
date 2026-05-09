@@ -1,168 +1,168 @@
 library: matplotlib
+language: python
 specification_id: confusion-matrix
 created: '2025-12-26T17:36:06Z'
-updated: '2025-12-26T17:39:39Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20526590092
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/matplotlib/plot.png
-preview_html: null
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-    - annotations
-    - colorbar
-    - manual-ticks
-  patterns:
-    - data-generation
-    - matrix-construction
-  dataprep: []
-  styling:
-    - custom-colormap
-    - grid-styling
+updated: '2026-05-09T16:38:17Z'
+generated_by: claude-haiku
+workflow_run: 25605963374
+issue: 2272
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent text contrast with adaptive white/black text based on background intensity
-  - Row-normalized percentages provide additional insight beyond raw counts
-  - Realistic multi-class classification scenario with plausible confusion patterns
-  - Clean KISS code structure with proper seed for reproducibility
-  - Square aspect ratio perfect for symmetric confusion matrix
-  - Professional colorbar with clear Count label
+  - 'Perfect visual quality: all text legible in both light and dark themes with no
+    contrast failures'
+  - 'Flawless spec compliance: all required features (counts, percentages, colorbar,
+    labels) present and correct'
+  - Excellent data quality using the well-known Iris dataset with realistic test split
+  - Clean, reproducible code with proper random seeds and deterministic execution
+  - Theme-adaptive styling correctly implements backgrounds and text colors for both
+    themes
+  - Cell annotations use luminance-based text color switching for readability
+  - Proper axis labels and title format exactly matches specification
   weaknesses:
-  - Does not leverage matplotlib-specific advanced features (just uses basic imshow)
-  - Grid lines at width=2 are slightly prominent compared to subtle alpha=0.3 guidelines
-  image_description: 'The plot displays a 4x4 confusion matrix heatmap for a multi-class
-    classification scenario with classes: Cat, Dog, Bird, and Fish. The diagonal cells
-    (correct predictions) are dark blue with high values (85, 78, 88, 90), while off-diagonal
-    cells (misclassifications) are lighter shades of blue with lower values. Each
-    cell shows both the raw count and the row percentage in parentheses. The y-axis
-    is labeled "True Label" and x-axis is labeled "Predicted Label". A colorbar on
-    the right shows the "Count" scale from approximately 10 to 90. The title follows
-    the required format "confusion-matrix · matplotlib · pyplots.ai". Text uses white
-    color on dark backgrounds and black on light backgrounds for contrast. X-axis
-    labels are rotated 45 degrees. White grid lines separate the cells.'
+  - Design Excellence uses library defaults without custom aesthetic enhancements
+    (standard Blues colormap)
+  - Limited exploration of matplotlib-specific distinctive features (could use custom
+    colormap normalization, LinearSegmentedColormap, or LogNorm/PowerNorm)
+  - Visual storytelling could be stronger with additional emphasis techniques or selective
+    annotation highlights
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme-adaptive surface
+      Chrome: Title in dark text (24pt), axis labels in 20pt dark text, tick labels rotated 45° for clarity - all readable. Colorbar labeled "Count" with readable scale. Grid lines subtle but visible.
+      Data: Blues colormap with diagonal cells darkest (perfect classification). Cell annotations in white text on dark cells, dark text on light cells - appropriate contrast. Both count and percentage shown.
+      Legibility verdict: PASS - all text clearly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme-adaptive surface
+      Chrome: Title, axis labels, tick labels all light-colored and clearly visible. Colorbar readable. Grid lines visible. No dark-on-dark or light-on-light failures.
+      Data: Identical Blues colormap intensities to light render (only chrome flipped). Cell text colors work correctly: dark text on light cells (from colormap), light text on dark blue cells. Data colors identical to light render.
+      Legibility verdict: PASS - all text clearly readable against dark background, proper contrast throughout
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, tick labels 18pt, cell annotations 16pt
-          bold - all perfectly readable
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 18pt'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: X-axis labels rotated 45°, no overlapping text
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Cells are well-sized, annotations clear with proper contrast (white
-          on dark, black on light)
+        comment: Heatmap cells, annotations, colorbar all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blues colormap is colorblind-safe, sequential palette appropriate
-          for count data
+        comment: Blues perceptually uniform, text switches on luminance
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Square format (12x12 inches) appropriate for symmetric matrix, good
-          margins, colorbar well-positioned
+        comment: 3600x3600 px square format with balanced margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive ("True Label", "Predicted Label") but lack
-          units (not applicable for categorical data, but could indicate "Class")
+        comment: 'Descriptive labels: Predicted Label, True Label'
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: White grid lines between cells are functional; colorbar is well-placed
-          though grid is slightly prominent
+        comment: Blues for count data, correct backgrounds, theme-adaptive text
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults without custom palette or exceptional design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, subtle grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color gradient emphasizes diagonal, visual hierarchy guides reader
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct confusion matrix heatmap
+        comment: Correct confusion matrix heatmap format
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: True labels on y-axis, Predicted labels on x-axis as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Cell annotations with counts and percentages, Blues colormap, colorbar,
-          clear axis labels
-      - id: SC-04
-        name: Data Range
+        comment: Counts, percentages, colorbar, labels all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All cells visible and readable
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Predicted Label (x), True Label (y) correctly assigned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled "Count"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "confusion-matrix · matplotlib · pyplots.ai"'
+        comment: Title format correct, axes labeled appropriately
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both correct predictions (diagonal) and misclassifications
-          (off-diagonal), varying accuracy levels across classes
+        comment: Shows all three Iris classes with full confusion patterns
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Animal classification is a common real-world ML scenario, class confusion
-          patterns are realistic (Cat/Dog more confused than Fish)
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values are realistic for a test set (~100 samples per class, 78-90%
-          accuracy range)
+        comment: Real Iris dataset, legitimate ML classification task
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 45 test samples realistic for 30% split of 150 total
     code_quality:
       score: 10
       max: 10
@@ -172,41 +172,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean sequential structure: imports → data → plot → save'
+        comment: 'Linear flow: imports → data → train → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: random_state=42 set consistently
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: All imports used appropriately
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib APIs
+        comment: Clean Pythonic code, no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 0
-      max: 5
+        comment: Correct plot-{THEME}.png format
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper axes methods, good colorbar implementation
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
         max: 5
         passed: false
-        comment: Uses basic imshow() for heatmap; could use matplotlib's more advanced
-          features like ConfusionMatrixDisplay from sklearn integration, or custom
-          annotations with bounding boxes
+        comment: Uses imshow + colorbar; could leverage custom normalization or LinearSegmentedColormap
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - colorbar
+  - annotations
+  - manual-ticks
+  patterns:
+  - dataset-loading
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
+  - publication-ready
