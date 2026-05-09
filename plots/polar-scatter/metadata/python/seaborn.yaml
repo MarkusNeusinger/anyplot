@@ -1,175 +1,189 @@
 library: seaborn
+language: python
 specification_id: polar-scatter
 created: '2025-12-26T16:14:58Z'
-updated: '2025-12-26T16:19:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20525458235
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-09T10:40:21Z'
+generated_by: claude-haiku
+workflow_run: 25598953426
+issue: 2023
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - polar-projection
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
 review:
   strengths:
-  - Excellent implementation of polar coordinates with correct theta_zero_location
-    (North) and clockwise direction
-  - Realistic wind data with distinct prevailing directions for morning (SW) and afternoon
-    (NE)
-  - Good color choice with blue/yellow palette that is colorblind-accessible
-  - Clean title format following the required specification
-  - Appropriate use of seaborn scatterplot with hue parameter for categorical encoding
-  - Well-sized markers and good alpha transparency for the data density
+  - 'Exceptional theme handling: both light and dark renders perfectly implement theme-adaptive
+    tokens. All text is readable in both themes.'
+  - 'Clean code: linear, reproducible, no over-engineering. Every import is used.'
+  - 'Perfect spec compliance: all specification requirements met exactly. Title format
+    correct, legend matches data perfectly.'
+  - 'Realistic, neutral data: meteorological wind data is scientifically plausible
+    and socially neutral.'
+  - 'Professional visual quality: all text sizes explicitly set and readable at full
+    resolution. Grid refined. Markers appropriately sized.'
+  - 'Proper polar projection usage: cardinal directions labeled correctly. Radial
+    axis configured well. Data clearly visible in both clusters.'
   weaknesses:
-  - The radial axis label Wind Speed (m/s) is placed as rotated text at an awkward
-    angle and overlaps with some data points
-  - Figure size uses 12x12 (square) which is acceptable but the library rules suggest
-    16x9 landscape as the standard format
-  image_description: 'The plot displays a polar scatter chart with wind measurement
-    data. The chart shows data points in two colors: blue (#306998) for Morning observations
-    clustered around the SW direction (around 225°), and yellow/gold (#FFD43B) for
-    Afternoon observations clustered around the NE direction (around 45°). The radial
-    axis represents wind speed in m/s, ranging from 0 to approximately 35. Cardinal
-    and intercardinal directions (N, NE, E, SE, S, SW, W, NW) are labeled around the
-    perimeter. The plot has a light gray background (#f8f9fa) with subtle dashed gridlines.
-    A legend in the upper right shows "Time of Day" with Morning (blue) and Afternoon
-    (yellow) markers. The title "polar-scatter · seaborn · pyplots.ai" appears at
-    the top in bold. A "Wind Speed (m/s)" label is positioned diagonally at approximately
-    60° direction.'
+  - X-axis label "angle_rad" is technical; should ideally say "Wind Direction (degrees)"
+    rather than internal variable name (minor issue)
+  - 'Design is solid but not exceptional: uses standard theme configuration and Okabe-Ito
+    palette well, but doesn''t push beyond well-configured defaults into innovative
+    custom design'
+  - 'Grid could be more minimal: while refined (alpha=0.15), could be even subtler
+    or optional for ultra-clean aesthetic'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct surface color
+      Chrome: Title "polar-scatter · seaborn · anyplot.ai" bold at top. Cardinal directions (N, NE, E, SE, S, SW, W, NW) at 45° intervals. Radial label "Wind Speed (m/s)" positioned at 330°. All text dark (#1A1A17 primary, #4A4A44 secondary) - perfectly readable against light background
+      Data: Morning winds teal (#009E73, Okabe-Ito position 1) clustered at SW (225°). Afternoon winds orange (#D55E00, position 2) clustered at NE (45°). Grid subtle (alpha 0.15). Marker edges white for definition. 120 points total - appropriately visible.
+      Legibility verdict: PASS - excellent readability in light theme
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct surface color
+      Chrome: All text properly light-colored: primary (#F0EFE8), secondary (#B8B7B0). Cardinal directions visible in light gray. Radial label readable in light text. Grid lines light and subtle. No dark-on-dark text failures.
+      Data: Data colors IDENTICAL to light render - teal (#009E73) and orange (#D55E00) preserved exactly. Marker edges dark (#1A1A17) for dark-theme definition.
+      Legibility verdict: PASS - all text readable, no dark-on-dark issues, proper theme-adaptive coloring throughout
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29.5
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt bold, cardinal labels at 18pt, radial ticks at 14pt,
-          legend at 14/16pt - all clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, all labels are cleanly separated
+        comment: All font sizes explicitly set (title 24pt, labels 16-18pt). Perfectly
+          readable in both light and dark themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero overlap. Legend positioned with bbox_to_anchor. Title has pad=20.
+          Radial label well-positioned.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers at s=150 with alpha=0.7 are appropriately sized for 120 data
-          points, though some clustering in the SW quadrant makes individual points
-          slightly harder to distinguish
+        comment: Markers (size=150, alpha=0.7) optimally sized for 120 points. Grid
+          subtle but visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) provide excellent contrast and
-          are colorblind-friendly (blue-yellow is safe)
+        comment: Okabe-Ito palette is colorblind-safe. Excellent contrast between
+          teal (#009E73) and orange (#D55E00).
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Square 12x12 figure works well for polar plot, good canvas utilization,
-          though legend placement at bbox_to_anchor=(1.15, 1.0) adds extra margin
+        comment: Excellent proportions. Balanced margins. Polar layout naturally emphasizes
+          circular plot.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 1.5
         max: 2
         passed: true
-        comment: Cardinal directions shown clearly, "Wind Speed (m/s)" label present
-          with units, but placed awkwardly as rotated text overlapping with data points
+        comment: 'Title format correct. Radial label has units. Cardinal directions
+          descriptive. Minor deduction: x-axis ''angle_rad'' is technical.'
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle at alpha=0.3, legend well-placed with good styling, but
-          grid could be slightly more visible
+        comment: 'First series #009E73 (Okabe-Ito position 1). Second series #D55E00
+          (position 2). Backgrounds correct (#FAF8F1 light, #1A1A17 dark). Both renders
+          theme-correct.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Well-configured theme with thoughtful token usage. Professional polish.
+          Standard approach rather than exceptionally innovative.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Refined grid (subtle, not dominant). White marker edges for definition.
+          Generous whitespace. Could be more minimal.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: morning (teal, SW) vs afternoon (orange,
+          NE). Communicates wind direction shift effectively. Could emphasize more.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct polar scatter plot with theta and radius coordinates
+        comment: Perfect polar scatter. Angle and radius correctly plotted. Cardinal
+          directions shown.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Angle mapped to angular position, wind speed to radial distance correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Color encoding for time of day, prevailing wind directions, realistic
-          distributions all present
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: scatter markers, categories, color encoding,
+          gridlines, tick marks, padding, title, legend.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Radial axis starts at 0, extends to max(speeds)*1.1 to accommodate
-          all data
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X (theta): wind direction in degrees. Y (radius): wind speed in
+          m/s. All 120 points visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Morning and Afternoon categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "polar-scatter · seaborn · pyplots.ai"
+        comment: Title format 'polar-scatter · seaborn · anyplot.ai' exact match.
+          Legend labels correct.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows two distinct clusters with different prevailing directions,
-          different speed distributions (gamma distributions with different parameters),
-          but could show more variety in spread
+        comment: 'ALL aspects demonstrated: angle, radius, categorical coloring. Morning/afternoon
+          patterns clear.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Wind measurement scenario is authentic - SW morning winds and NE
-          afternoon winds are plausible for many coastal locations
+        comment: Real meteorological scenario. SW/NE diurnal pattern realistic. Speeds
+          3-35 m/s plausible. Neutral content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Wind speeds of 3-35 m/s are realistic, though the highest values
-          (~35 m/s = ~126 km/h) are approaching storm-force winds which is at the
-          edge of typical observational data
+        comment: Wind speeds on realistic scale. Axis limits (0 to max*1.1) sensible.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -177,42 +191,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions or classes
+        comment: 'Linear script: imports → data → plot → save. No unnecessary functions.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at the start
+        comment: np.random.seed(42) set. Deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (matplotlib, numpy, pandas, seaborn) are used
+        comment: 'Only used imports: os, matplotlib.pyplot, numpy, pandas, seaborn.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic and appropriate. No fake functionality. Clean API usage.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Using current seaborn and matplotlib APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as "plot.png" but should verify this is in the correct location
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct filenames (plot-{THEME}.png). Current API. No deprecated
+          functions.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Excellent: sns.scatterplot() high-level API, sns.set_theme() global
+          styling, hue parameter for categorical, theme-aware rc.'
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses sns.scatterplot with hue parameter for categorical coloring
-          and palette support, but doesn't leverage other seaborn features like jointplot,
-          pairplot or statistical capabilities. The implementation is essentially
-          matplotlib polar with seaborn's scatterplot layered on top.
+        comment: Good integration of seaborn + matplotlib polar. Custom ax.text()
+          for radial label. No strictly unique seaborn-only features beyond standard
+          scatterplot.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
