@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 confusion-matrix: Confusion Matrix Heatmap
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-26
+Library: highcharts unknown | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-09
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -17,8 +18,16 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+# Theme tokens (theme-adaptive chrome - CRITICAL for regen)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
 # Data - Image Classification Model Results (4-class problem)
-np.random.seed(42)
 class_names = ["Cat", "Dog", "Bird", "Fish"]
 n_classes = len(class_names)
 
@@ -46,49 +55,55 @@ reversed_classes = list(reversed(class_names))
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration
+# Chart configuration - theme-adaptive
 chart.options.chart = {
     "type": "heatmap",
     "width": 3600,
     "height": 3600,
-    "backgroundColor": "#ffffff",
-    "marginTop": 180,
-    "marginBottom": 280,
-    "marginLeft": 280,
-    "marginRight": 220,
+    "backgroundColor": PAGE_BG,
+    "marginTop": 140,
+    "marginBottom": 240,
+    "marginLeft": 240,
+    "marginRight": 180,
 }
 
-# Title
+# Title - theme-adaptive
 chart.options.title = {
-    "text": "confusion-matrix · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
+    "text": "confusion-matrix · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "fontWeight": "bold", "color": INK},
 }
 
-# Subtitle
+# Subtitle - theme-adaptive
 chart.options.subtitle = {
     "text": "Image Classification Model Performance",
-    "style": {"fontSize": "32px", "color": "#666666"},
+    "style": {"fontSize": "22px", "color": INK_SOFT},
 }
 
-# X-axis - Predicted Labels
+# X-axis - Predicted Labels (theme-adaptive)
 chart.options.x_axis = {
     "categories": class_names,
-    "title": {"text": "Predicted Label", "style": {"fontSize": "36px", "fontWeight": "bold"}},
-    "labels": {"style": {"fontSize": "30px"}},
+    "title": {"text": "Predicted Label", "style": {"fontSize": "22px", "fontWeight": "bold", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": GRID,
 }
 
-# Y-axis - True Labels
+# Y-axis - True Labels (theme-adaptive)
 chart.options.y_axis = {
     "categories": reversed_classes,
-    "title": {"text": "True Label", "style": {"fontSize": "36px", "fontWeight": "bold"}},
-    "labels": {"style": {"fontSize": "30px"}},
+    "title": {"text": "True Label", "style": {"fontSize": "22px", "fontWeight": "bold", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": GRID,
     "reversed": False,
 }
 
 # Color axis - Sequential Blues colormap (colorblind-friendly)
 chart.options.color_axis = {
     "min": 0,
-    "max": 100,
+    "max": 87,
     "stops": [
         [0, "#f7fbff"],  # Lightest blue
         [0.2, "#c6dbef"],
@@ -97,18 +112,21 @@ chart.options.color_axis = {
         [0.8, "#08519c"],
         [1.0, "#08306b"],  # Darkest blue
     ],
-    "labels": {"style": {"fontSize": "24px"}, "format": "{value}"},
+    "labels": {"style": {"fontSize": "16px", "color": INK_SOFT}, "format": "{value}"},
     "tickInterval": 20,
 }
 
-# Legend (colorbar)
+# Legend (colorbar) - theme-adaptive
 chart.options.legend = {
     "align": "right",
     "layout": "vertical",
     "verticalAlign": "middle",
     "symbolHeight": 600,
-    "itemStyle": {"fontSize": "24px"},
-    "title": {"text": "Count", "style": {"fontSize": "28px"}},
+    "itemStyle": {"fontSize": "16px", "color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
+    "title": {"text": "Count", "style": {"fontSize": "18px", "color": INK}},
 }
 
 # Tooltip
@@ -123,7 +141,7 @@ chart.options.tooltip = {
                'Count: <b>' + this.point.value + '</b><br>' +
                '(' + label + ')';
     }""",
-    "style": {"fontSize": "20px"},
+    "style": {"fontSize": "16px"},
 }
 
 # Disable credits
@@ -134,23 +152,23 @@ series = HeatmapSeries()
 series.name = "Classification Results"
 series.data = heatmap_data
 series.border_width = 2
-series.border_color = "#ffffff"
+series.border_color = PAGE_BG
 series.data_labels = {
     "enabled": True,
     "formatter": """function() {
         return this.point.value;
     }""",
-    "style": {"fontSize": "40px", "fontWeight": "bold", "textOutline": "2px white", "color": "#000000"},
+    "style": {"fontSize": "20px", "fontWeight": "bold", "textOutline": "2px white", "color": INK},
 }
 
 chart.add_series(series)
 
 # Download Highcharts JS and Heatmap module
-highcharts_url = "https://code.highcharts.com/highcharts.js"
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts.js"
 with urllib.request.urlopen(highcharts_url, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-heatmap_url = "https://code.highcharts.com/modules/heatmap.js"
+heatmap_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/modules/heatmap.js"
 with urllib.request.urlopen(heatmap_url, timeout=30) as response:
     heatmap_js = response.read().decode("utf-8")
 
@@ -163,7 +181,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{heatmap_js}</script>
 </head>
-<body style="margin:0; background-color: #ffffff;">
+<body style="margin:0; background-color: {PAGE_BG};">
     <div id="container" style="width: 3600px; height: 3600px;"></div>
     <script>{html_str}</script>
 </body>
@@ -174,8 +192,8 @@ with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encodin
     f.write(html_content)
     temp_path = f.name
 
-# Also save the HTML file for interactive viewing
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save HTML artifact with theme-suffix
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
 # Configure headless Chrome
@@ -190,7 +208,7 @@ chrome_options.add_argument("--window-size=3600,3600")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)  # Wait for chart to render
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 # Clean up temp file
