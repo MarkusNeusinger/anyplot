@@ -1,16 +1,25 @@
-""" pyplots.ai
+"""anyplot.ai
 roc-curve: ROC Curve with AUC
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2025-12-26
 """
+
+import os
+import sys
 
 import numpy as np
 import pandas as pd
-from plotnine import (
+
+
+# Prevent import of local file by removing current dir from path
+sys.path = [p for p in sys.path if os.path.abspath(p) != os.path.dirname(os.path.abspath(__file__))]
+
+from plotnine import (  # noqa: E402
     aes,
     annotate,
     coord_fixed,
     element_line,
+    element_rect,
     element_text,
     geom_abline,
     geom_line,
@@ -24,10 +33,19 @@ from plotnine import (
 )
 
 
-# Data - Simulate ROC curve from a good classifier
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
+# Data - Simulate ROC curve from good and moderate classifiers
 np.random.seed(42)
 
-# Generate realistic ROC curve data using beta distribution for smooth curve
 n_points = 200
 thresholds = np.linspace(0, 1, n_points)
 
@@ -53,32 +71,38 @@ df = pd.DataFrame(
     }
 )
 
+# Theme-adaptive style
+anyplot_theme = theme(
+    figure_size=(12, 12),
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+    panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
+    panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
+    axis_title=element_text(size=20, color=INK),
+    axis_text=element_text(size=16, color=INK_SOFT),
+    axis_line=element_line(color=INK_SOFT),
+    plot_title=element_text(size=24, color=INK),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.5),
+    legend_text=element_text(size=16, color=INK_SOFT),
+    legend_title=element_text(size=18, color=INK),
+    legend_position=(0.65, 0.25),
+)
+
 # Create plot
 plot = (
     ggplot(df, aes(x="fpr", y="tpr", color="Model"))
-    + geom_abline(intercept=0, slope=1, linetype="dashed", color="#888888", size=1)
+    + geom_abline(intercept=0, slope=1, linetype="dashed", color=INK_SOFT, size=1, alpha=0.5)
     + geom_line(size=2.5, alpha=0.9)
-    + scale_color_manual(values=["#306998", "#FFD43B"])
+    + scale_color_manual(values=OKABE_ITO[:2])
     + scale_x_continuous(limits=(0, 1), breaks=np.arange(0, 1.1, 0.2))
     + scale_y_continuous(limits=(0, 1), breaks=np.arange(0, 1.1, 0.2))
     + coord_fixed(ratio=1)
-    + labs(x="False Positive Rate", y="True Positive Rate", title="roc-curve · plotnine · pyplots.ai", color="Model")
+    + labs(x="False Positive Rate", y="True Positive Rate", title="roc-curve · plotnine · anyplot.ai", color="Model")
     + theme_minimal()
-    + theme(
-        figure_size=(12, 12),
-        text=element_text(size=14),
-        axis_title=element_text(size=22, face="bold"),
-        axis_text=element_text(size=18),
-        plot_title=element_text(size=26, face="bold"),
-        legend_text=element_text(size=18),
-        legend_title=element_text(size=20, face="bold"),
-        legend_position=(0.65, 0.25),
-        legend_background=element_line(color="#CCCCCC", size=0.5),
-        panel_grid_major=element_line(color="#DDDDDD", size=0.5, alpha=0.3),
-        panel_grid_minor=element_line(color="#EEEEEE", size=0.3, alpha=0.2),
-    )
-    + annotate("text", x=0.6, y=0.1, label="Diagonal = Random Classifier", size=12, color="#888888", fontstyle="italic")
+    + anyplot_theme
+    + annotate("text", x=0.6, y=0.1, label="Diagonal = Random Classifier", size=12, color=INK_SOFT, fontstyle="italic")
 )
 
 # Save plot
-plot.save("plot.png", dpi=300, width=12, height=12)
+plot.save(f"plot-{THEME}.png", dpi=300, width=12, height=12)
