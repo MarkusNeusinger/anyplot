@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" anyplot.ai
 heatmap-clustered: Clustered Heatmap
-Library: bokeh 3.8.1 | Python 3.13.11
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-09
 """
 
 import os
