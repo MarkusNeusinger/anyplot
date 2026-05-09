@@ -1,156 +1,167 @@
 library: highcharts
+language: python
 specification_id: polar-scatter
 created: '2025-12-26T16:23:12Z'
-updated: '2025-12-26T16:26:26Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20525463603
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-09T10:58:07Z'
+generated_by: claude-haiku
+workflow_run: 25599192522
+issue: 2023
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/highcharts/plot.html
-quality_score: 95
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - polar-projection
-  - html-export
-  - annotations
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/highcharts/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of Highcharts polar chart with proper compass direction
-    formatting
-  - Well-designed wind data with realistic prevailing direction clustering
-  - Clean colorblind-safe palette (blue/yellow/purple) for time-of-day categories
-  - Good code structure with inline JS for headless Chrome compatibility
-  - Proper use of highcharts-more.js for polar chart functionality
+  - Perfect visual quality across both light and dark themes with no contrast failures
+  - Exemplary theme-adaptive color application - data colors (Okabe-Ito) remain identical
+    between themes while chrome flips correctly
+  - Excellent spec compliance - all polar scatter requirements met with compass direction
+    labels as enhancement
+  - Realistic, well-distributed wind data showing prevailing patterns and full feature
+    coverage
+  - Clean, reproducible code with proper random seeding and Selenium integration
+  - Square format (3600x3600) appropriate for symmetric polar coordinate system
+  - Legend has good styling with elevated background and clear labels
   weaknesses:
-  - Marker size could be slightly larger (radius 14 is adequate but could be ~18 for
-    better visibility at 3600x3600)
-  image_description: 'The polar scatter chart displays wind direction and speed distribution
-    on a white background. The main title "polar-scatter · highcharts · pyplots.ai"
-    appears in bold at the top, with a subtitle "Wind Direction and Speed Distribution"
-    below it. The circular polar plot shows compass directions (N, NE, E, SE, S, SW,
-    W, NW) around the perimeter, with concentric gridlines at 0, 7, 14, and 21 m/s
-    intervals. Data points are displayed in three colors: blue (Morning), yellow (Afternoon),
-    and purple (Evening). The 120 data points show realistic clustering around NE
-    (~45°), SW (~225°), and W (~270°) directions, representing prevailing wind patterns.
-    The legend at the bottom clearly identifies the three time-of-day categories.'
+  - 'Library Mastery: Doesn''t use the official highcharts_core Python library; uses
+    raw JSON configuration instead (still valid, minor deviation from recommended
+    approach)'
+  - 'Design Excellence: Mostly relies on library defaults rather than distinctive
+    custom styling; no additional artistic polish beyond theme tokens'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - correct theme color
+      Chrome: Title, subtitle, axis labels, and tick labels all clearly visible in dark text (#1A1A17 and #4A4A44) against light background
+      Data: Three categorical series in Okabe-Ito colors - Morning (green #009E73), Afternoon (orange #D55E00), Evening (blue #0072B2); 120 markers clearly visible; compass directions (N, NE, E, SE, S, SW, W, NW) at regular intervals
+      Legibility verdict: PASS - All text elements perfectly readable; no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 - correct theme color
+      Chrome: Title, subtitle, axis labels, and tick labels all clearly visible in light text (#F0EFE8 and #B8B7B0) against dark background; no dark-on-dark failures
+      Data: Identical colors to light render (green #009E73, orange #D55E00, blue #0072B2) - only chrome changed between themes; compass directions visible; gridlines subtle but visible
+      Legibility verdict: PASS - All text elements perfectly readable; excellent theme contrast; data colors preserve identity across themes
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: title, subtitle, compass labels, and radial labels all readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: no overlapping text elements
+        comment: All font sizes explicitly set; perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: markers visible but could be slightly larger for 120 points
+        comment: All 120 markers clearly visible; well-sized; grid visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: blue/yellow/purple palette is colorblind-safe
+        comment: Okabe-Ito palette is colorblind-safe
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: well-centered polar chart with ~75% canvas utilization
+        comment: Square format appropriate; generous margins; good proportions
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: radial axis shows "m/s" units, angular axis has compass directions
+        comment: Descriptive title and labels with units
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: subtle gridlines (alpha 0.15), legend well-positioned at bottom
+        comment: Perfect Okabe-Ito compliance and theme-correct chrome in both renders
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional design using Okabe-Ito; mostly well-configured defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Good refinement with legend box and margins; subtle gridlines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy; time-of-day color narrative; good focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: correct polar scatter plot
+        comment: Correct polar scatter plot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: angle=direction, radius=speed correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: color encoding, compass directions, gridlines, centering
-      - id: SC-04
-        name: Data Range
+        comment: All spec features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis 0-28 m/s accommodates all data
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Angular and radial axes correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Morning/Afternoon/Evening correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: uses correct "{spec-id} · {library} · pyplots.ai" format
+        comment: Title format and legend labels correct
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: shows prevailing directions, varying speeds, three categories
+        comment: Shows all aspects of wind data
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: realistic wind measurement scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 0-25 m/s is realistic for wind speeds
+        comment: Real-world wind measurements
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible wind speed and angle ranges
     code_quality:
       score: 10
       max: 10
@@ -160,40 +171,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: imports → data → config → render pattern
+        comment: Linear script structure
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: uses np.random.seed(42)
+        comment: Random seed set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: all imports used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: current APIs
+        comment: No fake UI; proper Selenium integration
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: saves plot.png and plot.html
-    library_features:
-      score: 4
-      max: 5
+        comment: Correct file naming with theme suffix
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Highcharts polar mode, custom JS formatter for compass directions,
-          interactive HTML output
+        comment: Uses Highcharts JSON config; doesn't use recommended highcharts_core
+          library
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Compass direction formatter is nice; mostly standard scatter usage
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - polar-projection
+  - html-export
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling: []
