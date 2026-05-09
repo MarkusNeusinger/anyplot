@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-confidence: Line Plot with Confidence Interval
-Library: plotly 6.5.0 | Python 3.13
-Quality: 93/100 | Updated: 2025-12-26
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-09
 """
 
 import os
