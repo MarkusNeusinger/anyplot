@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 polar-scatter: Polar Scatter Plot
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Updated: 2025-12-26
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-09
 """
 
 import os
