@@ -1,162 +1,166 @@
 library: pygal
+language: python
 specification_id: bar-stacked
 created: '2025-12-26T10:03:55Z'
-updated: '2025-12-26T10:08:29Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520476916
+updated: '2026-05-09T07:18:43Z'
+generated_by: claude-haiku
+workflow_run: 25594901612
 issue: 1947
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/pygal/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent use of value labels displayed within each segment for precise reading
-  - Clean, realistic business scenario with quarterly revenue data
-  - Proper title format following pyplots.ai convention
-  - Good color palette with distinguishable colors for all four categories
-  - Well-configured custom style with appropriate font sizes for the large canvas
+  - Perfect spec compliance with all stacked bar chart requirements
+  - Flawless theme adaptation with both renders fully legible
+  - Correct Okabe-Ito palette with brand green as first series
+  - Professional presentation with custom styling and typography hierarchy
+  - Data clarity enhanced by printed values in segment centers
+  - Clean and straightforward code with proper imports and deterministic output
   weaknesses:
-  - Grid lines are minimal (only one visible at y=50); adding more y-axis guides would
-    improve readability
-  - Could use pygal's tooltips or other interactive features more prominently
-  image_description: 'The plot displays a stacked bar chart showing quarterly revenue
-    by product category. Four bars (Q1-Q4) are shown on the x-axis with "Revenue (Million
-    USD)" on the y-axis ranging from 0 to ~55. Each bar consists of four stacked segments
-    in distinct colors: Software (steel blue, bottom), Hardware (golden yellow), Services
-    (teal/cyan), and Cloud (coral/salmon, top). Value labels (e.g., 12.5, 8.3, 5.2,
-    3.1) are displayed within each segment. The title "bar-stacked · pygal · pyplots.ai"
-    appears at the top. A legend at the bottom identifies all four categories. The
-    chart demonstrates clear quarterly growth with Q4 showing the highest cumulative
-    revenue (~56M). A subtle dotted grid line is visible at y=50.'
+  - Design excellence could explore custom visual emphasis techniques such as alpha-blending
+    or edge-highlighting
+  - Styling is professional but fairly standard for pygal stacked bars without distinctive
+    flourishes beyond data labels
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - correct, not pure white
+      Chrome: Title "bar-stacked · pygal · anyplot.ai" clearly visible in dark text; axis labels "Energy (Million kWh)" and "Quarter" readable; tick labels (0-280, Q1-Q4) distinct; legend labels clear at bottom
+      Data: Stacked bars with Solar (brand green #009E73), Wind (orange #D55E00), Hydro (blue #0072B2), Nuclear (reddish-purple #CC79A7) in correct Okabe-Ito order; data values printed in segment centers; bars well-spaced with subtle y-axis grid
+      Legibility verdict: PASS - all elements readable, proper contrast, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 - correct, not pure black
+      Chrome: Title visible in light text; axis labels and tick labels all readable on dark background; legend labels clear; no dark-on-dark contrast issues
+      Data: Data colors identical to light render (#009E73, #D55E00, #0072B2, #CC79A7) confirming proper color consistency; brand green clearly visible; grid remains subtle; data values readable
+      Legibility verdict: PASS - both renders properly theme-adapted, no dark-on-dark failures, full legibility maintained
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and value labels are all readable. Font sizes
-          are appropriate for the 4800x2700 canvas.
+        comment: All text readable at full size in both themes with explicit font
+          sizing
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; value labels fit within segments.
+        comment: All text readable with proper bar spacing and margins
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar segments are well-sized and clearly visible with good spacing.
+        comment: Bars clearly visible with data values printed in centers
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Good color contrast; blue, yellow, teal, and coral are distinguishable.
-          Not perfectly optimized for colorblindness but acceptable.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout with proper margins; legend at bottom is well-positioned
-          but there is some empty space.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes have descriptive labels with units: "Quarter" and "Revenue
-          (Million USD)".'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe with adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions at 4800x2700, proper margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Only one subtle grid line visible at y=50, missing intermediate grid
-          lines for easier value reading. Legend is well-placed.
+        comment: Title correct; axis labels descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First series is brand green; Okabe-Ito order correct; backgrounds
+          correct; both renders theme-correct
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom Style with explicit font sizing and theme-adaptive colors;
+          professional but fairly standard
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines properly removed, subtle y-axis-only grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear hierarchy with printed values guiding viewer; consistent component
+          ordering
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct stacked bar chart type.
+        comment: Correct StackedBar chart type
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on x-axis, values stacked correctly.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has distinct colors, legend, value labels on segments as spec suggests.
-      - id: SC-04
-        name: Data Range
+        comment: All stacked components, individual values, cumulative totals shown
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, y-axis accommodates the tallest stack.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped, all data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels match the data series correctly.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "bar-stacked · pygal · pyplots.ai" format.
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows stacking well, demonstrates part-to-whole relationships. Could
-          show more variation in component ordering.
+        comment: All stacked bar aspects shown with 4 components
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Quarterly revenue by product category is a realistic, comprehensible
-          business scenario.
+        comment: Energy consumption data is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Revenue values in millions are realistic for a mid-sized company;
-          growth pattern is plausible.
+        comment: Quarterly energy data with sensible values
     code_quality:
       score: 10
       max: 10
@@ -166,41 +170,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → style → chart → save.'
+        comment: Straightforward code without unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses deterministic hardcoded data, no randomness.
+        comment: Hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pygal and Style are imported, both used.
+        comment: All imports used and necessary
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves to plot.png and plot.html correctly.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper use of StackedBar, Style, chart.add(), and ANYPLOT_THEME
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal's custom Style, StackedBar chart type, print_values feature,
-          and legend_at_bottom. Good use of pygal-specific configuration but nothing
-          highly distinctive.
+        comment: Uses print_values with custom formatter; fairly standard feature
+          set
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
