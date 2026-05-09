@@ -1,170 +1,167 @@
 library: bokeh
+language: python
 specification_id: roc-curve
 created: '2025-12-26T17:39:45Z'
-updated: '2025-12-26T17:50:15Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20526594112
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/roc-curve/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/roc-curve/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - html-export
-  - columndatasource
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-09T22:35:36Z'
+generated_by: claude-haiku
+workflow_run: 25613428240
+issue: 2273
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/bokeh/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent visual clarity with appropriate line widths and font sizes for the 3600x3600
-    canvas
-  - Correct implementation of ROC curve mathematics using parametric approach
-  - Clean, well-organized code following KISS principles
-  - Proper use of ColumnDataSource for data management
-  - Good color choices that distinguish the three classifiers
-  - Produces both PNG and HTML output showcasing Bokeh's dual output capability
+  - Both light and dark renders fully readable with correct theme adaptation
+  - Clean visualization with three classifiers showing performance progression
+  - Proper Okabe-Ito palette with AUC scores in legend
+  - Idiomatic bokeh patterns (ColumnDataSource, HoverTool, Legend styling)
+  - Square format with equal aspect ratio matches ROC specification
   weaknesses:
-  - Legend positioned in extreme bottom-right corner; could be better placed inside
-    the plot area or with more padding
-  - Does not utilize Bokeh's interactive features like HoverTool to show threshold
-    values on hover
-  image_description: 'The plot displays an ROC curve visualization on a square canvas
-    with a light gray (#FAFAFA) background. Three ROC curves are shown: a blue curve
-    (Random Forest, AUC=0.87) that bows strongly toward the top-left indicating good
-    performance, a yellow/gold curve (Logistic Regression, AUC=0.74) with moderate
-    curvature, and a red curve (Decision Tree, AUC=0.62) closer to the diagonal. A
-    gray dashed diagonal line represents the random classifier baseline. The title
-    "roc-curve · bokeh · pyplots.ai" appears centered at the top. Both axes are labeled
-    descriptively ("False Positive Rate" and "True Positive Rate") and range from
-    0 to 1. The legend is positioned in the bottom-right corner showing all four items
-    with their AUC scores. Grid lines are subtle with dashed styling.'
+  - Design Excellence could be elevated with subtle visual emphasis on best-performing
+    model (bolder line, refined typography)
+  - Legend positioning and styling could be more refined
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct warm tone not pure white
+      Chrome: Title "roc-curve · bokeh · anyplot.ai" clearly visible in dark text (#1A1A17). Axis labels "False Positive Rate" (x) and "True Positive Rate" (y) fully readable. Tick labels (0, 0.2, 0.4, 0.6, 0.8, 1) on both axes clearly visible in secondary color (#4A4A44).
+      Data: Three ROC curves in Okabe-Ito colors: Model A (green #009E73, AUC 0.97), Model B (orange #D55E00, AUC 0.74), Model C (blue #0072B2, AUC 0.62). Reference diagonal line shown dashed in light gray. Legend displays all four series with AUC values in styled box.
+      Grid: Subtle grid lines at 10% opacity on both axes.
+      Legibility verdict: PASS - All text is dark on light background, fully readable, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct tone not pure black
+      Chrome: Title clearly visible in light text (#F0EFE8). Axis labels fully readable in light text. Tick labels visible in secondary light color (#B8B7B0). Legend box has dark elevated background (#242420) with light text.
+      Data: Same three ROC curves with identical colors to light render (green, orange, blue). Reference diagonal line visible. AUC scores displayed in legend.
+      Grid: Subtle grid lines matching light render opacity.
+      No dark-on-dark failures observed - all text elements have sufficient contrast against dark background.
+      Legibility verdict: PASS - All text is light on dark background, fully readable, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 32pt, axis labels at 24pt, tick labels at 18pt, legend at
-          20pt - all clearly readable
+        comment: All text readable in both themes with correct theme-adaptive colors
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, legend positioned away from curves
+        comment: Zero text collisions; legend well-positioned
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width of 5 provides excellent visibility, curves clearly distinguishable
+        comment: Three curves and reference line all clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, yellow, and red provide good distinction; yellow might be slightly
-          light but still distinguishable
+        comment: Okabe-Ito colors 1-3 are colorblind-safe
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Square format is appropriate for ROC curves; however legend placement
-          in extreme bottom-right corner creates some visual imbalance
+        comment: Square format appropriate for equal aspect ratio; nothing cut off
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive ("False Positive Rate", "True Positive Rate")
-          but lack units (though rates are unitless, could add "(0-1)")
+        comment: Title format correct; axes labeled descriptively
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.3, dashed) which is good; legend text is
-          readable but could be better positioned
+        comment: 'First series is #009E73; multi-series follows Okabe-Ito order; theme-correct
+          backgrounds'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional styling with theme-adaptive colors; AUC scores in legend;
+          dashed reference line for distinction
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, clean borders, proper legend spacing
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear performance progression; focal point evident
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct ROC curve visualization
+        comment: Correct ROC curve structure
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: FPR on X-axis, TPR on Y-axis as required
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Includes diagonal reference line, AUC scores in legend, multiple
-          models with distinct colors
-      - id: SC-04
-        name: Data Range
+        comment: Multiple models, reference line, AUC scores
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes range from 0 to 1 as required
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Axes correct and show full range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly match curves with accurate AUC values
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Follows exact format "roc-curve · bokeh · pyplots.ai"
+        comment: Format correct; labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows three classifiers with varying performance levels demonstrating
-          the full range of ROC behavior; could show a near-perfect classifier for
-          completeness
+        comment: Three models with different performance levels; reference line included
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Uses realistic ML model names (Random Forest, Logistic Regression,
-          Decision Tree) with plausible AUC values
+        comment: Plausible AUC values (0.62-0.97); neutral context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: AUC values are realistic (0.62-0.87); the mathematical model used
-          (t^k) produces valid ROC curves
+        comment: Sensible 0-1 range with padding
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -172,41 +169,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean sequential structure: imports → data → plot → save'
+        comment: No functions/classes; straightforward code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: All imports are used, but Legend import could be combined
+        comment: Random seed set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Proper bokeh patterns; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, Legend model, and export_png/save for HTML;
-          however doesn't leverage Bokeh's interactive features like HoverTool which
-          would enhance ROC curve exploration
+        comment: figure(), ColumnDataSource, HoverTool used correctly
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool for interactivity; interactive HTML+PNG workflow; legend
+          styling
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - hover-tooltips
+  - multi-series
+  - reference-line
+  patterns:
+  - data-generation
+  - deterministic-seed
+  dataprep: []
+  styling:
+  - theme-adaptive
+  - legend-styling
