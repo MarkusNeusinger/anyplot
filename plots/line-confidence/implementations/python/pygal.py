@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-confidence: Line Plot with Confidence Interval
-Library: pygal | Python 3.13
-Quality: pending | Updated: 2026-05-09
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 81/100 | Updated: 2026-05-09
 """
 
 import os
