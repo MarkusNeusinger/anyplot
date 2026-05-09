@@ -1,168 +1,176 @@
 library: altair
+language: python
 specification_id: roc-curve
 created: '2025-12-26T17:37:31Z'
-updated: '2025-12-26T17:45:58Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20526594069
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/roc-curve/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/roc-curve/altair/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-09T22:38:46Z'
+generated_by: claude-haiku
+workflow_run: 25613469017
+issue: 2273
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/altair/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent color scheme with blue/yellow/gray that is accessible and visually appealing
-  - Clean declarative Altair code with proper encoding types (:Q, :N)
-  - AUC values prominently displayed in legend for easy comparison
-  - Diagonal reference line clearly distinguished with dashed style
-  - Square aspect ratio appropriate for ROC curves
-  - Both static PNG and interactive HTML outputs saved
+  - Perfect theme compliance in both light and dark renders with no legibility issues
+  - Excellent text sizing with explicit font specifications at large canvas scale
+  - Correct Okabe-Ito palette use with proper color ordering (positions 1 and 2)
+  - Clean, reproducible synthetic data generation with realistic AUC values
+  - Idiomatic Altair usage with proper encode/properties/configure patterns
+  - Strong visual storytelling through model comparison and diagonal reference line
+  - All required ROC curve features present and properly implemented
   weaknesses:
-  - Legend positioned using absolute pixel coordinates which could be fragile
-  - Y-axis has excessive tick density making it appear cluttered
-  - No interactivity or tooltips added despite Altair's strength in this area
-  - Grid lines could be styled more subtly with smaller dash pattern
-  image_description: The plot displays two ROC curves comparing classifier performance.
-    A blue solid line represents the "Good Model" (AUC = 0.96) that rises steeply
-    from the origin and hugs the top-left corner, indicating excellent classification
-    performance. A yellow/gold solid line shows the "Moderate Model" (AUC = 0.71)
-    with a more gradual curve. A gray dashed diagonal line represents the random classifier
-    baseline (AUC = 0.50). The title "roc-curve · altair · pyplots.ai" appears at
-    the top. The X-axis is labeled "False Positive Rate" (0 to 1), and the Y-axis
-    is labeled "True Positive Rate" (0 to 1). A legend in the lower right clearly
-    identifies all three lines with their AUC values. The plot uses a square 1:1 aspect
-    ratio with subtle grid lines.
+  - Design excellence is competent but not distinctive — relies on style guide defaults
+    without additional custom visual innovation
+  - Visual refinement could be enhanced (e.g., additional grid styling, spine customization,
+    typography hierarchy)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme color
+      Chrome: Title, axis labels, and tick labels all in dark text (#4A4A44 / #1A1A17) against light background — clearly readable
+      Data: Strong Model curve in #009E73 (Okabe-Ito position 1), Weak Model in #D55E00 (position 2), diagonal reference line in neutral gray
+      Grid: Subtle, opacity 0.10, visible but not dominant
+      Legend: Light background box, clearly readable labels with AUC values
+      Legibility verdict: PASS — all text is fully readable with excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme color
+      Chrome: Title, axis labels, and tick labels all in light text (#B8B7B0 / #F0EFE8) against dark background — clearly readable, no dark-on-dark failures
+      Data: Strong Model curve in #009E73 (identical to light), Weak Model in #D55E00 (identical to light) — data colors are theme-independent as required
+      Grid: Subtle, visible but not dominant
+      Legend: Dark background box (#242420), clearly readable labels
+      Legibility verdict: PASS — all text is fully readable with excellent contrast; data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick labels, and legend text are all clearly
-          readable with appropriate font sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; all labels are well-separated
+        comment: All font sizes explicitly set (title=28px, axes=22px, ticks=18px);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; clean, balanced layout
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines are well-sized with strokeWidth=4 for model curves and 3 for
-          diagonal; however the dense tick labels on y-axis make it slightly busy
+        comment: ROC curves well-sized with strokeWidth=4; clear differentiation between
+          models
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) provide excellent contrast and
-          are colorblind-safe; gray diagonal is appropriately muted
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Square format is appropriate for ROC curves; plot fills canvas well
-          but legend positioning could be slightly better integrated
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels "False Positive Rate" and "True Positive Rate"
-          (no units needed for rates 0-1)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe; excellent contrast between curves
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions (1400x1400 square); well-balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend is placed in lower-right but overlaps slightly with the plot
-          area. Grid is subtle with alpha 0.3.
+        comment: 'Descriptive labels: False Positive Rate, True Positive Rate'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito positions 1-2 correct; backgrounds #FAF8F1/#1A1A17 correct;
+          theme chrome perfect in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional, polished appearance; follows style guide closely but
+          lacks distinctive custom design innovations
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, good whitespace, appropriate spine retention; room for
+          additional refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear model comparison with visual contrast; diagonal reference provides
+          context; good hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct ROC curve visualization with TPR vs FPR
+        comment: Correct ROC curve implementation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=FPR, Y=TPR correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Diagonal reference line present, AUC displayed in legend, multiple
-          models compared with distinct colors
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: curves, AUC display, diagonal reference, multiple
+          models'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes range from 0 to 1 as specified
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=FPR, Y=TPR, 0-1 domain; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels are accurate with AUC scores
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "roc-curve · altair · pyplots.ai"
+        comment: Title format correct; legend shows model names with AUC values
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows two models with different performance levels plus random baseline;
-          demonstrates full ROC curve behavior from (0,0) to (1,1)
+        comment: Shows two models with distinctly different performance levels
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Generic model comparison scenario is plausible; could benefit from
-          a more concrete domain context (e.g., medical diagnosis)
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: All values correctly in 0-1 range; AUC values are realistic (0.96
-          good, 0.71 moderate)
+        comment: Binary classification scenario with realistic AUC values (0.82, 0.68)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: AUC values factually correct and within valid range
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -170,42 +178,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data generation → ROC computation →
-          plotting → save'
+        comment: 'Linear flow: imports → data → plot → save; no unnecessary abstractions'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas imported and all used
+        comment: Only necessary imports; no unused dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.trapezoid which is correct for newer numpy versions
+        comment: Clean, Pythonic; manual ROC calculation is appropriate
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: 'Correct output: plot-{THEME}.png and plot-{THEME}.html'
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Altair declarative encoding, layered charts, and configure methods
-          correctly but does not leverage interactive features or tooltips that make
-          Altair distinctive
+        comment: 'Canonical Altair pattern: Chart().mark_*().encode().properties().configure_*()'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses .interactive(), alt.value(), alt.Color() with domain/range;
+          strong Altair knowledge
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - html-export
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

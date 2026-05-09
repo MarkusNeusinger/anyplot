@@ -1,13 +1,40 @@
-""" pyplots.ai
+""" anyplot.ai
 roc-curve: ROC Curve with AUC
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-09
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import os
+import sys
 
+
+current_dir = sys.path[0] if sys.path and sys.path[0] else "."
+if current_dir in sys.path:
+    sys.path.remove(current_dir)
+sys.path.insert(0, "/dev/null")
+
+import altair as alt  # noqa: E402
+
+
+sys.path = [p for p in sys.path if p != "/dev/null"]
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette
+BRAND = "#009E73"  # Position 1
+SECONDARY = "#D55E00"  # Position 2
+NEUTRAL = INK_MUTED  # Diagonal reference line
 
 # Data - Generate synthetic classification scores and compute ROC curve
 np.random.seed(42)
@@ -15,15 +42,8 @@ n_samples = 500
 n_thresholds = 200
 
 # Simulate two models with different performance levels
-# Model 1 (Good): higher separation between classes
 y_true = np.concatenate([np.zeros(n_samples // 2), np.ones(n_samples // 2)])
-scores_model1 = np.where(
-    y_true == 1,
-    np.random.beta(5, 2, n_samples),  # Positive class scores shifted higher
-    np.random.beta(2, 5, n_samples),  # Negative class scores shifted lower
-)
-
-# Model 2 (Moderate): less separation
+scores_model1 = np.where(y_true == 1, np.random.beta(5, 2, n_samples), np.random.beta(2, 5, n_samples))
 scores_model2 = np.where(y_true == 1, np.random.beta(3, 2, n_samples), np.random.beta(2, 3, n_samples))
 
 # Compute ROC curve for Model 1
@@ -58,40 +78,25 @@ auc1 = -np.trapezoid(tpr1, fpr1)
 auc2 = -np.trapezoid(tpr2, fpr2)
 
 # Create labels for legend
-label1 = f"Good Model (AUC = {auc1:.2f})"
-label2 = f"Moderate Model (AUC = {auc2:.2f})"
+label1 = f"Strong Model (AUC = {auc1:.2f})"
+label2 = f"Weak Model (AUC = {auc2:.2f})"
 label_random = "Random (AUC = 0.50)"
 
 # Create DataFrames for Altair
 df_model1 = pd.DataFrame({"fpr": fpr1, "tpr": tpr1, "Model": label1})
 df_model2 = pd.DataFrame({"fpr": fpr2, "tpr": tpr2, "Model": label2})
 df_roc = pd.concat([df_model1, df_model2], ignore_index=True)
-
-# Diagonal reference line (random classifier)
 df_diagonal = pd.DataFrame({"fpr": [0, 1], "tpr": [0, 1], "Model": label_random})
 
-# Create ROC curves
+# ROC curves with interactivity
 roc_lines = (
     alt.Chart(df_roc)
     .mark_line(strokeWidth=4)
     .encode(
         x=alt.X("fpr:Q", title="False Positive Rate", scale=alt.Scale(domain=[0, 1])),
         y=alt.Y("tpr:Q", title="True Positive Rate", scale=alt.Scale(domain=[0, 1])),
-        color=alt.Color(
-            "Model:N",
-            scale=alt.Scale(domain=[label1, label2, label_random], range=["#306998", "#FFD43B", "#888888"]),
-            legend=alt.Legend(
-                orient="none",
-                legendX=930,
-                legendY=1150,
-                direction="vertical",
-                titleFontSize=20,
-                labelFontSize=18,
-                symbolStrokeWidth=4,
-                symbolSize=400,
-                labelLimit=400,
-            ),
-        ),
+        color=alt.Color("Model:N", scale=alt.Scale(domain=[label1, label2], range=[BRAND, SECONDARY])),
+        tooltip=["fpr:Q", "tpr:Q", "Model:N"],
     )
 )
 
@@ -99,26 +104,40 @@ roc_lines = (
 diagonal_line = (
     alt.Chart(df_diagonal)
     .mark_line(strokeWidth=3, strokeDash=[8, 6])
-    .encode(
-        x="fpr:Q",
-        y="tpr:Q",
-        color=alt.Color(
-            "Model:N", scale=alt.Scale(domain=[label1, label2, label_random], range=["#306998", "#FFD43B", "#888888"])
-        ),
-    )
+    .encode(x="fpr:Q", y="tpr:Q", color=alt.value(NEUTRAL), tooltip=alt.value(None))
 )
 
-# Combine charts
+# Combine and style
 chart = (
     (roc_lines + diagonal_line)
-    .properties(width=1400, height=1400, title="roc-curve · altair · pyplots.ai")
-    .configure_title(fontSize=32, anchor="middle", fontWeight="bold")
-    .configure_axis(
-        labelFontSize=18, titleFontSize=22, titlePadding=15, labelPadding=10, gridOpacity=0.3, gridDash=[4, 4]
+    .properties(
+        width=1400, height=1400, background=PAGE_BG, title=alt.Title("roc-curve · altair · anyplot.ai", fontSize=28)
     )
-    .configure_view(strokeWidth=0)
+    .configure_title(color=INK, anchor="middle", fontWeight="normal")
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.10,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=18,
+        titleFontSize=22,
+        titlePadding=15,
+        labelPadding=10,
+    )
+    .configure_legend(
+        fillColor="#FFFDF6" if THEME == "light" else "#242420",
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        titleFontSize=18,
+        labelFontSize=16,
+    )
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .interactive()
 )
 
 # Save outputs
-chart.save("plot.png", scale_factor=2.5)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
