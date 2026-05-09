@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 heatmap-clustered: Clustered Heatmap
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-25
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-09
 """
 
 import matplotlib.pyplot as plt
