@@ -1,173 +1,177 @@
 library: pygal
+language: python
 specification_id: line-timeseries
 created: '2025-12-26T08:31:00Z'
-updated: '2025-12-26T08:33:09Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20519152487
+updated: '2026-05-09T03:40:13Z'
+generated_by: claude-haiku
+workflow_run: 25590470019
 issue: 2006
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  - custom-legend
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/pygal/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent date label handling using x_labels_major to show only first of each
-    month, preventing clutter
-  - Clean, realistic stock price simulation with trend and volatility that clearly
-    demonstrates temporal patterns
-  - Proper use of pygal Style class with appropriately scaled font sizes for the large
-    canvas
-  - 'Good layout decisions: no dots for dense data, legend at bottom, rotated labels'
+  - 'Perfect visual quality: all text explicitly sized, readable in both themes, no
+    overlap, proper palette compliance'
+  - Correct time-series implementation with realistic stock price data and meaningful
+    date range (full year)
+  - 'Theme adaptation is flawless: no dark-on-dark or light-on-light failures in either
+    render'
+  - Clean, reproducible code following project guidelines with deterministic seed
+  - Intelligent x-axis label formatting (month-year with 45-degree rotation prevents
+    overlap)
   weaknesses:
-  - Grid could be shown on both axes as recommended in spec (currently only Y-axis
-    guides shown)
-  - Stroke width of 5 works but could be slightly thicker (e.g., 6-8) for better visibility
-    at full resolution
-  - HTML output could leverage pygal interactivity features (tooltips, hover effects)
-    more explicitly
-  image_description: 'The plot displays a time series line chart showing "ACME Corp
-    Stock" prices over the year 2024 (Jan-Dec). The chart uses a single blue line
-    (Python Blue #306998) on a white background. The title "line-timeseries · pygal
-    · pyplots.ai" appears at the top in black text. The Y-axis shows "Stock Price
-    (USD)" ranging from approximately 150 to 270, and the X-axis shows "Date" with
-    monthly labels (Jan 2024 through Dec 2024) rotated at 45 degrees. The line shows
-    an overall upward trend with realistic daily volatility - starting around 150,
-    dipping slightly in February, then gradually climbing through the year with some
-    corrections (notably in September) before reaching approximately 265 by December.
-    A legend "ACME Corp Stock" appears at the bottom left. Y-axis grid lines (dotted,
-    light gray) provide reference. The chart has good proportions with balanced margins.'
+  - 'Design excellence is conservative: correct but no distinctive aesthetic choices
+    beyond well-configured defaults'
+  - 'Visual refinement could improve: spines not removed, grid not customized beyond
+    default appearance'
+  - 'Data storytelling is minimal: no visual emphasis or hierarchy to highlight the
+    upward trend or volatility pattern'
+  - 'Library mastery is competent but not exceptional: could leverage more pygal-specific
+    interactive or styling features'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct and visually appealing
+      Chrome: Title "line-timeseries · pygal · anyplot.ai", axis labels "Date" and "Stock Price (USD)", legend "ACME Corp Stock" all rendered in dark text, clearly visible and readable against light background
+      Data: Line in brand green (#009E73) showing stock price over 365 days; x-axis displays month-year labels at 45 degrees for readability; y-axis shows price range 100-160 USD; grid lines subtle but visible
+      Legibility verdict: PASS - All text readable, no collisions, data clearly distinguishable from background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct and consistent with light render
+      Chrome: All text elements (title, labels, legend) rendered in light colors, fully readable against dark background; no dark-on-dark failures detected
+      Data: Line identical to light render in #009E73 green - perfect theme consistency; grid lines equally subtle; legend and axis labels properly light-colored
+      Legibility verdict: PASS - All text readable, no theme-adaptation failures, data colors identical to light render (only chrome adapted)
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick labels are all readable. Font sizes
-          are appropriately scaled for the 4800x2700 canvas, though tick labels could
-          be slightly larger.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text. X-axis labels are rotated 45 degrees and properly
-          spaced (showing only first of each month).
+        comment: 'All sizes explicitly set: title=28px, labels=22px, major_label=18px;
+          perfectly readable in both renders'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: X-axis rotation prevents label collision; all text fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line is clearly visible with stroke width of 5. No dots shown (appropriate
-          for 365 data points). Line thickness is appropriate for the data density.
+        comment: Line thickness optimal (stroke_width=6); clearly visible against
+          both backgrounds
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single series uses Python Blue, good contrast against white background.
-          No color accessibility concerns.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Plot fills good portion of canvas with reasonable margins. Legend
-          at bottom is well-positioned, though margin=60 is relatively small for such
-          a large canvas.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: "Stock Price (USD)" includes units. X-axis: "Date" is descriptive.'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette is CVD-safe; strong contrast between data and background
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas; balanced margins (margin=100); well-proportioned
+          layout
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Y-axis grid is subtle (dotted, light gray). Legend is positioned
-          at bottom. X-guides disabled which is appropriate.
+        comment: 'Labels are descriptive with units: ''Stock Price (USD)'' and ''Date'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds correct (#FAF8F1 light, #1A1A17
+          dark); theme tokens (foreground, foreground_subtle) applied correctly; both
+          renders theme-correct'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults with intentional theming; solid but not
+          exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Grid present and rotated labels added; could remove spines or further
+          refine grid
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Realistic trend data but no visual emphasis or hierarchy highlighting
+          insights
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct line chart type for time series data.
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Dates on X-axis, values on Y-axis correctly mapped.
-      - id: SC-03
+        comment: Correct line chart for time series
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Has intelligent date formatting (monthly labels), rotated tick labels,
-          Y-grid lines. Minor: no X-grid lines per spec recommendation.'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: date formatting, grid, readable layout'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows all data from ~145 to ~270.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis dates (365 points), Y-axis prices (100-160 USD)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows "ACME Corp Stock".
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "line-timeseries · pygal · pyplots.ai".'
+        comment: Title format correct; legend shows series name
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows upward trend with volatility, dips and recoveries, realistic
-          price movements. Could show more dramatic patterns (e.g., a larger correction).
+        comment: Year-long data with realistic trend and volatility
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price tracking over one year is an excellent, realistic scenario
-          mentioned in spec applications.
+        comment: Stock price scenario is real-world plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Stock prices starting at 150 USD and ranging to ~270 are realistic.
-          365 data points is within spec (30-500 points).
+        comment: Price range and growth trajectory realistic
     code_quality:
       score: 10
       max: 10
@@ -177,42 +181,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → seed → data generation → style
-          → chart config → save.'
+        comment: 'Linear flow: imports, data, styling, chart, save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses random.seed(42) for reproducibility.
+        comment: Seed set to 42; deterministic generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only imports used: random, datetime/timedelta, pygal, Style.'
+        comment: All imports used; no extraneous dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API.
+        comment: Pythonic, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as both plot.png and plot.html.
-    library_features:
-      score: 3
-      max: 5
+        comment: 'Correct output: plot-light.png, plot-dark.png, .html files'
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: true
-        comment: Uses custom Style class, x_labels_major for intelligent labeling,
-          legend_at_bottom, stroke_style. Could leverage more pygal-specific features
-          like tooltips for interactivity in HTML output.
+        passed: false
+        comment: Good use of Style object; x_labels_major is idiomatic but could leverage
+          more
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Interactive HTML output + custom Style; reasonable but not exceptionally
+          distinctive
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
