@@ -1,13 +1,17 @@
-""" pyplots.ai
+"""anyplot.ai
 scatter-marginal: Scatter Plot with Marginal Distributions
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2025-12-21
 """
 
+import http.server
+import os
+import shutil
+import socketserver
 import tempfile
+import threading
 import time
 import urllib.request
-from pathlib import Path
 
 import numpy as np
 from highcharts_core.chart import Chart
@@ -18,12 +22,26 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+try:
+    import requests
+
+    REQUESTS_AVAILABLE = True
+except ImportError:
+    REQUESTS_AVAILABLE = False
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"  # Okabe-Ito position 1
+
 # Data - bivariate normal with correlation (realistic sensor data scenario)
 np.random.seed(42)
 n_points = 150
-# Temperature sensor readings (Celsius)
 temperature = np.random.randn(n_points) * 5 + 25
-# Humidity readings (%) - correlated with temperature
 humidity = -1.2 * temperature + 80 + np.random.randn(n_points) * 8
 
 # Axis ranges for alignment
@@ -40,9 +58,26 @@ x_hist, x_edges = np.histogram(temperature, bins=n_bins, range=(x_min - x_paddin
 y_hist, y_edges = np.histogram(humidity, bins=n_bins, range=(y_min - y_padding, y_max + y_padding))
 
 # Download Highcharts JS (required for headless Chrome)
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Try multiple CDN sources
+cdns = ["https://cdn.jsdelivr.net/npm/highcharts@11.4.0/highcharts.min.js", "https://code.highcharts.com/highcharts.js"]
+highcharts_js = ""
+for cdn_url in cdns:
+    try:
+        if REQUESTS_AVAILABLE:
+            response = requests.get(cdn_url, timeout=30)
+            response.raise_for_status()
+            highcharts_js = response.text
+            break
+        else:
+            req = urllib.request.Request(cdn_url)
+            req.add_header("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36")
+            with urllib.request.urlopen(req, timeout=30) as response:
+                highcharts_js = response.read().decode("utf-8")
+                break
+    except Exception:
+        continue
+if not highcharts_js:
+    print("Warning: Failed to download Highcharts JS from all CDNs. Using external CDN link in HTML.")
 
 # Shared axis bounds for alignment
 scatter_x_min = x_min - x_padding
@@ -68,7 +103,7 @@ main_chart.options.chart = {
     "type": "scatter",
     "width": main_width,
     "height": main_height,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginTop": margin_top,
     "marginRight": margin_right,
     "marginBottom": margin_bottom,
@@ -81,28 +116,30 @@ main_chart.options.subtitle = {"text": ""}
 main_chart.options.caption = {"text": ""}
 
 main_chart.options.x_axis = {
-    "title": {"text": "Temperature (°C)", "style": {"fontSize": "32px", "color": "#333333"}},
-    "labels": {"style": {"fontSize": "26px", "color": "#333333"}},
+    "title": {"text": "Temperature (°C)", "style": {"fontSize": "32px", "color": INK}},
+    "labels": {"style": {"fontSize": "26px", "color": INK_SOFT}},
     "min": scatter_x_min,
     "max": scatter_x_max,
     "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
+    "gridLineColor": GRID,
     "gridLineDashStyle": "Dash",
     "lineWidth": 2,
-    "lineColor": "#333333",
+    "lineColor": INK_SOFT,
     "tickInterval": 5,
+    "tickColor": INK_SOFT,
 }
 
 main_chart.options.y_axis = {
-    "title": {"text": "Relative Humidity (%)", "style": {"fontSize": "32px", "color": "#333333"}},
-    "labels": {"style": {"fontSize": "26px", "color": "#333333"}},
+    "title": {"text": "Relative Humidity (%)", "style": {"fontSize": "32px", "color": INK}},
+    "labels": {"style": {"fontSize": "26px", "color": INK_SOFT}},
     "min": scatter_y_min,
     "max": scatter_y_max,
     "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
+    "gridLineColor": GRID,
     "gridLineDashStyle": "Dash",
     "lineWidth": 2,
-    "lineColor": "#333333",
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
 }
 
 main_chart.options.legend = {"enabled": False}
@@ -110,16 +147,14 @@ main_chart.options.credits = {"enabled": False}
 main_chart.options.exporting = {"enabled": False}
 
 main_chart.options.plot_options = {
-    "scatter": {
-        "marker": {"radius": 12, "fillColor": "rgba(48, 105, 152, 0.45)", "lineWidth": 1, "lineColor": "#306998"}
-    }
+    "scatter": {"marker": {"radius": 12, "fillColor": BRAND, "lineWidth": 1, "lineColor": PAGE_BG, "opacity": 0.7}}
 }
 
 # Add scatter series
 scatter_series = ScatterSeries()
 scatter_series.data = [[float(xi), float(yi)] for xi, yi in zip(temperature, humidity, strict=True)]
 scatter_series.name = "Sensor Readings"
-scatter_series.color = "#306998"
+scatter_series.color = BRAND
 main_chart.add_series(scatter_series)
 
 # Create top histogram (X marginal) - using column chart with continuous x-axis
@@ -130,7 +165,7 @@ top_chart.options.chart = {
     "type": "column",
     "width": main_width,
     "height": top_height,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginTop": 100,
     "marginRight": margin_right,
     "marginBottom": 0,
@@ -139,8 +174,8 @@ top_chart.options.chart = {
 }
 
 top_chart.options.title = {
-    "text": "scatter-marginal · highcharts · pyplots.ai",
-    "style": {"fontSize": "42px", "fontWeight": "bold", "color": "#333333"},
+    "text": "scatter-marginal · highcharts · anyplot.ai",
+    "style": {"fontSize": "42px", "fontWeight": "bold", "color": INK},
     "align": "center",
 }
 top_chart.options.subtitle = {"text": ""}
@@ -159,9 +194,9 @@ top_chart.options.x_axis = {
 
 top_chart.options.y_axis = {
     "title": {"text": "", "enabled": False},
-    "labels": {"style": {"fontSize": "22px", "color": "#333333"}},
+    "labels": {"style": {"fontSize": "22px", "color": INK_SOFT}},
     "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
+    "gridLineColor": GRID,
     "gridLineDashStyle": "Dash",
     "min": 0,
 }
@@ -176,7 +211,7 @@ bin_width = (scatter_x_max - scatter_x_min) / n_bins
 top_chart.options.plot_options = {
     "column": {
         "borderWidth": 1,
-        "borderColor": "#306998",
+        "borderColor": BRAND,
         "pointPadding": 0,
         "groupPadding": 0,
         "pointWidth": None,
@@ -188,7 +223,7 @@ top_chart.options.plot_options = {
 top_series = ColumnSeries()
 top_series.data = [{"x": float((x_edges[i] + x_edges[i + 1]) / 2), "y": int(x_hist[i])} for i in range(len(x_hist))]
 top_series.name = "Temperature Distribution"
-top_series.color = "rgba(48, 105, 152, 0.5)"
+top_series.color = BRAND
 top_chart.add_series(top_series)
 
 # Create right histogram (Y marginal) - using bar chart for horizontal bars
@@ -199,7 +234,7 @@ right_chart.options.chart = {
     "type": "bar",
     "width": right_width,
     "height": main_height,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginTop": margin_top,
     "marginRight": 120,
     "marginBottom": margin_bottom,
@@ -225,9 +260,9 @@ right_chart.options.x_axis = {
 
 right_chart.options.y_axis = {
     "title": {"text": "", "enabled": False},
-    "labels": {"style": {"fontSize": "22px", "color": "#333333"}},
+    "labels": {"style": {"fontSize": "22px", "color": INK_SOFT}},
     "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
+    "gridLineColor": GRID,
     "gridLineDashStyle": "Dash",
     "opposite": True,
     "reversed": False,
@@ -244,7 +279,7 @@ y_bin_width = (scatter_y_max - scatter_y_min) / n_bins
 right_chart.options.plot_options = {
     "bar": {
         "borderWidth": 1,
-        "borderColor": "#306998",
+        "borderColor": BRAND,
         "pointPadding": 0,
         "groupPadding": 0,
         "pointRange": y_bin_width * 0.9,
@@ -255,7 +290,7 @@ right_chart.options.plot_options = {
 right_series = BarSeries()
 right_series.data = [{"x": float((y_edges[i] + y_edges[i + 1]) / 2), "y": int(y_hist[i])} for i in range(len(y_hist))]
 right_series.name = "Humidity Distribution"
-right_series.color = "rgba(48, 105, 152, 0.5)"
+right_series.color = BRAND
 right_chart.add_series(right_series)
 
 # Generate JS literals
@@ -268,11 +303,16 @@ total_width = main_width + right_width
 total_height = top_height + main_height
 
 # Create combined HTML with all three charts - seamless layout with no gaps
+if highcharts_js:
+    script_tag = f"<script>{highcharts_js}</script>"
+else:
+    script_tag = '<script src="https://code.highcharts.com/highcharts.js"></script>'
+
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <script>{highcharts_js}</script>
+    {script_tag}
     <style>
         * {{
             margin: 0;
@@ -280,7 +320,7 @@ html_content = f"""<!DOCTYPE html>
             box-sizing: border-box;
         }}
         body {{
-            background: #ffffff;
+            background: {PAGE_BG};
             width: {total_width}px;
             height: {total_height}px;
             overflow: hidden;
@@ -298,7 +338,7 @@ html_content = f"""<!DOCTYPE html>
             left: {main_width}px;
             width: {right_width}px;
             height: {top_height}px;
-            background: #ffffff;
+            background: {PAGE_BG};
         }}
         #main-chart {{
             position: absolute;
@@ -322,7 +362,6 @@ html_content = f"""<!DOCTYPE html>
     <div id="main-chart"></div>
     <div id="right-chart"></div>
     <script>
-        // Override Highcharts defaults to remove "Chart title"
         Highcharts.setOptions({{
             lang: {{
                 chartTitle: ''
@@ -338,26 +377,50 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
-with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
-    f.write(html_content)
-    temp_path = f.name
+# Get current working directory before any changes
+cwd = os.getcwd()
 
-# Also save HTML for interactive viewing
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save HTML for interactive viewing
+with open(os.path.join(cwd, f"plot-{THEME}.html"), "w", encoding="utf-8") as f:
     f.write(html_content)
 
-chrome_options = Options()
-chrome_options.add_argument("--headless")
-chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--disable-dev-shm-usage")
-chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument(f"--window-size={total_width + 100},{total_height + 100}")
+# Write temp HTML
+temp_dir = tempfile.mkdtemp()
+temp_path = os.path.join(temp_dir, "chart.html")
+with open(temp_path, "w", encoding="utf-8") as f:
+    f.write(html_content)
 
-driver = webdriver.Chrome(options=chrome_options)
-driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for charts to render
-driver.save_screenshot("plot.png")
-driver.quit()
 
-Path(temp_path).unlink()  # Clean up temp file
+# Start simple HTTP server in background thread
+class QuietHandler(http.server.SimpleHTTPRequestHandler):
+    def log_message(self, format, *args):
+        pass
+
+
+os.chdir(temp_dir)
+
+# Find an available port
+with socketserver.TCPServer(("127.0.0.1", 0), QuietHandler) as httpd:
+    PORT = httpd.server_address[1]  # Get the actual port assigned
+    server_thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    server_thread.start()
+
+    time.sleep(1)  # Give server time to start
+
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument(f"--window-size={total_width + 100},{total_height + 100}")
+
+    driver = webdriver.Chrome(options=chrome_options)
+    driver.get(f"http://127.0.0.1:{PORT}/chart.html")
+    time.sleep(10)  # Wait for Highcharts to load and render
+    driver.save_screenshot(os.path.join(cwd, f"plot-{THEME}.png"))
+    driver.quit()
+
+    httpd.shutdown()
+
+# Clean up
+shutil.rmtree(temp_dir, ignore_errors=True)
