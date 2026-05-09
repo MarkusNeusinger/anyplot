@@ -1,13 +1,26 @@
-""" pyplots.ai
+""" anyplot.ai
 roc-curve: ROC Curve with AUC
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-09
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette - first series ALWAYS #009E73
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Set random seed for reproducibility
 np.random.seed(42)
@@ -80,37 +93,62 @@ auc2 = np.trapezoid(tpr2[idx2], fpr2[idx2])
 idx3 = np.argsort(fpr3)
 auc3 = np.trapezoid(tpr3[idx3], fpr3[idx3])
 
-# Set seaborn style
-sns.set_style("whitegrid")
-sns.set_context("talk", font_scale=1.2)
+# Configure seaborn with theme-adaptive colors and settings
+sns.set_theme(
+    style="whitegrid",
+    palette=OKABE_ITO,
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.1,
+        "grid.linewidth": 0.8,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+        "legend.framealpha": 0.95,
+    },
+)
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+# Create figure with theme-aware background
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 
-# Plot ROC curves using seaborn lineplot
-sns.lineplot(x=fpr1, y=tpr1, ax=ax, linewidth=3.5, color="#306998", label=f"Random Forest (AUC = {auc1:.3f})")
-sns.lineplot(x=fpr2, y=tpr2, ax=ax, linewidth=3.5, color="#FFD43B", label=f"Logistic Regression (AUC = {auc2:.3f})")
-sns.lineplot(x=fpr3, y=tpr3, ax=ax, linewidth=3.5, color="#E74C3C", label=f"Decision Tree (AUC = {auc3:.3f})")
+# Grid should be drawn before data to appear behind lines
+ax.set_axisbelow(True)
 
-# Diagonal reference line (random classifier)
-ax.plot([0, 1], [0, 1], linestyle="--", linewidth=2.5, color="#7F8C8D", label="Random Classifier (AUC = 0.500)")
+# Plot ROC curves using seaborn lineplot with theme-aware palette
+sns.lineplot(
+    x=fpr1, y=tpr1, ax=ax, linewidth=3.5, color=OKABE_ITO[0], label=f"Support Vector Machine (AUC = {auc1:.3f})"
+)
+sns.lineplot(x=fpr2, y=tpr2, ax=ax, linewidth=3.5, color=OKABE_ITO[1], label=f"Random Forest (AUC = {auc2:.3f})")
+sns.lineplot(x=fpr3, y=tpr3, ax=ax, linewidth=3.5, color=OKABE_ITO[2], label=f"Logistic Regression (AUC = {auc3:.3f})")
+
+# Diagonal reference line (random classifier) - use neutral theme-aware color
+ax.plot([0, 1], [0, 1], linestyle="--", linewidth=2.5, color=INK_SOFT, label="Random Classifier (AUC = 0.500)")
 
 # Styling
-ax.set_xlabel("False Positive Rate (FPR)", fontsize=22)
-ax.set_ylabel("True Positive Rate (TPR)", fontsize=22)
-ax.set_title("roc-curve · seaborn · pyplots.ai", fontsize=26, fontweight="bold")
-ax.tick_params(axis="both", labelsize=18)
+ax.set_xlabel("False Positive Rate (FPR)", fontsize=20, color=INK)
+ax.set_ylabel("True Positive Rate (TPR)", fontsize=20, color=INK)
+ax.set_title("roc-curve · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
 # Set axis limits and aspect
 ax.set_xlim([-0.02, 1.02])
 ax.set_ylim([-0.02, 1.02])
 ax.set_aspect("equal", adjustable="box")
 
-# Legend
-ax.legend(loc="lower right", fontsize=18, framealpha=0.95)
+# Spines
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for spine in ["left", "bottom"]:
+    ax.spines[spine].set_color(INK_SOFT)
 
-# Grid styling
-ax.grid(True, alpha=0.3, linestyle="--")
+# Legend
+ax.legend(loc="lower right", fontsize=16, framealpha=0.95, fancybox=False)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
