@@ -1,15 +1,33 @@
-""" pyplots.ai
+"""anyplot.ai
 line-timeseries: Time Series Line Plot
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: pygal | Python 3.13
+Quality: pending | Created: 2025-12-26
 """
 
+import os
 import random
+import sys
 from datetime import datetime, timedelta
 
-import pygal
-from pygal.style import Style
 
+# Ensure site-packages is in path before current directory to avoid shadowing
+site_packages = next((p for p in sys.path if "site-packages" in p), None)
+if site_packages and sys.path[0] == os.path.dirname(__file__):
+    sys.path.remove(sys.path[0])
+    sys.path.insert(0, site_packages)
+
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
 
 # Seed for reproducibility
 random.seed(42)
@@ -22,26 +40,23 @@ dates = [start_date + timedelta(days=i) for i in range(365)]
 price = 150.0
 prices = []
 for _ in range(365):
-    # Add slight upward trend with random daily changes
     change = random.gauss(0.1, 2.5)
-    price = max(100, price + change)  # Prevent going too low
+    price = max(100, price + change)
     prices.append(round(price, 2))
 
-# Custom style for 4800x2700 canvas with larger fonts
+# Custom style for 4800x2700 canvas
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998",),  # Python Blue
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=42,
-    legend_font_size=42,
-    value_font_size=36,
-    guide_stroke_color="#cccccc",
-    guide_stroke_dasharray="2,4",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
 )
 
 # Create line chart
@@ -49,18 +64,18 @@ chart = pygal.Line(
     width=4800,
     height=2700,
     style=custom_style,
-    title="line-timeseries · pygal · pyplots.ai",
+    title="line-timeseries · pygal · anyplot.ai",
     x_title="Date",
     y_title="Stock Price (USD)",
-    show_x_guides=False,
+    show_x_guides=True,
     show_y_guides=True,
     x_label_rotation=45,
     show_legend=True,
     legend_at_bottom=True,
     truncate_legend=-1,
     show_dots=False,
-    stroke_style={"width": 5},
-    margin=60,
+    stroke_style={"width": 6},
+    margin=100,
 )
 
 # Add data series
@@ -70,7 +85,7 @@ chart.add("ACME Corp Stock", prices)
 x_labels = []
 x_labels_major = []
 for d in dates:
-    if d.day == 1:  # First of each month
+    if d.day == 1:
         x_labels.append(d.strftime("%b %Y"))
         x_labels_major.append(d.strftime("%b %Y"))
     else:
@@ -80,5 +95,5 @@ chart.x_labels = x_labels
 chart.x_labels_major = x_labels_major
 
 # Save as PNG and HTML
-chart.render_to_file("plot.html")
-chart.render_to_png("plot.png")
+chart.render_to_file(f"plot-{THEME}.html")
+chart.render_to_png(f"plot-{THEME}.png")
