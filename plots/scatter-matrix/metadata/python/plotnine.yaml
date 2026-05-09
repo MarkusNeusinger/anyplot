@@ -1,15 +1,214 @@
 library: plotnine
+language: python
 specification_id: scatter-matrix
 created: '2025-12-26T16:16:35Z'
-updated: '2025-12-26T16:33:34Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20525446917
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/plotnine/plot.png
-preview_html: null
-quality_score: 90
+updated: '2026-05-09T14:54:27Z'
+generated_by: claude-haiku
+workflow_run: 25603815733
+issue: 2035
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
+review:
+  strengths:
+  - Perfect spec compliance with all required scatter matrix features present
+  - Excellent visual quality with readable text in both light and dark themes
+  - Proper theme-adaptive styling with all chrome elements correctly colored
+  - Clean, idiomatic plotnine code using appropriate high-level APIs
+  - Good data quality with realistic iris-like dataset and plausible distributions
+  - Proper transparency and point sizing for effective multivariate visualization
+  weaknesses:
+  - Design excellence is professional but not exceptional—faceted layout follows standard
+    patterns without unique visual refinement
+  - Limited custom visual hierarchy beyond default color encoding by species
+  - Typography and styling could be more deliberately refined to elevate visual storytelling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme background
+      Chrome: Title, axis labels, tick labels all in dark INK (#1A1A17) - excellent readability against light background
+      Data: Three species color-encoded with Okabe-Ito palette (green #009E73, orange #D55E00, blue #0072B2). Scatter points use alpha=0.7 for transparency. Diagonal KDE distributions clearly visible.
+      Legibility verdict: PASS - All text elements are readable, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme background
+      Chrome: Title, axis labels, tick labels all in light INK (#F0EFE8) - clear readability on dark surface, no dark-on-dark failures
+      Data: Identical colors to light render (only chrome flipped). Scatter points and KDE curves clearly visible and distinguishable from dark background.
+      Legibility verdict: PASS - All text elements readable, proper contrast throughout, no theme-adaptation failures
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean grid layout with no overlapping elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Data points visible with appropriate alpha, distributions clear
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 14×14 figure size appropriate for 4×4 grid, proper spacing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units, clear title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, correct Okabe-Ito order, theme-correct backgrounds'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional polish with intentional hierarchy, good use of transparency
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Styled panel borders, subtle grids, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with diagonal vs off-diagonal, color guides
+          viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter plot matrix structure
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal distributions + off-diagonal scatter + color by category
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correct, symmetric matrix, all variables shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Format correct, legend labels match
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All four variables with full pairwise coverage
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Iris-like data, plausible distributions, neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible values, appropriate point count per species
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No extraneous functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seed set (42), deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used, no extras
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png, current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper grammar of graphics, facet_grid correctly applied
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of faceting and geom_density, somewhat standard approach
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -17,199 +216,6 @@ impl_tags:
   patterns:
   - data-generation
   - wide-to-long
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - minimal-chrome
-review:
-  strengths:
-  - Excellent implementation of scatter matrix using plotnine facet_grid approach
-  - 'Clean color scheme using Python branding colors (blue #306998, yellow #FFD43B)
-    plus complementary coral'
-  - Proper use of KDE on diagonal cells with geom_density overlaid on scatter data
-  - Good transparency (alpha=0.7) handles point density well for 150 data points
-  - Variable strip labels are rotated properly (angle=0 for y-axis) for readability
-  - Realistic iris-like data demonstrates all key features of a scatter matrix
-  - Title follows exact required format
-  weaknesses:
-  - Uses warnings.filterwarnings("ignore") which could hide legitimate issues
-  - Some data transformation loops add complexity (though necessary for facet approach)
-  image_description: 'The plot displays a 4×4 scatter matrix (pairplot) for iris-like
-    data with four variables: Petal Length (cm), Petal Width (cm), Sepal Length (cm),
-    and Sepal Width (cm). The diagonal cells show kernel density estimates (KDE) for
-    each variable. Off-diagonal cells show scatter plots for each variable pair. Data
-    is color-coded by Species with three groups: setosa (blue/Python Blue #306998),
-    versicolor (yellow/Python Yellow #FFD43B), and virginica (coral/salmon #E07A5F).
-    The title "scatter-matrix · plotnine · pyplots.ai" appears centered at the top
-    in bold. Variable names are displayed along the top edge (columns) and right edge
-    (rows) as strip labels. A legend showing Species with colored markers is positioned
-    on the right side. The plot has a clean minimal theme with subtle gridlines and
-    good use of transparency (alpha=0.7) for the scatter points.'
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title is bold and readable, strip labels are clear, axis tick labels
-          are legible but could be slightly larger
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, clean layout
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Points are appropriately sized with good alpha for the data density
-          (150 points), density plots are visible
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, and coral provide excellent contrast and are distinguishable
-          for colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization with 4×4 grid filling the space well, though
-          bottom-left x-axis labels are slightly cramped
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: Variable names include units "(cm)" and are descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid is subtle, legend is well placed on right, but legend could
-          be slightly larger
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct scatter matrix/pairplot implementation
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: All pairwise combinations correctly shown
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Has diagonal KDE distributions, off-diagonal scatters, color encoding
-          by category
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly shows all three species
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "scatter-matrix · plotnine · pyplots.ai"'
-    data_quality:
-      score: 19
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
-        max: 8
-        passed: true
-        comment: Shows correlations (positive between petal dimensions), clear species
-          separation, different distributions on diagonal
-      - id: DQ-02
-        name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Iris-like data is a classic, appropriate choice for demonstrating
-          scatter matrices
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
-        max: 5
-        passed: true
-        comment: Values are realistic for iris measurements (sepal 4-8cm, petal 0-7cm,
-          widths appropriate)
-    code_quality:
-      score: 7
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Uses some helper loops for data transformation which is necessary
-          for this complex plot, but mostly follows KISS
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
-        max: 2
-        passed: true
-        comment: All imports are used, but warnings.filterwarnings could be avoided
-      - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: true
-        comment: Uses warnings.filterwarnings("ignore") which suppresses potential
-          issues
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of plotnine's grammar of graphics with ggplot, facet_grid,
-          geom_point, geom_density, and theming system. The layered approach is idiomatic.
-          Could have explored additional plotnine features.
-  verdict: APPROVED

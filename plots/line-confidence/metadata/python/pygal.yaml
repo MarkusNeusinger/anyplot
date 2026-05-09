@@ -1,35 +1,256 @@
 library: pygal
+language: python
 specification_id: line-confidence
 created: '2025-12-26T16:13:44Z'
-updated: '2025-12-26T16:36:56Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20525435948
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-09T12:57:33Z'
+generated_by: claude-haiku
+workflow_run: 25601455878
+issue: 2007
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-confidence/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-confidence/pygal/plot.html
-quality_score: 58
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-    - data-generation
-    - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/pygal/plot-dark.html
+quality_score: 82
 review:
   strengths:
-  - Clean KISS code structure with proper random seed for reproducibility
-  - Correct title format following pyplots.ai convention
-  - Realistic user growth prediction scenario with appropriate data scale
-  - Good use of pygal XY chart and custom Style configuration
-  - Proper axis labels and grid configuration
+  - 'Excellent text legibility: all font sizes explicitly set and readable in both
+    light and dark themes'
+  - 'Perfect spec compliance: all required features (central line, confidence band,
+    legend, grid) present and correctly implemented'
+  - Clean, reproducible code with proper seeding (np.random.seed(42)) and KISS structure
+  - 'Strong data storytelling: expanding confidence band effectively communicates
+    growing uncertainty over time'
+  - 'Proper theme adaptation: backgrounds and text colors correctly theme-adaptive;
+    no dark-on-dark failures'
+  - Well-spaced layout with balanced margins and no overlapping elements
   weaknesses:
-  - Confidence interval band is nearly invisible - the filled polygon approach with
-    rgba opacity renders as an almost imperceptible thin region rather than a clearly
-    visible shaded band
-  - Legend claims 95% Confidence Interval but users cannot actually see the band,
-    making the visualization misleading
-  - Pygal fill mechanism for polygons may not be suitable for confidence bands - library
-    limitation for this visualization type
+  - 'VQ-07 Palette Compliance: The second series (central prediction line) does not
+    use the correct Okabe-Ito color (#D55E00 vermillion/orange-red). It appears to
+    be greenish/teal instead, violating the mandatory palette requirement for multi-series
+    plots. Fix: Ensure the second chart.add() series receives the second color from
+    the OKABE_ITO palette.'
+  - 'VQ-04 Color Accessibility: Due to the palette issue, the confidence band and
+    central line are not sufficiently distinct in color. Both appear greenish rather
+    than contrasting. Fix: Correct the second series color to #D55E00 to create proper
+    color contrast.'
+  - 'DE-01 Aesthetic Sophistication: Uses library defaults without exceptional design
+    choices. The plot is functional but visually generic. Fix: Consider visual refinements
+    such as removing unnecessary spines, custom typography, or strategic use of whitespace.'
+  - 'DE-02 Visual Refinement: Minimal customization beyond default styling. Grid is
+    visible but not refined. Fix: Consider subtle grid styling (alpha adjustment)
+    and spine removal for a more polished appearance.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correctly rendered
+      Chrome: Title, axis labels ("Time (weeks)" and "Predicted Users"), tick labels all dark text on light surface—fully readable
+      Data: Semi-transparent greenish confidence band representing the 95% CI; a darker teal/cyan line showing the central prediction mean
+      Legibility verdict: PASS—all elements are clearly legible against the light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correctly rendered
+      Chrome: Title, axis labels, and tick labels all light text on dark surface—fully readable; no dark-on-dark failures
+      Data: Confidence band appears in same greenish tone (color identical to light render, as expected); central line in same teal/cyan color
+      Legibility verdict: PASS—all text is readable against the dark background; no contrast failures
+
+    Note: The data colors are consistent across both renders (only chrome flips between themes). However, the central line color appears to be greenish/teal rather than the Okabe-Ito palette position 2 color (#D55E00, vermillion/orange-red), which is a palette compliance issue flagged in VQ-07.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28, labels 22, ticks 18, legend
+          16); fully readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; all elements well-spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Confidence band and central line both clearly visible and well-adapted
+          to data density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: false
+        comment: Okabe-Ito palette is CVD-safe, but series colors are not sufficiently
+          distinct; both band and line appear greenish rather than contrasting colors
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Perfect layout: plot fills 60-70% of canvas with balanced margins'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format; axis labels descriptive with units (Time (weeks),
+          Predicted Users)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'First series (#009E73 greenish band) appears correct, but second
+          series line is not #D55E00 (orange-red); appears to be greenish/teal instead.
+          Background colors (#FAF8F1 light, #1A1A17 dark) are correct; text colors
+          are theme-appropriate. Violation: second series uses wrong palette color.'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Uses Okabe-Ito palette and custom Style, but represents a well-configured
+          library default without exceptional design thought
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: true
+        comment: Minimal customization; grid present but not refined; library defaults
+          mostly followed
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Expanding confidence band clearly communicates growing uncertainty
+          over time; good visual hierarchy showing the prediction trend and its evolving
+          bounds
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct chart type: line plot with confidence interval'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: central trend line, confidence band, legend,
+          grid lines'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned; axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct (line-confidence · pygal · anyplot.ai); legend
+          labels match data series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: central trend, confidence band, widening uncertainty
+          over time'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Model prediction scenario is realistic and neutral; plausible exponential
+          growth with widening uncertainty
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sensible for domain (predicted users 1000-1700 range over
+          12 weeks)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Simple, linear flow: imports → data generation → chart creation
+          → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures reproducible synthetic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Only necessary imports: os, numpy, pygal, Style'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic code; appropriate complexity; no over-engineering
+          or fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly saves as plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses pygal.XY chart correctly with custom Style; follows pygal patterns
+          but fairly standard approach
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Uses pygal's Style theming system and dual PNG/HTML output; confidence
+          band as closed polygon is a reasonable approach but fairly standard
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

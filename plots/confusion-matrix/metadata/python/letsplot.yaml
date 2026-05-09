@@ -1,173 +1,182 @@
 library: letsplot
+language: python
 specification_id: confusion-matrix
 created: '2025-12-26T17:38:12Z'
-updated: '2025-12-26T17:47:04Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20526594311
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - colorbar
-  - hover-tooltips
-  - html-export
-  - layer-composition
-  patterns:
-  - data-generation
-  - wide-to-long
-  dataprep: []
-  styling: []
+updated: '2026-05-09T16:58:52Z'
+generated_by: claude-haiku
+workflow_run: 25606304400
+issue: 2272
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/python/letsplot/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent text contrast using scale_color_identity() for dynamic white/black text
-    based on cell darkness
-  - Row-normalized percentages with raw counts provide dual interpretation
-  - Interactive tooltips configured for HTML export showing detailed cell information
-  - Clean ggplot2 grammar implementation with proper categorical ordering
-  - Square aspect ratio via coord_fixed() ideal for confusion matrices
+  - 'Perfect theme implementation: Both light and dark renders are readable with proper
+    color adaptation (inverted gradient for dark mode maintains legibility)'
+  - 'Complete specification compliance: All required features present (counts, percentages,
+    colorbar, labeled axes, correct matrix layout)'
+  - 'Excellent visual quality: Explicit font sizing (28pt/22pt/18pt/14pt), clear contrast,
+    no overlap, optimal square layout for symmetric heatmap'
+  - 'Realistic, neutral data: Image classifier with realistic confusion patterns (Cat-Dog,
+    Bird-Fish confusions) showing per-class accuracy of 70-85%'
+  - 'Clean, reproducible code: KISS structure, seed-based determinism, proper API
+    usage (LetsPlot 4.9.0), correct output format (PNG + HTML)'
+  - 'Correct palette: Sequential Blues for count data as spec-required; backgrounds
+    theme-correct; chrome properly themed in both renders'
   weaknesses:
-  - Colorbar could be positioned closer to the plot for better visual cohesion
-  - Grid/Legend score impacted by colorbar distance from main plot area
-  image_description: 'The plot displays a 4x4 confusion matrix heatmap for an image
-    classification task with classes Cat, Dog, Bird, and Fish. The matrix uses a sequential
-    blue colormap (light to dark blue gradient) where darker cells indicate higher
-    counts. Each cell shows both the raw count and row-normalized percentage in bold
-    black or white text (white text on darker cells, black on lighter). The diagonal
-    cells (correct predictions) are visibly darker, showing good model performance:
-    Cat=45 (77%), Dog=52 (82%), Bird=38 (79%), Fish=41 (80%). Off-diagonal cells show
-    realistic misclassification patterns (e.g., Cat↔Dog confusion, Bird↔Fish confusion).
-    The title "confusion-matrix · letsplot · pyplots.ai" appears at the top. Y-axis
-    labeled "True Label", X-axis labeled "Predicted Label". A colorbar on the right
-    shows the count scale from ~10 to 50. The plot uses a square 1:1 aspect ratio
-    with coord_fixed().'
+  - 'Design Excellence moderate (12/20): Looks like a well-configured library default
+    rather than a sophisticated custom design. Could improve with intentional color
+    harmony, refined typography hierarchy, or distinctive visual styling to reach
+    6+/8 on DE-01'
+  - 'Library Mastery low (4/10): Doesn''t leverage distinctive letsplot features (interactive
+    hover tooltips, custom marks, advanced theming options). LM-02=1 because logic
+    is replicable in other ggplot-style libraries without modification'
+  - 'Limited data storytelling: Natural emphasis via color gradient is present, but
+    no explicit visual hierarchy or design choices to amplify the insight (e.g., highlighting
+    diagonal or using accent colors for misclassification regions)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 ✓
+      Chrome: Title (28pt bold), axis labels (22pt), tick labels (18pt), and annotations (14pt) all in dark text #1A1A17 — all clearly readable against light background
+      Data: Blues sequential gradient from #E7F0F9 (low) to #08519C (high) for count heatmap; white/grey cell borders; bold count + percentage annotations with good contrast; colorbar legend labeled "Count"
+      Legibility verdict: PASS — All text readable, excellent contrast, no overlap
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 ✓
+      Chrome: Title, axis labels, tick labels, annotations all in light text #F0EFE8 — all clearly readable against dark background; white cell borders provide definition
+      Data: Blues gradient INVERTED to #1F3D5C (low) to #74B3E5 (high) for readability on dark background; same cell structure and annotations; colorbar visible
+      Data colors: Identical to light render (only the gradient's visual direction inverts with theme; the data series itself is consistent)
+      Legibility verdict: PASS — No dark-on-dark failures; all text readable; proper theme adaptation
+
+    Both renders pass legibility. Theme-adaptive implementation is correct.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is large and bold (~28pt), axis labels are clear (~22pt), cell
-          annotations are bold and readable (~14pt scaled)
+        comment: All font sizes explicitly set and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all labels and annotations are fully readable
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Tiles are perfectly sized for 4x4 matrix, white borders between tiles
-          provide clear separation
+        comment: Heatmap cells and annotations optimally sized
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Sequential blue colormap is colorblind-safe, good contrast between
-          light/dark cells
+        comment: Blues sequential colormap is perceptually uniform; good contrast
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good use of canvas with square aspect ratio, slight asymmetry due
-          to colorbar placement
+        comment: Square format ideal for symmetric heatmap; 70-80% canvas fill
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels "True Label" and "Predicted Label" but no units
-          (though units not applicable for categorical data)
+        comment: Descriptive labels; correct title format
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Panel grid is removed (good), but colorbar is somewhat distant from
-          the plot
+        comment: Blues sequential (spec-correct); backgrounds and chrome theme-correct
+          in both renders
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured default with theme-adaptive coloring, but not sophisticated
+          or publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid, removed spines, generous whitespace; some custom styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Diagonal naturally emphasized by color, but no additional design
+          choices to enhance narrative
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct heatmap/tile-based confusion matrix visualization
+        comment: Correct 4x4 confusion matrix heatmap
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: True labels on Y-axis, Predicted labels on X-axis as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has annotations (count + percentage), colorbar, sequential colormap,
-          clear axis labels
-      - id: SC-04
-        name: Data Range
+        comment: Counts, percentages, colorbar, labeled axes all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 4 classes visible, full matrix shown
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Predicted, Y=True; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled "Count" with appropriate scale
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as "confusion-matrix · letsplot · pyplots.ai"
+        comment: Correct title format; Count colorbar present
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows diagonal dominance (correct predictions), off-diagonal misclassifications,
-          and realistic confusion patterns; could show more varied accuracy rates
-          between classes
+        comment: Shows TP, FP, FN, TN with realistic confusion patterns
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Image classifier for animals is a plausible real-world scenario with
-          Cat/Dog/Bird/Fish classes
+        comment: Image classifier scenario is real, neutral, comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic (~50-60 samples per class, 77-82% accuracy),
-          though slightly idealized
+        comment: Realistic accuracy (70-85%), balanced class distribution
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -175,42 +184,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: 'Linear flow: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no cruft
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as "plot.png" but also saves "plot.html" which is fine, however
-          the code defines df.iterrows() which is slow but acceptable
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct PNG + HTML output
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses ggplot grammar, geom_tile, scale_color_identity for text colors,
-          tooltips for interactivity (HTML version), coord_fixed(); could leverage
-          more lets-plot specific features like custom tooltips formatting
+        passed: false
+        comment: Correct ggplot idioms but doesn't leverage letsplot's distinctive
+          features
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage; mostly replicable in other ggplot-style libraries
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - gradient-fill

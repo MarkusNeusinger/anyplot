@@ -1,160 +1,168 @@
 library: altair
+language: python
 specification_id: line-confidence
 created: '2025-12-26T16:14:06Z'
-updated: '2025-12-26T16:33:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20525434309
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-confidence/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-confidence/altair/plot.html
-quality_score: 78
-impl_tags:
-  dependencies: []
-  techniques:
-    - html-export
-    - layer-composition
-  patterns:
-    - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-09T12:49:55Z'
+generated_by: claude-haiku
+workflow_run: 25601312703
+issue: 2007
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/python/altair/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Clean code structure following KISS principles with clear data generation logic
-  - Confidence band appropriately widens over time showing realistic forecast uncertainty
-    behavior
-  - Uses Altair layered chart composition effectively (band + line + points)
-  - Interactive HTML export includes useful tooltips for exploration
-  - Consistent color scheme with good contrast between line and band
+  - Excellent theme adaptation with flawless color contrast in both light and dark
+    modes
+  - Professional visual hierarchy with central trend clearly emphasized over uncertainty
+    context
+  - Perfect specification compliance with all required features present and well-executed
+  - Realistic data generation demonstrating forecast uncertainty decay with widening
+    intervals
+  - Interactive HTML output with informative tooltips
+  - Clean, idiomatic altair code with proper layering and encoding
   weaknesses:
-  - Legend is not visible in the rendered PNG despite code attempting to create one
-    using resolve_legend - this violates spec requirement for legend that clearly
-    identifies both the central line and confidence band
-  - Y-axis starts at 0 but data ranges ~90-180, wasting nearly half the vertical canvas
-    space (the code calculates y_domain but Altair appears to ignore it or it is not
-    applied correctly to all layers)
-  image_description: The plot displays a line chart with a confidence interval on
-    a white background. A dark navy blue line (#306998) shows the predicted mean values,
-    surrounded by a light blue semi-transparent band representing the 95% confidence
-    interval. The x-axis is labeled "Day" (ranging 0-50) and the y-axis is labeled
-    "Predicted Value" (ranging 0-200). The title "line-confidence · altair · pyplots.ai"
-    appears at the top center. The confidence band appropriately widens as time progresses,
-    simulating forecast uncertainty. Point markers are visible along the line. However,
-    **no legend is visible** in the rendered image despite the code attempting to
-    create one. The y-axis starts at 0 creating significant whitespace below the data
-    (which ranges ~90-180).
+  - 'Minor: Could enhance visual definition of confidence band edges with subtle stroke
+    on band boundary'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct for light theme
+      Chrome: Title, axis labels ("Day", "Predicted Value"), tick labels all in dark text, clearly readable against light background
+      Data: Central line in brand green (#009E73) with point markers; semi-transparent green confidence band (opacity 0.25) surrounding it; subtle grid at 10% opacity; legend identifies "Confidence Band (5%)" and "Central Line"
+      Data representation: Time-series forecast showing upward trend over 50 days with confidence intervals widening over time
+      Legibility verdict: PASS - all text elements readable, no light-on-light failures, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct for dark theme
+      Chrome: Title, axis labels, tick labels all in light gray/off-white text, clearly readable against dark background; grid remains subtle and visible
+      Data: Identical to light render - central line in same green (#009E73), same point markers, same semi-transparent confidence band; only chrome elements have adapted to light values for contrast
+      Data representation: Identical trend and uncertainty visualization as light render
+      Legibility verdict: PASS - all text elements readable, no dark-on-dark failures, excellent contrast; data colors proven identical between themes with only chrome adapted
   criteria_checklist:
     visual_quality:
-      score: 31
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and axis labels are clear and readable at appropriate sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: Font sizes explicit (28px title, 22px labels, 18px ticks); readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean spacing, no collision of labels or elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line and band are clearly visible, point markers present but small
+        comment: Central line, band, point markers all clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Uses single color scheme, colorblind-friendly
+        comment: 'Okabe-Ito #009E73 is colorblind-safe; adequate contrast'
       - id: VQ-05
-        name: Layout Balance
-        score: 0
-        max: 5
-        passed: false
-        comment: Y-axis starts at 0 instead of data range, creating ~50% wasted vertical
-          space
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 proportions well-balanced; generous margins; nothing cut off
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no units
+        comment: Descriptive labels; correct title format
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle (good), but legend is NOT visible despite spec requirement
+        passed: true
+        comment: 'First series #009E73; backgrounds correct; both renders theme-adapted'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional palette use; intentional hierarchy emphasizing central
+          trend
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (10% opacity); clean configuration; good whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal point on trend; band provides context; widening intervals
+          convey confidence decay
     spec_compliance:
-      score: 20
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct line plot with confidence interval
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=Day, Y=Value, band=Lower/Upper correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Missing visible legend (spec explicitly requires "legend that clearly
-          identifies both the central line and confidence band")
-      - id: SC-04
-        name: Data Range
+        score: 4
+        max: 4
+        passed: true
+        comment: Central line, band, legend, grid all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible (though Y-axis range is suboptimal)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 0
-        max: 2
-        passed: false
-        comment: Legend not rendered/visible in output image
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
+        comment: X=Day, Y=Predicted Mean, Y2=bounds; full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: 'Correct format: "line-confidence · altair · pyplots.ai"'
+        comment: Title format correct; legend labels match spec
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows widening confidence interval over time, trend, and variability
+        comment: 'Complete: trend, band, points, widening uncertainty'
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Time series forecast scenario is plausible but generic
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: 50 days, values ~100-170, realistic for forecasting
+        comment: 95% confidence interval; realistic widening; neutral domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Range 95–185 with 5% padding; sensible magnitude
     code_quality:
       score: 10
       max: 10
@@ -164,41 +172,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: No unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Deterministic seed (42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (altair, numpy, pandas)
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current Altair API
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 0
-      max: 5
+        comment: Correct naming; current API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: The resolve_legend approach with transform_calculate is complex but
-          the legend doesn't render properly. Interactive HTML version with tooltips
-          is good, but the static PNG which is the primary output lacks the legend.
+        passed: true
+        comment: 'Idiomatic altair patterns: Chart, mark layers, y2 encoding, alt.layer()'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Interactive HTML with tooltips; proper encoding system
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
