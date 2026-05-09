@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 bar-stacked: Stacked Bar Chart
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 93/100 | Created: 2025-12-26
+Library: letsplot | Python 3.13
+Quality: pending | Created: 2026-05-09
 """
+
+import os
 
 import pandas as pd
 from lets_plot import *
@@ -10,10 +12,20 @@ from lets_plot import *
 
 LetsPlot.setup_html()
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
 # Data: Quarterly sales by product category
 data = {
     "quarter": ["Q1", "Q2", "Q3", "Q4"] * 4,
-    "product": ["Electronics"] * 4 + ["Furniture"] * 4 + ["Clothing"] * 4 + ["Accessories"] * 4,
+    "product": ["Electronics"] * 4 + ["Furniture"] * 4 + ["Clothing"] * 4 + ["Office Supplies"] * 4,
     "sales": [
         120,
         145,
@@ -30,59 +42,42 @@ data = {
         45,
         52,
         48,
-        58,  # Accessories
+        58,  # Office Supplies
     ],
 }
 df = pd.DataFrame(data)
 
-# Calculate totals for each quarter (for labels)
-totals = df.groupby("quarter")["sales"].sum().reset_index()
-totals.columns = ["quarter", "total"]
-totals["label"] = totals["total"].astype(str)
-# Add y position for labels (slightly above total)
-totals["y_pos"] = totals["total"] + 15
-
-# Colorblind-safe palette (Python Blue first, then accessible colors)
-colors = ["#306998", "#FFD43B", "#8B5CF6", "#F59E0B"]
-
-# Create stacked bar chart with tooltips
+# Create stacked bar chart
 plot = (
     ggplot(df, aes(x="quarter", y="sales", fill="product"))
     + geom_bar(
         stat="identity",
         position="stack",
-        width=0.7,
-        alpha=0.9,
-        tooltips=layer_tooltips().title("@product").line("@|@sales K$").format("sales", ".0f"),
+        width=0.6,
+        tooltips=layer_tooltips().title("@product").line("Sales: @sales K$").format("sales", ".0f"),
     )
-    # Add total labels above each stack
-    + geom_text(
-        data=totals,
-        mapping=aes(x="quarter", y="y_pos", label="label"),
-        size=16,
-        fontface="bold",
-        color="#333333",
-        inherit_aes=False,
-    )
-    + scale_fill_manual(values=colors)
-    + labs(title="bar-stacked · letsplot · pyplots.ai", x="Quarter", y="Sales (Thousands $)", fill="Product Category")
-    + theme_minimal()
+    + scale_fill_manual(values=OKABE_ITO)
+    + labs(title="bar-stacked · letsplot · anyplot.ai", x="Quarter", y="Sales (Thousands $)", fill="Product")
     + theme(
-        plot_title=element_text(size=28, face="bold"),
-        axis_title=element_text(size=22),
-        axis_text=element_text(size=18),
-        legend_title=element_text(size=20),
-        legend_text=element_text(size=18),
-        legend_position="right",
-        legend_background=element_rect(fill="#F8F9FA", color="#E5E7EB", size=1),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major_y=element_line(color=INK, size=0.3),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.4),
+        plot_title=element_text(size=24, color=INK),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.4),
+        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=16, color=INK),
+        legend_position="right",
     )
     + ggsize(1600, 900)
 )
 
-# Save as PNG (scale 3x for 4800x2700 px)
-ggsave(plot, "plot.png", path=".", scale=3)
+# Save PNG (scale 3x for 4800 × 2700 px)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
 
-# Save as HTML for interactivity
-ggsave(plot, "plot.html", path=".")
+# Save HTML
+ggsave(plot, f"plot-{THEME}.html", path=".")
