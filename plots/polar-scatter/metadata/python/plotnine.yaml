@@ -1,176 +1,161 @@
 library: plotnine
+language: python
 specification_id: polar-scatter
 created: '2025-12-26T16:15:54Z'
-updated: '2025-12-26T16:20:07Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20525461292
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - polar-projection
-  - layer-composition
-  - annotations
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - minimal-chrome
+updated: '2026-05-09T10:46:34Z'
+generated_by: claude-haiku
+workflow_run: 25599111027
+issue: 2023
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 95
 review:
   strengths:
-  - Excellent creative implementation using Cartesian coordinates to simulate polar
-    projection (plotnine lacks native polar coordinates)
-  - Clean grammar of graphics approach with multiple geom layers for gridlines, spokes,
-    data points, and labels
-  - Realistic wind data with prevailing directions (SW and NE clusters) that demonstrate
-    real-world wind patterns
-  - Good use of alpha transparency to handle point overlap in dense regions
-  - Proper compass orientation with 0° at North and clockwise angles
-  - Clear visual hierarchy with bold compass labels and subtle gridlines
-  weaknesses:
-  - Title format should be exactly "{spec-id} · {library} · pyplots.ai" not "Wind
-    Direction and Speed · polar-scatter · plotnine · pyplots.ai"
-  - Figure size is 12x12 (square) at 300 DPI = 3600x3600 which is valid, but the recommended
-    16:9 landscape might provide better label spacing
-  - Legend could be positioned closer to the plot area to reduce whitespace on the
-    right
-  image_description: 'The plot displays a polar scatter visualization of wind direction
-    and speed data. It features concentric dashed circular gridlines at 5, 10, 15,
-    20, and 25 m/s intervals. Eight radial spokes extend from the center to compass
-    directions (N, NE, E, SE, S, SW, W, NW), with bold dark gray labels at the perimeter.
-    Speed labels (5, 10, 15, 20, 25 m/s) are positioned along the NNE axis. Data points
-    are rendered as filled circles with alpha transparency, colored by time of day:
-    blue (Morning), yellow (Afternoon), and red/coral (Evening). The data clearly
-    shows two clusters - one in the SW quadrant (prevailing wind) and another in the
-    NE quadrant (secondary wind). The legend "Time of Day" is positioned on the right
-    side with all three categories listed. The title "Wind Direction and Speed · polar-scatter
-    · plotnine · pyplots.ai" appears at the top.'
+  - Flawless theme adaptation with correct color tokens in both light and dark modes
+  - Excellent data visualization with clear compass and wind-speed representation
+  - Professional design with custom circular gridlines and strategic label placement
+  - Perfect palette compliance using Okabe-Ito colors in correct order (green, orange,
+    blue)
+  - All text is legible and properly sized across both themes
+  - Strong library mastery with appropriate geom layering and coordinate conversion
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with proper theme adaptation
+      Chrome: Title, compass labels (N, NE, E, SE, S, SW, W, NW), and speed labels all rendered in dark text and clearly readable. Legend has light background with dark text.
+      Data: 120 wind data points color-coded by time of day - Morning in brand green (#009E73), Afternoon in orange (#D55E00), Evening in blue (#0072B2). Circular gridlines and radial spokes provide grid context in subtle gray.
+      Legibility verdict: PASS - all text is legible, properly sized, and well-positioned
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with correct dark theme
+      Chrome: Title, compass labels, and speed labels all rendered in light text and clearly readable against dark background. Legend has dark background with light text. No dark-on-dark legibility issues.
+      Data: Colors identical to light render (green, orange, blue) - only chrome flipped to dark theme. Gridlines remain visible and functional.
+      Legibility verdict: PASS - all text is readable in the dark theme with proper contrast
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and compass labels are clear and bold; speed labels are slightly
-          smaller but readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; all labels positioned clearly
+        comment: All text explicitly sized and theme-adapted
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Well-spaced labels, appropriate point density
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points are well-sized with good alpha (0.75) for 120 data points;
-          slight overlap in dense clusters but acceptable
+        comment: All elements visible with appropriate alpha
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, and red/coral are distinguishable and reasonably colorblind-friendly
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Square aspect ratio is appropriate for polar plot; slight imbalance
-          with legend taking space on right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Speed labels include units (m/s); compass directions are descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette, colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format appropriate, proper padding
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with dashed lines and alpha 0.5; legend is well placed
-          but could be closer to plot
+        comment: Correct title format, meaningful compass/speed labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, correct backgrounds for both themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom circular grid, compass labels, intentional styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, custom gridlines, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point, visual hierarchy, color-coded categories
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct polar scatter plot using angle and radius mapping
+        comment: Proper polar coordinate scatter plot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Angle maps to wind direction, radius maps to wind speed
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: radial gridlines, angular tick marks,
-          color encoding for third variable'
-      - id: SC-04
-        name: Data Range
+        comment: Radial gridlines, angular marks, color encoding
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within the 25 m/s radius
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Angle and radius correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows time of day categories
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Format includes spec-id, library, pyplots.ai but title has extra
-          "Wind Direction and Speed" prefix
+        comment: Correct format, legend labels match
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows prevailing wind patterns with two distinct directional clusters;
-          demonstrates the polar nature well
+        comment: Wind direction, speed, time categories shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Wind measurement scenario with realistic distributions and prevailing
-          directions
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Wind speeds 1-25 m/s are realistic; angles properly wrap to 0-360°
+        comment: Realistic wind patterns with prevailing directions
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible axis limits for data range
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -178,43 +163,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat structure with imports → data → plot → save
+        comment: No unnecessary functions, straightforward
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Random seed set, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only used imports, no cruft
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No simulated interactivity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: 'Saves as `plot.png` which is correct ✓ (reviewed: actually correct,
-          adjusting)'
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct plot-{THEME}.png format
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses grammar of graphics approach with geom_point, geom_path, geom_segment,
-          geom_text layers; good use of aes() and scale_color_manual; however, plotnine
-          does not have native coord_polar so this creative Cartesian workaround is
-          necessary
+        comment: ggplot + geoms, proper aesthetics, good use of coord_fixed
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_path for circles, geom_segment for spokes, geom_text for labels
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
+  - publication-ready
