@@ -1,166 +1,178 @@
 library: letsplot
+language: python
 specification_id: polar-scatter
 created: '2025-12-26T16:15:15Z'
-updated: '2025-12-26T16:19:49Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20525463357
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - polar-projection
-  - html-export
-  - layer-composition
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-05-09T10:59:25Z'
+generated_by: claude-haiku
+workflow_run: 25599231213
+issue: 2023
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/python/letsplot/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent polar coordinate implementation with proper compass direction labels
-    (N, NE, E, SE, S, SW, W, NW)
-  - Realistic wind data simulation using directional probability weighting and Weibull
-    distribution for speeds
-  - Clean, colorblind-accessible color scheme (Python Blue, Yellow, Purple)
-  - Good use of lets-plot ggplot2 grammar with coord_polar transformation
-  - Square 1:1 aspect ratio is ideal for polar plots
+  - Flawless theme adaptation in both light and dark renders with no contrast or readability
+    failures
+  - Correct Okabe-Ito palette consistently applied across both renders
+  - Proper use of synthetic wind data with realistic prevailing direction clustering
+  - Clean, reproducible code with clear data generation logic
+  - Appropriate square canvas format for polar coordinates
+  - All spec requirements met with competent implementation
   weaknesses:
-  - Some data point overlap in the NW/SW high-density sectors - consider slightly
-    smaller point size or lower alpha
-  - Legend positioning creates slight layout asymmetry
-  image_description: 'The polar scatter plot displays wind observations using compass
-    directions (N, NE, E, SE, S, SW, W, NW) around the perimeter with concentric circles
-    showing wind speed from 0 to 18 m/s. Data points (120 observations) are colored
-    by time of day: blue (Morning), yellow (Afternoon), and purple (Evening). The
-    plot shows realistic prevailing wind patterns with higher concentrations from
-    the NW, W, and SW directions, matching the spec''s requirement for realistic directional
-    distributions. The title "Wind Observations · polar-scatter · letsplot · pyplots.ai"
-    is positioned at the top, and a legend "Time of Day" is on the right. The radial
-    axis is labeled "Wind Speed (m/s)" on the left side. The grid uses subtle gray
-    lines with good visual hierarchy.'
+  - 'Design excellence is conservative: uses defaults (theme_minimal) without custom
+    refinement or intentional visual hierarchy'
+  - 'Library mastery is minimal: coord_polar is standard grammar-of-graphics, not
+    distinctive to lets-plot; no showcase of interactive features or advanced layer
+    composition'
+  - Data storytelling could emphasize the prevailing wind pattern more through visual
+    hierarchy or annotation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct for light theme
+      Chrome: Title, axis labels (N, NE, E, SE, S, SW, W, NW), tick labels all clearly visible in dark ink color (#1A1A17)
+      Data: Three categories (Morning green #009E73, Afternoon orange #D55E00, Evening blue #0072B2) properly color-encoded with good contrast; 120 data points well-distributed
+      Legibility verdict: PASS - All text readable, no contrast issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct for dark theme
+      Chrome: Title, axis labels, tick labels all clearly visible in light ink color (#F0EFE8); grid subtle but visible
+      Data: Data colors identical to light render (green, orange, blue only - chrome is what flipped); radial and angular gridlines maintained
+      Legibility verdict: PASS - All text readable, no dark-on-dark failures, theme adaptation complete and correct
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick marks, and legend all clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text, compass labels well-spaced
+        comment: All text properly sized and colored for legibility in both renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Alpha=0.75 handles marker overlaps well; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Points are visible with good alpha (0.75), but some clustering in
-          NW/SW sectors causes minor overlap
+        comment: Radial and angular gridlines visible and appropriately subtle; marker
+          size is clear
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, yellow, purple palette is colorblind-safe
+        comment: Okabe-Ito palette is colorblind-safe with adequate contrast
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Square format appropriate for polar plot; legend placement creates
-          slight asymmetry
+        comment: Square 3600×3600 format ideal for polar plots; proper centering and
+          padding
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has "Wind Speed (m/s)" with units; x-axis uses compass directions
+        comment: Title in spec format; y-axis includes units; angular labels clear
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Subtle grid (gray #CCCCCC), legend well-placed on right'
+        comment: 'First series #009E73, Okabe-Ito order preserved, backgrounds correct,
+          both renders properly themed'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Uses theme_minimal() but no custom design beyond requirements
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtle refinement with proper theme colors and spacing but minimal
+          customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Wind direction clustering and time-of-day encoding show narrative
+          but could be emphasized more
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct polar scatter plot type
+        comment: Authentic polar scatter with angular and radial dimensions
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Angle correctly maps to direction, radius to speed
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has compass directions, radial gridlines, color encoding by time
-          of day
-      - id: SC-04
-        name: Data Range
+        comment: 'All required elements present: degree labels, cardinal directions,
+          gridlines, color categories'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within 0-18 m/s range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Direction to angle, speed to radius, 120 points displayed, appropriate
+          ranges
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows Morning/Afternoon/Evening
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses "polar-scatter · letsplot · pyplots.ai" format
+        comment: Title in spec format; legend labels match categorical variable
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows directional clustering (prevailing winds), speed variation,
-          and time categories; could show more dramatic speed differences between
-          directions
+        comment: 'Full range of polar scatter features: directional clustering, speed
+          variation, categorical stratification'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Wind measurement scenario is realistic with von Mises-like directional
-          clustering
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Wind speeds 1-18 m/s are realistic for surface winds
+        comment: Meteorologically plausible wind data with realistic prevailing winds
+          and speeds (1-22 m/s)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Wind direction (0-360°) and speed (0-22 m/s) scales sensible for
+          domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -168,41 +180,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: No functions or classes; linear straightforward code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Uses "from lets_plot import *" which is acceptable per library rules,
-          but pandas could be questioned
+        comment: Uses np.random.seed(42) for deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; no unnecessary dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Appropriate complexity; no simulated interactivity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html; uses current ggsave() API
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses coord_polar, ggplot grammar, theme_minimal; could leverage more
-          lets-plot specific features like tooltips
+        passed: false
+        comment: Follows ggplot2 grammar of graphics; correct coord_polar, scales,
+          ggsave but not distinctive
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Uses standard grammar-of-graphics coord_polar; minimal lets-plot-specific
+          features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
