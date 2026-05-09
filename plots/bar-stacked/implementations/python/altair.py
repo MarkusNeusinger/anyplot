@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-stacked: Stacked Bar Chart
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-09
+Quality: 91/100 | Updated: 2026-05-09
 """
 
 import os
