@@ -1,14 +1,15 @@
-""" pyplots.ai
+"""pyplots.ai
 alluvial-basic: Basic Alluvial Diagram
 Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Quality: pending | Created: 2025-12-26
 """
 
+import os
 import sys
 
 
 # Prevent current directory from shadowing the plotnine package
-sys.path = [p for p in sys.path if not p.endswith("implementations")]
+sys.path = [p for p in sys.path if p and not p.endswith("implementations") and not p.endswith("python")]
 
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
@@ -17,6 +18,7 @@ from plotnine import (  # noqa: E402
     annotate,
     coord_cartesian,
     element_blank,
+    element_rect,
     element_text,
     geom_polygon,
     geom_rect,
@@ -29,8 +31,17 @@ from plotnine import (  # noqa: E402
 )
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
 # Data - Voter migration between parties across 4 election cycles
-# Each row represents a transition from one party at time t to another at time t+1
 transitions = pd.DataFrame(
     {
         "from_time": [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2],
@@ -97,11 +108,11 @@ transitions = pd.DataFrame(
     }
 )
 
-# Party colors - colorblind-safe palette
+# Party colors using Okabe-Ito palette
 party_colors = {
-    "Democrats": "#306998",  # Python Blue
-    "Republicans": "#E74C3C",  # Red
-    "Independent": "#FFD43B",  # Python Yellow
+    "Democrats": OKABE_ITO[0],  # #009E73 (bluish green)
+    "Republicans": OKABE_ITO[1],  # #D55E00 (vermillion)
+    "Independent": OKABE_ITO[2],  # #0072B2 (blue)
 }
 
 parties = ["Democrats", "Republicans", "Independent"]
@@ -158,7 +169,6 @@ for (t, party), pos in node_positions.items():
 nodes_df = pd.DataFrame(node_data)
 
 # Build flow polygons between adjacent time points
-# Filter out very small transitions (< 3 voters) to improve clarity
 flow_polygons = []
 min_voters_for_flow = 3
 
@@ -170,7 +180,6 @@ for _, row in transitions.iterrows():
     voters = row["voters"]
 
     if voters < min_voters_for_flow:
-        # Still accumulate offset for small flows but don't draw them
         src_pos = node_positions[(from_t, from_party)]
         tgt_pos = node_positions[(to_t, to_party)]
 
@@ -186,7 +195,6 @@ for _, row in transitions.iterrows():
         tgt_pos["flow_offset"] += flow_height_tgt
         continue
 
-    # Get source and target positions
     src_pos = node_positions[(from_t, from_party)]
     tgt_pos = node_positions[(to_t, to_party)]
 
@@ -198,22 +206,18 @@ for _, row in transitions.iterrows():
     total_tgt = sum(transitions[(transitions["to_time"] == to_t) & (transitions["to_party"] == to_party)]["voters"])
     flow_height_tgt = (voters / total_tgt) * tgt_pos["height"] if total_tgt > 0 else 0
 
-    # Source connection point
     src_y_top = src_pos["y_top"] - src_pos["flow_offset"]
     src_y_bottom = src_y_top - flow_height_src
     src_pos["flow_offset"] += flow_height_src
 
-    # Target connection point
     tgt_y_top = tgt_pos["y_top"] - tgt_pos["flow_offset"]
     tgt_y_bottom = tgt_y_top - flow_height_tgt
     tgt_pos["flow_offset"] += flow_height_tgt
 
-    # Create curved flow polygon
     flow_x_left = x_positions[from_t] + node_width / 2
     flow_x_right = x_positions[to_t] - node_width / 2
     n_points = 40
 
-    # Smooth cubic interpolation for top and bottom edges
     t_param = np.linspace(0, 1, n_points)
     x_top = flow_x_left + (flow_x_right - flow_x_left) * t_param
     y_top = src_y_top + (tgt_y_top - src_y_top) * (3 * t_param**2 - 2 * t_param**3)
@@ -221,7 +225,6 @@ for _, row in transitions.iterrows():
     x_bottom = flow_x_right + (flow_x_left - flow_x_right) * t_param
     y_bottom = tgt_y_bottom + (src_y_bottom - tgt_y_bottom) * (3 * t_param**2 - 2 * t_param**3)
 
-    # Combine into polygon
     x_polygon = np.concatenate([x_top, x_bottom])
     y_polygon = np.concatenate([y_top, y_bottom])
 
@@ -234,20 +237,17 @@ flows_df = pd.DataFrame(flow_polygons)
 # Create the plot
 plot = (
     ggplot()
-    # Flow polygons with transparency - colored by source party
     + geom_polygon(flows_df, aes(x="x", y="y", group="flow_id", fill="from_party"), alpha=0.5)
-    # Node rectangles
     + geom_rect(
         nodes_df, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="party"), color="white", size=0.5
     )
-    # Voter count labels on nodes (only for larger nodes)
     + geom_text(
         nodes_df[nodes_df["count"] >= 10],
         aes(x=(nodes_df["xmin"] + nodes_df["xmax"]) / 2, y="label_y", label="count"),
         ha="center",
         va="center",
         size=12,
-        color="white",
+        color=ELEVATED_BG,
         fontweight="bold",
     )
     + scale_fill_manual(
@@ -258,12 +258,16 @@ plot = (
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, ha="center", weight="bold"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_grid=element_blank(),
+        plot_title=element_text(size=24, ha="center", weight="bold", color=INK),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
-        panel_grid=element_blank(),
-        legend_title=element_text(size=16, weight="bold"),
-        legend_text=element_text(size=14),
+        axis_title=element_blank(),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_title=element_text(size=16, weight="bold", color=INK),
+        legend_text=element_text(size=14, color=INK_SOFT),
         legend_position="right",
     )
 )
@@ -271,7 +275,7 @@ plot = (
 # Add time point labels at bottom
 for t, label in zip(time_points, time_labels, strict=True):
     plot = plot + annotate(
-        "text", x=x_positions[t], y=0.02, label=label, size=18, color="#333333", fontweight="bold", ha="center"
+        "text", x=x_positions[t], y=0.02, label=label, size=18, color=INK, fontweight="bold", ha="center"
     )
 
 # Add party name labels on the left side of first column nodes
@@ -284,7 +288,7 @@ for party in parties:
         y=label_y,
         label=party,
         size=11,
-        color="#333333",
+        color=INK,
         fontweight="bold",
         ha="right",
         va="center",
@@ -300,10 +304,10 @@ for party in parties:
         y=label_y,
         label=party,
         size=11,
-        color="#333333",
+        color=INK,
         fontweight="bold",
         ha="left",
         va="center",
     )
 
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
