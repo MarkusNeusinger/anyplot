@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-stacked: Stacked Bar Chart
-Library: highcharts | Python 3.13
-Quality: 92 | Updated: 2025-12-26
+Library: highcharts unknown | Python 3.13.13
+Quality: 98/100 | Updated: 2026-05-09
 """
 
 import os
