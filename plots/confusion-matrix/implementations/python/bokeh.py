@@ -1,15 +1,27 @@
-""" pyplots.ai
+"""anyplot.ai
 confusion-matrix: Confusion Matrix Heatmap
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 96/100 | Created: 2025-12-26
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2025-12-26
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png, output_file, save
+from bokeh.io import output_file, save
 from bokeh.models import ColorBar, ColumnDataSource, LabelSet, LinearColorMapper
 from bokeh.plotting import figure
 from bokeh.transform import transform
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Multi-class classification results for a sentiment analysis model
 np.random.seed(42)
@@ -53,7 +65,7 @@ mapper = LinearColorMapper(palette=colors, low=0, high=max(values))
 p = figure(
     width=3600,
     height=3600,
-    title="confusion-matrix · bokeh · pyplots.ai",
+    title="confusion-matrix · bokeh · anyplot.ai",
     x_range=class_names,
     y_range=list(reversed(class_names)),  # Reverse to have first class at top
     x_axis_label="Predicted Label",
@@ -70,12 +82,12 @@ p.rect(
     height=1,
     source=source,
     fill_color=transform("value", mapper),
-    line_color="#FFFFFF",
+    line_color=PAGE_BG,
     line_width=3,
 )
 
 # Add text annotations for cell values
-# Calculate contrasting colors for text (white on dark, black on light)
+# Calculate contrasting colors for text (white on dark, dark on light)
 text_colors = []
 for val in values:
     # Use white text on darker cells (higher values)
@@ -99,22 +111,36 @@ labels = LabelSet(
 )
 p.add_layout(labels)
 
-# Style the figure for large canvas
+# Style the figure for large canvas and theme
 p.title.text_font_size = "36pt"
 p.title.text_font_style = "bold"
 p.title.align = "center"
+p.title.text_color = INK
 
 p.xaxis.axis_label_text_font_size = "28pt"
 p.yaxis.axis_label_text_font_size = "28pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+
 p.xaxis.major_label_text_font_size = "24pt"
 p.yaxis.major_label_text_font_size = "24pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
 
 # Axis styling
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.axis_line_width = 2
 p.yaxis.axis_line_width = 2
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 p.xaxis.major_tick_line_width = 2
 p.yaxis.major_tick_line_width = 2
-p.xaxis.major_label_orientation = 0.4  # Slight angle for readability
+
+# Background colors
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
 # Remove grid for cleaner heatmap look
 p.xgrid.grid_line_color = None
@@ -126,12 +152,13 @@ color_bar = ColorBar(
     location=(0, 0),
     title="Count",
     title_text_font_size="22pt",
-    major_label_text_font_size="18pt",
     label_standoff=12,
-    bar_line_color="#08306b",
+    major_label_text_font_size="18pt",
+    bar_line_color=INK_SOFT,
     bar_line_width=2,
     width=30,
     padding=40,
+    background_fill_color=ELEVATED_BG,
 )
 p.add_layout(color_bar, "right")
 
@@ -141,9 +168,25 @@ p.min_border_right = 150
 p.min_border_top = 100
 p.min_border_bottom = 150
 
-# Save outputs
-export_png(p, filename="plot.png")
-
-# Also save interactive HTML
-output_file("plot.html")
+# Save interactive HTML
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot with headless Chrome using Selenium
+W, H = 3600, 3600
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)  # let bokeh's JS render the canvas
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
