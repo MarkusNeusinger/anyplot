@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-timeseries: Time Series Line Plot
-Library: plotly | Python 3.13
-Quality: pending | Created: 2025-12-26
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-09
 """
 
 import os
