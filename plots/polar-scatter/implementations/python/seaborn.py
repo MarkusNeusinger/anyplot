@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 polar-scatter: Polar Scatter Plot
-Library: seaborn | Python 3.13
-Quality: pending | Created: 2025-05-09
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-09
 """
 
 import os
