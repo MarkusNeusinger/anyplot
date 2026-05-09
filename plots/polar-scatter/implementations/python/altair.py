@@ -1,13 +1,25 @@
-""" pyplots.ai
+"""anyplot.ai
 polar-scatter: Polar Scatter Plot
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: altair | Python 3.13
+Quality: pending | Created: 2025-12-26
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (positions 1, 2, 3 for three categories)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data - Synthetic wind measurements with prevailing directions
 np.random.seed(42)
@@ -81,65 +93,89 @@ labels_df = pd.DataFrame(angle_labels)
 radius_labels = [{"x": r + 0.5, "y": 0.5, "label": f"{r} m/s"} for r in radii]
 radius_labels_df = pd.DataFrame(radius_labels)
 
-# Define colors (Python blue and yellow, plus a third colorblind-safe color)
-color_scale = alt.Scale(domain=["Morning", "Afternoon", "Evening"], range=["#306998", "#FFD43B", "#E87D72"])
-
 # Circular gridlines
 grid_circles = (
     alt.Chart(circles_df)
-    .mark_line(strokeWidth=1, opacity=0.3, color="#888888")
-    .encode(x=alt.X("x:Q", axis=None), y=alt.Y("y:Q", axis=None), detail="radius:N", order="order:Q")
+    .mark_line(strokeWidth=1, opacity=0.10)
+    .encode(
+        x=alt.X("x:Q", axis=None),
+        y=alt.Y("y:Q", axis=None),
+        detail="radius:N",
+        order="order:Q",
+        color=alt.value(INK_SOFT),
+    )
 )
 
 # Radial spokes
 grid_spokes = (
     alt.Chart(spokes_df)
-    .mark_line(strokeWidth=1, opacity=0.3, color="#888888")
-    .encode(x=alt.X("x:Q", axis=None), y=alt.Y("y:Q", axis=None), detail="group:N", order="order:Q")
+    .mark_line(strokeWidth=1, opacity=0.10)
+    .encode(
+        x=alt.X("x:Q", axis=None),
+        y=alt.Y("y:Q", axis=None),
+        detail="group:N",
+        order="order:Q",
+        color=alt.value(INK_SOFT),
+    )
 )
 
 # Angle labels
 angle_text = (
     alt.Chart(labels_df)
-    .mark_text(fontSize=18, fontWeight="bold", color="#444444")
-    .encode(x=alt.X("x:Q", axis=None), y=alt.Y("y:Q", axis=None), text="label:N")
+    .mark_text(fontSize=18, fontWeight="bold")
+    .encode(x=alt.X("x:Q", axis=None), y=alt.Y("y:Q", axis=None), text="label:N", color=alt.value(INK_SOFT))
 )
 
 # Radius labels
 radius_text = (
     alt.Chart(radius_labels_df)
-    .mark_text(fontSize=14, color="#666666", align="left")
-    .encode(x=alt.X("x:Q", axis=None), y=alt.Y("y:Q", axis=None), text="label:N")
+    .mark_text(fontSize=14, align="left")
+    .encode(x=alt.X("x:Q", axis=None), y=alt.Y("y:Q", axis=None), text="label:N", color=alt.value(INK_SOFT))
 )
 
-# Data points
+# Data points with Okabe-Ito colors
 points = (
     alt.Chart(df)
-    .mark_point(size=200, filled=True, opacity=0.8)
+    .mark_point(size=220, filled=True, opacity=0.8)
     .encode(
         x=alt.X("x:Q", axis=None, scale=alt.Scale(domain=[-25, 25])),
         y=alt.Y("y:Q", axis=None, scale=alt.Scale(domain=[-25, 25])),
-        color=alt.Color("time_of_day:N", scale=color_scale, title="Time of Day"),
+        color=alt.Color(
+            "time_of_day:N",
+            scale=alt.Scale(domain=["Morning", "Afternoon", "Evening"], range=OKABE_ITO),
+            title="Time of Day",
+        ),
         tooltip=[
             alt.Tooltip("direction:Q", title="Direction (°)", format=".1f"),
-            alt.Tooltip("speed:Q", title="Speed (m/s)", format=".1f"),
-            alt.Tooltip("time_of_day:N", title="Time"),
+            alt.Tooltip("speed:Q", title="Wind Speed (m/s)", format=".1f"),
+            alt.Tooltip("time_of_day:N", title="Time of Day"),
         ],
     )
 )
 
-# Combine all layers
+# Combine all layers with theme-adaptive styling
 chart = (
     alt.layer(grid_circles, grid_spokes, angle_text, radius_text, points)
     .properties(
-        width=1200,
-        height=1200,
-        title=alt.Title("Wind Observations · polar-scatter · altair · pyplots.ai", fontSize=28, anchor="middle"),
+        width=1600,
+        height=1600,
+        background=PAGE_BG,
+        title=alt.Title("polar-scatter · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
     )
-    .configure_view(strokeWidth=0)
-    .configure_legend(titleFontSize=18, labelFontSize=16, symbolSize=200, orient="right")
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure_legend(
+        titleFontSize=22,
+        labelFontSize=18,
+        symbolSize=220,
+        orient="right",
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        titleColor=INK,
+        labelColor=INK_SOFT,
+    )
+    .interactive()
 )
 
-# Save as PNG and HTML
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save as PNG and HTML with theme-suffixed filenames
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
