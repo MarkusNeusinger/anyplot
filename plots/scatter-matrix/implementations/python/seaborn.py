@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-matrix: Scatter Plot Matrix
-Library: seaborn | Python 3.13
-Quality: pending | Created: 2025-12-26
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-09
 """
 
 import os
