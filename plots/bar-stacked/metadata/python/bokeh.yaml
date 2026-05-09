@@ -1,172 +1,177 @@
 library: bokeh
+language: python
 specification_id: bar-stacked
 created: '2025-12-26T10:05:14Z'
-updated: '2025-12-26T10:08:54Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520476809
+updated: '2026-05-09T07:14:35Z'
+generated_by: claude-haiku
+workflow_run: 25594773690
 issue: 1947
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/bokeh/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - hover-tooltips
-  - html-export
-  - custom-legend
-  patterns:
-  - columndatasource
-  - iteration-over-groups
-  - matrix-construction
-  dataprep: []
-  styling:
-  - edge-highlighting
-  - grid-styling
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/python/bokeh/plot-dark.html
+quality_score: 82
 review:
-  strengths:
-  - Excellent text legibility with appropriately scaled font sizes for the 4800×2700
-    canvas
-  - Clean stacking implementation with white borders between segments for clarity
-  - Good use of Bokeh ColumnDataSource and HoverTool for interactivity
-  - Colorblind-friendly palette with distinct hues
-  - Proper title format following pyplots.ai convention
-  - Realistic business scenario with meaningful data variation across quarters
-  weaknesses:
-  - Legend placement in top-left slightly crowds the upper y-axis tick labels
-  - Missing total value labels above each stack (mentioned in spec notes as consideration)
-  - Data is hardcoded rather than using random generation with seed
-  image_description: 'The plot displays a stacked bar chart showing quarterly sales
-    data (Q1-Q4) with four product categories stacked vertically: Electronics (dark
-    blue at bottom), Clothing (golden yellow), Home & Garden (teal/turquoise), and
-    Sports (coral/salmon at top). The title "bar-stacked · bokeh · pyplots.ai" appears
-    at the top left. The y-axis shows "Sales (thousands USD)" ranging from 0 to 500,
-    and the x-axis shows "Quarter" with Q1-Q4 labels. A legend in the top-left corner
-    identifies all four categories. The bars show a clear upward trend in total sales
-    across quarters, with Q1 at ~315K, Q2 at ~405K, Q3 at ~430K, and Q4 at ~475K.
-    White separator lines between stacked segments enhance readability. The grid uses
-    subtle dashed horizontal lines.'
+  strengths: []
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - correct theme surface
+      Chrome: Title (28pt), axis labels (22pt), tick labels (18pt), legend (18pt) all rendered in dark INK/INK_SOFT colors and clearly readable
+      Data: Four stacked components - Solar (green #009E73), Wind (orange #D55E00), Hydro (blue #0072B2), Natural Gas (pink #CC79A7) in canonical Okabe-Ito order
+      Bars: 12 month categories with width 0.6, clean separation, no overlap
+      Grid: Subtle horizontal y-axis gridlines (alpha 0.10) provide reference without clutter
+      Legend: Top-right positioned with background fill and border, not overlapping data
+      Legibility verdict: PASS - All text readable, no contrast issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 - correct theme surface
+      Chrome: Title, axis labels, tick labels, and legend rendered in light INK/INK_SOFT colors and clearly visible against dark background
+      Data: Identical stacked colors to light render - Solar green, Wind orange, Hydro blue, Natural Gas pink
+      Bars: Same composition and spacing as light render
+      Grid: Subtle horizontal gridlines adapted to dark theme
+      Theme adaptation: Data colors unchanged (positions 1-7 identical), only chrome (background, text, grid) flipped to dark theme
+      Legibility verdict: PASS - No dark-on-dark failures, all text readable, brand green #009E73 visible and distinct
+
+    Both renders confirm proper theme-adaptive design with flipped chrome and consistent data representation.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 36pt, axis labels at 28pt, tick labels at 24pt - all perfectly
-          readable at full resolution
+        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 18pt,
+          legend 18pt). Perfectly readable in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, legend is well-positioned and doesn't
-          cover data
+        comment: No overlapping text elements. Month labels clean, legend positioned
+          without interference.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar segments are clearly visible with white borders separating them,
-          good width (0.7)
+        comment: Four data series clearly distinguishable. Bar width (0.6) optimal
+          for 12 categories.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colors are distinct and colorblind-friendly (blue, yellow, teal,
-          coral - no red-green confusion)
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Good use of canvas space, minor issue: legend overlaps with y-axis
-          area slightly'
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Sales (thousands USD)" and "Quarter"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette ensures colorblind safety with good contrast between
+          all segments.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 canvas utilized 70-80%. Balanced margins, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: 'Labels descriptive with units: Month and Energy Production (GWh).'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73. Colors follow Okabe-Ito canonical order. Backgrounds
+          #FAF8F1 (light)/#1A1A17 (dark). Theme chrome correctly adapted in both renders.'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is subtle (alpha 0.3, dashed), but legend placement in top-left
-          crowds the 500 tick mark area
+        comment: Well-configured library defaults with correct palette. Lacks distinctive
+          design touches or intentional hierarchy. Not generic but predictable.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid styling (alpha 0.10) and legend refinement visible. Could
+          be enhanced with selective spine removal and whitespace optimization.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Plot effectively displays monthly energy composition but lacks visual
+          emphasis or hierarchy to guide viewer toward insights. Seasonal solar pattern
+          not highlighted.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct stacked bar chart
+        comment: Perfect stacked bar chart with 4 components across 12 categories.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on x-axis, stacked components correctly layered
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec requirements met: distinct colors, clear legend, consistent
-          stacking order'
-      - id: SC-04
-        name: Data Range
+        comment: Stacked bars, multiple components, hover tooltips, legend all present
+          and functional.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows all data with 10% padding at top
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis (months) correctly categorical, Y-axis (energy) correctly
+          numeric. Consistent stacking order.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: All four categories correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Exact format: "bar-stacked · bokeh · pyplots.ai"'
+        comment: 'Title format correct: bar-stacked · bokeh · anyplot.ai. Legend labels
+          match data.'
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation across categories and quarters, different growth
-          patterns per segment
+        comment: 'Shows all stacked bar aspects: individual components, cumulative
+          totals, variation patterns.'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Quarterly sales by product category is plausible business scenario,
-          though somewhat generic
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values in thousands USD (45-190K) are realistic retail sales figures
+        comment: 'Real-world scenario: monthly energy by renewable/fossil sources.
+          Neutral, non-controversial, comprehensible.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values (35-175+ GWh per source) realistic and proportional. Solar
+          seasonality factually correct.
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,42 +179,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: 'Linear flow: theme setup → data → figure → styling → save. No unnecessary
+          functions/classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 0
-        max: 3
-        passed: false
-        comment: No random seed needed (data is hardcoded/deterministic), but data
-          could benefit from np.random.seed for future extensions
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data. Fully reproducible execution.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: os, sys, time, Path, selenium, bokeh modules.
+          No extraneous imports.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Appropriate complexity. Clean sys.path manipulation. No fake functionality.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Outputs plot-{THEME}.png and plot-{THEME}.html. Current bokeh API.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses ColumnDataSource, HoverTool with custom tooltips, Legend with
-          LegendItem customization. Good use of Bokeh features but could leverage
-          more (e.g., LabelSet for totals).
-  verdict: APPROVED
+        passed: false
+        comment: 'Correct bokeh patterns: figure(), ColumnDataSource, p.vbar(), HoverTool,
+          Legend/LegendItem. Does not leverage advanced features like callbacks or
+          custom JS.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses HoverTool and ColumnDataSource idiomatically. Theme-adaptive
+          design is nice. Could showcase more distinctive bokeh capabilities.
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - hover-tooltips
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - columndatasource
+  dataprep: []
+  styling:
+  - theme-adaptive
