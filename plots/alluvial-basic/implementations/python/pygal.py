@@ -1,7 +1,7 @@
 """ anyplot.ai
 alluvial-basic: Basic Alluvial Diagram
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 62/100 | Updated: 2026-05-09
+Quality: 83/100 | Updated: 2026-05-09
 """
 
 import os

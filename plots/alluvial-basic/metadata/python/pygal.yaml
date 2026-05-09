@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: alluvial-basic
 created: '2025-12-26T10:38:41Z'
-updated: '2026-05-09T01:14:56Z'
+updated: '2026-05-09T01:20:43Z'
 generated_by: claude-haiku
 workflow_run: 25587257718
 issue: 1878
@@ -12,107 +12,113 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/pygal/plot-dark.html
-quality_score: 62
+quality_score: 83
 review:
   strengths:
-  - Correct alluvial diagram structure with accurate flow connections
-  - Proper use of Okabe-Ito palette for data colors in light theme
-  - Realistic voter migration data with appropriate scale
-  - Bezier curve implementation for smooth flow bands
-  - Clean, procedural code with deterministic seed
+  - Correct alluvial diagram structure with time-ordered columns and party categories
+    clearly labeled
+  - Proper use of Okabe-Ito palette with consistent party colors across both themes
+  - 'Excellent data storytelling: flow bands effectively show voter migration magnitude
+    and direction across four election cycles'
+  - Well-considered transparency (0.35 opacity) on overlapping flows improves clarity
+    without hiding data
+  - Strong typography hierarchy with explicit font sizing (title 28px, year labels
+    52px, party labels 44px) ensuring readability at large canvas size
+  - Clean, minimal design with good use of whitespace and balanced margins
+  - Realistic example data (US voter migration across 2012–2024 elections) with factually
+    plausible proportions and transitions
   weaknesses:
-  - 'Dark theme completely non-functional: flow bands invisible (dark-on-dark failure)'
-  - 'Background color appears pure black instead of warm near-black #1A1A17'
-  - Text colors don't use theme-adaptive tokens; party labels use data colors instead
-    of INK/INK_SOFT
-  - Flow band color hard-coded without dark theme adaptation
-  - Poor text contrast and readability in dark render
-  - SVG text elements lack proper theme-adaptive color application
+  - Minimal use of pygal library—implementation uses pygal only for title rendering
+    but hand-codes entire alluvial diagram in manual SVG. This sidesteps pygal's charting
+    API and reduces library mastery.
+  - 'Low library-specific techniques: implementation doesn''t leverage pygal''s interactive
+    features, animation support, or other distinctive capabilities; approach could
+    be replicated in any graphics library'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 - correct per style guide
-      Chrome: Title, year labels (2012, 2016, 2020, 2024), and party labels all clearly visible in dark text
-      Data: Four election years show voter party affiliation as stacked bars in Okabe-Ito colors (Democratic #009E73 green, Republican #D55E00 orange, Independent #0072B2 blue, Other #CC79A7 purple)
-      Flows: Semi-transparent bands connecting bars between time points, showing voter migration
-      Subtitle: "Voter Migration Between Political Parties (Millions of Voters)" readable in gray italic
-      Legibility verdict: PASS - All text readable, data clearly distinguishable, flows visible
+      Background: Warm off-white (#FAF8F1), as specified. Clear and inviting foundation.
+      Chrome: Title "alluvial-basic·pygal·anyplot.ai" at top in dark text (28px); year labels (2012, 2016, 2020, 2024) at bottom in bold dark text (52px); party labels (Democratic, Republican, Independent, Other) on left and right sides in matching party colors (44px bold). Subtitle "Voter Migration Between Political Parties (Millions of Voters)" in italics below years. All text is readable and well-positioned.
+      Data: Four vertical bars (nodes) at each year in Okabe-Ito colors (#009E73 Democratic, #D55E00 Republican, #0072B2 Independent, #CC79A7 Other). Semi-transparent flow bands (opacity 0.35) connect bars across years, showing voter transitions. Band widths are proportional to flow magnitude.
+      Legibility verdict: PASS - All elements clearly readable, excellent contrast, well-balanced layout.
 
     Dark render (plot-dark.png):
-      Background: Appears to be pure black or very close, NOT the specified warm near-black #1A1A17 - FAIL
-      Chrome: Title and year labels present but very faint, low contrast; party labels use colored text (data colors) instead of theme-adaptive INK tokens
-      Data: Bars remain visible in solid Okabe-Ito colors, BUT flows are NEARLY INVISIBLE - dark semi-transparent bands on dark background create dark-on-dark failure
-      Flows: Critical failure - the core visualization element (connecting bands) is almost unreadable
-      Overall: Dark theme completely breaks the visualization
-      Legibility verdict: FAIL - Flows invisible (dark-on-dark), text faint, low contrast against dark background
+      Background: Warm near-black (#1A1A17), as specified. Maintains theme consistency.
+      Chrome: Title, year labels, and party labels all visible in light-colored text, readable against dark background. Subtitle visible in muted light color. All text elements maintain readability through appropriate color adaptation.
+      Data: Bars maintain identical Okabe-Ito colors to light render (#009E73, #D55E00, #0072B2, #CC79A7). Flow bands appear darker/more muted due to 0.35 opacity blending with dark background, but remain visible and distinguishable. The color identity is preserved—only the visual appearance due to compositing changes, which is correct behavior.
+      Legibility verdict: PASS - All elements readable; flow bands slightly less vibrant than light render (expected from opacity blending), but still clearly visible and functionally effective for understanding voter transitions.
   criteria_checklist:
     visual_quality:
-      score: 19
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
-        passed: false
-        comment: Light theme readable, dark theme very faint with poor contrast
+        passed: true
+        comment: All font sizes explicitly set and perfectly readable in both renders
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Good spacing, no collisions
+        comment: All text fully readable with no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 2
+        score: 6
         max: 6
-        passed: false
-        comment: 'CRITICAL: flow bands invisible in dark render (dark-on-dark)'
+        passed: true
+        comment: Bars and flow bands optimally adapted to data density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette used correctly
+        comment: Okabe-Ito palette is CVD-safe; good contrast throughout
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Good layout but dark theme breaks visual hierarchy
+        passed: true
+        comment: Perfect layout with balanced margins and good canvas utilization
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All labels present and descriptive
+        comment: Title format correct; labels descriptive with context (millions of
+          voters)
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Dark background pure black not #1A1A17; no theme-adaptive text colors'
+        passed: true
+        comment: Okabe-Ito colors correct (#009E73 first), backgrounds theme-correct,
+          both renders compliant
     design_excellence:
-      score: 8
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 4
         max: 8
         passed: false
-        comment: Functional but generic; dark theme completely broken
+        comment: Well-configured library defaults, professional but not exceptional
+          design
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Clean in light theme, no refinement in dark
+        passed: true
+        comment: Good refinement with bar borders and opacity choices; generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Story clear in light, lost in dark theme
+        passed: true
+        comment: Effective visual hierarchy showing voter transitions across four
+          cycles; clear narrative
     spec_compliance:
       score: 15
       max: 15
@@ -122,27 +128,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct alluvial diagram
+        comment: Correct alluvial diagram with all required elements
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present
+        comment: 'All features present: time points, categories, proportional bands,
+          transparency, clear labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes and flows correctly mapped
+        comment: Time points and categories correctly mapped; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Proper title format and party labels
+        comment: Title format correct; party identification clear through consistent
+          coloring and labels
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -150,21 +158,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All alluvial aspects shown
+        comment: Shows all 4 parties across 4 time points with varied transition patterns
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: US election data realistic and neutral
+        comment: Real-world plausible scenario (US voter migration), though political
+          topic is flagged in content policy
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Voter counts realistic for US elections
+        comment: Voter counts in millions are factually proportional and logically
+          consistent
     code_quality:
-      score: 3
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -172,33 +182,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Procedural, no functions/classes
+        comment: 'Linear code flow: imports → constants → data → chart → SVG → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set; data is deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: All imports (os, cairosvg, numpy, pygal) are used
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: Manual SVG lacks dark theme adaptation; hard-coded colors
+        comment: Functional but uses pygal minimally for title only; hand-codes SVG
+          for actual visualization
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output file naming
+        comment: Correct output files (plot-light.png, plot-dark.png, HTML)
     library_mastery:
-      score: 2
+      score: 3
       max: 10
       items:
       - id: LM-01
@@ -206,22 +217,25 @@ review:
         score: 2
         max: 5
         passed: false
-        comment: Manual SVG manipulation necessary but incomplete without dark theme
+        comment: Pygal chart created and rendered, but actual visualization is hand-coded
+          SVG; minimal idiomatic usage
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Bezier curves distinctive but broken in dark theme
-  verdict: REJECTED
+        comment: No distinctive pygal features used; approach generic and library-independent
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
   - bezier-curves
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
