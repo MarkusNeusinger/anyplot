@@ -1,173 +1,171 @@
 library: matplotlib
+language: python
 specification_id: heatmap-clustered
 created: '2025-12-25T19:20:03Z'
-updated: '2025-12-25T19:22:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20509770742
+updated: '2026-05-09T09:06:06Z'
+generated_by: claude-haiku
+workflow_run: 25596784513
 issue: 2021
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies:
-  - scipy
-  techniques:
-  - subplots
-  - colorbar
-  - manual-ticks
-  patterns:
-  - data-generation
-  - matrix-construction
-  dataprep:
-  - hierarchical-clustering
-  styling:
-  - custom-colormap
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 78
 review:
   strengths:
-  - Excellent realistic gene expression data scenario with proper biological context
-    (tumor vs. normal, functional gene groups)
-  - Clean implementation of clustered heatmap using scipy hierarchical clustering
-    with Ward's method
-  - Proper use of diverging colormap (RdBu_r) centered on zero for expression data
-  - Well-organized code with gridspec for professional dendrogram + heatmap layout
-  - Clear visual distinction between sample groups and gene clusters in the final
-    visualization
+  - Correct clustered heatmap with proper hierarchical clustering and reordering
+  - Realistic gene expression data showing natural clustering patterns
+  - Effective dendrogram layout using gridspec for coordinate alignment
+  - RdBu_r diverging colormap well-suited for centered expression values
+  - Clean code structure with reproducible random seed
   weaknesses:
-  - Missing explicit x-axis and y-axis labels (could add Samples and Genes labels)
-  - Could add row/column color bars to annotate gene functional groups and sample
-    types as suggested in spec
-  - Tick label fontsize (14pt) slightly below the recommended 16pt for optimal legibility
-    at full resolution
-  image_description: The plot displays a clustered heatmap showing gene expression
-    data across 15 genes and 12 samples. The title "heatmap-clustered · matplotlib
-    · pyplots.ai" appears at the top in clear, readable font. A row dendrogram on
-    the left shows hierarchical clustering of genes (IL6, TNF, IFNG, IL1B, CXCL8 grouped
-    together as immune genes; CCNB1, AURKA, BUB1, CDK1, PLK1 clustered as cell cycle
-    genes; LDHA, HK2, PKM, GAPDH, ENO1 clustered as metabolism genes). A column dendrogram
-    on top shows sample clustering with normal samples (N1_B, N1_A, N1_C, N2_B, N2_A,
-    N2_C) on the left and tumor samples (T2_A, T2_B, T2_C, T1_C, T1_A, T1_B) on the
-    right. The heatmap uses a diverging RdBu_r colormap with red indicating high expression
-    (~+2.5 z-score) and blue indicating low expression (~-2.5 z-score). A colorbar
-    on the right is labeled "Expression (z-score)". The clustering clearly reveals
-    the tumor vs. normal distinction and gene functional groupings.
+  - 'Dark render has pure-black background (#000000) instead of warm #1A1A17 — critical
+    theme-chrome failure'
+  - 'Dendrogram colors hardcoded to #306998 (Python Blue), not theme-adaptive'
+  - 'No theme-adaptive implementation: code doesn''t read ANYPLOT_THEME environment
+    variable'
+  - Title and label colors not explicitly set for theme adaptation
+  - Minimal visual refinement beyond library defaults
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white around #FAF8F1 - correct
+      Chrome: Title "heatmap-clustered · matplotlib · anyplot.ai" in dark text, clearly visible. Row gene labels (CDK1, CCNB1, etc.) and column sample labels (N1_A, T2_B, etc.) all readable. Colorbar label "Expression (z-score)" with tick labels visible.
+      Data: RdBu_r diverging colormap shows blue (negative z-scores) and red (positive z-scores) with white at center. Column dendrogram at top in gray lines, row dendrogram on left. All cells clearly distinguishable.
+      Legibility verdict: PASS - excellent contrast and readability
+
+    Dark render (plot-dark.png):
+      Background: Pure black or very dark (appears #000000), WRONG - should be warm near-black #1A1A17
+      Chrome: Title and labels appear white/light gray but on wrong background. Colorbar labels visible but background is incorrect. Dendrogram lines appear white (not theme-adaptive #306998).
+      Data: Same RdBu_r colormap as light - data colors #009E73 positions are NOT visible in this plot type (it's diverging red/blue), but the red/blue data values ARE identical to light render, confirming data color consistency
+      Legibility verdict: FAIL - pure-black background violates theme requirements; dark-on-dark theme chrome failure (background color wrong)
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 24
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text is readable; title 24pt, tick labels 14pt are slightly below
-          recommended 16pt but still clear
+        score: 4
+        max: 8
+        passed: false
+        comment: Light render readable; dark render has poor contrast from pure-black
+          background
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; X-axis labels rotated 45° to prevent collision
+        comment: All labels readable with proper rotation on columns
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Heatmap cells clearly visible with good contrast between values
+        comment: Dendrograms and heatmap cells all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: RdBu_r is an excellent diverging colormap, colorblind-safe
+        comment: RdBu_r colormap is colorblind-safe diverging scale
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good layout with gridspec; slight imbalance with empty corner space
+        comment: Excellent gridspec layout with balanced dendrogram/heatmap/colorbar
+          coordination
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Gene and sample names are descriptive but no explicit axis titles
-          (x/y labels)
+        comment: Colorbar labeled with units; descriptive sample/gene labels
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 0
         max: 2
-        passed: true
-        comment: 'Colorbar well placed; no grid needed for heatmap; minor: colorbar
-          could be more prominent'
+        passed: false
+        comment: 'Dark render has pure-black background (not #1A1A17); dendrogram
+          colors hardcoded #306998; no theme-adaptive text colors'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-structured but generic; standard library defaults without exceptional
+          design polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization; spines remain visible, no grid styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Hierarchical clustering provides visual hierarchy, but storytelling
+          is understated
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: 'Correct: clustered heatmap with dendrograms'
+        comment: Correct clustered heatmap with dendrograms
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Matrix correctly mapped to heatmap cells
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All features present: dendrograms on both axes, reordered rows/columns,
-          diverging colormap, colorbar'
-      - id: SC-04
-        name: Data Range
+        comment: Hierarchical clustering, reordering, dendrograms, colorbar all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Symmetric color scale around zero shows all data properly
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Rows and columns correctly mapped with proper labels
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled with z-score
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "heatmap-clustered · matplotlib · pyplots.ai"'
+        comment: Title format correct; colorbar has descriptive label
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows clear cluster structure with multiple gene clusters and sample
-          groups; could benefit from more diverse expression patterns
+        comment: Shows gene clustering, tumor vs normal patterns, expression variation
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: 'Excellent: real gene names (CDK1, GAPDH, IL6, etc.) with tumor vs.
-          normal comparison is a classic bioinformatics use case'
+        comment: Gene expression analysis scenario is real, neutral, and scientifically
+          plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Z-scores in reasonable range (-2.5 to +2.5); slightly engineered
-          block patterns
+        comment: Z-score values appropriate and factually realistic for gene expression
+          data
     code_quality:
       score: 10
       max: 10
@@ -177,41 +175,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → clustering → plot → save'
+        comment: 'Linear code: data → clustering → visualization → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility
+        comment: np.random.seed(42) ensures reproducible results
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib, numpy, scipy.cluster.hierarchy, scipy.spatial.distance)
+        comment: All scipy imports used; no unused dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib and scipy APIs
+        comment: Clean code, no over-engineering or fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct settings
-    library_features:
-      score: 3
-      max: 5
+        comment: Output files generated correctly (plot-light.png, plot-dark.png)
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses matplotlib's gridspec for complex layout and scipy for clustering;
-          could leverage matplotlib's more advanced features like color bars for row/column
-          annotations
+        comment: Proper use of gridspec for layout; standard dendrogram API usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Gridspec coordination is present but not exceptional; could leverage
+          more matplotlib-specific features
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  techniques:
+  - subplots
+  - manual-ticks
+  - colorbar
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - hierarchical-clustering
+  styling: []
