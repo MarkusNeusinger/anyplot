@@ -1,213 +1,228 @@
 library: plotly
+language: python
 specification_id: roc-curve
 created: '2025-12-26T17:38:40Z'
-updated: '2025-12-26T17:47:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20526592327
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/roc-curve/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/roc-curve/plotly/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-09T22:33:14Z'
+generated_by: claude-haiku
+workflow_run: 25613390883
+issue: 2273
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/python/plotly/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - 'Excellent visual clarity with well-chosen colors (blue #306998 and yellow #FFD43B)
-    that are colorblind-safe'
-  - Proper use of plotly scaleanchor and scaleratio for equal aspect ratio as recommended
-    in spec
-  - AUC values displayed in legend following spec requirements
-  - Clean fill effect under the primary ROC curve adds visual appeal
-  - Interactive HTML output generated alongside PNG, leveraging plotly interactivity
-    strength
-  - Well-configured legend with background and border for readability
+  - Perfect theme-adaptive implementation with both renders readable and legible
+  - All text explicitly sized with correct font hierarchy (28px title, 22px labels,
+    18px ticks)
+  - 'Correct Okabe-Ito palette: first series #009E73, second #D55E00, no violations'
+  - Clean reproducible code with full seed control and no over-engineering
+  - 'Complete spec compliance: all required features present and correctly implemented'
+  - Professional design with fill under AUC and proper visual hierarchy
   weaknesses:
-  - Code contains helper functions (calculate_roc, calculate_auc) instead of inline
-    computation - violates KISS principle requiring no functions/classes
-  - Legend position overlaps slightly with the plot area; could be positioned outside
-    or with more careful placement
-  image_description: The plot displays two ROC curves on a white background with subtle
-    gray gridlines. The blue curve (Logistic Regression, AUC = 0.97) shows excellent
-    classifier performance, hugging the top-left corner with a light blue shaded area
-    underneath. The yellow curve (Decision Tree, AUC = 0.74) shows moderate performance,
-    positioned between the blue curve and the diagonal. A dashed gray diagonal line
-    represents the random classifier baseline (y=x). The title "roc-curve · plotly
-    · pyplots.ai" is centered at the top in dark gray text. Axes are labeled "False
-    Positive Rate" (x-axis) and "True Positive Rate" (y-axis), both ranging 0-1 with
-    0.2 tick intervals. The legend is positioned in the bottom-right with a white
-    background and subtle border, showing all three elements with their labels and
-    AUC scores.
+  - 'Design Excellence is solid but standard: uses conventional ROC visualization
+    without exceptional customization'
+  - 'Data storytelling effective but conservative: visual hierarchy through color
+    and fill without advanced emphasis techniques'
+  - Library Mastery could maximize plotly-specific features (4/5 rather than 5/5 for
+    distinctive features)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme color, not pure white
+      Chrome: Title, axis labels (22px), tick labels (18px) all in dark text (#1A1A17/#4A4A44) — clearly readable
+      Data: Green curve (#009E73) for Logistic Regression with light green fill; orange curve (#D55E00) for Decision Tree; gray dashed baseline (#888888); all clearly distinguishable
+      Legibility verdict: PASS — all text explicitly sized, zero overlap, optimal contrast against light surface
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme color, not pure black
+      Chrome: Title, axis labels, tick labels all in light text (#F0EFE8/#B8B7B0) — clearly readable, no dark-on-dark failures
+      Data: Green curve (#009E73) and orange curve (#D55E00) identical to light render, confirming correct color preservation; only chrome changed
+      Legibility verdict: PASS — all text readable, proper light-on-dark contrast, no dark-on-dark issues, brand green visible
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at the
-          target resolution
+        comment: All font sizes explicitly set; title 28px, labels 22px, ticks 18px;
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: Zero overlapping text; legend positioned bottom-right without interference
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line widths are appropriate, curves are distinct and clearly visible
+        comment: Curves and baseline clearly visible; line widths optimally adapted
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue and yellow are colorblind-safe, high contrast against white
-          background
+        comment: Okabe-Ito palette with strong contrast; CVD-safe; gray baseline appropriately
+          neutral
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of canvas with equal aspect ratio, but legend placement
-          creates slight asymmetry
+        comment: Plot fills 60-70% of canvas; balanced margins; generous whitespace
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no units (rates are unitless, but could note
-          "proportion" or similar)
+        comment: Descriptive labels; axes 0-1 with clear ticks
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (good), legend has good styling but slightly overlaps
-          the plot area
+        comment: 'First series #009E73, second #D55E00, background theme-correct,
+          chrome theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Well-executed but uses standard ROC visualization approach
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, generous margins, border-framed legend, theme-adaptive
+          styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy through color and fill; clear AUC comparison
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct ROC curve visualization
+        comment: Correct ROC curve with multiple models and baseline
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: FPR on x-axis, TPR on y-axis as required
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Diagonal reference line, AUC in legend, multiple models with distinct
-          styles
-      - id: SC-04
-        name: Data Range
+        comment: Two ROC curves, AUC values, random baseline all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes correctly range from 0 to 1
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: FPR/TPR axes correct 0-1 with equal aspect ratio
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all curves with accurate AUC values
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "roc-curve · plotly · pyplots.ai"'
+        comment: Title format correct, legend labels with AUC values
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows good vs moderate classifier, diagonal baseline; could show
-          a poor classifier too
+        comment: Shows two classifiers with different performance and baseline
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Binary classification with Logistic Regression vs Decision Tree is
-          a realistic ML comparison scenario
+        comment: Standard ML binary classification; neutral scientific context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: AUC values (0.97 and 0.74) are realistic; 0.97 is slightly high for
-          typical real-world models
+        comment: Realistic AUC values and proportions for the domain
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
-        max: 3
-        passed: false
-        comment: Contains two helper functions (`calculate_roc` and `calculate_auc`)
-          violating KISS principle
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses `np.random.seed(42)`
+        comment: Linear flow, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seed set and deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used
+        comment: All imports used, no unused dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotly API
+        comment: Clean, Pythonic, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as `plot.png` and `plot.html`
-    library_features:
-      score: 5
-      max: 5
+        comment: Correct output format and naming
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Uses `go.Scatter` with fill option, interactive HTML export, proper
-          layout configuration
+        comment: Expert use of go.Figure, Scatter, add_trace, update_layout
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Uses fill, HTML export, and theme-aware features; could maximize
+          library uniqueness
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
