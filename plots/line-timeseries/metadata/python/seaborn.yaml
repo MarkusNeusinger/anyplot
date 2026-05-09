@@ -1,156 +1,173 @@
 library: seaborn
+language: python
 specification_id: line-timeseries
 created: '2025-12-26T08:29:08Z'
-updated: '2025-12-26T08:31:10Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20519152366
+updated: '2026-05-09T03:29:12Z'
+generated_by: claude-haiku
+workflow_run: 25590252408
 issue: 2006
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/seaborn/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent text sizing and readability at high resolution
-  - Smart date formatting with MonthLocator and DateFormatter adapts to the 3-month
-    scale
-  - Clean KISS code structure following all guidelines
-  - Realistic temperature data with appropriate seasonal variation and noise
-  - Proper use of seaborn DataFrame-based API
+  - Perfect theme adaptation with no legibility issues in either render
+  - Complete spec compliance with smart date formatting using MonthLocator and DateFormatter
+  - Clean, reproducible code following KISS principles
+  - Realistic example data showing seasonal patterns with daily noise
+  - Proper use of matplotlib's datetime handling for professional time series
   weaknesses:
-  - Grid lines appear on both axes but could show minor grid as well
-  - Could leverage seaborn distinctive features like confidence intervals or multiple
-    series aggregation
-  image_description: The plot shows a time series line chart displaying temperature
-    data (in °C) over a 3-month period from January 2024 to April 2024. The line is
-    rendered in a blue color (#306998) with a linewidth of 3. The x-axis shows monthly
-    date labels ("Jan 2024", "Feb 2024", "Mar 2024", "Apr 2024") rotated at 45 degrees
-    for readability. The y-axis displays "Temperature (°C)" ranging from approximately
-    2.5 to 20°C. The title correctly follows the format "line-timeseries · seaborn
-    · pyplots.ai". A subtle gray dashed grid is present on both axes. The data shows
-    realistic temperature variation with noise and a subtle upward seasonal trend.
+  - Design aesthetics are functional but generic—no custom visual hierarchy or emphasis
+    techniques
+  - Data storytelling relies on data choice rather than visual design
+  - Limited exploration of seaborn-specific features beyond basic lineplot
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with no pure white artifacts
+      Chrome: Title "line-timeseries · seaborn · anyplot.ai" in dark text (24pt), axis labels "Temperature (°C)" and "Date" in dark text (20pt), tick labels in dark gray (16pt)—all clearly readable
+      Data: Brand green (#009E73) line with confidence interval band, 90-point time series showing seasonal trend with daily noise variation
+      Layout: Grid lines subtle on both axes at alpha=0.15, rotated x-axis labels at 45°, top/right spines removed
+      Legibility verdict: PASS—all text fully readable, no contrast issues, no overlap
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with no pure black artifacts
+      Chrome: Title in light text (#F0EFE8), axis labels in light text, tick labels in soft gray (#B8B7B0)—all clearly readable against dark surface
+      Data: Same brand green (#009E73) data line, proving Okabe-Ito palette is theme-independent; confidence band visible
+      Layout: Grid lines subtly visible in light gray, same rotated labels, consistent spine removal
+      Legibility verdict: PASS—no dark-on-dark failures, all text legible, data colors identical to light render, chrome properly flipped
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: Date labels are rotated 45° preventing overlap, all text clear
+        comment: 'All sizes explicitly set: Title 24pt, Labels 20pt, Ticks 16pt, perfectly
+          readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: X-axis labels rotated 45° with ha='right', no collisions or overlap
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line is well-sized at linewidth=3, visible throughout
+        comment: Linewidth=3, 90 points, confidence bands clearly visible, optimal
+          sizing
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color, high contrast against white background
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, minor extra whitespace possible
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: '"Temperature (°C)" and "Date" - descriptive with units'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Brand green excellent contrast on both surfaces, CVD-safe palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~60% of canvas with balanced margins and generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle at alpha=0.3, but no legend needed for single series
+        comment: Temperature (°C) with units, title matches spec format exactly
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Data #009E73, backgrounds #FAF8F1/#1A1A17, chrome properly themed'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults with thoughtful theme tokens, but no custom
+          design elements or visual hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Top/right spines removed, grid at alpha=0.15, reasonable refinement
+          but could be more polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data shows seasonal patterns but no visual emphasis techniques to
+          guide viewer
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct time series line plot
+        comment: Correct time series line plot with datetime x-axis
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on x-axis, temperature on y-axis correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Smart date formatting with MonthLocator, rotated labels, grid lines
-          present
-      - id: SC-04
-        name: Data Range
+        comment: Smart date formatting, rotated labels, grid on both axes, MonthLocator
+          and DateFormatter
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 90 days of data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Date (datetime), Y=Temperature (numeric), full range visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "line-timeseries · seaborn · pyplots.ai"
+        comment: Title 'line-timeseries · seaborn · anyplot.ai' format correct, no
+          legend needed
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows temporal variation, noise, and subtle trend; could show more
-          distinct seasonal pattern
+        comment: Shows daily variation, weekly oscillation, seasonal trend, confidence
+          intervals
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Daily temperature readings over 3 months is a real-world scenario
+        comment: Daily temperature over 3 months is real-world, neutral, scientifically
+          plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Temperature values (2.5°C to 20°C) are reasonable for winter/spring
-          transition
+        comment: Temperature range 2.5–20°C realistic for winter-to-spring with sinusoidal
+          pattern
     code_quality:
       score: 10
       max: 10
@@ -160,33 +177,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Linear flow: imports → tokens → config → data → plot → style → save,
+          no over-engineering'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures reproducible noise generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: matplotlib.dates, matplotlib.pyplot, numpy, pandas,
+          seaborn'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Pythonic, appropriate complexity, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 3
-      max: 5
-      items: []
+        comment: Saves as plot-{THEME}.png with 300 DPI, correct API usage
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: sns.lineplot() with ax parameter, sns.set_theme(), idiomatic matplotlib
+          patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses matplotlib date locators/formatters and seaborn errorbar/CI;
+          could explore more seaborn features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - time-series
+  styling:
+  - grid-styling
