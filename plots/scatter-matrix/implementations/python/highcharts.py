@@ -1,10 +1,11 @@
-""" pyplots.ai
+"""anyplot.ai
 scatter-matrix: Scatter Plot Matrix
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2026-05-09
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -15,10 +16,20 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette for 3 categories
+COLORS = ["#009E73", "#D55E00", "#0072B2"]
+
 # Data - Iris dataset (classic multivariate example)
 np.random.seed(42)
 
-# Generate Iris-like data with 4 variables and 3 species
 n_per_species = 50
 species_names = ["Setosa", "Versicolor", "Virginica"]
 
@@ -51,18 +62,23 @@ variables = ["Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Peta
 data = [sepal_length, sepal_width, petal_length, petal_width]
 n_vars = len(variables)
 
-# Colors for species (colorblind-safe)
-colors = ["#306998", "#FFD43B", "#9467BD"]  # Python Blue, Python Yellow, Purple
-
 # Calculate chart dimensions
 canvas_size = 3600  # Square for symmetric matrix
 chart_width = canvas_size // n_vars
 chart_height = canvas_size // n_vars
 
-# Download Highcharts JS
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Download Highcharts JS with retry
+highcharts_js = None
+urls_to_try = ["https://code.highcharts.com/highcharts.js", "https://unpkg.com/highcharts@latest/highcharts.js"]
+for url in urls_to_try:
+    try:
+        with urllib.request.urlopen(url, timeout=30) as response:
+            highcharts_js = response.read().decode("utf-8")
+        break
+    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError):
+        continue
+if highcharts_js is None:
+    raise RuntimeError("Failed to download Highcharts JS from any CDN")
 
 # Build HTML with multiple charts
 charts_html = ""
@@ -96,23 +112,33 @@ for row in range(n_vars):
             chart_config = {
                 "chart": {
                     "type": "column",
-                    "backgroundColor": "#ffffff",
+                    "backgroundColor": PAGE_BG,
                     "marginTop": 80 if row == 0 else 15,
-                    "marginBottom": 100 if row == n_vars - 1 else 15,
+                    "marginBottom": 120 if row == n_vars - 1 else 15,
                     "marginLeft": 140 if col == 0 else 15,
                     "marginRight": 15,
                 },
-                "title": {"text": variables[row] if row == 0 else "", "style": {"fontSize": "32px"}},
+                "title": {"text": variables[row] if row == 0 else "", "style": {"fontSize": "32px", "color": INK}},
                 "xAxis": {
                     "categories": categories,
-                    "labels": {"enabled": row == n_vars - 1, "style": {"fontSize": "18px"}, "rotation": -45, "step": 2},
+                    "labels": {
+                        "enabled": row == n_vars - 1,
+                        "style": {"fontSize": "18px", "color": INK_SOFT},
+                        "rotation": -45,
+                        "step": 2,
+                    },
                     "title": {"text": ""},
+                    "lineColor": INK_SOFT,
+                    "tickColor": INK_SOFT,
+                    "gridLineColor": GRID,
                 },
                 "yAxis": {
-                    "title": {"text": variables[row] if col == 0 else "", "style": {"fontSize": "26px"}},
-                    "labels": {"enabled": col == 0, "style": {"fontSize": "22px"}},
+                    "title": {"text": variables[row] if col == 0 else "", "style": {"fontSize": "26px", "color": INK}},
+                    "labels": {"enabled": col == 0, "style": {"fontSize": "22px", "color": INK_SOFT}},
                     "gridLineWidth": 1,
-                    "gridLineColor": "#e0e0e0",
+                    "gridLineColor": GRID,
+                    "lineColor": INK_SOFT,
+                    "tickColor": INK_SOFT,
                 },
                 "legend": {"enabled": False},
                 "credits": {"enabled": False},
@@ -120,7 +146,7 @@ for row in range(n_vars):
                     "column": {"grouping": True, "borderWidth": 0, "pointPadding": 0.05, "groupPadding": 0.1}
                 },
                 "series": [
-                    {"name": species_names[i], "data": hist_series_data[i], "color": colors[i]} for i in range(3)
+                    {"name": species_names[i], "data": hist_series_data[i], "color": COLORS[i]} for i in range(3)
                 ],
             }
         else:
@@ -137,7 +163,7 @@ for row in range(n_vars):
                     {
                         "name": species_names[sp_idx],
                         "data": sp_points,
-                        "color": colors[sp_idx],
+                        "color": COLORS[sp_idx],
                         "marker": {"radius": 8, "symbol": "circle"},
                         "opacity": 0.75,
                     }
@@ -146,24 +172,28 @@ for row in range(n_vars):
             chart_config = {
                 "chart": {
                     "type": "scatter",
-                    "backgroundColor": "#ffffff",
+                    "backgroundColor": PAGE_BG,
                     "marginTop": 80 if row == 0 else 15,
-                    "marginBottom": 100 if row == n_vars - 1 else 15,
+                    "marginBottom": 120 if row == n_vars - 1 else 15,
                     "marginLeft": 140 if col == 0 else 15,
                     "marginRight": 15,
                 },
-                "title": {"text": variables[col] if row == 0 else "", "style": {"fontSize": "32px"}},
+                "title": {"text": variables[col] if row == 0 else "", "style": {"fontSize": "32px", "color": INK}},
                 "xAxis": {
-                    "labels": {"enabled": row == n_vars - 1, "style": {"fontSize": "20px"}},
+                    "labels": {"enabled": row == n_vars - 1, "style": {"fontSize": "20px", "color": INK_SOFT}},
                     "title": {"text": ""},
                     "gridLineWidth": 1,
-                    "gridLineColor": "#e0e0e0",
+                    "gridLineColor": GRID,
+                    "lineColor": INK_SOFT,
+                    "tickColor": INK_SOFT,
                 },
                 "yAxis": {
-                    "title": {"text": variables[row] if col == 0 else "", "style": {"fontSize": "26px"}},
-                    "labels": {"enabled": col == 0, "style": {"fontSize": "22px"}},
+                    "title": {"text": variables[row] if col == 0 else "", "style": {"fontSize": "26px", "color": INK}},
+                    "labels": {"enabled": col == 0, "style": {"fontSize": "22px", "color": INK_SOFT}},
                     "gridLineWidth": 1,
-                    "gridLineColor": "#e0e0e0",
+                    "gridLineColor": GRID,
+                    "lineColor": INK_SOFT,
+                    "tickColor": INK_SOFT,
                 },
                 "legend": {"enabled": False},
                 "credits": {"enabled": False},
@@ -176,15 +206,19 @@ for row in range(n_vars):
         charts_js += f"Highcharts.chart('{container_id}', {config_js});\n"
 
 # Create legend HTML positioned closer to matrix with larger text
-legend_html = """
-<div style="position:absolute; left:50%; transform:translateX(-50%); bottom:60px; display:flex; gap:100px; font-size:52px; font-family:Arial,sans-serif; font-weight:500;">
+legend_html = (
+    """
+<div style="position:absolute; left:50%; transform:translateX(-50%); bottom:60px; display:flex; gap:100px; font-size:52px; font-family:Arial,sans-serif; font-weight:500; color:"""
+    + INK
+    + """;">
 """
+)
 for i, name in enumerate(species_names):
-    legend_html += f'<div style="display:flex; align-items:center; gap:24px;"><div style="width:44px; height:44px; background:{colors[i]}; border-radius:50%;"></div><span>{name}</span></div>'
+    legend_html += f'<div style="display:flex; align-items:center; gap:24px;"><div style="width:44px; height:44px; background:{COLORS[i]}; border-radius:50%;"></div><span>{name}</span></div>'
 legend_html += "</div>"
 
 # Title with larger font for 3600x3600 canvas
-title_html = '<div style="position:absolute; top:15px; left:50%; transform:translateX(-50%); font-size:60px; font-family:Arial,sans-serif; font-weight:bold;">scatter-matrix · highcharts · pyplots.ai</div>'
+title_html = f'<div style="position:absolute; top:15px; left:50%; transform:translateX(-50%); font-size:60px; font-family:Arial,sans-serif; font-weight:bold; color:{INK};">scatter-matrix · highcharts · anyplot.ai</div>'
 
 # Full HTML - with title at top, matrix in middle, legend close to matrix
 html_content = f"""<!DOCTYPE html>
@@ -193,7 +227,7 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0; background:#ffffff;">
+<body style="margin:0; background:{PAGE_BG};">
     {title_html}
     <div style="position:relative; width:{canvas_size}px; height:{canvas_size}px; margin-top:90px;">
         {charts_html}
@@ -210,8 +244,8 @@ with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encodin
     f.write(html_content)
     temp_path = f.name
 
-# Also save as plot.html for interactive viewing
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save as plot-{THEME}.html for interactive viewing
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
 # Take screenshot with Selenium
@@ -225,7 +259,7 @@ chrome_options.add_argument("--window-size=3600,3850")  # Extra height for title
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(6)  # Wait for all charts to render
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()  # Clean up temp file
