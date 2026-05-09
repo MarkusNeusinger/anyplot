@@ -1,211 +1,230 @@
 library: seaborn
+language: python
 specification_id: alluvial-basic
 created: '2025-12-26T10:38:20Z'
-updated: '2025-12-26T10:47:19Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20520941799
+updated: '2026-05-09T01:04:16Z'
+generated_by: claude-haiku
+workflow_run: 25586985814
 issue: 1878
-python_version: 3.13.11
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - bezier-curves
-  - patches
-  - annotations
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
 review:
   strengths:
-  - Excellent use of colorblind-safe palette from seaborn
-  - Clear visual hierarchy with party labels on both left and right edges including
-    voter counts
-  - Smooth curved Bezier flow bands with appropriate transparency
-  - Good data narrative showing voter migration patterns across election cycles
-  - Adaptive alpha for smaller flows improves visibility
-  - Clean white background and proper title format
+  - Excellent theme adaptation with proper backgrounds, text colors, and data color
+    consistency between light and dark renders
+  - Professional custom visualization using Bezier curves with intelligent transparency
+    handling based on flow magnitude
+  - Comprehensive labeling with year totals, sector counts, and context subtitle
+  - Perfect color palette with brand green (#009E73) as first series and proper Okabe-Ito
+    ordering
+  - 'Clean code structure: linear, readable, deterministic, and properly themed'
   weaknesses:
-  - No formal legend box (inline labels work but a legend would be cleaner)
-  - Limited use of seaborn core plotting functions since alluvial diagrams require
-    custom matplotlib patches
-  image_description: 'The plot displays an alluvial diagram showing US voter migration
-    across 4 election cycles (2012, 2016, 2020, 2024). Four vertical stacked bars
-    represent each year, with segments colored by party: Democratic (blue), Republican
-    (orange), Independent (green), and Other (gray). The colorblind-safe palette from
-    seaborn is used. Curved flow bands connect the bars showing voter transitions
-    between parties, with band widths proportional to flow magnitude. The title follows
-    the required format "alluvial-basic · seaborn · pyplots.ai" at the top. Labels
-    on the left (2012) and right (2024) edges show party names with voter counts in
-    millions. Each year column header shows the year and total voters. An italicized
-    subtitle at the bottom explains the data context.'
+  - Library Mastery slightly limited by matplotlib.patches lower-level approach rather
+    than higher-level seaborn-native implementation
+  - 'Minor: could enhance visual refinement with subtle grid accents or improved typography
+    hierarchy'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct and verified
+      Chrome: Title "alluvial-basic · seaborn · anyplot.ai" in bold dark text (24pt), year labels with totals in bold dark text (18pt), sector labels with employment counts in bold dark text (14pt), all clearly readable
+      Data: Four sectors with Okabe-Ito colors - Technology (#009E73 brand green), Finance (orange), Healthcare (blue), Manufacturing (reddish-purple); curved bands show flows between sectors with appropriate transparency
+      Legend: Upper right, colored patches on elevated background, all labels readable
+      Legibility verdict: PASS - all text highly readable, excellent contrast, no dark-on-dark issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct and verified
+      Chrome: Title in light text, year labels in light text (18pt), sector labels in light text (14pt), all clearly readable against dark background
+      Data: Sector colors IDENTICAL to light render - Technology still bright teal/green (#009E73), Finance orange, Healthcare blue, Manufacturing pink/purple; flows semi-transparent and clearly visible
+      Legend: Upper right with dark background box, light text labels, all readable
+      Legibility verdict: PASS - all text light-colored and highly readable, no dark-on-dark failures, proper theme adaptation throughout
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text readable, good font sizes, labels clear
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text, labels positioned outside bars
+        comment: Title 24pt, year labels 18pt, sector labels 14pt - all explicitly
+          sized and perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text elements fully readable with no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Flow bands visible with appropriate alpha, smaller flows use higher
-          alpha for visibility
+        comment: Bars and flows optimally sized, proportions correctly adapted to
+          data
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses seaborn's colorblind-safe palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for alluvial (no traditional axes), but year headers and party
-          labels are descriptive with units (M for millions)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette used throughout, CVD-safe, excellent contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 50-70% of canvas with balanced margins, legend well-positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: No formal legend, though colors are labeled directly on bars
+        passed: true
+        comment: Title format correct; subtitle provides context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct, Okabe-Ito ordering maintained, theme-correct
+          backgrounds, data colors identical between themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful color assignment, Bezier curve flows, professional polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All spines removed, appropriate transparency, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy showing tech growth and manufacturing decline
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct alluvial diagram with vertical columns and curved flows
+        comment: Correct alluvial diagram with proper node and flow structure
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time points as columns, categories as stacked segments, flows between
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: time points left-to-right, consistent
-          colors, proportional band widths, transparency for flows'
-      - id: SC-04
-        name: Data Range
+        comment: Consistent colors, proportional band widths, clear labels
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, years 2012-2024 shown
-      - id: SC-05
-        name: Legend Accuracy
-        score: 0
-        max: 2
+        comment: Years on X, sectors on Y with correct proportions
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No separate legend provided; labels are inline but a legend would
-          improve clarity
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "alluvial-basic · seaborn · pyplots.ai"
+        comment: Title format correct, legend labels match data
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows party retention (large same-party flows), cross-party migration
-          (visible transitions), varying flow sizes, multiple time transitions
+        comment: 'Shows all aspects: multiple time points, sectors, transitions, varying
+          flows'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: US voter data across election years is a comprehensible, real-world
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Voter counts in realistic millions range (60-80M for major parties)
+        comment: Employment transitions are realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values in thousands, realistic sector proportions
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Generally linear flow, though code is longer due to alluvial complexity;
-          no classes but uses nested loops
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) set
+        comment: 'Clean linear flow: setup → data → visualization → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions
+        comment: Readable, properly structured, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png, current API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper setup, theme tokens idiomatically used
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses sns.set_style, sns.set_context, sns.color_palette; however,
-          the core plotting uses matplotlib patches rather than seaborn plot functions
-          (alluvial is not a native seaborn plot type)
+        comment: Custom Bezier curves for flows show intentional design
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - patches
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
