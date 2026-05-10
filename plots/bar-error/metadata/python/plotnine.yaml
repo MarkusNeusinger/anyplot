@@ -1,167 +1,176 @@
 library: plotnine
+language: python
 specification_id: bar-error
 created: '2025-12-27T19:21:06Z'
-updated: '2025-12-27T19:28:29Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543282187
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-error/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - edge-highlighting
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-05-10T15:01:57Z'
+generated_by: claude-haiku
+workflow_run: 25631581240
+issue: 2376
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent use of plotnine grammar of graphics with clean layering (geom_col +
-    geom_errorbar)
-  - Error bars have visible caps (width=0.25) as required by spec
-  - Caption explains what error bars represent (95% CI) per spec requirements
-  - Proper category ordering preserved with pd.Categorical
-  - Clean minimal theme with appropriate font sizing for high-resolution output
-  - Good color contrast between blue bars and dark error bars
+  - Perfect theme adaptation - both light and dark renders fully readable with no
+    legibility issues
+  - Excellent visual quality - all text explicitly sized and readable, error bars
+    clearly rendered with visible caps
+  - Clean code structure following KISS principle with proper theme token usage
+  - Strong data quality with realistic survey scenario and appropriate confidence
+    interval ranges
+  - Idiomatic plotnine usage with proper aes() mappings and theme customization
   weaknesses:
-  - Caption appears slightly cut off on right edge
-  - Alternating blue/yellow colors do not convey meaning - single color or meaningful
-    color mapping would be cleaner
-  - Only symmetric error bars shown (spec mentions asymmetric may be needed for some
-    cases)
-  image_description: The plot displays a bar chart with 6 survey categories on the
-    x-axis (Product Quality, Customer Service, Delivery Speed, Price Value, Website
-    UX, Return Policy) and satisfaction scores (1-5) on the y-axis. Bars alternate
-    between Python blue (#306998) and gold (#FFD43B) colors. Each bar has black error
-    bars with horizontal caps representing 95% confidence intervals. The title "bar-error
-    · plotnine · pyplots.ai" appears in bold at the top. Category labels are rotated
-    ~25 degrees for readability. A caption "Error bars represent 95% CI" appears in
-    italics at the bottom right. The layout uses a minimal theme with subtle horizontal
-    grid lines only.
+  - 'Title URL typo: ''pyplots.ai'' should be ''anyplot.ai'' - fix in SC-04'
+  - Design sophistication uses defaults - could benefit from custom styling or enhanced
+    visual hierarchy
+  - Library mastery could showcase more plotnine-distinctive features beyond basic
+    theme customization
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title "bar-error · plotnine · pyplots.ai" in bold black text (readable), axis labels "Survey Category" and "Satisfaction Score (1-5)" in dark text, tick labels rotated 25° in dark gray, subtitle "Error bars represent 95% CI" in italicized gray
+      Data: 6 bars in Okabe-Ito #009E73 (brand green), each with symmetric error bars in dark gray (#4A4A44) featuring visible horizontal caps. Y-axis grid subtle and non-intrusive.
+      Legibility verdict: PASS - All text elements are clearly readable, good contrast against the light surface
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title in light text (readable), axis labels and tick labels in light gray (#B8B7B0), no dark-on-dark failures. Subtle panel border and grid lines visible.
+      Data: Bar colors and error bar styles identical to light render - confirming Okabe-Ito #009E73 is theme-independent. Error bar caps clearly visible against dark surface.
+      Legibility verdict: PASS - All text is light-colored and clearly visible against the dark background. No text legibility issues. Data representation identical to light render.
+
+    Both renders successfully demonstrate theme-adaptive chrome with consistent data colors across themes.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt bold, axis titles 20pt, tick labels appropriately sized,
-          all perfectly readable
+        comment: All sizes explicitly set (title 24pt, labels 20pt, ticks 14-16pt),
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Rotated x-axis labels prevent overlap, all text fully readable
+        comment: Category labels rotated 25° with proper alignment, no overlapping
+          text
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars well-sized, error bars clearly visible with caps
+        comment: Error bars clearly visible with caps, bars distinct from background
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow is colorblind-safe, but alternating colors don't convey
-          meaning
+        comment: 'Okabe-Ito #009E73 colorblind-safe, adequate contrast'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good proportions, plot fills canvas well
+        comment: Perfect 16:9 proportions, generous margins, nothing cut off
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Y-axis has units "(1-5)", X-axis label "Survey Category" is descriptive
-          but generic
+        comment: 'Descriptive labels with units: ''Satisfaction Score (1-5)'''
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: No legend needed, but grid only on y-axis is good; however caption
-          is slightly cut off on right edge
+        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17, both renders
+          theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library defaults, not publication-ready. Uses standard
+          Okabe-Ito without custom palette or intentional hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Some refinement: top/right spines removed, Y-axis grid only with
+          subtle alpha. Could be more polished'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Good hierarchy through title and data focus. Error bars effectively
+          communicate uncertainty, but limited visual emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct bar chart with error bars
+        comment: Correct bar chart with error bars and caps
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, values on Y, error bars correctly positioned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Error bars have visible caps, caption explains error bars represent
-          95% CI
-      - id: SC-04
-        name: Data Range
+        comment: Error bars present, legend annotation 'Error bars represent 95% CI'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, y-axis starts at 0
-      - id: SC-05
-        name: Legend Accuracy
+        comment: X/Y correctly assigned, all 6 categories visible
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: No legend needed for this visualization
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "bar-error · plotnine · pyplots.ai"
+        max: 3
+        passed: false
+        comment: 'Title format correct except URL typo: ''pyplots.ai'' should be ''anyplot.ai'''
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows varying bar heights and different error magnitudes, but all
-          symmetric errors (spec mentions asymmetric errors may be needed)
+        comment: 'Shows all aspects: 6 categories with varied values and error bounds'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Customer satisfaction survey is a realistic, comprehensible scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 1-5 satisfaction scale with values 3.5-4.5 and CI widths 0.2-0.5
-          are realistic
+        comment: Real-world survey satisfaction scenario, neutral and plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1-5 satisfaction scale with realistic confidence interval half-widths
+          (0.2-0.5)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,42 +178,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: Linear imports→data→plot→save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Data is deterministic but uses hardcoded values (acceptable, but
-          np.random.seed would show variety)
+        comment: Fixed data values, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'Only used imports: os, pandas, plotnine'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Clean, Pythonic, appropriate complexity, no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png correctly
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ggplot grammar with geom_col + geom_errorbar, pd.Categorical
-          for ordering, theme customization. Could use scale_fill_brewer for more
-          idiomatic palette usage.
+        comment: Expert ggplot + geom pattern with proper aes() and theme() customization
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses element_text/element_rect/element_line effectively and asymmetric
+          error bars, but could leverage more plotnine-specific features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
