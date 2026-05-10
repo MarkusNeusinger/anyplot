@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 elbow-curve: Elbow Curve for K-Means Clustering
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-10
@@ -29,11 +29,21 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 BRAND = "#009E73"
+ACCENT = "#D55E00"
 
 # Document clustering: optimal k determined by elbow curve
 # Represents topic grouping analysis on a text corpus
 k_values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 inertias = [5200, 2600, 1600, 950, 700, 560, 480, 420, 380, 350]
+
+# Identify elbow point: where the rate of improvement sharply drops
+# Calculate rates of change to find the point where slope flattens
+rates_of_change = [inertias[i] - inertias[i + 1] for i in range(len(inertias) - 1)]
+# The elbow is where the rate of change itself drops significantly
+# k=4 (index 3) shows diminishing returns: 650 → 250 drop
+elbow_k_index = 3  # k=4
+elbow_k = k_values[elbow_k_index]
+elbow_inertia = inertias[elbow_k_index]
 
 custom_style = Style(
     background=PAGE_BG,
@@ -41,7 +51,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=(BRAND,),
+    colors=(BRAND, ACCENT),
     title_font_size=28,
     label_font_size=22,
     major_label_font_size=18,
@@ -68,11 +78,16 @@ chart = pygal.XY(
     margin=80,
 )
 
-# Prepare data as (x, y) tuples
+# Main curve: all data points as continuous line
 elbow_data = [(k, inertia) for k, inertia in zip(k_values, inertias, strict=True)]
+chart.add("Inertia", elbow_data, stroke_style={"width": 3}, dots_size=8, show_dots=True)
 
-# Add elbow curve
-chart.add("Inertia", elbow_data, stroke_style={"width": 3})
+# Highlight elbow point with distinct marker (larger, accent color)
+# Create a single-point series for the elbow to emphasize it visually
+elbow_highlight = [None] * len(k_values)
+elbow_highlight[elbow_k_index] = (elbow_k, elbow_inertia)
+elbow_highlight_data = [(k, inertia) for i, (k, inertia) in enumerate(elbow_data) if i == elbow_k_index]
+chart.add("Optimal k", elbow_highlight_data, dots_size=16, show_dots=True, stroke=False, fill=False)
 
 # Save as PNG and HTML
 chart.render_to_png(f"plot-{THEME}.png")
