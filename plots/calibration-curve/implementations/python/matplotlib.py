@@ -1,118 +1,201 @@
-""" pyplots.ai
+"""anyplot.ai
 calibration-curve: Calibration Curve
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 93/100 | Created: 2025-12-26
+Library: matplotlib | Python 3.13
+Quality: pending | Created: 2026-05-10
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 
-# Data: Simulate predictions from classifiers with different calibration properties
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette - canonical order
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+BRAND = OKABE_ITO[0]  # #009E73
+
+# Data
 np.random.seed(42)
 n_samples = 2000
 n_bins = 10
 
-# Generate ground truth - imbalanced to be realistic (35% positive rate)
 y_true = np.random.binomial(1, 0.35, n_samples)
 
-# Well-calibrated model: predictions closely match true probability
-# Using logistic transformation with moderate noise
 logits_calibrated = 1.2 * (y_true * 2 - 1) + np.random.normal(0, 1.0, n_samples)
 y_prob_calibrated = 1 / (1 + np.exp(-logits_calibrated))
 
-# Overconfident model: pushes predictions toward 0 and 1 (sigmoid with steeper slope)
 logits_over = 2.0 * (y_true * 2 - 1) + np.random.normal(0, 0.5, n_samples)
 y_prob_overconfident = 1 / (1 + np.exp(-logits_over))
 
-# Underconfident model: predictions clustered toward 0.5 (flatter sigmoid)
 logits_under = 0.5 * (y_true * 2 - 1) + np.random.normal(0, 0.8, n_samples)
 y_prob_underconfident = 1 / (1 + np.exp(-logits_under))
 
-# Calculate calibration curves for each model
 bin_edges = np.linspace(0, 1, n_bins + 1)
 
-# Well-calibrated model calibration curve
+# Calculate calibration curves - well-calibrated
 bin_idx_cal = np.digitize(y_prob_calibrated, bin_edges[1:-1])
-prob_true_cal = [np.mean(y_true[bin_idx_cal == i]) for i in range(n_bins) if np.sum(bin_idx_cal == i) > 0]
-prob_pred_cal = [np.mean(y_prob_calibrated[bin_idx_cal == i]) for i in range(n_bins) if np.sum(bin_idx_cal == i) > 0]
+prob_true_cal = np.array([np.mean(y_true[bin_idx_cal == i]) for i in range(n_bins) if np.sum(bin_idx_cal == i) > 0])
+prob_pred_cal = np.array(
+    [np.mean(y_prob_calibrated[bin_idx_cal == i]) for i in range(n_bins) if np.sum(bin_idx_cal == i) > 0]
+)
+prob_std_cal = np.array(
+    [
+        np.std(y_true[bin_idx_cal == i]) / np.sqrt(np.sum(bin_idx_cal == i))
+        for i in range(n_bins)
+        if np.sum(bin_idx_cal == i) > 0
+    ]
+)
 
-# Overconfident model calibration curve
+# Calculate calibration curves - overconfident
 bin_idx_over = np.digitize(y_prob_overconfident, bin_edges[1:-1])
-prob_true_over = [np.mean(y_true[bin_idx_over == i]) for i in range(n_bins) if np.sum(bin_idx_over == i) > 0]
-prob_pred_over = [
-    np.mean(y_prob_overconfident[bin_idx_over == i]) for i in range(n_bins) if np.sum(bin_idx_over == i) > 0
-]
+prob_true_over = np.array([np.mean(y_true[bin_idx_over == i]) for i in range(n_bins) if np.sum(bin_idx_over == i) > 0])
+prob_pred_over = np.array(
+    [np.mean(y_prob_overconfident[bin_idx_over == i]) for i in range(n_bins) if np.sum(bin_idx_over == i) > 0]
+)
+prob_std_over = np.array(
+    [
+        np.std(y_true[bin_idx_over == i]) / np.sqrt(np.sum(bin_idx_over == i))
+        for i in range(n_bins)
+        if np.sum(bin_idx_over == i) > 0
+    ]
+)
 
-# Underconfident model calibration curve
+# Calculate calibration curves - underconfident
 bin_idx_under = np.digitize(y_prob_underconfident, bin_edges[1:-1])
-prob_true_under = [np.mean(y_true[bin_idx_under == i]) for i in range(n_bins) if np.sum(bin_idx_under == i) > 0]
-prob_pred_under = [
-    np.mean(y_prob_underconfident[bin_idx_under == i]) for i in range(n_bins) if np.sum(bin_idx_under == i) > 0
-]
+prob_true_under = np.array(
+    [np.mean(y_true[bin_idx_under == i]) for i in range(n_bins) if np.sum(bin_idx_under == i) > 0]
+)
+prob_pred_under = np.array(
+    [np.mean(y_prob_underconfident[bin_idx_under == i]) for i in range(n_bins) if np.sum(bin_idx_under == i) > 0]
+)
+prob_std_under = np.array(
+    [
+        np.std(y_true[bin_idx_under == i]) / np.sqrt(np.sum(bin_idx_under == i))
+        for i in range(n_bins)
+        if np.sum(bin_idx_under == i) > 0
+    ]
+)
 
-# Calculate Brier scores (mean squared error of probability predictions)
 brier_cal = np.mean((y_prob_calibrated - y_true) ** 2)
 brier_over = np.mean((y_prob_overconfident - y_true) ** 2)
 brier_under = np.mean((y_prob_underconfident - y_true) ** 2)
 
-# Create figure with two subplots: calibration curve and histogram
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 9), gridspec_kw={"height_ratios": [3, 1]})
+# Plot
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 9), gridspec_kw={"height_ratios": [3, 1]}, facecolor=PAGE_BG)
+ax1.set_facecolor(PAGE_BG)
+ax2.set_facecolor(PAGE_BG)
 
-# Primary colors from style guide
-python_blue = "#306998"
-python_yellow = "#FFD43B"
-third_color = "#E377C2"  # Colorblind-safe pink/magenta
+# Calibration curves with confidence bands
+ax1.plot([0, 1], [0, 1], "--", linewidth=2, color=INK_SOFT, label="Perfect Calibration", alpha=0.6)
 
-# Plot calibration curves
-ax1.plot([0, 1], [0, 1], "k--", linewidth=2, label="Perfect Calibration", alpha=0.7)
+# Well-calibrated
+ax1.fill_between(
+    prob_pred_cal, prob_true_cal - prob_std_cal, prob_true_cal + prob_std_cal, alpha=0.2, color=OKABE_ITO[0]
+)
 ax1.plot(
     prob_pred_cal,
     prob_true_cal,
     "o-",
-    color=python_blue,
+    color=OKABE_ITO[0],
     linewidth=3,
-    markersize=12,
+    markersize=10,
     label=f"Well-Calibrated (Brier: {brier_cal:.3f})",
+)
+
+# Overconfident
+ax1.fill_between(
+    prob_pred_over, prob_true_over - prob_std_over, prob_true_over + prob_std_over, alpha=0.2, color=OKABE_ITO[1]
 )
 ax1.plot(
     prob_pred_over,
     prob_true_over,
     "s-",
-    color=python_yellow,
+    color=OKABE_ITO[1],
     linewidth=3,
-    markersize=12,
+    markersize=10,
     label=f"Overconfident (Brier: {brier_over:.3f})",
+)
+
+# Underconfident
+ax1.fill_between(
+    prob_pred_under, prob_true_under - prob_std_under, prob_true_under + prob_std_under, alpha=0.2, color=OKABE_ITO[2]
 )
 ax1.plot(
     prob_pred_under,
     prob_true_under,
     "^-",
-    color=third_color,
+    color=OKABE_ITO[2],
     linewidth=3,
-    markersize=12,
+    markersize=10,
     label=f"Underconfident (Brier: {brier_under:.3f})",
 )
 
-# Style calibration plot
-ax1.set_xlabel("Mean Predicted Probability", fontsize=20)
-ax1.set_ylabel("Fraction of Positives", fontsize=20)
-ax1.set_title("calibration-curve · matplotlib · pyplots.ai", fontsize=24)
-ax1.tick_params(axis="both", labelsize=16)
-ax1.legend(fontsize=16, loc="lower right")
-ax1.grid(True, alpha=0.3, linestyle="--")
+ax1.set_xlabel("Mean Predicted Probability (0 to 1)", fontsize=20, color=INK)
+ax1.set_ylabel("Fraction of Positives (0 to 1)", fontsize=20, color=INK)
+ax1.set_title("calibration-curve · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax1.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 ax1.set_xlim(0, 1)
 ax1.set_ylim(0, 1)
 
-# Histogram of predicted probabilities
-ax2.hist(y_prob_calibrated, bins=20, alpha=0.6, color=python_blue, label="Well-Calibrated", edgecolor="white")
-ax2.hist(y_prob_overconfident, bins=20, alpha=0.6, color=python_yellow, label="Overconfident", edgecolor="white")
-ax2.hist(y_prob_underconfident, bins=20, alpha=0.6, color=third_color, label="Underconfident", edgecolor="white")
-ax2.set_xlabel("Predicted Probability", fontsize=20)
-ax2.set_ylabel("Count", fontsize=20)
-ax2.tick_params(axis="both", labelsize=16)
-ax2.legend(fontsize=14, loc="upper right")
-ax2.grid(True, alpha=0.3, linestyle="--")
+leg1 = ax1.legend(fontsize=16, loc="lower right")
+leg1.get_frame().set_facecolor(ELEVATED_BG)
+leg1.get_frame().set_edgecolor(INK_SOFT)
+leg1.get_frame().set_linewidth(0.5)
+for text in leg1.get_texts():
+    text.set_color(INK_SOFT)
+
+ax1.yaxis.grid(True, alpha=0.1, linewidth=0.8, color=INK)
+ax1.spines["top"].set_visible(False)
+ax1.spines["right"].set_visible(False)
+for s in ("left", "bottom"):
+    ax1.spines[s].set_color(INK_SOFT)
+
+# Histogram
+ax2.hist(
+    y_prob_calibrated, bins=20, alpha=0.6, color=OKABE_ITO[0], label="Well-Calibrated", edgecolor=PAGE_BG, linewidth=0.5
+)
+ax2.hist(
+    y_prob_overconfident,
+    bins=20,
+    alpha=0.6,
+    color=OKABE_ITO[1],
+    label="Overconfident",
+    edgecolor=PAGE_BG,
+    linewidth=0.5,
+)
+ax2.hist(
+    y_prob_underconfident,
+    bins=20,
+    alpha=0.6,
+    color=OKABE_ITO[2],
+    label="Underconfident",
+    edgecolor=PAGE_BG,
+    linewidth=0.5,
+)
+
+ax2.set_xlabel("Predicted Probability (0 to 1)", fontsize=20, color=INK)
+ax2.set_ylabel("Count (Sample Frequency)", fontsize=20, color=INK)
+ax2.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+
+leg2 = ax2.legend(fontsize=16, loc="upper right")
+leg2.get_frame().set_facecolor(ELEVATED_BG)
+leg2.get_frame().set_edgecolor(INK_SOFT)
+leg2.get_frame().set_linewidth(0.5)
+for text in leg2.get_texts():
+    text.set_color(INK_SOFT)
+
+ax2.yaxis.grid(True, alpha=0.1, linewidth=0.8, color=INK)
+ax2.spines["top"].set_visible(False)
+ax2.spines["right"].set_visible(False)
+for s in ("left", "bottom"):
+    ax2.spines[s].set_color(INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
