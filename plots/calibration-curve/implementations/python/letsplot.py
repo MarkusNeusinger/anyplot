@@ -1,15 +1,30 @@
-""" pyplots.ai
+""" anyplot.ai
 calibration-curve: Calibration Curve
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-10
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from lets_plot import *
+from lets_plot.export import ggsave
 
 
 LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+BRAND = "#009E73"  # Okabe-Ito position 1 — first series
+SECONDARY = "#D55E00"  # Okabe-Ito position 2 — reference line
 
 # Data - Generate realistic binary classification predictions
 np.random.seed(42)
@@ -70,6 +85,12 @@ df_calibration = pd.DataFrame(
     {"mean_predicted": mean_predicted, "fraction_positive": fraction_positive, "bin_count": bin_counts}
 )
 df_calibration = df_calibration.dropna()
+df_calibration["tooltip"] = df_calibration.apply(
+    lambda row: (
+        f"Predicted: {row['mean_predicted']:.3f}\nObserved: {row['fraction_positive']:.3f}\nBin size: {int(row['bin_count'])}"
+    ),
+    axis=1,
+)
 
 # Create dataframe for diagonal (perfect calibration)
 df_diagonal = pd.DataFrame({"x": [0, 1], "y": [0, 1]})
@@ -78,46 +99,49 @@ df_diagonal = pd.DataFrame({"x": [0, 1], "y": [0, 1]})
 hist_bins = 20
 hist_counts, hist_edges = np.histogram(y_prob, bins=hist_bins, range=(0, 1))
 hist_centers = (hist_edges[:-1] + hist_edges[1:]) / 2
-df_histogram = pd.DataFrame(
-    {
-        "prob_center": hist_centers,
-        "count": hist_counts / hist_counts.max(),  # Normalize for subplot
-    }
-)
+df_histogram = pd.DataFrame({"prob_center": hist_centers, "count": hist_counts / hist_counts.max()})
 
 # Plot
 plot = (
     ggplot()
     # Perfect calibration diagonal line
-    + geom_line(aes(x="x", y="y"), data=df_diagonal, color="#888888", size=1.5, linetype="dashed")
+    + geom_line(aes(x="x", y="y"), data=df_diagonal, color=INK_SOFT, size=1.5, linetype="dashed")
     # Calibration curve
-    + geom_line(aes(x="mean_predicted", y="fraction_positive"), data=df_calibration, color="#306998", size=2)
+    + geom_line(aes(x="mean_predicted", y="fraction_positive"), data=df_calibration, color=BRAND, size=2)
     + geom_point(
-        aes(x="mean_predicted", y="fraction_positive"), data=df_calibration, color="#306998", size=5, alpha=0.9
+        aes(x="mean_predicted", y="fraction_positive", tooltip="tooltip"),
+        data=df_calibration,
+        color=BRAND,
+        size=5,
+        alpha=0.9,
     )
     # Histogram bars at bottom showing prediction distribution
     + geom_bar(
-        aes(x="prob_center", y="count"), data=df_histogram, stat="identity", fill="#FFD43B", alpha=0.6, width=0.045
+        aes(x="prob_center", y="count"), data=df_histogram, stat="identity", fill=INK_MUTED, alpha=0.4, width=0.045
     )
     # Labels and styling
     + labs(
         x="Mean Predicted Probability",
         y="Fraction of Positives",
-        title=f"calibration-curve · letsplot · pyplots.ai\nBrier Score: {brier_score:.4f} | ECE: {ece:.4f}",
+        title=f"calibration-curve · letsplot · anyplot.ai\nBrier Score: {brier_score:.4f} | ECE: {ece:.4f}",
     )
     + scale_x_continuous(limits=[0, 1], breaks=[0, 0.2, 0.4, 0.6, 0.8, 1.0])
     + scale_y_continuous(limits=[0, 1], breaks=[0, 0.2, 0.4, 0.6, 0.8, 1.0])
-    + theme_minimal()
     + theme(
-        plot_title=element_text(size=22),
-        axis_title=element_text(size=18),
-        axis_text=element_text(size=14),
-        panel_grid_major=element_line(color="#CCCCCC", size=0.5),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=RULE, size=0.4),
         panel_grid_minor=element_blank(),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.6),
+        plot_title=element_text(size=24, color=INK),
+        axis_ticks_length_x=6,
+        axis_ticks_length_y=6,
     )
     + ggsize(1600, 900)
 )
 
 # Save outputs
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.html", path=".")

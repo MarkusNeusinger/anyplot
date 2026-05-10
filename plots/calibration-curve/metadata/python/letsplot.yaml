@@ -1,163 +1,177 @@
 library: letsplot
+language: python
 specification_id: calibration-curve
 created: '2025-12-26T19:37:18Z'
-updated: '2025-12-26T19:43:58Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20528205405
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/letsplot/plot.html
+updated: '2026-05-10T11:06:10Z'
+generated_by: claude-haiku
+workflow_run: 25626801514
+issue: 2331
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/letsplot/plot-dark.html
 quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques: []
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep:
-  - binning
-  styling: []
 review:
   strengths:
-  - Excellent implementation of all spec requirements including diagonal reference
-    line, 10 bins, both Brier score and ECE metrics
-  - Clean integration of histogram showing prediction distribution at the bottom without
-    requiring a separate subplot
-  - Good color scheme with blue calibration curve, gray reference diagonal, and yellow
-    histogram bars
-  - Proper title format following pyplots.ai conventions
-  - Well-structured code following KISS principles with good reproducibility
+  - Excellent theme support with proper color token adaptation across both light and
+    dark renders
+  - Complete spec compliance with all required features (diagonal line, bins, Brier
+    Score, ECE, histogram)
+  - Strong visual quality with readable text at full resolution and proper font sizing
+  - Clean, reproducible code with deterministic data generation
+  - Proper Okabe-Ito palette usage with good color hierarchy
   weaknesses:
-  - The calibration curve is quite extreme - fraction of positives jumps from near
-    0 to near 1 very sharply around the 0.3-0.6 probability range, making the miscalibration
-    pattern less gradual than typical real-world examples
-  - Histogram bars extend quite high (normalized to max) which visually competes with
-    the calibration curve; could use smaller scale factor
-  image_description: The plot shows a calibration curve with a blue line and points
-    representing the model's calibration across 10 probability bins. The x-axis shows
-    "Mean Predicted Probability" (0 to 1) and the y-axis shows "Fraction of Positives"
-    (0 to 1). A gray dashed diagonal line represents perfect calibration. Yellow semi-transparent
-    bars at the bottom display the histogram of predicted probabilities, showing the
-    distribution of predictions. The title displays "calibration-curve · letsplot
-    · pyplots.ai" with Brier Score (0.0516) and ECE (0.1885) metrics below. The calibration
-    curve shows the model is underconfident at lower probabilities (curve below diagonal)
-    and overconfident at higher probabilities (curve above diagonal, reaching 1.0
-    while perfect calibration would be lower).
+  - Design Excellence could be elevated by removing top/right spines for cleaner L-shaped
+    frame
+  - Library Mastery could showcase more distinctive letsplot features beyond basic
+    tooltips
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct light theme color
+      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all in dark text (#1A1A17 / #4A4A44) - fully readable
+      Data: Green calibration curve (#009E73) with points (size=5, alpha=0.9); dashed reference line in gray (#4A4A44); histogram bars in muted gray (#6B6A63) at bottom
+      Grid: Subtle light gray grid lines visible but not dominant
+      Legibility verdict: PASS - all elements readable with excellent contrast against light surface
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme color
+      Chrome: Title, axis labels in light text (#F0EFE8), tick labels in secondary light (#B8B7B0) - fully readable
+      Data: Green calibration curve (#009E73) identical to light render; dashed reference line in light gray; histogram bars in light gray
+      Grid: Subtle light grid lines visible and readable
+      Color consistency: Data colors (Okabe-Ito #009E73) identical between renders - only chrome adapted (PASS)
+      Legibility verdict: PASS - no dark-on-dark failures; all text clearly visible against near-black background
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and axis labels are readable, though title could be slightly
-          larger
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All text sizes explicitly set (title=24pt, labels=20pt, ticks=16pt);
+          fully readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean separation between curve, points, histogram; no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points and lines are visible, histogram bars are appropriately sized
+        comment: Line (size=2), points (size=5, alpha=0.9), histogram bars all visible
+          and distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/gray/yellow palette is colorblind-safe
+        comment: 'Okabe-Ito #009E73 primary color; good contrast; CVD-safe palette'
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of canvas, plot well-proportioned
+        comment: Good 16:9 proportions; generous margins; nothing cut off
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no units (probabilities are unitless, so acceptable)
+        comment: Descriptive axes; metrics in title
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle and appropriate, no legend needed for single-model
-          plot
+        comment: 'First series #009E73; backgrounds #FAF8F1 (light) / #1A1A17 (dark);
+          both renders theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Good professional polish with proper theme tokens; dashed reference
+          line adds visual distinction; histogram enriches composition
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid and generous whitespace; could improve by removing top/right
+          spines for cleaner L-shaped frame
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal point on calibration curve; histogram adds context; metrics
+          support interpretation
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct calibration curve with reliability diagram format
+        comment: Correct calibration curve with binned calibration analysis
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Mean predicted probability on X, fraction of positives on Y
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Diagonal reference line, 10 bins, Brier score AND ECE displayed,
-          histogram of predictions included
-      - id: SC-04
-        name: Data Range
+        comment: Diagonal reference line, 10 bins, Brier Score, ECE, histogram all
+          present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Both axes show full 0-1 range appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: Mean Predicted Probability (0-1); Y: Fraction of Positives (0-1);
+          full data range shown'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for single model, elements are self-explanatory
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "calibration-curve · letsplot · pyplots.ai"
+        comment: Title correct; metrics displayed; single series, no legend needed
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows calibration deviation from perfect line, but the curve is somewhat
-          extreme (goes from 0 to 1 very sharply)
+        comment: 'Shows all aspects: calibration curve, perfect calibration line,
+          prediction distribution, summary metrics'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Binary classification scenario with realistic 60/40 class imbalance
+        comment: Imbalanced binary classification (60/40); realistic overconfidence;
+          sensible probability distributions
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are in valid 0-1 range, ECE of 0.1885 is realistic
+        comment: Sample size 1000 (within 500-10000 recommendation); probability range
+          0-1; sensible for classification
     code_quality:
       score: 10
       max: 10
@@ -167,40 +181,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: No unnecessary functions; straightforward linear execution; clear
+          logic flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Uses np.random.seed(42); deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, lets_plot used
+        comment: 'Only used imports: numpy, pandas, lets_plot'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current lets-plot API
+        comment: No fake interactivity; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png + plot-{THEME}.html
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ggplot grammar correctly with geom_line, geom_point, geom_bar,
-          theme_minimal, but doesn't leverage more advanced lets-plot features
+        comment: Perfect ggplot composition syntax; proper geom_line/geom_point/geom_bar
+          usage; theme customization idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses tooltip aes() and HTML export; could explore more letsplot-specific
+          features
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - binning
+  - matrix-construction
+  dataprep:
+  - binning
+  styling:
+  - publication-ready
+  - alpha-blending
