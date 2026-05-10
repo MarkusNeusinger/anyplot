@@ -1,180 +1,180 @@
 library: letsplot
+language: python
 specification_id: silhouette-basic
 created: '2025-12-26T19:39:00Z'
-updated: '2025-12-26T19:44:40Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20528205803
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - sklearn
-  techniques:
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  - dataset-loading
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-05-10T12:54:44Z'
+generated_by: claude-haiku
+workflow_run: 25629093276
+issue: 2334
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/letsplot/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent use of geom_segment to create horizontal bars sorted within each cluster,
-    producing the characteristic silhouette shape
-  - Clear cluster annotations with average scores positioned appropriately on the
-    left side
-  - Well-implemented dashed vertical line showing overall average silhouette score
-    with label
-  - Uses realistic Iris dataset which is a classic clustering example
-  - Good color scheme with Python branding colors that are also colorblind-friendly
-  - Proper ggplot2 grammar style with theme customization for clean appearance
-  weaknesses:
-  - X-axis extends to -0.3 but no negative silhouette values exist in the data, creating
-    unnecessary whitespace
-  - Legend is somewhat redundant since cluster labels are already annotated directly
-    on the plot
-  - The Iris dataset with 3 clusters produces all positive silhouette values; showing
-    some negative values would better demonstrate the plot ability to highlight potential
-    misclassifications
-  image_description: 'The plot displays a silhouette coefficient visualization for
-    3 clusters from the Iris dataset. The layout shows horizontal bars representing
-    each sample''s silhouette score, grouped by cluster. Cluster 0 (blue, Python Blue
-    #306998) is at the bottom with avg: 0.42, Cluster 1 (yellow/gold, Python Yellow
-    #FFD43B) in the middle with avg: 0.80, and Cluster 2 (red, #DC2626) at the top
-    with avg: 0.45. A vertical dashed black line indicates the overall average silhouette
-    score (0.55) with "Avg: 0.55" label. Each cluster section is annotated with its
-    name and average score on the left side. The x-axis shows "Silhouette Coefficient"
-    ranging from -0.3 to 1.0, and the y-axis is labeled "Sample Index (sorted within
-    cluster)" with tick marks hidden. A legend on the right shows cluster colors.
-    The title reads "silhouette-basic · letsplot · pyplots.ai".'
+  - Flawless visual quality in both light and dark themes with perfect text readability
+    and palette compliance
+  - Perfect spec adherence with all required features correctly implemented (horizontal
+    bars, cluster colors, reference line, cluster annotations)
+  - Real educational data context using iris clustering with clear visual storytelling
+    about cluster quality differences
+  - Clean, reproducible code with proper theme-adaptive styling and correct letsplot
+    idioms
+  - Excellent canvas utilization and visual hierarchy that immediately communicates
+    which clusters are well-separated
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "silhouette-basic · letsplot · anyplot.ai" bold and readable; axis labels "Silhouette Coefficient" and "Sample Index (sorted within cluster)" descriptive and clear; tick labels and cluster annotations all readable in dark text (INK color)
+      Data: Three clusters in Okabe-Ito colors - Cluster 0 (green #009E73), Cluster 1 (orange #D55E00), Cluster 2 (blue #0072B2). Horizontal bars sorted within clusters, showing silhouette scores. Average line marked with dashed vertical line at 0.55, labeled "Avg: 0.55"
+      Legibility verdict: PASS - all text clearly readable, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title and all labels rendered in light text (INK_SOFT #B8B7B0 and INK #F0EFE8) with perfect contrast on dark surface. Grid lines subtle and visible. Cluster annotations and average line label all clearly readable. No "dark-on-dark" text failures
+      Data: All cluster colors identical to light render (green #009E73, orange #D55E00, blue #0072B2) - only chrome adapted to dark theme, not data colors
+      Legibility verdict: PASS - all text perfectly readable on dark background, no legibility issues
+
+    Both renders pass all theme-readability checks. Theme-adaptive implementation is correct.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, annotations all clearly readable with appropriate
-          font sizes
+        comment: All sizes explicitly set (title 24pt, labels 20pt, text 14-16pt),
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; cluster labels, average annotation,
-          and legend are well separated
+        comment: No overlapping text elements, cluster annotations positioned left,
+          average label positioned clear
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Horizontal bars are well-sized (size=1.5) and clearly visible; sorted
-          ordering within clusters creates smooth silhouette shape
+        comment: 150 bars well-sized for data density, all clearly visible and distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, red palette is colorblind-friendly with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good overall layout but some wasted space on the left side of the
-          plot (x-axis extends to -0.3 but data only goes to ~0)
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: "Silhouette Coefficient" and "Sample Index (sorted
-          within cluster)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette with three CVD-safe distinct colors, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 65-70% of canvas, balanced margins, legend properly positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive labels with context and methodology, correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, multi-series follows Okabe-Ito order, backgrounds
+          #FAF8F1/#1A1A17, theme-correct chrome in both renders'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Y-axis grid is appropriately hidden, but legend is somewhat redundant
-          since cluster labels are already annotated in the plot
+        comment: Well-configured library default, professional but not exceptional
+          design
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Subtle grid and whitespace, library defaults with minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through color and clustering. Immediately
+          shows Cluster 1 is excellent (0.80) vs. others problematic (0.42-0.45).
+          Average line and annotations create effective emphasis on cluster quality
+          differences
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct silhouette plot with horizontal bars for each sample
+        comment: Correct silhouette plot with all subtypes (bars, cluster colors,
+          reference line, annotations)
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Silhouette coefficients correctly mapped to x-axis, samples to y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec requirements met: horizontal bars, cluster grouping with
-          distinct colors, vertical line for average, cluster annotations with average
-          scores'
-      - id: SC-04
-        name: Data Range
+        comment: 'All required features present: horizontal bars, cluster colors,
+          average line, cluster annotations'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows full silhouette range (-0.3 to 1.0), all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: silhouette coefficient correct range, Y-axis: sample index
+          sorted within cluster, all data visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies clusters
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "silhouette-basic · letsplot · pyplots.ai"'
+        comment: Title format correct (silhouette-basic · letsplot · anyplot.ai),
+          legend labels match clusters
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows variation across clusters (Cluster 1 has high scores ~0.80,
-          Cluster 0 and 2 have lower averages). Missing: no negative silhouette values
-          shown which would demonstrate potential misclassification'
+        comment: 'Shows all aspects: score range, multiple cluster quality levels,
+          variation within clusters'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Uses real Iris dataset with K-means clustering - classic, comprehensible
-          scenario
+        comment: Real iris dataset, K-means clustering with k=3, scientific/educational
+          context, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Silhouette values are realistic but extending x-axis to -0.3 when
-          no negative values exist creates wasted space
+        comment: Silhouette scores realistic (-0.1 to 1.0), 150 samples plausible,
+          k=3 matches iris species
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -182,33 +182,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → plot → save'
+        comment: 'Linear flow: imports → data prep → plot → save, no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) and KMeans random_state=42
+        comment: np.random.seed(42) and KMeans(random_state=42) set, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: os, numpy, pandas, lets_plot, sklearn'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity, no over-engineering or fake
+          functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Using current API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current letsplot
+          API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert ggplot2-style grammar: geom_segment for bars, geom_vline
+          for reference, geom_text for annotations, scale_color_manual, theme() with
+          element functions'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
         passed: false
-        comment: 'Minor: saves with path="." which works but is unconventional'
-    library_features:
-      score: 3
-      max: 5
-      items: []
+        comment: Uses theme-adaptive styling, ggsize(), ggsave() with scale, HTML
+          export. Competent but silhouette plot logic is universal across libraries
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - dataset-loading
+  - iteration-over-groups
+  dataprep: []
+  styling: []

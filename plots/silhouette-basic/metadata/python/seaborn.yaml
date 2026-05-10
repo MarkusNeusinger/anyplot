@@ -1,174 +1,187 @@
 library: seaborn
+language: python
 specification_id: silhouette-basic
 created: '2025-12-26T19:36:36Z'
-updated: '2025-12-26T19:42:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20528201516
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-10T12:42:22Z'
+generated_by: claude-haiku
+workflow_run: 25628802647
+issue: 2334
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/seaborn/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies:
-  - sklearn
-  techniques:
-  - annotations
-  patterns:
-  - data-generation
-  - dataset-loading
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of silhouette plot with proper sorted bars within each
-    cluster
-  - Clear visualization with three distinct clusters showing varying cluster quality
-  - Good use of Iris dataset as realistic, well-known clustering example
-  - Per-cluster average annotations provide valuable insight for cluster comparison
-  - Red dashed average line serves as effective reference point
-  - Clean code structure following KISS principles
-  - Professional title formatting
+  - Excellent visual quality with perfect palette compliance across both light and
+    dark themes
+  - Complete spec implementation with all required features present and correctly
+    executed
+  - Realistic data context demonstrating genuine customer segmentation clustering
+    scenario
+  - Clean, readable design with appropriate spacing and typography hierarchy
+  - Proper theme adaptation ensuring text readability in both renders without dark-on-dark
+    failures
+  - Well-placed cluster annotations providing interpretive insight into cluster quality
+    variation
   weaknesses:
-  - Per-cluster average annotations use fixed x-position (0.92) instead of being relative
-    to data or axes transform - could be cut off with different data ranges
-  - Limited use of seaborn-specific plotting functions (primarily uses matplotlib
-    barh with seaborn styling)
-  - All silhouette scores are positive; demonstrating some negative scores would better
-    showcase the plot's ability to identify misclassified samples
-  image_description: The plot displays a silhouette plot with 3 clusters visualized
-    using horizontal bars. Cluster 0 (steel blue) is at the bottom with samples ranging
-    from ~0.05 to ~0.55 silhouette scores. Cluster 1 (golden yellow) in the middle
-    shows the best clustering with scores ranging from ~0.55 to ~0.88. Cluster 2 (green)
-    at the top has moderate scores from ~0.30 to ~0.70. A red dashed vertical line
-    marks the overall average silhouette score at 0.553. Per-cluster averages are
-    annotated on the right side (0.417, 0.798, 0.451). The title correctly displays
-    "silhouette-basic · seaborn · pyplots.ai". X-axis shows "Silhouette Coefficient"
-    (0.0-1.0), Y-axis shows "Samples (grouped by cluster)". A legend in the lower
-    right identifies each cluster and the average line.
+  - Library Mastery is moderate—doesn't deeply leverage seaborn's distinctive clustering
+    or statistical visualization features beyond basic theming and plotting
+  - Design Excellence could be strengthened with visual emphasis techniques to highlight
+    cluster quality differences (opacity variation, size variation, or color saturation)
+  - Generic professional styling lacks distinctive visual distinction—all clusters
+    presented equally without emphasizing performance variation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "silhouette-basic · seaborn · anyplot.ai" in dark text (24pt, readable). X-axis "Silhouette Coefficient" (20pt), Y-axis "Samples (grouped by cluster)" (20pt) both dark and readable. X-axis tick labels (0.0, 0.2, 0.4, 0.6, 0.8, 1.0) at 16pt in soft gray (#4A4A44), clear. Y-axis shows no ticks, cluster annotations positioned left (C0 0.59, C1 0.62, C2 0.72) in colored text.
+      Data: Cluster 0 (green #009E73) spans bottom with bars 0.0-0.85. Cluster 1 (orange #D55E00) middle 0.0-0.80. Cluster 2 (blue #0072B2) top 0.05-0.95. Bars are height=1.0, well-spaced with 10-unit padding between clusters. Average line is vertical dashed at 0.633 in soft gray. Grid is subtle (alpha=0.15) on x-axis only.
+      Legend: Bottom-right, shows "Average: 0.633", cluster labels. Background #FFFDF6 with soft edge.
+      Legibility verdict: PASS — all elements readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and labels now light colored (#F0EFE8) and readable. X-axis ticks in soft ink (#B8B7B0), good contrast. Cluster annotations (C0 0.59, C1 0.62, C2 0.72) remain colored text, readable. All text maintains strong contrast.
+      Data: Cluster colors IDENTICAL to light render — green #009E73, orange #D55E00, blue #0072B2. No color shift, only chrome adapted. Bar visibility maintained, average line visible in light dashed style.
+      Legend: Dark background #242420 with light edge color, proper adaptation.
+      Legibility verdict: PASS — all text readable on dark background, no dark-on-dark failures. Brand green remains visible and accessible.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt bold, axis labels 20pt, tick labels 16pt - all perfectly
-          readable
+        comment: All text sizes explicit and readable in both themes; title 24pt,
+          labels 20pt, ticks 16pt
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, clean separation between clusters
+        comment: Clusters spaced with 10-unit padding; annotations left-aligned without
+          collision; legend positioned cleanly
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Horizontal bars perfectly adapted with alpha=0.8, height=1.0 for
-          dense display
+        comment: All bars clearly visible and distinguishable; height=1.0 appropriate;
+          no density/alpha issues
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow/green palette is colorblind-safe, good contrast
+        comment: Okabe-Ito palette (colorblind-safe); good contrast in both themes;
+          no red-green as sole differentiator
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good canvas utilization but per-cluster annotations positioned at
-          fixed x=0.92 rather than dynamically; slight imbalance with large right
-          margin
+        comment: 16:9 landscape format appropriate; generous margins; spines removed
+          (top/right/left); nothing cut off
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no units (coefficient is unitless, so acceptable)
+        comment: Title correct format; X-axis descriptive; Y-axis descriptive
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle at alpha=0.3, legend well placed; however x-axis only
-          grid could be improved with subtle horizontal reference lines
+        comment: C0=#009E73 (pos 1), C1=#D55E00 (pos 2), C2=#0072B2 (pos 3); backgrounds
+          correct; data colors identical across themes
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Professional but generic styling. Okabe-Ito required (not a choice).
+          No visual emphasis to distinguish cluster quality variation.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed cleanly; subtle grid (alpha=0.15); generous whitespace;
+          legend styled properly
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Average line provides focal point; cluster annotations enable interpretation;
+          could emphasize quality variation more
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct silhouette plot with horizontal bars
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Samples on Y-axis, silhouette coefficient on X-axis, correctly grouped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: sorted bars within clusters, distinct
-          colors, vertical average line, per-cluster annotations'
-      - id: SC-04
-        name: Data Range
+        comment: Bars sorted within clusters; distinct colors per cluster; average
+          line at 0.633; cluster annotations; sklearn.metrics.silhouette_samples used
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows -0.1 to 1.0 covering full coefficient range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis silhouette coefficient correct; Y-axis samples grouped by
+          cluster; axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies clusters and average line
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Exact format: "silhouette-basic · seaborn · pyplots.ai"'
+        comment: Title format correct; legend shows clusters and average
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation between clusters (good vs poor clustering), some
-          negative-ish values near 0, but could show more dramatic misclassification
-          cases (negative scores)
+        comment: 200 samples, 3 clusters, 3 features (spending, frequency, recency);
+          demonstrates silhouette use case completely
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Iris dataset is the classic example for clustering validation
+        comment: Customer segmentation is real-world plausible, neutral, and demonstrates
+          business value
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good silhouette values (0.05-0.88), though all positive; real-world
-          often has some negative values
+        comment: 200 samples readable; 3 clusters good for comparison; silhouette
+          scores 0.59-0.72 realistic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -176,43 +189,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: Simple linear flow; no unnecessary classes/functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) and random_state=42 for KMeans
+        comment: Seeds set (42 for data, 123 for KMeans); deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses n_init=10 explicitly which is good, but annotation xy parameter
-          uses raw coordinates (0.92) instead of transform
+        comment: Appropriate complexity; no fake UI; no AR-08 violations
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses sns.despine() for seaborn styling, but core plotting uses matplotlib
-          barh directly rather than seaborn plotting functions; this is necessary
-          since seaborn doesn't have a native silhouette plot function, but limits
-          seaborn's distinctive contribution
+        comment: sns.set_theme() used correctly; theme-aware rc dict; matplotlib integration
+          clean; barh() idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Basic seaborn usage; doesn't leverage distinctive seaborn capabilities
+          beyond standard theming and plotting
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - barh
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

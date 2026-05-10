@@ -1,163 +1,181 @@
 library: matplotlib
+language: python
 specification_id: silhouette-basic
 created: '2025-12-26T19:35:55Z'
-updated: '2025-12-26T19:40:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20528201302
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies:
-  - sklearn
-  techniques:
-  - annotations
-  - custom-legend
-  patterns:
-  - data-generation
-  - dataset-loading
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
+updated: '2026-05-10T12:41:38Z'
+generated_by: claude-haiku
+workflow_run: 25628757360
+issue: 2334
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent use of matplotlib fill_betweenx for creating characteristic silhouette
-    bar shapes
-  - Uses real iris dataset as specified, providing meaningful clustering context
-  - Clear visual separation between clusters with gaps and distinct colors
-  - Proper cluster annotations showing average silhouette scores for each group
-  - Well-positioned reference line with legend explaining overall average score
+  - Perfect visual quality across all dimensions (legibility, overlap, visibility,
+    accessibility, layout, labels, palette)
+  - Excellent theme compliance with no dark-on-dark or light-on-light failures in
+    either render
+  - Correct Okabe-Ito palette usage with constant data colors across light and dark
+    themes
+  - All specification requirements met with clean, reproducible implementation
+  - Real-world plausible data (iris clustering) demonstrating all silhouette plot
+    features
+  - Clean code structure with proper theme token setup for pipeline integration
   weaknesses:
-  - Y-axis label could be simplified since individual sample indices are not meaningful
-  - All silhouette values are positive; showing some negative values would better
-    demonstrate full range
-  image_description: 'The silhouette plot displays three clusters from the iris dataset
-    as horizontal filled areas. Cluster 0 (Python blue, #306998) is at the bottom
-    with an average score of 0.42, showing samples with silhouette values ranging
-    from near 0 to about 0.7. Cluster 1 (yellow, #FFD43B) is in the middle with the
-    highest average of 0.80, displaying consistently high silhouette values. Cluster
-    2 (green, #2ca02c) is at the top with an average of 0.45. A red dashed vertical
-    line marks the overall average silhouette score of 0.55. The x-axis shows "Silhouette
-    Coefficient" ranging from -0.2 to 1.0, and the y-axis is labeled "Sample Index
-    (by Cluster)" with no tick marks. Each cluster is annotated with its name and
-    average score. The title reads "silhouette-basic · matplotlib · pyplots.ai". A
-    legend in the lower right shows the average score line.'
+  - Design Excellence scores conservatively — implementation is a well-executed default
+    rather than something with exceptional aesthetic flair or innovative visual storytelling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with excellent contrast for dark text elements
+      Chrome: Title, x-axis ("Silhouette Coefficient"), y-axis ("Sample Index (by Cluster)"), cluster annotations, and legend all use dark text (INK #1A1A17, INK_SOFT #4A4A44) — all perfectly readable
+      Data: Three horizontal bar groups (Clusters 0, 1, 2) with Okabe-Ito colors (#009E73 green, #D55E00 orange, #0072B2 blue); bars sorted within each cluster; 150 samples total clearly visible; vertical reference line at average silhouette score (0.55) in dashed style
+      Grid: X-axis grid only, subtle alpha=0.15, does not compete with data
+      Legend: Bottom-right positioned with "Average Score: 0.55" label; legend frame uses elevated background (#FFFDF6) with INK_SOFT edge
+      Legibility verdict: PASS — All text clearly readable, no overlap, proper contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with excellent contrast for light text elements
+      Chrome: All text elements (title, axis labels, ticks, cluster annotations, legend) use light colors (INK #F0EFE8, INK_SOFT #B8B7B0) — no dark-on-dark failures, all perfectly readable
+      Data: Identical silhouette bar colors to light render (#009E73, #D55E00, #0072B2) — data colors are constant across themes as required; same 150 samples visible with same sorting; reference line remains distinct and visible
+      Grid: X-axis grid with subtle alpha, visible against dark background
+      Legend: Legend frame uses elevated dark background (#242420) with light edge color (INK_SOFT), maintaining proper contrast
+      Legibility verdict: PASS — All text elements readable, proper theme adaptation, no contrast failures
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: title 24pt, labels 20pt, ticks 16pt - all perfectly readable
+        comment: All font sizes explicitly set; title 24pt, labels 20pt, ticks 16pt;
+          perfectly readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: no overlapping text, cluster annotations well-positioned
+        comment: No overlapping text elements; cluster annotations, legend, and axis
+          labels all well-positioned
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: horizontal bars clearly visible with appropriate alpha
+        comment: All 150 bars clearly visible with optimal sizing; color distinction
+          excellent per cluster
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: blue/yellow/green palette is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: plot fills canvas well, balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: descriptive labels but no units (silhouette coefficient is unitless,
-          acceptable)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: subtle x-axis grid (alpha 0.3), legend well-placed in lower right
+        comment: Okabe-Ito palette is colorblind-safe; strong contrast between clusters
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~70% of canvas with balanced margins; no cut-off content
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with proper title format {spec-id} · {library}
+          · anyplot.ai
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order (positions 2–3); backgrounds
+          #FAF8F1 (light) / #1A1A17 (dark); theme-correct chrome in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured library defaults with correct palette; professional
+          appearance but no exceptional design thought beyond standard styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed; grid subtle (x-axis only); cluster annotations
+          styled with borders; legend properly themed
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sorted bars create visual progression; color hierarchy clear; average
+          reference line aids interpretation; visual story guides viewer
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: correct silhouette plot with horizontal bars per sample
+        comment: Correct silhouette plot with horizontal bars per sample
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: samples sorted within clusters, grouped by cluster assignment
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: horizontal bars ✓, distinct colors ✓, average line ✓, cluster annotations
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: bars grouped by cluster, distinct colors, average
+          line, cluster annotations, sorted bars'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x-axis shows -0.2 to 1.0, covering full silhouette range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis (silhouette -0.2 to 1.0) and Y-axis (sample index) correct;
+          iris dataset with 3 clusters
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: legend correctly shows average score line
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'uses correct format: silhouette-basic · matplotlib · pyplots.ai'
+        comment: Title format correct; legend present and informative
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: shows variation in cluster quality (0.42, 0.80, 0.45), sorted samples,
-          but no negative silhouette values shown
+        comment: 'Iris dataset shows all silhouette plot aspects: well-separated clusters,
+          weaker clusters, varied scores within groups'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: uses iris dataset as suggested in spec, real clustering scenario
+        comment: Real iris dataset; KMeans clustering is realistic ML scenario; neutral,
+          non-controversial context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: silhouette values are realistic (-1 to 1 range), but all values are
-          positive
+        comment: Silhouette scores valid (-0.2 to 1.0); K=3 appropriate for iris;
+          proportions accurate
     code_quality:
       score: 10
       max: 10
@@ -167,40 +185,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: imports → data → plot → save, no functions/classes
+        comment: Imports → data → clustering → plot → save; no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) and random_state=42 for KMeans
+        comment: KMeans random_state=42; deterministic iris dataset
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: all imports are used
+        comment: 'Only used imports: os, matplotlib, numpy, sklearn components'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: uses current matplotlib and sklearn APIs
+        comment: Clean, Pythonic code; appropriate complexity; no over-engineering;
+          no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png; current API; dpi=300
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: fill_betweenx for silhouette bars, axvline for reference, proper
-          ax methods
+        comment: Excellent use of plt.subplots(), ax methods, fill_betweenx, theme
+          tokens; high-level recommended patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses fill_betweenx and custom cluster annotation styling; mostly
+          standard matplotlib patterns
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - annotations
+  patterns:
+  - dataset-loading
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
