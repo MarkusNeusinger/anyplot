@@ -1,165 +1,168 @@
 library: matplotlib
+language: python
 specification_id: learning-curve-basic
 created: '2025-12-26T17:37:29Z'
-updated: '2025-12-26T17:44:59Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20526600991
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - fill-between
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-10T03:26:42Z'
+generated_by: claude-haiku
+workflow_run: 25618584853
+issue: 2275
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent visual clarity with well-chosen colors (Python blue/gold) that are colorblind-friendly
-  - Perfect implementation of the spec requirements including confidence bands via
-    fill_between
-  - Clean, readable KISS-style code structure with proper reproducibility (seed=42)
-  - Good data simulation showing realistic overfitting pattern with training scores
-    staying high while validation improves with more data
-  - Proper sizing for all visual elements (markers, lines, fonts) at 4800x2700 resolution
+  - Perfect text legibility and theme adaptation across both light and dark renders
+  - Correct implementation of learning curves with confidence bands showing cross-validation
+    variability
+  - Excellent spec compliance with all required features present and properly formatted
+  - Clean, reproducible code with proper KISS structure and idiomatic matplotlib usage
+  - Strong data storytelling that clearly demonstrates learning curve behavior and
+    bias-variance tradeoff
   weaknesses:
-  - Y-axis label could include units or clarification that it is a dimensionless score
-  - Could add annotations to highlight the overfitting gap or key insights about the
-    learning curve
-  image_description: 'The plot displays a learning curve with two lines on a white
-    background. The training score is shown in blue (Python logo blue, #306998) with
-    circular markers and a light blue confidence band. The validation score is shown
-    in yellow/gold (#FFD43B) with square markers and a corresponding light yellow
-    confidence band. The x-axis shows "Training Set Size (samples)" ranging from 0
-    to 1600, and the y-axis shows "Accuracy Score" ranging from approximately 0.55
-    to 1.0. The title "learning-curve-basic · matplotlib · pyplots.ai" appears at
-    the top. A legend in the lower right clearly identifies both curves. The training
-    score starts around 0.88 and quickly rises to ~0.99, while the validation score
-    starts around 0.67 and gradually increases to ~0.85, showing a classic overfitting
-    pattern with a persistent gap between training and validation performance.'
+  - Design Excellence relies on well-configured defaults rather than introducing distinctive
+    styling or custom polish
+  - Legend box uses PAGE_BG instead of recommended ELEVATED_BG for visual separation
+    (minor, still visually sound)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - correct
+      Chrome: Title, axis labels, tick labels all in dark text (#INK) - fully readable
+      Data: Green training curve (#009E73) and orange validation curve (#D55E00) clearly distinguished with circles and squares markers
+      Legibility verdict: PASS - All text is explicitly sized (title 24pt, labels 20pt, ticks 16pt) and perfectly readable. Confidence bands at alpha=0.15 are visible without obscuring curves. Grid is subtle. Legend is clear in lower right.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 - correct
+      Chrome: Title, axis labels, tick labels all in light text (#INK_SOFT) - fully readable against dark background
+      Data: Green (#009E73) and orange (#D55E00) are identical to light render - no color variation between themes, only chrome changes
+      Legibility verdict: PASS - All text is readable in light colors. No dark-on-dark failures. Confidence bands maintain visibility. Legend box styling is proper with light text on dark background. Grid remains subtle and visible.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all perfectly readable
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt),
+          perfect readability in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: Zero text overlap, legend cleanly positioned in lower right
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers at size 10 with linewidth 3 are appropriate for 10 data points;
-          confidence bands clearly visible with alpha=0.2
+        comment: Markers and lines clearly visible, confidence bands at optimal alpha=0.15
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue and yellow are colorblind-safe and provide excellent contrast
+        comment: Okabe-Ito colors with excellent contrast, marker distinction beyond
+          color
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills the canvas well with balanced margins using tight_layout()
+        comment: Plot fills 70% of canvas with balanced margins, figsize=(16,9) at
+          dpi=300
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive ("Training Set Size (samples)", "Accuracy
-          Score") but y-axis could specify accuracy is dimensionless
+        comment: Descriptive labels with units, correct title format
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3, dashed), legend well-placed in lower right;
-          grid could be slightly more subtle
+        comment: 'Brand green #009E73 first series, correct backgrounds and theme-correct
+          chrome'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults, not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Good refinement: spines removed, subtle grid, generous whitespace'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Clear learning curve narrative with visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct learning curve with two lines and confidence bands
+        comment: Correct learning curve with confidence bands
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis shows training set sizes, Y-axis shows scores
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: two curves, shaded confidence bands,
-          legend, proper labeling'
-      - id: SC-04
-        name: Data Range
+        comment: All features present and working
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis from 0.55 to 1.02 shows all data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly distinguishes "Training Score" from "Validation
-          Score"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "learning-curve-basic · matplotlib · pyplots.ai"
+        comment: Title format correct, legend labels match data
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows classic overfitting pattern with gap between training/validation;
-          however, could demonstrate the convergence scenario or underfitting as well
-          to fully showcase learning curve diagnostics
+        comment: 'Shows all learning curve aspects: training, validation, improvement,
+          variability'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Plausible ML training scenario with accuracy scores; the training
-          score reaching 0.99 is realistic for a slightly overfit model
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Training sizes from 50-1600 samples and accuracy scores 0.65-0.99
-          are realistic
+        comment: Real ML scenario with 5-fold CV, neutral and educational
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic values and proportions for learning curve
     code_quality:
       score: 10
       max: 10
@@ -169,41 +172,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: Clean linear flow, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set, fully reproducible
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current matplotlib API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as 'plot.png' with dpi=300
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Pythonic and appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct output format
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert matplotlib patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
         max: 5
         passed: false
-        comment: Uses standard matplotlib features (fill_between, plot with markers)
-          competently but doesn't leverage more advanced features like annotations,
-          secondary axes, or custom styling
+        comment: Standard techniques, not particularly creative
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
