@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: bar-feature-importance
 created: '2025-12-26T17:45:26Z'
-updated: '2026-05-10T01:27:14Z'
+updated: '2026-05-10T01:33:05Z'
 generated_by: claude-haiku
 workflow_run: 25616339082
 issue: 2276
@@ -15,89 +15,84 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-featu
 quality_score: 74
 review:
   strengths:
-  - Clean code structure with straightforward linear logic
-  - 'All spec-required features present: bars sorted by importance, error bars showing
-    variability, value labels for precision'
-  - Realistic and neutral data (loan default prediction model)
-  - Font sizes explicitly set and readable in both light and dark renders
-  - Good layout proportions with generous whitespace and no overlapping elements
+  - Clear visual hierarchy through sorted bars and color gradient
+  - Good data coverage with 15 features showing variability (std)
+  - Clean layout with appropriate spacing and readable text at both themes
+  - Error bars effectively communicate uncertainty in importance estimates
   weaknesses:
-  - 'Title contains wrong domain: ''pyplots.ai'' instead of ''anyplot.ai'' (line 92)'
-  - 'Uses custom blue gradient (#A8D5E5 to #306998) instead of approved colormap (viridis,
-    cividis, or BrBG)'
-  - 'Does not read ANYPLOT_THEME environment variable or implement theme-adaptive
-    chrome — code has hardcoded colors (#333333, #E0E0E0) that should adapt per style
-    guide'
-  - Saves as 'plot.png' instead of 'plot-{THEME}.png' — breaks pipeline pattern for
-    light/dark rendering
-  - Generic design with minimal visual refinement beyond spec requirements
+  - Title domain is 'pyplots.ai' instead of 'anyplot.ai' (spec requires exact format)
+  - Output filenames hardcoded as plot.png/plot.html instead of theme-aware plot-{THEME}.png/plot-{THEME}.html
+  - Custom blue gradient (#A8D5E5→#306998) should use standard colormap (viridis/cividis/BrBG)
+    for continuous data
+  - 'No theme-adaptive color tokens — hardcodes #333333, #E0E0E0, #F0F0F0 instead
+    of INK/INK_SOFT per library guide'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface approximately #FAF8F1 — correct theme color
-      Chrome: Title, axis labels ("Feature", "Importance Score"), and tick labels are clearly visible in dark text; no readability issues
-      Data: 15 horizontal bars with blue gradient fill from light (#A8D5E5) to dark (#306998); error bars visible in gray; value labels (0.182–0.003) displayed at bar ends
-      Legibility verdict: PASS — all text readable, elements properly spaced
+      Background: Warm off-white (#FAF8F1), correct surface color
+      Chrome: Title "bar-feature-importance · letsplot · pyplots.ai" in dark, bold font; axis labels "Feature" (y) and "Importance Score" (x) clearly readable in dark text; tick labels readable
+      Data: 15 horizontal bars with gradient fill from light blue (#A8D5E5, low importance) to dark blue (#306998, high importance); error bars in dark gray; data labels (0.003–0.182) positioned right of bars in dark text
+      Legibility verdict: PASS — all text is readable, no overlap issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface approximately #1A1A17 — correct theme color
-      Chrome: Title, axis labels, and tick labels appear in light colors and are clearly readable; no dark-on-dark failures
-      Data: Same bars and gradient as light render (good color consistency); error bars visible in light gray; value labels clearly readable
-      Legibility verdict: PASS — text readable in both themes, no contrast failures
+      Background: Warm near-black (#1A1A17), correct surface color
+      Chrome: Title in light text; axis labels in light text; tick labels readable; grid lines visible in light gray
+      Data: Same 15 bars with identical gradient colors (blue remains the same — data colors don't flip, correct); error bars appear in light gray (visible); data labels in light text
+      Legibility verdict: PASS — all elements readable in both themes; data colors are identical between renders (only chrome adapted)
 
-    Note: Both renders are visually correct and readable. However, code does not implement the theme-adaptive color pattern shown in the library guide (no ANYPLOT_THEME reading, no INK/INK_SOFT tokens, hardcoded colors). The images may be from a previous build or workflow compensation.
+    Note: Dark render shows light colors despite code hardcoding dark (#333333), suggesting pipeline applies theme adaptation.
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Sizes set explicitly (24/20/16/14/10pt), readable in both renders
-          but colors hardcoded not theme-adaptive
+        comment: All text readable in both light and dark renders despite code hardcoding
+          concerns
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text readable, no collisions between labels and bars
+        comment: Feature labels and data values have ample spacing, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars, error bars, and labels all clearly visible at full resolution
+        comment: Bars, error bars, and data labels all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Gradient appears perceptually uniform but not from approved list
-          (viridis/cividis/BrBG)
+        passed: true
+        comment: Blue gradient has adequate contrast; no red-green dependency
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, generous margins, nothing cut off
+        comment: Proportions well-balanced, margins generous, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
-        max: 2
-        passed: true
-        comment: Descriptive labels (Feature, Importance Score); title identifies
-          plot type and library
+        score: 1
+        max: 3
+        passed: false
+        comment: Title has 'pyplots.ai' instead of required 'anyplot.ai'; axis labels
+          otherwise descriptive
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: 'Uses custom gradient instead of approved continuous colormap; backgrounds
-          appear correct (#FAF8F1 light, #1A1A17 dark)'
+        comment: Backgrounds correct (#FAF8F1/#1A1A17), but custom blue gradient violates
+          requirement for standard colormaps (viridis/cividis/BrBG) on continuous
+          data
     design_excellence:
-      score: 10
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -105,22 +100,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Custom gradient is visually appealing but not from approved palette;
-          no distinctive design choices beyond gradient
+        comment: Generic blue gradient with no distinctive design choices; defaults
+          only
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization; grid present but basic; no spine removal or
-          refinement
+        comment: theme_minimal() base, subtle grid, but no custom refinement
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Gradient creates visual hierarchy; darker bars emphasize high-importance
-          features; clear focal point at top
+        passed: false
+        comment: Sorted bars and gradient create some hierarchy; data labels help,
+          but limited visual emphasis
     spec_compliance:
       score: 13
       max: 15
@@ -136,21 +130,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Bars sorted by importance, error bars present, value annotations
-          included
+        comment: 'All features present: sorting, gradient, error bars, text annotations'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Features on y-axis, importance on x-axis; all data visible
+        comment: X (importance) and Y (features) correctly mapped; all 15 features
+          visible
       - id: SC-04
         name: Title & Legend
         score: 1
         max: 3
         passed: false
-        comment: 'Title contains wrong domain: ''pyplots.ai'' should be ''anyplot.ai'';
-          legend labels correct'
+        comment: 'Title format violated: ''pyplots.ai'' instead of ''anyplot.ai'';
+          legend label ''Importance'' is appropriate'
     data_quality:
       score: 15
       max: 15
@@ -160,24 +154,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows importance values, standard deviations (error bars), and feature
-          names; 15 features appropriate
+        comment: 15 features with full range of importances and std shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic loan default prediction dataset; neutral (no controversial
-          assumptions)
+        comment: Loan default prediction model is plausible and neutral context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Importance values 0.003–0.182 are sensible for random forest relative
-          importance
+        comment: Importance 0.003–0.182, std proportional to importance, sensible
+          domain
     code_quality:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: CQ-01
@@ -185,57 +177,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; straightforward linear script
+        comment: Simple linear script, no unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data (no random seeding needed)
+        comment: Data is deterministic; no random seed needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous packages
+        comment: All imports used; no dead code in imports
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake UI or pseudo-interactivity; appropriate complexity
+        passed: false
+        comment: 'Hardcoded colors (#333333, #E0E0E0, #F0F0F0) instead of theme tokens
+          (INK, INK_SOFT); fragile to theme changes'
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as 'plot.png' and 'plot.html' instead of 'plot-{THEME}.png'
-          and 'plot-{THEME}.html'; breaks pipeline
+        comment: Saves as plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html;
+          violates output spec
     library_mastery:
-      score: 5
+      score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses ggplot grammar correctly (aes, geoms, scales); proper theme
-          composition; does not follow library guide for theme-adaptive implementation
-      - id: LM-02
-        name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: Uses letsplot-specific ggsize, ggsave, LetsPlot.setup_html(); HTML
-          export implemented
+        passed: false
+        comment: Uses ggplot2-style composition (+) but doesn't implement letsplot-recommended
+          theme tokens and environment variable patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Error bars added (good) but no distinctive letsplot-specific features;
+          mostly generic ggplot2 pattern
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
+  - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
   - custom-colormap
+  - grid-styling
