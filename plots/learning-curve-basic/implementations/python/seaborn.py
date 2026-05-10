@@ -1,13 +1,26 @@
-""" pyplots.ai
+"""anyplot.ai
 learning-curve-basic: Model Learning Curve
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-26
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2025-12-26
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series always #009E73)
+TRAIN_COLOR = "#009E73"
+VAL_COLOR = "#D55E00"
 
 # Data - Simulating a learning curve with typical patterns
 np.random.seed(42)
@@ -38,22 +51,35 @@ train_std = train_scores.std(axis=0)
 val_mean = validation_scores.mean(axis=0)
 val_std = validation_scores.std(axis=0)
 
-# Plot setup
+# Configure seaborn theme with adaptive colors
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 sns.set_context("talk", font_scale=1.1)
-sns.set_style("whitegrid")
-fig, ax = plt.subplots(figsize=(16, 9))
 
-# Define colors - Python Blue for training, Python Yellow for validation
-train_color = "#306998"
-val_color = "#FFD43B"
+# Plot setup
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 
 # Plot training curve with confidence band
-ax.fill_between(train_sizes, train_mean - train_std, train_mean + train_std, alpha=0.2, color=train_color)
+ax.fill_between(train_sizes, train_mean - train_std, train_mean + train_std, alpha=0.2, color=TRAIN_COLOR)
 sns.lineplot(
     x=train_sizes,
     y=train_mean,
     ax=ax,
-    color=train_color,
+    color=TRAIN_COLOR,
     linewidth=3,
     marker="o",
     markersize=10,
@@ -61,25 +87,31 @@ sns.lineplot(
 )
 
 # Plot validation curve with confidence band
-ax.fill_between(train_sizes, val_mean - val_std, val_mean + val_std, alpha=0.2, color=val_color)
+ax.fill_between(train_sizes, val_mean - val_std, val_mean + val_std, alpha=0.2, color=VAL_COLOR)
 sns.lineplot(
-    x=train_sizes, y=val_mean, ax=ax, color=val_color, linewidth=3, marker="s", markersize=10, label="Validation Score"
+    x=train_sizes, y=val_mean, ax=ax, color=VAL_COLOR, linewidth=3, marker="s", markersize=10, label="Validation Score"
 )
 
 # Labels and styling
-ax.set_xlabel("Training Set Size", fontsize=20)
-ax.set_ylabel("Accuracy Score", fontsize=20)
-ax.set_title("learning-curve-basic · seaborn · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
+ax.set_xlabel("Training Set Size (samples)", fontsize=20, color=INK)
+ax.set_ylabel("Accuracy Score (0-1)", fontsize=20, color=INK)
+ax.set_title("learning-curve-basic · seaborn · anyplot.ai", fontsize=24, color=INK, fontweight="medium")
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
 # Set y-axis limits for better visualization
 ax.set_ylim(0.5, 1.02)
 
 # Configure legend
-ax.legend(fontsize=16, loc="lower right", framealpha=0.9)
+ax.legend(fontsize=16, loc="lower right", framealpha=0.95)
 
-# Subtle grid
-ax.grid(True, alpha=0.3, linestyle="--")
+# Subtle grid (y-axis only)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8)
+
+# Remove top and right spines
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
