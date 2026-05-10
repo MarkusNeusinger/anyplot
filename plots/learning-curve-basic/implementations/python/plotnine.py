@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 learning-curve-basic: Model Learning Curve
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2025-05-10
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-10
 """
 
 import os
