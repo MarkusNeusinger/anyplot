@@ -1,166 +1,171 @@
 library: altair
+language: python
 specification_id: lift-curve
 created: '2025-12-27T19:22:47Z'
-updated: '2025-12-27T19:25:43Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543282471
-issue: 0
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lift-curve/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/lift-curve/altair/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - layer-composition
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-10T16:50:19Z'
+generated_by: claude-haiku
+workflow_run: 25634078630
+issue: 2379
+python_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/altair/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent lift curve visualization that clearly demonstrates model performance
-    vs random selection
-  - Well-implemented decile markers provide clear reference points for business decisions
-  - Realistic customer churn prediction scenario with appropriate lift values
-  - Clean code structure following KISS principles with proper random seed
-  - Good use of Altair layering to combine lift line, reference line, markers, and
-    annotation
-  - Tooltips add interactive value for exploring specific lift values
+  - Perfect visual quality (30/30) with excellent text legibility in both light and
+    dark themes
+  - Excellent theme-adaptive styling with correct Okabe-Ito palette compliance and
+    zero accessibility issues
+  - Clean, idiomatic Altair code with proper use of layer composition and configuration
+    APIs
+  - Realistic churn prediction scenario with mathematically correct lift calculations
+  - All spec requirements met perfectly with proper title format and axis labels
   weaknesses:
-  - Could add a small legend to label the lift curve line
-  - Annotation text placement could be slightly adjusted to avoid visual proximity
-    to the reference line
-  image_description: The plot displays a lift curve showing cumulative lift on the
-    Y-axis (ranging from 0 to 5.0) against population targeted percentage on the X-axis
-    (0-100%). The main lift curve is a solid blue line (#306998) that starts high
-    at approximately 5.0 (capped by the Y-axis scale) at the far left, then gradually
-    decreases in a smooth curve as the population percentage increases, eventually
-    approaching 1.0 at 100%. Blue filled circular markers are placed at decile points
-    (10%, 20%, 30%, etc.) along the curve. A gray dashed horizontal reference line
-    at y=1 represents random selection, with the annotation "Random Selection (Lift
-    = 1)" placed near it. The title "lift-curve · altair · pyplots.ai" is displayed
-    at the top center. Axis labels are clearly readable with "Population Targeted
-    (%)" on the X-axis and "Cumulative Lift" on the Y-axis. The background has subtle
-    grid lines.
+  - Design Excellence uses library defaults rather than distinctive aesthetic choices
+    or custom visual refinements
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with subtle grid overlay
+      Chrome: Title "lift-curve · altair · anyplot.ai" in dark text (INK color), axis labels "Population Targeted (%)" and "Cumulative Lift" with descriptive formatting, tick labels in secondary color (INK_SOFT) all clearly readable
+      Data: Main lift curve in brand green (#009E73) showing strong performance at low percentiles declining smoothly to y=1 at 100%, reference line at y=1 as gray dashed line (#999999), decile markers as green dots at 10%, 20%, 30%, etc.
+      Legibility verdict: PASS - All text is dark and clearly visible against the warm light background with good contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with subtle grid overlay
+      Chrome: Title in light text (INK color), axis labels and tick labels in light secondary color (INK_SOFT) all clearly visible against dark background - no dark-on-dark failures
+      Data: Lift curve remains identical brand green (#009E73), reference line identical gray dashed (#999999), decile markers identical green dots - data colors are preserved exactly as in light render
+      Legibility verdict: PASS - All text is light and clearly visible against the dark background, no readability issues, proper theme adaptation throughout
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at appropriate
-          font sizes
+        comment: 'All font sizes explicitly set: 28px title, 22px axis labels, 18px
+          tick labels. Perfectly readable in both light and dark themes.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere in the plot
+        comment: No overlapping text elements. All labels fully readable and well-spaced.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width is appropriate (strokeWidth=4), decile markers are clearly
-          visible (size=200)
+        comment: Lift line strokeWidth=4 and decile markers size=200 are perfectly
+          adapted to data density and clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses blue (#306998) and gray, colorblind-safe combination
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions, plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Descriptive labels but no units (percentage sign is part of label
-          text, not a unit)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: false
-        comment: Grid is subtle and good (alpha=0.3), but annotation text slightly
-          overlaps the reference line area
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct lift curve visualization
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=population percentage, Y=cumulative lift, correctly assigned
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Reference line at y=1, decile markers, smooth curve, all present
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: X-axis 0-100%, Y-axis shows full lift range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 0
-        max: 2
-        passed: false
-        comment: No legend present (not strictly needed but could label the lift curve)
-      - id: SC-06
-        name: Title Format
         score: 2
         max: 2
         passed: true
-        comment: Uses correct format "lift-curve · altair · pyplots.ai"
-    data_quality:
-      score: 20
+        comment: CVD-safe Okabe-Ito palette with good contrast and luminance differences.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout with plot filling good canvas area and balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: ''Population Targeted (%)'' and ''Cumulative
+          Lift''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, backgrounds are #FAF8F1 (light) / #1A1A17
+          (dark), theme-correct chrome in both renders, data colors identical across
+          themes.'
+    design_excellence:
+      score: 12
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
         max: 8
+        passed: false
+        comment: Well-configured library defaults but not custom palette or publication-polished
+          design.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
         passed: true
-        comment: Shows high lift at low percentages, gradual decline, approaches 1
-          at 100% - demonstrates all key aspects
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
+        comment: Good visual refinement with subtle grid and clean layout.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
         passed: true
-        comment: Customer churn prediction scenario with 20% churn rate is realistic
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: Visual hierarchy guides viewer through lift curve story with thick
+          main line and decile markers creating emphasis.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Lift values range from ~5x at top to 1x at bottom, realistic for
-          a good model
+        comment: Correct lift curve implementation.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: lift line, reference line at y=1, decile markers.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned, axes show full data range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format 'lift-curve · altair · anyplot.ai' correct, no legend
+          needed for single series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all aspects of lift curve with realistic churn prediction scenario.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real-world customer churn prediction scenario, neutral and comprehensible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Mathematically correct lift calculation with sensible sample size
+          and realistic distributions.
     code_quality:
       score: 10
       max: 10
@@ -170,40 +175,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear script: imports → data → plot → save'
+        comment: Linear structure with no unnecessary abstractions.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Uses np.random.seed(42) for deterministic data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (altair, numpy, pandas)
+        comment: 'Only used imports: altair, numpy, pandas.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Clean, Pythonic code with appropriate complexity.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output as plot-{THEME}.png and plot-{THEME}.html.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses layered chart composition and tooltips, but could leverage more
-          Altair features like selections or interactive highlighting
+        passed: true
+        comment: 'Expert use of Altair''s high-level API: Chart().mark_*(), layer(),
+          encode(), configure_*.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses layer composition and alt.Scale() for domain control, but styling
+          is standard.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling: []

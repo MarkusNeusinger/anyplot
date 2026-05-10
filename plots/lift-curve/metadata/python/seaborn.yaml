@@ -1,163 +1,182 @@
 library: seaborn
+language: python
 specification_id: lift-curve
 created: '2025-12-27T19:20:51Z'
-updated: '2025-12-27T19:26:29Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543281168
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-10T16:46:35Z'
+generated_by: claude-haiku
+workflow_run: 25633985996
+issue: 2379
+python_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lift-curve/seaborn/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent visual clarity with appropriate font sizes and line widths for high-resolution
-    output
-  - Proper lift curve calculation methodology with clear documentation in comments
-  - Good use of decile markers with lift value annotations to highlight key insights
-  - Reference baseline at y=1 clearly distinguishes model performance from random
-    selection
-  - Realistic marketing campaign scenario with appropriate 10% base response rate
-  - Clean, well-organized code following KISS principles
+  - Perfect visual quality with full text legibility in both light and dark themes
+  - Excellent theme adaptation — backgrounds, text colors, and chrome perfectly theme-correct
+    in both renders
+  - Perfect spec compliance with all required features present and correctly implemented
+  - High-quality realistic data demonstrating a predictive model with 10x initial
+    lift
+  - Clean, reproducible code with clear data generation logic and proper seeding
+  - Strong visual storytelling through annotated decile markers that guide reader
+    to key insights
   weaknesses:
-  - Seaborn is used minimally - only for sns.lineplot and theming; the core visualization
-    could be done entirely in matplotlib
-  - First decile annotation appears slightly cramped near the top of the curve
-  - Y-axis label could clarify that lift is a ratio
-  image_description: The plot displays a lift curve chart with a 16:9 landscape format
-    on a white background with a subtle gray grid. The main lift curve is rendered
-    as a thick blue line (#306998 Python Blue) starting at approximately 10x lift
-    on the left and smoothly decreasing to approach 1x at 100% population. A dashed
-    yellow/gold horizontal reference line at y=1 represents random selection (no lift).
-    Six decile markers are shown as blue circles at the 10%, 20%, 30%, 40%, and 50%
-    population points, with bold blue annotations showing lift values (8.30x, 4.95x,
-    3.33x, 2.50x, 2.00x). The title "lift-curve · seaborn · pyplots.ai" is prominently
-    displayed at the top in bold. X-axis shows "Population Targeted (%)" from 0-100,
-    Y-axis shows "Cumulative Lift" from 0-11. A legend in the upper right identifies
-    "Model Lift" (solid blue) and "Random (No Lift)" (dashed yellow).
+  - Design Excellence relies on configured seaborn defaults rather than distinctive
+    aesthetic choices
+  - Library Mastery could leverage more distinctive seaborn features beyond basic
+    lineplot usage
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Chrome: Title "lift-curve · seaborn · anyplot.ai" in bold black (24pt), axis labels in black (20pt), tick labels in soft gray (#4A4A44, 16pt) — all clearly readable
+      Data: Main curve in bluish-green (#009E73, Okabe-Ito position 1), baseline reference line in gray dashed, 5 decile markers with labeled lift values (8.30x, 4.95x, 3.33x, 2.50x, 2.00x), legend in upper right
+      Elements: Spines removed (top/right), subtle y-axis gridlines, no overlap of text elements
+      Legibility verdict: PASS — All text readable, proper contrast, clear visual hierarchy
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title in light text (#F0EFE8), axis labels in light, tick labels in light gray (#B8B7B0) — all clearly readable against dark background
+      Data: Main curve in IDENTICAL bluish-green (#009E73) to light render, baseline in light gray dashed, same 5 decile markers with identical values, legend with dark-themed background
+      Elements: Spines in light gray, gridlines subtle, no dark-on-dark text failures
+      Color verification: Data colors are pixel-perfect identical to light render — only chrome (background, text, grid) adapts to theme
+      Legibility verdict: PASS — No dark-on-dark failures, all elements readable, theme adaptation is flawless
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'All text is clearly readable: title at 24pt bold, axis labels at
-          20pt, tick labels at 16pt'
+        comment: 'All fonts explicitly set: title 24pt, labels 20pt, ticks 16pt, annotations
+          14pt — perfectly readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; decile annotations are well-spaced
+        comment: No text overlaps; annotations use offset positioning; legend in clear
+          position
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width of 3 is appropriate, markers at size 12 are clearly visible
+        comment: Curve linewidth=3, markers markersize=12, all elements prominently
+          visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue and yellow are colorblind-safe combination with good contrast
+        comment: Okabe-Ito palette ensures CVD safety; good luminance contrast in
+          both themes
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins, legend positioned appropriately
+        comment: Plot fills 60-70% of canvas, balanced margins, legend positioned
+          naturally
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but Y-axis lacks units (ratio is unitless, but
-          could use "x" suffix)
+        comment: Title format correct; X-axis includes units (%), Y-axis descriptive
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid at alpha=0.3 is subtle; legend well-placed but could be slightly
-          smaller
+        comment: 'First series #009E73 (Okabe-Ito); backgrounds #FAF8F1 (light) /
+          #1A1A17 (dark); chrome colors theme-correct in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Clean, professional appearance with proper palette, but relies on
+          configured defaults rather than distinctive design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Spines removed, subtle grid, good whitespace; could add more polish
+          with line style or marker edge variations
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Decile annotations guide reader to key insights; green vs. gray distinction
+          creates visual hierarchy; storytelling is good but not exceptional
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct lift curve visualization
+        comment: Correct lift curve with all required subtypes
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=population percentage, Y=cumulative lift ratio correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Includes reference line at y=1, decile markers with values, proper
-          curve shape
-      - id: SC-04
-        name: Data Range
+        comment: Lift curve, baseline at y=1, decile markers at 10/20/30/40/50%, value
+          annotations all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis 0-100%, Y-axis shows full lift range with appropriate headroom
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis population %, Y-axis lift ratio — correct and complete
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies both lines
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses exact format: "lift-curve · seaborn · pyplots.ai"'
+        comment: Title 'lift-curve · seaborn · anyplot.ai' correct; legend labels
+          accurate
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows high initial lift (~10x), gradual decay, convergence to baseline
+        comment: 'Shows full lift curve behavior: steep descent at low percentiles,
+          approach to baseline at high percentiles'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Marketing campaign response prediction is plausible; 10% base rate
-          is realistic
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 1000 samples, 10% response rate, lift values 1-10x are all realistic
+        comment: Customer response prediction scenario; 10% base rate realistic for
+          marketing; model shows good discriminative power
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1000 samples reasonable; lift values (10x → 1x) mathematically correct;
+          all proportions sound
     code_quality:
       score: 10
       max: 10
@@ -167,42 +186,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → calculations → plot → save'
+        comment: 'Linear flow: no functions/classes, straightforward setup → data
+          → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set; deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib, numpy, pandas, seaborn)
+        comment: 'All imports used: os, matplotlib, numpy, pandas, seaborn'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API correctly
+        comment: Clean, Pythonic, appropriate complexity, no over-engineering or fake
+          functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png; uses current API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: false
-        comment: Only uses sns.lineplot and sns.set_theme; the actual lift curve calculation
-          and most visualization is done with matplotlib (ax.axhline, ax.plot, ax.annotate).
-          Seaborn is primarily used for theming rather than its distinctive statistical
-          visualization features.
+        comment: Uses sns.lineplot() and sns.set_theme() appropriately; could leverage
+          more idiomatic patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Good use of seaborn's theme system; basic lineplot usage could showcase
+          more distinctive seaborn capabilities
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - cumulative-sum
+  styling: []
