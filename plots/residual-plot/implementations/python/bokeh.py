@@ -1,15 +1,30 @@
-""" pyplots.ai
+"""anyplot.ai
 residual-plot: Residual Plot
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-26
+Library: bokeh | Python 3.13
+Quality: pending | Updated: 2025-05-10
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png, save
+from bokeh.io import output_file, save
 from bokeh.models import Band, ColumnDataSource, Label, Span
 from bokeh.plotting import figure
-from bokeh.resources import CDN
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+BRAND = "#009E73"  # Okabe-Ito position 1 (residuals)
+OUTLIER_COLOR = "#D55E00"  # Okabe-Ito position 2 (outliers)
 
 # Data - Linear regression example with realistic housing price prediction
 np.random.seed(42)
@@ -19,7 +34,6 @@ n_points = 150
 y_pred = np.linspace(150, 450, n_points) + np.random.randn(n_points) * 20
 
 # Generate residuals with some heteroscedasticity pattern for demonstration
-# Most residuals near zero, some outliers
 base_residuals = np.random.randn(n_points) * 25
 # Add a few outliers beyond 2 standard deviations
 outlier_indices = [10, 45, 89, 120, 140]
@@ -38,7 +52,6 @@ is_outlier = np.abs(residuals) > 2 * residual_std
 
 # Prepare data sources
 source_normal = ColumnDataSource(data={"x": y_pred[~is_outlier], "y": residuals[~is_outlier]})
-
 source_outliers = ColumnDataSource(data={"x": y_pred[is_outlier], "y": residuals[is_outlier]})
 
 # Band data for ±2 SD region
@@ -54,7 +67,7 @@ band_source = ColumnDataSource(
 p = figure(
     width=4800,
     height=2700,
-    title="residual-plot · bokeh · pyplots.ai",
+    title="residual-plot · bokeh · anyplot.ai",
     x_axis_label="Fitted Values (Predicted Price in $1000s)",
     y_axis_label="Residuals (Observed - Predicted)",
     tools="pan,wheel_zoom,box_zoom,reset,save",
@@ -62,90 +75,113 @@ p = figure(
     y_range=(min(residuals) - 20, max(residuals) + 20),
 )
 
-# Add ±2 SD band (light gray background)
+# Add ±2 SD band (light fill with theme-adaptive color)
 band = Band(
-    base="x", lower="lower", upper="upper", source=band_source, fill_alpha=0.15, fill_color="#888888", line_width=0
+    base="x", lower="lower", upper="upper", source=band_source, fill_alpha=0.15, fill_color=INK_SOFT, line_width=0
 )
 p.add_layout(band)
 
 # Add horizontal reference line at y=0
-zero_line = Span(location=0, dimension="width", line_color="#306998", line_width=3, line_dash="solid")
+zero_line = Span(location=0, dimension="width", line_color=BRAND, line_width=4, line_dash="solid")
 p.add_layout(zero_line)
 
 # Add dashed lines at ±2 SD boundaries
-upper_line = Span(location=upper_band, dimension="width", line_color="#666666", line_width=2, line_dash="dashed")
-lower_line = Span(location=lower_band, dimension="width", line_color="#666666", line_width=2, line_dash="dashed")
+upper_line = Span(location=upper_band, dimension="width", line_color=INK_SOFT, line_width=2, line_dash="dashed")
+lower_line = Span(location=lower_band, dimension="width", line_color=INK_SOFT, line_width=2, line_dash="dashed")
 p.add_layout(upper_line)
 p.add_layout(lower_line)
 
-# Plot normal points (Python Blue)
-p.scatter("x", "y", source=source_normal, size=18, color="#306998", alpha=0.7, legend_label="Residuals")
+# Plot normal points (Brand color)
+p.scatter("x", "y", source=source_normal, size=18, color=BRAND, alpha=0.7, legend_label="Residuals")
 
-# Plot outliers (Python Yellow)
+# Plot outliers (Okabe-Ito color 2)
 p.scatter(
     "x",
     "y",
     source=source_outliers,
     size=22,
-    color="#FFD43B",
+    color=OUTLIER_COLOR,
     alpha=0.9,
-    line_color="#306998",
+    line_color=BRAND,
     line_width=2,
     legend_label="Outliers (>2 SD)",
 )
 
-# Add labels for ±2 SD bands (positioned inside the plot area)
+# Add labels for ±2 SD bands (larger font for better visibility)
 label_upper = Label(
     x=min(y_pred) + 10,
     y=upper_band + 3,
     text="+2 SD",
-    text_font_size="16pt",
-    text_color="#555555",
+    text_font_size="24pt",
+    text_color=INK_SOFT,
     text_font_style="italic",
 )
 label_lower = Label(
     x=min(y_pred) + 10,
     y=lower_band + 3,
     text="-2 SD",
-    text_font_size="16pt",
-    text_color="#555555",
+    text_font_size="24pt",
+    text_color=INK_SOFT,
     text_font_style="italic",
 )
 p.add_layout(label_upper)
 p.add_layout(label_lower)
 
 # Styling - Text sizes for 4800x2700 canvas
-p.title.text_font_size = "32pt"
-p.title.text_color = "#333333"
-p.xaxis.axis_label_text_font_size = "24pt"
-p.yaxis.axis_label_text_font_size = "24pt"
+p.title.text_font_size = "28pt"
+p.title.text_color = INK
+p.xaxis.axis_label_text_font_size = "22pt"
+p.yaxis.axis_label_text_font_size = "22pt"
 p.xaxis.major_label_text_font_size = "18pt"
 p.yaxis.major_label_text_font_size = "18pt"
 
 # Grid styling
-p.grid.grid_line_alpha = 0.3
-p.grid.grid_line_dash = [6, 4]
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.10
 
 # Legend styling
 p.legend.location = "top_left"
-p.legend.label_text_font_size = "18pt"
-p.legend.background_fill_alpha = 0.8
-p.legend.border_line_color = "#cccccc"
+p.legend.label_text_font_size = "20pt"
+p.legend.label_text_color = INK_SOFT
+p.legend.background_fill_color = ELEVATED_BG
+p.legend.border_line_color = INK_SOFT
 p.legend.padding = 15
 p.legend.spacing = 10
 
 # Axis styling
-p.xaxis.axis_line_width = 2
-p.yaxis.axis_line_width = 2
-p.xaxis.axis_line_color = "#666666"
-p.yaxis.axis_line_color = "#666666"
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 
 # Background
-p.background_fill_color = "#fafafa"
-p.border_fill_color = "#ffffff"
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
-# Save outputs
-export_png(p, filename="plot.png")
+# Save HTML output
+output_file(f"plot-{THEME}.html")
+save(p)
 
-# Also save HTML for interactive version
-save(p, filename="plot.html", resources=CDN, title="Residual Plot")
+# Screenshot with headless Chrome (Selenium)
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
