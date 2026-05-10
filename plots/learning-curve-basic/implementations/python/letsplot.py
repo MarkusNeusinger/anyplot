@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 learning-curve-basic: Model Learning Curve
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-26
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-10
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,6 +13,16 @@ from lets_plot import ggsave
 
 
 LetsPlot.setup_html()  # noqa: F405
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Data - Simulate learning curve for a model showing slight overfitting pattern
 np.random.seed(42)
@@ -72,30 +84,35 @@ plot = (
     + geom_ribbon(aes(ymin="Lower", ymax="Upper"), alpha=0.2, color="rgba(0,0,0,0)")
     + geom_line(size=2)
     + geom_point(size=4)
-    + scale_color_manual(values=["#306998", "#FFD43B"])
-    + scale_fill_manual(values=["#306998", "#FFD43B"])
+    + scale_color_manual(values=OKABE_ITO[:2])
+    + scale_fill_manual(values=OKABE_ITO[:2])
     + scale_y_continuous(limits=[0.55, 1.02])
     + scale_x_continuous(limits=[0, 1700], breaks=list(range(0, 1800, 200)))
     + labs(
         x="Training Set Size (samples)",
-        y="Accuracy Score",
-        title="learning-curve-basic · letsplot · pyplots.ai",
+        y="Accuracy Score (0-1)",
+        title="learning-curve-basic · letsplot · anyplot.ai",
         color="",
         fill="",
     )
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        legend_text=element_text(size=16),
-        legend_position="bottom",
-        panel_grid_major=element_line(color="#CCCCCC", size=0.5),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK_SOFT, size=0.3),
         panel_grid_minor=element_blank(),
+        axis_title=element_text(color=INK, size=20),
+        axis_text=element_text(color=INK_SOFT, size=16),
+        axis_line=element_line(color=INK_SOFT),
+        plot_title=element_text(color=INK, size=24),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(color=INK_SOFT, size=16),
+        legend_title=element_text(color=INK),
+        legend_position="bottom",
     )
     + ggsize(1600, 900)
 )
 
 # Save as PNG (scale 3x = 4800 x 2700 px) and HTML
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.html", path=".")

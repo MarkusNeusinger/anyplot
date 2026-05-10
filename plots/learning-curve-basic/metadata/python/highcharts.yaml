@@ -1,177 +1,169 @@
 library: highcharts
+language: python
 specification_id: learning-curve-basic
 created: '2025-12-26T19:13:41Z'
-updated: '2025-12-26T19:16:01Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20527871964
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-10T03:43:50Z'
+generated_by: claude-haiku
+workflow_run: 25618803570
+issue: 2275
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/highcharts/plot.html
-quality_score: 92
-impl_tags:
-  dependencies:
-  - selenium
-  - pillow
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/highcharts/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent use of Highcharts arearange series for confidence bands with proper
-    layering (bands behind lines)
-  - Colorblind-safe palette using blue (#306998) and yellow (#FFD43B)
-  - Professional appearance with appropriate font sizes for 4800x2700 canvas
-  - Realistic learning curve data showing typical ML training behavior (overfitting
-    gap that decreases with more data)
-  - Proper title format following spec-id · library · pyplots.ai convention
-  - Clean separation of training and validation curves with distinct markers (squares
-    vs triangles)
+  - Perfect theme-adaptation with both renders passing legibility checks
+  - All text elements properly sized and colored with theme tokens
+  - Correct Okabe-Ito palette usage with consistent data colors across themes
+  - Realistic, well-structured learning curve data showing overfitting patterns
+  - Proper confidence band rendering with appropriate opacity and zIndex layering
+  - Clean, maintainable code with deterministic data generation
   weaknesses:
-  - Legend does not include entries for the confidence bands (±1 std) - only shows
-    the line series
-  - Y-axis could start at 0.65 instead of 0.60 to reduce empty space at the bottom
-  image_description: 'The plot displays a learning curve visualization on a white
-    background. The title "learning-curve-basic · highcharts · pyplots.ai" appears
-    at the top in bold black text, with a subtitle "Model Performance vs Training
-    Set Size" below it. The X-axis shows "Training Set Size (samples)" ranging from
-    0 to 1700, and the Y-axis shows "Accuracy Score" ranging from 0.60 to 1.02. Two
-    lines are displayed:
+  - Design is functional but conventional without visual hierarchy to guide the viewer
+  - Missing distinctive visual refinements like color contrast emphasis or focal points
+  - Standard legend placement and styling without particular refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title "learning-curve-basic · highcharts · anyplot.ai" and subtitle "Model Performance vs Training Set Size" clearly visible in dark text; axis labels "Training Set Size (samples)" and "Accuracy Score" readable; tick labels in secondary color readable
+      Data: Training line (bluish-green #009E73) high and slightly decreasing (0.99→0.944); validation line (vermillion #D55E00) low and increasing (0.72→0.932); confidence bands semi-transparent fills; all markers visible
+      Legibility verdict: PASS ✓
 
-    - A **blue line with square markers** representing Training Score, starting high
-    (~0.99) and gradually decreasing to ~0.94
-
-    - A **yellow/gold line with triangle markers** representing Validation Score,
-    starting low (~0.72) and increasing toward ~0.93
-
-    Both lines have semi-transparent shaded confidence bands showing ±1 standard deviation.
-    The blue band is narrower (training is more consistent), while the yellow band
-    is wider at low training sizes and narrows as training size increases. A legend
-    in the top-right corner clearly identifies both series. Dashed grid lines provide
-    reference.'
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title, subtitle, axis labels all clearly visible in light text; tick labels readable; legend visible with dark background and light border
+      Data: Training and validation colors identical to light render (only chrome flipped); markers visible; confidence bands properly rendered
+      Legibility verdict: PASS ✓ — No dark-on-dark failures; brand green (#009E73) remains visible and readable
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick marks, and legend are all clearly readable
-          at full resolution
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere in the plot
+        comment: All text properly sized and readable in both light and dark themes
+          with strong contrast
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend positioned away from data; no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines and markers are well-sized; confidence bands visible but markers
-          could be slightly larger
+        comment: All markers, lines, and confidence bands clearly visible with appropriate
+          opacity
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) are colorblind-safe, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good overall layout, but plot area could use slightly more vertical
-          space
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes have descriptive labels with units: "Training Set Size
-          (samples)" and "Accuracy Score"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette CVD-safe with adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Generous margins; balanced proportions; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds correct; both renders theme-correct'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: false
-        comment: Grid is appropriate, but legend shows only lines without the ±1 std
-          bands mentioned
+        comment: Professional but conventional design; standard layout without distinctive
+          visual flourishes
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Adequate whitespace and subtle grid; minimal customization beyond
+          defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Clearly communicates learning curve narrative but lacks visual hierarchy
+          or emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct learning curve with training/validation lines
+        comment: Correct learning curve with training/validation lines and confidence
+          bands
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=training sizes, Y=scores, correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has both curves, shaded confidence bands, clear distinction
-      - id: SC-04
-        name: Data Range
+        comment: All spec requirements met
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y axes correct; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Training Score and Validation Score
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: "learning-curve-basic · highcharts · pyplots.ai"'
+        comment: Proper title format; legend labels accurate
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows classic learning curve pattern: high training/low validation
-          at small sizes, convergence at larger sizes; could show slight overfitting
-          gap more clearly'
+        comment: Shows all learning curve aspects including overfitting pattern
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Realistic ML scenario showing typical model learning behavior
+        comment: Realistic classification model curve with plausible patterns
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Accuracy values are realistic (0.72-0.99), training sizes reasonable;
-          minor: y-axis minimum at 0.6 leaves some empty space'
+        comment: Sensible training set sizes and accuracy range
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -179,41 +171,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, follows imports → data → plot → save pattern
+        comment: Straightforward implementation without unnecessary complexity
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Uses np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Highcharts patterns
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but also creates intermediate plot_raw.png (cleaned
-          up)
-    library_features:
-      score: 4
-      max: 5
+        comment: Correct file naming and current API
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
-        passed: true
-        comment: Good use of arearange for confidence bands, proper series layering
-          with zIndex, interactive HTML output also generated
+        passed: false
+        comment: Good Highcharts patterns but fairly standard API usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses arearange series and zIndex layering appropriately but without
+          distinctive choices
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
+  - publication-ready
