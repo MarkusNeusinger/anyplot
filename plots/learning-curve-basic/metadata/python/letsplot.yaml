@@ -1,167 +1,159 @@
 library: letsplot
+language: python
 specification_id: learning-curve-basic
 created: '2025-12-26T19:13:26Z'
-updated: '2025-12-26T19:15:41Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20527872881
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-10T03:41:12Z'
+generated_by: claude-haiku
+workflow_run: 25618840563
+issue: 2275
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/letsplot/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent visual clarity with well-chosen blue/yellow color scheme that provides
-    high contrast
-  - Perfect implementation of learning curve concept showing classic overfitting pattern
-  - Clean ggplot2 grammar usage with geom_ribbon for confidence bands
-  - Well-structured code following KISS principles
-  - Proper title format and legend placement
-  weaknesses:
-  - Y-axis label could include units/scale indicator (e.g., Accuracy Score 0-1)
-  - Could demonstrate more lets-plot specific features like tooltips or interactive
-    elements
-  image_description: 'The plot shows a learning curve with two distinct lines on a
-    light gray background. The title "learning-curve-basic · letsplot · pyplots.ai"
-    appears at the top. The x-axis displays "Training Set Size (samples)" ranging
-    from 0 to 1,600, and the y-axis shows "Accuracy Score" ranging from 0.55 to 1.0.
-    Two curves are visible:
+  - Perfect theme adaptation with both renders fully readable
+  - 'Correct Okabe-Ito palette usage (green #009E73 first, orange #D55E00 second)'
+  - Realistic data generation with 5 CV folds demonstrating overfitting/convergence
+    pattern
+  - Proper statistical representation with transparent confidence bands (±1 std dev)
+  - Clean, reproducible code with deterministic seed and no extraneous imports
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "learning-curve-basic · letsplot · anyplot.ai" in dark INK color (8/8 legibility). Axis labels "Training Set Size (samples)" and "Accuracy Score (0-1)" in dark text. Tick labels in INK_SOFT gray. Grid lines subtle and light colored. All readable with strong contrast.
+      Data: Two lines with transparent ribbon bands. Training (green #009E73) starts at 0.88, plateaus near 0.98. Validation (orange #D55E00) starts at 0.67, improves to 0.84. Markers clearly visible at each of 10 sample sizes. Bands show ±1 std dev variation.
+      Legibility verdict: PASS
 
-    - A **blue line** (Training Score) starting around 0.88 and quickly rising to
-    plateau near 0.99
-
-    - A **yellow/gold line** (Validation Score) starting around 0.67 and gradually
-    rising to about 0.84
-
-    Both curves have shaded confidence bands showing standard deviation. The legend
-    is positioned at the bottom center, clearly labeling "Training Score" and "Validation
-    Score". The plot demonstrates a classic overfitting pattern with a gap between
-    training and validation scores.'
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title in light INK color (#F0EFE8). Axis labels and tick labels in light INK_SOFT (#B8B7B0). All text readable against dark background with no dark-on-dark failures. Grid subtle and properly visible.
+      Data: Data colors identical to light render - training green (#009E73) and validation orange (#D55E00) unchanged. Markers and ribbon bands display with same clarity as light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable with
-          appropriate font sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: All text explicitly sized (24/20/16pt) and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text well-separated, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines and points are clearly visible; markers slightly small but
-          acceptable
+        comment: 10 data points with ribbons clearly visible at all density levels
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow/gold are colorblind-safe and high contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space, balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Y-axis says "Accuracy Score" but lacks units (could be "Accuracy
-          Score (0-1)")
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle gray grid, legend well positioned at bottom
+        comment: Okabe-Ito palette colorblind-safe, strong series distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 aspect, good proportions, generous margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches spec format, axis labels descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct colors and backgrounds for both themes
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional polish with intentional hierarchy, theme_minimal base
+          with custom tokens
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear narrative about learning dynamics, confidence bands add depth
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct learning curve with two lines and confidence bands
+        comment: Correct learning curve with confidence bands
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Training sizes on X, scores on Y correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has both training/validation curves, shaded confidence bands, proper
-          legend
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: dual lines, bands, legend, labels'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis limits
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct axes with all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels Training Score and Validation Score
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format "{spec-id} · {library} · pyplots.ai"
+        comment: Spec-format title and matching legend labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows overfitting pattern with gap between training and validation;
-          demonstrates improvement with more data
+        comment: Demonstrates overfitting, convergence, realistic CV variation
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: ML model evaluation is a perfect realistic scenario for learning
-          curves
+        comment: Simulates scikit-learn output structure with plausible values
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Score values 0.65-0.99 are realistic; training sizes 50-1600 are
-          reasonable
+        comment: Sensible ML experiment parameters with focused y-axis limits
     code_quality:
       score: 10
       max: 10
@@ -171,41 +163,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: No unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Deterministic seed ensures consistent output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports, all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Using current lets_plot API
+        comment: No fake interactivity, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct file naming and current ggsave API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ggplot2 grammar, idiomatic geom_ribbon usage
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot2 grammar correctly with geom_ribbon for confidence bands,
-          manual color scales, and theme customization; could leverage more interactive
-          features
+        comment: Good use of ggsize, ggsave scale parameter, comprehensive theme layer
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
