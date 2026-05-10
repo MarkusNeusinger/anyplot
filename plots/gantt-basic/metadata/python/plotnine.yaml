@@ -1,167 +1,165 @@
 library: plotnine
+language: python
 specification_id: gantt-basic
 created: '2025-12-27T19:21:04Z'
-updated: '2025-12-27T19:27:04Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543282858
-issue: 0
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/plotnine/plot.png
-preview_html: null
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - manual-ticks
-  patterns:
-  - explicit-figure
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-05-10T22:41:39Z'
+generated_by: claude-haiku
+workflow_run: 25641632268
+issue: 2377
+python_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent use of geom_segment with appropriate sizing for Gantt bars
-  - Clean implementation of the current date marker with dashed red line
-  - Well-organized categorical color palette matching project phases
-  - Proper task ordering by start date with reversed y-axis for logical top-to-bottom
-    flow
-  - Perfect title format and comprehensive theme customization
+  - Perfect visual quality with explicit font sizing and legibility in both themes
+  - Flawless spec compliance with correct chart type, features, data mapping, and
+    title format
+  - Excellent data quality with realistic project timeline and comprehensive feature
+    coverage
+  - Proper theme-adaptive chrome with identical data colors across light/dark renders
+  - Clean, idiomatic plotnine code with good structure and readability
   weaknesses:
-  - Yellow (#FFD43B) and light blue (#4B8BBE) colors may be difficult to distinguish
-    for some colorblind users; consider using a colorblind-safe palette
-  - The lineend="butt" parameter in geom_segment may cause deprecation warnings in
-    newer plotnine versions
-  image_description: 'The plot displays a horizontal Gantt chart for a software development
-    project. It shows 10 tasks (Requirements, UI Design, Backend Architecture, Database
-    Setup, API Development, Frontend Development, Integration, Testing, Documentation,
-    Deployment) arranged vertically on the y-axis. The x-axis shows dates from mid-January
-    2025 to mid-March 2025 with rotated date labels. Each task is represented by a
-    horizontal bar spanning from start to end date. Tasks are color-coded by phase:
-    Planning (dark blue), Design (yellow), Development (light blue), QA (gray), and
-    Deployment (green). A dashed red vertical line indicates the current date (Feb
-    10, 2025). The legend on the right shows the Phase categories. The title reads
-    "gantt-basic · plotnine · pyplots.ai" in bold.'
+  - Design Excellence is solid but conservative—could benefit from more sophisticated
+    visual refinement or intentional hierarchy beyond color grouping
+  - Library Mastery is competent but not exceptional—uses core plotnine patterns well
+    but doesn't leverage distinctive features creatively
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title bold and dark, axis labels "Date" and "Task" clearly visible, task names and dates readable, legend properly positioned on right
+      Data: 10 horizontal bars in Okabe-Ito colors - Planning (#009E73), Design (#D55E00), Development (#0072B2), QA (#CC79A7), Deployment (#E69F00). Dashed vertical line marks current date (2025-02-10). All bars clearly distinguishable.
+      Legibility verdict: PASS - All text perfectly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title and axis labels rendered in light text, all fully readable against dark background, no dark-on-dark failures detected
+      Data: Identical colors to light render (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00) confirming theme-independent data colors. Dashed line visible.
+      Legibility verdict: PASS - All text perfectly readable against dark background, no legibility issues
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is bold 24pt, axis labels 20pt, tick labels 16pt - all perfectly
-          readable
+        comment: All font sizes explicitly set, perfect readability in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, task names fit well, x-axis labels are rotated
-          to avoid overlap
+        comment: No overlapping text, proper spacing on x-axis dates and y-axis tasks
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Segment bars have good thickness (size=12), clearly visible and distinguishable
+        comment: Bars optimally sized for 10-task density
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Good color contrast overall, but yellow and light blue could be difficult
-          for some colorblind users (-1)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of canvas, plot fills appropriate space, legend well-positioned
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels ("Date", "Task") but no units (-1)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle vertical grid lines (alpha=0.5), legend well placed on right
+        comment: Okabe-Ito palette ensures CVD safety and good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 65% of canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels and correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order followed, theme chrome correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional palette and hierarchy, well-configured but conservative
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, clean whitespace, minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color grouping and current date marker create narrative
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Gantt chart with horizontal bars representing task durations
+        comment: Correct Gantt chart implementation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Tasks on Y-axis, dates on X-axis, correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'Has all spec features: horizontal bars, time axis, color coding
-          by category, current date marker, logical ordering'
-      - id: SC-04
-        name: Data Range
+        comment: Tasks, dates, category coloring, current date marker all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within chart bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Date, Y=Task, Color=Category, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows Phase categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "gantt-basic · plotnine · pyplots.ai"'
+        comment: Correct title format and legend labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows overlapping tasks, varying durations, multiple categories,
-          but all tasks are sequential with no parallel dependencies shown explicitly
-          (-1)
+        comment: Shows varying durations, overlapping tasks, multiple phases
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Software development project is a perfect realistic context for Gantt
-          charts
+        comment: Real software development project, neutral and comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Dates and durations are plausible, though some tasks like "Deployment"
-          seem short at only 4 days (-1)
+        comment: Realistic timeline and task durations
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,42 +167,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data → plot → save'
+        comment: 'Clean flow: imports, data, plot, save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses deterministic datetime data, no randomness
+        comment: Deterministic date data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used, no unnecessary dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses lineend="butt" which generates a warning in newer plotnine versions
-          (-1)
+        comment: Clean, Pythonic, no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ggplot API usage with aes, geoms, and theme
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of ggplot grammar with geom_segment for bars, scale_color_manual
-          for custom colors, theme customization. Could have used faceting or additional
-          plotnine-specific features for enhancement.
+        comment: Uses geom_segment and geom_vline appropriately, theme-adaptive colors
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending
