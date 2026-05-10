@@ -1,167 +1,169 @@
 library: plotly
+language: python
 specification_id: learning-curve-basic
 created: '2025-12-26T17:37:42Z'
-updated: '2025-12-26T17:46:11Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20526600929
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/plotly/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+updated: '2026-05-10T03:31:06Z'
+generated_by: claude-haiku
+workflow_run: 25618666638
+issue: 2275
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/plotly/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent visual clarity with properly sized text and well-balanced layout
-  - Perfect spec compliance including title format and all required features
-  - Realistic simulated data showing characteristic learning curve behavior with convergence
-  - Clean code structure following KISS principles with reproducible random seed
-  - Blue/yellow color scheme provides excellent colorblind accessibility and contrast
+  - Perfect technical execution with all visual quality criteria scored maximum
+  - Flawless specification compliance and data quality
+  - Exemplary code quality with KISS structure and reproducibility
+  - Theme-adaptive implementation with correct Okabe-Ito palette usage
+  - Realistic learning curve data showing genuine ML insights for overfitting diagnosis
   weaknesses:
-  - Axis labels lack units (e.g., Accuracy Score 0-1 or metric specification)
-  - Could leverage Plotly interactive hover templates to show exact values and fold
-    statistics
-  - Data shows a relatively mild overfitting scenario; more dramatic gap could better
-    illustrate the concept
-  image_description: 'The plot displays a model learning curve with two distinct lines
-    on a white background. The **Training Score** line (dark blue, #306998) starts
-    at approximately 0.98 and gradually decreases to around 0.92 as training set size
-    increases. The **Validation Score** line (golden yellow, #FFD43B) starts at approximately
-    0.73 and improves to around 0.86, showing the characteristic learning curve convergence
-    pattern. Both lines have semi-transparent shaded regions representing ±1 standard
-    deviation confidence bands. The x-axis shows "Training Set Size" from 0 to 3000,
-    and the y-axis shows "Accuracy Score" from 0.65 to 1.0. The title "learning-curve-basic
-    · plotly · pyplots.ai" is centered at the top. A legend in the lower right corner
-    clearly identifies both curves. Markers are visible at each data point (10 sizes
-    total).'
+  - Design excellence somewhat standard (well-configured but not exceptional)
+  - Library mastery competent but not distinctive (lacks interactive features like
+    animations or callbacks)
+  - Confidence bands use simple transparency (could explore alternatives)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title "learning-curve-basic · plotly · anyplot.ai" (28px), axis labels "Training Set Size" and "Accuracy Score (0-1)" (22px), tick labels (18px, #4A4A44) — all clearly readable in dark text
+      Data: Training score (green #009E73) line 0.96→0.88 with light green ±1std band; Validation score (orange #D55E00) line 0.68→0.87 with light orange band; 10 data points per series with size-12 markers
+      Legend: Bottom-right, white box (#FFFDF6) with gray border, clearly readable
+      Grid: Subtle, both axes, low opacity, not competing with data
+      Legibility verdict: PASS — all elements readable, no overlaps, good contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title and axis labels in light text (#F0EFE8), tick labels in soft gray (#B8B7B0) — all clearly readable against dark surface; NO dark-on-dark failures
+      Data: Training score green #009E73 (identical to light), Validation score orange #D55E00 (identical to light) ✓
+      Legend: Background adapts to #242420, border color #B8B7B0, text #B8B7B0 — theme-correct
+      Grid: Subtle light lines, appropriate opacity
+      Color fidelity: Data colors identical across both renders; only chrome flips themes as required ✓
+      Legibility verdict: PASS — all text readable, no theme-adaptation failures, color consistency verified
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title (32pt), axis labels (24pt), tick labels (18pt) - all clearly
-          readable at high resolution
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: All sizes explicitly set (title 28px, labels 22px, ticks 18px)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text readable, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Lines and markers well-sized (width=4, markers=14), confidence bands
-          clearly visible. Minor: markers slightly large for the density'
+        comment: Markers size 12, lines width 4, optimal for 10 points per series
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) are colorblind-safe, excellent
-          contrast
+        comment: Okabe-Ito palette, CVD-safe, good contrast
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good margins, plot fills canvas well, balanced whitespace
+        comment: 4800x2700, 50-60% canvas fill, balanced margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive but lack units ("Accuracy Score" could specify
-          range 0-1)
+        comment: Descriptive with context
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle (alpha 0.1), legend well placed but could have slightly
-          better styling
+        comment: Training=#009E73, Validation=#D55E00, correct theme backgrounds and
+          chrome
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful palette use, clear hierarchy, professional — clearly above
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace — good refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color contrast shows train/val, gap shows overfitting, convergence
+          shows diminishing returns
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct learning curve with training/validation lines and confidence
-          bands
+        comment: Correct learning curve with confidence bands
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=training set sizes, Y=scores correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has shaded confidence bands (±1 std), distinct colors, legend, appropriate
-          axes
-      - id: SC-04
-        name: Data Range
+        comment: Shaded regions, legend, labeled axes
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis range [0.65, 1.02] shows all data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels "Training Score" and "Validation Score"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses exact format: "learning-curve-basic · plotly · pyplots.ai"'
+        comment: Correct format, matching labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows classic learning curve pattern: high training score decreasing
-          slightly, validation improving and converging. Shows the gap (variance indicator).
-          Minor: could show more extreme overfitting scenario'
+        comment: Shows overfitting, gap, convergence, fold variability
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Accuracy scores (0.73-0.98) are realistic for ML models; training
-          sizes (50-3000) are practical
+        comment: Realistic ML scenario, neutral, plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are sensible; training scores slightly high at 0.98 but acceptable
-          for simulated data
+        comment: Realistic ranges (0.68-0.96 accuracy, 50-3000 sizes, ±0.01-0.02 variance)
     code_quality:
       score: 10
       max: 10
@@ -171,42 +173,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data generation → plotting → save. No functions/classes'
+        comment: Linear flow, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses `np.random.seed(42)`
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as "plot.png" and "plot.html"
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Pythonic, appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct format: plot-{THEME}.png/html'
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct use of go.Figure(), Scatter(), fill='toself', update_layout()
+          — fairly standard
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
         max: 5
         passed: false
-        comment: Uses go.Figure and go.Scatter correctly, creates shaded bands using
-          fill="toself", but doesn't leverage Plotly-specific interactive features
-          like hover templates or annotations that would enhance the learning curve
-          visualization
+        comment: Uses basic fill-to-self and hover, but lacks animations/callbacks/advanced
+          interactivity
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
