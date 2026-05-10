@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 silhouette-basic: Silhouette Plot
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 28/100 | Updated: 2026-05-10
 """
 
 import numpy as np
