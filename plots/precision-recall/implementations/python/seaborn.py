@@ -1,14 +1,48 @@
-""" pyplots.ai
+""" anyplot.ai
 precision-recall: Precision-Recall Curve
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-10
 """
+
+import os
+import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
-from sklearn.metrics import average_precision_score, precision_recall_curve
 
+
+# Remove local directory from path to avoid shadowing library imports
+sys.path = [p for p in sys.path if not p.endswith("/python")]  # noqa: E402
+
+import seaborn as sns  # noqa: E402
+from sklearn.metrics import average_precision_score, precision_recall_curve  # noqa: E402
+
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
 # Data - Simulate binary classification with imbalanced classes (fraud detection scenario)
 np.random.seed(42)
@@ -33,25 +67,34 @@ y_scores_moderate = np.where(
     np.random.beta(2, 3, n_samples),  # Negatives: moderately lower
 )
 
+y_scores_poor = np.where(
+    y_true == 1,
+    np.random.beta(2, 2, n_samples),  # Positives: similar to negatives
+    np.random.beta(2, 2, n_samples),  # Negatives: similar to positives
+)
+
 # Calculate precision-recall curves
 precision_good, recall_good, _ = precision_recall_curve(y_true, y_scores_good)
 precision_moderate, recall_moderate, _ = precision_recall_curve(y_true, y_scores_moderate)
+precision_poor, recall_poor, _ = precision_recall_curve(y_true, y_scores_poor)
 
 # Average precision scores
 ap_good = average_precision_score(y_true, y_scores_good)
 ap_moderate = average_precision_score(y_true, y_scores_moderate)
+ap_poor = average_precision_score(y_true, y_scores_poor)
 
 # Baseline (random classifier)
 baseline = n_positive / n_samples
 
 # Create plot
 fig, ax = plt.subplots(figsize=(16, 9))
-sns.set_style("whitegrid")
 
 # Plot PR curves using seaborn's lineplot style with step interpolation
 # Good classifier
-ax.step(recall_good, precision_good, where="post", linewidth=3, color="#306998", label=f"Model A (AP = {ap_good:.2f})")
-ax.fill_between(recall_good, precision_good, step="post", alpha=0.2, color="#306998")
+ax.step(
+    recall_good, precision_good, where="post", linewidth=3, color=OKABE_ITO[0], label=f"Model A (AP = {ap_good:.2f})"
+)
+ax.fill_between(recall_good, precision_good, step="post", alpha=0.2, color=OKABE_ITO[0])
 
 # Moderate classifier
 ax.step(
@@ -59,18 +102,24 @@ ax.step(
     precision_moderate,
     where="post",
     linewidth=3,
-    color="#FFD43B",
+    color=OKABE_ITO[1],
     label=f"Model B (AP = {ap_moderate:.2f})",
 )
-ax.fill_between(recall_moderate, precision_moderate, step="post", alpha=0.2, color="#FFD43B")
+ax.fill_between(recall_moderate, precision_moderate, step="post", alpha=0.2, color=OKABE_ITO[1])
+
+# Poor classifier
+ax.step(
+    recall_poor, precision_poor, where="post", linewidth=3, color=OKABE_ITO[2], label=f"Model C (AP = {ap_poor:.2f})"
+)
+ax.fill_between(recall_poor, precision_poor, step="post", alpha=0.2, color=OKABE_ITO[2])
 
 # Baseline reference line
-ax.axhline(y=baseline, linestyle="--", linewidth=2, color="#888888", label=f"Random Classifier (P = {baseline:.2f})")
+ax.axhline(y=baseline, linestyle="--", linewidth=2, color=INK_SOFT, label=f"Random Classifier (P = {baseline:.2f})")
 
 # Styling with seaborn aesthetics
 ax.set_xlabel("Recall (Sensitivity)", fontsize=20)
 ax.set_ylabel("Precision (Positive Predictive Value)", fontsize=20)
-ax.set_title("precision-recall · seaborn · pyplots.ai", fontsize=24)
+ax.set_title("precision-recall · seaborn · anyplot.ai", fontsize=24)
 ax.tick_params(axis="both", labelsize=16)
 
 # Set axis limits
@@ -78,10 +127,12 @@ ax.set_xlim([0.0, 1.0])
 ax.set_ylim([0.0, 1.05])
 
 # Legend
-ax.legend(loc="upper right", fontsize=16, frameon=True, fancybox=True, framealpha=0.9, edgecolor="#cccccc")
+ax.legend(loc="upper right", fontsize=16, frameon=True, fancybox=True, framealpha=0.9)
 
 # Grid styling
-ax.grid(True, alpha=0.3, linestyle="--")
+ax.yaxis.grid(True, alpha=0.2, linewidth=0.8)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
