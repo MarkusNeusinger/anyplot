@@ -1,166 +1,173 @@
 library: letsplot
+language: python
 specification_id: bar-feature-importance
 created: '2025-12-26T17:45:26Z'
-updated: '2025-12-26T17:53:03Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20526664327
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/letsplot/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-05-10T01:33:05Z'
+generated_by: claude-haiku
+workflow_run: 25616339082
+issue: 2276
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/letsplot/plot-dark.html
+quality_score: 74
 review:
   strengths:
-  - 'Excellent implementation of all spec requirements: sorted bars, color gradient,
-    error bars, and value annotations'
-  - Clean, readable code following KISS principles with proper grammar of graphics
-    structure
-  - Well-chosen loan default prediction scenario with realistic feature names and
-    importance values
-  - Good use of coord_flip() for horizontal bars with readable feature names
-  - Proper text sizing for high-resolution output (4800x2700 px)
+  - Clear visual hierarchy through sorted bars and color gradient
+  - Good data coverage with 15 features showing variability (std)
+  - Clean layout with appropriate spacing and readable text at both themes
+  - Error bars effectively communicate uncertainty in importance estimates
   weaknesses:
-  - Legend is positioned far from the main plot area, creating visual disconnect
-  - Missing random seed even though data is deterministic (minor but good practice)
-  image_description: The plot displays a horizontal bar chart showing feature importance
-    scores for a loan default prediction model. There are 15 features shown, sorted
-    from highest importance (income at 0.182) to lowest (region at 0.003). The bars
-    use a sequential color gradient from light blue (#A8D5E5) for low importance to
-    dark blue (#306998) for high importance. Each bar has error bars (standard deviation)
-    shown in dark gray, and importance values are annotated at the end of each bar.
-    The title "bar-feature-importance · letsplot · pyplots.ai" is at the top, the
-    y-axis is labeled "Feature", and the x-axis is labeled "Importance Score". A color
-    legend for the gradient is positioned on the right side. The layout is clean with
-    subtle grid lines on the x-axis only.
+  - Title domain is 'pyplots.ai' instead of 'anyplot.ai' (spec requires exact format)
+  - Output filenames hardcoded as plot.png/plot.html instead of theme-aware plot-{THEME}.png/plot-{THEME}.html
+  - Custom blue gradient (#A8D5E5→#306998) should use standard colormap (viridis/cividis/BrBG)
+    for continuous data
+  - 'No theme-adaptive color tokens — hardcodes #333333, #E0E0E0, #F0F0F0 instead
+    of INK/INK_SOFT per library guide'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct surface color
+      Chrome: Title "bar-feature-importance · letsplot · pyplots.ai" in dark, bold font; axis labels "Feature" (y) and "Importance Score" (x) clearly readable in dark text; tick labels readable
+      Data: 15 horizontal bars with gradient fill from light blue (#A8D5E5, low importance) to dark blue (#306998, high importance); error bars in dark gray; data labels (0.003–0.182) positioned right of bars in dark text
+      Legibility verdict: PASS — all text is readable, no overlap issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct surface color
+      Chrome: Title in light text; axis labels in light text; tick labels readable; grid lines visible in light gray
+      Data: Same 15 bars with identical gradient colors (blue remains the same — data colors don't flip, correct); error bars appear in light gray (visible); data labels in light text
+      Legibility verdict: PASS — all elements readable in both themes; data colors are identical between renders (only chrome adapted)
+
+    Note: Dark render shows light colors despite code hardcoding dark (#333333), suggesting pipeline applies theme adaptation.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is bold and clearly readable, axis labels and tick marks are
-          all appropriately sized
+        comment: All text readable in both light and dark renders despite code hardcoding
+          concerns
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; feature names, values, and error bars
-          are well spaced
+        comment: Feature labels and data values have ample spacing, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are appropriately sized for the 15 features, error bars are
-          visible and not overwhelming
+        comment: Bars, error bars, and data labels all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Sequential blue gradient is colorblind-safe, good contrast against
-          white background
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, but legend could be positioned closer to
-          the plot
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels "Feature" and "Importance Score"
+        comment: Blue gradient has adequate contrast; no red-green dependency
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Proportions well-balanced, margins generous, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 3
+        passed: false
+        comment: Title has 'pyplots.ai' instead of required 'anyplot.ai'; axis labels
+          otherwise descriptive
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 1
         max: 2
         passed: false
-        comment: Grid is subtle, but legend is placed far from the data area
+        comment: Backgrounds correct (#FAF8F1/#1A1A17), but custom blue gradient violates
+          requirement for standard colormaps (viridis/cividis/BrBG) on continuous
+          data
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Generic blue gradient with no distinctive design choices; defaults
+          only
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: theme_minimal() base, subtle grid, but no custom refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Sorted bars and gradient create some hierarchy; data labels help,
+          but limited visual emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 13
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct horizontal bar chart
+        comment: Correct horizontal bar chart for feature importance
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Features on y-axis, importance on x-axis, correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has sorted bars, color gradient, error bars, text annotations - all
-          spec requirements met
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: sorting, gradient, error bars, text annotations'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, x-axis range appropriate (0 to ~0.22)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly shows importance gradient
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format "bar-feature-importance · letsplot · pyplots.ai"
+        comment: X (importance) and Y (features) correctly mapped; all 15 features
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 1
+        max: 3
+        passed: false
+        comment: 'Title format violated: ''pyplots.ai'' instead of ''anyplot.ai'';
+          legend label ''Importance'' is appropriate'
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows full range from high importance (income 0.182) to near-zero
-          (region 0.003), with varying error bar sizes
+        comment: 15 features with full range of importances and std shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Loan default prediction is a realistic ML use case with plausible
-          feature names
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Importance values sum to ~1.0, realistic for Random Forest feature
-          importances
+        comment: Loan default prediction model is plausible and neutral context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Importance 0.003–0.182, std proportional to importance, sensible
+          domain
     code_quality:
       score: 7
       max: 10
@@ -170,41 +177,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: Simple linear script, no unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 0
-        max: 3
-        passed: false
-        comment: No random seed set (data is deterministic, but good practice to include)
+        score: 2
+        max: 2
+        passed: true
+        comment: Data is deterministic; no random seed needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no dead code in imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Modern lets-plot API used
+        max: 2
+        passed: false
+        comment: 'Hardcoded colors (#333333, #E0E0E0, #F0F0F0) instead of theme tokens
+          (INK, INK_SOFT); fragile to theme changes'
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png with correct scale factor
-    library_features:
+        passed: false
+        comment: Saves as plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html;
+          violates output spec
+    library_mastery:
       score: 3
-      max: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 2
         max: 5
-        passed: true
-        comment: Uses ggplot grammar, coord_flip, scale_fill_gradient, and theme customization;
-          HTML export for interactivity. Could use more advanced lets-plot specific
-          features
-  verdict: APPROVED
+        passed: false
+        comment: Uses ggplot2-style composition (+) but doesn't implement letsplot-recommended
+          theme tokens and environment variable patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Error bars added (good) but no distinctive letsplot-specific features;
+          mostly generic ggplot2 pattern
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - grid-styling
