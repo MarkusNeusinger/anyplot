@@ -1,14 +1,18 @@
-""" pyplots.ai
+""" anyplot.ai
 silhouette-basic: Silhouette Plot
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-10
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
     element_blank,
+    element_line,
+    element_rect,
     element_text,
     geom_segment,
     geom_text,
@@ -24,6 +28,16 @@ from sklearn.cluster import KMeans
 from sklearn.datasets import load_iris
 from sklearn.metrics import silhouette_samples, silhouette_score
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data - Clustering iris dataset into 3 groups
 np.random.seed(42)
@@ -44,8 +58,6 @@ data_rows = []
 y_position = 0
 cluster_centers = []
 cluster_avg_scores = []
-
-colors = ["#306998", "#FFD43B", "#2ca02c"]  # Python Blue, Python Yellow, Green
 
 for cluster_idx in range(n_clusters):
     # Get samples in this cluster
@@ -92,31 +104,37 @@ avg_label_df = pd.DataFrame(
 plot = (
     ggplot()
     + geom_segment(aes(x="x_start", xend="silhouette", y="y", yend="y", color="cluster"), data=df, size=1.5)
-    + geom_vline(xintercept=avg_silhouette, color="#d62728", linetype="dashed", size=1.2)
-    + geom_text(aes(x="x", y="y", label="label"), data=annotation_df, size=12, ha="right")
-    + geom_text(aes(x="x", y="y", label="label"), data=avg_label_df, size=11, ha="left")
-    + scale_color_manual(values=colors)
+    + geom_vline(xintercept=avg_silhouette, color=INK_SOFT, linetype="dashed", size=1.2, alpha=0.6)
+    + geom_text(aes(x="x", y="y", label="label"), data=annotation_df, size=12, ha="right", color=INK_SOFT)
+    + geom_text(aes(x="x", y="y", label="label"), data=avg_label_df, size=11, ha="left", color=INK_SOFT)
+    + scale_color_manual(values=OKABE_ITO)
     + labs(
         x="Silhouette Coefficient",
         y="Sample Index (sorted within cluster)",
-        title="silhouette-basic · plotnine · pyplots.ai",
+        title="silhouette-basic · plotnine · anyplot.ai",
     )
     + xlim(-0.25, 1.0)
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        axis_text_y=element_blank(),
-        axis_ticks_major_y=element_blank(),
-        legend_text=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_position="right",
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major_y=element_blank(),
         panel_grid_minor_y=element_blank(),
+        panel_grid_major_x=element_line(color=INK, size=0.3, alpha=0.10),
+        panel_grid_minor_x=element_line(color=INK, size=0.2, alpha=0.05),
+        panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
+        plot_title=element_text(size=24, color=INK),
+        axis_title=element_text(size=20, color=INK),
+        axis_text_x=element_text(size=16, color=INK_SOFT),
+        axis_text_y=element_blank(),
+        axis_ticks_major_y=element_blank(),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
+        legend_position="right",
     )
 )
 
 # Save as PNG
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
