@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 bar-error: Bar Chart with Error Bars
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-27
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 83/100 | Updated: 2026-05-10
 """
 
 import pygal

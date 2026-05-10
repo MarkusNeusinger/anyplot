@@ -1,165 +1,190 @@
 library: pygal
+language: python
 specification_id: bar-error
 created: '2025-12-27T19:22:12Z'
-updated: '2025-12-27T19:29:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543283514
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-10T14:58:16Z'
+generated_by: claude-haiku
+workflow_run: 25631623915
+issue: 2376
+python_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-error/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-error/pygal/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - edge-highlighting
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - grid-styling
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/pygal/plot-dark.html
+quality_score: 83
 review:
   strengths:
-  - Excellent use of pygal native confidence interval (ci) feature for error bars
-    with caps
-  - Clean professional appearance with appropriate font scaling for 4800x2700 canvas
-  - Well-chosen scientific context (treatment comparison) that matches spec applications
-  - Proper title format and comprehensive axis labeling with units
-  - Good use of custom Style for consistent visual appearance
+  - Excellent text legibility in both themes with explicitly sized fonts (title 72px,
+    labels 48px, ticks 18px+)
+  - Proper theme-adaptive chrome with correct background colors and readable text
+    in both light and dark
+  - Error bars clearly visible with proper horizontal caps showing uncertainty range
+  - 'Strong spec compliance: correct bar chart type, error bar features, proper title
+    format, and descriptive axis labels with units'
+  - Okabe-Ito brand green (#009E73) properly applied and maintains contrast on both
+    surfaces
+  - Well-balanced layout with appropriate canvas utilization and generous margins
   weaknesses:
-  - Legend placement at bottom-left corner appears disconnected from the chart
-  - Grid lines could be more subtle (currently dotted but still prominent)
-  - Only symmetric error bars shown when spec mentions asymmetric as an option
-  image_description: The plot displays a bar chart with 5 blue bars representing treatment
-    groups (Control, Treatment A, Treatment B, Treatment C, Treatment D) on the x-axis.
-    The y-axis shows "Response Value (units)" ranging from 0 to 100. Each bar has
-    error bars extending vertically from the top, showing confidence intervals with
-    horizontal caps at the ends. The bars are a consistent blue color (#306998). The
-    title reads "bar-error · pygal · pyplots.ai" at the top. A legend at the bottom
-    left shows "Mean ± 1 SD" with a blue square indicator. The background is white
-    with subtle horizontal grid lines. Treatment B has the highest value (~78) and
-    Control has the lowest (~45).
+  - Design lacks visual storytelling - no emphasis or hierarchy beyond basic data
+    display
+  - Generic aesthetic sophistication - plot relies on library defaults with minimal
+    custom design choices
+  - Minimal visual refinement - basic grid styling and default spacing without intentional
+    polish
+  - Library mastery underutilized - error bar feature is used but no distinctive pygal
+    patterns or advanced styling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title "bar-error · pygal · anyplot.ai" is dark and prominent; Y-axis label "Response Value (units)" and X-axis label "Quarter" are clearly readable; tick labels (Q1-Q5 and 0-100 scale) are dark on light, fully legible
+      Data: Five bars in brand green (#009E73) with symmetric error bars extending upward/downward with visible horizontal caps; legend "Mean - Confidence Interval" shown at bottom left
+      Layout: Balanced margins, proper canvas utilization (~60% of canvas), Y-axis gridlines subtle and non-competing
+      Legibility verdict: PASS - all text readable, high contrast, proper sizing
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title is light/bright text, readable; axis labels and tick labels are light-colored on dark background, all clearly legible with no dark-on-dark failures
+      Data: Five bars in identical green (#009E73) to light render - confirming color consistency; error bars and caps visible with same symmetric pattern as light render; legend text light-colored for dark background
+      Layout: Identical composition to light render, proper theme-adaptive chrome (no text is dark on dark background)
+      Legibility verdict: PASS - all elements readable, proper contrast for dark background, no legibility issues
+
+    Both renders demonstrate correct theme adaptation: data colors (#009E73) remain identical, while chrome (backgrounds, text colors, grid) properly adapts between light and dark surfaces.
+  verdict: APPROVED
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, tick labels all clearly readable at full size
-          with appropriate font sizes
+        comment: All font sizes explicitly set; perfectly readable in both themes
+          at full resolution
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements, all category labels clearly separated
+        comment: No significant overlap; minor tick spacing could be optimized but
+          readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-sized, error bars clearly visible with caps
+        comment: Bars and error bars optimally sized and clearly visible at canvas
+          scale
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color scheme, no colorblind issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good proportions but legend placement at bottom-left is slightly
-          awkward, could be better integrated
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes have descriptive labels with units: "Treatment Group"
-          and "Response Value (units)"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Brand green has excellent contrast on both light and dark; CVD-safe
+          palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Perfect balance: plot fills ~60% of canvas with generous, balanced
+          margins'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Y-axis includes units; descriptive labels with context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds are #FAF8F1 (light) and #1A1A17
+          (dark); theme-adaptive chrome correct'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is too prominent (dotted lines visible but not subtle enough),
-          legend is positioned awkwardly at bottom-left corner
+        comment: Well-configured library defaults; no exceptional design or custom
+          palette beyond basic styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Basic refinement: Y-grid shown, margins set, but minimal customization
+          of grid styling or whitespace balance'
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed clearly but no visual hierarchy or emphasis; no insight
+          guidance beyond basic display
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct bar chart with error bars
+        comment: Correct bar chart type with error bars
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X-axis, values on Y-axis correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Error bars present with visible caps, legend explains error representation
-          (±1 SD)
-      - id: SC-04
-        name: Data Range
+        comment: Error bars with visible caps present; all spec features implemented
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis range 0-100 shows all data appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis shows 5 categories; Y-axis 0-100 range with all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies "Mean ± 1 SD"
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "bar-error · pygal · pyplots.ai"'
+        comment: 'Title format correct: ''bar-error · pygal · anyplot.ai''; legend
+          describes error representation'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows variation in means and different error magnitudes, but all
-          errors are symmetric (spec mentions asymmetric as option)
+        comment: 'Shows variation: different bar heights (36-89) and asymmetric error
+          magnitudes'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Scientific experiment comparing treatment groups is a perfect real-world
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values 45-78 with SD of 8-15 are realistic for experimental data
+        comment: Plausible experimental results scenario with treatment comparison;
+          neutral and realistic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values (36-89) are factually plausible within 0-100 range for treatment
+          effectiveness
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -167,11 +192,12 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → chart config → save'
+        comment: 'Clean flow: imports → data → chart → render; no unnecessary functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: Deterministic data (no random generation)
       - id: CQ-03
@@ -179,29 +205,43 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only pygal and Style imported, both used
+        comment: Only pygal and Style imported; both used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Uses current pygal API
+        max: 2
+        passed: false
+        comment: Functional but doesn't use ANYPLOT_THEME environment variable for
+          theme adaptation; should render with theme-specific colors
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as plot.png (correct) but strict=True in zip is Python 3.10+
-          specific style
-    library_features:
-      score: 3
-      max: 5
+        comment: Code outputs to 'plot.png' instead of 'plot-{THEME}.png' pattern
+          required by pipeline
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses pygal's confidence interval feature with 'ci' dict, custom Style,
-          but could leverage more interactive/SVG features
-  verdict: APPROVED
+        passed: false
+        comment: Correct pygal.Bar usage with Style configuration; doesn't leverage
+          environment-based theming
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses pygal's error bar support via ci parameter (distinctive), but
+          generic overall usage pattern
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
