@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 gantt-basic: Basic Gantt Chart
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2025-05-10
+Library: highcharts unknown | Python 3.13.13
+Quality: 96/100 | Updated: 2026-05-10
 """
 
 import os
