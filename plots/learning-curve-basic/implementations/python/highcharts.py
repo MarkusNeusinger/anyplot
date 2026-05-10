@@ -1,27 +1,39 @@
-""" pyplots.ai
+"""anyplot.ai
 learning-curve-basic: Model Learning Curve
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-26
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2025-12-26
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+BRAND = "#009E73"  # Position 1 - first series
+ORANGE = "#D55E00"  # Position 2
 
 # Data - Simulated learning curve from a classification model
 np.random.seed(42)
 
 train_sizes = [50, 100, 200, 400, 600, 800, 1000, 1200, 1400, 1600]
 
-# Training scores: starts high, remains high (slight decrease with more data due to harder fitting)
+# Training scores: starts high, remains high (slight decrease with more data)
 train_scores_mean = [0.99, 0.98, 0.97, 0.96, 0.955, 0.95, 0.948, 0.946, 0.944, 0.943]
 train_scores_std = [0.01, 0.012, 0.01, 0.008, 0.007, 0.006, 0.005, 0.005, 0.004, 0.004]
 
@@ -36,10 +48,8 @@ val_upper = [m + s for m, s in zip(validation_scores_mean, validation_scores_std
 val_lower = [m - s for m, s in zip(validation_scores_mean, validation_scores_std, strict=True)]
 
 # Prepare data for Highcharts
-# arearange series expects [[x, low, high], ...]
 train_band_data = [[x, lo, hi] for x, lo, hi in zip(train_sizes, train_lower, train_upper, strict=True)]
 val_band_data = [[x, lo, hi] for x, lo, hi in zip(train_sizes, val_lower, val_upper, strict=True)]
-# line series expects [[x, y], ...]
 train_line_data = [[x, y] for x, y in zip(train_sizes, train_scores_mean, strict=True)]
 val_line_data = [[x, y] for x, y in zip(train_sizes, validation_scores_mean, strict=True)]
 
@@ -48,33 +58,32 @@ chart_options = {
     "chart": {
         "width": 4800,
         "height": 2700,
-        "backgroundColor": "#ffffff",
+        "backgroundColor": PAGE_BG,
         "marginBottom": 180,
         "marginLeft": 200,
         "marginRight": 120,
         "marginTop": 150,
-        "style": {"fontFamily": "Arial, sans-serif"},
+        "style": {"fontFamily": "Arial, sans-serif", "color": INK},
     },
-    "title": {
-        "text": "learning-curve-basic · highcharts · pyplots.ai",
-        "style": {"fontSize": "64px", "fontWeight": "bold"},
-    },
-    "subtitle": {"text": "Model Performance vs Training Set Size", "style": {"fontSize": "38px", "color": "#666666"}},
+    "title": {"text": "learning-curve-basic · highcharts · anyplot.ai", "style": {"fontSize": "28px", "color": INK}},
+    "subtitle": {"text": "Model Performance vs Training Set Size", "style": {"fontSize": "22px", "color": INK_SOFT}},
     "xAxis": {
-        "title": {"text": "Training Set Size (samples)", "style": {"fontSize": "48px"}, "margin": 20},
-        "labels": {"style": {"fontSize": "36px"}},
+        "title": {"text": "Training Set Size (samples)", "style": {"fontSize": "22px", "color": INK}},
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+        "lineColor": INK_SOFT,
+        "tickColor": INK_SOFT,
         "gridLineWidth": 1,
-        "gridLineColor": "rgba(0, 0, 0, 0.1)",
-        "gridLineDashStyle": "Dash",
+        "gridLineColor": GRID,
         "min": 0,
         "max": 1700,
     },
     "yAxis": {
-        "title": {"text": "Accuracy Score", "style": {"fontSize": "48px"}, "margin": 20},
-        "labels": {"style": {"fontSize": "36px"}, "format": "{value:.2f}"},
+        "title": {"text": "Accuracy Score", "style": {"fontSize": "22px", "color": INK}},
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}, "format": "{value:.2f}"},
+        "lineColor": INK_SOFT,
+        "tickColor": INK_SOFT,
         "gridLineWidth": 1,
-        "gridLineColor": "rgba(0, 0, 0, 0.1)",
-        "gridLineDashStyle": "Dash",
+        "gridLineColor": GRID,
         "min": 0.6,
         "max": 1.02,
     },
@@ -85,16 +94,16 @@ chart_options = {
         "layout": "vertical",
         "x": -50,
         "y": 120,
-        "itemStyle": {"fontSize": "36px"},
+        "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
         "itemMarginBottom": 15,
-        "backgroundColor": "rgba(255, 255, 255, 0.9)",
+        "backgroundColor": ELEVATED_BG,
         "borderWidth": 1,
-        "borderColor": "#cccccc",
+        "borderColor": INK_SOFT,
         "padding": 15,
     },
     "plotOptions": {
         "arearange": {"fillOpacity": 0.25, "lineWidth": 0, "marker": {"enabled": False}},
-        "line": {"lineWidth": 6, "marker": {"enabled": True, "radius": 12, "lineWidth": 3, "lineColor": "#ffffff"}},
+        "line": {"lineWidth": 6, "marker": {"enabled": True, "radius": 8, "lineWidth": 2, "lineColor": PAGE_BG}},
     },
     "series": [
         # Training confidence band
@@ -102,7 +111,7 @@ chart_options = {
             "name": "Training ±1 std",
             "type": "arearange",
             "data": train_band_data,
-            "color": "#306998",
+            "color": BRAND,
             "fillOpacity": 0.25,
             "zIndex": 0,
             "showInLegend": False,
@@ -113,7 +122,7 @@ chart_options = {
             "name": "Validation ±1 std",
             "type": "arearange",
             "data": val_band_data,
-            "color": "#FFD43B",
+            "color": ORANGE,
             "fillOpacity": 0.35,
             "zIndex": 0,
             "showInLegend": False,
@@ -124,27 +133,27 @@ chart_options = {
             "name": "Training Score",
             "type": "line",
             "data": train_line_data,
-            "color": "#306998",
+            "color": BRAND,
             "lineWidth": 6,
             "zIndex": 1,
-            "marker": {"fillColor": "#306998", "radius": 12, "lineWidth": 3, "lineColor": "#ffffff"},
+            "marker": {"fillColor": BRAND, "radius": 8, "lineWidth": 2, "lineColor": PAGE_BG},
         },
         # Validation score line
         {
             "name": "Validation Score",
             "type": "line",
             "data": val_line_data,
-            "color": "#FFD43B",
+            "color": ORANGE,
             "lineWidth": 6,
             "zIndex": 1,
-            "marker": {"fillColor": "#FFD43B", "radius": 12, "lineWidth": 3, "lineColor": "#ffffff"},
+            "marker": {"fillColor": ORANGE, "radius": 8, "lineWidth": 2, "lineColor": PAGE_BG},
         },
     ],
 }
 
-# Download Highcharts JS and highcharts-more (needed for arearange)
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
+# Download Highcharts JS and highcharts-more from jsDelivr CDN
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts/highcharts.js"
+highcharts_more_url = "https://cdn.jsdelivr.net/npm/highcharts/highcharts-more.js"
 
 with urllib.request.urlopen(highcharts_url, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
@@ -160,7 +169,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{highcharts_more_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {{
@@ -170,38 +179,29 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Write temp HTML file
+# Save HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Write temp HTML for screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
-# Also save the HTML for interactive viewing
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
-
 # Take screenshot with headless Chrome
 chrome_options = Options()
-chrome_options.add_argument("--headless=new")
+chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--force-device-scale-factor=1")
+chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
-driver.set_window_size(4900, 2900)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
 
-# Take screenshot
-driver.save_screenshot("plot_raw.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-# Crop/resize to exact 4800x2700 using PIL
-img = Image.open("plot_raw.png")
-final_img = Image.new("RGB", (4800, 2700), (255, 255, 255))
-final_img.paste(img.crop((0, 0, min(img.width, 4800), min(img.height, 2700))), (0, 0))
-final_img.save("plot.png")
-
 # Clean up
-Path("plot_raw.png").unlink()
 Path(temp_path).unlink()
