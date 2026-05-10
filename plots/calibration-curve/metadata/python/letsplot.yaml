@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: calibration-curve
 created: '2025-12-26T19:37:18Z'
-updated: '2026-05-10T10:59:56Z'
+updated: '2026-05-10T11:06:10Z'
 generated_by: claude-haiku
 workflow_run: 25626801514
 issue: 2331
@@ -12,36 +12,36 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibrati
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/python/letsplot/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - Perfect visual quality across both themes with zero legibility issues
-  - 'Excellent theme adaptation: data colors identical, chrome flips appropriately'
-  - All specification requirements met cleanly
-  - High-quality realistic data that demonstrates the plot's purpose
-  - Clean, readable code with proper seeding for reproducibility
-  - Proper use of Okabe-Ito palette with brand green for primary series
+  - Excellent theme support with proper color token adaptation across both light and
+    dark renders
+  - Complete spec compliance with all required features (diagonal line, bins, Brier
+    Score, ECE, histogram)
+  - Strong visual quality with readable text at full resolution and proper font sizing
+  - Clean, reproducible code with deterministic data generation
+  - Proper Okabe-Ito palette usage with good color hierarchy
   weaknesses:
-  - 'Design Excellence is slightly below exceptional: consider removing top/right
-    spines for greater polish'
-  - 'Limited use of letsplot-distinctive features: implementation is generic ggplot2-style
-    rather than showcasing library strengths'
-  - No custom styling beyond theme tokens
+  - Design Excellence could be elevated by removing top/right spines for cleaner L-shaped
+    frame
+  - Library Mastery could showcase more distinctive letsplot features beyond basic
+    tooltips
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white
-      Chrome: Title, axis labels (Mean Predicted Probability, Fraction of Positives), and ticks (0.0, 0.2, 0.4, 0.6, 0.8, 1.0) all rendered in dark text (#1A1A17), clearly readable against light background
-      Data: Main calibration curve in brand green (#009E73) with solid line and circular markers; reference diagonal in neutral gray (#4A4A44) dashed line; histogram bars in light gray (#6B6A63) showing prediction distribution
-      Grid: Subtle gray lines that do not compete with data
-      Legibility verdict: PASS - all elements clearly readable with no overlap
+      Background: Warm off-white (#FAF8F1) - correct light theme color
+      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all in dark text (#1A1A17 / #4A4A44) - fully readable
+      Data: Green calibration curve (#009E73) with points (size=5, alpha=0.9); dashed reference line in gray (#4A4A44); histogram bars in muted gray (#6B6A63) at bottom
+      Grid: Subtle light gray grid lines visible but not dominant
+      Legibility verdict: PASS - all elements readable with excellent contrast against light surface
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black
-      Chrome: Title, axis labels, and ticks all rendered in light text (#F0EFE8), clearly readable against dark background; no dark-on-dark issues present
-      Data: Main calibration curve identical to light render in brand green (#009E73); reference diagonal in light gray; histogram bars in white/light color (#F0EFE8)
-      Grid: Subtle light gray lines, appropriately visible
-      Data color consistency: All data colors (green curve, gray diagonal, histogram bars) are identical between light and dark renders; only chrome colors adapt to theme
-      Legibility verdict: PASS - all elements clearly readable, perfect theme adaptation, no dark-on-dark failures
+      Background: Warm near-black (#1A1A17) - correct dark theme color
+      Chrome: Title, axis labels in light text (#F0EFE8), tick labels in secondary light (#B8B7B0) - fully readable
+      Data: Green calibration curve (#009E73) identical to light render; dashed reference line in light gray; histogram bars in light gray
+      Grid: Subtle light grid lines visible and readable
+      Color consistency: Data colors (Okabe-Ito #009E73) identical between renders - only chrome adapted (PASS)
+      Legibility verdict: PASS - no dark-on-dark failures; all text clearly visible against near-black background
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,68 +53,70 @@ review:
         max: 8
         passed: true
         comment: All text sizes explicitly set (title=24pt, labels=20pt, ticks=16pt);
-          perfectly readable in both themes
+          fully readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; all text fully readable
+        comment: Clean separation between curve, points, histogram; no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers, lines, and histogram bars optimally sized for data density
+        comment: Line (size=2), points (size=5, alpha=0.9), histogram bars all visible
+          and distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between green line and backgrounds; CVD-safe
+        comment: 'Okabe-Ito #009E73 primary color; good contrast; CVD-safe palette'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout; plot fills 60-70% of canvas with balanced margins
+        comment: Good 16:9 proportions; generous margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with implicit units
+        comment: Descriptive axes; metrics in title
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; text and grid
-          colors theme-correct'
+        comment: 'First series #009E73; backgrounds #FAF8F1 (light) / #1A1A17 (dark);
+          both renders theme-correct'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured defaults with thoughtful colors; professional but
-          not exceptional
+        passed: true
+        comment: Good professional polish with proper theme tokens; dashed reference
+          line adds visual distinction; histogram enriches composition
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Subtle grid styling, clean layout; minimal customization
+        comment: Subtle grid and generous whitespace; could improve by removing top/right
+          spines for cleaner L-shaped frame
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Visual hierarchy guides viewer; clear focal point on calibration
-          curve
+        comment: Clear focal point on calibration curve; histogram adds context; metrics
+          support interpretation
     spec_compliance:
       score: 15
       max: 15
@@ -124,25 +126,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct calibration curve with perfect calibration diagonal
+        comment: Correct calibration curve with binned calibration analysis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: 10 bins, diagonal, Brier score, ECE, histogram'
+        comment: Diagonal reference line, 10 bins, Brier Score, ECE, histogram all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; axes show full 0-1 range
+        comment: 'X: Mean Predicted Probability (0-1); Y: Fraction of Positives (0-1);
+          full data range shown'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; single-series plot correctly omits legend
+        comment: Title correct; metrics displayed; single series, no legend needed
     data_quality:
       score: 15
       max: 15
@@ -152,19 +156,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows calibration quality across probability ranges; realistic distribution
+        comment: 'Shows all aspects: calibration curve, perfect calibration line,
+          prediction distribution, summary metrics'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Resembles sklearn predict_proba output; plausible and neutral
+        comment: Imbalanced binary classification (60/40); realistic overconfidence;
+          sensible probability distributions
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Probabilities correctly bounded to [0,1]; proportions factually correct
+        comment: Sample size 1000 (within 500-10000 recommendation); probability range
+          0-1; sensible for classification
     code_quality:
       score: 10
       max: 10
@@ -174,31 +181,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean progression: imports → data → plot → save'
+        comment: No unnecessary functions; straightforward linear execution; clear
+          logic flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Uses np.random.seed(42); deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports; no unused dependencies
+        comment: 'Only used imports: numpy, pandas, lets_plot'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, no over-engineering, no fake functionality
+        comment: No fake interactivity; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves plot-{THEME}.png and .html
+        comment: Saves as plot-{THEME}.png + plot-{THEME}.html
     library_mastery:
       score: 7
       max: 10
@@ -208,22 +216,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of letsplot's ggplot2 API; proper theme customization
+        comment: Perfect ggplot composition syntax; proper geom_line/geom_point/geom_bar
+          usage; theme customization idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses theme tokens appropriately but lacks distinctively letsplot-specific
+        comment: Uses tooltip aes() and HTML export; could explore more letsplot-specific
           features
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
+  - binning
   - matrix-construction
   dataprep:
   - binning
-  styling: []
+  styling:
+  - publication-ready
+  - alpha-blending

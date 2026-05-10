@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 calibration-curve: Calibration Curve
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-10
+Quality: 91/100 | Updated: 2026-05-10
 """
 
 import os
