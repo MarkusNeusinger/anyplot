@@ -1,20 +1,30 @@
-""" pyplots.ai
+"""anyplot.ai
 gantt-basic: Basic Gantt Chart
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-27
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2025-05-10
 """
 
+import os
 import tempfile
 import time
 import urllib.request
 from datetime import datetime
 from pathlib import Path
 
-from highcharts_core.chart import Chart
-from highcharts_core.options import HighchartsOptions
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Data - Project tasks with start/end dates and categories
 tasks = [
@@ -37,143 +47,59 @@ tasks = [
     {"name": "Go Live", "start": datetime(2025, 4, 14), "end": datetime(2025, 4, 18), "category": "Deployment"},
 ]
 
-# Colors for categories (colorblind-safe)
+# Map categories to Okabe-Ito colors
 category_colors = {
-    "Planning": "#306998",  # Python Blue
-    "Development": "#FFD43B",  # Python Yellow
-    "Testing": "#9467BD",  # Purple
-    "Deployment": "#17BECF",  # Cyan
+    "Planning": OKABE_ITO[0],  # #009E73
+    "Development": OKABE_ITO[1],  # #D55E00
+    "Testing": OKABE_ITO[2],  # #0072B2
+    "Deployment": OKABE_ITO[3],  # #CC79A7
 }
 
-# Create chart
-chart = Chart(container="container")
-chart.options = HighchartsOptions()
-
-# Chart configuration
-chart.options.chart = {
-    "type": "xrange",
-    "width": 4800,
-    "height": 2700,
-    "backgroundColor": "#ffffff",
-    "spacingBottom": 120,
-    "marginLeft": 420,
-    "marginTop": 150,
-}
-
-# Set colors at chart level
-chart.options.colors = ["#306998", "#FFD43B", "#9467BD", "#17BECF"]
-
-# Title
-chart.options.title = {
-    "text": "gantt-basic · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
-    "y": 60,
-}
-
-# X-axis (time)
-today_ts = int(datetime(2025, 2, 15).timestamp() * 1000)
-chart.options.x_axis = {
-    "type": "datetime",
-    "dateTimeLabelFormats": {"week": "%e %b", "month": "%b '%y"},
-    "title": {"text": "Timeline", "style": {"fontSize": "32px"}},
-    "labels": {"style": {"fontSize": "28px"}},
-    "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
-    "plotLines": [
-        {
-            "value": today_ts,
-            "color": "#E53935",
-            "width": 4,
-            "zIndex": 10,
-            "label": {
-                "text": "Today (Feb 15)",
-                "style": {"fontSize": "26px", "color": "#E53935", "fontWeight": "bold"},
-                "rotation": 0,
-                "align": "center",
-                "y": -20,
-            },
-        }
-    ],
-}
-
-# Y-axis (tasks)
 task_names = [t["name"] for t in tasks]
-chart.options.y_axis = {
-    "type": "category",
-    "categories": task_names,
-    "title": {"text": "Tasks", "style": {"fontSize": "32px"}},
-    "labels": {"style": {"fontSize": "26px"}},
-    "gridLineWidth": 1,
-    "gridLineColor": "#f0f0f0",
-    "reversed": True,
-}
 
-# Legend configuration - show categories
-chart.options.legend = {
-    "enabled": True,
-    "align": "center",
-    "verticalAlign": "bottom",
-    "layout": "horizontal",
-    "itemStyle": {"fontSize": "32px"},
-    "symbolRadius": 4,
-    "symbolWidth": 50,
-    "symbolHeight": 30,
-    "floating": False,
-}
+# Download Highcharts JS from jsDelivr CDN
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts.js"
+xrange_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/modules/xrange.js"
 
-# Tooltip configuration
-chart.options.tooltip = {
-    "headerFormat": '<span style="font-size: 24px; font-weight: bold;">{point.key}</span><br/>',
-    "pointFormat": '<span style="font-size: 22px">{point.x:%b %e} - {point.x2:%b %e, %Y}</span>',
-}
-
-# Create series for each category (for legend with color coding)
-# Order categories to appear properly in legend
-category_order = ["Planning", "Development", "Testing", "Deployment"]
-series_list = []
-
-for category in category_order:
-    color = category_colors[category]
-    category_data = []
-    for i, task in enumerate(tasks):
-        if task["category"] == category:
-            category_data.append(
-                {
-                    "x": int(task["start"].timestamp() * 1000),
-                    "x2": int(task["end"].timestamp() * 1000),
-                    "y": i,
-                    "name": task["name"],
-                    "color": color,
-                }
-            )
-
-    series_list.append(
-        {
-            "type": "xrange",
-            "name": category,
-            "color": color,
-            "pointWidth": 55,
-            "data": category_data,
-            "dataLabels": {"enabled": False},
-            "borderRadius": 6,
-            "borderWidth": 2,
-            "borderColor": "#555555",
-        }
-    )
-
-chart.options.series = series_list
-
-# Download Highcharts JS modules
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+req = urllib.request.Request(
+    highcharts_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+)
+with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-xrange_url = "https://code.highcharts.com/modules/xrange.js"
-with urllib.request.urlopen(xrange_url, timeout=30) as response:
+req = urllib.request.Request(
+    xrange_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+)
+with urllib.request.urlopen(req, timeout=30) as response:
     xrange_js = response.read().decode("utf-8")
 
-# Generate HTML with inline scripts
-html_str = chart.to_js_literal()
+# Build series data with timestamps
+today_ts = int(datetime(2025, 2, 15).timestamp() * 1000)
+series_data_planning = []
+series_data_development = []
+series_data_testing = []
+series_data_deployment = []
+
+for i, task in enumerate(tasks):
+    point = {
+        "x": int(task["start"].timestamp() * 1000),
+        "x2": int(task["end"].timestamp() * 1000),
+        "y": i,
+        "name": task["name"],
+    }
+    if task["category"] == "Planning":
+        series_data_planning.append(point)
+    elif task["category"] == "Development":
+        series_data_development.append(point)
+    elif task["category"] == "Testing":
+        series_data_testing.append(point)
+    else:
+        series_data_deployment.append(point)
+
+# Format task names as JavaScript array
+task_names_js = "[" + ",".join([f'"{name}"' for name in task_names]) + "]"
+
+# Generate HTML with embedded JavaScript configuration
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -181,17 +107,127 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{xrange_js}</script>
 </head>
-<body style="margin:0; padding:0; background: #ffffff;">
+<body style="margin:0; background-color: {PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
-    <script>{html_str}</script>
+    <script>
+        Highcharts.chart('container', {{
+            chart: {{
+                type: 'xrange',
+                width: 4800,
+                height: 2700,
+                backgroundColor: '{PAGE_BG}',
+                spacingBottom: 120,
+                marginLeft: 360,
+                marginTop: 150,
+            }},
+            colors: ['{OKABE_ITO[0]}', '{OKABE_ITO[1]}', '{OKABE_ITO[2]}', '{OKABE_ITO[3]}'],
+            title: {{
+                text: 'gantt-basic · highcharts · anyplot.ai',
+                style: {{fontSize: '28px', fontWeight: 'bold', color: '{INK}'}},
+                y: 40,
+            }},
+            xAxis: {{
+                type: 'datetime',
+                title: {{
+                    text: 'Timeline',
+                    style: {{fontSize: '22px', color: '{INK}'}}
+                }},
+                labels: {{style: {{fontSize: '18px', color: '{INK_SOFT}'}}}},
+                lineColor: '{INK_SOFT}',
+                tickColor: '{INK_SOFT}',
+                gridLineWidth: 1,
+                gridLineColor: '{GRID}',
+                plotLines: [{{
+                    value: {today_ts},
+                    color: '#E53935',
+                    width: 4,
+                    zIndex: 10,
+                    label: {{
+                        text: 'Today (Feb 15)',
+                        style: {{fontSize: '18px', color: '#E53935', fontWeight: 'bold'}},
+                        rotation: 0,
+                        align: 'center',
+                        y: -20
+                    }}
+                }}]
+            }},
+            yAxis: {{
+                type: 'category',
+                categories: {task_names_js},
+                title: {{
+                    text: 'Tasks',
+                    style: {{fontSize: '22px', color: '{INK}'}}
+                }},
+                labels: {{style: {{fontSize: '18px', color: '{INK_SOFT}'}}}},
+                lineColor: '{INK_SOFT}',
+                tickColor: '{INK_SOFT}',
+                gridLineWidth: 1,
+                gridLineColor: '{GRID}',
+                reversed: true
+            }},
+            legend: {{
+                enabled: true,
+                align: 'center',
+                verticalAlign: 'bottom',
+                layout: 'horizontal',
+                itemStyle: {{fontSize: '18px', color: '{INK_SOFT}'}},
+                backgroundColor: '{ELEVATED_BG}',
+                borderColor: '{INK_SOFT}',
+                borderWidth: 1,
+                symbolRadius: 6,
+                symbolWidth: 60,
+                symbolHeight: 30
+            }},
+            tooltip: {{
+                headerFormat: '<span style="font-size: 18px; font-weight: bold;">{{point.key}}</span><br/>',
+                pointFormat: '<span style="font-size: 16px; color: {{series.color}}">● {{series.name}}</span><br/><span style="font-size: 16px">{{point.x:%b %e}} - {{point.x2:%b %e, %Y}}</span>',
+                style: {{fontSize: '16px', color: '{INK}'}},
+                backgroundColor: '{ELEVATED_BG}',
+                borderColor: '{INK_SOFT}',
+                borderRadius: 6
+            }},
+            plotOptions: {{
+                xrange: {{
+                    pointWidth: 55,
+                    borderRadius: 6,
+                    borderWidth: 2,
+                    borderColor: '{INK_SOFT}',
+                    dataLabels: {{enabled: false}}
+                }}
+            }},
+            series: [
+                {{
+                    name: 'Planning',
+                    data: {str(series_data_planning)},
+                    color: '{OKABE_ITO[0]}'
+                }},
+                {{
+                    name: 'Development',
+                    data: {str(series_data_development)},
+                    color: '{OKABE_ITO[1]}'
+                }},
+                {{
+                    name: 'Testing',
+                    data: {str(series_data_testing)},
+                    color: '{OKABE_ITO[2]}'
+                }},
+                {{
+                    name: 'Deployment',
+                    data: {str(series_data_deployment)},
+                    color: '{OKABE_ITO[3]}'
+                }}
+            ],
+            credits: {{enabled: false}}
+        }});
+    </script>
 </body>
 </html>"""
 
 # Save HTML
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
-# Screenshot with Selenium - use element screenshot for exact dimensions
+# Screenshot with Selenium
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
@@ -205,11 +241,10 @@ chrome_options.add_argument("--window-size=5000,3000")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)
+time.sleep(10)
 
-# Take screenshot of the chart container element for exact dimensions
 container = driver.find_element("id", "container")
-container.screenshot("plot.png")
+container.screenshot(f"plot-{THEME}.png")
 
 driver.quit()
 Path(temp_path).unlink()
