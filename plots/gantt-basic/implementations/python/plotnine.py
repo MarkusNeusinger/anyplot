@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 gantt-basic: Basic Gantt Chart
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-27
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-10
 """
 
+import os
 from datetime import datetime
 
 import pandas as pd
@@ -11,6 +12,7 @@ from plotnine import (
     aes,
     element_blank,
     element_line,
+    element_rect,
     element_text,
     geom_segment,
     geom_vline,
@@ -22,6 +24,16 @@ from plotnine import (
     theme_minimal,
 )
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (5 categories)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
 
 # Data - Software development project schedule
 data = {
@@ -59,7 +71,7 @@ data = {
         datetime(2025, 3, 7),
         datetime(2025, 3, 14),
         datetime(2025, 3, 14),
-        datetime(2025, 3, 14),
+        datetime(2025, 3, 21),
     ],
     "category": [
         "Planning",
@@ -81,13 +93,13 @@ df = pd.DataFrame(data)
 df = df.sort_values("start", ascending=True)
 df["task"] = pd.Categorical(df["task"], categories=df["task"].tolist(), ordered=True)
 
-# Python-inspired color palette
-colors = {
-    "Planning": "#306998",  # Python Blue
-    "Design": "#FFD43B",  # Python Yellow
-    "Development": "#4B8BBE",  # Light Python Blue
-    "QA": "#646464",  # Gray
-    "Deployment": "#28A745",  # Green
+# Map categories to Okabe-Ito colors
+category_colors = {
+    "Planning": OKABE_ITO[0],
+    "Design": OKABE_ITO[1],
+    "Development": OKABE_ITO[2],
+    "QA": OKABE_ITO[3],
+    "Deployment": OKABE_ITO[4],
 }
 
 # Current date marker
@@ -96,27 +108,31 @@ today = datetime(2025, 2, 10)
 # Create the Gantt chart
 plot = (
     ggplot(df, aes(x="start", xend="end", y="task", yend="task", color="category"))
-    + geom_segment(size=12, lineend="butt")
-    + geom_vline(xintercept=today, linetype="dashed", color="#E74C3C", size=1.5)
-    + scale_color_manual(values=colors)
+    + geom_segment(size=12)
+    + geom_vline(xintercept=today, linetype="dashed", color=INK, size=1.5, alpha=0.5)
+    + scale_color_manual(values=category_colors)
     + scale_y_discrete(limits=df["task"].tolist()[::-1])
-    + labs(title="gantt-basic \u00b7 plotnine \u00b7 pyplots.ai", x="Date", y="Task", color="Phase")
+    + labs(title="gantt-basic · plotnine · anyplot.ai", x="Date", y="Task", color="Phase")
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, face="bold"),
-        axis_title_x=element_text(size=20),
-        axis_title_y=element_text(size=20),
-        axis_text_x=element_text(size=16, rotation=45, ha="right"),
-        axis_text_y=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=14),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        plot_title=element_text(size=24, face="bold", color=INK),
+        axis_title_x=element_text(size=20, color=INK),
+        axis_title_y=element_text(size=20, color=INK),
+        axis_text_x=element_text(size=16, rotation=45, ha="right", color=INK_SOFT),
+        axis_text_y=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.5),
+        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=14, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_position="right",
         panel_grid_major_y=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_x=element_line(color="#CCCCCC", size=0.5, alpha=0.5),
+        panel_grid_major_x=element_line(color=INK, size=0.3, alpha=0.10),
     )
 )
 
 # Save the plot
-plot.save("plot.png", dpi=300, width=16, height=9)
+plot.save(f"plot-{THEME}.png", dpi=300, width=16, height=9)
