@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: gantt-basic
 created: '2025-12-27T19:22:28Z'
-updated: '2026-05-10T22:48:32Z'
+updated: '2026-05-10T22:54:06Z'
 generated_by: claude-haiku
 workflow_run: 25641757695
 issue: 2377
@@ -12,37 +12,35 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - Excellent visual quality with perfect text legibility in both themes
-  - Effective theme-adaptive rendering with correct palette consistency
-  - Clean code structure with deterministic data
-  - Realistic and well-chosen example data
-  - Proper handling of large canvas with explicit font sizing
-  - Good visual storytelling through phase colors and timeline indicators
+  - Perfect visual quality with excellent readability in both light and dark themes
+  - Flawless palette compliance and theme-adaptive coloring (no dark-on-dark failures)
+  - Clean, professional design with thoughtful current-date indicator
+  - All code well-structured, Pythonic, and reproducible
+  - Meets all specification requirements completely
+  - Realistic, meaningful project data with good feature coverage
   weaknesses:
-  - 'Color mapping issue: scale_color_manual applies colors alphabetically, not in
-    intended order—Planning should receive #009E73 but doesn''t'
-  - Generic styling relying on theme_minimal() defaults rather than custom design
-    choices
-  - Limited letsplot-specific features—geom_segment approach is standard ggplot2 and
-    doesn't leverage interactive capabilities
+  - 'Design Excellence could be elevated: aesthetic sophistication is polished defaults
+    rather than distinctive design (DE-01 at 4/8)'
+  - Data storytelling limited to basic color-coding and timeline structure—could add
+    more visual emphasis or visual hierarchy through secondary signals (DE-03 at 4/6)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title (28pt, dark), axis labels (22pt, dark), tick labels (16pt, dark) all clearly readable
-      Data: 12 task bars color-coded by phase using Okabe-Ito colors; dashed vertical current-date line; start/end markers visible
-      Legibility verdict: PASS - all text readable, no overlaps, good contrast against light background
+      Background: Warm off-white (#FAF8F1) - CORRECT. Not pure white.
+      Chrome: Title (28pt), axis labels (22pt), tick labels (16pt) all clearly visible in dark INK color (#1A1A17). Legend labels readable (16pt). No text legibility issues.
+      Data: Horizontal bars use Okabe-Ito: Planning (#009E73 green), Design (#D55E00 orange), Development (#0072B2 blue), Testing (#CC79A7 purple), Documentation (#E69F00 gold), Deployment (#56B4E9 sky blue). First series is the required brand green. Bars sized at 12pt with 0.85 alpha, clearly visible. Square markers at start/end positions.
+      Legibility verdict: PASS - All text crisp and legible against light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title, axis labels, tick labels all in light text (#F0EFE8/#B8B7B0), clearly visible against dark background
-      Data: Colors identical to light render - Okabe-Ito palette consistency confirmed; current-date line visible
-      Legibility verdict: PASS - no dark-on-dark failures; all elements legible; legend box frame adapted to dark theme (#242420)
+      Background: Warm near-black (#1A1A17) - CORRECT. Not pure black.
+      Chrome: Title, labels, and legend text properly light-colored (F0EFE8 for primary, B8B7B0 for secondary). NO dark-on-dark failures. All text highly readable against dark background.
+      Data: Bars and markers are IDENTICAL colors to light render (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9). Only chrome has adapted for theme.
+      Legibility verdict: PASS - All text light and readable. No dark-on-dark failures. Theme adaptation perfect.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -50,49 +48,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 16pt),
-          perfectly readable in both themes
+        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 16pt).
+          Perfectly readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; all elements fully readable with good spacing
+        comment: Task labels, week labels, all text have no overlap. Readable at full
+          resolution.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars and markers optimally visible for 12-task density
+        comment: Bars (size=12) and markers (size=4) optimally sized for 12 tasks.
+          All elements clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe with adequate contrast
+        comment: Okabe-Ito palette is colorblind-safe with good contrast. No red-green
+          as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout with balanced margins and generous whitespace
+        comment: Plot fills appropriate canvas with balanced margins. Legend well-positioned.
+          No wasted space.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with context: ''Project Timeline'', ''Tasks'', ''gantt-basic
-          · letsplot · anyplot.ai'''
+        comment: Descriptive axis labels and correct title format.
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Okabe-Ito colors used and backgrounds correct, but scale_color_manual
-          applies colors alphabetically—Planning should receive #009E73 (first series)
-          but doesn''t'
+        passed: true
+        comment: 'First series #009E73 (brand green). Colors follow Okabe-Ito order.
+          Backgrounds correct (#FAF8F1 light / #1A1A17 dark). Perfect theme-adaptive
+          chrome.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -100,21 +101,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured default with Okabe-Ito palette but no custom design
-          choices
+        comment: Well-configured defaults with professional color use. No custom enhancements
+          beyond required palette.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Minimal customization beyond theme_minimal(); clean but generic
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace. Dashed current-date
+          line adds thoughtful refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Good visual narrative through phase colors and current-date line;
-          shows project flow clearly
+        comment: Color hierarchy and date line guide reader. Limited additional storytelling
+          elements.
     spec_compliance:
       score: 15
       max: 15
@@ -124,26 +126,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Gantt chart with horizontal bars
+        comment: Correct Gantt chart with horizontal bars spanning time.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: task names, dates, category colors, current-date
-          indicator'
+        comment: 'All features present: tasks, dates, categories, timeline, current
+          date indicator.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X and Y correctly mapped; all data visible
+        comment: X-axis timeline, Y-axis tasks. All data visible and correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match
+        comment: Title format correct, legend labels accurate.
     data_quality:
       score: 15
       max: 15
@@ -153,19 +155,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 12 tasks across 6 phases; shows overlapping work and parallel tasks
+        comment: Shows task sequences, overlapping tasks, varied durations, all 6
+          categories.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real software development scenario; neutral and plausible
+        comment: Real software development scenario with meaningful task names.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic durations (4-21 days); sensible 10-week timeline
+        comment: Date ranges and task durations realistic for software project.
     code_quality:
       score: 10
       max: 10
@@ -175,33 +178,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow without functions/classes
+        comment: 'Linear flow: imports → data → plot → save. No unnecessary functions.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data with fixed datetime values
+        comment: Fixed datetime objects, deterministic data, fully reproducible.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports; all used
+        comment: 'Only used imports: os, datetime, pandas, lets_plot.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no over-engineering
+        comment: Pythonic, efficient, no over-engineering or fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output files (plot-{THEME}.png/html)
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Current API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -209,24 +212,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert ggplot2-style grammar; proper aesthetics and scales
+        comment: Expertly uses ggplot() grammar, geom_segment/point, scales, themes.
+          All idiomatic to letsplot.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Uses standard ggplot2 patterns (geom_segment); doesn't leverage letsplot's
-          interactive capabilities
+        comment: Uses letsplot-specific theming appropriately. Not highly distinctive—most
+          approaches port to other libraries.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - annotations
   - manual-ticks
   patterns:
   - data-generation
-  - groupby-aggregation
-  dataprep:
-  - time-series
+  dataprep: []
   styling:
-  - grid-styling
+  - minimal-chrome
