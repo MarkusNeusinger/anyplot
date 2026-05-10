@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: bar-error
 created: '2025-12-27T19:22:47Z'
-updated: '2026-05-10T14:47:37Z'
+updated: '2026-05-10T14:53:54Z'
 generated_by: claude-haiku
 workflow_run: 25631537233
 issue: 2376
@@ -12,31 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-error
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - Perfect visual quality with all text legible, no overlaps, excellent layout
-  - Correct theme implementation with proper light/dark adaptation
-  - Complete spec compliance with all features working correctly
-  - Idiomatic altair usage with expert layering pattern
-  - Realistic and statistically sensible data scenario
+  - Excellent visual quality with all text legible in both light and dark themes
+  - Proper theme adaptation with no dark-on-dark failures
+  - Full spec compliance with all required features correctly implemented
+  - Clean idiomatic Altair code using layering for multi-mark composition
+  - Proper use of Okabe-Ito brand color and theme-adaptive chrome tokens
+  - Helpful annotation clarifies error bar meaning
   weaknesses:
-  - Design excellence is generic (looks like well-configured defaults, not bespoke
-    design)
-  - No visual hierarchy or emphasis to guide reader toward insights
-  - Doesn't leverage distinctive altair features like interactive selections or transformations
+  - Design Excellence is solid but not exceptional - styling is functional rather
+    than distinctive
+  - Visual refinement could be enhanced with subtle bar edge colors, custom grid styling,
+    or emphasis techniques
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme
-      Chrome: Title, axis labels, ticks all clearly visible in dark text
-      Data: Five green bars (#009E73) with symmetric error bars and tick caps; annotation explains ±1 SD
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1), correct for light theme
+      Chrome: Title (28px), axis labels (22px), tick labels (18px) all clearly readable in dark text
+      Data: Green bars (#009E73, Okabe-Ito) with gray error bars featuring visible horizontal caps
+      Annotation: "Error bars: ±1 SD" positioned in top-right, secondary text color, fully legible
+      Grid: Subtle (10% opacity), does not compete with data
+      Legibility verdict: PASS - all elements readable against light background, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme
-      Chrome: Title, axis labels, ticks all clearly visible in light text; no dark-on-dark issues
-      Data: Bars and error bars identical green to light render; only chrome adapted
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17), correct for dark theme
+      Chrome: Title, axis labels, tick labels all clearly readable in light text
+      Data: Green bars identical to light render (#009E73), confirming proper theme adaptation
+      Error bars: Gray bars visible against dark background with clear caps
+      Annotation: "Error bars: ±1 SD" remains visible and readable
+      Grid: Subtle but visible
+      Legibility verdict: PASS - all elements readable, no dark-on-dark failures detected, brand green reads well on dark surface
   criteria_checklist:
     visual_quality:
       score: 30
@@ -47,58 +53,68 @@ review:
         score: 8
         max: 8
         passed: true
+        comment: All font sizes explicit (28px title, 22px axes, 18px ticks). Readable
+          in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
+        comment: All text readable without collisions. Annotation well-positioned.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
+        comment: Error bars and caps clearly visible. Appropriate spacing.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
+        comment: 'Okabe-Ito #009E73, adequate contrast, no red-green dependency.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
+        comment: Good proportions (1600x900), nothing cut off, generous whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
+        comment: Labels include units. Title format correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
+        comment: 'First series #009E73. Backgrounds correct. Both renders theme-correct.'
     design_excellence:
-      score: 8
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured defaults, not bespoke design
+        comment: Professional and functional, annotation adds clarity. Not exceptional.
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Minimal customization beyond defaults
+        comment: Standard styling, clean and functional. Could add subtle bar edges
+          or custom grid.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy or emphasis
+        comment: Visual hierarchy shows Combination treatment superiority. Straightforward
+          narrative.
     spec_compliance:
       score: 15
       max: 15
@@ -108,21 +124,26 @@ review:
         score: 5
         max: 5
         passed: true
+        comment: Correct bar chart with error bars.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
+        comment: 'All features: bars, values, symmetric errors, caps, annotation.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
+        comment: 'X: treatment groups, Y: response rate (0-100%), errors correctly
+          calculated.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
+        comment: Correct title format and error explanation.
     data_quality:
       score: 15
       max: 15
@@ -132,16 +153,21 @@ review:
         score: 6
         max: 6
         passed: true
+        comment: 'All aspects shown: 5 categories, varied values (45.2-82.1), varied
+          errors (8.5-15.2).'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
+        comment: Treatment comparison with measurement uncertainty is realistic and
+          neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
+        comment: Response rate scale (0-100%) sensible, values span 35-95.
     code_quality:
       score: 10
       max: 10
@@ -151,28 +177,33 @@ review:
         score: 3
         max: 3
         passed: true
+        comment: 'Straightforward: data, layers, combination. No unnecessary functions.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
+        comment: Deterministic data (explicit values).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
+        comment: 'Only used imports: os, sys, altair, pandas.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
+        comment: Appropriate complexity, clear names. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
+        comment: Saves plot-{THEME}.png and .html. Current API (altair 6.1.0).
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -180,22 +211,23 @@ review:
         score: 5
         max: 5
         passed: true
+        comment: Proper Chart().mark_bar().encode() pattern. Idiomatic layering with
+          alt.layer().
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: false
-        comment: Standard altair patterns, no advanced features
+        comment: 'Good use of Altair strengths: encoding, layering, tooltips, interactive
+          export.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - annotations
-  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep: []
-  styling:
-  - grid-styling
+  styling: []
