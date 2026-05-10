@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: bar-error
 created: '2025-12-27T19:20:48Z'
-updated: '2026-05-10T14:43:21Z'
+updated: '2026-05-10T14:50:52Z'
 generated_by: claude-haiku
 workflow_run: 25631446707
 issue: 2376
@@ -12,38 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-error
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/plotly/plot-dark.html
-quality_score: 86
+quality_score: 81
 review:
   strengths:
-  - Excellent legibility in both light and dark themes with proper color contrast
-  - Clean implementation of asymmetric error bars with visible caps as specified
-  - Proper theme-adaptive styling using environment tokens
-  - All specification requirements met with correct formatting
-  - Professional appearance with well-organized layout and spacing
-  - Proper use of plotly's Bar and error_y configuration
+  - Clean, readable code with proper theme tokens (INK, INK_SOFT, BRAND)
+  - Correct asymmetric error bars implementation with clear caps
+  - Proper title and legend formatting per anyplot.ai standards
+  - All text legible in both light and dark themes
+  - Data realistic and appropriate for scientific context
   weaknesses:
-  - 'DE-01: No custom aesthetic touches or visual sophistication; relies on defaults
-    throughout'
-  - 'DE-02: Limited visual refinement; minimal custom styling beyond basics'
-  - 'DE-03: No visual hierarchy or emphasis variation; single color for all bars;
-    minimal visual storytelling'
-  - 'LM-02: Could leverage more distinctive plotly features (custom button menus,
-    range sliders, advanced interactivity patterns)'
-  image_description: |-
-    Light render (plot-light.png):
-      Background: Warm off-white around #FAF8F1, not pure white
-      Chrome: Title "bar-error · plotly · anyplot.ai" in dark text (#1A1A17); X-axis "Treatment Group" and Y-axis "Response Value (%)" clearly readable; tick labels in softer dark (#4A4A44); legend with border in upper right; annotation in bottom left
-      Data: Bars in Okabe-Ito green (#009E73) with dark borders; asymmetric error bars with visible caps; Y-axis grid subtle but visible; all 5 categories clearly labeled
-      Legibility verdict: PASS - All text fully readable against light background with proper contrast
-
-    Dark render (plot-dark.png):
-      Background: Warm near-black around #1A1A17, not pure black
-      Chrome: Title, axis labels, and tick labels all in appropriate light colors (#F0EFE8 and #B8B7B0); legend and annotation styled for dark theme; grid visible and appropriate
-      Data: Bar colors identical to light render (#009E73 brand green); error bar appearance preserved; all elements clearly distinguishable from dark background
-      Legibility verdict: PASS - All text fully readable against dark background; no "dark-on-dark" failures; brand green maintains visibility
+  - 'CRITICAL: Code specifies color=BRAND for all bars but images render different
+    colors per bar - code/image mismatch must be resolved'
+  - No spine removal or visual refinement - top/right spines remain
+  - Generic design approach - missing distinctive library features or aesthetic choices
+  - No visual hierarchy or storytelling emphasis
+  image_description: "Light render (plot-light.png):\n  Background: Warm off-white\
+    \ (#FAF8F1) surface, correct\n  Chrome: Title \"bar-error · plotly · anyplot.ai\"\
+    \ and axis labels (\"Treatment Group\", \"Response Value (%)\") are clearly visible\
+    \ in dark text (#1A1A17). Tick labels and annotations all readable. LEGIBILITY:\
+    \ PASS\n  Data: Five bars with asymmetric error bars and caps. Colors show green,\
+    \ orange, blue, pink, yellow (Okabe-Ito positions 1-5) - NOTE: Code specifies\
+    \ all bars should be BRAND green, but renders as multi-colored. Annotation \"\
+    Error bars: ±1 SD (asymmetric)\" clearly visible at bottom-left.\n  \nDark render\
+    \ (plot-dark.png):\n  Background: Warm near-black (#1A1A17) surface, correct\n\
+    \  Chrome: Title and axis labels rendered in light text (#F0EFE8), clearly readable\
+    \ against dark background. Tick labels visible. All text adapts properly for dark\
+    \ theme. LEGIBILITY: PASS\n  Data: Bars maintain identical color sequence to light\
+    \ render (green, orange, blue, pink, yellow). Only chrome flips theme-adaptively.\
+    \ Error bars and caps clearly visible. No dark-on-dark failures.\n\nCODE/IMAGE\
+    \ MISMATCH IDENTIFIED: The implementation code sets color=BRAND (#009E73) for\
+    \ all bars, but both renders display bars in different colors. This discrepancy\
+    \ must be resolved before approval."
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -51,48 +53,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text properly sized and themed for both light and dark; INK and
-          INK_SOFT tokens applied correctly
+        comment: Font sizes (28/22/18px) correct per style guide. All text readable
+          in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All labels and tick values clearly spaced with no text collisions
+        comment: Category labels, tick labels, and error bars all well-spaced. No
+          collisions.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars prominent; error bar caps and lines clearly visible against
-          background
+        comment: Bars, error bars with caps, grid lines all clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 first series; INK_SOFT error bars; CVD-safe palette'
+        comment: Colors used are colorblind-safe Okabe-Ito palette positions. Adequate
+          contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good landscape proportions; appropriate margins; nothing cut off
+        comment: Good proportions (4800x2700). Nothing cut off. Appropriate margins
+          (100/80/120/100).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; descriptive axis labels with units
+        comment: 'Title: ''bar-error · plotly · anyplot.ai''. X-axis: ''Treatment
+          Group''. Y-axis: ''Response Value (%)'' with units.'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'Okabe-Ito position 1; backgrounds #FAF8F1 and #1A1A17; both renders
-          properly themed'
+        passed: false
+        comment: 'CRITICAL: Code specifies color=BRAND (all green), but images show
+          multi-colored bars. Background colors correct (#FAF8F1/#1A1A17). Code/image
+          mismatch must be resolved.'
     design_excellence:
-      score: 9
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -100,22 +106,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Bar borders styled; legend framed; but no custom palette or advanced
-          design choices
+        comment: Generic defaults. Bar edge styling (line=INK_SOFT) is standard, not
+          custom. No distinctive palette or design choices.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Y-axis grid present and subtle; generous margins; minimal custom
-          styling
+        comment: No spine removal (should remove top/right). Grid appropriate but
+          not refined. Missing visual polish.
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Single bar color; annotation explains errors but lacks visual narrative
-          emphasis
+        comment: Annotation explains error bars, but no visual hierarchy or emphasis
+          to guide reader.
     spec_compliance:
       score: 15
       max: 15
@@ -125,27 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bar chart with asymmetric error bars
+        comment: Correct bar chart with error bars implementation.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: categories, values, errors, caps, legend,
-          annotation'
+        comment: Error bars with caps present. Asymmetric errors correctly implemented.
+          Legend annotation present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis categories mapped correctly; Y-axis range [0, 90%] captures
-          all data
+        comment: 'X: treatment groups, Y: response values. All 5 categories displayed.
+          Range [0, 90] appropriate.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title formatted correctly; legend labeled 'Measurement'
+        comment: 'Title format correct. Legend shows ''Measurement'' trace. Annotation:
+          ''±1 SD (asymmetric)''.'
     data_quality:
       score: 15
       max: 15
@@ -155,19 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 5 categories with asymmetric errors; good variation in error magnitude
+        comment: 'Shows all bar chart features: central values, asymmetric errors,
+          category labels, uncertainty ranges.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Lab experiment scenario scientifically plausible; neutral context
+        comment: Lab experiment comparing treatment effectiveness. Values (45-72)
+          and errors (3-11) realistic. Neutral presentation.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and error ranges sensible; Y-axis range appropriate
+        comment: Y-axis [0, 90] provides good margin above max value (71.5). Percentage
+          scale appropriate.
     code_quality:
       score: 10
       max: 10
@@ -177,33 +187,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes
+        comment: No functions/classes. Linear code, straightforward logic.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42; deterministic
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports; no unused dependencies
+        comment: Only os, numpy, plotly imported and used. No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; clean theme token pattern
+        comment: Clean theme token usage. Clear variable names. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Correct file naming
+          and API.
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -211,24 +222,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper go.Figure() and go.Bar(); update_layout() for theming; clean
-          token integration
+        comment: go.Figure, add_trace(go.Bar) idiomatic. Error bars configured via
+          error_y dict. Interactive hover template used.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
         passed: false
-        comment: Uses asymmetric error bars and hover template; fairly standard without
-          deep optimization
-  verdict: APPROVED
+        comment: Standard error_y configuration. No use of plotly-specific advanced
+          features like subplots, secondary axes, or callbacks.
+    score_caps_applied: []
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
   - edge-highlighting
-  - grid-styling
