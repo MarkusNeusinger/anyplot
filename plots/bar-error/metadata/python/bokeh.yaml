@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: bar-error
 created: '2025-12-27T19:22:25Z'
-updated: '2026-05-10T14:45:32Z'
+updated: '2026-05-10T14:52:10Z'
 generated_by: claude-haiku
 workflow_run: 25631490410
 issue: 2376
@@ -12,44 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-error
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 78
 review:
   strengths:
-  - 'Perfect visual quality: all text sizes explicitly set (28pt title, 22pt axis
-    labels, 18pt tick labels) and fully readable in both themes'
-  - 'Flawless theme implementation: data colors (#009E73) identical across light and
-    dark; chrome perfectly adapted (background #FAF8F1 light / #1A1A17 dark; text
-    and grid colors theme-correct)'
-  - 'Excellent spec compliance: bar chart with error bars, visible caps, symmetric
-    errors, correct title format, all required features present'
-  - 'Clean Pythonic code: linear structure, proper ColumnDataSource usage, deterministic
-    seeding (np.random.seed(42)), no unused imports'
-  - 'Proper Bokeh idioms: ColumnDataSource for data, Whisker + TeeHead for error bars
-    with caps, explicit font sizing for high-resolution rendering'
+  - Perfect theme adaptation in chrome with both light and dark renders highly readable
+  - Professional error bar design using Bokeh's Whisker and TeeHead models
+  - All text explicitly sized and readable at full resolution in both themes
+  - Clean, uncluttered layout with appropriate spacing and proportions
+  - Correct data mapping and category representation
   weaknesses:
-  - 'Design Excellence limited to configured defaults: no exceptional aesthetic design,
-    custom color harmonies, or typographic emphasis — uses standard Okabe-Ito palette
-    without additional refinement'
-  - 'No visual storytelling or hierarchy: plot accurately displays data but doesn''t
-    guide the viewer toward insight; categories not ordered for narrative (e.g., by
-    revenue), no visual emphasis on variation in error ranges'
-  - 'Minimal visual refinement beyond standard library defaults: grid is subtle (good)
-    but other styling elements (margins, whitespace, spine treatment) are uncustomized'
+  - 'VQ-07 CRITICAL - Palette Violation: Bar 2 (Clothing) is blue (#0072B2) instead
+    of brand green (#009E73); code specifies fill_color=BRAND for all bars but rendering
+    shows inconsistency'
+  - 'SC-02/SC-04 - Missing Error Bar Annotation: Specification requires annotation
+    explaining what error bars represent (e.g. ±1 SD, 95% CI); current plot provides
+    no explanation'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme color, not pure white
-      Chrome: Title "bar-error · bokeh · anyplot.ai" in dark text, axis labels "Product Category" and "Quarterly Revenue ($ millions)" in dark text, tick labels for all 5 categories clearly readable in dark text
-      Data: Five green (#009E73, Okabe-Ito position 1) bars with symmetric error bars; each bar has horizontal caps (TeeHead) extending from the error range; bars show values 85.2, 62.8, 48.5, 71.3, 35.7 with standard deviations 8.5, 5.2, 6.8, 9.1, 4.2
-      Legibility verdict: PASS — all text is dark and readable on light background; bars and error bars are clearly visible; grid is subtle but visible
+      Background: Warm off-white #FAF8F1 - correct
+      Chrome: Title "bar-error · bokeh · anyplot.ai" in dark text (INK); axis labels "Product Category" and "Quarterly Revenue ($ millions)" with units; tick labels all readable
+      Data: 5 bars showing revenue values. CRITICAL ISSUE: Bar 1 (Electronics) is green #009E73, Bar 2 (Clothing) is BLUE #0072B2 (should be green), Bars 3-5 green. Error bars shown in gray with tee-head caps.
+      Legibility verdict: PASS (all text readable, but color inconsistency in data)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme color, not pure black
-      Chrome: Title in light text, axis labels in light text, all tick labels in light text — all readable against dark background; no dark-on-dark failures
-      Data: Same green bars (#009E73) as light render; error bars with visible caps present; data colors are identical to light render (only chrome changed to light theme)
-      Legibility verdict: PASS — all text is light and readable on dark background; excellent contrast; bars and error bars equally visible to light render; no theme-adaptation failures
+      Background: Warm near-black #1A1A17 - correct
+      Chrome: Title in light text #F0EFE8; axis labels and ticks in light text #B8B7B0; all readable
+      Data: Same color issue persists - Bar 2 is blue when it should be green like all others. Error bars and caps visible.
+      Legibility verdict: PASS (readable in dark theme, but color issue remains)
+
+    Both renders have identical data colors (confirming theme adaptation) but Bar 2 has wrong color in both. This suggests a code execution or rendering bug, not a theme-specific issue.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -57,52 +51,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, labels 22pt, ticks 18pt;
-          perfectly readable in both themes'
+        comment: All font sizes explicitly set and readable at full resolution in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; category labels, axis labels, and tick labels
-          all clearly readable with good spacing
+        comment: No overlapping elements; clean spacing throughout
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars and error bars perfectly visible; sizing well-adapted to 5-category
-          data; error bar caps are prominent
+        comment: Bars, error bars, and caps all clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; good contrast between bars and background; CVD-safe
+        comment: Okabe-Ito palette is CVD-safe with good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Perfect layout: plot fills appropriate canvas area (~50-70%), balanced
-          margins, nothing cut off'
+        comment: Well-proportioned layout with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format; Y-axis has units ('Quarterly Revenue ($ millions)');
-          X-axis descriptive ('Product Category')
+        comment: Descriptive labels with units; correct title format
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'First series #009E73 (correct); backgrounds #FAF8F1 light / #1A1A17
-          dark (correct); chrome colors theme-adaptive; both renders pass theme-chrome
-          checks'
+        passed: false
+        comment: 'CRITICAL: Bar 2 is blue #0072B2 instead of brand green #009E73;
+          violates palette compliance'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -110,25 +99,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Looks like well-configured library default; TeeHead caps show some
-          thought but no custom design, intentional hierarchy, or publication-ready
-          polish
+        comment: Well-configured library default; no custom enhancements
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Grid is subtle (y-axis only, alpha 0.10) and well-styled; x-grid
-          hidden; but other elements (spines, whitespace, margins) are standard defaults
+        comment: Minimal customization; Bokeh defaults
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed accurately but no visual hierarchy or emphasis; categories
-          not ordered for narrative; viewer must interpret data without guidance
+        comment: Functional visualization without visual hierarchy
     spec_compliance:
-      score: 15
+      score: 11
       max: 15
       items:
       - id: SC-01
@@ -136,53 +121,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bar chart with error bars present
+        comment: Correct bar chart with error bars
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: 'All spec features: symmetric error bars with visible caps, correct
-          chart type, category labels'
+        passed: false
+        comment: Bars and errors present; missing required annotation explaining error
+          representation
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on X-axis, values on Y-axis; all data visible; axes correctly
-          labeled
+        comment: Categories on X, values on Y, errors properly mapped
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: 'Title: ''bar-error · bokeh · anyplot.ai'' (correct format); no legend
-          needed (single series)'
+        passed: false
+        comment: Title correct; missing error bar annotation/legend
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'All aspects shown: 5 categories with varying values (35.7–85.2M)
-          and different error magnitudes (4.2–9.1 SD)'
+        comment: Shows categorical values with error ranges; realistic example
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real business scenario: quarterly revenue by product line (Electronics,
-          Clothing, Home & Garden, Sports, Books); neutral and comprehensible'
+        comment: Product revenue with standard deviation; neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible revenue figures and error ranges; proportions make sense
-          for quarterly business data
+        comment: Values and errors sensible for revenue domain
     code_quality:
       score: 10
       max: 10
@@ -192,35 +172,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → data → figure → plot → save; no unnecessary functions
-          or classes'
+        comment: Simple linear script; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, bokeh modules, selenium, pathlib, os, time;
-          no unused imports'
+        comment: All imports used appropriately
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity; no over-engineering or fake
-          functionality
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output: plot-light.png, plot-dark.png, plot-light.html,
-          plot-dark.html'
+        comment: Correctly saves as plot-{THEME}.png and .html
     library_mastery:
       score: 7
       max: 10
@@ -230,16 +206,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct Bokeh patterns: ColumnDataSource, figure(), vbar(), Whisker;
-          standard but idiomatic usage'
+        comment: Proper use of ColumnDataSource, figure API, and theme tokens
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses Whisker + TeeHead (Bokeh-specific error bar approach) and theme-token
-          pattern; shows library understanding but could leverage more advanced features
-  verdict: APPROVED
+        passed: true
+        comment: Good use of Whisker and TeeHead models for error bars
+  verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
@@ -249,5 +223,4 @@ impl_tags:
   - data-generation
   - columndatasource
   dataprep: []
-  styling:
-  - grid-styling
+  styling: []
