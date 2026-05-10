@@ -1,173 +1,176 @@
 library: letsplot
+language: python
 specification_id: gantt-basic
 created: '2025-12-27T19:22:28Z'
-updated: '2025-12-27T19:25:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543284331
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - explicit-figure
-  - data-generation
-  dataprep: []
-  styling:
-  - grid-styling
+updated: '2026-05-10T22:54:06Z'
+generated_by: claude-haiku
+workflow_run: 25641757695
+issue: 2377
+python_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/python/letsplot/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent visual clarity with proper bar sizing and spacing between tasks
-  - Smart use of geom_segment with square end markers for clean Gantt bar appearance
-  - Professional color palette with 6 distinct phase colors
-  - Well-structured realistic software development project data
-  - Proper canvas sizing (1600x900 with scale=3) for 4800x2700 output
-  - Clean week-based x-axis labeling making timeline easy to follow
-  - Tasks logically sorted by start date for natural reading flow
+  - Perfect visual quality with excellent readability in both light and dark themes
+  - Flawless palette compliance and theme-adaptive coloring (no dark-on-dark failures)
+  - Clean, professional design with thoughtful current-date indicator
+  - All code well-structured, Pythonic, and reproducible
+  - Meets all specification requirements completely
+  - Realistic, meaningful project data with good feature coverage
   weaknesses:
-  - Missing today marker (vertical reference line) which spec notes suggest
-  - Blue and teal colors for Planning and Deployment phases could be more distinct
-    for colorblind accessibility
-  - Cleanup code for lets-plot-images folder adds unnecessary complexity
-  image_description: 'The plot displays a professional Gantt chart for a software
-    development project with 12 tasks displayed as horizontal bars. Tasks are listed
-    vertically on the y-axis from "Requirements Gathering" at the top to "Deployment"
-    at the bottom, sorted by start date (earliest first). The x-axis shows the project
-    timeline labeled in weeks (Week 1 through Week 11) with angled labels. Each task
-    bar is color-coded by category/phase using a 6-color palette: blue (Planning),
-    purple (Design), green (Development), yellow/gold (Testing), red (Documentation),
-    and teal (Deployment). The legend on the right side clearly identifies each phase.
-    The title "gantt-basic · letsplot · pyplots.ai" is displayed at the top. Task
-    bars have square end markers and show varying durations and overlapping schedules
-    representing a realistic software project timeline.'
+  - 'Design Excellence could be elevated: aesthetic sophistication is polished defaults
+    rather than distinctive design (DE-01 at 4/8)'
+  - Data storytelling limited to basic color-coding and timeline structure—could add
+    more visual emphasis or visual hierarchy through secondary signals (DE-03 at 4/6)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - CORRECT. Not pure white.
+      Chrome: Title (28pt), axis labels (22pt), tick labels (16pt) all clearly visible in dark INK color (#1A1A17). Legend labels readable (16pt). No text legibility issues.
+      Data: Horizontal bars use Okabe-Ito: Planning (#009E73 green), Design (#D55E00 orange), Development (#0072B2 blue), Testing (#CC79A7 purple), Documentation (#E69F00 gold), Deployment (#56B4E9 sky blue). First series is the required brand green. Bars sized at 12pt with 0.85 alpha, clearly visible. Square markers at start/end positions.
+      Legibility verdict: PASS - All text crisp and legible against light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - CORRECT. Not pure black.
+      Chrome: Title, labels, and legend text properly light-colored (F0EFE8 for primary, B8B7B0 for secondary). NO dark-on-dark failures. All text highly readable against dark background.
+      Data: Bars and markers are IDENTICAL colors to light render (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9). Only chrome has adapted for theme.
+      Legibility verdict: PASS - All text light and readable. No dark-on-dark failures. Theme adaptation perfect.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is large and bold, axis labels are clear, task names are readable,
-          week labels are appropriately sized
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, task labels well-spaced, angled x-axis
-          labels prevent overlap
+        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 16pt).
+          Perfectly readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Task labels, week labels, all text have no overlap. Readable at full
+          resolution.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-sized with good thickness, end markers visible, alpha=0.85
-          provides good visibility while allowing overlap perception
+        comment: Bars (size=12) and markers (size=4) optimally sized for 12 tasks.
+          All elements clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Good distinct colors, but blue/teal may be slightly similar for some
-          colorblind viewers
+        comment: Okabe-Ito palette is colorblind-safe with good contrast. No red-green
+          as sole signal.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Excellent canvas utilization, plot fills appropriate space, legend
-          well-positioned
+        comment: Plot fills appropriate canvas with balanced margins. Legend well-positioned.
+          No wasted space.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: '"Tasks" and "Project Timeline" are descriptive but generic; x-axis
-          says "Project Timeline (Days from Start)" in code but displays as "Project
-          Timeline"'
+        comment: Descriptive axis labels and correct title format.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle and appropriate, legend is well-placed, but vertical
-          grid lines could be slightly more prominent for timeline reading
+        comment: 'First series #009E73 (brand green). Colors follow Okabe-Ito order.
+          Backgrounds correct (#FAF8F1 light / #1A1A17 dark). Perfect theme-adaptive
+          chrome.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults with professional color use. No custom enhancements
+          beyond required palette.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace. Dashed current-date
+          line adds thoughtful refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color hierarchy and date line guide reader. Limited additional storytelling
+          elements.
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Gantt chart with horizontal bars for tasks
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Tasks on y-axis, time on x-axis, categories for color
-      - id: SC-03
+        comment: Correct Gantt chart with horizontal bars spanning time.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has task bars, time axis, color coding by category; missing "current
-          date" vertical line mentioned in spec notes
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: tasks, dates, categories, timeline, current
+          date indicator.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All tasks visible, timeline shows full project span
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis timeline, Y-axis tasks. All data visible and correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all 6 phases with accurate colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses "gantt-basic · letsplot · pyplots.ai"
+        comment: Title format correct, legend labels accurate.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows overlapping tasks, varying durations, multiple categories,
-          sequential dependencies; could show more complex task dependencies
+        comment: Shows task sequences, overlapping tasks, varied durations, all 6
+          categories.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Software development project is an excellent, realistic scenario
-          with appropriate phases
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 12 tasks over ~10 weeks is realistic for a software project, task
-          durations are sensible
+        comment: Real software development scenario with meaningful task names.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Date ranges and task durations realistic for software project.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -175,42 +178,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no unnecessary functions/classes
+        comment: 'Linear flow: imports → data → plot → save. No unnecessary functions.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Data is deterministic (hardcoded dates), no random elements
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: All imports used, but `import os` and `shutil` are only for cleanup,
-          not core functionality
+        comment: Fixed datetime objects, deterministic data, fully reproducible.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Only used imports: os, datetime, pandas, lets_plot.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Pythonic, efficient, no over-engineering or fake functionality.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with proper scale=3
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Current API.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of geom_segment for bars, scale_y_continuous with custom
-          labels, theme customization. Could better leverage lets-plot's interactive
-          HTML features or tooltip capabilities
+        comment: Expertly uses ggplot() grammar, geom_segment/point, scales, themes.
+          All idiomatic to letsplot.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses letsplot-specific theming appropriately. Not highly distinctive—most
+          approaches port to other libraries.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
