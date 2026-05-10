@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-feature-importance: Feature Importance Bar Chart
 Library: highcharts unknown | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-10
