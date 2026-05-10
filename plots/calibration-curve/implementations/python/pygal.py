@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 calibration-curve: Calibration Curve
-Library: pygal | Python 3.13
-Quality: 91/100 | Updated: 2025-05-10
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-10
 """
 
 import os
