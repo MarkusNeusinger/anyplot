@@ -1,7 +1,7 @@
-"""
-anyplot.ai
+""" anyplot.ai
 lift-curve: Model Lift Chart
-Library: plotnine | Python 3.13+
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-10
 """
 
 import os
