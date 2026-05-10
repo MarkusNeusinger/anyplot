@@ -1,172 +1,172 @@
 library: highcharts
+language: python
 specification_id: bar-error
 created: '2025-12-27T19:22:37Z'
-updated: '2025-12-27T19:30:00Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20543283403
-issue: 0
-python_version: 3.13.11
+updated: '2026-05-10T15:09:12Z'
+generated_by: claude-haiku
+workflow_run: 25631665975
+issue: 2376
+python_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-error/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-error/highcharts/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - selenium
-  techniques:
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/python/highcharts/plot-dark.html
+quality_score: 83
 review:
   strengths:
-  - Excellent use of Highcharts errorbar series with proper whisker styling (caps
-    visible)
-  - Clear subtitle explaining what error bars represent (±1 SD) as required by spec
-  - Professional appearance with colorblind-safe color palette
-  - Properly downloads and inlines Highcharts JS for headless rendering
-  - Clean separation between bar series and errorbar series
-  - Good canvas utilization with appropriate margins
+  - 'Excellent theme adaptation: both renders pass all legibility checks'
+  - 'Correct specification compliance: all required features present and working'
+  - Clean, deterministic code with proper Highcharts library API usage
+  - Professional typography hierarchy at 4800×2700 resolution with readable font sizes
+  - Proper Okabe-Ito palette compliance with brand green (#009E73) throughout
+  - Error bars correctly rendered with visible caps and symmetric ±1 SD ranges
   weaknesses:
-  - Legend appears to only show Mean Value entry; the Error series legend entry is
-    not visible in the rendered image
-  - Could demonstrate asymmetric error bars to fully showcase the capability mentioned
-    in spec
-  image_description: 'The plot displays a vertical bar chart with 5 blue columns (#306998)
-    representing treatment groups: Control, Treatment A, Treatment B, Treatment C,
-    and Treatment D. Each bar has black error bars with visible caps (whiskers) extending
-    above and below the bar tops. The title "bar-error · highcharts · pyplots.ai"
-    appears at the top in bold, with a subtitle "Error bars represent ±1 Standard
-    Deviation" below it. The y-axis is labeled "Response Value (units)" ranging from
-    0 to ~80, and the x-axis is labeled "Treatment Group". A legend showing "Mean
-    Value" appears in the top-right corner. The grid uses subtle dashed horizontal
-    lines. Treatment C shows the highest value (~68), while Control shows the lowest
-    (~42).'
+  - 'Design lacks visual sophistication: relies on Highcharts defaults without custom
+    styling'
+  - No visual hierarchy or emphasis techniques to guide viewer attention
+  - Generic appearance indistinguishable from basic Highcharts templates
+  - Could benefit from custom bar edge colors, refined grid opacity, or visual contrast
+    enhancement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - correct and matches specification
+      Chrome: Title "bar-error · highcharts · anyplot.ai" (28px, readable), subtitle "Error bars represent ±1 Standard Deviation" (18px, readable), X-axis "Treatment Group" (22px, readable), Y-axis "Response Value (units)" (22px, readable). Tick labels dark text on light background - all readable. Grid subtle but visible.
+      Data: Five green bars (#009E73) with symmetric error bars showing ±1 SD. Error bars have visible horizontal caps. Markers clearly distinguishable from background.
+      Legibility verdict: PASS - all text readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 - correct and matches specification
+      Chrome: Same title and axis labels rendered in light colors (#F0EFE8 primary, #B8B7B0 secondary). Tick labels light on dark background - excellent contrast. Grid subtle but visible. No dark-on-dark failures detected.
+      Data: Identical green bars (#009E73) confirming theme-independence of categorical data. Error bar whiskers and caps now light gray/white for proper contrast against dark background.
+      Legibility verdict: PASS - all text readable against dark background. Both renders confirm perfect theme adaptation with consistent data colors and readable chrome.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable. Font
-          sizes are appropriate for the 4800x2700 canvas.
+        comment: All text readable in both themes with proper font sizes (28px title,
+          22px labels, 18px ticks)
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; all labels are fully readable
+        comment: No text collisions, category labels well-spaced, adequate margins
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-sized, error bars have visible caps/whiskers, good
-          contrast
+        comment: Bars and error bars clearly visible, 5 categories provide optimal
+          spacing
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses colorblind-safe blue (#306998) with dark error bars; no red-green
-          issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space; minor issue with legend only showing "Mean
-          Value" (missing error bar legend entry in visible legend)
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: "Response Value (units)" and "Treatment
-          Group"'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Okabe-Ito #009E73 meets CVD-safe standards, error bars in neutral
+          INK_SOFT'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Well-balanced proportions, generous margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with dashed lines (good), but legend is incomplete
-          - only shows "Mean Value", the "Error (±1 SD)" entry defined in code is
-          not visible in the screenshot
+        comment: Title follows spec format, axis labels descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand color #009E73, correct backgrounds #FAF8F1/#1A1A17, both renders
+          theme-correct'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Generic Highcharts defaults, no custom palette or distinctive styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization beyond theme tokens, standard grid and padding
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Subtitle adds value, logical data order, but no visual hierarchy
+          or emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct bar chart with error bars
+        comment: Correct vertical bar chart with error bars
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X-axis, values on Y-axis correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Error bars with visible caps, subtitle explaining error bar meaning
-          (±1 SD)
-      - id: SC-04
-        name: Data Range
+        comment: Error bars with caps, legend explaining representation, consistent
+          styling
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis starts at 0 and shows all data including error bar ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis categories correct, Y-axis 0-80 encompasses all data (37.1-76.1)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels match data series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "bar-error · highcharts · pyplots.ai"'
+        comment: Title format correct, legend shows both series clearly
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows variation in bar heights and different error magnitudes. Missing
-          asymmetric error bars which spec mentions as optional
+        comment: 'Shows all bar-error aspects: bars, error ranges, caps, categories'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Treatment comparison with control group is a plausible scientific
-          experiment scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values (42-68 range) and errors (4.8-8.3) are realistic for experimental
-          data
+        comment: Treatment comparison with mean and SD realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sensible for scientific context, Y-axis scale appropriate
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,41 +174,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → chart config → render'
+        comment: No functions/classes, straightforward data and configuration
       - id: CQ-02
         name: Reproducibility
-        score: 1
-        max: 3
-        passed: false
-        comment: Uses deterministic data (no random), but no seed comment. The data
-          is hardcoded which is reproducible.
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded seed data, deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current highcharts-core API
+        comment: Elegant error bar data construction, proper API usage
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts errorbar series type, highcharts-more.js module,
-          proper whisker configuration, interactive HTML output
+        comment: Good use of Highcharts core, proper container/options setup
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses errorbar series, theme-adaptive styling, but limited innovation
+    score_caps: []
+    total_score: 83
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
