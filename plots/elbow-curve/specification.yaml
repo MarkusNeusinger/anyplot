@@ -6,7 +6,7 @@ title: Elbow Curve for K-Means Clustering
 
 # Specification tracking
 created: 2025-12-26T19:28:09Z
-updated: null
+updated: 2026-05-10T07:03:42Z
 issue: 2333
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - line
-    - curve
   data_type:
     - numeric
     - discrete
