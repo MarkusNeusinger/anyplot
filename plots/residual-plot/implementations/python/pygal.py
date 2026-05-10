@@ -1,28 +1,38 @@
-""" pyplots.ai
+""" anyplot.ai
 residual-plot: Residual Plot
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 88/100 | Created: 2025-12-26
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 95/100 | Updated: 2026-05-10
 """
+
+import os
 
 import numpy as np
 import pygal
 from pygal.style import Style
 
 
-# Data - Linear regression example with some non-linearity
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+
+# Data - Linear regression example with heteroscedasticity
 np.random.seed(42)
 n_points = 100
 
 # Generate fitted values (x-axis) - house price predictions in $1000s
 fitted_values = np.linspace(150, 500, n_points)
 
-# Generate residuals with slight heteroscedasticity and a few outliers
+# Generate residuals with heteroscedasticity and outliers
 base_residuals = np.random.normal(0, 20, n_points)
-# Add slight heteroscedasticity (variance increases with fitted values)
 heteroscedasticity = (fitted_values / 500) * np.random.normal(0, 15, n_points)
 residuals = base_residuals + heteroscedasticity
 
-# Add a few outliers
+# Add outliers
 outlier_indices = [15, 45, 78]
 residuals[outlier_indices] = [85, -75, 90]
 
@@ -34,32 +44,30 @@ lower_band = -2 * std_residuals
 # Identify outliers (beyond 2 standard deviations)
 outlier_mask = np.abs(residuals) > 2 * std_residuals
 
-# Custom style for 4800x2700 canvas following library guide recommendations
+# Custom style for 4800x2700 canvas with theme-adaptive tokens
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#999999",
-    colors=("#306998", "#E74C3C", "#2C3E50", "#AAAAAA", "#AAAAAA"),
-    title_font_size=32,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
     label_font_size=22,
     major_label_font_size=20,
-    legend_font_size=24,
-    value_font_size=16,
-    tooltip_font_size=16,
+    legend_font_size=18,
+    value_font_size=14,
     stroke_width=3,
-    guide_stroke_color="#DDDDDD",
+    guide_stroke_color=INK_MUTED,
     guide_stroke_dasharray="3, 3",
 )
 
 # Create XY scatter chart for residual plot
-# Use explicit x_labels to control axis display and range settings
 chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="residual-plot · pygal · pyplots.ai",
+    title="residual-plot · pygal · anyplot.ai",
     x_title="Fitted Values - Predicted Price ($1000s)",
     y_title="Residuals - Actual minus Predicted ($1000s)",
     show_legend=True,
@@ -75,7 +83,7 @@ chart = pygal.XY(
     range=(-100, 110),
 )
 
-# Set explicit x-axis labels to display actual fitted values (not indices)
+# Set explicit x-axis labels
 chart.x_labels = [150, 200, 250, 300, 350, 400, 450, 500]
 
 # Prepare data points - separate normal and outlier points
@@ -86,22 +94,23 @@ outlier_points = [(float(fitted_values[i]), float(residuals[i])) for i in range(
 chart.add("Residuals", normal_points)
 chart.add("Outliers (>2σ)", outlier_points)
 
-# Add zero reference line - create more points for solid appearance
+# Add zero reference line
 zero_line_points = [(float(x), 0.0) for x in np.linspace(150, 500, 50)]
 chart.add("Zero Reference (Perfect Fit)", zero_line_points, stroke=True, show_dots=False, stroke_style={"width": 5})
 
-# Add +2σ reference band line with multiple points for visibility
+# Add +2σ reference band line
 upper_band_points = [(float(x), float(upper_band)) for x in np.linspace(150, 500, 50)]
 chart.add(
     "+2σ Threshold", upper_band_points, stroke=True, show_dots=False, stroke_style={"width": 3, "dasharray": "10, 8"}
 )
 
-# Add -2σ reference band line with multiple points for visibility
+# Add -2σ reference band line
 lower_band_points = [(float(x), float(lower_band)) for x in np.linspace(150, 500, 50)]
 chart.add(
     "-2σ Threshold", lower_band_points, stroke=True, show_dots=False, stroke_style={"width": 3, "dasharray": "10, 8"}
 )
 
 # Save as PNG and HTML
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())

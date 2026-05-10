@@ -1,162 +1,177 @@
 library: bokeh
+language: python
 specification_id: residual-plot
 created: '2025-12-26T19:36:43Z'
-updated: '2025-12-26T19:42:56Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20528204767
-issue: 0
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/residual-plot/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/residual-plot/bokeh/plot.html
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  - columndatasource
-  dataprep: []
-  styling: []
+updated: '2026-05-10T08:58:43Z'
+generated_by: claude-haiku
+workflow_run: 25624529762
+issue: 2332
+python_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/python/bokeh/plot-dark.html
+quality_score: 98
 review:
   strengths:
-  - Excellent use of Bokeh-specific features (Band, Span, Label, ColumnDataSource)
-  - Clear differentiation between normal residuals and outliers using distinct colors
-  - Well-designed ±2 SD reference bands with proper labeling
-  - Realistic housing price prediction context with appropriate data scale
-  - Clean KISS code structure with proper reproducibility (seed=42)
-  weaknesses:
-  - The +2 SD and -2 SD labels are quite small and positioned very close to the band
-    edges, making them hard to read
-  - Legend text size could be slightly larger for better visibility at the 4800x2700
-    resolution
-  image_description: "The plot displays a residual plot for regression diagnostics\
-    \ with a light gray (#fafafa) background. The title \"residual-plot · bokeh ·\
-    \ pyplots.ai\" appears at the top left in dark gray text. The x-axis shows \"\
-    Fitted Values (Predicted Price in $1000s)\" ranging from ~125 to ~475, and the\
-    \ y-axis shows \"Residuals (Observed - Predicted)\" ranging from approximately\
-    \ -100 to +100. \n\nBlue circular markers (Python blue #306998) represent normal\
-    \ residuals scattered around the zero line. Yellow/gold markers (#FFD43B) with\
-    \ blue borders highlight outliers beyond ±2 standard deviations - visible at the\
-    \ extreme top and bottom of the plot. A solid blue horizontal reference line at\
-    \ y=0 indicates perfect predictions. A light gray shaded band spans the ±2 SD\
-    \ region (~-50 to ~+50), bounded by dashed gray lines. Small italic labels \"\
-    +2 SD\" and \"-2 SD\" appear near the left edge of the band boundaries. The legend\
-    \ in the top-left corner shows \"Residuals\" and \"Outliers (>2 SD)\". The grid\
-    \ is subtle with dashed lines and low alpha."
+  - Excellent Okabe-Ito color usage with proper brand green (#009E73) for residuals
+    and orange (#D55E00) for outliers
+  - Perfect theme adaptation with both light and dark renders fully readable and identical
+    data colors
+  - Sophisticated ±2 SD band visualization with dashed boundaries for reference context
+  - Professional use of alpha transparency to handle 150 overlapping data points without
+    clutter
+  - Clean bokeh-idiomatic code with proper scaling for 4800x2700 canvas
+  - All specification requirements implemented correctly with clear visual hierarchy
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 with subtle tone
+      Chrome: Title 'residual-plot · bokeh · anyplot.ai' in dark INK (#1A1A17); axis labels 'Fitted Values (Predicted Price in $1000s)' and 'Residuals (Observed - Predicted)' clearly visible; tick labels readable in INK_SOFT (#4A4A44); legend 'Residuals' and 'Outliers (>2 SD)' with themed background
+      Data: 150 green (#009E73) scatter points at alpha=0.7 clustered around zero; 5 orange (#D55E00) outlier points at alpha=0.9 with green stroke edges; green solid reference line at y=0; dashed lines at ±2 SD; gray shaded band between bounds; '+2 SD' and '-2 SD' labels on left side
+      Legibility verdict: PASS — all text readable, no dark-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 with subtle tone
+      Chrome: Title in light cream INK (#F0EFE8); axis labels and tick labels in soft light gray INK_SOFT (#B8B7B0); legend properly themed with dark background #242420; all text clearly visible
+      Data: IDENTICAL colors to light render — same green residuals (#009E73), same orange outliers (#D55E00); reference lines and band maintain visibility; '+2 SD' and '-2 SD' labels visible
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures, brand green visible and distinct
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick marks are all readable; SD labels slightly
-          small
+        comment: Title, axis labels, tick labels, legend all explicitly sized for
+          4800x2700 and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text; legend, labels, and title well-positioned with
+          clear spacing
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Marker sizes appropriate for 150 points, good alpha transparency
+        comment: Alpha transparency (0.7, 0.9) handles 150 overlapping points; all
+          elements visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow color scheme is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization, slight excess whitespace at bottom
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units ("$1000s")
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette safe for CVD; orange outliers distinct by color
+          and size
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700 landscape format with excellent proportions and generous
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle (alpha 0.3), but legend labels could be larger
+        comment: Title and axis labels descriptive with units (price in $1000s, residuals)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green for residuals, Okabe-Ito pos 2 for outliers, correct
+          backgrounds #FAF8F1/#1A1A17, both renders theme-compliant'
+    design_excellence:
+      score: 18
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Professional polish with custom theme tokens; themed legend background;
+          sophisticated ±2 SD band; outlier emphasis through color and size
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid (alpha=0.10); generous whitespace; alpha blending for
+          overlapping points; well-styled legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with prominent zero line; band provides context;
+          outliers visually emphasized; guides viewer to identify concerning residuals
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct residual plot (scatter with reference line)
+        comment: Correct residual plot with residuals on y-axis, fitted values on
+          x-axis
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Fitted values on x-axis, residuals on y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has zero line, ±2 SD bands, outlier highlighting, alpha transparency
-      - id: SC-04
-        name: Data Range
+        comment: Horizontal y=0 reference line, ±2 SD bands, outlier identification
+          and visual distinction
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped; 150 observations in realistic range; axes show
+          all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies residuals and outliers
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "residual-plot · bokeh · pyplots.ai"'
+        comment: Correct title format 'residual-plot · bokeh · anyplot.ai'; clear
+          legend labels
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows random scatter around zero, outliers, variance pattern
+        comment: Demonstrates core residual plot features including scatter, bands,
+          outlier ID, and reference line
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Housing price prediction is plausible; residual distribution realistic
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Price range $150k-$450k and residuals ±70 are sensible
+        comment: Linear regression housing price prediction; realistic domain; heteroscedasticity
+          pattern is educational
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Fitted values 150-450K sensible for house prices; residuals ±80 appropriate;
+          axes well-scaled
     code_quality:
       score: 10
       max: 10
@@ -166,40 +181,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports → data → plot → save structure
+        comment: Direct script with no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) used
+        comment: np.random.seed(42) set for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only used imports; no unused dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: No fake UI; appropriate complexity; proper theme token usage
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png (and plot.html)
-    library_features:
-      score: 5
-      max: 5
+        comment: Outputs plot-{THEME}.png and plot-{THEME}.html; current API
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Excellent use of Band, Span, Label, ColumnDataSource, and interactive
-          tools
+        comment: 'Idiomatic bokeh: figure() with proper params, ColumnDataSource for
+          data, Band/Span/Label glyphs, proper styling, Selenium screenshot'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Band for confidence region, Span for reference lines, Label for annotations,
+          theme-adaptive environment variables, well-styled legend
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - columndatasource
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
