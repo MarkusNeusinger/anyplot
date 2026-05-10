@@ -6,7 +6,7 @@ title: Bar Chart with Error Bars
 
 # Specification tracking
 created: 2025-12-27T19:12:59Z
-updated: null
+updated: 2026-05-10T14:30:54Z
 issue: 2376
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - bar
-    - errorbar
   data_type:
     - categorical
     - numeric
