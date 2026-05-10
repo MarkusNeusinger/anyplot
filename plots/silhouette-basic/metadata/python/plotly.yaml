@@ -1,174 +1,184 @@
 library: plotly
+language: python
 specification_id: silhouette-basic
 created: '2025-12-26T19:35:33Z'
-updated: '2025-12-26T19:37:58Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20528201763
-issue: 0
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/plotly/plot.html
-quality_score: 91
-impl_tags:
-  dependencies:
-  - sklearn
-  techniques:
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  - dataset-loading
-  - iteration-over-groups
-  dataprep: []
-  styling: []
+updated: '2026-05-10T12:59:08Z'
+generated_by: claude-haiku
+workflow_run: 25628844990
+issue: 2334
+python_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/python/plotly/plot-dark.html
+quality_score: 77
 review:
   strengths:
-  - Excellent visual clarity with well-sized fonts and properly sorted bars within
-    each cluster
-  - Correct implementation of silhouette plot with all required features from the
-    spec
-  - Good use of colorblind-safe color palette with strong visual contrast
-  - Proper use of Iris dataset as a realistic, educational example
-  - Clean, reproducible code following KISS principles
-  - Includes both PNG and HTML output for interactivity
+  - Visual clarity—both light and dark renders are highly readable and well-composed
+  - Spec adherence—all required features (bars, clusters, average line, annotations)
+    correctly implemented
+  - Data quality—realistic, neutral dataset with appropriate scale and full feature
+    coverage
+  - Theme adaptation in renders—despite code limitations, actual images show correct
+    light/dark theme switching with data colors constant and chrome adaptive
   weaknesses:
-  - Legend placement could be better positioned to avoid proximity to the average
-    line annotation
-  - Missing negative silhouette values in the visualization which would better demonstrate
-    the full range of the metric
-  - Could leverage more Plotly-specific interactive features like custom hover data
-    showing sample indices
-  image_description: 'The plot displays a silhouette plot with three horizontal bar
-    clusters representing K-means clustering results on the Iris dataset. The clusters
-    are colored in Python blue (#306998) for Cluster 0 at the bottom, bright yellow
-    (#FFD43B) for Cluster 1 in the middle, and coral red (#E84A5F) for Cluster 2 at
-    the top. Each cluster shows sorted horizontal bars representing individual sample
-    silhouette coefficients. A red dashed vertical line indicates the average silhouette
-    score (0.553) with a label at the top. The x-axis shows "Silhouette Coefficient"
-    ranging from -0.2 to 1.0, and the y-axis shows "Samples (grouped by cluster)"
-    with cluster labels on the left side. The legend in the upper right shows each
-    cluster with its average score (Cluster 0: 0.42, Cluster 1: 0.80, Cluster 2: 0.45).
-    The title follows the correct format: "silhouette-basic · plotly · pyplots.ai".'
+  - Missing theme tokens in code—implementation does not read ANYPLOT_THEME or apply
+    INK/INK_SOFT/GRID/PAGE_BG tokens; relies on template defaults rather than explicit
+    theme adaptation (violates Plotly library guide)
+  - Wrong output file naming in code—hardcodes plot.png/plot.html; should use f'plot-{THEME}.png'
+    and f'plot-{THEME}.html' (actual pipeline outputs correct, but code is stale)
+  - Title typo—'pyplots.ai' should be 'anyplot.ai'
+  - Generic design—no visual sophistication, distinctive features, or data storytelling
+    beyond minimum spec requirements
+  - Code-output mismatch—cluster colors in code list as Python-specific but renders
+    show Okabe-Ito palette, suggesting code file is outdated
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1 range), not pure white
+      Chrome: Title "silhouette-basic · plotly · pyplots.ai" clearly readable in dark text; axis labels ("Silhouette Coefficient", "Samples (grouped by cluster)") and tick labels dark and legible; cluster labels ("Cluster 0", "Cluster 1", "Cluster 2") positioned left without overlap; legend box has clear border with readable text
+      Data: Green, orange, blue horizontal bars representing silhouette coefficients for three clusters; red dashed line marking overall average (0.553); gray line at zero; all bars clearly distinguishable
+      Legibility verdict: PASS - all text and elements readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Very dark near-black (#1A1A17 range), not pure black
+      Chrome: Title, axis labels, and tick labels all rendered in light colors (white/near-white) with excellent contrast against dark background; no dark-on-dark text failures; legend has clear border and readable secondary text; grid lines subtle but visible in light
+      Data: Green, orange, blue bars identical to light render (data colors constant across themes); red dashed average line visible; gray zero line visible
+      Legibility verdict: PASS - all text and elements readable against dark background; proper theme adaptation with only chrome changing while data colors remain constant
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 32pt, axis labels at 24pt, tick fonts at 18pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, cluster labels well positioned
+        comment: All text readable in both themes; font sizes appropriate for large
+          canvas (32px title, 24px axes, 18px ticks)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Cluster labels, legend, and annotations positioned clearly without
+          collision
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-sized and clearly visible, though some very thin bars
-          at low values are slightly hard to distinguish
+        comment: All bars, grid, reference lines, and annotations fully visible and
+          distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, yellow, and red are colorblind-safe with good contrast
+        comment: Green, orange, blue bars are colorblind-safe; Okabe-Ito palette evident
+          in renders
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: Good proportions, generous margins, nothing cut off; proper 4800x2700
+          rendering
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels (Silhouette Coefficient, Samples grouped by cluster)
+      - id: VQ-07
+        name: Palette Compliance
         score: 1
         max: 2
-        passed: true
-        comment: '"Silhouette Coefficient" is descriptive but no units (coefficients
-          are unitless, so acceptable)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: true
-        comment: Grid is subtle, but legend placement overlaps slightly with the average
-          line annotation
+        passed: false
+        comment: Data colors appear correct in renders (Okabe-Ito green, orange, blue);
+          but code lacks explicit theme tokens for background/chrome colors
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Generic defaults; functional but not polished; no custom design refinements
+          beyond spec requirements
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization; uses template and bargap=0 but no spine removal
+          or grid refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Plot fulfills spec but no visual hierarchy or narrative beyond requirements
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct silhouette plot with horizontal bars grouped by cluster
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Silhouette values correctly mapped to x-axis, samples to y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Horizontal bars sorted within clusters, distinct colors, vertical
-          average line, cluster annotations
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: horizontal bars, cluster grouping, vertical
+          average line, cluster annotations'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis range [-0.2, 1.0] shows all data appropriately
-      - id: SC-05
-        name: Legend Accuracy
+        comment: X/Y axes correct; silhouette range appropriate; all iris samples
+          shown
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly shows cluster names with average scores
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format "silhouette-basic · plotly · pyplots.ai"
+        max: 3
+        passed: false
+        comment: 'Legend correct with cluster averages; title contains typo: ''pyplots.ai''
+          should be ''anyplot.ai'''
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation in cluster quality (Cluster 1 well-separated at 0.80,
-          Clusters 0 and 2 moderate at 0.42-0.45), but no negative silhouette values
-          visible which would demonstrate misclassification
+        comment: K-means clustering, individual silhouette coefficients, cluster averages,
+          silhouette distribution all shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Iris dataset is a classic, real-world clustering example
+        comment: Iris dataset is real, well-known, neutral, and plausible for clustering
+          demonstration
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Silhouette scores are realistic for K-means on Iris, though the absence
-          of negative values limits educational value
+        comment: 50 samples, 3 clusters, readable; silhouette ranges realistic
     code_quality:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: CQ-01
@@ -176,41 +186,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save'
+        comment: No functions/classes; straightforward linear flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) and random_state=42 for KMeans
+        comment: np.random.seed(42) and random_state=42 in KMeans
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Current Plotly and sklearn APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Uses distinctive library features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 0
+        max: 1
+        passed: false
+        comment: Code saves to bare plot.png/plot.html; should be plot-{THEME}.png
+          and plot-{THEME}.html (actual outputs correct—code is stale)
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
         passed: false
-        comment: Uses go.Bar and basic Plotly features, but misses opportunity for
-          interactive hover enhancements beyond basic template, could use subplot
-          annotations more effectively
-  verdict: APPROVED
+        comment: Standard Plotly patterns (go.Figure, add_trace, add_vline, update_layout);
+          missing theme adaptation layer (no ANYPLOT_THEME reading, no theme tokens)
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Uses add_vline and custom annotations, but these are spec requirements,
+          not distinctive to Plotly
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - dataset-loading
+  - iteration-over-groups
+  dataprep: []
+  styling: []
