@@ -6,7 +6,7 @@ title: Calibration Curve
 
 # Specification tracking
 created: 2025-12-26T19:28:20Z
-updated: null
+updated: 2026-05-10T20:45:30Z
 issue: 2331
 suggested: MarkusNeusinger
 
@@ -15,8 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - calibration
-    - line
-    - reliability-diagram
   data_type:
     - numeric
     - probability
