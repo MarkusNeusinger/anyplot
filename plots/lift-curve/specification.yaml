@@ -6,7 +6,7 @@ title: Model Lift Chart
 
 # Specification tracking
 created: 2025-12-27T19:13:11Z
-updated: null
+updated: 2026-05-10T16:25:26Z
 issue: 2379
 suggested: MarkusNeusinger
 
@@ -14,9 +14,7 @@ suggested: MarkusNeusinger
 # See docs/reference/tagging-system.md for detailed guidelines
 tags:
   plot_type:
-    - lift
     - line
-    - evaluation
   data_type:
     - numeric
     - categorical
@@ -31,3 +29,4 @@ tags:
     - comparison
     - cumulative
     - model-evaluation
+    - lift
