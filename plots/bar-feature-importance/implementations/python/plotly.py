@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-feature-importance: Feature Importance Bar Chart
-Library: plotly | Python 3.13
-Quality: pending | Created: 2025-12-26
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-10
 """
 
 import os
