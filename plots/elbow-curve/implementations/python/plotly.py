@@ -1,23 +1,34 @@
-""" pyplots.ai
+""" anyplot.ai
 elbow-curve: Elbow Curve for K-Means Clustering
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 97/100 | Updated: 2026-05-10
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"
+ACCENT = "#D55E00"
 
 # Data - simulate K-means inertia values for k=1 to k=12
 np.random.seed(42)
 k_values = np.arange(1, 13)
 
 # Generate realistic inertia values that decrease with k
-# Using exponential decay with some noise to simulate real clustering behavior
 base_inertia = 5000
 inertia = base_inertia * np.exp(-0.25 * (k_values - 1)) + np.random.normal(0, 30, len(k_values))
-inertia = np.maximum(inertia, 100)  # Ensure positive values
-inertia = np.sort(inertia)[::-1]  # Ensure monotonic decrease
+inertia = np.maximum(inertia, 100)
+inertia = np.sort(inertia)[::-1]
 
 # Optimal k (elbow point) is around k=4
 optimal_k = 4
@@ -33,8 +44,8 @@ fig.add_trace(
         y=inertia,
         mode="lines+markers",
         name="Inertia",
-        line=dict(color="#306998", width=4),
-        marker=dict(size=16, color="#306998", line=dict(color="white", width=2)),
+        line={"color": BRAND, "width": 4},
+        marker={"size": 16, "color": BRAND, "line": {"color": PAGE_BG, "width": 2}},
         hovertemplate="k=%{x}<br>Inertia=%{y:.0f}<extra></extra>",
     )
 )
@@ -46,7 +57,7 @@ fig.add_trace(
         y=[optimal_inertia],
         mode="markers",
         name=f"Elbow (k={optimal_k})",
-        marker=dict(size=24, color="#FFD43B", symbol="circle", line=dict(color="#306998", width=3)),
+        marker={"size": 24, "color": ACCENT, "symbol": "circle", "line": {"color": INK, "width": 3}},
         hovertemplate=f"Optimal k={optimal_k}<br>Inertia={optimal_inertia:.0f}<extra></extra>",
     )
 )
@@ -60,55 +71,61 @@ fig.add_annotation(
     arrowhead=2,
     arrowsize=1.5,
     arrowwidth=2,
-    arrowcolor="#306998",
+    arrowcolor=INK,
     ax=80,
     ay=-80,
-    font=dict(size=20, color="#306998"),
-    bgcolor="rgba(255, 255, 255, 0.9)",
-    bordercolor="#306998",
+    font={"size": 20, "color": INK},
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
     borderwidth=2,
     borderpad=8,
 )
 
 # Update layout
 fig.update_layout(
-    title=dict(text="elbow-curve · plotly · pyplots.ai", font=dict(size=32, color="#333333"), x=0.5, xanchor="center"),
-    xaxis=dict(
-        title=dict(text="Number of Clusters (k)", font=dict(size=24)),
-        tickfont=dict(size=18),
-        tickmode="linear",
-        tick0=1,
-        dtick=1,
-        showgrid=True,
-        gridcolor="rgba(0, 0, 0, 0.1)",
-        gridwidth=1,
-        zeroline=False,
-    ),
-    yaxis=dict(
-        title=dict(text="Within-Cluster Sum of Squares (Inertia)", font=dict(size=24)),
-        tickfont=dict(size=18),
-        showgrid=True,
-        gridcolor="rgba(0, 0, 0, 0.1)",
-        gridwidth=1,
-        zeroline=False,
-    ),
-    template="plotly_white",
+    title={"text": "elbow-curve · plotly · anyplot.ai", "font": {"size": 28, "color": INK}, "x": 0.5, "xanchor": "center"},
+    xaxis={
+        "title": {"text": "Number of Clusters (k)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "tickmode": "linear",
+        "tick0": 1,
+        "dtick": 1,
+        "showgrid": True,
+        "gridcolor": GRID,
+        "gridwidth": 1,
+        "zeroline": False,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+    },
+    yaxis={
+        "title": {"text": "Within-Cluster Sum of Squares (Inertia)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "showgrid": True,
+        "gridcolor": GRID,
+        "gridwidth": 1,
+        "zeroline": False,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+    },
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
     showlegend=True,
-    legend=dict(
-        x=0.95,
-        y=0.95,
-        xanchor="right",
-        yanchor="top",
-        font=dict(size=18),
-        bgcolor="rgba(255, 255, 255, 0.9)",
-        bordercolor="#cccccc",
-        borderwidth=1,
-    ),
-    margin=dict(l=100, r=80, t=100, b=100),
+    legend={
+        "x": 0.95,
+        "y": 0.95,
+        "xanchor": "right",
+        "yanchor": "top",
+        "font": {"size": 16, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+    },
+    margin={"l": 120, "r": 80, "t": 100, "b": 100},
 )
 
 # Save as PNG (4800x2700 via scale=3)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
+output_dir = os.path.dirname(os.path.abspath(__file__))
+fig.write_image(os.path.join(output_dir, f"plot-{THEME}.png"), width=1600, height=900, scale=3)
 
 # Save interactive HTML
-fig.write_html("plot.html", include_plotlyjs=True, full_html=True)
+fig.write_html(os.path.join(output_dir, f"plot-{THEME}.html"), include_plotlyjs="cdn")
