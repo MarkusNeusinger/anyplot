@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: learning-curve-basic
 created: '2025-12-26T17:37:26Z'
-updated: '2026-05-10T03:33:00Z'
+updated: '2026-05-10T03:38:41Z'
 generated_by: claude-haiku
 workflow_run: 25618729017
 issue: 2275
@@ -12,40 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/learning-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - Flawless visual quality across all VQ criteria—all text legible, no overlap, proper
-    theming
-  - 'Perfect palette compliance: Okabe-Ito colors identical across themes; theme-adaptive
-    chrome working correctly'
-  - 'Complete spec compliance: all learning curve features present and correctly mapped'
-  - Clean, reproducible code with proper seeding and linear structure
-  - Proper idiomatic use of plotnine's grammar of graphics (ggplot + geom_line + geom_ribbon
-    + scales + theme)
+  - 'Perfect visual quality: all text explicitly sized and readable in both themes'
+  - 'Flawless spec compliance: correct plot type, confidence bands, legend, axis labels,
+    and data mapping'
+  - 'Correct Okabe-Ito palette: first series #009E73, second series #D55E00, identical
+    across light and dark renders'
+  - 'Theme-adaptive styling: backgrounds, text colors, and grid properly respond to
+    light/dark theme environment variable'
+  - 'Data quality: realistic underfitting scenario with 12 training sizes, proper
+    standard deviation confidence bands, and plausible accuracy values'
+  - 'Idiomatic plotnine usage: ggplot composition, geom_ribbon for bands, scale_color_manual
+    for palette, custom theme with element_* components'
+  - 'Clean code: KISS structure, deterministic seed, no unused imports, ggsave with
+    proper parameters'
   weaknesses:
-  - 'Design Excellence is moderate—clean defaults but lacking distinctive sophistication
-    or visual refinement (DE-01: 5/8, DE-02: 4/6)'
-  - 'Library Mastery is weak—doesn''t leverage distinctive plotnine features beyond
-    standard geom usage (LM-02: 2/5)'
-  - 'Data storytelling is minimal—plot displays data without visual hierarchy, emphasis,
-    or annotation beyond baseline presentation (DE-03: 3/6)'
+  - 'Design Excellence: implementation uses well-configured Okabe-Ito defaults rather
+    than custom refinements; grid styling and panel borders are good but not exceptional'
+  - 'Visual storytelling: data pattern (underfitting) is clear but could benefit from
+    emphasis techniques (e.g., annotation labels) to highlight the insight more explicitly'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct theme surface
-      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all in dark text (#1A1A17)—clearly readable against light background
-      Data: Training Score in brand green (#009E73) with light green ribbon (alpha=0.25); Validation Score in Okabe-Ito orange (#D55E00) with light orange ribbon
-      Legend: Positioned lower right with clear labels; background uses elevated surface color
-      Legibility verdict: PASS—all elements are clear and readable
+      Background: Warm off-white at #FAF8F1 (correct for light theme)
+      Chrome: Title "learning-curve-basic · plotnine · anyplot.ai" in dark text, clearly readable at 24pt. Axis labels "Training Set Size" (X) and "Accuracy Score" (Y) at 20pt, highly legible. Tick labels at 16pt visible and uncluttered. Panel border in soft gray, grid lines subtle with 10% alpha.
+      Data: Training Score line in Okabe-Ito #009E73 (brand green) with light teal confidence band (alpha 0.25). Validation Score line in Okabe-Ito #D55E00 (orange/vermillion) with light peach confidence band. Both clearly distinguishable and visually coherent.
+      Legend: "Training Score" and "Validation Score" labels with color key, positioned at (0.75, 0.25), light background box for definition.
+      Legibility verdict: PASS - All elements readable and well-positioned. No overlap, no contrast issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct theme surface
-      Chrome: Title and axis labels are light text (#F0EFE8 or #B8B7B0)—clearly readable against dark background; no dark-on-dark failures
-      Data: Training Score (#009E73) and Validation Score (#D55E00) are IDENTICAL to light render; ribbons appear as darker muted tones but remain visible
-      Grid: Subtle and visible; legend similarly positioned with theme-correct background
-      Legibility verdict: PASS—all text and data elements are distinguishable; theme chrome correctly flipped while data colors remain constant
-
-    Both renders pass theme-readability checkpoint. Confidence bands are visible in both themes with appropriate alpha blending.
+      Background: Warm near-black at #1A1A17 (correct for dark theme)
+      Chrome: Title in light text, fully readable against dark background. Axis labels and tick labels in light gray (#B8B7B0 INK_SOFT equivalent), excellent contrast and legibility. No dark-on-dark failures. Panel border visible in soft light gray.
+      Data: Training Score line remains Okabe-Ito #009E73 (identical to light render—brand green unchanged across themes). Validation Score line remains #D55E00 (identical). Confidence bands maintain alpha transparency for readability on dark surface.
+      Legend: Same labels and key as light render, legend box fill now darker (#242420 ELEVATED_BG), text in light gray for contrast.
+      Data colors identical to light render: YES, only chrome adapts to dark theme as specified.
+      Legibility verdict: PASS - All text readable. No dark-on-dark issues. Background, text, and data elements properly theme-adapted.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -56,69 +58,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; perfectly readable in both themes
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
+          Perfect readability in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; legend well-positioned
+        comment: No overlapping text elements. All labels clearly separated and readable.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines and ribbons optimally visible; good alpha adaptation
+        comment: Lines (size=2) and ribbons (alpha=0.25) optimally sized for 12 data
+          points per series.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; colorblind-safe; strong contrast
+        comment: Okabe-Ito palette is CVD-safe. Teal vs orange clearly distinguishable
+          without relying on hue alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~60% canvas; balanced margins; legend positioned near
-          plot
+        comment: 16:9 landscape format (4800×2700px). Plot fills ~65% of canvas with
+          balanced margins. Nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: 'X: ''Training Set Size'' (descriptive), Y: ''Accuracy Score'' (with
+          context). Title: correct format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; second #D55E00 (Okabe-Ito order); theme-correct
-          backgrounds and chrome in both renders'
+        comment: 'First series #009E73 (Okabe-Ito pos 1). Second series #D55E00 (Okabe-Ito
+          pos 2). Backgrounds #FAF8F1 (light) / #1A1A17 (dark). Data colors identical
+          across themes; chrome theme-correct.'
     design_excellence:
       score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Well-executed default styling with theme-aware palette; professional
-          but not distinctive
+        comment: Well-configured library defaults with professional polish. Uses Okabe-Ito
+          correctly but no custom palette or exceptional design flourishes.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Subtle grid and legend box; good details but could be more refined
+        comment: Panel border instead of spines, subtle grid (alpha 0.10/0.05), generous
+          whitespace. Good customization visible but not extensive.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Shows underfitting pattern clearly but lacks visual hierarchy or
-          emphasis
+        comment: Underfitting scenario is clear. Color contrast and confidence bands
+          create hierarchy. Viewer understands the learning curve pattern.
     spec_compliance:
       score: 15
       max: 15
@@ -128,48 +136,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct learning curve with two lines and confidence bands
+        comment: Learning curve with training and validation lines + confidence bands.
+          Correct type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Shaded regions, clear labels, legend distinguishing training/validation
+        comment: 'All present: two curves, shaded confidence bands (±1 std), legend,
+          axis labels, sample sizes on X-axis, metric on Y-axis.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; axes show full data range
+        comment: 'X: training sizes (20-500). Y: accuracy scores (0.6-0.85). Color:
+          curve type. All data visible.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match
+        comment: 'Title: ''learning-curve-basic · plotnine · anyplot.ai'' (correct
+          format). Legend: ''Training Score'' / ''Validation Score''.'
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows underfitting with confidence bands; could explore more variance
-          patterns
+        comment: Shows underfitting signature (low curves, small gap, convergence).
+          Confidence bands show variability. 12 sample sizes provide good coverage.
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Plausible learning curve; realistic underfitting pattern
+        comment: Learning curves are a real, well-known ML diagnostic tool. Underfitting
+          is a realistic scenario from scikit-learn.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Accuracy range and sample sizes are factually reasonable
+        comment: Accuracy 0.6-0.85 (plausible). Training sizes 20-500 (reasonable).
+          Std devs 2-5% (realistic).
     code_quality:
       score: 10
       max: 10
@@ -179,49 +193,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear structure; no functions/classes
+        comment: Imports → Data generation → Plot composition → Save. No functions
+          or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(123) set
+        comment: np.random.seed(123) set. Deterministic data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no waste
+        comment: 'All imports used: numpy, pandas, plotnine, os. No dead weight.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Clean, Pythonic. Theme tokens well-organized. No over-engineering
+          or fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png
+        comment: Saves as 'plot-{THEME}.png' via ggsave with dpi=300, correct dimensions.
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct grammar-of-graphics usage; good but doesn't fully leverage
-          advanced plotnine patterns
+        comment: ggplot composition, geom_ribbon and geom_line, scale_color/fill_manual,
+          theme_minimal + custom theme. Canonical plotnine patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
         passed: false
-        comment: Uses geom_ribbon and custom theme but not distinctive to plotnine;
-          generic application
+        comment: Uses geom_ribbon for confidence bands and custom theme with element_*
+          components (plotnine-specific). Good use but fairly standard for the library.
   verdict: APPROVED
 impl_tags:
   dependencies: []
