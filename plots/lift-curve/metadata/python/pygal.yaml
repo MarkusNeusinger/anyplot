@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: lift-curve
 created: '2025-12-27T19:20:59Z'
-updated: '2026-05-10T16:45:26Z'
+updated: '2026-05-10T16:51:00Z'
 generated_by: claude-haiku
 workflow_run: 25634092175
 issue: 2379
@@ -12,35 +12,34 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lift-curv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 84
 review:
   strengths:
-  - 'Perfect palette compliance with Okabe-Ito (first series #009E73, second #D55E00)'
-  - Excellent theme adaptation with both light and dark renders fully readable and
-    data colors properly held constant
-  - Clean data story with reference line at y=1 providing essential baseline context
-  - Proper sizing and typography legible at full resolution per style guide
-  - Correct specification implementation with deciles, reference line, and proper
-    axis labels
+  - Correct theme adaptation with proper background and text colors for both light
+    and dark themes
+  - Proper Okabe-Ito palette usage with brand green (#009E73) as primary series color
+  - Clean, readable typography at 4800×2700 high resolution with well-scaled font
+    sizes
+  - Accurate lift curve calculations with realistic simulated customer response data
+  - Proper baseline reference line at y=1.0 for random selection comparison
+  - Reproducible code with deterministic seed and clean implementation
   weaknesses:
-  - 'Design Excellence below target: generic styling with no custom visual refinement;
-    could benefit from spine removal or subtle grid tuning for better aesthetics'
-  - 'Limited use of library-specific features: no distinctive pygal capabilities explored
-    (e.g., interactive hover tooltips in HTML output)'
-  - 'No data labels or annotations: lift values at key deciles could be labeled for
-    enhanced precision and storytelling (optional, not spec-required)'
+  - Limited visual refinement — no spine removal or customization beyond correct defaults
+  - No visual hierarchy or emphasis on key insights (e.g., highlighting optimal percentiles)
+  - Could leverage more of pygal's distinctive interactive features beyond basic tooltip
+    export
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, not pure white
-      Chrome: Title "lift-curve · pygal · anyplot.ai" clearly visible in dark text; axis labels "Population Targeted (%)" and "Lift (Model Rate / Baseline Rate)" readable; tick labels 10%-100% and Y-axis values all clear and legible
-      Data: Model Lift curve in brand green (#009E73) starts at ~1.69 at 10% and decays to 1.0 at 100%; Random (No Lift) reference line in vermillion (#D55E00) stays flat at y=1; both lines have visible markers and adequate stroke width
-      Legibility verdict: PASS - all text fully readable with strong dark-on-light contrast
+      Background: Warm off-white (#FAF8F1) surface — correct light theme background.
+      Chrome: Title "lift-curve · pygal · anyplot.ai" is clearly visible in dark text. Axis labels "Population Targeted (%)" and "Lift (Model Rate / Baseline Rate)" are well-positioned and readable. Tick labels (10%, 20%, ..., 100% on x-axis; 0.9, 1.0, 1.1, 1.2, etc. on y-axis) are clearly visible. Y-axis grid lines are subtle but visible. Legend at top-left shows "Model Lift" and "Random (No Lift)" labels clearly.
+      Data: Two series rendered correctly. Model Lift curve (green #009E73) shows appropriate behavior starting at ~1.7 lift and declining to ~1.0 as population percentage increases. Random baseline (orange #D55E00) is a flat line at y=1.0. Data points marked with visible dots, line thickness is prominent. All elements distinguish clearly from the light background.
+      Legibility verdict: PASS — All text is readable, no contrast issues, dark-on-light works perfectly.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, not pure black
-      Chrome: Title, axis labels, and tick labels all clearly visible in light text (#F0EFE8 family) with proper contrast on dark surface; no dark-on-dark failures observed
-      Data: Model Lift (#009E73) and Random (#D55E00) colors are identical to light render, confirming proper theme adaptation with only chrome changed
-      Legibility verdict: PASS - all text readable; proper dark-theme contrast; data colors properly preserved
+      Background: Warm near-black (#1A1A17) surface — correct dark theme background.
+      Chrome: Title is visible in light text against dark background. Axis labels and tick labels all readable in light color. Y-axis grid lines present and subtle. Legend at top-left clearly displays both series names.
+      Data: Model Lift curve maintains identical green (#009E73) color as light render. Random baseline maintains identical orange (#D55E00). Both lines clearly distinguish from dark background. Data point markers are visible. Line prominence matches light render.
+      Legibility verdict: PASS — All text is readable against dark background, no dark-on-dark issues detected. Brand green and orange colors remain visible and distinct.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,50 +50,53 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text (title, axis labels, tick labels) fully readable in both
-          themes with strong contrast
+        comment: Title, axis labels, tick labels all explicitly set via Style object
+          with appropriate font sizes (28px, 22px, 18px). Readable in both light and
+          dark themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean legend placement, no text collisions, all elements distinct
-          and readable
+        comment: No overlapping text elements. Legend cleanly positioned top-left.
+          Points well-spaced.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Both data lines clearly visible with adequate stroke width (5px)
-          and marker size (10px)
+        comment: Data markers (dots) clearly visible with dots_size=10. Lines prominent
+          with stroke_width=5. No density or visibility issues.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (positions 1 and 2), CVD-safe, adequate contrast
+        comment: 'Okabe-Ito palette (#009E73 + #D55E00) is colorblind-safe with high
+          contrast between series.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Standard 4800×2700 format, good proportions, 100px margins, nothing
-          cut off
+        comment: Good proportions at 4800×2700. Margins=100 provides proper whitespace.
+          Nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct, axes descriptive with units
+        comment: 'Descriptive labels with units. Title format correct: ''lift-curve
+          · pygal · anyplot.ai''.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand), second #D55E00 (Okabe-Ito 2), identical
-          light/dark, backgrounds correct, theme-adaptive chrome'
+        comment: 'First series #009E73 (brand green), second #D55E00 (Okabe-Ito pos
+          2). Backgrounds correct (#FAF8F1 light, #1A1A17 dark). Both renders theme-correct.'
     design_excellence:
-      score: 11
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -102,22 +104,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Professional but functional styling; no embellishments or sophisticated
-          design touches
+        comment: Custom Style object with thoughtful application of theme tokens.
+          Okabe-Ito palette applied correctly. Professional but basic — no additional
+          visual sophistication beyond correct defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Clean minimal design with L-shaped frame; subtle gridlines; basic
-          refinement level
+        comment: Y-axis grid only (show_y_guides=True, show_x_guides=False) is appropriate.
+          Margins provide whitespace. But no removal of unnecessary elements or sophisticated
+          visual refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Clear focal point (Model Lift), effective reference line context,
-          visual hierarchy present
+        passed: false
+        comment: Baseline reference at y=1 provides context. But no special emphasis,
+          color contrast, or annotations to guide viewer through key insights.
     spec_compliance:
       score: 15
       max: 15
@@ -127,25 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart type for lift curve
+        comment: Correct line chart type for lift curve visualization.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Deciles, reference line, proper labels all present
+        comment: 'All features present: lift curve, baseline reference at y=1, decile
+          markers (10-100%), proper axis labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis population %, Y-axis lift values correctly mapped
+        comment: X = population percentage, Y = lift ratio. Axes properly labeled.
+          All data visible in range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format and legend labels correct
+        comment: Title format correct. Legend labels match series ('Model Lift', 'Random
+          (No Lift)').
     data_quality:
       score: 15
       max: 15
@@ -155,19 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full range of population targeting with realistic decay
+        comment: Shows all aspects of lift curve — high initial lift, gradual decline,
+          approach to 1.0.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Marketing response scenario with realistic parameters
+        comment: Simulated customer response prediction is realistic and neutral.
+          Beta distribution for scores, realistic response probability function.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis adapted to data, X-axis covers appropriate range
+        comment: Range adjusted dynamically (0.9, max*1.1). Lift values sensible for
+          classification task.
     code_quality:
       score: 10
       max: 10
@@ -177,55 +187,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes
+        comment: No unnecessary functions/classes. Linear, straightforward flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Uses np.random.seed(42) for deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: 'Imports only what''s used: os, numpy, pygal, Style.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity. No fake UI/interactivity. Clean lift metric
+          calculation.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format (plot-{THEME}.png/html)
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with current API.
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Solid pygal idioms (Style object, theme tokens, proper API)
+        passed: false
+        comment: Uses pygal's recommended Style object and high-level API. Solid but
+          doesn't leverage advanced features.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Standard pygal usage, no distinctive features explored
+        comment: Uses pygal's interactive HTML export and Style customization. Could
+          better leverage unique pygal animation and interactivity features.
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - html-export
+  techniques: []
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
-  styling:
-  - publication-ready
+  styling: []
