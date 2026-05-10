@@ -1,99 +1,141 @@
-""" pyplots.ai
+"""anyplot.ai
 silhouette-basic: Silhouette Plot
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2025-05-10
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from sklearn.cluster import KMeans
-from sklearn.datasets import load_iris
 from sklearn.metrics import silhouette_samples, silhouette_score
 
 
-# Set random seed for reproducibility
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+
+# Set seaborn theme
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Customer segmentation synthetic data
 np.random.seed(42)
+n_customers = 200
 
-# Load iris dataset for realistic example
-iris = load_iris()
-X = iris.data
+# Generate customer features: spending, frequency, recency metrics
+spending = np.concatenate(
+    [
+        np.random.normal(1500, 300, 60),  # High spenders
+        np.random.normal(800, 200, 90),  # Medium spenders
+        np.random.normal(200, 100, 50),  # Low spenders
+    ]
+)
+frequency = np.concatenate([np.random.normal(24, 5, 60), np.random.normal(12, 4, 90), np.random.normal(3, 2, 50)])
+recency = np.concatenate([np.random.normal(5, 10, 60), np.random.normal(20, 15, 90), np.random.normal(60, 30, 50)])
 
-# Perform K-means clustering with 3 clusters
+X = np.column_stack([spending, frequency, recency])
+
+# K-means clustering
 n_clusters = 3
-kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+kmeans = KMeans(n_clusters=n_clusters, random_state=123, n_init=10)
 cluster_labels = kmeans.fit_predict(X)
 
-# Calculate silhouette scores
+# Silhouette analysis
 silhouette_vals = silhouette_samples(X, cluster_labels)
 avg_score = silhouette_score(X, cluster_labels)
 
 # Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Define colors using Python palette first, then colorblind-safe
-colors = ["#306998", "#FFD43B", "#4DAF4A"]
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 y_lower = 10
 cluster_info = []
 
 for i in range(n_clusters):
-    # Get silhouette values for cluster i
     cluster_silhouette_vals = silhouette_vals[cluster_labels == i]
     cluster_silhouette_vals.sort()
 
     cluster_size = len(cluster_silhouette_vals)
     y_upper = y_lower + cluster_size
 
-    # Create horizontal bar chart for this cluster
     y_positions = np.arange(y_lower, y_upper)
 
     ax.barh(
         y_positions,
         cluster_silhouette_vals,
         height=1.0,
-        color=colors[i],
-        edgecolor=colors[i],
-        alpha=0.8,
+        color=OKABE_ITO[i],
+        edgecolor=OKABE_ITO[i],
+        alpha=0.85,
         label=f"Cluster {i}",
     )
 
-    # Calculate cluster average
     cluster_avg = np.mean(cluster_silhouette_vals)
     cluster_info.append((i, cluster_avg, (y_lower + y_upper) / 2))
 
-    y_lower = y_upper + 10  # Gap between clusters
+    y_lower = y_upper + 10
 
-# Add vertical line for average silhouette score
-ax.axvline(x=avg_score, color="#E31A1C", linestyle="--", linewidth=3, label=f"Average: {avg_score:.3f}")
+# Average silhouette line
+ax.axvline(x=avg_score, color=INK_SOFT, linestyle="--", linewidth=2.5, label=f"Average: {avg_score:.3f}")
 
-# Annotate each cluster with its average score (positioned to avoid overlap)
+# Cluster average annotations
 for cluster_id, cluster_avg, y_center in cluster_info:
-    # Position annotation at right edge for visibility
-    ax.annotate(
-        f"Avg: {cluster_avg:.3f}",
-        xy=(0.92, y_center),
-        fontsize=16,
-        fontweight="bold",
-        color=colors[cluster_id],
+    ax.text(
+        -0.08,
+        y_center,
+        f"C{cluster_id}\n{cluster_avg:.2f}",
+        fontsize=14,
+        fontweight="medium",
+        color=OKABE_ITO[cluster_id],
         va="center",
-        ha="left",
+        ha="right",
     )
 
-# Style the plot using seaborn
-sns.despine(left=True, bottom=False)
-ax.set_xlim([-0.1, 1.0])
-ax.set_xlabel("Silhouette Coefficient", fontsize=20)
-ax.set_ylabel("Samples (grouped by cluster)", fontsize=20)
-ax.set_title("silhouette-basic · seaborn · pyplots.ai", fontsize=24, fontweight="bold")
-ax.tick_params(axis="both", labelsize=16)
-ax.set_yticks([])  # Hide y-axis ticks as samples are grouped
+# Style
+ax.set_xlim([-0.15, 1.0])
+ax.set_xlabel("Silhouette Coefficient", fontsize=20, color=INK)
+ax.set_ylabel("Samples (grouped by cluster)", fontsize=20, color=INK)
+ax.set_title("silhouette-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="x", labelsize=16, colors=INK_SOFT)
+ax.tick_params(axis="y", labelsize=0)
+ax.set_yticks([])
 
-# Add legend
-ax.legend(loc="lower right", fontsize=16, framealpha=0.9)
+# Remove spines
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["left"].set_visible(False)
+ax.spines["bottom"].set_color(INK_SOFT)
 
-# Add subtle grid for x-axis
-ax.grid(axis="x", alpha=0.3, linestyle="--")
+# Subtle grid
+ax.grid(axis="x", alpha=0.15, linewidth=0.8, color=INK)
+
+# Legend
+legend = ax.legend(loc="lower right", fontsize=16, framealpha=0.95)
+legend.get_frame().set_facecolor(ELEVATED_BG)
+legend.get_frame().set_edgecolor(INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
