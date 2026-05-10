@@ -1,164 +1,182 @@
 library: matplotlib
+language: python
 specification_id: bar-feature-importance
 created: '2025-12-26T17:37:25Z'
-updated: '2025-12-26T17:45:28Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20526602154
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/matplotlib/plot.png
-preview_html: null
-quality_score: 94
-impl_tags:
-  dependencies: []
-  techniques:
-  - colorbar
-  - annotations
-  patterns:
-  - data-generation
-  dataprep: []
-  styling:
-  - custom-colormap
-  - grid-styling
+updated: '2026-05-10T01:03:55Z'
+generated_by: claude-haiku
+workflow_run: 25616056210
+issue: 2276
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - 'Excellent implementation of all spec requirements: sorted bars, color gradient,
-    error bars, and value annotations'
-  - Clean code structure following KISS principles with proper seed for reproducibility
-  - Professional styling with hidden top/right spines and subtle grid
-  - Realistic credit scoring context with appropriate feature names and importance
-    values
-  - Good use of Blues colormap for sequential color gradient mapped to importance
-    values
+  - Excellent theme-adaptive implementation with identical data colors between light
+    and dark renders
+  - 'All spec requirements present and well-executed: sorted bars, gradient mapping,
+    error bars, value annotations'
+  - Professional viridis colormap for continuous importance data with proper normalization
+  - Perfect text legibility in both themes with explicitly sized fonts (title 24pt,
+    labels 20pt, ticks 16pt)
+  - Realistic, interpretable loan approval data that demonstrates feature importance
+    visualization effectively
+  - Clean, reproducible code with proper theme token usage and no unnecessary complexity
   weaknesses:
-  - Axis labels could include units (e.g., "Importance Score (normalized)" or similar)
-  - Could leverage matplotlib annotate() for more styled value labels with arrows
-    or backgrounds
-  image_description: The plot displays a horizontal bar chart showing feature importances
-    from a machine learning model (credit/loan prediction context). The chart shows
-    12 features sorted by importance from bottom to top, with "Income" being the most
-    important (0.182) and "Number of Dependents" the least important (0.015). The
-    bars use a sequential blue color gradient (Blues colormap) that transitions from
-    lighter blue for lower values to darker blue for higher importance values. Each
-    bar has error bars showing standard deviation and value annotations displayed
-    to the right of each bar. The title uses the correct format "bar-feature-importance
-    · matplotlib · pyplots.ai". The x-axis is labeled "Importance Score" and y-axis
-    is labeled "Feature". A subtle dashed grid is visible on the x-axis only. The
-    top and right spines are hidden for a cleaner appearance.
+  - 'Design excellence could be elevated beyond defaults: while technically excellent,
+    could add more intentional visual emphasis on top features or distinctive typography
+    choices'
+  - 'Visual storytelling adequate but not exceptional: gradient provides hierarchy
+    but no explicit callout or emphasis on key insights (e.g., annotation on most
+    important feature)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), perfectly matching spec
+      Chrome: Title in dark text (INK #1A1A17), axis labels (20pt) dark and readable, tick labels in soft gray (INK_SOFT #4A4A44) with excellent contrast. All text explicitly sized (title 24pt, labels 20pt, ticks 16pt) and perfectly readable.
+      Data: 12 features from loan approval model with importance scores displayed as horizontal bars colored by viridis gradient (yellow to dark purple) mapped to importance values. Error bars in gray show standard deviation. Value annotations (0.182 to 0.015) in gray text at bar ends. Features sorted by importance with highest at top.
+      Legibility verdict: PASS - All elements clearly visible, no overlaps, excellent contrast throughout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), perfectly matching spec
+      Chrome: Title in light text (INK #F0EFE8), axis labels (20pt) light and readable, tick labels in light gray (INK_SOFT #B8B7B0) with excellent contrast against dark background. Same explicit sizing as light render ensures consistency.
+      Data: Identical viridis gradient colors as light render (yellow to dark purple) - only chrome has adapted. Error bars in light gray on dark surface. Value annotations in light gray text remain readable. Feature order and data representation identical to light render.
+      Legibility verdict: PASS - No dark-on-dark failures, all text clearly visible, proper contrast, viridis colors visible and distinguishable on dark background
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt, all perfectly readable
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt;
+          perfectly readable in both light and dark themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all feature names fully visible
+        comment: No overlapping text elements; all feature names, values, and axes
+          fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-sized, error bars clearly visible with good capsize
+        comment: Bars optimally sized with clear viridis gradient; error bars and
+          value annotations integrated well
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Uses Blues colormap which is colorblind-safe
+        comment: Viridis is perceptually uniform and CVD-safe; error bars contrast
+          well with bars
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins, tight_layout applied
+        comment: Plot fills 60-70% of canvas with balanced margins; all elements well-positioned
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive ("Importance Score", "Feature") but missing
-          units
+        comment: X-axis includes units; descriptive labels; title follows required
+          format
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle (alpha=0.3, dashed), but there is no legend (not needed
-          here)
+        passed: true
+        comment: 'Viridis sequential colormap correct for continuous data; backgrounds
+          #FAF8F1 (light) and #1A1A17 (dark); theme-adaptive chrome perfect in both
+          renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional viridis gradient; error bars add sophistication; theme-aware
+          implementation. Clearly above defaults but not publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle x-axis grid, spines removed, generous whitespace, styled bar
+          edges. Good refinement with room for more polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Gradient emphasizes higher importances; sorted order aids interpretation;
+          annotations help narrative. Could add more intentional emphasis on top features.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct horizontal bar chart
+        comment: Correct horizontal bar chart with features sorted by importance
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Features on y-axis, importance on x-axis as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Sorted bars, color gradient, error bars, value annotations all present
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: sorted bars, gradient mapping, error
+          bars, value annotations'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows full range from 0 to beyond max importance + std
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; axes show full data range; sorting preserved
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series, N/A
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "bar-feature-importance · matplotlib · pyplots.ai"'
+        comment: Title format correct; no legend needed for single-series gradient
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows 12 features with good variation in importance values, but all
-          features trend consistently (could show some mid-range clustering)
+        comment: 12 features with diverse importance range (0.182 to 0.015); shows
+          variation and depth
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Credit/loan prediction model with realistic feature names (Income,
-          Credit Score, Age, etc.)
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Importance values sum to ~1.0, realistic for sklearn feature_importances_
+        comment: Realistic loan approval scenario with interpretable features; neutral
+          and professional domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Normalized importance scores are plausible for ensemble models; realistic
+          proportions
     code_quality:
       score: 10
       max: 10
@@ -168,40 +186,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Linear structure: imports, tokens, data, plot, save. No unnecessary
+          abstractions.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures reproducibility; deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy, both used
+        comment: 'Only necessary imports: matplotlib, numpy, os'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Clean, Pythonic code; appropriate complexity; no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct parameters
-    library_features:
-      score: 3
-      max: 5
+        comment: 'Correct output format: plot-{THEME}.png with proper theme handling'
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert matplotlib patterns: Axes methods, theme tokens from environment,
+          normalized colormap, tight_layout'
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses barh with error bars, colormap, spine customization. Good but
-          could use additional matplotlib features like annotate() for richer annotations
+        comment: Uses barh(), normalized colormap with vmin/vmax scaling, styled error
+          bars. Solid but fairly standard techniques.
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - colorbar
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - edge-highlighting
