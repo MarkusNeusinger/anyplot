@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 residual-plot: Residual Plot
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 93/100 | Created: 2025-12-26
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-10
 """
 
 import matplotlib.pyplot as plt
