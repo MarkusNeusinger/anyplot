@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 gantt-basic: Basic Gantt Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-10
@@ -41,18 +41,18 @@ custom_style = Style(
 )
 
 tasks = [
-    ("Requirements Analysis", "Planning", date(2025, 1, 6), date(2025, 1, 17)),
-    ("System Design", "Planning", date(2025, 1, 13), date(2025, 1, 31)),
-    ("Database Design", "Design", date(2025, 1, 27), date(2025, 2, 7)),
-    ("UI/UX Design", "Design", date(2025, 1, 20), date(2025, 2, 14)),
-    ("Backend Development", "Development", date(2025, 2, 3), date(2025, 3, 14)),
-    ("Frontend Development", "Development", date(2025, 2, 10), date(2025, 3, 21)),
-    ("API Integration", "Development", date(2025, 3, 3), date(2025, 3, 21)),
-    ("Unit Testing", "Testing", date(2025, 3, 10), date(2025, 3, 28)),
-    ("Integration Testing", "Testing", date(2025, 3, 24), date(2025, 4, 11)),
-    ("User Acceptance Testing", "Testing", date(2025, 4, 7), date(2025, 4, 18)),
-    ("Documentation", "Deployment", date(2025, 4, 7), date(2025, 4, 18)),
-    ("Deployment", "Deployment", date(2025, 4, 14), date(2025, 4, 25)),
+    ("Requirements Analysis", "Planning", date(2025, 1, 6), date(2025, 1, 17), True),
+    ("System Design", "Planning", date(2025, 1, 13), date(2025, 1, 31), True),
+    ("Database Design", "Design", date(2025, 1, 27), date(2025, 2, 7), False),
+    ("UI/UX Design", "Design", date(2025, 1, 20), date(2025, 2, 14), False),
+    ("Backend Development", "Development", date(2025, 2, 3), date(2025, 3, 14), True),
+    ("Frontend Development", "Development", date(2025, 2, 10), date(2025, 3, 21), True),
+    ("API Integration", "Development", date(2025, 3, 3), date(2025, 3, 21), False),
+    ("Unit Testing", "Testing", date(2025, 3, 10), date(2025, 3, 28), False),
+    ("Integration Testing", "Testing", date(2025, 3, 24), date(2025, 4, 11), True),
+    ("User Acceptance Testing", "Testing", date(2025, 4, 7), date(2025, 4, 18), True),
+    ("Documentation", "Deployment", date(2025, 4, 7), date(2025, 4, 18), False),
+    ("Deployment", "Deployment", date(2025, 4, 14), date(2025, 4, 25), True),
 ]
 
 reference_date = date(2025, 1, 1)
@@ -66,7 +66,7 @@ category_colors = {
 }
 
 all_dates = []
-for _, _, start, end in tasks:
+for _, _, start, end, _ in tasks:
     all_dates.extend([start, end])
 min_date = min(all_dates)
 max_date = max(all_dates)
@@ -116,7 +116,7 @@ bar_height = row_height * 0.55
 
 bar_elements = []
 
-for i, (task_name, category, start, end) in enumerate(tasks):
+for i, (task_name, category, start, end, on_critical_path) in enumerate(tasks):
     start_day_val = (start - reference_date).days
     end_day_val = (end - reference_date).days
 
@@ -131,12 +131,39 @@ for i, (task_name, category, start, end) in enumerate(tasks):
     color = category_colors[category]
     duration = (end - start).days
 
+    stroke_style = ""
+    if on_critical_path:
+        stroke_style = f' stroke="{INK}" stroke-width="2.5"'
+
     bar_elements.append(
         f'<rect x="{x_start:.1f}" y="{y_top:.1f}" width="{width:.1f}" '
-        f'height="{bar_height:.1f}" fill="{color}" rx="6" ry="6" opacity="0.9">'
+        f'height="{bar_height:.1f}" fill="{color}" rx="6" ry="6" opacity="0.9"{stroke_style}>'
         f"<title>{task_name}&#10;{start.strftime('%b %d')} - {end.strftime('%b %d')} "
-        f"({duration} days)</title></rect>"
+        f"({duration} days){' • CRITICAL PATH' if on_critical_path else ''}</title></rect>"
     )
+
+milestone_dates = [
+    (date(2025, 1, 31), "Planning Complete"),
+    (date(2025, 2, 14), "Design Complete"),
+    (date(2025, 3, 21), "Development Complete"),
+    (date(2025, 4, 11), "Testing Complete"),
+]
+
+milestone_markers = []
+for milestone_date, milestone_label in milestone_dates:
+    day_val = (milestone_date - reference_date).days
+    if start_day <= day_val <= end_day:
+        x_pos = PLOT_LEFT + ((day_val - start_day) / day_range) * PLOT_WIDTH
+        milestone_markers.append(
+            f'<line x1="{x_pos:.1f}" y1="{PLOT_TOP - 15}" x2="{x_pos:.1f}" '
+            f'y2="{PLOT_TOP}" stroke="{INK}" stroke-width="2.5" opacity="0.6"/>'
+        )
+        milestone_markers.append(f'<circle cx="{x_pos:.1f}" cy="{PLOT_TOP - 25}" r="4" fill="{INK}" opacity="0.6"/>')
+        milestone_markers.append(
+            f'<text x="{x_pos:.1f}" y="{PLOT_TOP - 35}" '
+            f'font-family="Consolas, monospace" font-size="12" fill="{INK}" opacity="0.6" '
+            f'text-anchor="middle">{milestone_label}</text>'
+        )
 
 month_markers = []
 for month in range(1, 5):
@@ -162,7 +189,7 @@ month_markers.append(
     f'text-anchor="middle">Timeline (2025)</text>'
 )
 
-all_elements = "\n".join(bar_elements + month_markers)
+all_elements = "\n".join(bar_elements + milestone_markers + month_markers)
 svg_output = svg_string.replace("</svg>", f"{all_elements}\n</svg>")
 
 svg_output = svg_output.replace(">No data<", "><")
