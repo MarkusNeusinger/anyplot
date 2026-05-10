@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-feature-importance: Feature Importance Bar Chart
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 80/100 | Updated: 2026-05-10
+Quality: 85/100 | Updated: 2026-05-10
 """
 
 import matplotlib.pyplot as plt
