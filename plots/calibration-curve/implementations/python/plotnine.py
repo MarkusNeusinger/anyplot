@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 calibration-curve: Calibration Curve
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2025-12-26
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-10
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,6 +12,7 @@ from plotnine import (
     aes,
     coord_fixed,
     element_line,
+    element_rect,
     element_text,
     geom_abline,
     geom_line,
@@ -22,16 +25,23 @@ from plotnine import (
 )
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"
+
 # Data - Simulate a classifier with realistic calibration characteristics
 np.random.seed(42)
 n_samples = 2000
 
 # Generate predicted probabilities from a slightly overconfident model
-y_prob = np.random.beta(2, 3, n_samples)  # Skewed toward lower probabilities
+y_prob = np.random.beta(2, 3, n_samples)
 
-# Generate true labels - model is slightly overconfident (predicts higher than actual)
-# Add noise to simulate real-world calibration issues
-calibration_shift = 0.08  # Model predicts ~8% too high on average
+# Generate true labels - model is slightly overconfident
+calibration_shift = 0.08
 true_prob = np.clip(y_prob - calibration_shift + np.random.normal(0, 0.05, n_samples), 0, 1)
 y_true = (np.random.random(n_samples) < true_prob).astype(int)
 
@@ -64,41 +74,47 @@ for i in range(n_bins):
         ece += bin_counts[i] * abs(fraction_positives[i] - mean_predicted[i])
 ece /= n_samples
 
-# Create DataFrame for plotting
+# Create DataFrame for calibration curve
 df_calibration = pd.DataFrame(
     {"mean_predicted": mean_predicted, "fraction_positives": fraction_positives, "bin_counts": bin_counts}
 ).dropna()
 
-# Add size column for point sizing based on bin counts (normalized)
+# Add size column for point sizing based on bin counts
 max_count = df_calibration["bin_counts"].max()
 df_calibration["point_size"] = 3 + 5 * (df_calibration["bin_counts"] / max_count)
 
-# Create plot
+# Create calibration curve plot
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+    panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
+    panel_border=element_rect(color=INK_SOFT, fill=None, size=0.8),
+    axis_title=element_text(size=20, color=INK),
+    axis_text=element_text(size=16, color=INK_SOFT),
+    axis_line=element_line(color=INK_SOFT, size=0.8),
+    plot_title=element_text(size=24, color=INK),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_text=element_text(color=INK_SOFT),
+    legend_title=element_text(color=INK),
+)
+
 plot = (
     ggplot(df_calibration, aes(x="mean_predicted", y="fraction_positives"))
-    + geom_abline(intercept=0, slope=1, linetype="dashed", color="#888888", size=1.2)  # Perfect calibration line
-    + geom_line(color="#306998", size=2)  # Calibration curve line
-    + geom_point(
-        aes(size="point_size"), color="#306998", fill="#FFD43B", stroke=1.5, shape="o"
-    )  # Points sized by bin count
+    + geom_abline(intercept=0, slope=1, linetype="dashed", color=INK_SOFT, size=1.2)
+    + geom_line(color=BRAND, size=2)
+    + geom_point(aes(size="point_size"), color=BRAND, fill=BRAND, stroke=0, alpha=0.8)
     + scale_size_identity()
     + labs(
         x="Mean Predicted Probability",
-        y="Fraction of Positives",
-        title=f"calibration-curve · plotnine · pyplots.ai (ECE = {ece:.3f})",
+        y="Fraction of Positives (Observed)",
+        title=f"calibration-curve · plotnine · anyplot.ai (ECE = {ece:.3f})",
     )
     + coord_fixed(ratio=1, xlim=(0, 1), ylim=(0, 1))
     + theme_minimal()
-    + theme(
-        figure_size=(12, 12),  # Square format for calibration curve (3600x3600 at 300dpi)
-        text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=22),
-        panel_grid_major=element_line(color="#cccccc", size=0.5, alpha=0.3),
-        panel_grid_minor=element_line(color="#eeeeee", size=0.3, alpha=0.2),
-    )
+    + anyplot_theme
+    + theme(figure_size=(12, 12))
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
