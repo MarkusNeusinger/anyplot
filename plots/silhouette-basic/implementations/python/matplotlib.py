@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 silhouette-basic: Silhouette Plot
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 92/100 | Created: 2025-12-26
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-10
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,8 +13,17 @@ from sklearn.datasets import load_iris
 from sklearn.metrics import silhouette_samples, silhouette_score
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette for clusters
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
 # Data - use iris dataset for realistic clustering example
-np.random.seed(42)
 iris = load_iris()
 X = iris.data
 n_clusters = 3
@@ -25,11 +36,9 @@ cluster_labels = kmeans.fit_predict(X)
 silhouette_avg = silhouette_score(X, cluster_labels)
 sample_silhouette_values = silhouette_samples(X, cluster_labels)
 
-# Create plot
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Colors for clusters - Python Blue first, then yellow and accessible colors
-colors = ["#306998", "#FFD43B", "#2ca02c"]
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 y_lower = 10
 for i in range(n_clusters):
@@ -45,8 +54,8 @@ for i in range(n_clusters):
         np.arange(y_lower, y_upper),
         0,
         ith_cluster_silhouette_values,
-        facecolor=colors[i],
-        edgecolor=colors[i],
+        facecolor=OKABE_ITO[i % len(OKABE_ITO)],
+        edgecolor=OKABE_ITO[i % len(OKABE_ITO)],
         alpha=0.8,
     )
 
@@ -59,25 +68,39 @@ for i in range(n_clusters):
         fontsize=16,
         verticalalignment="center",
         horizontalalignment="right",
+        color=INK,
     )
 
     y_lower = y_upper + 10  # Gap between clusters
 
 # Add vertical line for average silhouette score
-ax.axvline(x=silhouette_avg, color="#d62728", linestyle="--", linewidth=3, label=f"Average Score: {silhouette_avg:.2f}")
+ax.axvline(x=silhouette_avg, color=INK_SOFT, linestyle="--", linewidth=3, label=f"Average Score: {silhouette_avg:.2f}")
 
-# Styling
-ax.set_xlabel("Silhouette Coefficient", fontsize=20)
-ax.set_ylabel("Sample Index (by Cluster)", fontsize=20)
-ax.set_title("silhouette-basic · matplotlib · pyplots.ai", fontsize=24)
+# Style
+ax.set_xlabel("Silhouette Coefficient", fontsize=20, color=INK)
+ax.set_ylabel("Sample Index (by Cluster)", fontsize=20, color=INK)
+ax.set_title("silhouette-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
 
-ax.tick_params(axis="both", labelsize=16)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 ax.set_xlim([-0.2, 1.0])
 ax.set_ylim([0, y_lower])
 ax.set_yticks([])  # Hide y-axis ticks as they're not meaningful
 
-ax.legend(fontsize=16, loc="lower right")
-ax.grid(True, alpha=0.3, linestyle="--", axis="x")
+# Spine styling
+for spine in ["top", "right"]:
+    ax.spines[spine].set_visible(False)
+for spine in ["left", "bottom"]:
+    ax.spines[spine].set_color(INK_SOFT)
+
+# Legend
+leg = ax.legend(fontsize=16, loc="lower right")
+if leg:
+    leg.get_frame().set_facecolor(ELEVATED_BG)
+    leg.get_frame().set_edgecolor(INK_SOFT)
+    leg.get_frame().set_linewidth(1)
+    plt.setp(leg.get_texts(), color=INK_SOFT)
+
+ax.grid(True, alpha=0.15, linestyle="-", axis="x", color=INK_SOFT, linewidth=0.8)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
