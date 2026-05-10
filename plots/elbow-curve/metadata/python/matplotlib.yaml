@@ -1,169 +1,171 @@
 library: matplotlib
+language: python
 specification_id: elbow-curve
 created: '2025-12-26T19:36:06Z'
-updated: '2025-12-26T19:41:50Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20528202012
-issue: 0
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/matplotlib/plot.png
-preview_html: null
-quality_score: 92
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  patterns:
-  - data-generation
-  - explicit-figure
-  dataprep: []
-  styling: []
+updated: '2026-05-10T07:12:27Z'
+generated_by: claude-haiku
+workflow_run: 25622517570
+issue: 2333
+python_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
 review:
   strengths:
-  - Excellent elbow curve visualization with clear elbow point identification at k=4
-  - Professional annotation with arrow pointing to the optimal cluster count
-  - Thoughtful diminishing returns shaded region adds educational value
-  - 'Color scheme (Python blue #306998 and yellow #FFD43B) is visually appealing and
-    brand-consistent'
-  - Realistic inertia decay pattern that demonstrates the typical K-means behavior
-  - Clean, readable code following KISS principles
-  weaknesses:
-  - Legend is defined but not displayed (ax.legend() call is missing), though the
-    label parameter and axvspan label are set
-  - Y-axis label could include units or clarify unitless nature of inertia
-  image_description: The plot displays an elbow curve for K-Means clustering on a
-    16:9 landscape canvas with a white background. The X-axis shows "Number of Clusters
-    (k)" ranging from 1 to 10, and the Y-axis shows "Inertia (Within-Cluster Sum of
-    Squares)" ranging from approximately 500 to 5000. A dark blue line (#306998) connects
-    10 data points, each marked with yellow (#FFD43B) circular markers with blue borders.
-    The curve shows the characteristic elbow shape with a sharp decline from k=1 to
-    k=4, then a gradual decrease from k=4 onwards. The elbow point at k=4 is highlighted
-    with a larger yellow marker and annotated with "Elbow Point (k=4)" in bold blue
-    text with an arrow pointing to it. A subtle light blue shaded region spans from
-    k=4 to k=10 indicating the "diminishing returns" zone. The title "elbow-curve
-    · matplotlib · pyplots.ai" appears at the top. A subtle dashed grid is visible
-    in the background.
+  - Perfect text legibility with explicit font sizing across both themes
+  - Flawless theme-adaptive chrome with proper tokens throughout (BRAND, INK, INK_SOFT,
+    ELEVATED_BG)
+  - 'Excellent visual storytelling: annotation + diminishing-returns region clearly
+    guides viewer to elbow insight'
+  - 'Publication-ready code: KISS structure, reproducible seed, clean imports, idiomatic
+    matplotlib usage'
+  - All spec requirements met with authentic K-means clustering data and realistic
+    inertia decay pattern
+  - Strong design sophistication with thoughtful annotation placement and visual hierarchy
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), provides excellent contrast for all elements
+      Chrome: Title "elbow-curve · matplotlib · anyplot.ai" in dark ink, axis labels "Number of Clusters (k)" and "Inertia (Within-Cluster Sum of Squares)" in dark ink (#1A1A17), tick labels in soft ink (#4A4A44), all clearly readable
+      Data: Brand green (#009E73) line with markers shows the decay curve smoothly from k=1 (inertia ~5000) to k=10 (inertia ~700). Elbow point at k=4 is highlighted with larger scatter marker. Diminishing returns region (k≥4) is shaded with subtle alpha. Annotation box with arrow clearly points to elbow point with "Elbow Point (k=4)" label.
+      Legibility verdict: PASS - All text is highly readable, excellent contrast, data colors pop against the background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), maintains excellent contrast for all elements
+      Chrome: Title and axis labels rendered in light text (#F0EFE8), tick labels in soft light ink (#B8B7B0). No dark-on-dark failures; text is perfectly readable against the dark surface
+      Data: Brand green (#009E73) is identical to light render - data colors stay constant across themes. Elbow point highlight and annotation box are identical. Diminishing returns region shading adapts to dark theme with same semantic emphasis. All visual hierarchy is preserved.
+      Legibility verdict: PASS - All text is highly readable, no dark-on-dark failures, brand green maintains excellent visibility on dark surface
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt),
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, annotation placed well away from data
+        comment: Clean spacing, no overlapping text or elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers (s=400 for elbow, markersize=12 for line) are appropriately
-          sized for 10 data points
+        comment: Line width 3, markers size 12, elbow highlight s=400 all perfectly
+          visible and appropriately sized
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow color scheme is colorblind-safe with excellent contrast
+        comment: Brand green has excellent contrast on both light and dark surfaces,
+          CVD-safe
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins, good use of space
+        comment: Perfect 16:9 layout, plot fills 60-70% with balanced margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive but Y-axis lacks specific units (though for
-          inertia, unitless is acceptable)
+        comment: Descriptive labels with context (k value, inertia definition)
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3), but no legend is shown despite having
-          a label parameter and a labeled axvspan
+        comment: 'Perfect Okabe-Ito (#009E73), correct backgrounds (#FAF8F1 light
+          / #1A1A17 dark), all theme tokens properly applied'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with intentional annotation and visual hierarchy, goes
+          beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed appropriately, subtle grid, diminishing-returns region
+          adds visual polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotation and shaded region clearly guide viewer to elbow insight
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct elbow curve line plot with markers
+        comment: Correct line+marker chart type
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=k values, Y=inertia correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: markers at data points, smooth connecting
-          line, elbow point annotation'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: markers, connecting line, elbow annotation,
+          plateau region'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data clearly with appropriate range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A (legend not required for this single-series plot)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: "elbow-curve · matplotlib · pyplots.ai"'
+        comment: Title format correct, legend appropriately omitted for single series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows elbow curve shape well with clear elbow point; slight deduction
-          as the curve could show more dramatic variation in the "tail" to better
-          illustrate diminishing returns
+        comment: Shows realistic K-means behavior with steep decline and plateau
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Inertia values (5000 down to ~700) are realistic for K-means clustering
-          scenarios
+        comment: Authentic clustering scenario, neutral scientific context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are sensible, though the starting inertia of 5000 is somewhat
-          arbitrary
+        comment: Factually correct K-means proportions
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,41 +173,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Clean linear flow: imports → tokens → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set (np.random.seed(42))
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, no over-engineering
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: All APIs are current
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 0
-        passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format and DPI
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Uses matplotlib features
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of high-level API with proper theme tokens
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of annotations with arrowprops, axvspan for shading, marker
-          customization. Could use more distinctive features like spines customization
-          or secondary annotations.
+        comment: Uses annotation and axvspan, solid but not particularly distinctive
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - grid-styling
