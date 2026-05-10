@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 lift-curve: Model Lift Chart
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2025-12-27
+Library: highcharts unknown | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-10
 """
 
 import os
