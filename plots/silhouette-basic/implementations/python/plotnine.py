@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 silhouette-basic: Silhouette Plot
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Updated: 2025-05-10
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-10
 """
 
 import os
